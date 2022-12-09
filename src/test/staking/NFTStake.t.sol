@@ -509,6 +509,48 @@ contract NFTStakeTest is BaseTest {
         stakeContract.withdraw(_tokenIdsTwo);
     }
 
+    function test_revert_largeRewardsPerUnitTime_adminRewardsLock() public {
+        //================ stake tokens
+        vm.warp(1);
+        uint256[] memory _tokenIdsOne = new uint256[](1);
+        uint256[] memory _tokenIdsTwo = new uint256[](1);
+
+        uint256 stakerOneToken = erc721.nextTokenIdToMint();
+        erc721.mint(stakerOne, 5); // mint token id 0 to 4
+        uint256 stakerTwoToken = erc721.nextTokenIdToMint();
+        erc721.mint(stakerTwo, 5); // mint token id 5 to 9
+        _tokenIdsOne[0] = stakerOneToken;
+        _tokenIdsTwo[0] = stakerTwoToken;
+
+        // Two users stake 1 tokens each
+        vm.prank(stakerOne);
+        stakeContract.stake(_tokenIdsOne);
+        vm.prank(stakerTwo);
+        stakeContract.stake(_tokenIdsTwo);
+
+        // set rewardsPerTimeUnit to max value
+        uint256 rewardsPerTimeUnit = type(uint256).max;
+        vm.prank(deployer);
+        stakeContract.setRewardsPerUnitTime(rewardsPerTimeUnit);
+
+        vm.warp(1 days);
+
+        // stakerOne and stakerTwo can't withdraw their tokens
+        // vm.expectRevert(stdError.arithmeticError);
+        vm.prank(stakerOne);
+        stakeContract.withdraw(_tokenIdsOne);
+
+        // vm.expectRevert(stdError.arithmeticError);
+        vm.prank(stakerTwo);
+        stakeContract.withdraw(_tokenIdsTwo);
+
+        // rewardsPerTimeUnit can't be changed
+        rewardsPerTimeUnit = 60;
+        // vm.expectRevert(stdError.arithmeticError);
+        vm.prank(deployer);
+        stakeContract.setRewardsPerUnitTime(rewardsPerTimeUnit);
+    }
+
     function test_Macro_NFTDirectSafeTransferLocksToken() public {
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = 0;

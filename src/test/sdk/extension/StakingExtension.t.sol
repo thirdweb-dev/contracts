@@ -7,10 +7,11 @@ import "@ds-test/test.sol";
 import { Staking721 } from "contracts/extension/Staking721.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 import "../../mocks/MockERC721.sol";
 
-contract MyStakingContract is ERC20, Staking721 {
+contract MyStakingContract is ERC20, Staking721, IERC721Receiver {
     bool condition;
 
     constructor(
@@ -22,6 +23,24 @@ contract MyStakingContract is ERC20, Staking721 {
     ) ERC20(_name, _symbol) Staking721(_nftCollection) {
         condition = true;
         _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        ERC 165 / 721 logic
+    //////////////////////////////////////////////////////////////*/
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external view override returns (bytes4) {
+        require(isStaking == 2, "Direct transfer");
+        return this.onERC721Received.selector;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+        return interfaceId == type(IERC721Receiver).interfaceId;
     }
 
     function setCondition(bool _condition) external {

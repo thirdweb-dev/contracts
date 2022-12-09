@@ -2,6 +2,7 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "../openzeppelin-presets/utils/math/SafeMath.sol";
 import "../eip/interface/IERC1155.sol";
 
 import "./interface/IStaking1155.sol";
@@ -236,23 +237,23 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         }
     }
 
-    function getTimeUnit(uint256 _tokenId) public view returns (uint128 _timeUnit) {
+    function getTimeUnit(uint256 _tokenId) public view returns (uint256 _timeUnit) {
         uint256 _nextConditionId = nextConditionId[_tokenId];
         require(_nextConditionId != 0, "Time unit not set. Check default time unit.");
         _timeUnit = stakingConditions[_tokenId][_nextConditionId - 1].timeUnit;
     }
 
-    function getRewardsPerUnitTime(uint256 _tokenId) public view returns (uint128 _rewardsPerUnitTime) {
+    function getRewardsPerUnitTime(uint256 _tokenId) public view returns (uint256 _rewardsPerUnitTime) {
         uint256 _nextConditionId = nextConditionId[_tokenId];
         require(_nextConditionId != 0, "Rewards not set. Check default rewards.");
         _rewardsPerUnitTime = stakingConditions[_tokenId][_nextConditionId - 1].rewardsPerUnitTime;
     }
 
-    function getDefaultTimeUnit() public view returns (uint128 _timeUnit) {
+    function getDefaultTimeUnit() public view returns (uint256 _timeUnit) {
         _timeUnit = defaultCondition[nextDefaultConditionId - 1].timeUnit;
     }
 
-    function getDefaultRewardsPerUnitTime() public view returns (uint128 _rewardsPerUnitTime) {
+    function getDefaultRewardsPerUnitTime() public view returns (uint256 _rewardsPerUnitTime) {
         _rewardsPerUnitTime = defaultCondition[nextDefaultConditionId - 1].rewardsPerUnitTime;
     }
 
@@ -384,12 +385,12 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
             }
         }
 
-        stakingConditions[_tokenId][conditionId - 1].endTimestamp = uint128(block.timestamp);
+        stakingConditions[_tokenId][conditionId - 1].endTimestamp = block.timestamp;
 
         stakingConditions[_tokenId][conditionId] = StakingCondition({
-            timeUnit: uint128(_timeUnit),
-            rewardsPerUnitTime: uint128(_rewardsPerUnitTime),
-            startTimestamp: uint128(block.timestamp),
+            timeUnit: _timeUnit,
+            rewardsPerUnitTime: _rewardsPerUnitTime,
+            startTimestamp: block.timestamp,
             endTimestamp: 0
         });
 
@@ -403,14 +404,14 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         nextDefaultConditionId += 1;
 
         defaultCondition[conditionId] = StakingCondition({
-            timeUnit: uint128(_timeUnit),
-            rewardsPerUnitTime: uint128(_rewardsPerUnitTime),
-            startTimestamp: uint128(block.timestamp),
+            timeUnit: _timeUnit,
+            rewardsPerUnitTime: _rewardsPerUnitTime,
+            startTimestamp: block.timestamp,
             endTimestamp: 0
         });
 
         if (conditionId > 0) {
-            defaultCondition[conditionId - 1].endTimestamp = uint128(block.timestamp);
+            defaultCondition[conditionId - 1].endTimestamp = block.timestamp;
         }
     }
 
@@ -429,9 +430,16 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
                 uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
                 uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
 
-                _rewards +=
-                    ((endTime - startTime) * staker.amountStaked * condition.rewardsPerUnitTime) /
-                    condition.timeUnit;
+                (bool noOverflowProduct, uint256 rewardsProduct) = SafeMath.tryMul(
+                    (endTime - startTime) * staker.amountStaked,
+                    condition.rewardsPerUnitTime
+                );
+                (bool noOverflowSum, uint256 rewardsSum) = SafeMath.tryAdd(
+                    _rewards,
+                    rewardsProduct / condition.timeUnit
+                );
+
+                _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
             }
         } else {
             for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
@@ -440,9 +448,16 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
                 uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
                 uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
 
-                _rewards +=
-                    ((endTime - startTime) * staker.amountStaked * condition.rewardsPerUnitTime) /
-                    condition.timeUnit;
+                (bool noOverflowProduct, uint256 rewardsProduct) = SafeMath.tryMul(
+                    (endTime - startTime) * staker.amountStaked,
+                    condition.rewardsPerUnitTime
+                );
+                (bool noOverflowSum, uint256 rewardsSum) = SafeMath.tryAdd(
+                    _rewards,
+                    rewardsProduct / condition.timeUnit
+                );
+
+                _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
             }
         }
     }

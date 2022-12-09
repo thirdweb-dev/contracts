@@ -689,3 +689,90 @@ contract Macro_TokenStake_Rewards18_Staking6_Test is BaseTest {
         assertEq(_availableRewards, 200e18);
     }
 }
+
+contract Macro_TokenStakeTest is BaseTest {
+    TokenStake internal stakeContract;
+
+    uint256 internal timeUnit;
+    uint256 internal rewardsPerUnitTime;
+    uint256 internal rewardRatioNumerator;
+    uint256 internal rewardRatioDenominator;
+    uint256 internal tokenAmount = 100;
+    address internal stakerOne = address(0x345);
+    address internal stakerTwo = address(0x567);
+
+    function setUp() public override {
+        super.setUp();
+
+        timeUnit = 60;
+        rewardRatioNumerator = 3;
+        rewardRatioDenominator = 50;
+        // mint 1000 tokens to stakerOne
+        erc20Aux.mint(stakerOne, tokenAmount);
+        // mint 1000 tokens to stakerOne
+        erc20Aux.mint(stakerTwo, tokenAmount);
+        // mint reward tokens to contract admin
+        erc20.mint(deployer, 1000 ether);
+
+        stakeContract = TokenStake(getContract("TokenStake"));
+
+        // set approvals
+        vm.prank(stakerOne);
+        erc20Aux.approve(address(stakeContract), type(uint256).max);
+        vm.prank(stakerTwo);
+        erc20Aux.approve(address(stakeContract), type(uint256).max);
+
+        vm.prank(deployer);
+        erc20.transfer(address(stakeContract), 100 ether);
+    }
+
+    // Demostrate setting unitTime to 0 locks the tokens irreversibly
+    function testToken_adminLockTokens() public {
+        //================ stake tokens
+        vm.warp(1);
+
+        // Two users stake 1 tokens each
+        vm.prank(stakerOne);
+        stakeContract.stake(tokenAmount);
+        vm.prank(stakerTwo);
+        stakeContract.stake(tokenAmount);
+
+        // set timeUnit to zero
+        uint256 newTimeUnit = 0;
+        vm.prank(deployer);
+        vm.expectRevert("time-unit can't be 0");
+        stakeContract.setTimeUnit(newTimeUnit);
+    }
+
+    function testToken_demostrate_adminRewardsLock() public {
+        //================ stake tokens
+        vm.warp(1);
+        // Two users stake 1 tokens each
+        vm.prank(stakerOne);
+        stakeContract.stake(tokenAmount);
+        vm.prank(stakerTwo);
+        stakeContract.stake(tokenAmount);
+
+        // set timeUnit to a fraction of uint256 maximum value
+        uint256 newRewardsPerTimeUnit = type(uint256).max / 100;
+        vm.prank(deployer);
+        stakeContract.setRewardRatio(newRewardsPerTimeUnit, 1);
+
+        vm.warp(1 days);
+
+        // stakerOne and stakerTwo can't withdraw their tokens
+        // vm.expectRevert(stdError.arithmeticError);
+        vm.prank(stakerOne);
+        stakeContract.withdraw(tokenAmount);
+
+        // vm.expectRevert(stdError.arithmeticError);
+        vm.prank(stakerTwo);
+        stakeContract.withdraw(tokenAmount);
+
+        // rewardRatio can't be changed back
+        newRewardsPerTimeUnit = 60;
+        // vm.expectRevert(stdError.arithmeticError);
+        vm.prank(deployer);
+        stakeContract.setRewardRatio(newRewardsPerTimeUnit, 1);
+    }
+}

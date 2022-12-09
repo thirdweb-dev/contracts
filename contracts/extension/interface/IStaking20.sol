@@ -60,10 +60,10 @@ interface IStaking20 {
      */
     struct StakingCondition {
         uint256 timeUnit;
-        uint128 rewardRatioNumerator;
-        uint128 rewardRatioDenominator;
-        uint128 startTimestamp;
-        uint128 endTimestamp;
+        uint256 rewardRatioNumerator;
+        uint256 rewardRatioDenominator;
+        uint256 startTimestamp;
+        uint256 endTimestamp;
     }
 
     /**

@@ -2,6 +2,7 @@
 pragma solidity ^0.8.11;
 
 import "../openzeppelin-presets/security/ReentrancyGuard.sol";
+import "../openzeppelin-presets/utils/math/SafeMath.sol";
 import "../eip/interface/IERC721.sol";
 
 import "./interface/IStaking721.sol";
@@ -158,11 +159,11 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
         _rewards = _availableRewards(_staker);
     }
 
-    function getTimeUnit() public view returns (uint128 _timeUnit) {
+    function getTimeUnit() public view returns (uint256 _timeUnit) {
         _timeUnit = stakingConditions[nextConditionId - 1].timeUnit;
     }
 
-    function getRewardsPerUnitTime() public view returns (uint128 _rewardsPerUnitTime) {
+    function getRewardsPerUnitTime() public view returns (uint256 _rewardsPerUnitTime) {
         _rewardsPerUnitTime = stakingConditions[nextConditionId - 1].rewardsPerUnitTime;
     }
 
@@ -277,14 +278,14 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
         nextConditionId += 1;
 
         stakingConditions[conditionId] = StakingCondition({
-            timeUnit: uint128(_timeUnit),
-            rewardsPerUnitTime: uint128(_rewardsPerUnitTime),
-            startTimestamp: uint128(block.timestamp),
+            timeUnit: _timeUnit,
+            rewardsPerUnitTime: _rewardsPerUnitTime,
+            startTimestamp: block.timestamp,
             endTimestamp: 0
         });
 
         if (conditionId > 0) {
-            stakingConditions[conditionId - 1].endTimestamp = uint128(block.timestamp);
+            stakingConditions[conditionId - 1].endTimestamp = block.timestamp;
         }
     }
 
@@ -301,9 +302,13 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
             uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
             uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
 
-            _rewards +=
-                ((endTime - startTime) * staker.amountStaked * condition.rewardsPerUnitTime) /
-                condition.timeUnit;
+            (bool noOverflowProduct, uint256 rewardsProduct) = SafeMath.tryMul(
+                (endTime - startTime) * staker.amountStaked,
+                condition.rewardsPerUnitTime
+            );
+            (bool noOverflowSum, uint256 rewardsSum) = SafeMath.tryAdd(_rewards, rewardsProduct / condition.timeUnit);
+
+            _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
         }
     }
 

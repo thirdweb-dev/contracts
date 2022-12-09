@@ -2,6 +2,7 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "../openzeppelin-presets/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./interface/IStaking721.sol";
@@ -160,11 +161,11 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
         _rewards = _availableRewards(_staker);
     }
 
-    function getTimeUnit() public view returns (uint128 _timeUnit) {
+    function getTimeUnit() public view returns (uint256 _timeUnit) {
         _timeUnit = stakingConditions[nextConditionId - 1].timeUnit;
     }
 
-    function getRewardsPerUnitTime() public view returns (uint128 _rewardsPerUnitTime) {
+    function getRewardsPerUnitTime() public view returns (uint256 _rewardsPerUnitTime) {
         _rewardsPerUnitTime = stakingConditions[nextConditionId - 1].rewardsPerUnitTime;
     }
 
@@ -193,7 +194,11 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
                         IERC721(_nftCollection).isApprovedForAll(msg.sender, address(this))),
                 "Not owned or approved"
             );
-            IERC721(_nftCollection).transferFrom(msg.sender, address(this), _tokenIds[i]);
+
+            isStaking = 2;
+            IERC721(_nftCollection).safeTransferFrom(msg.sender, address(this), _tokenIds[i]);
+            isStaking = 1;
+
             stakerAddress[_tokenIds[i]] = msg.sender;
 
             if (!isIndexed[_tokenIds[i]]) {
@@ -230,7 +235,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
         for (uint256 i = 0; i < len; ++i) {
             require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
             stakerAddress[_tokenIds[i]] = address(0);
-            IERC721(_nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
+            IERC721(_nftCollection).safeTransferFrom(address(this), msg.sender, _tokenIds[i]);
         }
 
         emit TokensWithdrawn(msg.sender, _tokenIds);
@@ -275,14 +280,14 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
         nextConditionId += 1;
 
         stakingConditions[conditionId] = StakingCondition({
-            timeUnit: uint128(_timeUnit),
-            rewardsPerUnitTime: uint128(_rewardsPerUnitTime),
-            startTimestamp: uint128(block.timestamp),
+            timeUnit: _timeUnit,
+            rewardsPerUnitTime: _rewardsPerUnitTime,
+            startTimestamp: block.timestamp,
             endTimestamp: 0
         });
 
         if (conditionId > 0) {
-            stakingConditions[conditionId - 1].endTimestamp = uint128(block.timestamp);
+            stakingConditions[conditionId - 1].endTimestamp = block.timestamp;
         }
     }
 
@@ -299,9 +304,13 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
             uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
             uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
 
-            _rewards +=
-                ((endTime - startTime) * staker.amountStaked * condition.rewardsPerUnitTime) /
-                condition.timeUnit;
+            (bool noOverflowProduct, uint256 rewardsProduct) = SafeMath.tryMul(
+                (endTime - startTime) * staker.amountStaked,
+                condition.rewardsPerUnitTime
+            );
+            (bool noOverflowSum, uint256 rewardsSum) = SafeMath.tryAdd(_rewards, rewardsProduct / condition.timeUnit);
+
+            _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
         }
     }
 
