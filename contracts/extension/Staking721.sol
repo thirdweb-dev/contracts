@@ -229,6 +229,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
                 if (stakersArray[i] == _stakeMsgSender()) {
                     stakersArray[i] = stakersArray[stakersArray.length - 1];
                     stakersArray.pop();
+                    break;
                 }
             }
         }

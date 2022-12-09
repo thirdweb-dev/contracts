@@ -231,6 +231,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
                 if (stakersArray[i] == _stakeMsgSender()) {
                     stakersArray[i] = stakersArray[stakersArray.length - 1];
                     stakersArray.pop();
+                    break;
                 }
             }
         }
