@@ -136,7 +136,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
      *  @return _rewards        Available reward amount.
      */
     function getStakeInfo(address _staker)
-        public
+        external
         view
         virtual
         returns (uint256[] memory _tokensStaked, uint256 _rewards)

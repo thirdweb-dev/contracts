@@ -193,7 +193,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
      *  @return _rewards        Available reward amount.
      */
     function getStakeInfoForToken(uint256 _tokenId, address _staker)
-        public
+        external
         view
         virtual
         returns (uint256 _tokensStaked, uint256 _rewards)
@@ -211,7 +211,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
      *  @return _totalRewards   Total rewards available.
      */
     function getStakeInfo(address _staker)
-        public
+        external
         view
         virtual
         returns (

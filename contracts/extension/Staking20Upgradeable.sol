@@ -148,7 +148,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
      *  @return _tokensStaked   Amount of tokens staked.
      *  @return _rewards        Available reward amount.
      */
-    function getStakeInfo(address _staker) public view virtual returns (uint256 _tokensStaked, uint256 _rewards) {
+    function getStakeInfo(address _staker) external view virtual returns (uint256 _tokensStaked, uint256 _rewards) {
         _tokensStaked = stakers[_staker].amountStaked;
         _rewards = _availableRewards(_staker);
     }
