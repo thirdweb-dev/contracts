@@ -47,7 +47,6 @@ contract EditionStake is
         uint256 _defaultTimeUnit,
         uint256 _defaultRewardsPerUnitTime
     ) external initializer {
-        __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
 
         rewardToken = _rewardToken;

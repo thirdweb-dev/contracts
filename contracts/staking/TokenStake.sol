@@ -45,7 +45,6 @@ contract TokenStake is
         uint256 _rewardRatioNumerator,
         uint256 _rewardRatioDenominator
     ) external initializer {
-        __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
 
         require(_rewardToken != _stakingToken, "Reward Token and Staking Token can't be same.");

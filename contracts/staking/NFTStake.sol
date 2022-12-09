@@ -47,7 +47,6 @@ contract NFTStake is
         uint256 _timeUnit,
         uint256 _rewardsPerUnitTime
     ) external initializer {
-        __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
 
         rewardToken = _rewardToken;
