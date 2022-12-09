@@ -315,7 +315,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
             address[] memory _stakersArray = stakersArray[_tokenId];
             for (uint256 i = 0; i < _stakersArray.length; ++i) {
                 if (_stakersArray[i] == _stakeMsgSender()) {
-                    stakersArray[_tokenId][i] = stakersArray[_tokenId][_stakersArray.length - 1];
+                    stakersArray[_tokenId][i] = _stakersArray[_stakersArray.length - 1];
                     stakersArray[_tokenId].pop();
                     break;
                 }

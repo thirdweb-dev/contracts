@@ -198,7 +198,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
             address[] memory _stakersArray = stakersArray;
             for (uint256 i = 0; i < _stakersArray.length; ++i) {
                 if (_stakersArray[i] == _stakeMsgSender()) {
-                    stakersArray[i] = stakersArray[_stakersArray.length - 1];
+                    stakersArray[i] = _stakersArray[_stakersArray.length - 1];
                     stakersArray.pop();
                     break;
                 }

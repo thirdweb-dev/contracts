@@ -225,9 +225,10 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
         _updateUnclaimedRewardsForStaker(_stakeMsgSender());
 
         if (_amountStaked == len) {
-            for (uint256 i = 0; i < stakersArray.length; ++i) {
-                if (stakersArray[i] == _stakeMsgSender()) {
-                    stakersArray[i] = stakersArray[stakersArray.length - 1];
+            address[] memory _stakersArray = stakersArray;
+            for (uint256 i = 0; i < _stakersArray.length; ++i) {
+                if (_stakersArray[i] == _stakeMsgSender()) {
+                    stakersArray[i] = _stakersArray[_stakersArray.length - 1];
                     stakersArray.pop();
                     break;
                 }
