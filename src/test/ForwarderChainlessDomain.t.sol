@@ -50,6 +50,7 @@ contract ForwarderChainlessDomainTest is BaseTest {
 
     function signForwarderRequest(ForwarderChainlessDomain.ForwardRequest memory forwardRequest, uint256 privateKey)
         internal
+        view
         returns (bytes memory)
     {
         bytes memory encodedRequest = abi.encode(

@@ -276,10 +276,10 @@ contract TokenStakeTest is BaseTest {
 
     function test_state_setTimeUnit() public {
         // set value and check
-        uint256 timeUnit = 100;
+        uint256 timeUnitToSet = 100;
         vm.prank(deployer);
-        stakeContract.setTimeUnit(timeUnit);
-        assertEq(timeUnit, stakeContract.timeUnit());
+        stakeContract.setTimeUnit(timeUnitToSet);
+        assertEq(timeUnitToSet, stakeContract.timeUnit());
 
         //================ stake tokens
         vm.warp(1);
@@ -302,7 +302,7 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardRatioNumerator) / timeUnit) /
+            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardRatioNumerator) / timeUnitToSet) /
                 rewardRatioDenominator)
         );
 
