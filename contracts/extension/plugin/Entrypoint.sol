@@ -25,8 +25,6 @@ contract Entrypoint is Multicall {
 
     fallback() external payable virtual {
         address extension = IMap(functionMap).getExtensionForFunction(msg.sig);
-        require(extension != address(0), "Function does not exist");
-
         _delegate(extension);
     }
 
