@@ -56,6 +56,42 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 |---|---|---|
 | _0 | uint256[] | undefined |
 
+### burn
+
+```solidity
+function burn(address _owner, uint256 _tokenId, uint256 _amount) external nonpayable
+```
+
+Lets an owner or approved operator burn NFTs of the given tokenId.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _owner | address | The owner of the NFT to burn. |
+| _tokenId | uint256 | The tokenId of the NFT to burn. |
+| _amount | uint256 | The amount of the NFT to burn. |
+
+### burnBatch
+
+```solidity
+function burnBatch(address _owner, uint256[] _tokenIds, uint256[] _amounts) external nonpayable
+```
+
+Lets an owner or approved operator burn NFTs of the given tokenIds.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _owner | address | The owner of the NFTs to burn. |
+| _tokenIds | uint256[] | The tokenIds of the NFTs to burn. |
+| _amounts | uint256[] | The amounts of the NFTs to burn. |
+
 ### claim
 
 ```solidity

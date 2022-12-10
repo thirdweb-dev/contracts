@@ -92,6 +92,54 @@ contract ERC1155Drop is
             interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
     }
 
+    /*//////////////////////////////////////////////////////////////
+                        Minting/burning logic
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice         Lets an owner or approved operator burn NFTs of the given tokenId.
+     *
+     *  @param _owner   The owner of the NFT to burn.
+     *  @param _tokenId The tokenId of the NFT to burn.
+     *  @param _amount  The amount of the NFT to burn.
+     */
+    function burn(
+        address _owner,
+        uint256 _tokenId,
+        uint256 _amount
+    ) external virtual {
+        address caller = msg.sender;
+
+        require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
+        require(balanceOf[_owner][_tokenId] >= _amount, "Not enough tokens owned");
+
+        _burn(_owner, _tokenId, _amount);
+    }
+
+    /**
+     *  @notice         Lets an owner or approved operator burn NFTs of the given tokenIds.
+     *
+     *  @param _owner    The owner of the NFTs to burn.
+     *  @param _tokenIds The tokenIds of the NFTs to burn.
+     *  @param _amounts  The amounts of the NFTs to burn.
+     */
+    function burnBatch(
+        address _owner,
+        uint256[] memory _tokenIds,
+        uint256[] memory _amounts
+    ) external virtual {
+        address caller = msg.sender;
+
+        require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
+        require(_tokenIds.length == _amounts.length, "Length mismatch");
+
+        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
+            require(balanceOf[_owner][_tokenIds[i]] >= _amounts[i], "Not enough tokens owned");
+        }
+
+        _burnBatch(_owner, _tokenIds, _amounts);
+    }
+
     /*///////////////////////////////////////////////////////////////
                     Overriden metadata logic
     //////////////////////////////////////////////////////////////*/
