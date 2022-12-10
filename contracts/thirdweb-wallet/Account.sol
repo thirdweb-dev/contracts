@@ -6,6 +6,7 @@ import "./interface/IAccount.sol";
 
 // ========== Utils ==========
 import "../extension/Multicall.sol";
+import "../extension/PermissionsEnumerable.sol";
 
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
@@ -17,23 +18,25 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
  *      - Sign messages
  *      - Own assets
  */
-contract Account is IAccount, EIP712, Multicall {
+contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
                             Constants
     //////////////////////////////////////////////////////////////*/
 
+    bytes32 public constant SIGNER_ROLE = keccak256("SIGNER");
+
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
 
     bytes32 private constant EXECUTE_TYPEHASH =
         keccak256(
-            "TransactionParams(address target,bytes data,uint256 nonce,uint256 value,uint256 gas,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+            "TransactionParams(address signer,address target,bytes data,uint256 nonce,uint256 value,uint256 gas,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
 
     bytes32 private constant DEPLOY_TYPEHASH =
         keccak256(
-            "DeployParams(bytes bytecode,bytes32 salt,uint256 value,uint256 nonce,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+            "DeployParams(address signer,bytes bytecode,bytes32 salt,uint256 value,uint256 nonce,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
 
     /*///////////////////////////////////////////////////////////////
@@ -42,9 +45,6 @@ contract Account is IAccount, EIP712, Multicall {
 
     /// @notice The admin of the wallet; the only address that is a valid `msg.sender` in this contract.
     address public controller;
-
-    /// @notice The signer of the wallet; a signature from this signer must be provided to execute with the wallet.
-    address public signer;
 
     /// @notice The nonce of the wallet.
     uint256 public nonce;
@@ -55,7 +55,9 @@ contract Account is IAccount, EIP712, Multicall {
 
     constructor(address _controller, address _signer) payable EIP712("thirdwebWallet", "1") {
         controller = _controller;
-        signer = _signer;
+        _setupRole(SIGNER_ROLE, _signer);
+
+        emit SignerAdded(_signer);
     }
 
     /// @dev Checks whether the caller is `controller`.
@@ -99,6 +101,7 @@ contract Account is IAccount, EIP712, Multicall {
         bytes32 messageHash = keccak256(
             abi.encode(
                 EXECUTE_TYPEHASH,
+                _params.signer,
                 _params.target,
                 keccak256(_params.data),
                 _params.nonce,
@@ -108,10 +111,17 @@ contract Account is IAccount, EIP712, Multicall {
                 _params.validityEndTimestamp
             )
         );
-        _validateSignature(messageHash, _signature);
+        _validateSignature(_params.signer, messageHash, _signature);
         success = _call(_params);
 
-        emit TransactionExecuted(signer, _params.target, _params.data, _params.nonce, _params.value, _params.gas);
+        emit TransactionExecuted(
+            _params.signer,
+            _params.target,
+            _params.data,
+            _params.nonce,
+            _params.value,
+            _params.gas
+        );
     }
 
     /// @notice Deploys a smart contract.
@@ -125,6 +135,7 @@ contract Account is IAccount, EIP712, Multicall {
         bytes32 messageHash = keccak256(
             abi.encode(
                 DEPLOY_TYPEHASH,
+                _params.signer,
                 keccak256(bytes(_params.bytecode)),
                 _params.salt,
                 _params.value,
@@ -133,26 +144,33 @@ contract Account is IAccount, EIP712, Multicall {
                 _params.validityEndTimestamp
             )
         );
-        _validateSignature(messageHash, _signature);
+        _validateSignature(_params.signer, messageHash, _signature);
         deployment = Create2.deploy(_params.value, _params.salt, _params.bytecode);
         emit ContractDeployed(deployment);
     }
 
-    /// @notice Updates the signer of this contract.
-    function updateSigner(address _newSigner) external onlyController returns (bool success) {
-        address prevSigner = signer;
-        signer = _newSigner;
+    /// @notice Adds a signer to this contract.
+    function addSigner(address _signer) external onlyController returns (bool success) {
+        grantRole(SIGNER_ROLE, _signer);
         success = true;
 
-        emit SignerUpdated(prevSigner, _newSigner);
+        emit SignerAdded(_signer);
+    }
+
+    /// @notice Updates the signer of this contract.
+    function removeSigner(address _signer) external onlyController returns (bool success) {
+        revokeRole(SIGNER_ROLE, _signer);
+        success = true;
+
+        emit SignerRemoved(_signer);
     }
 
     /// @notice See EIP-1271. Returns whether a signature is a valid signature made on behalf of this contract.
     function isValidSignature(bytes32 _hash, bytes calldata _signature) external view override returns (bytes4) {
-        address signer_ = _hash.recover(_signature);
+        address signer = _hash.recover(_signature);
 
         // Validate signatures
-        if (signer == signer_) {
+        if (hasRole(SIGNER_ROLE, signer)) {
             return MAGICVALUE;
         } else {
             return 0xffffffff;
@@ -193,15 +211,18 @@ contract Account is IAccount, EIP712, Multicall {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Validates a signature.
-    function _validateSignature(bytes32 _messageHash, bytes calldata _signature) internal view {
+    function _validateSignature(
+        address _signer,
+        bytes32 _messageHash,
+        bytes calldata _signature
+    ) internal view {
         bool validSignature = false;
-        address signer_ = signer;
 
-        if (signer_.code.length > 0) {
-            validSignature = MAGICVALUE == IERC1271(signer_).isValidSignature(_messageHash, _signature);
+        if (_signer.code.length > 0) {
+            validSignature = MAGICVALUE == IERC1271(_signer).isValidSignature(_messageHash, _signature);
         } else {
             address recoveredSigner = _hashTypedDataV4(_messageHash).recover(_signature);
-            validSignature = signer_ == recoveredSigner;
+            validSignature = _signer == recoveredSigner && hasRole(SIGNER_ROLE, _signer);
         }
 
         require(validSignature, "Account: invalid signer.");

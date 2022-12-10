@@ -30,6 +30,7 @@ interface IAccount is IERC1271 {
      *  @param validityEndTimestamp The timestamp at and after which the account creation request is invalid.
      */
     struct DeployParams {
+        address signer;
         bytes bytecode;
         bytes32 salt;
         uint256 value;
@@ -50,6 +51,7 @@ interface IAccount is IERC1271 {
      *  @param validityEndTimestamp The timestamp at and after which the account creation request is invalid.
      */
     struct TransactionParams {
+        address signer;
         address target;
         bytes data;
         uint256 nonce;
@@ -63,8 +65,11 @@ interface IAccount is IERC1271 {
                                 Events
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Emitted when the signer of the wallet is updated.
-    event SignerUpdated(address prevSigner, address newSigner);
+    /// @notice Emitted when the signer is added to the account.
+    event SignerAdded(address signer);
+
+    /// @notice Emitted when the signer is removed from the account.
+    event SignerRemoved(address signer);
 
     /// @notice Emitted when the wallet deploys a smart contract.
     event ContractDeployed(address indexed deployment);
@@ -100,9 +105,16 @@ interface IAccount is IERC1271 {
     function deploy(DeployParams calldata params, bytes memory signature) external payable returns (address deployment);
 
     /**
-     *  @notice Updates the signer of a smart contract.
+     *  @notice Adds a signer to the smart contract.
      *
-     *  @param newSigner The address to set as the signer of the smart contract.
+     *  @param signer The address to add as a signer to the smart contract.
      */
-    function updateSigner(address newSigner) external returns (bool success);
+    function addSigner(address signer) external returns (bool success);
+
+    /**
+     *  @notice Removes a signer to the smart contract.
+     *
+     *  @param signer The address to remove as a signer of the smart contract.
+     */
+    function removeSigner(address signer) external returns (bool success);
 }
