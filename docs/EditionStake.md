@@ -94,40 +94,6 @@ function contractVersion() external pure returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined |
 
-### defaultRewardsPerUnitTime
-
-```solidity
-function defaultRewardsPerUnitTime() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### defaultTimeUnit
-
-```solidity
-function defaultTimeUnit() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### edition
 
 ```solidity
@@ -144,6 +110,79 @@ function edition() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
+
+### getDefaultRewardsPerUnitTime
+
+```solidity
+function getDefaultRewardsPerUnitTime() external view returns (uint256 _rewardsPerUnitTime)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _rewardsPerUnitTime | uint256 | undefined |
+
+### getDefaultTimeUnit
+
+```solidity
+function getDefaultTimeUnit() external view returns (uint256 _timeUnit)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _timeUnit | uint256 | undefined |
+
+### getRewardTokenBalance
+
+```solidity
+function getRewardTokenBalance() external view returns (uint256 _rewardsAvailableInContract)
+```
+
+View total rewards available in the staking contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _rewardsAvailableInContract | uint256 | undefined |
+
+### getRewardsPerUnitTime
+
+```solidity
+function getRewardsPerUnitTime(uint256 _tokenId) external view returns (uint256 _rewardsPerUnitTime)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _rewardsPerUnitTime | uint256 | undefined |
 
 ### getRoleAdmin
 
@@ -259,6 +298,28 @@ View amount staked and rewards for a user, for a given token-id.
 |---|---|---|
 | _tokensStaked | uint256 |   Amount of tokens staked for given token-id. |
 | _rewards | uint256 |        Available reward amount. |
+
+### getTimeUnit
+
+```solidity
+function getTimeUnit(uint256 _tokenId) external view returns (uint256 _timeUnit)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _timeUnit | uint256 | undefined |
 
 ### grantRole
 
@@ -462,7 +523,7 @@ function onERC1155BatchReceived(address operator, address from, uint256[] ids, u
 ### onERC1155Received
 
 ```solidity
-function onERC1155Received(address, address, uint256, uint256, bytes) external pure returns (bytes4)
+function onERC1155Received(address, address, uint256, uint256, bytes) external nonpayable returns (bytes4)
 ```
 
 
@@ -535,28 +596,6 @@ function rewardToken() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### rewardsPerUnitTime
-
-```solidity
-function rewardsPerUnitTime(uint256) external view returns (uint256)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### setContractURI
 
@@ -660,7 +699,7 @@ Stake ERC721 Tokens.
 ### stakers
 
 ```solidity
-function stakers(uint256, address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards)
+function stakers(uint256, address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards, uint256 conditionIdOflastUpdate)
 ```
 
 
@@ -681,6 +720,7 @@ function stakers(uint256, address) external view returns (uint256 amountStaked, 
 | amountStaked | uint256 | undefined |
 | timeOfLastUpdate | uint256 | undefined |
 | unclaimedRewards | uint256 | undefined |
+| conditionIdOflastUpdate | uint256 | undefined |
 
 ### stakersArray
 
@@ -713,7 +753,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-*Returns true if this contract implements the interface defined by `interfaceId`. See the corresponding https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section] to learn more about how these ids are created. This function call must use less than 30 000 gas.*
+
 
 #### Parameters
 
@@ -726,28 +766,6 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined |
-
-### timeUnit
-
-```solidity
-function timeUnit(uint256) external view returns (uint256)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### withdraw
 
@@ -818,6 +836,22 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+### RewardTokensWithdrawnByAdmin
+
+```solidity
+event RewardTokensWithdrawnByAdmin(uint256 _amount)
+```
+
+
+
+*Emitted when contract admin withdraws reward tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount  | uint256 | undefined |
 
 ### RewardsClaimed
 

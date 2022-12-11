@@ -38,6 +38,41 @@ Returns the contract metadata URI.
 |---|---|---|
 | _0 | string | undefined |
 
+### getRewardRatio
+
+```solidity
+function getRewardRatio() external view returns (uint256 _numerator, uint256 _denominator)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _numerator | uint256 | undefined |
+| _denominator | uint256 | undefined |
+
+### getRewardTokenBalance
+
+```solidity
+function getRewardTokenBalance() external view returns (uint256 _rewardsAvailableInContract)
+```
+
+View total rewards available in the staking contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _rewardsAvailableInContract | uint256 | undefined |
+
 ### getStakeInfo
 
 ```solidity
@@ -60,6 +95,23 @@ View amount staked and rewards for a user.
 |---|---|---|
 | _tokensStaked | uint256 |   Amount of tokens staked. |
 | _rewards | uint256 |        Available reward amount. |
+
+### getTimeUnit
+
+```solidity
+function getTimeUnit() external view returns (uint256 _timeUnit)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _timeUnit | uint256 | undefined |
 
 ### multicall
 
@@ -100,40 +152,6 @@ Returns the owner of the contract.
 |---|---|---|
 | _0 | address | undefined |
 
-### rewardRatioDenominator
-
-```solidity
-function rewardRatioDenominator() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### rewardRatioNumerator
-
-```solidity
-function rewardRatioNumerator() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### rewardToken
 
 ```solidity
@@ -150,6 +168,23 @@ function rewardToken() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
+
+### rewardTokenDecimals
+
+```solidity
+function rewardTokenDecimals() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### setContractURI
 
@@ -235,7 +270,7 @@ Stake ERC20 Tokens.
 ### stakers
 
 ```solidity
-function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards)
+function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards, uint256 conditionIdOflastUpdate)
 ```
 
 
@@ -255,6 +290,7 @@ function stakers(address) external view returns (uint256 amountStaked, uint256 t
 | amountStaked | uint256 | undefined |
 | timeOfLastUpdate | uint256 | undefined |
 | unclaimedRewards | uint256 | undefined |
+| conditionIdOflastUpdate | uint256 | undefined |
 
 ### stakersArray
 
@@ -278,10 +314,27 @@ function stakersArray(uint256) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### timeUnit
+### stakingTokenBalance
 
 ```solidity
-function timeUnit() external view returns (uint256)
+function stakingTokenBalance() external view returns (uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### stakingTokenDecimals
+
+```solidity
+function stakingTokenDecimals() external view returns (uint256)
 ```
 
 
