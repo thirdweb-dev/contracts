@@ -55,6 +55,7 @@ contract BaseERC20SignatureMintVoteTest is BaseUtilTest {
 
     function signMintRequest(ERC20SignatureMintVote.MintRequest memory _request, uint256 _privateKey)
         internal
+        view
         returns (bytes memory)
     {
         bytes memory encodedRequest = abi.encode(

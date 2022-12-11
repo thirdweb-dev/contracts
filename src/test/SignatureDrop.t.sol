@@ -83,6 +83,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
 
     function signMintRequest(SignatureDrop.MintRequest memory _request, uint256 privateKey)
         internal
+        view
         returns (bytes memory)
     {
         bytes memory encodedRequest = abi.encode(
@@ -731,6 +732,7 @@ contract SignatureDropTest is BaseTest {
 
     function signMintRequest(SignatureDrop.MintRequest memory mintrequest, uint256 privateKey)
         internal
+        view
         returns (bytes memory)
     {
         bytes memory encodedRequest = abi.encode(

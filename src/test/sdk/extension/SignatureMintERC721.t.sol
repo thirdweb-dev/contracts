@@ -77,6 +77,7 @@ contract ExtensionSignatureMintERC721 is DSTest, Test {
 
     function signMintRequest(MySigMint721.MintRequest memory _request, uint256 _privateKey)
         internal
+        view
         returns (bytes memory)
     {
         bytes memory encodedRequest = abi.encode(
