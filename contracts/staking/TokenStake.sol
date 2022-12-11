@@ -74,10 +74,13 @@ contract TokenStake is
     }
 
     /// @dev Admin can withdraw excess reward tokens.
-    function withdrawRewardTokens(uint256 _amount) external {
+    function withdrawRewardTokens(uint256 _amount) external nonReentrant {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
         CurrencyTransferLib.transferCurrency(rewardToken, address(this), _msgSender(), _amount);
+
+        // The withdrawal shouldn't reduce staking token balance. `>=` accounts for any accidental transfers.
+        require(IERC20(token).balanceOf(address(this)) >= stakingTokenBalance, "Staking token balance reduced.");
 
         emit RewardTokensWithdrawnByAdmin(_amount);
     }

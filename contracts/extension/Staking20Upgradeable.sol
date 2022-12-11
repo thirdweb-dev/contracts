@@ -29,6 +29,9 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     /// @dev List of accounts that have staked that token-id.
     address[] public stakersArray;
 
+    /// @dev Total amount of tokens staked in the contract.
+    uint256 public stakingTokenBalance;
+
     ///@dev Next staking condition Id. Tracks number of conditon updates so far.
     uint256 private nextConditionId;
 
@@ -182,6 +185,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         CurrencyTransferLib.transferCurrency(_token, _stakeMsgSender(), address(this), _amount);
 
         stakers[_stakeMsgSender()].amountStaked += _amount;
+        stakingTokenBalance += _amount;
 
         emit TokensStaked(_stakeMsgSender(), _amount);
     }
@@ -205,6 +209,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
             }
         }
         stakers[_stakeMsgSender()].amountStaked -= _amount;
+        stakingTokenBalance -= _amount;
 
         CurrencyTransferLib.transferCurrency(token, address(this), _stakeMsgSender(), _amount);
 
