@@ -182,12 +182,14 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
 
+        uint256 balanceBefore = IERC20(_token).balanceOf(address(this));
         CurrencyTransferLib.transferCurrency(_token, _stakeMsgSender(), address(this), _amount);
+        uint256 actualAmount = IERC20(_token).balanceOf(address(this)) - balanceBefore;
 
-        stakers[_stakeMsgSender()].amountStaked += _amount;
-        stakingTokenBalance += _amount;
+        stakers[_stakeMsgSender()].amountStaked += actualAmount;
+        stakingTokenBalance += actualAmount;
 
-        emit TokensStaked(_stakeMsgSender(), _amount);
+        emit TokensStaked(_stakeMsgSender(), actualAmount);
     }
 
     /// @dev Withdraw logic. Override to add custom logic.

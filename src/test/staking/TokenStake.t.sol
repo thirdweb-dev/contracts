@@ -776,3 +776,69 @@ contract Macro_TokenStakeTest is BaseTest {
         stakeContract.setRewardRatio(newRewardsPerTimeUnit, 1);
     }
 }
+
+contract Macro_TokenStake_Tax is BaseTest {
+    TokenStake internal stakeContract;
+    uint256 internal tokenAmount = 100 ether;
+    address internal stakerOne = address(0x345);
+    address internal stakerTwo = address(0x567);
+
+    function setUp() public override {
+        super.setUp();
+
+        stakeContract = TokenStake(getContract("TokenStake"));
+
+        // mint reward tokens to contract admin
+        erc20.mint(deployer, tokenAmount);
+        // mint 100 tokens to stakers
+        erc20Aux.mint(stakerOne, tokenAmount);
+        erc20Aux.mint(stakerTwo, tokenAmount);
+
+        // Activate Mock tax
+        erc20Aux.toggleTax();
+
+        vm.prank(stakerOne);
+        erc20Aux.approve(address(stakeContract), type(uint256).max);
+
+        vm.prank(deployer);
+        erc20.transfer(address(stakeContract), 100 ether);
+    }
+
+    // Demonstrate griefer can drain staked tokens for other users
+    function testToken_demonstrate_inaccurate_amount() public {
+        // First user stakes 100 tokens
+        vm.prank(stakerOne);
+        stakeContract.stake(tokenAmount);
+
+        // Since there is 10% tax only 90 should be in the contract
+        uint256 stakingTokenBalance = erc20Aux.balanceOf(address(stakeContract));
+        assertEq(stakingTokenBalance, 90 ether);
+        // Assert the amount was correctly assigned
+        (uint256 stakingTokenAmount, ) = stakeContract.getStakeInfo(stakerOne);
+        assertEq(stakingTokenAmount, 90 ether);
+
+        // Users stake and withdraw tokens, draining other users staked balances
+        // for (uint256 i = 1; i <= 9; i++) {
+        //     address staker = vm.addr(i);
+        //     erc20Aux.mint(staker, tokenAmount);
+        //     vm.startPrank(staker);
+        //     erc20Aux.approve(address(stakeContract), type(uint256).max);
+        //     stakeContract.stake(tokenAmount);
+        //     stakeContract.withdraw(tokenAmount);
+        //     vm.stopPrank();
+        // }
+
+        // // Staked amount still reamins unchanged for stakerOne
+        // (stakingTokenAmount, ) = stakeContract.getStakeInfo(stakerOne);
+        // assertEq(stakingTokenAmount, 100 ether);
+
+        // // However there are no tokens left in the contract
+        // stakingTokenBalance = erc20Aux.balanceOf(address(stakeContract));
+        // assertEq(stakingTokenBalance, 0 ether);
+
+        // // StakerOne can't withdraw since there is no balance left
+        // vm.expectRevert("ERC20: transfer amount exceeds balance");
+        // vm.prank(stakerOne);
+        // stakeContract.withdraw(stakingTokenAmount);
+    }
+}
