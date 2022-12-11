@@ -60,7 +60,7 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155 {
      *  @param _rewards   Amount of tokens to be given out as reward.
      *
      */
-    function _mintRewards(address _staker, uint256 _rewards) internal override {
+    function _mintRewards(address _staker, uint256 _rewards) internal virtual override {
         // Mint or transfer reward-tokens here.
         // e.g.
         //
