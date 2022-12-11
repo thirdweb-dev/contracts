@@ -32,6 +32,9 @@ contract NFTStake is
     bytes32 private constant MODULE_TYPE = bytes32("NFTStake");
     uint256 private constant VERSION = 1;
 
+    /// @dev Emitted when contract admin withdraws reward tokens.
+    event RewardTokensWithdrawnByAdmin(uint256 _amount);
+
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
 
@@ -72,6 +75,13 @@ contract NFTStake is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
         CurrencyTransferLib.transferCurrency(rewardToken, address(this), _msgSender(), _amount);
+
+        emit RewardTokensWithdrawnByAdmin(_amount);
+    }
+
+    /// @notice View total rewards available in the staking contract.
+    function getRewardTokenBalance() external view override returns (uint256 _rewardsAvailableInContract) {
+        return IERC20(rewardToken).balanceOf(address(this));
     }
 
     /*///////////////////////////////////////////////////////////////

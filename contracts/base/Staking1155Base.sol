@@ -48,6 +48,11 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155 {
         rewardToken = _rewardToken;
     }
 
+    /// @notice View total rewards available in the staking contract.
+    function getRewardTokenBalance() external view override returns (uint256 _rewardsAvailableInContract) {
+        return IERC20(rewardToken).balanceOf(address(this));
+    }
+
     /*//////////////////////////////////////////////////////////////
                         Minting logic
     //////////////////////////////////////////////////////////////*/

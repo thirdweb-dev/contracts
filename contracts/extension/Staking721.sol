@@ -328,8 +328,14 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     }
 
     /*///////////////////////////////////////////////////////////////
-        Virtual functions: to be implemented in derived contract
+        Virtual functions to be implemented in derived contract
     //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice View total rewards available in the staking contract.
+     *
+     */
+    function getRewardTokenBalance() external view virtual returns (uint256 _rewardsAvailableInContract);
 
     /**
      *  @dev    Mint/Transfer ERC20 rewards to the staker. Must override.

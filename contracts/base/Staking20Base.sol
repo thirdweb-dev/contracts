@@ -51,6 +51,11 @@ contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
         rewardToken = _rewardToken;
     }
 
+    /// @notice View total rewards available in the staking contract.
+    function getRewardTokenBalance() external view override returns (uint256 _rewardsAvailableInContract) {
+        return IERC20(rewardToken).balanceOf(address(this));
+    }
+
     /*//////////////////////////////////////////////////////////////
                         Minting logic
     //////////////////////////////////////////////////////////////*/

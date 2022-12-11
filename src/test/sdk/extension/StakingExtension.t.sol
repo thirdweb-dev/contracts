@@ -25,6 +25,9 @@ contract MyStakingContract is ERC20, Staking721, IERC721Receiver {
         _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
     }
 
+    /// @notice View total rewards available in the staking contract.
+    function getRewardTokenBalance() external view override returns (uint256) {}
+
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 logic
     //////////////////////////////////////////////////////////////*/
