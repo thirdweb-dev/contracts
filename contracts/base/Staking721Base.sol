@@ -49,7 +49,7 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721 {
     }
 
     /// @notice View total rewards available in the staking contract.
-    function getRewardTokenBalance() external view override returns (uint256 _rewardsAvailableInContract) {
+    function getRewardTokenBalance() external view virtual override returns (uint256 _rewardsAvailableInContract) {
         return IERC20(rewardToken).balanceOf(address(this));
     }
 
@@ -83,7 +83,7 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721 {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether staking restrictions can be set in given execution context.
-    function _canSetStakeConditions() internal view override returns (bool) {
+    function _canSetStakeConditions() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 

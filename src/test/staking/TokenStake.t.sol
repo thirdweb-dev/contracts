@@ -280,8 +280,8 @@ contract TokenStakeTest is BaseTest {
         // set value and check
         uint256 timeUnitToSet = 100;
         vm.prank(deployer);
-        stakeContract.setTimeUnit(timeUnit);
-        assertEq(timeUnit, stakeContract.getTimeUnit());
+        stakeContract.setTimeUnit(timeUnitToSet);
+        assertEq(timeUnitToSet, stakeContract.getTimeUnit());
 
         //================ stake tokens
         vm.warp(1);
