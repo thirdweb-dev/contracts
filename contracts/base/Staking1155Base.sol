@@ -43,10 +43,14 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155 {
         address _rewardToken
     ) Staking1155(_edition) {
         _setupOwner(msg.sender);
-        _setDefaultTimeUnit(_defaultTimeUnit);
-        _setDefaultRewardsPerUnitTime(_defaultRewardsPerUnitTime);
+        _setDefaultStakingCondition(_defaultTimeUnit, _defaultRewardsPerUnitTime);
 
         rewardToken = _rewardToken;
+    }
+
+    /// @notice View total rewards available in the staking contract.
+    function getRewardTokenBalance() external view virtual override returns (uint256 _rewardsAvailableInContract) {
+        return IERC20(rewardToken).balanceOf(address(this));
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -79,7 +83,7 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155 {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether staking restrictions can be set in given execution context.
-    function _canSetStakeConditions() internal view override returns (bool) {
+    function _canSetStakeConditions() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 

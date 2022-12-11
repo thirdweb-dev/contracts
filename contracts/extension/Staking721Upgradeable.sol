@@ -2,6 +2,7 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "../openzeppelin-presets/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./interface/IStaking721.sol";
@@ -18,14 +19,17 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
     ///@dev Address of ERC721 NFT contract -- staked tokens belong to this contract.
     address public nftCollection;
 
-    /// @dev Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.
-    uint256 public timeUnit;
-
-    ///@dev Rewards accumulated per unit of time.
-    uint256 public rewardsPerUnitTime;
-
     ///@dev List of token-ids ever staked.
     uint256[] public indexedTokens;
+
+    /// @dev List of accounts that have staked their NFTs.
+    address[] public stakersArray;
+
+    /// @dev Flag to check direct transfers of staking tokens.
+    uint8 internal isStaking = 1;
+
+    ///@dev Next staking condition Id. Tracks number of conditon updates so far.
+    uint256 private nextConditionId;
 
     ///@dev Mapping from token-id to whether it is indexed or not.
     mapping(uint256 => bool) public isIndexed;
@@ -36,8 +40,8 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
     /// @dev Mapping from staked token-id to staker address.
     mapping(uint256 => address) public stakerAddress;
 
-    /// @dev List of accounts that have staked their NFTs.
-    address[] public stakersArray;
+    ///@dev Mapping from condition Id to staking condition. See {struct IStaking721.StakingCondition}
+    mapping(uint256 => StakingCondition) private stakingConditions;
 
     function __Staking721_init(address _nftCollection) internal onlyInitializing {
         __ReentrancyGuard_init();
@@ -96,12 +100,12 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
             revert("Not authorized");
         }
 
-        _updateUnclaimedRewardsForAll();
+        StakingCondition memory condition = stakingConditions[nextConditionId - 1];
+        require(_timeUnit != condition.timeUnit, "Time-unit unchanged.");
 
-        uint256 currentTimeUnit = timeUnit;
-        _setTimeUnit(_timeUnit);
+        _setStakingCondition(_timeUnit, condition.rewardsPerUnitTime);
 
-        emit UpdatedTimeUnit(currentTimeUnit, _timeUnit);
+        emit UpdatedTimeUnit(condition.timeUnit, _timeUnit);
     }
 
     /**
@@ -118,12 +122,12 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
             revert("Not authorized");
         }
 
-        _updateUnclaimedRewardsForAll();
+        StakingCondition memory condition = stakingConditions[nextConditionId - 1];
+        require(_rewardsPerUnitTime != condition.rewardsPerUnitTime, "Reward unchanged.");
 
-        uint256 currentRewardsPerUnitTime = rewardsPerUnitTime;
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
+        _setStakingCondition(condition.timeUnit, _rewardsPerUnitTime);
 
-        emit UpdatedRewardsPerUnitTime(currentRewardsPerUnitTime, _rewardsPerUnitTime);
+        emit UpdatedRewardsPerUnitTime(condition.rewardsPerUnitTime, _rewardsPerUnitTime);
     }
 
     /**
@@ -134,7 +138,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
      *  @return _rewards        Available reward amount.
      */
     function getStakeInfo(address _staker)
-        public
+        external
         view
         virtual
         returns (uint256[] memory _tokensStaked, uint256 _rewards)
@@ -161,6 +165,14 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
         _rewards = _availableRewards(_staker);
     }
 
+    function getTimeUnit() public view returns (uint256 _timeUnit) {
+        _timeUnit = stakingConditions[nextConditionId - 1].timeUnit;
+    }
+
+    function getRewardsPerUnitTime() public view returns (uint256 _rewardsPerUnitTime) {
+        _rewardsPerUnitTime = stakingConditions[nextConditionId - 1].rewardsPerUnitTime;
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Internal Functions
     //////////////////////////////////////////////////////////////*/
@@ -172,74 +184,82 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
 
         address _nftCollection = nftCollection;
 
-        if (stakers[msg.sender].amountStaked > 0) {
-            _updateUnclaimedRewardsForStaker(msg.sender);
+        if (stakers[_stakeMsgSender()].amountStaked > 0) {
+            _updateUnclaimedRewardsForStaker(_stakeMsgSender());
         } else {
-            stakersArray.push(msg.sender);
-            stakers[msg.sender].timeOfLastUpdate = block.timestamp;
+            stakersArray.push(_stakeMsgSender());
+            stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+            stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
         for (uint256 i = 0; i < len; ++i) {
             require(
-                IERC721(_nftCollection).ownerOf(_tokenIds[i]) == msg.sender &&
+                IERC721(_nftCollection).ownerOf(_tokenIds[i]) == _stakeMsgSender() &&
                     (IERC721(_nftCollection).getApproved(_tokenIds[i]) == address(this) ||
-                        IERC721(_nftCollection).isApprovedForAll(msg.sender, address(this))),
+                        IERC721(_nftCollection).isApprovedForAll(_stakeMsgSender(), address(this))),
                 "Not owned or approved"
             );
-            IERC721(_nftCollection).transferFrom(msg.sender, address(this), _tokenIds[i]);
-            stakerAddress[_tokenIds[i]] = msg.sender;
+
+            isStaking = 2;
+            IERC721(_nftCollection).safeTransferFrom(_stakeMsgSender(), address(this), _tokenIds[i]);
+            isStaking = 1;
+
+            stakerAddress[_tokenIds[i]] = _stakeMsgSender();
 
             if (!isIndexed[_tokenIds[i]]) {
                 isIndexed[_tokenIds[i]] = true;
                 indexedTokens.push(_tokenIds[i]);
             }
         }
-        stakers[msg.sender].amountStaked += len;
+        stakers[_stakeMsgSender()].amountStaked += len;
 
-        emit TokensStaked(msg.sender, _tokenIds);
+        emit TokensStaked(_stakeMsgSender(), _tokenIds);
     }
 
     /// @dev Withdraw logic. Override to add custom logic.
     function _withdraw(uint256[] calldata _tokenIds) internal virtual {
-        uint256 _amountStaked = stakers[msg.sender].amountStaked;
+        uint256 _amountStaked = stakers[_stakeMsgSender()].amountStaked;
         uint256 len = _tokenIds.length;
         require(len != 0, "Withdrawing 0 tokens");
         require(_amountStaked >= len, "Withdrawing more than staked");
 
         address _nftCollection = nftCollection;
 
-        _updateUnclaimedRewardsForStaker(msg.sender);
+        _updateUnclaimedRewardsForStaker(_stakeMsgSender());
 
         if (_amountStaked == len) {
-            for (uint256 i = 0; i < stakersArray.length; ++i) {
-                if (stakersArray[i] == msg.sender) {
-                    stakersArray[i] = stakersArray[stakersArray.length - 1];
+            address[] memory _stakersArray = stakersArray;
+            for (uint256 i = 0; i < _stakersArray.length; ++i) {
+                if (_stakersArray[i] == _stakeMsgSender()) {
+                    stakersArray[i] = _stakersArray[_stakersArray.length - 1];
                     stakersArray.pop();
+                    break;
                 }
             }
         }
-        stakers[msg.sender].amountStaked -= len;
+        stakers[_stakeMsgSender()].amountStaked -= len;
 
         for (uint256 i = 0; i < len; ++i) {
-            require(stakerAddress[_tokenIds[i]] == msg.sender, "Not staker");
+            require(stakerAddress[_tokenIds[i]] == _stakeMsgSender(), "Not staker");
             stakerAddress[_tokenIds[i]] = address(0);
-            IERC721(_nftCollection).transferFrom(address(this), msg.sender, _tokenIds[i]);
+            IERC721(_nftCollection).safeTransferFrom(address(this), _stakeMsgSender(), _tokenIds[i]);
         }
 
-        emit TokensWithdrawn(msg.sender, _tokenIds);
+        emit TokensWithdrawn(_stakeMsgSender(), _tokenIds);
     }
 
     /// @dev Logic for claiming rewards. Override to add custom logic.
     function _claimRewards() internal virtual {
-        uint256 rewards = stakers[msg.sender].unclaimedRewards + _calculateRewards(msg.sender);
+        uint256 rewards = stakers[_stakeMsgSender()].unclaimedRewards + _calculateRewards(_stakeMsgSender());
 
         require(rewards != 0, "No rewards");
 
-        stakers[msg.sender].timeOfLastUpdate = block.timestamp;
-        stakers[msg.sender].unclaimedRewards = 0;
+        stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+        stakers[_stakeMsgSender()].unclaimedRewards = 0;
+        stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
 
-        _mintRewards(msg.sender, rewards);
+        _mintRewards(_stakeMsgSender(), rewards);
 
-        emit RewardsClaimed(msg.sender, rewards);
+        emit RewardsClaimed(_stakeMsgSender(), rewards);
     }
 
     /// @dev View available rewards for a user.
@@ -251,42 +271,73 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
         }
     }
 
-    /// @dev Update unclaimed rewards for all users. Called when setting timeUnit or rewardsPerUnitTime.
-    function _updateUnclaimedRewardsForAll() internal virtual {
-        address[] memory _stakers = stakersArray;
-        uint256 len = _stakers.length;
-        for (uint256 i = 0; i < len; ++i) {
-            address user = _stakers[i];
-
-            uint256 rewards = _calculateRewards(user);
-            stakers[user].unclaimedRewards += rewards;
-            stakers[user].timeOfLastUpdate = block.timestamp;
-        }
-    }
-
     /// @dev Update unclaimed rewards for a users. Called for every state change for a user.
     function _updateUnclaimedRewardsForStaker(address _staker) internal virtual {
         uint256 rewards = _calculateRewards(_staker);
         stakers[_staker].unclaimedRewards += rewards;
         stakers[_staker].timeOfLastUpdate = block.timestamp;
+        stakers[_staker].conditionIdOflastUpdate = nextConditionId - 1;
     }
 
-    /// @dev Set time unit in seconds.
-    function _setTimeUnit(uint256 _timeUnit) internal virtual {
-        timeUnit = _timeUnit;
+    /// @dev Set staking conditions.
+    function _setStakingCondition(uint256 _timeUnit, uint256 _rewardsPerUnitTime) internal virtual {
+        require(_timeUnit != 0, "time-unit can't be 0");
+        uint256 conditionId = nextConditionId;
+        nextConditionId += 1;
+
+        stakingConditions[conditionId] = StakingCondition({
+            timeUnit: _timeUnit,
+            rewardsPerUnitTime: _rewardsPerUnitTime,
+            startTimestamp: block.timestamp,
+            endTimestamp: 0
+        });
+
+        if (conditionId > 0) {
+            stakingConditions[conditionId - 1].endTimestamp = block.timestamp;
+        }
     }
 
-    /// @dev Set rewards per unit time.
-    function _setRewardsPerUnitTime(uint256 _rewardsPerUnitTime) internal virtual {
-        rewardsPerUnitTime = _rewardsPerUnitTime;
-    }
-
-    /// @dev Reward calculation logic. Override to implement custom logic.
+    /// @dev Calculate rewards for a staker.
     function _calculateRewards(address _staker) internal view virtual returns (uint256 _rewards) {
         Staker memory staker = stakers[_staker];
-        _rewards = ((((block.timestamp - staker.timeOfLastUpdate) * staker.amountStaked) * rewardsPerUnitTime) /
-            timeUnit);
+
+        uint256 _stakerConditionId = staker.conditionIdOflastUpdate;
+        uint256 _nextConditionId = nextConditionId;
+
+        for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
+            StakingCondition memory condition = stakingConditions[i];
+
+            uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
+            uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
+
+            (bool noOverflowProduct, uint256 rewardsProduct) = SafeMath.tryMul(
+                (endTime - startTime) * staker.amountStaked,
+                condition.rewardsPerUnitTime
+            );
+            (bool noOverflowSum, uint256 rewardsSum) = SafeMath.tryAdd(_rewards, rewardsProduct / condition.timeUnit);
+
+            _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
+        }
     }
+
+    /*////////////////////////////////////////////////////////////////////
+        Optional hooks that can be implemented in the derived contract
+    ///////////////////////////////////////////////////////////////////*/
+
+    /// @dev Exposes the ability to override the msg sender -- support ERC2771.
+    function _stakeMsgSender() internal virtual returns (address) {
+        return msg.sender;
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Virtual functions to be implemented in derived contract
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice View total rewards available in the staking contract.
+     *
+     */
+    function getRewardTokenBalance() external view virtual returns (uint256 _rewardsAvailableInContract);
 
     /**
      *  @dev    Mint/Transfer ERC20 rewards to the staker. Must override.

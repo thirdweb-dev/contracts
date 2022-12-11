@@ -10,6 +10,7 @@ import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
+import "../eip/interface/IERC20Metadata.sol";
 
 //  ==========  Features    ==========
 
@@ -28,6 +29,9 @@ contract TokenStake is
     bytes32 private constant MODULE_TYPE = bytes32("TokenStake");
     uint256 private constant VERSION = 1;
 
+    /// @dev Emitted when contract admin withdraws reward tokens.
+    event RewardTokensWithdrawnByAdmin(uint256 _amount);
+
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
 
@@ -44,14 +48,16 @@ contract TokenStake is
         uint256 _rewardRatioNumerator,
         uint256 _rewardRatioDenominator
     ) external initializer {
-        __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
 
         require(_rewardToken != _stakingToken, "Reward Token and Staking Token can't be same.");
         rewardToken = _rewardToken;
-        __Staking20_init(_stakingToken);
-        _setTimeUnit(_timeUnit);
-        _setRewardRatio(_rewardRatioNumerator, _rewardRatioDenominator);
+        __Staking20_init(
+            _stakingToken,
+            IERC20Metadata(_stakingToken).decimals(),
+            IERC20Metadata(_rewardToken).decimals()
+        );
+        _setStakingCondition(_timeUnit, _rewardRatioNumerator, _rewardRatioDenominator);
 
         _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -68,10 +74,20 @@ contract TokenStake is
     }
 
     /// @dev Admin can withdraw excess reward tokens.
-    function withdrawRewardTokens(uint256 _amount) external {
+    function withdrawRewardTokens(uint256 _amount) external nonReentrant {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
         CurrencyTransferLib.transferCurrency(rewardToken, address(this), _msgSender(), _amount);
+
+        // The withdrawal shouldn't reduce staking token balance. `>=` accounts for any accidental transfers.
+        require(IERC20(token).balanceOf(address(this)) >= stakingTokenBalance, "Staking token balance reduced.");
+
+        emit RewardTokensWithdrawnByAdmin(_amount);
+    }
+
+    /// @notice View total rewards available in the staking contract.
+    function getRewardTokenBalance() external view override returns (uint256 _rewardsAvailableInContract) {
+        return IERC20(rewardToken).balanceOf(address(this));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -100,6 +116,10 @@ contract TokenStake is
     /*///////////////////////////////////////////////////////////////
                             Miscellaneous
     //////////////////////////////////////////////////////////////*/
+
+    function _stakeMsgSender() internal view virtual override returns (address) {
+        return _msgSender();
+    }
 
     function _msgSender() internal view virtual override returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();

@@ -3,6 +3,7 @@ pragma solidity ^0.8.11;
 
 // Token
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 
 // Meta transactions
@@ -24,11 +25,15 @@ contract EditionStake is
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    IERC1155ReceiverUpgradeable,
-    Staking1155Upgradeable
+    Staking1155Upgradeable,
+    ERC165Upgradeable,
+    IERC1155ReceiverUpgradeable
 {
     bytes32 private constant MODULE_TYPE = bytes32("EditionStake");
     uint256 private constant VERSION = 1;
+
+    /// @dev Emitted when contract admin withdraws reward tokens.
+    event RewardTokensWithdrawnByAdmin(uint256 _amount);
 
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
@@ -45,13 +50,11 @@ contract EditionStake is
         uint256 _defaultTimeUnit,
         uint256 _defaultRewardsPerUnitTime
     ) external initializer {
-        __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
 
         rewardToken = _rewardToken;
         __Staking1155_init(_edition);
-        _setDefaultTimeUnit(_defaultTimeUnit);
-        _setDefaultRewardsPerUnitTime(_defaultRewardsPerUnitTime);
+        _setDefaultStakingCondition(_defaultTimeUnit, _defaultRewardsPerUnitTime);
 
         _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -72,6 +75,13 @@ contract EditionStake is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
         CurrencyTransferLib.transferCurrency(rewardToken, address(this), _msgSender(), _amount);
+
+        emit RewardTokensWithdrawnByAdmin(_amount);
+    }
+
+    /// @notice View total rewards available in the staking contract.
+    function getRewardTokenBalance() external view override returns (uint256 _rewardsAvailableInContract) {
+        return IERC20(rewardToken).balanceOf(address(this));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -84,7 +94,8 @@ contract EditionStake is
         uint256,
         uint256,
         bytes calldata
-    ) external pure returns (bytes4) {
+    ) external returns (bytes4) {
+        require(isStaking == 2, "Direct transfer");
         return this.onERC1155Received.selector;
     }
 
@@ -96,8 +107,13 @@ contract EditionStake is
         bytes calldata data
     ) external returns (bytes4) {}
 
-    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId;
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC165Upgradeable, IERC165Upgradeable)
+        returns (bool)
+    {
+        return interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -126,6 +142,10 @@ contract EditionStake is
     /*///////////////////////////////////////////////////////////////
                             Miscellaneous
     //////////////////////////////////////////////////////////////*/
+
+    function _stakeMsgSender() internal view virtual override returns (address) {
+        return _msgSender();
+    }
 
     function _msgSender() internal view virtual override returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();

@@ -21,6 +21,41 @@ Claim accumulated rewards.
 *See {_claimRewards}. Override that to implement custom logic.             See {_calculateRewards} for reward-calculation logic.*
 
 
+### getRewardRatio
+
+```solidity
+function getRewardRatio() external view returns (uint256 _numerator, uint256 _denominator)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _numerator | uint256 | undefined |
+| _denominator | uint256 | undefined |
+
+### getRewardTokenBalance
+
+```solidity
+function getRewardTokenBalance() external view returns (uint256 _rewardsAvailableInContract)
+```
+
+View total rewards available in the staking contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _rewardsAvailableInContract | uint256 | undefined |
+
 ### getStakeInfo
 
 ```solidity
@@ -44,32 +79,32 @@ View amount staked and rewards for a user.
 | _tokensStaked | uint256 |   Amount of tokens staked. |
 | _rewards | uint256 |        Available reward amount. |
 
-### rewardRatioDenominator
+### getTimeUnit
 
 ```solidity
-function rewardRatioDenominator() external view returns (uint256)
+function getTimeUnit() external view returns (uint256 _timeUnit)
 ```
 
 
 
-*Rewards ratio is the number of reward tokens for a number of staked tokens, per unit of time.*
+
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| _timeUnit | uint256 | undefined |
 
-### rewardRatioNumerator
+### rewardTokenDecimals
 
 ```solidity
-function rewardRatioNumerator() external view returns (uint256)
+function rewardTokenDecimals() external view returns (uint256)
 ```
 
 
 
-*Rewards ratio is the number of reward tokens for a number of staked tokens, per unit of time.*
+*Decimals of reward token.*
 
 
 #### Returns
@@ -130,7 +165,7 @@ Stake ERC20 Tokens.
 ### stakers
 
 ```solidity
-function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards)
+function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards, uint256 conditionIdOflastUpdate)
 ```
 
 
@@ -150,6 +185,7 @@ function stakers(address) external view returns (uint256 amountStaked, uint256 t
 | amountStaked | uint256 | undefined |
 | timeOfLastUpdate | uint256 | undefined |
 | unclaimedRewards | uint256 | undefined |
+| conditionIdOflastUpdate | uint256 | undefined |
 
 ### stakersArray
 
@@ -173,15 +209,32 @@ function stakersArray(uint256) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### timeUnit
+### stakingTokenBalance
 
 ```solidity
-function timeUnit() external view returns (uint256)
+function stakingTokenBalance() external view returns (uint256)
 ```
 
 
 
-*Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.*
+*Total amount of tokens staked in the contract.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### stakingTokenDecimals
+
+```solidity
+function stakingTokenDecimals() external view returns (uint256)
+```
+
+
+
+*Decimals of staking token.*
 
 
 #### Returns

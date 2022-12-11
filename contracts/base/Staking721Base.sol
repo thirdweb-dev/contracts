@@ -37,16 +37,20 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721 {
     address public rewardToken;
 
     constructor(
-        uint256 _timeUnit,
-        uint256 _rewardsPerUnitTime,
+        uint128 _timeUnit,
+        uint128 _rewardsPerUnitTime,
         address _nftCollection,
         address _rewardToken
     ) Staking721(_nftCollection) {
         _setupOwner(msg.sender);
-        _setTimeUnit(_timeUnit);
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
+        _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
 
         rewardToken = _rewardToken;
+    }
+
+    /// @notice View total rewards available in the staking contract.
+    function getRewardTokenBalance() external view virtual override returns (uint256 _rewardsAvailableInContract) {
+        return IERC20(rewardToken).balanceOf(address(this));
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -79,7 +83,7 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721 {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether staking restrictions can be set in given execution context.
-    function _canSetStakeConditions() internal view override returns (bool) {
+    function _canSetStakeConditions() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 

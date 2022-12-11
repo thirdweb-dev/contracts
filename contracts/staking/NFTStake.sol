@@ -3,6 +3,7 @@ pragma solidity ^0.8.11;
 
 // Token
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 
 // Meta transactions
@@ -24,11 +25,15 @@ contract NFTStake is
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    IERC721ReceiverUpgradeable,
-    Staking721Upgradeable
+    Staking721Upgradeable,
+    ERC165Upgradeable,
+    IERC721ReceiverUpgradeable
 {
     bytes32 private constant MODULE_TYPE = bytes32("NFTStake");
     uint256 private constant VERSION = 1;
+
+    /// @dev Emitted when contract admin withdraws reward tokens.
+    event RewardTokensWithdrawnByAdmin(uint256 _amount);
 
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
@@ -45,13 +50,11 @@ contract NFTStake is
         uint256 _timeUnit,
         uint256 _rewardsPerUnitTime
     ) external initializer {
-        __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
 
         rewardToken = _rewardToken;
         __Staking721_init(_nftCollection);
-        _setTimeUnit(_timeUnit);
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
+        _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
 
         _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -72,6 +75,13 @@ contract NFTStake is
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
         CurrencyTransferLib.transferCurrency(rewardToken, address(this), _msgSender(), _amount);
+
+        emit RewardTokensWithdrawnByAdmin(_amount);
+    }
+
+    /// @notice View total rewards available in the staking contract.
+    function getRewardTokenBalance() external view override returns (uint256 _rewardsAvailableInContract) {
+        return IERC20(rewardToken).balanceOf(address(this));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -83,12 +93,13 @@ contract NFTStake is
         address,
         uint256,
         bytes calldata
-    ) external pure override returns (bytes4) {
+    ) external view override returns (bytes4) {
+        require(isStaking == 2, "Direct transfer");
         return this.onERC721Received.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return interfaceId == type(IERC721ReceiverUpgradeable).interfaceId;
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return interfaceId == type(IERC721ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -117,6 +128,10 @@ contract NFTStake is
     /*///////////////////////////////////////////////////////////////
                             Miscellaneous
     //////////////////////////////////////////////////////////////*/
+
+    function _stakeMsgSender() internal view virtual override returns (address) {
+        return _msgSender();
+    }
 
     function _msgSender() internal view virtual override returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();

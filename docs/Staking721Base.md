@@ -38,6 +38,40 @@ Returns the contract metadata URI.
 |---|---|---|
 | _0 | string | undefined |
 
+### getRewardTokenBalance
+
+```solidity
+function getRewardTokenBalance() external view returns (uint256 _rewardsAvailableInContract)
+```
+
+View total rewards available in the staking contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _rewardsAvailableInContract | uint256 | undefined |
+
+### getRewardsPerUnitTime
+
+```solidity
+function getRewardsPerUnitTime() external view returns (uint256 _rewardsPerUnitTime)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _rewardsPerUnitTime | uint256 | undefined |
+
 ### getStakeInfo
 
 ```solidity
@@ -60,6 +94,23 @@ View amount staked and total rewards for a user.
 |---|---|---|
 | _tokensStaked | uint256[] |   List of token-ids staked by staker. |
 | _rewards | uint256 |        Available reward amount. |
+
+### getTimeUnit
+
+```solidity
+function getTimeUnit() external view returns (uint256 _timeUnit)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _timeUnit | uint256 | undefined |
 
 ### indexedTokens
 
@@ -178,23 +229,6 @@ function rewardToken() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### rewardsPerUnitTime
-
-```solidity
-function rewardsPerUnitTime() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### setContractURI
 
 ```solidity
@@ -300,7 +334,7 @@ function stakerAddress(uint256) external view returns (address)
 ### stakers
 
 ```solidity
-function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards)
+function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards, uint256 conditionIdOflastUpdate)
 ```
 
 
@@ -320,6 +354,7 @@ function stakers(address) external view returns (uint256 amountStaked, uint256 t
 | amountStaked | uint256 | undefined |
 | timeOfLastUpdate | uint256 | undefined |
 | unclaimedRewards | uint256 | undefined |
+| conditionIdOflastUpdate | uint256 | undefined |
 
 ### stakersArray
 
@@ -342,23 +377,6 @@ function stakersArray(uint256) external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### timeUnit
-
-```solidity
-function timeUnit() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### withdraw
 
