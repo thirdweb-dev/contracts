@@ -66,7 +66,7 @@ contract ERC721A is Context, ERC165, IERC721A {
     /**
      * @dev Burned tokens are calculated here, use _totalMinted() if you want to count just minted tokens.
      */
-    function totalSupply() public view override returns (uint256) {
+    function totalSupply() public view virtual override returns (uint256) {
         // Counter underflow is impossible as _burnCounter cannot be incremented
         // more than _currentIndex - _startTokenId() times
         unchecked {
@@ -167,7 +167,7 @@ contract ERC721A is Context, ERC165, IERC721A {
     /**
      * @dev See {IERC721-ownerOf}.
      */
-    function ownerOf(uint256 tokenId) public view override returns (address) {
+    function ownerOf(uint256 tokenId) public view virtual override returns (address) {
         return _ownershipOf(tokenId).addr;
     }
 
@@ -222,7 +222,7 @@ contract ERC721A is Context, ERC165, IERC721A {
     /**
      * @dev See {IERC721-getApproved}.
      */
-    function getApproved(uint256 tokenId) public view override returns (address) {
+    function getApproved(uint256 tokenId) public view virtual override returns (address) {
         if (!_exists(tokenId)) revert ApprovalQueryForNonexistentToken();
 
         return _tokenApprovals[tokenId];
