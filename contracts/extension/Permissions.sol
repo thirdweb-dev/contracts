@@ -109,6 +109,7 @@ contract Permissions is IPermissions {
         if (msg.sender != account) {
             revert("Can only renounce for self");
         }
+        _checkRole(role, account);
         _revokeRole(role, account);
     }
 
@@ -127,7 +128,6 @@ contract Permissions is IPermissions {
 
     /// @dev Revokes `role` from `account`
     function _revokeRole(bytes32 role, address account) internal virtual {
-        _checkRole(role, account);
         delete _hasRole[role][account];
         emit RoleRevoked(role, account, msg.sender);
     }

@@ -55,26 +55,6 @@ contract DropERC1155Test is BaseTest {
     }
 
     /**
-     *  note: Tests whether contract reverts when a role admin revokes a role for a non-holder.
-     */
-    function test_revert_revokeRoleForNonHolder() public {
-        address target = address(0x123);
-        bytes32 role = keccak256("MINTER_ROLE");
-
-        vm.prank(deployer);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
-                " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
-            )
-        );
-
-        drop.revokeRole(role, target);
-    }
-
-    /**
      *  @dev Tests whether contract reverts when a role is granted to an existent role holder.
      */
     function test_revert_grant_role_to_account_with_role() public {

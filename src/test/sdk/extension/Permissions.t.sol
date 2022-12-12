@@ -148,18 +148,6 @@ contract ExtensionPermissions is DSTest, Test {
         );
         ext.revokeRole(keccak256("role"), address(0x567));
         vm.stopPrank();
-
-        vm.startPrank(defaultAdmin);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                TWStrings.toHexString(uint160(address(0x789)), 20),
-                " is missing role ",
-                TWStrings.toHexString(uint256(keccak256("role")), 32)
-            )
-        );
-        ext.revokeRole(keccak256("role"), address(0x789));
-        vm.stopPrank();
     }
 
     function test_event_revokeRole() public {
