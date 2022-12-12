@@ -66,6 +66,12 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
         _;
     }
 
+    /// @dev Checks whether the caller is self.
+    modifier onlySelf() {
+        require(controller == msg.sender, "Account: caller not self.");
+        _;
+    }
+
     /// @dev Ensures conditions for a valid wallet action: a call or deployment.
     modifier onlyValidWalletCall(
         uint256 _nonce,
@@ -150,7 +156,7 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
     }
 
     /// @notice Adds a signer to this contract.
-    function addSigner(address _signer) external onlyController returns (bool success) {
+    function addSigner(address _signer) external onlySelf returns (bool success) {
         grantRole(SIGNER_ROLE, _signer);
         success = true;
 
@@ -158,7 +164,7 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
     }
 
     /// @notice Updates the signer of this contract.
-    function removeSigner(address _signer) external onlyController returns (bool success) {
+    function removeSigner(address _signer) external onlySelf returns (bool success) {
         revokeRole(SIGNER_ROLE, _signer);
         success = true;
 
