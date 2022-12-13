@@ -10,6 +10,23 @@
 
 ## Methods
 
+### addSigner
+
+```solidity
+function addSigner(IAccount.SignerUpdateParams params, bytes signature) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| params | IAccount.SignerUpdateParams | undefined |
+| signature | bytes | undefined |
+
 ### deploy
 
 ```solidity
@@ -79,13 +96,13 @@ function isValidSignature(bytes32 _hash, bytes _signature) external view returns
 |---|---|---|
 | _0 | bytes4 | undefined |
 
-### updateSigner
+### removeSigner
 
 ```solidity
-function updateSigner(address newSigner) external nonpayable returns (bool success)
+function removeSigner(IAccount.SignerUpdateParams params, bytes signature) external nonpayable
 ```
 
-Updates the signer of a smart contract.
+
 
 
 
@@ -93,13 +110,8 @@ Updates the signer of a smart contract.
 
 | Name | Type | Description |
 |---|---|---|
-| newSigner | address | The address to set as the signer of the smart contract. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| success | bool | undefined |
+| params | IAccount.SignerUpdateParams | undefined |
+| signature | bytes | undefined |
 
 
 
@@ -121,13 +133,13 @@ Emitted when the wallet deploys a smart contract.
 |---|---|---|
 | deployment `indexed` | address | undefined |
 
-### SignerUpdated
+### SignerAdded
 
 ```solidity
-event SignerUpdated(address prevSigner, address newSigner)
+event SignerAdded(address signer)
 ```
 
-Emitted when the signer of the wallet is updated.
+Emitted when the signer is added to the account.
 
 
 
@@ -135,13 +147,28 @@ Emitted when the signer of the wallet is updated.
 
 | Name | Type | Description |
 |---|---|---|
-| prevSigner  | address | undefined |
-| newSigner  | address | undefined |
+| signer  | address | undefined |
+
+### SignerRemoved
+
+```solidity
+event SignerRemoved(address signer)
+```
+
+Emitted when the signer is removed from the account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer  | address | undefined |
 
 ### TransactionExecuted
 
 ```solidity
-event TransactionExecuted(address indexed signer, address indexed target, bytes data, uint256 indexed nonce, uint256 value, uint256 txGas)
+event TransactionExecuted(address indexed signer, address indexed target, bytes data, uint256 indexed nonce, uint256 value, uint256 gas)
 ```
 
 Emitted when a wallet performs a call.
@@ -157,7 +184,7 @@ Emitted when a wallet performs a call.
 | data  | bytes | undefined |
 | nonce `indexed` | uint256 | undefined |
 | value  | uint256 | undefined |
-| txGas  | uint256 | undefined |
+| gas  | uint256 | undefined |
 
 
 

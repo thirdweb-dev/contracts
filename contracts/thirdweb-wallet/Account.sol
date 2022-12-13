@@ -1,22 +1,30 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-// ========== Interface ==========
+////////// Interface //////////
 import "./interface/IAccount.sol";
+import "./interface/IAccountAdmin.sol";
 
-// ========== Utils ==========
+////////// Utils //////////
 import "../extension/Multicall.sol";
 import "../extension/PermissionsEnumerable.sol";
-
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
+////////// NOTE(S) //////////
 /**
- *  Basic actions:
- *      - Deploy smart contracts
- *      - Make transactions on contracts
- *      - Sign messages
- *      - Own assets
+ *  - The Account can have many Signers.
+ *  - Currently, there is no difference in power between signers.
+ *    Each Signer can:
+ *      - Perform any transaction / action on this account with 1/n approval.
+ *      - Add signers or remove existing signers.
+ *
+ *  - The Account can:
+ *      - Deploy smart contracts.
+ *      - Send native tokens.
+ *      - Call smart contracts.
+ *      - Sign messages. (EIP-1271)
+ *      - Own and transfer assets. (ERC-20/721/1155)
  */
 contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
     using ECDSA for bytes32;
@@ -39,18 +47,23 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
             "DeployParams(address signer,bytes bytecode,bytes32 salt,uint256 value,uint256 nonce,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
 
+    bytes32 private constant SIGNER_UPDATE_TYPEHASH =
+        keccak256(
+            "SignerUpdateParams(address signer,bytes32 credentials,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+        );
+
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice The admin of the wallet; the only address that is a valid `msg.sender` in this contract.
+    /// @notice The admin smart contract of the account.
     address public controller;
 
-    /// @notice The nonce of the wallet.
+    /// @notice The nonce of the account.
     uint256 public nonce;
 
     /*///////////////////////////////////////////////////////////////
-                        Constructor & Modifiers
+                            Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(address _controller, address _signer) payable EIP712("thirdwebWallet", "1") {
@@ -60,6 +73,10 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
         emit SignerAdded(_signer);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                                Modifiers
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Checks whether the caller is `controller`.
     modifier onlyController() {
         require(controller == msg.sender, "Account: caller not controller.");
@@ -68,7 +85,7 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
 
     /// @dev Checks whether the caller is self.
     modifier onlySelf() {
-        require(controller == msg.sender, "Account: caller not self.");
+        require(msg.sender == address(this), "Account: caller not self.");
         _;
     }
 
@@ -90,11 +107,15 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
     }
 
     /*///////////////////////////////////////////////////////////////
-                            External functions
+                        Receive native tokens.
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Lets this contract receive native tokens.
     receive() external payable {}
+
+    /*///////////////////////////////////////////////////////////////
+     Execute a transaction. Send native tokens, call smart contracts
+    //////////////////////////////////////////////////////////////*/
 
     /// @notice Perform transactions; send native tokens or call a smart contract.
     function execute(TransactionParams calldata _params, bytes calldata _signature)
@@ -104,20 +125,10 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
         onlyValidWalletCall(_params.nonce, _params.value, _params.validityStartTimestamp, _params.validityEndTimestamp)
         returns (bool success)
     {
-        bytes32 messageHash = keccak256(
-            abi.encode(
-                EXECUTE_TYPEHASH,
-                _params.signer,
-                _params.target,
-                keccak256(_params.data),
-                _params.nonce,
-                _params.value,
-                _params.gas,
-                _params.validityStartTimestamp,
-                _params.validityEndTimestamp
-            )
-        );
-        _validateSignature(_params.signer, messageHash, _signature);
+        {
+            bytes32 messageHash = keccak256(_encodeTransactionParams(_params));
+            _validateSignature(_params.signer, messageHash, _signature);
+        }
         success = _call(_params);
 
         emit TransactionExecuted(
@@ -130,6 +141,10 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
         );
     }
 
+    /*///////////////////////////////////////////////////////////////
+                        Deploy smart contracts.
+    //////////////////////////////////////////////////////////////*/
+
     /// @notice Deploys a smart contract.
     function deploy(DeployParams calldata _params, bytes calldata _signature)
         external
@@ -138,38 +153,61 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
         onlyValidWalletCall(_params.nonce, _params.value, _params.validityStartTimestamp, _params.validityEndTimestamp)
         returns (address deployment)
     {
+        {
+            bytes32 messageHash = keccak256(_encodeDeployParams(_params));
+            _validateSignature(_params.signer, messageHash, _signature);
+        }
+        deployment = Create2.deploy(_params.value, _params.salt, _params.bytecode);
+        emit ContractDeployed(deployment);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                Change signer composition to the account.
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Adds a signer to the account.
+    function addSigner(SignerUpdateParams calldata _params, bytes calldata _signature) external onlySelf {
         bytes32 messageHash = keccak256(
             abi.encode(
-                DEPLOY_TYPEHASH,
+                SIGNER_UPDATE_TYPEHASH,
                 _params.signer,
-                keccak256(bytes(_params.bytecode)),
-                _params.salt,
-                _params.value,
-                _params.nonce,
+                _params.credentials,
                 _params.validityStartTimestamp,
                 _params.validityEndTimestamp
             )
         );
         _validateSignature(_params.signer, messageHash, _signature);
-        deployment = Create2.deploy(_params.value, _params.salt, _params.bytecode);
-        emit ContractDeployed(deployment);
+
+        _setupRole(SIGNER_ROLE, _params.signer);
+
+        emit SignerAdded(_params.signer);
+
+        IAccountAdmin(controller).addSignerToAccount(_params.signer, _params.credentials);
     }
 
-    /// @notice Adds a signer to this contract.
-    function addSigner(address _signer) external onlySelf returns (bool success) {
-        grantRole(SIGNER_ROLE, _signer);
-        success = true;
+    /// @notice Removes a signer to the account.
+    function removeSigner(SignerUpdateParams calldata _params, bytes calldata _signature) external onlySelf {
+        bytes32 messageHash = keccak256(
+            abi.encode(
+                SIGNER_UPDATE_TYPEHASH,
+                _params.signer,
+                _params.credentials,
+                _params.validityStartTimestamp,
+                _params.validityEndTimestamp
+            )
+        );
+        _validateSignature(_params.signer, messageHash, _signature);
 
-        emit SignerAdded(_signer);
+        _revokeRole(SIGNER_ROLE, _params.signer);
+
+        emit SignerRemoved(_params.signer);
+
+        IAccountAdmin(controller).removeSignerToAccount(_params.signer, _params.credentials);
     }
 
-    /// @notice Updates the signer of this contract.
-    function removeSigner(address _signer) external onlySelf returns (bool success) {
-        revokeRole(SIGNER_ROLE, _signer);
-        success = true;
-
-        emit SignerRemoved(_signer);
-    }
+    /*///////////////////////////////////////////////////////////////
+                    EIP-1271 Smart contract signatures
+    //////////////////////////////////////////////////////////////*/
 
     /// @notice See EIP-1271. Returns whether a signature is a valid signature made on behalf of this contract.
     function isValidSignature(bytes32 _hash, bytes calldata _signature) external view override returns (bytes4) {
@@ -182,6 +220,10 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
             return 0xffffffff;
         }
     }
+
+    /*///////////////////////////////////////////////////////////////
+                    Receive assets (ERC-721/1155)
+    //////////////////////////////////////////////////////////////*/
 
     function onERC721Received(
         address,
@@ -254,5 +296,34 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
         }
 
         return success;
+    }
+
+    function _encodeTransactionParams(TransactionParams calldata _params) private pure returns (bytes memory) {
+        return
+            abi.encode(
+                EXECUTE_TYPEHASH,
+                _params.signer,
+                _params.target,
+                keccak256(_params.data),
+                _params.nonce,
+                _params.value,
+                _params.gas,
+                _params.validityStartTimestamp,
+                _params.validityEndTimestamp
+            );
+    }
+
+    function _encodeDeployParams(DeployParams calldata _params) private pure returns (bytes memory) {
+        return
+            abi.encode(
+                DEPLOY_TYPEHASH,
+                _params.signer,
+                keccak256(bytes(_params.bytecode)),
+                _params.salt,
+                _params.value,
+                _params.nonce,
+                _params.validityStartTimestamp,
+                _params.validityEndTimestamp
+            );
     }
 }

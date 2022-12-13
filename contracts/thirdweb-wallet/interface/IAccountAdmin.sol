@@ -2,9 +2,15 @@
 pragma solidity ^0.8.11;
 
 interface IAccountAdmin {
-    /*///////////////////////////////////////////////////////////////
-                                Structs
-    //////////////////////////////////////////////////////////////*/
+    ////////// Creating accounts //////////
+
+    /// @notice Emitted when an account is created.
+    event AccountCreated(
+        address indexed account,
+        address indexed signerOfAccount,
+        address indexed creator,
+        bytes32 credentials
+    );
 
     /**
      *  @notice Parameters to pass to create an account.
@@ -26,22 +32,21 @@ interface IAccountAdmin {
     }
 
     /**
-     *  @notice Parameters to pass to update the controlling signer of an account.
+     *  @notice Creates an account.
      *
-     *  @param account The account whose signer is to be updated.
-     *  @param newSigner The address to set as the new signer of the account.
-     *  @param newCredentials The credentials to associate with the account, required to be signed by `signer` every time transaction data is passed to the account.
-     *  @param validityStartTimestamp The timestamp before which the account creation request is invalid.
-     *  @param validityEndTimestamp The timestamp at and after which the account creation request is invalid.
+     *  @param params Parameters to pass to create an account.
+     *  @param signature Signature from the intended signer of the account, signing account creation parameters.
+     *  @return account The address of the account created.
      */
-    struct SignerUpdateParams {
-        address account;
-        address currentSigner;
-        address newSigner;
-        bytes32 newCredentials;
-        uint128 validityStartTimestamp;
-        uint128 validityEndTimestamp;
-    }
+    function createAccount(CreateAccountParams calldata params, bytes calldata signature)
+        external
+        payable
+        returns (address account);
+
+    ////////// Relaying transaction to account //////////
+
+    /// @notice Emitted on a call to an account.
+    event CallResult(bool success, bytes result);
 
     /**
      *  @notice Parameters to pass to send transaction instructions to an account.
@@ -54,7 +59,7 @@ interface IAccountAdmin {
      *  @param validityStartTimestamp The timestamp before which the account creation request is invalid.
      *  @param validityEndTimestamp The timestamp at and after which the account creation request is invalid.
      */
-    struct TransactionRequest {
+    struct RelayRequestParams {
         address signer;
         bytes32 credentials;
         uint256 value;
@@ -64,54 +69,52 @@ interface IAccountAdmin {
         uint128 validityEndTimestamp;
     }
 
-    /*///////////////////////////////////////////////////////////////
-                                Events
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Emitted when an account is created.
-    event AccountCreated(address indexed account, address indexed signerOfAccount, address indexed creator);
-
-    /// @notice Emitted when the signer for an account is updated.
-    event SignerUpdated(address indexed account, address indexed newSigner);
-
-    /// @notice Emitted on a call to an account.
-    event CallResult(bool success, bytes result);
-
-    /*///////////////////////////////////////////////////////////////
-                                Functions
-    //////////////////////////////////////////////////////////////*/
-
-    /**
-     *  @notice Creates an account.
-     *
-     *  @param params Parameters to pass to create an account.
-     *  @param signature Signature from the intended signer of the account, signing account creation parameters.
-     *  @return account The address of the account created.
-     */
-    function createAccount(CreateAccountParams calldata params, bytes calldata signature)
-        external
-        payable
-        returns (address account);
-
-    /**
-     *  @notice Updates the signer of an account.
-     *
-     *  @param params Parameters to pass to update the signer of an account.
-     *  @param signature Signature from the incumbent signer of the account, signing the parameters passed for udpating the signer of the account.
-     */
-    function changeSignerForAccount(SignerUpdateParams calldata params, bytes memory signature) external;
-
     /**
      *  @notice Calls an account to execute a transaction on the instructions of its controlling signer.
      *
-     *  @param req Parameters to pass when sending transaction data to an account.
+     *  @param params Parameters to pass when sending transaction data to an account.
      *  @param signature Signature from the incumbent signer of the account, signing the parameters passed for sending transaction data to the account.
      *
      *  @return success Returns whether the call to the account was successful.
      *  @return result Returns the call result of the call to the account.
      */
-    function execute(TransactionRequest calldata req, bytes memory signature)
+    function relay(RelayRequestParams calldata params, bytes memory signature)
         external
         payable
         returns (bool success, bytes memory result);
+
+    ////////// Changes to signer composition of accounts //////////
+
+    /// @notice Emitted when a signer is added to an account.
+    event SignerAdded(address signer, address account, bytes32 pairHash);
+
+    /// @notice Emitted when a signer is removed from an account.
+    event SignerRemoved(address signer, address account, bytes32 pairHash);
+
+    /**
+     *  @notice Called by an account (itself) when a signer is added to it.
+     *
+     *  @param signer The signer added to the account.
+     *  @param credentials The credentials of the signer used with the relevant account.
+     */
+    function addSignerToAccount(address signer, bytes32 credentials) external;
+
+    /**
+     *  @notice Called by an account (itself) when a signer is removed from it.
+     *
+     *  @param signer The signer removed from the account.
+     *  @param credentials The credentials of the signer used with the relevant account.
+     */
+    function removeSignerToAccount(address signer, bytes32 credentials) external;
+
+    ////////// Data fetching //////////
+
+    /// @notice Returns all accounts that a signer is a part of.
+    function getAllAccountsOfSigner(address signer) external view returns (address[] memory accounts);
+
+    /// @notice Returns all signers that are part of an account.
+    function getAllSignersOfAccount(address account) external view returns (address[] memory signers);
+
+    /// @notice Returns the account associated with a particular signer-credential pair.
+    function getAccountForCredential(address signer, bytes32 credentials) external view returns (address);
 }
