@@ -1,72 +1,54 @@
 # IMap
 
-
-
-
-
-
-
-
-
 ## Methods
 
-### addExtension
+### getAllFunctionsOfExtension
 
 ```solidity
-function addExtension(bytes4 _selector, address _extension) external nonpayable
+function getAllFunctionsOfExtension(address _extension) external view returns (bytes4[] registered)
 ```
-
-
-
-
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _selector | bytes4 | undefined |
-| _extension | address | undefined |
-
-### getExtension
-
-```solidity
-function getExtension(bytes4 _selector) external view returns (address)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _selector | bytes4 | undefined |
+| Name        | Type    | Description |
+| ----------- | ------- | ----------- |
+| \_extension | address | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| registered | bytes4[] | undefined   |
 
-### replaceExtension
+### getAllRegistered
 
 ```solidity
-function replaceExtension(bytes4 _selector, address _extension) external nonpayable
+function getAllRegistered() external view returns (struct IMap.ExtensionMap[] registered)
 ```
 
+#### Returns
 
+| Name       | Type                | Description |
+| ---------- | ------------------- | ----------- |
+| registered | IMap.ExtensionMap[] | undefined   |
 
+### getExtensionForFunction
 
+```solidity
+function getExtensionForFunction(bytes4 _selector) external view returns (address)
+```
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _selector | bytes4 | undefined |
-| _extension | address | undefined |
+| Name       | Type   | Description |
+| ---------- | ------ | ----------- |
+| \_selector | bytes4 | undefined   |
 
+#### Returns
 
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ## Events
 
@@ -76,33 +58,9 @@ function replaceExtension(bytes4 _selector, address _extension) external nonpaya
 event ExtensionRegistered(bytes4 indexed selector, address indexed extension)
 ```
 
-
-
-
-
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| selector `indexed` | bytes4 | undefined |
-| extension `indexed` | address | undefined |
-
-### ExtensionReplaced
-
-```solidity
-event ExtensionReplaced(bytes4 indexed selector, address indexed extension)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| selector `indexed` | bytes4 | undefined |
-| extension `indexed` | address | undefined |
-
-
-
+| Name                | Type    | Description |
+| ------------------- | ------- | ----------- |
+| selector `indexed`  | bytes4  | undefined   |
+| extension `indexed` | address | undefined   |

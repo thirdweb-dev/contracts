@@ -228,13 +228,13 @@ contract NFTStakeTest is BaseTest {
 
     function test_state_setRewardsPerUnitTime() public {
         // check current value
-        assertEq(rewardsPerUnitTime, stakeContract.rewardsPerUnitTime());
+        assertEq(rewardsPerUnitTime, stakeContract.getRewardsPerUnitTime());
 
         // set new value and check
         uint256 newRewardsPerUnitTime = 50;
         vm.prank(deployer);
         stakeContract.setRewardsPerUnitTime(newRewardsPerUnitTime);
-        assertEq(newRewardsPerUnitTime, stakeContract.rewardsPerUnitTime());
+        assertEq(newRewardsPerUnitTime, stakeContract.getRewardsPerUnitTime());
 
         //================ stake tokens
         vm.warp(1);
@@ -254,7 +254,7 @@ contract NFTStakeTest is BaseTest {
 
         vm.prank(deployer);
         stakeContract.setRewardsPerUnitTime(200);
-        assertEq(200, stakeContract.rewardsPerUnitTime());
+        assertEq(200, stakeContract.getRewardsPerUnitTime());
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
@@ -284,13 +284,13 @@ contract NFTStakeTest is BaseTest {
 
     function test_state_setTimeUnit() public {
         // check current value
-        assertEq(timeUnit, stakeContract.timeUnit());
+        assertEq(timeUnit, stakeContract.getTimeUnit());
 
         // set new value and check
-        uint256 newTimeUnit = 1 minutes;
+        uint256 newTimeUnit = 2 minutes;
         vm.prank(deployer);
         stakeContract.setTimeUnit(newTimeUnit);
-        assertEq(newTimeUnit, stakeContract.timeUnit());
+        assertEq(newTimeUnit, stakeContract.getTimeUnit());
 
         //================ stake tokens
         vm.warp(1);
@@ -310,7 +310,7 @@ contract NFTStakeTest is BaseTest {
 
         vm.prank(deployer);
         stakeContract.setTimeUnit(1 seconds);
-        assertEq(1 seconds, stakeContract.timeUnit());
+        assertEq(1 seconds, stakeContract.getTimeUnit());
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
@@ -473,5 +473,100 @@ contract NFTStakeTest is BaseTest {
         vm.prank(stakerOne);
         vm.expectRevert("Withdrawing more than staked");
         stakeContract.withdraw(_tokensToWithdraw);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+
+    function test_revert_zeroTimeUnit_adminLockTokens() public {
+        //================ stake tokens
+        vm.warp(1);
+        uint256[] memory _tokenIdsOne = new uint256[](1);
+        uint256[] memory _tokenIdsTwo = new uint256[](1);
+        _tokenIdsOne[0] = 0;
+        _tokenIdsTwo[0] = 5;
+
+        // Two different users stake 1 tokens each
+        vm.prank(stakerOne);
+        stakeContract.stake(_tokenIdsOne);
+        vm.prank(stakerTwo);
+        stakeContract.stake(_tokenIdsTwo);
+
+        // set timeUnit to zero
+        uint256 newTimeUnit = 0;
+        vm.prank(deployer);
+        vm.expectRevert("time-unit can't be 0");
+        stakeContract.setTimeUnit(newTimeUnit);
+
+        // stakerOne and stakerTwo can withdraw their tokens
+        // vm.expectRevert(stdError.divisionError);
+        vm.prank(stakerOne);
+        stakeContract.withdraw(_tokenIdsOne);
+
+        // vm.expectRevert(stdError.divisionError);
+        vm.prank(stakerTwo);
+        stakeContract.withdraw(_tokenIdsTwo);
+    }
+
+    function test_revert_largeRewardsPerUnitTime_adminRewardsLock() public {
+        //================ stake tokens
+        vm.warp(1);
+        uint256[] memory _tokenIdsOne = new uint256[](1);
+        uint256[] memory _tokenIdsTwo = new uint256[](1);
+
+        uint256 stakerOneToken = erc721.nextTokenIdToMint();
+        erc721.mint(stakerOne, 5); // mint token id 0 to 4
+        uint256 stakerTwoToken = erc721.nextTokenIdToMint();
+        erc721.mint(stakerTwo, 5); // mint token id 5 to 9
+        _tokenIdsOne[0] = stakerOneToken;
+        _tokenIdsTwo[0] = stakerTwoToken;
+
+        // Two users stake 1 tokens each
+        vm.prank(stakerOne);
+        stakeContract.stake(_tokenIdsOne);
+        vm.prank(stakerTwo);
+        stakeContract.stake(_tokenIdsTwo);
+
+        // set rewardsPerTimeUnit to max value
+        uint256 rewardsPerTimeUnit = type(uint256).max;
+        vm.prank(deployer);
+        stakeContract.setRewardsPerUnitTime(rewardsPerTimeUnit);
+
+        vm.warp(1 days);
+
+        // stakerOne and stakerTwo can't withdraw their tokens
+        // vm.expectRevert(stdError.arithmeticError);
+        vm.prank(stakerOne);
+        stakeContract.withdraw(_tokenIdsOne);
+
+        // vm.expectRevert(stdError.arithmeticError);
+        vm.prank(stakerTwo);
+        stakeContract.withdraw(_tokenIdsTwo);
+
+        // rewardsPerTimeUnit can't be changed
+        rewardsPerTimeUnit = 60;
+        // vm.expectRevert(stdError.arithmeticError);
+        vm.prank(deployer);
+        stakeContract.setRewardsPerUnitTime(rewardsPerTimeUnit);
+    }
+
+    function test_Macro_NFTDirectSafeTransferLocksToken() public {
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+
+        // stakerOne mistakenly safe-transfers direct to the staking contract
+        vm.prank(stakerOne);
+        vm.expectRevert("Direct transfer");
+        erc721.safeTransferFrom(stakerOne, address(stakeContract), tokenIds[0]);
+
+        // show that the transferred token was not properly staked
+        // (uint256[] memory tokensStaked, uint256 rewards) = stakeContract.getStakeInfo(stakerOne);
+        // assertEq(0, tokensStaked.length);
+
+        // // show that stakerOne cannot recover the token
+        // vm.expectRevert();
+        // vm.prank(stakerOne);
+        // stakeContract.withdraw(tokenIds);
     }
 }
