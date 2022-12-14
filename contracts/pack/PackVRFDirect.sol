@@ -45,7 +45,7 @@ contract PackVRFDirect is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("Pack_VRF");
+    bytes32 private constant MODULE_TYPE = bytes32("PackVRFDirect");
     uint256 private constant VERSION = 2;
 
     address private immutable forwarder;
@@ -279,7 +279,7 @@ contract PackVRFDirect is
     function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
         RequestInfo memory info = requestInfo[_requestId];
 
-        require(info.randomWords.length > 0, "request not found");
+        require(info.randomWords.length == 0, "request not found");
         requestInfo[_requestId].randomWords = _randomWords;
 
         emit PackRandomnessFulfilled(info.packId, _requestId);
