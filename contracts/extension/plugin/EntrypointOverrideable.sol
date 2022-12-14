@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "../interface/plugin/IMap.sol";
 import "../interface/plugin/IEntrypointOverrideable.sol";
 import "../../extension/Multicall.sol";
+import "../../eip/ERC165.sol";
 import "../../openzeppelin-presets/utils/EnumerableSet.sol";
 
 library EntrypointOverrideableStorage {
@@ -22,7 +23,7 @@ library EntrypointOverrideableStorage {
     }
 }
 
-abstract contract EntrypointOverrideable is Multicall, IEntrypointOverrideable {
+abstract contract EntrypointOverrideable is Multicall, IEntrypointOverrideable, ERC165 {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /*///////////////////////////////////////////////////////////////
@@ -40,8 +41,26 @@ abstract contract EntrypointOverrideable is Multicall, IEntrypointOverrideable {
     }
 
     /*///////////////////////////////////////////////////////////////
+                                ERC 165
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return
+            interfaceId == type(IEntrypointOverrideable).interfaceId ||
+            interfaceId == type(IEntrypoint).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
+
+    /*///////////////////////////////////////////////////////////////
                         Generic contract logic
     //////////////////////////////////////////////////////////////*/
+
+    function getFunctionMap() external view returns (address) {
+        return functionMap;
+    }
 
     fallback() external payable virtual {
         address extension = _getExtensionOverride(msg.sig);

@@ -27,6 +27,23 @@ function getAllOverriden() external view returns (struct IEntrypointOverrideable
 |---|---|---|
 | functionExtensionPairs | IEntrypointOverrideable.ExtensionMap[] | undefined |
 
+### getFunctionMap
+
+```solidity
+function getFunctionMap() external view returns (address map)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| map | address | undefined |
+
 ### overrideExtensionForFunction
 
 ```solidity

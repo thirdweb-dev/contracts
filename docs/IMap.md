@@ -1,5 +1,13 @@
 # IMap
 
+
+
+
+
+
+
+
+
 ## Methods
 
 ### getAllFunctionsOfExtension
@@ -8,17 +16,21 @@
 function getAllFunctionsOfExtension(address _extension) external view returns (bytes4[] registered)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name        | Type    | Description |
-| ----------- | ------- | ----------- |
-| \_extension | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _extension | address | undefined |
 
 #### Returns
 
-| Name       | Type     | Description |
-| ---------- | -------- | ----------- |
-| registered | bytes4[] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| registered | bytes4[] | undefined |
 
 ### getAllRegistered
 
@@ -26,11 +38,16 @@ function getAllFunctionsOfExtension(address _extension) external view returns (b
 function getAllRegistered() external view returns (struct IMap.ExtensionMap[] registered)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name       | Type                | Description |
-| ---------- | ------------------- | ----------- |
-| registered | IMap.ExtensionMap[] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| registered | IMap.ExtensionMap[] | undefined |
 
 ### getExtensionForFunction
 
@@ -38,17 +55,23 @@ function getAllRegistered() external view returns (struct IMap.ExtensionMap[] re
 function getExtensionForFunction(bytes4 _selector) external view returns (address)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name       | Type   | Description |
-| ---------- | ------ | ----------- |
-| \_selector | bytes4 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _selector | bytes4 | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+
 
 ## Events
 
@@ -58,9 +81,16 @@ function getExtensionForFunction(bytes4 _selector) external view returns (addres
 event ExtensionRegistered(bytes4 indexed selector, address indexed extension)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| selector `indexed`  | bytes4  | undefined   |
-| extension `indexed` | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| selector `indexed` | bytes4 | undefined |
+| extension `indexed` | address | undefined |
+
+
+

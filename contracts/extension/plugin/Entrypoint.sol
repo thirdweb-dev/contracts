@@ -2,14 +2,16 @@
 pragma solidity ^0.8.0;
 
 import "../interface/plugin/IMap.sol";
+import "../interface/plugin/IEntrypoint.sol";
 import "../../extension/Multicall.sol";
+import "../../eip/ERC165.sol";
 
-contract Entrypoint is Multicall {
+contract Entrypoint is Multicall, IEntrypoint, ERC165 {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    address public immutable functionMap;
+    address private immutable functionMap;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -20,8 +22,23 @@ contract Entrypoint is Multicall {
     }
 
     /*///////////////////////////////////////////////////////////////
+                                ERC 165
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @dev See {IERC165-supportsInterface}.
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IEntrypoint).interfaceId || super.supportsInterface(interfaceId);
+    }
+
+    /*///////////////////////////////////////////////////////////////
                         Generic contract logic
     //////////////////////////////////////////////////////////////*/
+
+    function getFunctionMap() external view returns (address) {
+        return functionMap;
+    }
 
     fallback() external payable virtual {
         address extension = IMap(functionMap).getExtensionForFunction(msg.sig);

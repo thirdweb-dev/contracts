@@ -1,6 +1,12 @@
 # Map
 
-TODO: - Remove OZ EnumerableSet external dependency.
+
+
+
+
+TODO:      - Remove OZ EnumerableSet external dependency.
+
+
 
 ## Methods
 
@@ -10,17 +16,21 @@ TODO: - Remove OZ EnumerableSet external dependency.
 function getAllFunctionsOfExtension(address _extension) external view returns (bytes4[] registered)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name        | Type    | Description |
-| ----------- | ------- | ----------- |
-| \_extension | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _extension | address | undefined |
 
 #### Returns
 
-| Name       | Type     | Description |
-| ---------- | -------- | ----------- |
-| registered | bytes4[] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| registered | bytes4[] | undefined |
 
 ### getAllRegistered
 
@@ -28,11 +38,16 @@ function getAllFunctionsOfExtension(address _extension) external view returns (b
 function getAllRegistered() external view returns (struct IMap.ExtensionMap[] functionExtensionPairs)
 ```
 
+
+
+
+
+
 #### Returns
 
-| Name                   | Type                | Description |
-| ---------------------- | ------------------- | ----------- |
-| functionExtensionPairs | IMap.ExtensionMap[] | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| functionExtensionPairs | IMap.ExtensionMap[] | undefined |
 
 ### getExtensionForFunction
 
@@ -40,17 +55,21 @@ function getAllRegistered() external view returns (struct IMap.ExtensionMap[] fu
 function getExtensionForFunction(bytes4 _selector) external view returns (address)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name       | Type   | Description |
-| ---------- | ------ | ----------- |
-| \_selector | bytes4 | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _selector | bytes4 | undefined |
 
 #### Returns
 
-| Name | Type    | Description |
-| ---- | ------- | ----------- |
-| \_0  | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### multicall
 
@@ -60,19 +79,21 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 Receives and executes a batch of function calls on this contract.
 
-_Receives and executes a batch of function calls on this contract._
+*Receives and executes a batch of function calls on this contract.*
 
 #### Parameters
 
-| Name | Type    | Description                                                          |
-| ---- | ------- | -------------------------------------------------------------------- |
+| Name | Type | Description |
+|---|---|---|
 | data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
 
 #### Returns
 
-| Name    | Type    | Description                                                                      |
-| ------- | ------- | -------------------------------------------------------------------------------- |
+| Name | Type | Description |
+|---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
+
+
 
 ## Events
 
@@ -82,9 +103,16 @@ _Receives and executes a batch of function calls on this contract._
 event ExtensionRegistered(bytes4 indexed selector, address indexed extension)
 ```
 
+
+
+
+
 #### Parameters
 
-| Name                | Type    | Description |
-| ------------------- | ------- | ----------- |
-| selector `indexed`  | bytes4  | undefined   |
-| extension `indexed` | address | undefined   |
+| Name | Type | Description |
+|---|---|---|
+| selector `indexed` | bytes4 | undefined |
+| extension `indexed` | address | undefined |
+
+
+
