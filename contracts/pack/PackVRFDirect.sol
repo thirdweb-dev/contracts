@@ -93,7 +93,7 @@ contract PackVRFDirect is
     }
 
     mapping(uint256 => RequestInfo) private requestInfo;
-    mapping(address => uint256) public openerToReqId;
+    mapping(address => uint256) private openerToReqId;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -252,7 +252,7 @@ contract PackVRFDirect is
 
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
 
-        require(openerToReqId[opener] == 0, "!ActiveReq");
+        require(!canClaimRewards(opener), "!ActiveReq");
 
         require(_amountToOpen > 0 && balanceOf(opener, _packId) >= _amountToOpen, "!Bal");
         require(packInfo[_packId].openStartTimestamp <= block.timestamp, "cant open");
@@ -282,13 +282,18 @@ contract PackVRFDirect is
         emit PackRandomnessFulfilled(info.packId, _requestId);
     }
 
+    /// @notice Returns whether a pack opener is ready to call `claimRewards`.
+    function canClaimRewards(address _opener) public view returns (bool) {
+        return openerToReqId[_opener] > 0;
+    }
+
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
     function claimRewards() external returns (Token[] memory) {
         address opener = _msgSender();
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
 
+        require(canClaimRewards(opener), "!ActiveReq");
         uint256 reqId = openerToReqId[opener];
-        require(reqId > 0, "!ActiveReq");
         RequestInfo memory info = requestInfo[reqId];
 
         delete openerToReqId[opener];

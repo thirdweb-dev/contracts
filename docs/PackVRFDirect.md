@@ -73,6 +73,28 @@ function balanceOfBatch(address[] accounts, uint256[] ids) external view returns
 |---|---|---|
 | _0 | uint256[] | undefined |
 
+### canClaimRewards
+
+```solidity
+function canClaimRewards(address _opener) external view returns (bool)
+```
+
+Returns whether a pack opener is ready to call `claimRewards`.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _opener | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### claimRewards
 
 ```solidity
@@ -607,28 +629,6 @@ Lets a pack owner open packs and receive the packs&#39; reward units.
 | Name | Type | Description |
 |---|---|---|
 | requestId | uint256 | undefined |
-
-### openerToReqId
-
-```solidity
-function openerToReqId(address) external view returns (uint256)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### owner
 

@@ -10,6 +10,28 @@ The thirdweb `Pack` contract is a lootbox mechanism. An account can bundle up ar
 
 ## Methods
 
+### canClaimRewards
+
+```solidity
+function canClaimRewards(address _opener) external view returns (bool)
+```
+
+Returns whether a pack opener is ready to call `claimRewards`.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _opener | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### claimRewards
 
 ```solidity

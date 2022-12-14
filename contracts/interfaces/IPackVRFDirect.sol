@@ -72,4 +72,7 @@ interface IPackVRFDirect is ITokenBundle {
 
     /// @notice Called by a pack opener to claim rewards from the opened pack.
     function claimRewards() external returns (Token[] memory rewardUnits);
+
+    /// @notice Returns whether a pack opener is ready to call `claimRewards`.
+    function canClaimRewards(address _opener) external view returns (bool);
 }
