@@ -26,8 +26,11 @@ interface IPackVRFDirect is ITokenBundle {
     /// @notice Emitted when a set of packs is created.
     event PackCreated(uint256 indexed packId, address recipient, uint256 totalPacksCreated);
 
-    /// @notice Emitted when more packs are minted for a packId.
-    event PackUpdated(uint256 indexed packId, address recipient, uint256 totalPacksCreated);
+    /// @notice Emitted when the opening of a pack is requested.
+    event PackOpenRequested(address indexed opener, uint256 indexed packId, uint256 amountToOpen, uint256 requestId);
+
+    /// @notice Emitted when Chainlink VRF fulfills a random number request.
+    event PackRandomnessFulfilled(uint256 indexed packId, uint256 indexed requestId);
 
     /// @notice Emitted when a pack is opened.
     event PackOpened(

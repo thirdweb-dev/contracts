@@ -246,9 +246,6 @@ contract PackVRFDirect is
                             VRF logic
     //////////////////////////////////////////////////////////////*/
 
-    event PackOpenRequested(address indexed opener, uint256 indexed packId, uint256 amountToOpen, uint256 requestId);
-    event PackRandomnessFulfilled(uint256 indexed packId, uint256 indexed requestId);
-
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
     function openPack(uint256 _packId, uint256 _amountToOpen) external returns (uint256 requestId) {
         address opener = _msgSender();
