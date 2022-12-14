@@ -305,8 +305,8 @@ contract PackVRFDirect is
         require(_amountToOpen > 0 && balanceOf(opener, _packId) >= _amountToOpen, "!Bal");
         require(packInfo[_packId].openStartTimestamp <= block.timestamp, "cant open");
 
-        // Burn packs.
-        _burn(opener, _packId, _amountToOpen);
+        // Transfer packs into the contract.
+        _safeTransferFrom(opener, address(this), _packId, _amountToOpen, "");
 
         // Request VRF for randomness.
         requestId = requestRandomness(CALLBACKGASLIMIT, REQUEST_CONFIRMATIONS, NUMWORDS);
@@ -351,6 +351,9 @@ contract PackVRFDirect is
             pack.amountDistributedPerOpen,
             pack
         );
+
+        // Burn packs.
+        _burn(address(this), info.packId, info.amountToOpen);
 
         _transferTokenBatch(address(this), opener, rewardUnits);
 
