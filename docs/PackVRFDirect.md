@@ -608,6 +608,28 @@ Lets a pack owner open packs and receive the packs&#39; reward units.
 |---|---|---|
 | requestId | uint256 | undefined |
 
+### openerToReqId
+
+```solidity
+function openerToReqId(address) external view returns (uint256)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### owner
 
 ```solidity

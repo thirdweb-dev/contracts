@@ -93,7 +93,7 @@ contract PackVRFDirect is
     }
 
     mapping(uint256 => RequestInfo) private requestInfo;
-    mapping(address => uint256) private openerToReqId;
+    mapping(address => uint256) public openerToReqId;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
