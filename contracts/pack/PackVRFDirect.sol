@@ -33,7 +33,7 @@ contract PackVRFDirect is
     ContractMetadata,
     Ownable,
     Royalty,
-    PermissionsEnumerable,
+    Permissions,
     TokenStore,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
@@ -77,9 +77,6 @@ contract PackVRFDirect is
 
     /// @dev Mapping from pack ID => The state of that set of packs.
     mapping(uint256 => PackInfo) private packInfo;
-
-    /// @dev Checks if pack-creator allowed to add more tokens to a packId; set to false after first transfer
-    mapping(uint256 => bool) public canUpdatePack;
 
     /*///////////////////////////////////////////////////////////////
                             VRF state
@@ -165,21 +162,17 @@ contract PackVRFDirect is
     }
 
     /*///////////////////////////////////////////////////////////////
-                            Modifiers
-    //////////////////////////////////////////////////////////////*/
-
-    modifier onlyRoleWithSwitch(bytes32 role) {
-        _checkRoleWithSwitch(role, _msgSender());
-        _;
-    }
-
-    /*///////////////////////////////////////////////////////////////
                         Generic contract logic
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the type of the contract.
     function contractType() external pure returns (bytes32) {
         return MODULE_TYPE;
+    }
+
+    /// @dev Returns the version of the contract.
+    function contractVersion() external pure returns (uint8) {
+        return uint8(VERSION);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -218,7 +211,7 @@ contract PackVRFDirect is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    ) external payable onlyRoleWithSwitch(minterRole) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
+    ) external payable onlyRole(minterRole) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
         require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
 
         if (!hasRole(assetRole, address(0))) {
@@ -242,49 +235,11 @@ contract PackVRFDirect is
         packInfo[packId].openStartTimestamp = _openStartTimestamp;
         packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
 
-        canUpdatePack[packId] = true;
+        // canUpdatePack[packId] = true;
 
         _mint(_recipient, packId, packTotalSupply, "");
 
         emit PackCreated(packId, _recipient, packTotalSupply);
-    }
-
-    /// @dev Add contents to an existing packId.
-    function addPackContents(
-        uint256 _packId,
-        Token[] calldata _contents,
-        uint256[] calldata _numOfRewardUnits,
-        address _recipient
-    )
-        external
-        payable
-        onlyRoleWithSwitch(minterRole)
-        nonReentrant
-        returns (uint256 packTotalSupply, uint256 newSupplyAdded)
-    {
-        require(canUpdatePack[_packId], "!Allowed");
-        require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
-        require(balanceOf(_recipient, _packId) != 0, "!Bal");
-
-        if (!hasRole(assetRole, address(0))) {
-            for (uint256 i = 0; i < _contents.length; i += 1) {
-                _checkRole(assetRole, _contents[i].assetContract);
-            }
-        }
-
-        uint256 amountPerOpen = packInfo[_packId].amountDistributedPerOpen;
-
-        newSupplyAdded = escrowPackContents(_contents, _numOfRewardUnits, "", _packId, amountPerOpen, true);
-        packTotalSupply = totalSupply[_packId] + newSupplyAdded;
-
-        _mint(_recipient, _packId, newSupplyAdded, "");
-
-        emit PackUpdated(_packId, _recipient, newSupplyAdded);
-    }
-
-    /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -488,10 +443,6 @@ contract PackVRFDirect is
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
-    function generateRandomValue() internal view returns (uint256 random) {
-        random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number - 1), block.difficulty)));
-    }
-
     /**
      * @dev See {ERC1155-_beforeTokenTransfer}.
      */
@@ -513,13 +464,6 @@ contract PackVRFDirect is
         if (from == address(0)) {
             for (uint256 i = 0; i < ids.length; ++i) {
                 totalSupply[ids[i]] += amounts[i];
-            }
-        } else {
-            for (uint256 i = 0; i < ids.length; ++i) {
-                // pack can no longer be updated after first transfer to non-zero address
-                if (canUpdatePack[ids[i]] && amounts[i] != 0) {
-                    canUpdatePack[ids[i]] = false;
-                }
             }
         }
 
