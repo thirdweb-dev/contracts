@@ -610,7 +610,7 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 ### openPack
 
 ```solidity
-function openPack(uint256 _packId, uint256 _amountToOpen) external nonpayable returns (uint256 requestId)
+function openPack(uint256 _packId, uint256 _amountToOpen) external nonpayable returns (uint256)
 ```
 
 Lets a pack owner open packs and receive the packs&#39; reward units.
@@ -628,7 +628,31 @@ Lets a pack owner open packs and receive the packs&#39; reward units.
 
 | Name | Type | Description |
 |---|---|---|
-| requestId | uint256 | undefined |
+| _0 | uint256 | undefined |
+
+### openPackAndClaimRewards
+
+```solidity
+function openPackAndClaimRewards(uint256 _packId, uint256 _amountToOpen, uint32 _callBackGasLimit) external nonpayable returns (uint256)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _packId | uint256 | undefined |
+| _amountToOpen | uint256 | undefined |
+| _callBackGasLimit | uint32 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### owner
 

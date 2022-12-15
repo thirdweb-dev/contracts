@@ -62,9 +62,6 @@ contract PackVRFDirect is
     /// @dev Only MINTER_ROLE holders can create packs.
     bytes32 private minterRole;
 
-    /// @dev Only assets with ASSET_ROLE can be packed, when packing is restricted to particular assets.
-    bytes32 private assetRole;
-
     /// @dev The token Id of the next set of packs to be minted.
     uint256 public nextTokenIdToMint;
 
@@ -90,6 +87,7 @@ contract PackVRFDirect is
         uint256 packId;
         uint256 amountToOpen;
         uint256[] randomWords;
+        bool openOnFulfillRandomness;
     }
 
     mapping(uint256 => RequestInfo) private requestInfo;
@@ -120,7 +118,6 @@ contract PackVRFDirect is
     ) external initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
-        bytes32 _assetRole = keccak256("ASSET_ROLE");
 
         /** note:  The immutable state-variable `forwarder` is an EOA-only forwarder,
          *         which guards against automated attacks.
@@ -147,14 +144,10 @@ contract PackVRFDirect is
         _setupRole(_minterRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
 
-        // note: see `onlyRoleWithSwitch` for ASSET_ROLE behaviour.
-        _setupRole(_assetRole, address(0));
-
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
 
         transferRole = _transferRole;
         minterRole = _minterRole;
-        assetRole = _assetRole;
     }
 
     receive() external payable {
@@ -214,12 +207,6 @@ contract PackVRFDirect is
     ) external payable onlyRole(minterRole) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
         require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
 
-        if (!hasRole(assetRole, address(0))) {
-            for (uint256 i = 0; i < _contents.length; i += 1) {
-                _checkRole(assetRole, _contents[i].assetContract);
-            }
-        }
-
         packId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
 
@@ -246,8 +233,25 @@ contract PackVRFDirect is
                             VRF logic
     //////////////////////////////////////////////////////////////*/
 
+    function openPackAndClaimRewards(
+        uint256 _packId,
+        uint256 _amountToOpen,
+        uint32 _callBackGasLimit
+    ) external returns (uint256) {
+        return _requestOpenPack(_packId, _amountToOpen, _callBackGasLimit, true);
+    }
+
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
-    function openPack(uint256 _packId, uint256 _amountToOpen) external returns (uint256 requestId) {
+    function openPack(uint256 _packId, uint256 _amountToOpen) external returns (uint256) {
+        return _requestOpenPack(_packId, _amountToOpen, CALLBACKGASLIMIT, false);
+    }
+
+    function _requestOpenPack(
+        uint256 _packId,
+        uint256 _amountToOpen,
+        uint32 _callBackGasLimit,
+        bool _openOnFulfill
+    ) internal returns (uint256 requestId) {
         address opener = _msgSender();
 
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
@@ -261,12 +265,13 @@ contract PackVRFDirect is
         _safeTransferFrom(opener, address(this), _packId, _amountToOpen, "");
 
         // Request VRF for randomness.
-        requestId = requestRandomness(CALLBACKGASLIMIT, REQUEST_CONFIRMATIONS, NUMWORDS);
+        requestId = requestRandomness(_callBackGasLimit, REQUEST_CONFIRMATIONS, NUMWORDS);
         require(requestId > 0, "!VRF");
 
         // Mark request as active; store request parameters.
         requestInfo[requestId].packId = _packId;
         requestInfo[requestId].amountToOpen = _amountToOpen;
+        requestInfo[requestId].openOnFulfillRandomness = _openOnFulfill;
         openerToReqId[opener] = requestId;
 
         emit PackOpenRequested(opener, _packId, _amountToOpen, requestId);
@@ -280,6 +285,10 @@ contract PackVRFDirect is
         requestInfo[_requestId].randomWords = _randomWords;
 
         emit PackRandomnessFulfilled(info.packId, _requestId);
+
+        if (info.openOnFulfillRandomness) {
+            claimRewards();
+        }
     }
 
     /// @notice Returns whether a pack opener is ready to call `claimRewards`.
@@ -289,7 +298,7 @@ contract PackVRFDirect is
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
-    function claimRewards() external returns (Token[] memory) {
+    function claimRewards() public returns (Token[] memory) {
         address opener = _msgSender();
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
 

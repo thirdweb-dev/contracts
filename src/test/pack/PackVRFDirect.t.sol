@@ -256,40 +256,6 @@ contract PackVRFDirectTest is BaseTest {
     }
 
     /**
-     *  note: Testing state changes; token owner calls `createPack` to pack owned tokens.
-     *        Only assets with ASSET_ROLE can be packed.
-     */
-    function test_state_createPack_withAssetRoleRestriction() public {
-        vm.startPrank(deployer);
-        pack.revokeRole(keccak256("ASSET_ROLE"), address(0));
-        for (uint256 i = 0; i < packContents.length; i += 1) {
-            if (!pack.hasRole(keccak256("ASSET_ROLE"), packContents[i].assetContract)) {
-                pack.grantRole(keccak256("ASSET_ROLE"), packContents[i].assetContract);
-            }
-        }
-        vm.stopPrank();
-
-        uint256 packId = pack.nextTokenIdToMint();
-        address recipient = address(0x123);
-
-        vm.prank(address(tokenOwner));
-        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
-
-        assertEq(packId + 1, pack.nextTokenIdToMint());
-
-        (ITokenBundle.Token[] memory packed, ) = pack.getPackContents(packId);
-        assertEq(packed.length, packContents.length);
-        for (uint256 i = 0; i < packed.length; i += 1) {
-            assertEq(packed[i].assetContract, packContents[i].assetContract);
-            assertEq(uint256(packed[i].tokenType), uint256(packContents[i].tokenType));
-            assertEq(packed[i].tokenId, packContents[i].tokenId);
-            assertEq(packed[i].totalAmount, packContents[i].totalAmount);
-        }
-
-        assertEq(packUri, pack.uri(packId));
-    }
-
-    /**
      *  note: Testing event emission; token owner calls `createPack` to pack owned tokens.
      */
     function test_event_createPack_PackCreated() public {
@@ -355,30 +321,6 @@ contract PackVRFDirectTest is BaseTest {
 
         // Pack wrapped token balance
         assertEq(pack.balanceOf(address(recipient), packId), totalSupply);
-    }
-
-    /**
-     *  note: Testing revert condition; token owner calls `createPack` to pack owned tokens.
-     *        Only assets with ASSET_ROLE can be packed, but assets being packed don't have that role.
-     */
-    function test_revert_createPack_access_ASSET_ROLE() public {
-        vm.prank(deployer);
-        pack.revokeRole(keccak256("ASSET_ROLE"), address(0));
-
-        address recipient = address(0x123);
-
-        string memory errorMsg = string(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(packContents[0].assetContract), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(keccak256("ASSET_ROLE")), 32)
-            )
-        );
-
-        vm.prank(address(tokenOwner));
-        vm.expectRevert(bytes(errorMsg));
-        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
     }
 
     /**
