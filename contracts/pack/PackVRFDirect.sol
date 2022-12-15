@@ -284,7 +284,8 @@ contract PackVRFDirect is
 
     /// @notice Returns whether a pack opener is ready to call `claimRewards`.
     function canClaimRewards(address _opener) public view returns (bool) {
-        return openerToReqId[_opener] > 0;
+        uint256 requestId = openerToReqId[_opener];
+        return requestId > 0 && requestInfo[requestId].randomWords.length > 0;
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
