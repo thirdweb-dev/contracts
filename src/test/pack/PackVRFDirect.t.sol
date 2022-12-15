@@ -521,6 +521,38 @@ contract PackVRFDirectTest is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
+                        Unit tests: `openPackAndClaimRewards`
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  note: Testing state changes; pack owner calls `openPack` to redeem underlying rewards.
+     */
+    function test_state_openPackAndClaimRewards() public {
+        vm.warp(1000);
+        uint256 packId = pack.nextTokenIdToMint();
+        uint256 packsToOpen = 3;
+        address recipient = address(1);
+
+        vm.prank(address(tokenOwner));
+        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+
+        vm.prank(recipient, recipient);
+        uint256 requestId = pack.openPackAndClaimRewards(packId, packsToOpen, 2_500_000);
+        console2.log("request ID for opening pack:", requestId);
+
+        uint256[] memory randomValues = new uint256[](1);
+        randomValues[0] = 12345678;
+
+        ITokenBundle.Token[] memory emptyRewardUnitsForTestingEvent;
+
+        vm.expectEmit(true, true, false, false);
+        emit PackOpened(packId, recipient, 1, emptyRewardUnitsForTestingEvent);
+
+        vm.prank(vrfV2Wrapper);
+        pack.rawFulfillRandomWords(requestId, randomValues);
+    }
+
+    /*///////////////////////////////////////////////////////////////
                         Unit tests: `openPack`
     //////////////////////////////////////////////////////////////*/
 

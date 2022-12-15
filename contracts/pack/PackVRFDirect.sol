@@ -56,9 +56,6 @@ contract PackVRFDirect is
     // Token symbol
     string public symbol;
 
-    /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private transferRole;
-
     /// @dev Only MINTER_ROLE holders can create packs.
     bytes32 private minterRole;
 
@@ -85,6 +82,7 @@ contract PackVRFDirect is
 
     struct RequestInfo {
         uint256 packId;
+        address opener;
         uint256 amountToOpen;
         uint256[] randomWords;
         bool openOnFulfillRandomness;
@@ -116,7 +114,6 @@ contract PackVRFDirect is
         address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
-        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
 
         /** note:  The immutable state-variable `forwarder` is an EOA-only forwarder,
@@ -139,14 +136,10 @@ contract PackVRFDirect is
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-
-        _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_minterRole, _defaultAdmin);
-        _setupRole(_transferRole, address(0));
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
 
-        transferRole = _transferRole;
         minterRole = _minterRole;
     }
 
@@ -270,6 +263,7 @@ contract PackVRFDirect is
 
         // Mark request as active; store request parameters.
         requestInfo[requestId].packId = _packId;
+        requestInfo[requestId].opener = opener;
         requestInfo[requestId].amountToOpen = _amountToOpen;
         requestInfo[requestId].openOnFulfillRandomness = _openOnFulfill;
         openerToReqId[opener] = requestId;
@@ -287,7 +281,7 @@ contract PackVRFDirect is
         emit PackRandomnessFulfilled(info.packId, _requestId);
 
         if (info.openOnFulfillRandomness) {
-            claimRewards();
+            _claimRewards(info.opener);
         }
     }
 
@@ -298,8 +292,12 @@ contract PackVRFDirect is
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
-    function claimRewards() public returns (Token[] memory) {
-        address opener = _msgSender();
+    function claimRewards() external returns (Token[] memory) {
+        return _claimRewards(_msgSender());
+    }
+
+    function _claimRewards(address _opener) internal returns (Token[] memory) {
+        address opener = _opener;
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
 
         require(canClaimRewards(opener), "!ActiveReq");
@@ -467,11 +465,6 @@ contract PackVRFDirect is
         bytes memory data
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-
-        // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(transferRole, from) || hasRole(transferRole, to), "!TRANSFER_ROLE");
-        }
 
         if (from == address(0)) {
             for (uint256 i = 0; i < ids.length; ++i) {
