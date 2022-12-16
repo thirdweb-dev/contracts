@@ -636,7 +636,7 @@ Lets a pack owner open packs and receive the packs&#39; reward units.
 function openPackAndClaimRewards(uint256 _packId, uint256 _amountToOpen, uint32 _callBackGasLimit) external nonpayable returns (uint256)
 ```
 
-
+Called by a pack opener to open a pack in a single transaction, instead of calling openPack and claimRewards separately.
 
 
 

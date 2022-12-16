@@ -100,6 +100,30 @@ Lets a pack owner request to open a pack.
 |---|---|---|
 | requestId | uint256 | undefined |
 
+### openPackAndClaimRewards
+
+```solidity
+function openPackAndClaimRewards(uint256 _packId, uint256 _amountToOpen, uint32 _callBackGasLimit) external nonpayable returns (uint256)
+```
+
+Called by a pack opener to open a pack in a single transaction, instead of calling openPack and claimRewards separately.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _packId | uint256 | undefined |
+| _amountToOpen | uint256 | undefined |
+| _callBackGasLimit | uint32 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 
 
 ## Events
