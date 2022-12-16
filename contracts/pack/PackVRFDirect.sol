@@ -249,7 +249,7 @@ contract PackVRFDirect is
 
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
 
-        require(!canClaimRewards(opener), "!ActiveReq");
+        require(openerToReqId[opener] == 0, "ReqInFlight");
 
         require(_amountToOpen > 0 && balanceOf(opener, _packId) >= _amountToOpen, "!Bal");
         require(packInfo[_packId].openStartTimestamp <= block.timestamp, "cant open");
