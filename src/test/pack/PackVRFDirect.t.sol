@@ -552,6 +552,33 @@ contract PackVRFDirectTest is BaseTest {
         pack.rawFulfillRandomWords(requestId, randomValues);
     }
 
+    /**
+     *  note: Cannot open pack again while a previous openPack request is in flight.
+     */
+    function test_revert_openPackAndClaimRewards_ReqInFlight() public {
+        vm.warp(1000);
+        uint256 packId = pack.nextTokenIdToMint();
+        uint256 packsToOpen = 3;
+        address recipient = address(1);
+
+        vm.prank(address(tokenOwner));
+        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+
+        vm.prank(recipient, recipient);
+        uint256 requestId = pack.openPackAndClaimRewards(packId, packsToOpen, 2_500_000);
+        console2.log("request ID for opening pack:", requestId);
+
+        vm.expectRevert("ReqInFlight");
+
+        vm.prank(recipient, recipient);
+        pack.openPackAndClaimRewards(packId, packsToOpen, 2_500_000);
+
+        vm.expectRevert("ReqInFlight");
+
+        vm.prank(recipient, recipient);
+        pack.openPack(packId, packsToOpen);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Unit tests: `openPack`
     //////////////////////////////////////////////////////////////*/
@@ -724,6 +751,33 @@ contract PackVRFDirectTest is BaseTest {
         string memory err = "!EOA";
         vm.expectRevert(bytes(err));
         pack.openPack(packId, 1);
+    }
+
+    /**
+     *  note: Cannot open pack again while a previous openPack request is in flight.
+     */
+    function test_revert_openPack_ReqInFlight() public {
+        vm.warp(1000);
+        uint256 packId = pack.nextTokenIdToMint();
+        uint256 packsToOpen = 3;
+        address recipient = address(1);
+
+        vm.prank(address(tokenOwner));
+        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+
+        vm.prank(recipient, recipient);
+        uint256 requestId = pack.openPack(packId, packsToOpen);
+        console2.log("request ID for opening pack:", requestId);
+
+        vm.expectRevert("ReqInFlight");
+
+        vm.prank(recipient, recipient);
+        pack.openPack(packId, packsToOpen);
+
+        vm.expectRevert("ReqInFlight");
+
+        vm.prank(recipient, recipient);
+        pack.openPackAndClaimRewards(packId, packsToOpen, 2_500_000);
     }
 
     /**
