@@ -298,7 +298,7 @@ contract PackVRFDirect is
 
     function _claimRewards(address _opener) internal returns (Token[] memory) {
         address opener = _opener;
-        require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
+        require(isTrustedForwarder(msg.sender) || msg.sender == address(VRF_V2_WRAPPER) || opener == tx.origin, "!EOA");
 
         require(canClaimRewards(opener), "!ActiveReq");
         uint256 reqId = openerToReqId[opener];
