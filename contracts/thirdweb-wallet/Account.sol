@@ -151,18 +151,12 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Deploys a smart contract.
-    function deploy(DeployParams calldata _params, bytes calldata _signature)
-        external
-        payable
-        onlyController
-        onlyValidWalletCall(_params.nonce, _params.value, _params.validityStartTimestamp, _params.validityEndTimestamp)
-        returns (address deployment)
-    {
-        {
-            bytes32 messageHash = keccak256(_encodeDeployParams(_params));
-            _validateSignature(_params.signer, messageHash, _signature);
-        }
-        deployment = Create2.deploy(_params.value, _params.salt, _params.bytecode);
+    function deploy(
+        bytes calldata _bytecode,
+        bytes32 _salt,
+        uint256 _value
+    ) external payable onlySelf returns (address deployment) {
+        deployment = Create2.deploy(_value, _salt, _bytecode);
         emit ContractDeployed(deployment);
     }
 
@@ -325,20 +319,6 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
                 _params.nonce,
                 _params.value,
                 _params.gas,
-                _params.validityStartTimestamp,
-                _params.validityEndTimestamp
-            );
-    }
-
-    function _encodeDeployParams(DeployParams calldata _params) private pure returns (bytes memory) {
-        return
-            abi.encode(
-                DEPLOY_TYPEHASH,
-                _params.signer,
-                keccak256(bytes(_params.bytecode)),
-                _params.salt,
-                _params.value,
-                _params.nonce,
                 _params.validityStartTimestamp,
                 _params.validityEndTimestamp
             );

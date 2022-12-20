@@ -62,33 +62,12 @@ interface IAccount is IERC1271 {
     /// @notice Emitted when the wallet deploys a smart contract.
     event ContractDeployed(address indexed deployment);
 
-    /**
-     * @notice Parameters to pass to make the wallet deploy a smart contract.
-     *
-     *  @param bytecode The smart contract bytcode to deploy.
-     *  @param salt The create2 salt for smart contract deployment.
-     *  @param value The amount of native tokens to pass to the contract on creation.
-     *  @param nonce The nonce of the smart contract wallet at the time of deploying the contract.
-     *  @param validityStartTimestamp The timestamp before which the account creation request is invalid.
-     *  @param validityEndTimestamp The timestamp at and after which the account creation request is invalid.
-     */
-    struct DeployParams {
-        address signer;
-        bytes bytecode;
-        bytes32 salt;
-        uint256 value;
-        uint256 nonce;
-        uint128 validityStartTimestamp;
-        uint128 validityEndTimestamp;
-    }
-
-    /**
-     *  @notice Deploys a smart contract.
-     *
-     *  @param params Parameters to pass to make the wallet deploy a smart contract.
-     *  @param signature A signature of intent from the wallet's signer, produced on signing the function parameters.
-     */
-    function deploy(DeployParams calldata params, bytes memory signature) external payable returns (address deployment);
+    /// @notice Deploys a smart contract.
+    function deploy(
+        bytes calldata _bytecode,
+        bytes32 _salt,
+        uint256 _value
+    ) external payable returns (address deployment);
 
     ////////// Changing signer composition of the account //////////
 
