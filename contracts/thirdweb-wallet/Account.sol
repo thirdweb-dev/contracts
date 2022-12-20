@@ -14,10 +14,15 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 ////////// NOTE(S) //////////
 /**
  *  - The Account can have many Signers.
- *  - Currently, there is no difference in power between signers.
- *    Each Signer can:
+ *  - There are two kinds of signers: `Admin`s and `Operator`s.
+ *
+ *    Each `Admin` can:
  *      - Perform any transaction / action on this account with 1/n approval.
  *      - Add signers or remove existing signers.
+ *      - Approve a particular smart contract call (i.e. fn signature + contract address) for an `Operator`.
+ *
+ *    Each `Operator` can:
+ *      - Perform smart contract calls it is approved for (i.e. wherever Operator => (fn signature + contract address) => TRUE).
  *
  *  - The Account can:
  *      - Deploy smart contracts.
