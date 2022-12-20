@@ -2,16 +2,27 @@
 pragma solidity ^0.8.11;
 
 interface IMap {
-    struct ExtensionMap {
+    struct Plugin {
         bytes4 selector;
-        address extension;
+        address pluginAddress;
+        string functionString;
     }
 
-    event ExtensionRegistered(bytes4 indexed selector, address indexed extension);
+    event PluginRegistered(bytes4 indexed selector, address indexed pluginAddress);
 
-    function getExtensionForFunction(bytes4 _selector) external view returns (address);
+    event PluginUpdated(bytes4 indexed selector, address indexed oldPluginAddress, address indexed newPluginAddress);
 
-    function getAllFunctionsOfExtension(address _extension) external view returns (bytes4[] memory registered);
+    event PluginRemoved(bytes4 indexed selector, address indexed pluginAddress);
 
-    function getAllRegistered() external view returns (ExtensionMap[] memory registered);
+    function setPlugin(Plugin memory _plugin) external;
+
+    function updatePlugin(Plugin memory _plugin) external;
+
+    function removePlugin(bytes4 _selector) external;
+
+    function getPluginForFunction(bytes4 _selector) external view returns (address);
+
+    function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] memory registered);
+
+    function getAllRegistered() external view returns (Plugin[] memory registered);
 }
