@@ -67,6 +67,9 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
     /// @notice The nonce of the account.
     uint256 public nonce;
 
+    /// @notice  Mapping from Signer => (fn sig, contract address) => approval to call.
+    mapping(address => mapping(bytes32 => bool)) private isApprovedFor;
+
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -82,32 +85,9 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
                                 Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Checks whether the caller is `controller`.
-    modifier onlyController() {
-        require(controller == msg.sender, "Account: caller not controller.");
-        _;
-    }
-
     /// @dev Checks whether the caller is self.
     modifier onlySelf() {
         require(msg.sender == address(this), "Account: caller not self.");
-        _;
-    }
-
-    /// @dev Ensures conditions for a valid wallet action: a call or deployment.
-    modifier onlyValidWalletCall(
-        uint256 _nonce,
-        uint256 _value,
-        uint128 _validityStartTimestamp,
-        uint128 _validityEndTimestamp
-    ) {
-        require(msg.value == _value, "Account: incorrect value sent.");
-        require(
-            _validityStartTimestamp <= block.timestamp && block.timestamp < _validityEndTimestamp,
-            "Account: request premature or expired."
-        );
-        require(_nonce == nonce, "Account: incorrect nonce.");
-        nonce += 1;
         _;
     }
 
@@ -126,14 +106,16 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
     function execute(TransactionParams calldata _params, bytes calldata _signature)
         external
         payable
-        onlyController
-        onlyValidWalletCall(_params.nonce, _params.value, _params.validityStartTimestamp, _params.validityEndTimestamp)
         returns (bool success)
     {
-        {
-            bytes32 messageHash = keccak256(_encodeTransactionParams(_params));
-            _validateSignature(_params.signer, messageHash, _signature);
-        }
+        _validateCallConditions(
+            _params.nonce,
+            _params.value,
+            _params.validityStartTimestamp,
+            _params.validityEndTimestamp
+        );
+        _validateSignature(_params, _signature);
+
         success = _call(_params);
 
         emit TransactionExecuted(
@@ -269,22 +251,52 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
                             Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Validates a signature.
-    function _validateSignature(
-        address _signer,
-        bytes32 _messageHash,
-        bytes calldata _signature
-    ) internal view {
+    /// @dev Validates a signature for a call to account.
+    function _validateSignature(TransactionParams calldata _params, bytes calldata _signature) internal view {
         bool validSignature = false;
+        {
+            bytes32 messageHash = keccak256(_encodeTransactionParams(_params));
 
-        if (_signer.code.length > 0) {
-            validSignature = MAGICVALUE == IERC1271(_signer).isValidSignature(_messageHash, _signature);
-        } else {
-            address recoveredSigner = _hashTypedDataV4(_messageHash).recover(_signature);
-            validSignature = _signer == recoveredSigner && hasRole(SIGNER_ROLE, _signer);
+            if (_params.signer.code.length > 0) {
+                validSignature = MAGICVALUE == IERC1271(_params.signer).isValidSignature(messageHash, _signature);
+            } else {
+                address recoveredSigner = _hashTypedDataV4(messageHash).recover(_signature);
+                validSignature = _params.signer == recoveredSigner;
+            }
         }
 
-        require(validSignature, "Account: invalid signer.");
+        bool hasPermissions = hasRole(DEFAULT_ADMIN_ROLE, _params.signer);
+
+        if (!hasPermissions) {
+            bytes32 targetHash = keccak256(abi.encode(_getSelector(_params.data), _params.target));
+            hasPermissions = hasRole(SIGNER_ROLE, _params.signer) && isApprovedFor[_params.signer][targetHash];
+        }
+
+        require(validSignature && hasPermissions, "Account: invalid signer.");
+    }
+
+    /// @dev Validates conditions for a call to account.
+    function _validateCallConditions(
+        uint256 _nonce,
+        uint256 _value,
+        uint128 _validityStartTimestamp,
+        uint128 _validityEndTimestamp
+    ) internal {
+        require(controller == msg.sender, "Account: caller not controller.");
+        require(msg.value == _value, "Account: incorrect value sent.");
+        require(
+            _validityStartTimestamp <= block.timestamp && block.timestamp < _validityEndTimestamp,
+            "Account: request premature or expired."
+        );
+        require(_nonce == nonce, "Account: incorrect nonce.");
+        nonce += 1;
+    }
+
+    /// @notice See `https://ethereum.stackexchange.com/questions/111384/how-to-load-the-first-4-bytes-from-a-bytes-calldata-var`
+    function _getSelector(bytes calldata data) internal pure returns (bytes4 selector) {
+        assembly {
+            selector := calldataload(data.offset)
+        }
     }
 
     /// @dev Performs a call; sends native tokens or calls a smart contract.
