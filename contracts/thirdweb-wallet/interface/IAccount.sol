@@ -92,40 +92,27 @@ interface IAccount is IERC1271 {
 
     ////////// Changing signer composition of the account //////////
 
-    /// @notice Emitted when the signer is added to the account.
+    /// @notice Emitted when a signer is added to the account.
     event SignerAdded(address signer);
 
-    /// @notice Emitted when the signer is removed from the account.
+    /// @notice Emitted when a signer is removed from the account.
     event SignerRemoved(address signer);
 
-    /**
-     *  @notice The parameters to pass when adding or removing a signer.
-     *
-     *  @param signer The signer to add or remove.
-     *  @param credentials The credentials for the signer to add or remove.
-     *  @param validityStartTimestamp The timestamp before which the account creation request is invalid.
-     *  @param validityEndTimestamp The timestamp at and after which the account creation request is invalid.
-     */
-    struct SignerUpdateParams {
-        address signer;
-        bytes32 credentials;
-        uint128 validityStartTimestamp;
-        uint128 validityEndTimestamp;
-    }
+    /// @notice Emitted when an admin is added to the account.
+    event AdminAdded(address signer);
 
-    /**
-     *  @notice Adds a signer to the account.
-     *
-     *  @param params The parameters to pass to add a signer to the account.
-     *  @param signature A signature of intent from the account's signer, produced on signing the function parameters.
-     */
-    function addSigner(SignerUpdateParams calldata params, bytes calldata signature) external;
+    /// @notice Emitted when an admin is removed from the account.
+    event AdminRemoved(address signer);
 
-    /**
-     *  @notice Removes a signer from the account.
-     *
-     *  @param params The parameters to pass to remove a signer from the account.
-     *  @param signature A signature of intent from the account's signer, produced on signing the function parameters.
-     */
-    function removeSigner(SignerUpdateParams calldata params, bytes calldata signature) external;
+    /// @notice Adds an admin to the account.
+    function addAdmin(address _signer, bytes32 _credentials) external;
+
+    /// @notice Removes an admin from the account.
+    function removeAdmin(address _signer, bytes32 _credentials) external;
+
+    /// @notice Adds a signer to the account.
+    function addSigner(address _signer, bytes32 _credentials) external;
+
+    /// @notice Removes a signer from the account.
+    function removeSigner(address _signer, bytes32 _credentials) external;
 }

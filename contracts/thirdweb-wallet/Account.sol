@@ -75,7 +75,7 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
         controller = _controller;
         _setupRole(DEFAULT_ADMIN_ROLE, _signer);
 
-        emit SignerAdded(_signer);
+        emit AdminAdded(_signer);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -170,44 +170,56 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
                 Change signer composition to the account.
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Adds a signer to the account.
-    function addSigner(SignerUpdateParams calldata _params, bytes calldata _signature) external onlySelf {
-        bytes32 messageHash = keccak256(
-            abi.encode(
-                SIGNER_UPDATE_TYPEHASH,
-                _params.signer,
-                _params.credentials,
-                _params.validityStartTimestamp,
-                _params.validityEndTimestamp
-            )
-        );
-        _validateSignature(_params.signer, messageHash, _signature);
+    /// @notice Adds an admin to the account.
+    function addAdmin(address _signer, bytes32 _credentials) external onlySelf {
+        _setupRole(DEFAULT_ADMIN_ROLE, _signer);
+        emit AdminAdded(_signer);
 
-        _setupRole(SIGNER_ROLE, _params.signer);
-
-        emit SignerAdded(_params.signer);
-
-        IAccountAdmin(controller).addSignerToAccount(_params.signer, _params.credentials);
+        IAccountAdmin(controller).addSignerToAccount(_signer, _credentials);
     }
 
-    /// @notice Removes a signer to the account.
-    function removeSigner(SignerUpdateParams calldata _params, bytes calldata _signature) external onlySelf {
-        bytes32 messageHash = keccak256(
-            abi.encode(
-                SIGNER_UPDATE_TYPEHASH,
-                _params.signer,
-                _params.credentials,
-                _params.validityStartTimestamp,
-                _params.validityEndTimestamp
-            )
-        );
-        _validateSignature(_params.signer, messageHash, _signature);
+    /// @notice Removes an admin from the account.
+    function removeAdmin(address _signer, bytes32 _credentials) external onlySelf {
+        _revokeRole(DEFAULT_ADMIN_ROLE, _signer);
+        emit AdminRemoved(_signer);
 
-        _revokeRole(SIGNER_ROLE, _params.signer);
+        IAccountAdmin(controller).removeSignerToAccount(_signer, _credentials);
+    }
 
-        emit SignerRemoved(_params.signer);
+    /// @notice Adds a signer to the account.
+    function addSigner(address _signer, bytes32 _credentials) external onlySelf {
+        _setupRole(SIGNER_ROLE, _signer);
+        emit SignerAdded(_signer);
 
-        IAccountAdmin(controller).removeSignerToAccount(_params.signer, _params.credentials);
+        IAccountAdmin(controller).addSignerToAccount(_signer, _credentials);
+    }
+
+    /// @notice Removes a signer from the account.
+    function removeSigner(address _signer, bytes32 _credentials) external onlySelf {
+        _revokeRole(SIGNER_ROLE, _signer);
+        emit SignerRemoved(_signer);
+
+        IAccountAdmin(controller).removeSignerToAccount(_signer, _credentials);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Override permission functions without AccountAdmin callback
+    //////////////////////////////////////////////////////////////*/
+
+    function grantRole(bytes32, address) public virtual override(IPermissions, Permissions) {
+        _permissionsRevert();
+    }
+
+    function revokeRole(bytes32, address) public virtual override(IPermissions, Permissions) {
+        _permissionsRevert();
+    }
+
+    function renounceRole(bytes32, address) public virtual override(IPermissions, Permissions) {
+        _permissionsRevert();
+    }
+
+    function _permissionsRevert() private pure {
+        revert("Account: cannot directly change permissions.");
     }
 
     /*///////////////////////////////////////////////////////////////
