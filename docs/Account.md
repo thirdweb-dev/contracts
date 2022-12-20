@@ -4,7 +4,7 @@
 
 
 
-- The Account can have many Signers.  - Currently, there is no difference in power between signers.    Each Signer can:      - Perform any transaction / action on this account with 1/n approval.      - Add signers or remove existing signers.  - The Account can:      - Deploy smart contracts.      - Send native tokens.      - Call smart contracts.      - Sign messages. (EIP-1271)      - Own and transfer assets. (ERC-20/721/1155)
+- The Account can have many Signers.  - There are two kinds of signers: `Admin`s and `Operator`s.    Each `Admin` can:      - Perform any transaction / action on this account with 1/n approval.      - Add signers or remove existing signers.      - Approve a particular smart contract call (i.e. fn signature + contract address) for an `Operator`.    Each `Operator` can:      - Perform smart contract calls it is approved for (i.e. wherever Operator =&gt; (fn signature + contract address) =&gt; TRUE).  - The Account can:      - Deploy smart contracts.      - Send native tokens.      - Call smart contracts.      - Sign messages. (EIP-1271)      - Own and transfer assets. (ERC-20/721/1155)
 
 
 
@@ -44,13 +44,13 @@ function SIGNER_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### addSigner
+### addAdmin
 
 ```solidity
-function addSigner(IAccount.SignerUpdateParams _params, bytes _signature) external nonpayable
+function addAdmin(address _signer, bytes32 _credentials) external nonpayable
 ```
 
-
+Adds an admin to the account.
 
 
 
@@ -58,8 +58,43 @@ function addSigner(IAccount.SignerUpdateParams _params, bytes _signature) extern
 
 | Name | Type | Description |
 |---|---|---|
-| _params | IAccount.SignerUpdateParams | undefined |
-| _signature | bytes | undefined |
+| _signer | address | undefined |
+| _credentials | bytes32 | undefined |
+
+### addSigner
+
+```solidity
+function addSigner(address _signer, bytes32 _credentials) external nonpayable
+```
+
+Adds a signer to the account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+| _credentials | bytes32 | undefined |
+
+### approveSignerFor
+
+```solidity
+function approveSignerFor(address _signer, bytes4 _selector, address _target) external nonpayable
+```
+
+Approves a signer to be able to call `_selector` function on `_target` smart contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+| _selector | bytes4 | undefined |
+| _target | address | undefined |
 
 ### controller
 
@@ -81,10 +116,10 @@ The admin smart contract of the account.
 ### deploy
 
 ```solidity
-function deploy(IAccount.DeployParams _params, bytes _signature) external payable returns (address deployment)
+function deploy(bytes _bytecode, bytes32 _salt, uint256 _value) external payable returns (address deployment)
 ```
 
-
+Deploys a smart contract.
 
 
 
@@ -92,14 +127,33 @@ function deploy(IAccount.DeployParams _params, bytes _signature) external payabl
 
 | Name | Type | Description |
 |---|---|---|
-| _params | IAccount.DeployParams | undefined |
-| _signature | bytes | undefined |
+| _bytecode | bytes | undefined |
+| _salt | bytes32 | undefined |
+| _value | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | deployment | address | undefined |
+
+### disapproveSignerFor
+
+```solidity
+function disapproveSignerFor(address _signer, bytes4 _selector, address _target) external nonpayable
+```
+
+Disapproves a signer from being able to call `_selector` function on `_target` smart contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+| _selector | bytes4 | undefined |
+| _target | address | undefined |
 
 ### execute
 
@@ -123,6 +177,28 @@ function execute(IAccount.TransactionParams _params, bytes _signature) external 
 | Name | Type | Description |
 |---|---|---|
 | success | bool | undefined |
+
+### getAllApprovedForSigner
+
+```solidity
+function getAllApprovedForSigner(address _signer) external view returns (struct IAccount.CallTarget[] approvedTargets)
+```
+
+Returns all call targets approved for a given signer.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| approvedTargets | IAccount.CallTarget[] | undefined |
 
 ### getRoleAdmin
 
@@ -194,19 +270,19 @@ Returns total number of accounts that have a role.
 ### grantRole
 
 ```solidity
-function grantRole(bytes32 role, address account) external nonpayable
+function grantRole(bytes32, address) external nonpayable
 ```
 
-Grants a role to an account, if not previously granted.
 
-*Caller must have admin role for the `role`.                  Emits {RoleGranted Event}.*
+
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account to which the role is being granted. |
+| _0 | bytes32 | undefined |
+| _1 | address | undefined |
 
 ### hasRole
 
@@ -393,13 +469,13 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 |---|---|---|
 | _0 | bytes4 | undefined |
 
-### removeSigner
+### removeAdmin
 
 ```solidity
-function removeSigner(IAccount.SignerUpdateParams _params, bytes _signature) external nonpayable
+function removeAdmin(address _signer, bytes32 _credentials) external nonpayable
 ```
 
-
+Removes an admin from the account.
 
 
 
@@ -407,46 +483,114 @@ function removeSigner(IAccount.SignerUpdateParams _params, bytes _signature) ext
 
 | Name | Type | Description |
 |---|---|---|
-| _params | IAccount.SignerUpdateParams | undefined |
-| _signature | bytes | undefined |
+| _signer | address | undefined |
+| _credentials | bytes32 | undefined |
+
+### removeSigner
+
+```solidity
+function removeSigner(address _signer, bytes32 _credentials) external nonpayable
+```
+
+Removes a signer from the account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+| _credentials | bytes32 | undefined |
 
 ### renounceRole
 
 ```solidity
-function renounceRole(bytes32 role, address account) external nonpayable
+function renounceRole(bytes32, address) external nonpayable
 ```
 
-Revokes role from the account.
 
-*Caller must have the `role`, with caller being the same as `account`.                  Emits {RoleRevoked Event}.*
+
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account from which the role is being revoked. |
+| _0 | bytes32 | undefined |
+| _1 | address | undefined |
 
 ### revokeRole
 
 ```solidity
-function revokeRole(bytes32 role, address account) external nonpayable
+function revokeRole(bytes32, address) external nonpayable
 ```
 
-Revokes role from an account.
 
-*Caller must have admin role for the `role`.                  Emits {RoleRevoked Event}.*
+
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account from which the role is being revoked. |
+| _0 | bytes32 | undefined |
+| _1 | address | undefined |
 
 
 
 ## Events
+
+### AdminAdded
+
+```solidity
+event AdminAdded(address signer)
+```
+
+Emitted when an admin is added to the account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer  | address | undefined |
+
+### AdminRemoved
+
+```solidity
+event AdminRemoved(address signer)
+```
+
+Emitted when an admin is removed from the account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer  | address | undefined |
+
+### ApprovalForSigner
+
+```solidity
+event ApprovalForSigner(address indexed signer, bytes4 indexed selector, address indexed target, bool isApproved)
+```
+
+Emitted when a signer is approved to call `_selector` function on `_target` smart contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer `indexed` | address | undefined |
+| selector `indexed` | bytes4 | undefined |
+| target `indexed` | address | undefined |
+| isApproved  | bool | undefined |
 
 ### ContractDeployed
 
@@ -524,7 +668,7 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 event SignerAdded(address signer)
 ```
 
-Emitted when the signer is added to the account.
+Emitted when a signer is added to the account.
 
 
 
@@ -540,7 +684,7 @@ Emitted when the signer is added to the account.
 event SignerRemoved(address signer)
 ```
 
-Emitted when the signer is removed from the account.
+Emitted when a signer is removed from the account.
 
 
 
