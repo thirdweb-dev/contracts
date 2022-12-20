@@ -73,7 +73,7 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
 
     constructor(address _controller, address _signer) payable EIP712("thirdwebWallet", "1") {
         controller = _controller;
-        _setupRole(SIGNER_ROLE, _signer);
+        _setupRole(DEFAULT_ADMIN_ROLE, _signer);
 
         emit SignerAdded(_signer);
     }
