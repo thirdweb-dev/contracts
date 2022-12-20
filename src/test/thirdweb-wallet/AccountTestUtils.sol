@@ -38,11 +38,20 @@ contract AccountData {
     /// @notice Emitted when the wallet deploys a smart contract.
     event ContractDeployed(address indexed deployment);
 
-    /// @notice Emitted when the signer is added to the account.
+    /// @notice Emitted when a signer is added to the account.
     event SignerAdded(address signer);
 
-    /// @notice Emitted when the signer is removed from the account.
+    /// @notice Emitted when a signer is removed from the account.
     event SignerRemoved(address signer);
+
+    /// @notice Emitted when an admin is added to the account.
+    event AdminAdded(address signer);
+
+    /// @notice Emitted when an admin is removed from the account.
+    event AdminRemoved(address signer);
+
+    /// @notice Emitted when a signer is approved to call `_selector` function on `_target` smart contract.
+    event ApprovalForSigner(address indexed signer, bytes4 indexed selector, address indexed target, bool isApproved);
 }
 
 contract AccountUtil is BaseTest {
@@ -51,15 +60,6 @@ contract AccountUtil is BaseTest {
             "TransactionParams(address signer,address target,bytes data,uint256 nonce,uint256 value,uint256 gas,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
 
-    bytes32 private constant DEPLOY_TYPEHASH =
-        keccak256(
-            "DeployParams(address signer,bytes bytecode,bytes32 salt,uint256 value,uint256 nonce,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
-        );
-
-    bytes32 private constant SIGNER_UPDATE_TYPEHASH =
-        keccak256(
-            "SignerUpdateParams(address signer,bytes32 credentials,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
-        );
     bytes32 internal nameHashWallet = keccak256(bytes("thirdwebWallet"));
     bytes32 internal versionHashWallet = keccak256(bytes("1"));
     bytes32 internal typehashEip712Wallet =
@@ -85,60 +85,6 @@ contract AccountUtil is BaseTest {
 
         bytes32 domainSeparator = keccak256(
             abi.encode(typehashEip712Wallet, nameHashWallet, versionHashWallet, block.chainid, address(targetContract))
-        );
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
-        bytes memory sig = abi.encodePacked(r, s, v);
-
-        return sig;
-    }
-
-    function signDeploy(
-        Account.DeployParams memory _params,
-        uint256 _privateKey,
-        address targetContract
-    ) internal view returns (bytes memory) {
-        bytes32 structHash = keccak256(
-            abi.encode(
-                DEPLOY_TYPEHASH,
-                keccak256(bytes(_params.bytecode)),
-                _params.salt,
-                _params.value,
-                _params.nonce,
-                _params.validityStartTimestamp,
-                _params.validityEndTimestamp
-            )
-        );
-
-        bytes32 domainSeparator = keccak256(
-            abi.encode(typehashEip712Wallet, nameHashWallet, versionHashWallet, block.chainid, address(targetContract))
-        );
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
-        bytes memory sig = abi.encodePacked(r, s, v);
-
-        return sig;
-    }
-
-    function signSignerUpdate(
-        Account.SignerUpdateParams memory _params,
-        uint256 _privateKey,
-        address _targetContract
-    ) internal view returns (bytes memory) {
-        bytes32 structHash = keccak256(
-            abi.encode(
-                SIGNER_UPDATE_TYPEHASH,
-                _params.signer,
-                _params.credentials,
-                _params.validityStartTimestamp,
-                _params.validityEndTimestamp
-            )
-        );
-
-        bytes32 domainSeparator = keccak256(
-            abi.encode(typehashEip712Wallet, nameHashWallet, versionHashWallet, block.chainid, address(_targetContract))
         );
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 

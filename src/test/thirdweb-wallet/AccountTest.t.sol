@@ -6,13 +6,14 @@ import { Account, IAccount } from "contracts/thirdweb-wallet/Account.sol";
 import { AccountAdmin, IAccountAdmin } from "contracts/thirdweb-wallet/AccountAdmin.sol";
 
 ////////// Test utils: signing //////////
-import { AccountUtil, AccountAdminUtil, DummyContract } from "./AccountTestUtils.sol";
+import { AccountUtil, AccountData, AccountAdminUtil, AccountAdminData, DummyContract } from "./AccountTestUtils.sol";
 
 ////////// Generic test imports //////////
 import { ERC20, ERC721, ERC1155, Create2 } from "../utils/BaseTest.sol";
 
-contract ThirdwebWalletTest is AccountUtil, AccountAdminUtil {
+contract ThirdwebWalletTest is AccountUtil, AccountData, AccountAdminUtil, AccountAdminData {
     bytes32 private constant SIGNER_ROLE = keccak256("SIGNER");
+    bytes32 private constant DEFAULT_ADMIN_ROLE = 0x00;
 
     AccountAdmin private accountAdmin;
     Account private account;
@@ -53,8 +54,10 @@ contract ThirdwebWalletTest is AccountUtil, AccountAdminUtil {
         bytes memory signature = signCreateAccount(params, privateKey1, address(accountAdmin));
         address accountAddress = accountAdmin.createAccount(params, signature);
 
-        assertEq(Account(payable(accountAddress)).hasRole(SIGNER_ROLE, signer1), true);
-        assertEq(Account(payable(accountAddress)).getRoleMemberCount(SIGNER_ROLE), 1);
+        assertEq(Account(payable(accountAddress)).hasRole(SIGNER_ROLE, signer1), false);
+        assertEq(Account(payable(accountAddress)).hasRole(DEFAULT_ADMIN_ROLE, signer1), true);
+        assertEq(Account(payable(accountAddress)).getRoleMemberCount(SIGNER_ROLE), 0);
+        assertEq(Account(payable(accountAddress)).getRoleMemberCount(DEFAULT_ADMIN_ROLE), 1);
         assertEq(Account(payable(accountAddress)).nonce(), 0);
         assertEq(Account(payable(accountAddress)).controller(), address(accountAdmin));
     }
