@@ -7,7 +7,7 @@ import { NFTStake } from "contracts/staking/NFTStake.sol";
 import "contracts/lib/TWStrings.sol";
 import "../utils/BaseTest.sol";
 
-contract NFTStakeTest is BaseTest {
+contract NFTStakeEthRewardTest is BaseTest {
     NFTStake internal stakeContract;
 
     address internal stakerOne;
@@ -27,9 +27,19 @@ contract NFTStakeTest is BaseTest {
 
         erc721.mint(stakerOne, 5); // mint token id 0 to 4
         erc721.mint(stakerTwo, 5); // mint token id 5 to 9
-        erc20.mint(deployer, 1000 ether); // mint reward tokens to contract admin
+        vm.deal(deployer, 1000 ether); // mint reward tokens (Eth) to contract admin
 
-        stakeContract = NFTStake(payable(getContract("NFTStake")));
+        stakeContract = NFTStake(
+            payable(
+                deployContractProxy(
+                    "NFTStake",
+                    abi.encodeCall(
+                        NFTStake.initialize,
+                        (deployer, CONTRACT_URI, forwarders(), NATIVE_TOKEN, address(erc721), 60, 1)
+                    )
+                )
+            )
+        );
 
         // set approvals
         vm.prank(stakerOne);
@@ -39,8 +49,7 @@ contract NFTStakeTest is BaseTest {
         erc721.setApprovalForAll(address(stakeContract), true);
 
         vm.startPrank(deployer);
-        erc20.approve(address(stakeContract), type(uint256).max);
-        stakeContract.depositRewardTokens(100 ether);
+        stakeContract.depositRewardTokens{ value: 100 ether }(100 ether);
         // erc20.transfer(address(stakeContract), 100 ether);
         vm.stopPrank();
         assertEq(stakeContract.getRewardTokenBalance(), 100 ether);
@@ -183,7 +192,7 @@ contract NFTStakeTest is BaseTest {
 
         // check reward balances
         assertEq(
-            erc20.balanceOf(stakerOne),
+            stakerOne.balance,
             ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) * rewardsPerUnitTime) / timeUnit)
         );
         assertEq(

@@ -17,6 +17,9 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
                             State variables / Mappings
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev The address of the native token wrapper contract.
+    address internal immutable nativeTokenWrapper;
+
     ///@dev Address of ERC20 contract -- staked tokens belong to this contract.
     address public token;
 
@@ -42,13 +45,15 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     mapping(uint256 => StakingCondition) private stakingConditions;
 
     constructor(
+        address _nativeTokenWrapper,
         address _token,
         uint256 _stakingTokenDecimals,
         uint256 _rewardTokenDecimals
     ) ReentrancyGuard() {
-        require(address(_token) != address(0), "address 0");
+        require(_token != address(0) && _nativeTokenWrapper != address(0), "address 0");
         require(_stakingTokenDecimals != 0 && _rewardTokenDecimals != 0, "decimals 0");
 
+        nativeTokenWrapper = _nativeTokenWrapper;
         token = _token;
         stakingTokenDecimals = _stakingTokenDecimals;
         rewardTokenDecimals = _rewardTokenDecimals;
@@ -65,7 +70,7 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
      *
      *  @param _amount    Amount to stake.
      */
-    function stake(uint256 _amount) external nonReentrant {
+    function stake(uint256 _amount) external payable nonReentrant {
         _stake(_amount);
     }
 
@@ -170,7 +175,14 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     /// @dev Staking logic. Override to add custom logic.
     function _stake(uint256 _amount) internal virtual {
         require(_amount != 0, "Staking 0 tokens");
-        address _token = token;
+
+        address _token;
+        if (token == CurrencyTransferLib.NATIVE_TOKEN) {
+            _token = nativeTokenWrapper;
+        } else {
+            require(msg.value == 0, "Value not 0");
+            _token = token;
+        }
 
         if (stakers[_stakeMsgSender()].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(_stakeMsgSender());
@@ -181,7 +193,13 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
         }
 
         uint256 balanceBefore = IERC20(_token).balanceOf(address(this));
-        CurrencyTransferLib.transferCurrency(_token, _stakeMsgSender(), address(this), _amount);
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            token,
+            _stakeMsgSender(),
+            address(this),
+            _amount,
+            nativeTokenWrapper
+        );
         uint256 actualAmount = IERC20(_token).balanceOf(address(this)) - balanceBefore;
 
         stakers[_stakeMsgSender()].amountStaked += actualAmount;
@@ -211,7 +229,13 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
         stakers[_stakeMsgSender()].amountStaked -= _amount;
         stakingTokenBalance -= _amount;
 
-        CurrencyTransferLib.transferCurrency(token, address(this), _stakeMsgSender(), _amount);
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            token,
+            address(this),
+            _stakeMsgSender(),
+            _amount,
+            nativeTokenWrapper
+        );
 
         emit TokensWithdrawn(_stakeMsgSender(), _amount);
     }

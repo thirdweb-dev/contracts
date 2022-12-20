@@ -32,13 +32,24 @@ contract NFTStake is
     bytes32 private constant MODULE_TYPE = bytes32("NFTStake");
     uint256 private constant VERSION = 1;
 
+    /// @dev The address of the native token wrapper contract.
+    address internal immutable nativeTokenWrapper;
+
     /// @dev Emitted when contract admin withdraws reward tokens.
     event RewardTokensWithdrawnByAdmin(uint256 _amount);
+
+    /// @dev Emitted when contract admin deposits reward tokens.
+    event RewardTokensDepositedByAdmin(uint256 _amount);
 
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
 
-    constructor() initializer {}
+    /// @dev Total amount of reward tokens in the contract.
+    uint256 private rewardTokenBalance;
+
+    constructor(address _nativeTokenWrapper) initializer {
+        nativeTokenWrapper = _nativeTokenWrapper;
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -70,18 +81,53 @@ contract NFTStake is
         return uint8(VERSION);
     }
 
+    /// @dev Lets the contract receive ether to unwrap native tokens.
+    receive() external payable {
+        require(msg.sender == nativeTokenWrapper, "caller not native token wrapper.");
+    }
+
+    /// @dev Admin deposits reward tokens.
+    function depositRewardTokens(uint256 _amount) external payable nonReentrant {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
+
+        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : rewardToken;
+
+        uint256 balanceBefore = IERC20(_rewardToken).balanceOf(address(this));
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            rewardToken,
+            _msgSender(),
+            address(this),
+            _amount,
+            nativeTokenWrapper
+        );
+        uint256 actualAmount = IERC20(_rewardToken).balanceOf(address(this)) - balanceBefore;
+
+        rewardTokenBalance += actualAmount;
+
+        emit RewardTokensDepositedByAdmin(actualAmount);
+    }
+
     /// @dev Admin can withdraw excess reward tokens.
     function withdrawRewardTokens(uint256 _amount) external {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
-        CurrencyTransferLib.transferCurrency(rewardToken, address(this), _msgSender(), _amount);
+        // to prevent locking of direct-transferred tokens
+        rewardTokenBalance = _amount > rewardTokenBalance ? 0 : rewardTokenBalance - _amount;
+
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            rewardToken,
+            address(this),
+            _msgSender(),
+            _amount,
+            nativeTokenWrapper
+        );
 
         emit RewardTokensWithdrawnByAdmin(_amount);
     }
 
     /// @notice View total rewards available in the staking contract.
-    function getRewardTokenBalance() external view override returns (uint256 _rewardsAvailableInContract) {
-        return IERC20(rewardToken).balanceOf(address(this));
+    function getRewardTokenBalance() external view override returns (uint256) {
+        return rewardTokenBalance;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -108,7 +154,15 @@ contract NFTStake is
 
     /// @dev Mint/Transfer ERC20 rewards to the staker.
     function _mintRewards(address _staker, uint256 _rewards) internal override {
-        CurrencyTransferLib.transferCurrency(rewardToken, address(this), _staker, _rewards);
+        require(_rewards <= rewardTokenBalance, "Not enough reward tokens");
+        rewardTokenBalance -= _rewards;
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            rewardToken,
+            address(this),
+            _staker,
+            _rewards,
+            nativeTokenWrapper
+        );
     }
 
     /*///////////////////////////////////////////////////////////////
