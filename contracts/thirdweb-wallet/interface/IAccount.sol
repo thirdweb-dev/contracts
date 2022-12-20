@@ -4,14 +4,14 @@ pragma solidity ^0.8.11;
 interface IERC1271 {
     /**
      * @dev Should return whether the signature provided is valid for the provided hash
-     * @param _hash      Hash of the data to be signed
-     * @param _signature Signature byte array associated with _hash
+     * @param hash      Hash of the data to be signed
+     * @param signature Signature byte array associated with _hash
      *
      * MUST return the bytes4 magic value 0x1626ba7e when function passes.
      * MUST NOT modify state (using STATICCALL for solc < 0.5, view modifier for solc > 0.5)
      * MUST allow external calls
      */
-    function isValidSignature(bytes32 _hash, bytes memory _signature) external view returns (bytes4);
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4);
 }
 
 interface IAccount is IERC1271 {
@@ -64,9 +64,9 @@ interface IAccount is IERC1271 {
 
     /// @notice Deploys a smart contract.
     function deploy(
-        bytes calldata _bytecode,
-        bytes32 _salt,
-        uint256 _value
+        bytes calldata bytecode,
+        bytes32 salt,
+        uint256 value
     ) external payable returns (address deployment);
 
     ////////// Changing signer composition of the account //////////
@@ -84,16 +84,16 @@ interface IAccount is IERC1271 {
     event AdminRemoved(address signer);
 
     /// @notice Adds an admin to the account.
-    function addAdmin(address _signer, bytes32 _credentials) external;
+    function addAdmin(address signer, bytes32 credentials) external;
 
     /// @notice Removes an admin from the account.
-    function removeAdmin(address _signer, bytes32 _credentials) external;
+    function removeAdmin(address signer, bytes32 credentials) external;
 
     /// @notice Adds a signer to the account.
-    function addSigner(address _signer, bytes32 _credentials) external;
+    function addSigner(address signer, bytes32 credentials) external;
 
     /// @notice Removes a signer from the account.
-    function removeSigner(address _signer, bytes32 _credentials) external;
+    function removeSigner(address signer, bytes32 credentials) external;
 
     ////////// Approve non-admin signers for function calls //////////
 
@@ -108,16 +108,16 @@ interface IAccount is IERC1271 {
 
     /// @notice Approves a signer to be able to call `_selector` function on `_target` smart contract.
     function approveSignerFor(
-        address _signer,
-        bytes4 _selector,
-        address _target
+        address signer,
+        bytes4 selector,
+        address target
     ) external;
 
     /// @notice Disapproves a signer from being able to call `_selector` function on `_target` smart contract.
     function disapproveSignerFor(
-        address _signer,
-        bytes4 _selector,
-        address _target
+        address signer,
+        bytes4 selector,
+        address target
     ) external;
 
     /// @notice Returns all call targets approved for a given signer.
