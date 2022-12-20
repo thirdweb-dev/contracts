@@ -47,16 +47,6 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
             "TransactionParams(address signer,address target,bytes data,uint256 nonce,uint256 value,uint256 gas,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
 
-    bytes32 private constant DEPLOY_TYPEHASH =
-        keccak256(
-            "DeployParams(address signer,bytes bytecode,bytes32 salt,uint256 value,uint256 nonce,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
-        );
-
-    bytes32 private constant SIGNER_UPDATE_TYPEHASH =
-        keccak256(
-            "SignerUpdateParams(address signer,bytes32 credentials,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
-        );
-
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
