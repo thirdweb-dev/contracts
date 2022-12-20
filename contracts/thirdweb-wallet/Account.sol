@@ -67,6 +67,9 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
     /// @notice The nonce of the account.
     uint256 public nonce;
 
+    /// @notice Mapping from Signer => CallTargets approved (at least once).
+    mapping(address => CallTarget[]) private callTargets;
+
     /// @notice  Mapping from Signer => (fn sig, contract address) => approval to call.
     mapping(address => mapping(bytes32 => bool)) private isApprovedFor;
 
@@ -196,6 +199,79 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
 
     function _permissionsRevert() private pure {
         revert("Account: cannot directly change permissions.");
+    }
+
+    /*///////////////////////////////////////////////////////////////
+            Approve non-admin signers for function calls.
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Approves a signer to be able to call `_selector` function on `_target` smart contract.
+    function approveSignerFor(
+        address _signer,
+        bytes4 _selector,
+        address _target
+    ) external onlySelf {
+        bytes32 targetHash = keccak256(abi.encode(_selector, _target));
+        bool currentApproval = isApprovedFor[_signer][targetHash];
+
+        require(!currentApproval, "Account: signer already approved.");
+
+        isApprovedFor[_signer][targetHash] = true;
+        callTargets[_signer].push(CallTarget(_selector, _target));
+
+        emit ApprovalForSigner(_signer, _selector, _target, true);
+    }
+
+    /// @notice Disapproves a signer from being able to call `_selector` function on `_target` smart contract.
+    function disapproveSignerFor(
+        address _signer,
+        bytes4 _selector,
+        address _target
+    ) external onlySelf {
+        bytes32 targetHash = keccak256(abi.encode(_selector, _target));
+        bool currentApproval = isApprovedFor[_signer][targetHash];
+
+        require(currentApproval, "Account: signer already not approved.");
+
+        isApprovedFor[_signer][targetHash] = false;
+
+        CallTarget[] memory targets = callTargets[_signer];
+        uint256 len = targets.length;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            bytes32 targetHashToCheck = keccak256(abi.encode(targets[i].selector, targets[i].targetContract));
+            if (targetHashToCheck == targetHash) {
+                delete callTargets[_signer][i];
+                break;
+            }
+        }
+
+        emit ApprovalForSigner(_signer, _selector, _target, false);
+    }
+
+    /// @notice Returns all call targets approved for a given signer.
+    function getAllApprovedForSigner(address _signer) external view returns (CallTarget[] memory approvedTargets) {
+        CallTarget[] memory targets = callTargets[_signer];
+        uint256 len = targets.length;
+
+        uint256 count = 0;
+        for (uint256 i = 0; i < len; i += 1) {
+            if (targets[i].targetContract != address(0)) {
+                count += 1;
+            }
+        }
+
+        approvedTargets = new CallTarget[](count);
+        uint256 idx = 0;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            if (targets[i].targetContract != address(0)) {
+                approvedTargets[idx].selector = targets[i].selector;
+                approvedTargets[idx].targetContract = targets[i].targetContract;
+
+                idx += 1;
+            }
+        }
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -94,4 +94,32 @@ interface IAccount is IERC1271 {
 
     /// @notice Removes a signer from the account.
     function removeSigner(address _signer, bytes32 _credentials) external;
+
+    ////////// Approve non-admin signers for function calls //////////
+
+    /// @notice Emitted when a signer is approved to call `_selector` function on `_target` smart contract.
+    event ApprovalForSigner(address indexed signer, bytes4 indexed selector, address indexed target, bool isApproved);
+
+    /// @notice A struct representing a call target (fn selector + smart contract).
+    struct CallTarget {
+        bytes4 selector;
+        address targetContract;
+    }
+
+    /// @notice Approves a signer to be able to call `_selector` function on `_target` smart contract.
+    function approveSignerFor(
+        address _signer,
+        bytes4 _selector,
+        address _target
+    ) external;
+
+    /// @notice Disapproves a signer from being able to call `_selector` function on `_target` smart contract.
+    function disapproveSignerFor(
+        address _signer,
+        bytes4 _selector,
+        address _target
+    ) external;
+
+    /// @notice Returns all call targets approved for a given signer.
+    function getAllApprovedForSigner(address signer) external view returns (CallTarget[] memory approvedTargets);
 }
