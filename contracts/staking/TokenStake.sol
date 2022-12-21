@@ -17,6 +17,7 @@ import "../eip/interface/IERC20Metadata.sol";
 import "../extension/ContractMetadata.sol";
 import "../extension/PermissionsEnumerable.sol";
 import { Staking20Upgradeable } from "../extension/Staking20Upgradeable.sol";
+import "../interfaces/staking/ITokenStake.sol";
 
 contract TokenStake is
     Initializable,
@@ -24,16 +25,11 @@ contract TokenStake is
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    Staking20Upgradeable
+    Staking20Upgradeable,
+    ITokenStake
 {
     bytes32 private constant MODULE_TYPE = bytes32("TokenStake");
     uint256 private constant VERSION = 1;
-
-    /// @dev Emitted when contract admin withdraws reward tokens.
-    event RewardTokensWithdrawnByAdmin(uint256 _amount);
-
-    /// @dev Emitted when contract admin deposits reward tokens.
-    event RewardTokensDepositedByAdmin(uint256 _amount);
 
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;

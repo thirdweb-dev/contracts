@@ -18,6 +18,7 @@ import "../lib/CurrencyTransferLib.sol";
 import "../extension/ContractMetadata.sol";
 import "../extension/PermissionsEnumerable.sol";
 import { Staking1155Upgradeable } from "../extension/Staking1155Upgradeable.sol";
+import "../interfaces/staking/IEditionStake.sol";
 
 contract EditionStake is
     Initializable,
@@ -27,19 +28,14 @@ contract EditionStake is
     MulticallUpgradeable,
     Staking1155Upgradeable,
     ERC165Upgradeable,
-    IERC1155ReceiverUpgradeable
+    IERC1155ReceiverUpgradeable,
+    IEditionStake
 {
     bytes32 private constant MODULE_TYPE = bytes32("EditionStake");
     uint256 private constant VERSION = 1;
 
     /// @dev The address of the native token wrapper contract.
     address internal immutable nativeTokenWrapper;
-
-    /// @dev Emitted when contract admin withdraws reward tokens.
-    event RewardTokensWithdrawnByAdmin(uint256 _amount);
-
-    /// @dev Emitted when contract admin deposits reward tokens.
-    event RewardTokensDepositedByAdmin(uint256 _amount);
 
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
