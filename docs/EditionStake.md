@@ -94,6 +94,7 @@ function contractVersion() external pure returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined |
 
+<<<<<<< HEAD
 ### depositRewardTokens
 
 ```solidity
@@ -110,6 +111,8 @@ function depositRewardTokens(uint256 _amount) external payable
 |---|---|---|
 | _amount | uint256 | undefined |
 
+=======
+>>>>>>> main
 ### edition
 
 ```solidity
@@ -853,6 +856,7 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
+<<<<<<< HEAD
 ### RewardTokensDepositedByAdmin
 
 ```solidity
@@ -869,6 +873,8 @@ event RewardTokensDepositedByAdmin(uint256 _amount)
 |---|---|---|
 | _amount  | uint256 | undefined |
 
+=======
+>>>>>>> main
 ### RewardTokensWithdrawnByAdmin
 
 ```solidity
