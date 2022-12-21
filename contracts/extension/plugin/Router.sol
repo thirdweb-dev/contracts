@@ -11,7 +11,7 @@ abstract contract Router is Multicall, Map, ERC165 {
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Plugin[] memory _pluginsToRegister) Map(_pluginsToRegister) {}
+    constructor(Plugin[] memory _pluginsToAdd) Map(_pluginsToAdd) {}
 
     /*///////////////////////////////////////////////////////////////
                                 ERC 165

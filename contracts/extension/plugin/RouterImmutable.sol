@@ -12,8 +12,14 @@ contract RouterImmutable is Router {
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Plugin[] memory _pluginsToRegister) Router(_pluginsToRegister) {}
+    constructor(Plugin[] memory _pluginsToAdd) Router(_pluginsToAdd) {}
+
+    /*///////////////////////////////////////////////////////////////
+                        Internal functions
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether plug-in can be set in the given execution context.
-    function _canSetPlugin() internal view override returns (bool) {}
+    function _canSetPlugin() internal pure override returns (bool) {
+        return false;
+    }
 }

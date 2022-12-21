@@ -97,7 +97,7 @@ contract RouterTest is BaseTest {
         assertEq(Counter(router).number(), num * 2);
 
         // Get and check all overriden extensions.
-        IMap.Plugin[] memory pluginsStored = RouterImplementation(payable(router)).getAllRegistered();
+        IMap.Plugin[] memory pluginsStored = RouterImplementation(payable(router)).getAllPlugins();
         assertEq(pluginsStored.length, 3);
 
         for (uint256 i = 0; i < pluginsStored.length; i += 1) {

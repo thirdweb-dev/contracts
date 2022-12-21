@@ -41,7 +41,7 @@ contract MapTest is BaseTest {
         }
     }
 
-    function test_state_getAllFunctionsOfExtension() external {
+    function test_state_getAllFunctionsOfPlugin() external {
         uint256 len = plugins.length;
         for (uint256 i = 0; i < len; i += 1) {
             address pluginAddress = plugins[i].pluginAddress;
@@ -75,7 +75,7 @@ contract MapTest is BaseTest {
     }
 
     function test_state_getAllRegistered() external {
-        IMap.Plugin[] memory pluginsStored = router.getAllRegistered();
+        IMap.Plugin[] memory pluginsStored = router.getAllPlugins();
 
         for (uint256 i = 0; i < pluginsStored.length; i += 1) {
             assertEq(pluginsStored[i].pluginAddress, plugins[i].pluginAddress);

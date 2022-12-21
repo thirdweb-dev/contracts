@@ -45,7 +45,7 @@ contract RouterImmutableTest is BaseTest {
     }
 
     function test_revert_callWithRouter() external {
-        vm.expectRevert("No plugin available for selector.");
+        vm.expectRevert("Map: No plugin available for selector");
         Counter(router).doubleNumber();
     }
 }
