@@ -7,7 +7,7 @@ import { EditionStake } from "contracts/staking/EditionStake.sol";
 import "contracts/lib/TWStrings.sol";
 import "../utils/BaseTest.sol";
 
-contract EditionStakeTest is BaseTest {
+contract EditionStakeEthRewardTest is BaseTest {
     EditionStake internal stakeContract;
 
     address internal stakerOne;
@@ -31,9 +31,19 @@ contract EditionStakeTest is BaseTest {
         erc1155.mint(stakerTwo, 0, 100); // mint 100 tokens with id 0 to stakerTwo
         erc1155.mint(stakerTwo, 1, 100); // mint 100 tokens with id 1 to stakerTwo
 
-        erc20.mint(deployer, 1000 ether); // mint reward tokens to contract admin
+        vm.deal(deployer, 1000 ether); // mint reward tokens (Eth) to contract admin
 
-        stakeContract = EditionStake(payable(getContract("EditionStake")));
+        stakeContract = EditionStake(
+            payable(
+                deployContractProxy(
+                    "EditionStake",
+                    abi.encodeCall(
+                        EditionStake.initialize,
+                        (deployer, CONTRACT_URI, forwarders(), NATIVE_TOKEN, address(erc1155), 60, 1)
+                    )
+                )
+            )
+        );
 
         // set approvals
         vm.prank(stakerOne);
@@ -43,8 +53,7 @@ contract EditionStakeTest is BaseTest {
         erc1155.setApprovalForAll(address(stakeContract), true);
 
         vm.startPrank(deployer);
-        erc20.approve(address(stakeContract), type(uint256).max);
-        stakeContract.depositRewardTokens(100 ether);
+        stakeContract.depositRewardTokens{ value: 100 ether }(100 ether);
         // erc20.transfer(address(stakeContract), 100 ether);
         vm.stopPrank();
         assertEq(stakeContract.getRewardTokenBalance(), 100 ether);
@@ -245,7 +254,7 @@ contract EditionStakeTest is BaseTest {
 
         // check reward balances
         assertEq(
-            erc20.balanceOf(stakerOne),
+            stakerOne.balance,
             ((((block.timestamp - timeOfLastUpdate_one) * 50) * defaultRewardsPerUnitTime) / defaultTimeUnit)
         );
         assertEq(
@@ -278,7 +287,7 @@ contract EditionStakeTest is BaseTest {
 
         // check reward balances
         assertEq(
-            erc20.balanceOf(stakerTwo),
+            stakerTwo.balance,
             ((((block.timestamp - timeOfLastUpdate_two) * 20) * defaultRewardsPerUnitTime) / defaultTimeUnit)
         );
         assertEq(
@@ -362,7 +371,7 @@ contract EditionStakeTest is BaseTest {
 
         // check reward balances
         assertEq(
-            erc20.balanceOf(stakerOne),
+            stakerOne.balance,
             ((((block.timestamp - timeOfLastUpdate_one) * 50) * defaultRewardsPerUnitTime) / defaultTimeUnit)
         );
         assertEq(
@@ -395,7 +404,7 @@ contract EditionStakeTest is BaseTest {
 
         // check reward balances
         assertEq(
-            erc20.balanceOf(stakerTwo),
+            stakerTwo.balance,
             ((((block.timestamp - timeOfLastUpdate_two) * 20) * defaultRewardsPerUnitTime) / defaultTimeUnit)
         );
         assertEq(
@@ -1050,104 +1059,5 @@ contract EditionStakeTest is BaseTest {
         // vm.expectRevert();
         // vm.prank(stakerOne);
         // stakeContract.withdraw(tokenId, 100);
-    }
-}
-
-contract Macro_EditionStakeTest is BaseTest {
-    EditionStake internal stakeContract;
-
-    uint256 internal defaultTimeUnit;
-    uint256 internal defaultRewardsPerUnitTime;
-    uint256 internal tokenAmount = 100;
-    address internal stakerOne = address(0x345);
-    address internal stakerTwo = address(0x567);
-
-    function setUp() public override {
-        super.setUp();
-
-        defaultTimeUnit = 60;
-        defaultRewardsPerUnitTime = 1;
-
-        // mint erc1155 tokens to stakers
-        erc1155.mint(stakerOne, 1, tokenAmount);
-        erc1155.mint(stakerTwo, 2, tokenAmount);
-
-        // mint reward tokens to contract admin
-        erc20.mint(deployer, 1000 ether);
-
-        stakeContract = EditionStake(payable(getContract("EditionStake")));
-
-        // set approval
-        vm.prank(stakerOne);
-        erc1155.setApprovalForAll(address(stakeContract), true);
-        vm.prank(stakerTwo);
-        erc1155.setApprovalForAll(address(stakeContract), true);
-    }
-
-    // Demostrate setting unitTime to 0 locks the tokens irreversibly
-    function testEdition_adminLockTokens() public {
-        //================ stake tokens
-        vm.warp(1);
-
-        // Two users stake 1 tokens each
-        vm.prank(stakerOne);
-        stakeContract.stake(1, tokenAmount);
-        vm.prank(stakerTwo);
-        stakeContract.stake(2, tokenAmount);
-
-        // set timeUnit to zero
-        uint256 newTimeUnit = 0;
-        vm.prank(deployer);
-        vm.expectRevert("time-unit can't be 0");
-        stakeContract.setDefaultTimeUnit(newTimeUnit);
-
-        // stakerOne and stakerTwo can't withdraw their tokens
-        // vm.expectRevert(stdError.divisionError);
-        vm.prank(stakerOne);
-        stakeContract.withdraw(1, tokenAmount);
-
-        // vm.expectRevert(stdError.divisionError);
-        vm.prank(stakerTwo);
-        stakeContract.withdraw(2, tokenAmount);
-
-        // timeUnit can't be changed back to a nonzero value
-        newTimeUnit = 40;
-        // vm.expectRevert(stdError.divisionError);
-        vm.prank(deployer);
-        stakeContract.setDefaultTimeUnit(newTimeUnit);
-    }
-
-    // Demostrate setting rewardsPerTimeUnit to a high value locks the tokens irreversibly
-    function testEdition_demostrate_adminRewardsLock() public {
-        //================ stake tokens
-        vm.warp(1);
-
-        // Two users stake 1 tokens each
-        vm.prank(stakerOne);
-        stakeContract.stake(1, tokenAmount);
-        vm.prank(stakerTwo);
-        stakeContract.stake(2, tokenAmount);
-
-        // set rewardsPerTimeUnit to max value
-        uint256 rewardsPerTimeUnit = type(uint256).max;
-        vm.prank(deployer);
-        stakeContract.setDefaultRewardsPerUnitTime(rewardsPerTimeUnit);
-
-        vm.warp(1 days);
-
-        // stakerOne and stakerTwo can't withdraw their tokens
-        // vm.expectRevert(stdError.arithmeticError);
-        vm.prank(stakerOne);
-        stakeContract.withdraw(1, tokenAmount);
-
-        // vm.expectRevert(stdError.arithmeticError);
-        vm.prank(stakerTwo);
-        stakeContract.withdraw(2, tokenAmount);
-
-        // timeUnit can't be changed back
-        rewardsPerTimeUnit = 60;
-        // vm.expectRevert(stdError.arithmeticError);
-        vm.prank(deployer);
-        stakeContract.setDefaultRewardsPerUnitTime(rewardsPerTimeUnit);
     }
 }

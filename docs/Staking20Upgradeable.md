@@ -149,7 +149,7 @@ Set time unit. Set as a number of seconds.           Could be specified as -- x 
 ### stake
 
 ```solidity
-function stake(uint256 _amount) external nonpayable
+function stake(uint256 _amount) external payable
 ```
 
 Stake ERC20 Tokens.

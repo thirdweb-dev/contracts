@@ -10,7 +10,6 @@ import "../eip/interface/IERC20.sol";
 import "../eip/interface/IERC20Metadata.sol";
 
 /**
- *      note: This is a Beta release.
  *
  *  EXTENSION: Staking20
  *
@@ -42,8 +41,16 @@ contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
         uint256 _rewardRatioNumerator,
         uint256 _rewardRatioDenominator,
         address _stakingToken,
-        address _rewardToken
-    ) Staking20(_stakingToken, IERC20Metadata(_stakingToken).decimals(), IERC20Metadata(_rewardToken).decimals()) {
+        address _rewardToken,
+        address _nativeTokenWrapper
+    )
+        Staking20(
+            _nativeTokenWrapper,
+            _stakingToken,
+            IERC20Metadata(_stakingToken).decimals(),
+            IERC20Metadata(_rewardToken).decimals()
+        )
+    {
         _setupOwner(msg.sender);
         _setStakingCondition(_timeUnit, _rewardRatioNumerator, _rewardRatioDenominator);
 
