@@ -2,13 +2,13 @@
 pragma solidity ^0.8.0;
 
 import "contracts/extension/plugin/Map.sol";
-import "contracts/extension/plugin/EntrypointOverrideable.sol";
+import "contracts/extension/plugin/Router.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 
-contract Entrypoint is EntrypointOverrideable {
-    constructor(address _functionMap) EntrypointOverrideable(_functionMap) {}
+contract RouterImplementation is Router {
+    constructor(Plugin[] memory _pluginsToRegister) Router(_pluginsToRegister) {}
 
-    function _canOverrideExtensions() internal pure override returns (bool) {
+    function _canSetPlugin() internal pure override returns (bool) {
         return true;
     }
 }
@@ -52,9 +52,9 @@ contract CounterAlternate {
     }
 }
 
-contract EntrypointOverrideableTest is BaseTest {
+contract RouterTest is BaseTest {
     address internal map;
-    address internal entrypoint;
+    address internal router;
 
     address internal counter;
     address internal counterAlternate;
@@ -65,41 +65,45 @@ contract EntrypointOverrideableTest is BaseTest {
         counter = address(new Counter());
         counterAlternate = address(new CounterAlternate());
 
-        IMap.ExtensionMap[] memory extensionMaps = new IMap.ExtensionMap[](3);
-        extensionMaps[0] = IMap.ExtensionMap(Counter.number.selector, counter);
-        extensionMaps[1] = IMap.ExtensionMap(Counter.setNumber.selector, counter);
-        extensionMaps[2] = IMap.ExtensionMap(Counter.doubleNumber.selector, counter);
+        IMap.Plugin[] memory pluginMaps = new IMap.Plugin[](3);
+        pluginMaps[0] = IMap.Plugin(Counter.number.selector, counter, "number()");
+        pluginMaps[1] = IMap.Plugin(Counter.setNumber.selector, counter, "setNumber(uint256)");
+        pluginMaps[2] = IMap.Plugin(Counter.doubleNumber.selector, counter, "doubleNumber()");
 
-        map = address(new Map(extensionMaps));
-        entrypoint = address(new Entrypoint(map));
+        router = address(new RouterImplementation(pluginMaps));
     }
 
-    function test_state_overrideExtensionForFunction() external {
+    function test_state_updatePlugin() external {
         // Set number.
         uint256 num = 5;
-        Counter(entrypoint).setNumber(num);
-        assertEq(Counter(entrypoint).number(), num);
+        Counter(router).setNumber(num);
+        assertEq(Counter(router).number(), num);
 
         // Double number. Bug: it quadruples the number.
-        Counter(entrypoint).doubleNumber();
-        assertEq(Counter(entrypoint).number(), num * 4);
+        Counter(router).doubleNumber();
+        assertEq(Counter(router).number(), num * 4);
 
         // Reset number.
-        Counter(entrypoint).setNumber(num);
-        assertEq(Counter(entrypoint).number(), num);
+        Counter(router).setNumber(num);
+        assertEq(Counter(router).number(), num);
 
         // Fix the extension for `doubleNumber`.
-        Entrypoint(payable(entrypoint)).overrideExtensionForFunction(Counter.doubleNumber.selector, counterAlternate);
+        RouterImplementation(payable(router)).updatePlugin(
+            IMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
+        );
 
         // Double number. Fixed: it doubles the number.
-        Counter(entrypoint).doubleNumber();
-        assertEq(Counter(entrypoint).number(), num * 2);
+        Counter(router).doubleNumber();
+        assertEq(Counter(router).number(), num * 2);
 
         // Get and check all overriden extensions.
-        IEntrypointOverrideable.ExtensionMap[] memory extensionMapsStored = Entrypoint(payable(entrypoint))
-            .getAllOverriden();
-        assertEq(extensionMapsStored.length, 1);
-        assertEq(extensionMapsStored[0].extension, counterAlternate);
-        assertEq(extensionMapsStored[0].selector, Counter.doubleNumber.selector);
+        IMap.Plugin[] memory pluginsStored = RouterImplementation(payable(router)).getAllPlugins();
+        assertEq(pluginsStored.length, 3);
+
+        for (uint256 i = 0; i < pluginsStored.length; i += 1) {
+            if (pluginsStored[i].selector == Counter.doubleNumber.selector) {
+                assertEq(pluginsStored[i].pluginAddress, counterAlternate);
+            }
+        }
     }
 }
