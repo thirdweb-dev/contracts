@@ -7,10 +7,6 @@ import "../eip/interface/IERC1155.sol";
 
 import "./interface/IStaking1155.sol";
 
-/**
- *      note: This is a Beta release.
- */
-
 abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     /*///////////////////////////////////////////////////////////////
                             State variables / Mappings

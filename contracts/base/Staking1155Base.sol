@@ -9,7 +9,6 @@ import "../extension/Staking1155.sol";
 import "../eip/interface/IERC20.sol";
 
 /**
- *      note: This is a Beta release.
  *
  *  EXTENSION: Staking1155
  *

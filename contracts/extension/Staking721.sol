@@ -7,10 +7,6 @@ import "../eip/interface/IERC721.sol";
 
 import "./interface/IStaking721.sol";
 
-/**
- *      note: This is a Beta release.
- */
-
 abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     /*///////////////////////////////////////////////////////////////
                             State variables / Mappings

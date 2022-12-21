@@ -10,7 +10,6 @@ import "../eip/interface/IERC20.sol";
 import "../eip/interface/IERC20Metadata.sol";
 
 /**
- *      note: This is a Beta release.
  *
  *  EXTENSION: Staking20
  *

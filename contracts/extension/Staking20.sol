@@ -8,10 +8,6 @@ import "../lib/CurrencyTransferLib.sol";
 
 import "./interface/IStaking20.sol";
 
-/**
- *      note: This is a Beta release.
- */
-
 abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     /*///////////////////////////////////////////////////////////////
                             State variables / Mappings
