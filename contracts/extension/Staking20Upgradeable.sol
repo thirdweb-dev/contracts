@@ -21,7 +21,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     address internal immutable nativeTokenWrapper;
 
     ///@dev Address of ERC20 contract -- staked tokens belong to this contract.
-    address public token;
+    address public stakingToken;
 
     /// @dev Decimals of staking token.
     uint256 public stakingTokenDecimals;
@@ -51,16 +51,16 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     }
 
     function __Staking20_init(
-        address _token,
+        address _stakingToken,
         uint256 _stakingTokenDecimals,
         uint256 _rewardTokenDecimals
     ) internal onlyInitializing {
         __ReentrancyGuard_init();
 
-        require(address(_token) != address(0), "token address 0");
+        require(address(_stakingToken) != address(0), "token address 0");
         require(_stakingTokenDecimals != 0 && _rewardTokenDecimals != 0, "decimals 0");
 
-        token = _token;
+        stakingToken = _stakingToken;
         stakingTokenDecimals = _stakingTokenDecimals;
         rewardTokenDecimals = _rewardTokenDecimals;
     }
@@ -182,12 +182,12 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     function _stake(uint256 _amount) internal virtual {
         require(_amount != 0, "Staking 0 tokens");
 
-        address _token;
-        if (token == CurrencyTransferLib.NATIVE_TOKEN) {
-            _token = nativeTokenWrapper;
+        address _stakingToken;
+        if (stakingToken == CurrencyTransferLib.NATIVE_TOKEN) {
+            _stakingToken = nativeTokenWrapper;
         } else {
             require(msg.value == 0, "Value not 0");
-            _token = token;
+            _stakingToken = stakingToken;
         }
 
         if (stakers[_stakeMsgSender()].amountStaked > 0) {
@@ -198,15 +198,15 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
 
-        uint256 balanceBefore = IERC20(_token).balanceOf(address(this));
+        uint256 balanceBefore = IERC20(_stakingToken).balanceOf(address(this));
         CurrencyTransferLib.transferCurrencyWithWrapper(
-            token,
+            stakingToken,
             _stakeMsgSender(),
             address(this),
             _amount,
             nativeTokenWrapper
         );
-        uint256 actualAmount = IERC20(_token).balanceOf(address(this)) - balanceBefore;
+        uint256 actualAmount = IERC20(_stakingToken).balanceOf(address(this)) - balanceBefore;
 
         stakers[_stakeMsgSender()].amountStaked += actualAmount;
         stakingTokenBalance += actualAmount;
@@ -236,7 +236,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         stakingTokenBalance -= _amount;
 
         CurrencyTransferLib.transferCurrencyWithWrapper(
-            token,
+            stakingToken,
             address(this),
             _stakeMsgSender(),
             _amount,

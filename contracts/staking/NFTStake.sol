@@ -57,14 +57,14 @@ contract NFTStake is
         string memory _contractURI,
         address[] memory _trustedForwarders,
         address _rewardToken,
-        address _nftCollection,
+        address _stakingToken,
         uint256 _timeUnit,
         uint256 _rewardsPerUnitTime
     ) external initializer {
         __ERC2771Context_init_unchained(_trustedForwarders);
 
         rewardToken = _rewardToken;
-        __Staking721_init(_nftCollection);
+        __Staking721_init(_stakingToken);
         _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
 
         _setupContractURI(_contractURI);

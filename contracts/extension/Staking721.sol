@@ -17,7 +17,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     //////////////////////////////////////////////////////////////*/
 
     ///@dev Address of ERC721 NFT contract -- staked tokens belong to this contract.
-    address public nftCollection;
+    address public stakingToken;
 
     ///@dev List of token-ids ever staked.
     uint256[] public indexedTokens;
@@ -43,9 +43,9 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     ///@dev Mapping from condition Id to staking condition. See {struct IStaking721.StakingCondition}
     mapping(uint256 => StakingCondition) private stakingConditions;
 
-    constructor(address _nftCollection) ReentrancyGuard() {
-        require(address(_nftCollection) != address(0), "collection address 0");
-        nftCollection = _nftCollection;
+    constructor(address _stakingToken) ReentrancyGuard() {
+        require(address(_stakingToken) != address(0), "collection address 0");
+        stakingToken = _stakingToken;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -180,7 +180,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
         uint256 len = _tokenIds.length;
         require(len != 0, "Staking 0 tokens");
 
-        address _nftCollection = nftCollection;
+        address _stakingToken = stakingToken;
 
         if (stakers[_stakeMsgSender()].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(_stakeMsgSender());
@@ -191,14 +191,14 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
         }
         for (uint256 i = 0; i < len; ++i) {
             require(
-                IERC721(_nftCollection).ownerOf(_tokenIds[i]) == _stakeMsgSender() &&
-                    (IERC721(_nftCollection).getApproved(_tokenIds[i]) == address(this) ||
-                        IERC721(_nftCollection).isApprovedForAll(_stakeMsgSender(), address(this))),
+                IERC721(_stakingToken).ownerOf(_tokenIds[i]) == _stakeMsgSender() &&
+                    (IERC721(_stakingToken).getApproved(_tokenIds[i]) == address(this) ||
+                        IERC721(_stakingToken).isApprovedForAll(_stakeMsgSender(), address(this))),
                 "Not owned or approved"
             );
 
             isStaking = 2;
-            IERC721(_nftCollection).safeTransferFrom(_stakeMsgSender(), address(this), _tokenIds[i]);
+            IERC721(_stakingToken).safeTransferFrom(_stakeMsgSender(), address(this), _tokenIds[i]);
             isStaking = 1;
 
             stakerAddress[_tokenIds[i]] = _stakeMsgSender();
@@ -220,7 +220,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
         require(len != 0, "Withdrawing 0 tokens");
         require(_amountStaked >= len, "Withdrawing more than staked");
 
-        address _nftCollection = nftCollection;
+        address _stakingToken = stakingToken;
 
         _updateUnclaimedRewardsForStaker(_stakeMsgSender());
 
@@ -239,7 +239,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
         for (uint256 i = 0; i < len; ++i) {
             require(stakerAddress[_tokenIds[i]] == _stakeMsgSender(), "Not staker");
             stakerAddress[_tokenIds[i]] = address(0);
-            IERC721(_nftCollection).safeTransferFrom(address(this), _stakeMsgSender(), _tokenIds[i]);
+            IERC721(_stakingToken).safeTransferFrom(address(this), _stakeMsgSender(), _tokenIds[i]);
         }
 
         emit TokensWithdrawn(_stakeMsgSender(), _tokenIds);

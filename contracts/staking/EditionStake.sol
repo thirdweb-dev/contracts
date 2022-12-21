@@ -57,14 +57,14 @@ contract EditionStake is
         string memory _contractURI,
         address[] memory _trustedForwarders,
         address _rewardToken,
-        address _edition,
+        address _stakingToken,
         uint256 _defaultTimeUnit,
         uint256 _defaultRewardsPerUnitTime
     ) external initializer {
         __ERC2771Context_init_unchained(_trustedForwarders);
 
         rewardToken = _rewardToken;
-        __Staking1155_init(_edition);
+        __Staking1155_init(_stakingToken);
         _setDefaultStakingCondition(_defaultTimeUnit, _defaultRewardsPerUnitTime);
 
         _setupContractURI(_contractURI);

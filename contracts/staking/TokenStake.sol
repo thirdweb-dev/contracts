@@ -125,8 +125,11 @@ contract TokenStake is
         );
 
         // The withdrawal shouldn't reduce staking token balance. `>=` accounts for any accidental transfers.
-        address _token = token == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : token;
-        require(IERC20(_token).balanceOf(address(this)) >= stakingTokenBalance, "Staking token balance reduced.");
+        address _stakingToken = stakingToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : stakingToken;
+        require(
+            IERC20(_stakingToken).balanceOf(address(this)) >= stakingTokenBalance,
+            "Staking token balance reduced."
+        );
 
         emit RewardTokensWithdrawnByAdmin(_amount);
     }
