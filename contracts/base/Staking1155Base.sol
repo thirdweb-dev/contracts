@@ -9,7 +9,6 @@ import "../extension/Staking1155.sol";
 import "../eip/interface/IERC20.sol";
 
 /**
- *      note: This is a Beta release.
  *
  *  EXTENSION: Staking1155
  *
@@ -39,9 +38,9 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155 {
     constructor(
         uint256 _defaultTimeUnit,
         uint256 _defaultRewardsPerUnitTime,
-        address _edition,
+        address _stakingToken,
         address _rewardToken
-    ) Staking1155(_edition) {
+    ) Staking1155(_stakingToken) {
         _setupOwner(msg.sender);
         _setDefaultStakingCondition(_defaultTimeUnit, _defaultRewardsPerUnitTime);
 

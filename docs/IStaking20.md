@@ -47,7 +47,7 @@ View amount staked and total rewards for a user.
 ### stake
 
 ```solidity
-function stake(uint256 amount) external nonpayable
+function stake(uint256 amount) external payable
 ```
 
 Stake ERC721 Tokens.

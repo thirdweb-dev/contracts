@@ -8,17 +8,16 @@ import "../lib/CurrencyTransferLib.sol";
 
 import "./interface/IStaking20.sol";
 
-/**
- *      note: This is a Beta release.
- */
-
 abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20 {
     /*///////////////////////////////////////////////////////////////
                             State variables / Mappings
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev The address of the native token wrapper contract.
+    address internal immutable nativeTokenWrapper;
+
     ///@dev Address of ERC20 contract -- staked tokens belong to this contract.
-    address public token;
+    address public stakingToken;
 
     /// @dev Decimals of staking token.
     uint256 public stakingTokenDecimals;
@@ -41,17 +40,23 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     ///@dev Mapping from condition Id to staking condition. See {struct IStaking721.StakingCondition}
     mapping(uint256 => StakingCondition) private stakingConditions;
 
+    constructor(address _nativeTokenWrapper) {
+        require(_nativeTokenWrapper != address(0), "address 0");
+
+        nativeTokenWrapper = _nativeTokenWrapper;
+    }
+
     function __Staking20_init(
-        address _token,
+        address _stakingToken,
         uint256 _stakingTokenDecimals,
         uint256 _rewardTokenDecimals
     ) internal onlyInitializing {
         __ReentrancyGuard_init();
 
-        require(address(_token) != address(0), "token address 0");
+        require(address(_stakingToken) != address(0), "token address 0");
         require(_stakingTokenDecimals != 0 && _rewardTokenDecimals != 0, "decimals 0");
 
-        token = _token;
+        stakingToken = _stakingToken;
         stakingTokenDecimals = _stakingTokenDecimals;
         rewardTokenDecimals = _rewardTokenDecimals;
     }
@@ -67,7 +72,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
      *
      *  @param _amount    Amount to stake.
      */
-    function stake(uint256 _amount) external nonReentrant {
+    function stake(uint256 _amount) external payable nonReentrant {
         _stake(_amount);
     }
 
@@ -172,7 +177,14 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     /// @dev Staking logic. Override to add custom logic.
     function _stake(uint256 _amount) internal virtual {
         require(_amount != 0, "Staking 0 tokens");
-        address _token = token;
+
+        address _stakingToken;
+        if (stakingToken == CurrencyTransferLib.NATIVE_TOKEN) {
+            _stakingToken = nativeTokenWrapper;
+        } else {
+            require(msg.value == 0, "Value not 0");
+            _stakingToken = stakingToken;
+        }
 
         if (stakers[_stakeMsgSender()].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(_stakeMsgSender());
@@ -182,9 +194,15 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
 
-        uint256 balanceBefore = IERC20(_token).balanceOf(address(this));
-        CurrencyTransferLib.transferCurrency(_token, _stakeMsgSender(), address(this), _amount);
-        uint256 actualAmount = IERC20(_token).balanceOf(address(this)) - balanceBefore;
+        uint256 balanceBefore = IERC20(_stakingToken).balanceOf(address(this));
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            stakingToken,
+            _stakeMsgSender(),
+            address(this),
+            _amount,
+            nativeTokenWrapper
+        );
+        uint256 actualAmount = IERC20(_stakingToken).balanceOf(address(this)) - balanceBefore;
 
         stakers[_stakeMsgSender()].amountStaked += actualAmount;
         stakingTokenBalance += actualAmount;
@@ -213,7 +231,13 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         stakers[_stakeMsgSender()].amountStaked -= _amount;
         stakingTokenBalance -= _amount;
 
-        CurrencyTransferLib.transferCurrency(token, address(this), _stakeMsgSender(), _amount);
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            stakingToken,
+            address(this),
+            _stakeMsgSender(),
+            _amount,
+            nativeTokenWrapper
+        );
 
         emit TokensWithdrawn(_stakeMsgSender(), _amount);
     }

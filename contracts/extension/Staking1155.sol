@@ -7,17 +7,13 @@ import "../eip/interface/IERC1155.sol";
 
 import "./interface/IStaking1155.sol";
 
-/**
- *      note: This is a Beta release.
- */
-
 abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     /*///////////////////////////////////////////////////////////////
                             State variables / Mappings
     //////////////////////////////////////////////////////////////*/
 
     ///@dev Address of ERC1155 contract -- staked tokens belong to this contract.
-    address public edition;
+    address public stakingToken;
 
     /// @dev Flag to check direct transfers of staking tokens.
     uint8 internal isStaking = 1;
@@ -46,9 +42,9 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     /// @dev Mapping from token-id to list of accounts that have staked that token-id.
     mapping(uint256 => address[]) public stakersArray;
 
-    constructor(address _edition) ReentrancyGuard() {
-        require(address(_edition) != address(0), "address 0");
-        edition = _edition;
+    constructor(address _stakingToken) ReentrancyGuard() {
+        require(address(_stakingToken) != address(0), "address 0");
+        stakingToken = _stakingToken;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -270,7 +266,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     /// @dev Staking logic. Override to add custom logic.
     function _stake(uint256 _tokenId, uint256 _amount) internal virtual {
         require(_amount != 0, "Staking 0 tokens");
-        address _edition = edition;
+        address _stakingToken = stakingToken;
 
         if (stakers[_tokenId][_stakeMsgSender()].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(_tokenId, _stakeMsgSender());
@@ -285,12 +281,12 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         }
 
         require(
-            IERC1155(_edition).balanceOf(_stakeMsgSender(), _tokenId) >= _amount &&
-                IERC1155(_edition).isApprovedForAll(_stakeMsgSender(), address(this)),
+            IERC1155(_stakingToken).balanceOf(_stakeMsgSender(), _tokenId) >= _amount &&
+                IERC1155(_stakingToken).isApprovedForAll(_stakeMsgSender(), address(this)),
             "Not balance or approved"
         );
         isStaking = 2;
-        IERC1155(_edition).safeTransferFrom(_stakeMsgSender(), address(this), _tokenId, _amount, "");
+        IERC1155(_stakingToken).safeTransferFrom(_stakeMsgSender(), address(this), _tokenId, _amount, "");
         isStaking = 1;
         // stakerAddress[_tokenIds[i]] = _stakeMsgSender();
         stakers[_tokenId][_stakeMsgSender()].amountStaked += _amount;
@@ -323,7 +319,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         }
         stakers[_tokenId][_stakeMsgSender()].amountStaked -= _amount;
 
-        IERC1155(edition).safeTransferFrom(address(this), _stakeMsgSender(), _tokenId, _amount, "");
+        IERC1155(stakingToken).safeTransferFrom(address(this), _stakeMsgSender(), _tokenId, _amount, "");
 
         emit TokensWithdrawn(_stakeMsgSender(), _tokenId, _amount);
     }
