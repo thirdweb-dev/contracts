@@ -212,7 +212,7 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
         emit ApprovalForSigner(_signer, _selector, _target, true);
     }
 
-    /// @notice Disapproves a signer from being able to call `_selector` function on `_target` smart contract.
+    /// @notice Removes approval of a signer from being able to call `_selector` function on `_target` smart contract.
     function disapproveSignerFor(
         address _signer,
         bytes4 _selector,

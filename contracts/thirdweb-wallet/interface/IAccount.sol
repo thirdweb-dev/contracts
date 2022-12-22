@@ -30,13 +30,14 @@ interface IAccount is IERC1271 {
     /**
      *  @notice Parameters to pass to make the wallet perform a call.
      *
+     *  @param signer The acting signer performing the transaction.
      *  @param target The call's target address.
-     *  @param data The call data.
-     *  @param nonce The nonce of the smart contract wallet at the time of making the call.
+     *  @param data The calldata for the transaction the signer wants Account to perform.
+     *  @param nonce The nonce of the Account smart contract wallet at the time of making the call.
      *  @param value The value to send in the call.
-     *  @param gas The gas to send in the call.
-     *  @param validityStartTimestamp The timestamp before which the account creation request is invalid.
-     *  @param validityEndTimestamp The timestamp at and after which the account creation request is invalid.
+     *  @param gas The gas to send in the call. (Optional: if 0 then no particular gas is specified in the call.)
+     *  @param validityStartTimestamp The timestamp before which the call request is invalid.
+     *  @param validityEndTimestamp The timestamp at and after which the call request is invalid.
      */
     struct TransactionParams {
         address signer;
@@ -52,8 +53,8 @@ interface IAccount is IERC1271 {
     /**
      *  @notice Executes a transaction. Sends native tokens or calls a smart contract.
      *
-     *  @param params Parameters to pass to make the wallet execute a transaction.
-     *  @param signature A signature of intent from the wallet's signer, produced on signing the function parameters.
+     *  @param params Parameters to pass to make the Account execute a transaction.
+     *  @param signature A signature of intent from the Account's signer, produced on signing the function parameters.
      */
     function execute(TransactionParams calldata params, bytes memory signature) external payable returns (bool success);
 
@@ -62,7 +63,13 @@ interface IAccount is IERC1271 {
     /// @notice Emitted when the wallet deploys a smart contract.
     event ContractDeployed(address indexed deployment);
 
-    /// @notice Deploys a smart contract.
+    /**
+     *  @notice Deploys a smart contract.
+     *
+     *  @param bytecode The bytecode of the contract to deploy.
+     *  @param salt The salt to use in the CREATE2 deployment of the contract.
+     *  @param value The value to send to the contract at construction time.
+     */
     function deploy(
         bytes calldata bytecode,
         bytes32 salt,
@@ -83,16 +90,36 @@ interface IAccount is IERC1271 {
     /// @notice Emitted when an admin is removed from the account.
     event AdminRemoved(address signer);
 
-    /// @notice Adds an admin to the account.
+    /**
+     *  @notice Adds an admin to the account.
+     *
+     *  @param signer The address to make an admin of the Account.
+     *  @param credentials The credentials for the address; must be unique for the signer in the associated AccountAdmin.
+     */
     function addAdmin(address signer, bytes32 credentials) external;
 
-    /// @notice Removes an admin from the account.
+    /**
+     *  @notice Removes an admin from the account.
+     *
+     *  @param signer The address to remove as an admin of the Account.
+     *  @param credentials The credentials for the address.
+     */
     function removeAdmin(address signer, bytes32 credentials) external;
 
-    /// @notice Adds a signer to the account.
+    /**
+     *  @notice Adds a signer to the account.
+     *
+     *  @param signer An address to add as a signer to the Account.
+     *  @param credentials The credentials for the address; must be unique for the signer in the associated AccountAdmin.
+     */
     function addSigner(address signer, bytes32 credentials) external;
 
-    /// @notice Removes a signer from the account.
+    /**
+     *  @notice Removes a signer from the account.
+     *
+     *  @param signer An address to remove as a signer to the Account.
+     *  @param credentials The credentials for the address.
+     */
     function removeSigner(address signer, bytes32 credentials) external;
 
     ////////// Approve non-admin signers for function calls //////////
@@ -106,14 +133,26 @@ interface IAccount is IERC1271 {
         address targetContract;
     }
 
-    /// @notice Approves a signer to be able to call `_selector` function on `_target` smart contract.
+    /**
+     *  @notice Approves a signer to be able to call `_selector` function on `_target` smart contract.
+     *
+     *  @param signer The signer to approve.
+     *  @param selector The function selector to approve the signer for.
+     *  @param target The contract address to approve the signer for.
+     */
     function approveSignerFor(
         address signer,
         bytes4 selector,
         address target
     ) external;
 
-    /// @notice Disapproves a signer from being able to call `_selector` function on `_target` smart contract.
+    /**
+     *  @notice Removes approval of a signer from being able to call `_selector` function on `_target` smart contract.
+     *
+     *  @param signer The signer to remove approval for.
+     *  @param selector The function selector for which to remove the approval of the signer.
+     *  @param target The contract address for which to remove the approval of the signer.
+     */
     function disapproveSignerFor(
         address signer,
         bytes4 selector,
