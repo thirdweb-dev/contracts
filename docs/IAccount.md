@@ -13,7 +13,7 @@
 ### addAdmin
 
 ```solidity
-function addAdmin(address signer, bytes32 credentials) external nonpayable
+function addAdmin(address signer, bytes32 accountId) external nonpayable
 ```
 
 Adds an admin to the account.
@@ -24,13 +24,13 @@ Adds an admin to the account.
 
 | Name | Type | Description |
 |---|---|---|
-| signer | address | undefined |
-| credentials | bytes32 | undefined |
+| signer | address | The address to make an admin of the Account. |
+| accountId | bytes32 | The accountId for the address; must be unique for the signer in the associated AccountAdmin. |
 
 ### addSigner
 
 ```solidity
-function addSigner(address signer, bytes32 credentials) external nonpayable
+function addSigner(address signer, bytes32 accountId) external nonpayable
 ```
 
 Adds a signer to the account.
@@ -41,13 +41,47 @@ Adds a signer to the account.
 
 | Name | Type | Description |
 |---|---|---|
-| signer | address | undefined |
-| credentials | bytes32 | undefined |
+| signer | address | An address to add as a signer to the Account. |
+| accountId | bytes32 | The accountId for the address; must be unique for the signer in the associated AccountAdmin. |
 
-### approveSignerFor
+### approveSignerForContract
 
 ```solidity
-function approveSignerFor(address signer, bytes4 selector, address target) external nonpayable
+function approveSignerForContract(address signer, address target) external nonpayable
+```
+
+Approves a signer to be able to call any function on `target` smart contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | The signer to approve. |
+| target | address | The contract address to approve the signer for. |
+
+### approveSignerForFunction
+
+```solidity
+function approveSignerForFunction(address signer, bytes4 selector) external nonpayable
+```
+
+Approves a signer to be able to call `selector` function on any smart contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | The signer to approve. |
+| selector | bytes4 | The function selector to approve the signer for. |
+
+### approveSignerForTarget
+
+```solidity
+function approveSignerForTarget(address signer, bytes4 selector, address target) external nonpayable
 ```
 
 Approves a signer to be able to call `_selector` function on `_target` smart contract.
@@ -58,9 +92,9 @@ Approves a signer to be able to call `_selector` function on `_target` smart con
 
 | Name | Type | Description |
 |---|---|---|
-| signer | address | undefined |
-| selector | bytes4 | undefined |
-| target | address | undefined |
+| signer | address | The signer to approve. |
+| selector | bytes4 | The function selector to approve the signer for. |
+| target | address | The contract address to approve the signer for. |
 
 ### deploy
 
@@ -76,9 +110,9 @@ Deploys a smart contract.
 
 | Name | Type | Description |
 |---|---|---|
-| bytecode | bytes | undefined |
-| salt | bytes32 | undefined |
-| value | uint256 | undefined |
+| bytecode | bytes | The bytecode of the contract to deploy. |
+| salt | bytes32 | The salt to use in the CREATE2 deployment of the contract. |
+| value | uint256 | The value to send to the contract at construction time. |
 
 #### Returns
 
@@ -86,13 +120,13 @@ Deploys a smart contract.
 |---|---|---|
 | deployment | address | undefined |
 
-### disapproveSignerFor
+### disapproveSignerForContract
 
 ```solidity
-function disapproveSignerFor(address signer, bytes4 selector, address target) external nonpayable
+function disapproveSignerForContract(address signer, address target) external nonpayable
 ```
 
-Disapproves a signer from being able to call `_selector` function on `_target` smart contract.
+Disapproves a signer from being able to call arbitrary function on `_target` smart contract.
 
 
 
@@ -100,9 +134,43 @@ Disapproves a signer from being able to call `_selector` function on `_target` s
 
 | Name | Type | Description |
 |---|---|---|
-| signer | address | undefined |
-| selector | bytes4 | undefined |
-| target | address | undefined |
+| signer | address | The signer to remove approval for. |
+| target | address | The contract address for which to remove the approval of the signer. |
+
+### disapproveSignerForFunction
+
+```solidity
+function disapproveSignerForFunction(address signer, bytes4 selector) external nonpayable
+```
+
+Disapproves a signer from being able to call `_selector` function on arbitrary smart contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | The signer to remove approval for. |
+| selector | bytes4 | The function selector for which to remove the approval of the signer. |
+
+### disapproveSignerForTarget
+
+```solidity
+function disapproveSignerForTarget(address signer, bytes4 selector, address target) external nonpayable
+```
+
+Removes approval of a signer from being able to call `_selector` function on `_target` smart contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | The signer to remove approval for. |
+| selector | bytes4 | The function selector for which to remove the approval of the signer. |
+| target | address | The contract address for which to remove the approval of the signer. |
 
 ### execute
 
@@ -127,10 +195,54 @@ function execute(IAccount.TransactionParams params, bytes signature) external pa
 |---|---|---|
 | success | bool | undefined |
 
-### getAllApprovedForSigner
+### getAllApprovedContracts
 
 ```solidity
-function getAllApprovedForSigner(address signer) external view returns (struct IAccount.CallTarget[] approvedTargets)
+function getAllApprovedContracts(address signer) external view returns (address[] contracts)
+```
+
+Returns all contract targets approved for a given signer.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| contracts | address[] | undefined |
+
+### getAllApprovedFunctions
+
+```solidity
+function getAllApprovedFunctions(address signer) external view returns (bytes4[] functions)
+```
+
+Returns all function targets approved for a given signer.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| functions | bytes4[] | undefined |
+
+### getAllApprovedTargets
+
+```solidity
+function getAllApprovedTargets(address signer) external view returns (struct IAccount.CallTarget[] approvedTargets)
 ```
 
 Returns all call targets approved for a given signer.
@@ -175,7 +287,7 @@ function isValidSignature(bytes32 hash, bytes signature) external view returns (
 ### removeAdmin
 
 ```solidity
-function removeAdmin(address signer, bytes32 credentials) external nonpayable
+function removeAdmin(address signer, bytes32 accountId) external nonpayable
 ```
 
 Removes an admin from the account.
@@ -186,13 +298,13 @@ Removes an admin from the account.
 
 | Name | Type | Description |
 |---|---|---|
-| signer | address | undefined |
-| credentials | bytes32 | undefined |
+| signer | address | The address to remove as an admin of the Account. |
+| accountId | bytes32 | The accountId for the address. |
 
 ### removeSigner
 
 ```solidity
-function removeSigner(address signer, bytes32 credentials) external nonpayable
+function removeSigner(address signer, bytes32 accountId) external nonpayable
 ```
 
 Removes a signer from the account.
@@ -203,8 +315,8 @@ Removes a signer from the account.
 
 | Name | Type | Description |
 |---|---|---|
-| signer | address | undefined |
-| credentials | bytes32 | undefined |
+| signer | address | An address to remove as a signer to the Account. |
+| accountId | bytes32 | The accountId for the address. |
 
 
 
@@ -242,13 +354,13 @@ Emitted when an admin is removed from the account.
 |---|---|---|
 | signer  | address | undefined |
 
-### ApprovalForSigner
+### ContractApprovedForSigner
 
 ```solidity
-event ApprovalForSigner(address indexed signer, bytes4 indexed selector, address indexed target, bool isApproved)
+event ContractApprovedForSigner(address indexed signer, address indexed targetContract, bool approval)
 ```
 
-Emitted when a signer is approved to call `_selector` function on `_target` smart contract.
+Emitted when a signer is approved to call arbitrary function on `target` smart contract.
 
 
 
@@ -257,9 +369,8 @@ Emitted when a signer is approved to call `_selector` function on `_target` smar
 | Name | Type | Description |
 |---|---|---|
 | signer `indexed` | address | undefined |
-| selector `indexed` | bytes4 | undefined |
-| target `indexed` | address | undefined |
-| isApproved  | bool | undefined |
+| targetContract `indexed` | address | undefined |
+| approval  | bool | undefined |
 
 ### ContractDeployed
 
@@ -276,6 +387,24 @@ Emitted when the wallet deploys a smart contract.
 | Name | Type | Description |
 |---|---|---|
 | deployment `indexed` | address | undefined |
+
+### FunctionApprovedForSigner
+
+```solidity
+event FunctionApprovedForSigner(address indexed signer, bytes4 indexed selector, bool approval)
+```
+
+Emitted when a signer is approved to call `selector` function on arbitrary smart contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer `indexed` | address | undefined |
+| selector `indexed` | bytes4 | undefined |
+| approval  | bool | undefined |
 
 ### SignerAdded
 
@@ -308,6 +437,25 @@ Emitted when a signer is removed from the account.
 | Name | Type | Description |
 |---|---|---|
 | signer  | address | undefined |
+
+### TargetApprovedForSigner
+
+```solidity
+event TargetApprovedForSigner(address indexed signer, bytes4 indexed selector, address indexed target, bool isApproved)
+```
+
+Emitted when a signer is approved to call `selector` function on `target` smart contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer `indexed` | address | undefined |
+| selector `indexed` | bytes4 | undefined |
+| target `indexed` | address | undefined |
+| isApproved  | bool | undefined |
 
 ### TransactionExecuted
 

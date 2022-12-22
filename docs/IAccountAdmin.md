@@ -13,7 +13,7 @@
 ### addSignerToAccount
 
 ```solidity
-function addSignerToAccount(address signer, bytes32 credentials) external nonpayable
+function addSignerToAccount(address signer, bytes32 accountId) external nonpayable
 ```
 
 Called by an account (itself) when a signer is added to it.
@@ -25,7 +25,7 @@ Called by an account (itself) when a signer is added to it.
 | Name | Type | Description |
 |---|---|---|
 | signer | address | The signer added to the account. |
-| credentials | bytes32 | The credentials of the signer used with the relevant account. |
+| accountId | bytes32 | The accountId of the signer used with the relevant account. |
 
 ### createAccount
 
@@ -50,13 +50,13 @@ function createAccount(IAccountAdmin.CreateAccountParams params, bytes signature
 |---|---|---|
 | account | address | undefined |
 
-### getAccountForCredential
+### getAccount
 
 ```solidity
-function getAccountForCredential(address signer, bytes32 credentials) external view returns (address)
+function getAccount(address signer, bytes32 accountId) external view returns (address)
 ```
 
-Returns the account associated with a particular signer-credential pair.
+Returns the account associated with a particular signer-accountId pair.
 
 
 
@@ -65,7 +65,7 @@ Returns the account associated with a particular signer-credential pair.
 | Name | Type | Description |
 |---|---|---|
 | signer | address | undefined |
-| credentials | bytes32 | undefined |
+| accountId | bytes32 | undefined |
 
 #### Returns
 
@@ -120,7 +120,7 @@ Returns all signers that are part of an account.
 ### relay
 
 ```solidity
-function relay(IAccountAdmin.RelayRequestParams params, bytes signature) external payable returns (bool success, bytes result)
+function relay(IAccountAdmin.RelayRequestParams params) external payable returns (bool success, bytes result)
 ```
 
 
@@ -132,7 +132,6 @@ function relay(IAccountAdmin.RelayRequestParams params, bytes signature) externa
 | Name | Type | Description |
 |---|---|---|
 | params | IAccountAdmin.RelayRequestParams | undefined |
-| signature | bytes | undefined |
 
 #### Returns
 
@@ -144,7 +143,7 @@ function relay(IAccountAdmin.RelayRequestParams params, bytes signature) externa
 ### removeSignerToAccount
 
 ```solidity
-function removeSignerToAccount(address signer, bytes32 credentials) external nonpayable
+function removeSignerToAccount(address signer, bytes32 accountId) external nonpayable
 ```
 
 Called by an account (itself) when a signer is removed from it.
@@ -156,7 +155,7 @@ Called by an account (itself) when a signer is removed from it.
 | Name | Type | Description |
 |---|---|---|
 | signer | address | The signer removed from the account. |
-| credentials | bytes32 | The credentials of the signer used with the relevant account. |
+| accountId | bytes32 | The accountId of the signer used with the relevant account. |
 
 
 
@@ -165,7 +164,7 @@ Called by an account (itself) when a signer is removed from it.
 ### AccountCreated
 
 ```solidity
-event AccountCreated(address indexed account, address indexed signerOfAccount, address indexed creator, bytes32 credentials)
+event AccountCreated(address indexed account, address indexed signerOfAccount, address indexed creator, bytes32 accountId)
 ```
 
 Emitted when an account is created.
@@ -179,12 +178,12 @@ Emitted when an account is created.
 | account `indexed` | address | undefined |
 | signerOfAccount `indexed` | address | undefined |
 | creator `indexed` | address | undefined |
-| credentials  | bytes32 | undefined |
+| accountId  | bytes32 | undefined |
 
 ### CallResult
 
 ```solidity
-event CallResult(bool success, bytes result)
+event CallResult(address indexed signer, address indexed account, bool success)
 ```
 
 Emitted on a call to an account.
@@ -195,8 +194,9 @@ Emitted on a call to an account.
 
 | Name | Type | Description |
 |---|---|---|
+| signer `indexed` | address | undefined |
+| account `indexed` | address | undefined |
 | success  | bool | undefined |
-| result  | bytes | undefined |
 
 ### SignerAdded
 

@@ -4,16 +4,33 @@
 
 
 
-- One Signer can be a part of many Accounts.  - One Account can have many Signers.  - A Signer-Credential pair hash can only be used/associated with one unique account.    i.e. a Signer must use unique credentials for each Account it wants to be a part of.  - How does data fetching work?      - Fetch all accounts for a single signer.      - Fetch all signers for a single account.      - Fetch the unique account for a signer-credential pair.
+
 
 
 
 ## Methods
 
+### accountImplementation
+
+```solidity
+function accountImplementation() external view returns (address)
+```
+
+Implementation address for `Account`.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### addSignerToAccount
 
 ```solidity
-function addSignerToAccount(address _signer, bytes32 _credentials) external nonpayable
+function addSignerToAccount(address _signer, bytes32 _accountId) external nonpayable
 ```
 
 Called by an account (itself) when a signer is added to it.
@@ -25,7 +42,7 @@ Called by an account (itself) when a signer is added to it.
 | Name | Type | Description |
 |---|---|---|
 | _signer | address | undefined |
-| _credentials | bytes32 | undefined |
+| _accountId | bytes32 | undefined |
 
 ### createAccount
 
@@ -50,13 +67,13 @@ function createAccount(IAccountAdmin.CreateAccountParams _params, bytes _signatu
 |---|---|---|
 | account | address | undefined |
 
-### getAccountForCredential
+### getAccount
 
 ```solidity
-function getAccountForCredential(address _signer, bytes32 _credentials) external view returns (address)
+function getAccount(address _signer, bytes32 _accountId) external view returns (address)
 ```
 
-Returns the account associated with a particular signer-credential pair.
+Returns the account associated with a particular signer-accountId pair.
 
 
 
@@ -65,7 +82,7 @@ Returns the account associated with a particular signer-credential pair.
 | Name | Type | Description |
 |---|---|---|
 | _signer | address | undefined |
-| _credentials | bytes32 | undefined |
+| _accountId | bytes32 | undefined |
 
 #### Returns
 
@@ -76,7 +93,7 @@ Returns the account associated with a particular signer-credential pair.
 ### getAllAccountsOfSigner
 
 ```solidity
-function getAllAccountsOfSigner(address _signer) external view returns (address[] accounts)
+function getAllAccountsOfSigner(address _signer) external view returns (address[])
 ```
 
 Returns all accounts that a signer is a part of.
@@ -93,12 +110,12 @@ Returns all accounts that a signer is a part of.
 
 | Name | Type | Description |
 |---|---|---|
-| accounts | address[] | undefined |
+| _0 | address[] | undefined |
 
 ### getAllSignersOfAccount
 
 ```solidity
-function getAllSignersOfAccount(address _account) external view returns (address[] signers)
+function getAllSignersOfAccount(address _account) external view returns (address[])
 ```
 
 Returns all signers that are part of an account.
@@ -115,23 +132,39 @@ Returns all signers that are part of an account.
 
 | Name | Type | Description |
 |---|---|---|
-| signers | address[] | undefined |
+| _0 | address[] | undefined |
 
-### isAssociatedAccount
+### initialize
 
 ```solidity
-function isAssociatedAccount(address) external view returns (bool)
+function initialize(address[] _trustedForwarders) external nonpayable
 ```
 
 
 
-*Address =&gt; whether the address is of an account created via this admin contract.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| _trustedForwarders | address[] | undefined |
+
+### isTrustedForwarder
+
+```solidity
+function isTrustedForwarder(address forwarder) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| forwarder | address | undefined |
 
 #### Returns
 
@@ -139,10 +172,32 @@ function isAssociatedAccount(address) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined |
 
+### multicall
+
+```solidity
+function multicall(bytes[] data) external nonpayable returns (bytes[] results)
+```
+
+Receives and executes a batch of function calls on this contract.
+
+*Receives and executes a batch of function calls on this contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
+
 ### relay
 
 ```solidity
-function relay(IAccountAdmin.RelayRequestParams _params, bytes _signature) external payable returns (bool, bytes)
+function relay(IAccountAdmin.RelayRequestParams _params) external payable returns (bool, bytes)
 ```
 
 
@@ -154,7 +209,6 @@ function relay(IAccountAdmin.RelayRequestParams _params, bytes _signature) exter
 | Name | Type | Description |
 |---|---|---|
 | _params | IAccountAdmin.RelayRequestParams | undefined |
-| _signature | bytes | undefined |
 
 #### Returns
 
@@ -166,7 +220,7 @@ function relay(IAccountAdmin.RelayRequestParams _params, bytes _signature) exter
 ### removeSignerToAccount
 
 ```solidity
-function removeSignerToAccount(address _signer, bytes32 _credentials) external nonpayable
+function removeSignerToAccount(address _signer, bytes32 _accountId) external nonpayable
 ```
 
 Called by an account (itself) when a signer is removed from it.
@@ -178,7 +232,7 @@ Called by an account (itself) when a signer is removed from it.
 | Name | Type | Description |
 |---|---|---|
 | _signer | address | undefined |
-| _credentials | bytes32 | undefined |
+| _accountId | bytes32 | undefined |
 
 
 
@@ -187,7 +241,7 @@ Called by an account (itself) when a signer is removed from it.
 ### AccountCreated
 
 ```solidity
-event AccountCreated(address indexed account, address indexed signerOfAccount, address indexed creator, bytes32 credentials)
+event AccountCreated(address indexed account, address indexed signerOfAccount, address indexed creator, bytes32 accountId)
 ```
 
 Emitted when an account is created.
@@ -201,12 +255,12 @@ Emitted when an account is created.
 | account `indexed` | address | undefined |
 | signerOfAccount `indexed` | address | undefined |
 | creator `indexed` | address | undefined |
-| credentials  | bytes32 | undefined |
+| accountId  | bytes32 | undefined |
 
 ### CallResult
 
 ```solidity
-event CallResult(bool success, bytes result)
+event CallResult(address indexed signer, address indexed account, bool success)
 ```
 
 Emitted on a call to an account.
@@ -217,8 +271,25 @@ Emitted on a call to an account.
 
 | Name | Type | Description |
 |---|---|---|
+| signer `indexed` | address | undefined |
+| account `indexed` | address | undefined |
 | success  | bool | undefined |
-| result  | bytes | undefined |
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### SignerAdded
 
