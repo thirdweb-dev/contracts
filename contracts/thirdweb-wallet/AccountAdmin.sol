@@ -10,10 +10,11 @@ import "./Account.sol";
 
 ////////// Utils //////////
 import "../extension/Multicall.sol";
-import "../openzeppelin-presets/metatx/ERC2771Context.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
-import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "@openzeppelin/contracts/proxy/Clones.sol";
 
 ////////// NOTE(S) //////////
 /**
@@ -28,9 +29,17 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
  *      - Fetch the unique account for a signer-accountId pair.
  */
 
-contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context, Multicall {
+interface IAccountInitialize {
+    function initialize(
+        address[] memory trustedForwarders,
+        address controller,
+        address signer
+    ) external payable;
+}
+
+contract AccountAdmin is IAccountAdmin, Initializable, EIP712Upgradeable, ERC2771ContextUpgradeable, Multicall {
     using EnumerableSet for EnumerableSet.AddressSet;
-    using ECDSA for bytes32;
+    using ECDSAUpgradeable for bytes32;
 
     /*///////////////////////////////////////////////////////////////
                             Constants
@@ -51,6 +60,10 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context, Multicall {
                             State variables
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Implementation address for `Account`.
+    address public immutable accountImplementation;
+
+    /// @notice Trusted forwarders for gasless transactions.
     address[] private trustedForwarders;
 
     /// @dev Signer => Accounts where signer is an actor.
@@ -65,10 +78,18 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context, Multicall {
     /// @dev Address => whether the address is of an account created via this admin contract.
     mapping(address => bool) private isAssociatedAccount;
 
-    constructor(address[] memory _trustedForwarders)
-        EIP712("thirdweb_wallet_admin", "1")
-        ERC2771Context(_trustedForwarders)
-    {
+    /*///////////////////////////////////////////////////////////////
+                    Constructor + initializer
+    //////////////////////////////////////////////////////////////*/
+
+    constructor(address _accountImplementation) {
+        accountImplementation = _accountImplementation;
+    }
+
+    function initialize(address[] memory _trustedForwarders) external initializer {
+        __EIP712_init("thirdweb_wallet_admin", "1");
+        __ERC2771Context_init(_trustedForwarders);
+
         uint256 len = _trustedForwarders.length;
         for (uint256 i = 0; i < len; i += 1) {
             trustedForwarders.push(_trustedForwarders[i]);
@@ -131,12 +152,12 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context, Multicall {
         require(pairHashToAccount[pairHash] == address(0), "AccountAdmin: accountId already used.");
 
         /// @validate: (By Create2) No repeat deployment salt.
-        address[] memory forwarders = trustedForwarders;
         bytes32 salt = keccak256(abi.encode(_params.deploymentSalt, _msgSender()));
-        account = Create2.deploy(
-            _params.initialAccountBalance,
-            salt,
-            abi.encodePacked(type(Account).creationCode, abi.encode(forwarders, address(this), _params.signer))
+        account = Clones.cloneDeterministic(accountImplementation, salt);
+        IAccountInitialize(account).initialize{ value: _params.initialAccountBalance }(
+            trustedForwarders,
+            address(this),
+            _params.signer
         );
 
         isAssociatedAccount[account] = true;

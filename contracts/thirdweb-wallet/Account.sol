@@ -6,11 +6,12 @@ import "./interface/IAccount.sol";
 import "./interface/IAccountAdmin.sol";
 
 ////////// Utils //////////
+
 import "../extension/Multicall.sol";
 import "../extension/PermissionsEnumerable.sol";
-import "../openzeppelin-presets/metatx/ERC2771Context.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
-import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 ////////// NOTE(S) //////////
@@ -33,10 +34,17 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
  *      - Sign messages. (EIP-1271)
  *      - Own and transfer assets. (ERC-20/721/1155)
  */
-contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnumerable {
+contract Account is
+    IAccount,
+    Initializable,
+    EIP712Upgradeable,
+    Multicall,
+    ERC2771ContextUpgradeable,
+    PermissionsEnumerable
+{
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.Bytes32Set;
-    using ECDSA for bytes32;
+    using ECDSAUpgradeable for bytes32;
 
     /*///////////////////////////////////////////////////////////////
                             Constants
@@ -80,14 +88,19 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
     mapping(address => mapping(bytes4 => bool)) private isApprovedForFunction;
 
     /*///////////////////////////////////////////////////////////////
-                            Constructor
+                    Constructor + initializer
     //////////////////////////////////////////////////////////////*/
 
-    constructor(
+    constructor() {}
+
+    function initialize(
         address[] memory _trustedForwarders,
         address _controller,
         address _signer
-    ) payable ERC2771Context(_trustedForwarders) EIP712("thirdweb_wallet", "1") {
+    ) external payable initializer {
+        __EIP712_init("thirdweb_wallet", "1");
+        __ERC2771Context_init(_trustedForwarders);
+
         controller = _controller;
         _setupRole(DEFAULT_ADMIN_ROLE, _signer);
 
