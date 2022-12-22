@@ -65,7 +65,7 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
     mapping(address => bool) public isAssociatedAccount;
 
     constructor(address[] memory _trustedForwarders)
-        EIP712("thirdwebWallet_Admin", "1")
+        EIP712("thirdweb_wallet_admin", "1")
         ERC2771Context(_trustedForwarders)
     {
         uint256 len = _trustedForwarders.length;

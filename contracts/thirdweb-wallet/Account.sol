@@ -72,7 +72,7 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
         address[] memory _trustedForwarders,
         address _controller,
         address _signer
-    ) payable ERC2771Context(_trustedForwarders) EIP712("thirdwebWallet", "1") {
+    ) payable ERC2771Context(_trustedForwarders) EIP712("thirdweb_wallet", "1") {
         controller = _controller;
         _setupRole(DEFAULT_ADMIN_ROLE, _signer);
 
