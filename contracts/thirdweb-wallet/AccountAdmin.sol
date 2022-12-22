@@ -182,7 +182,7 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
         // Check gas: https://ronan.eth.link/blog/ethereum-gas-dangers/
         assert(gasleft() > _params.gas / 63);
 
-        emit CallResult(success, result);
+        emit CallResult(account, _params.signer, success);
 
         return (success, result);
     }

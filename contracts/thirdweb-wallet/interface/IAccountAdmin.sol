@@ -46,7 +46,7 @@ interface IAccountAdmin {
     ////////// Relaying transaction to account //////////
 
     /// @notice Emitted on a call to an account.
-    event CallResult(bool success, bytes result);
+    event CallResult(address indexed signer, address indexed account, bool success);
 
     /**
      *  @notice Parameters to pass to send transaction instructions to an account.
