@@ -9,6 +9,7 @@ import "./interface/IAccount.sol";
 import "./Account.sol";
 
 ////////// Utils //////////
+import "../extension/Multicall.sol";
 import "../openzeppelin-presets/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
@@ -27,7 +28,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
  *      - Fetch the unique account for a signer-accountId pair.
  */
 
-contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
+contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context, Multicall {
     using EnumerableSet for EnumerableSet.AddressSet;
     using ECDSA for bytes32;
 
