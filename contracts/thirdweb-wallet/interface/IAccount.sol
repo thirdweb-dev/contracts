@@ -124,8 +124,19 @@ interface IAccount is IERC1271 {
 
     ////////// Approve non-admin signers for function calls //////////
 
-    /// @notice Emitted when a signer is approved to call `_selector` function on `_target` smart contract.
-    event ApprovalForSigner(address indexed signer, bytes4 indexed selector, address indexed target, bool isApproved);
+    /// @notice Emitted when a signer is approved to call `selector` function on `target` smart contract.
+    event TargetApprovedForSigner(
+        address indexed signer,
+        bytes4 indexed selector,
+        address indexed target,
+        bool isApproved
+    );
+
+    /// @notice Emitted when a signer is approved to call arbitrary function on `target` smart contract.
+    event ContractApprovedForSigner(address indexed signer, address indexed targetContract, bool approval);
+
+    /// @notice Emitted when a signer is approved to call `selector` function on arbitrary smart contract.
+    event FunctionApprovedForSigner(address indexed signer, bytes4 indexed selector, bool approval);
 
     /// @notice A struct representing a call target (fn selector + smart contract).
     struct CallTarget {
@@ -140,11 +151,27 @@ interface IAccount is IERC1271 {
      *  @param selector The function selector to approve the signer for.
      *  @param target The contract address to approve the signer for.
      */
-    function approveSignerFor(
+    function approveSignerForTarget(
         address signer,
         bytes4 selector,
         address target
     ) external;
+
+    /**
+     *  @notice Approves a signer to be able to call any function on `target` smart contract.
+     *
+     *  @param signer The signer to approve.
+     *  @param target The contract address to approve the signer for.
+     */
+    function approveSignerForContract(address signer, address target) external;
+
+    /**
+     *  @notice Approves a signer to be able to call `selector` function on any smart contract.
+     *
+     *  @param signer The signer to approve.
+     *  @param selector The function selector to approve the signer for.
+     */
+    function approveSignerForFunction(address signer, bytes4 selector) external;
 
     /**
      *  @notice Removes approval of a signer from being able to call `_selector` function on `_target` smart contract.
@@ -153,12 +180,34 @@ interface IAccount is IERC1271 {
      *  @param selector The function selector for which to remove the approval of the signer.
      *  @param target The contract address for which to remove the approval of the signer.
      */
-    function disapproveSignerFor(
+    function disapproveSignerForTarget(
         address signer,
         bytes4 selector,
         address target
     ) external;
 
+    /**
+     *  @notice Disapproves a signer from being able to call arbitrary function on `_target` smart contract.
+     *
+     *  @param signer The signer to remove approval for.
+     *  @param target The contract address for which to remove the approval of the signer.
+     */
+    function disapproveSignerForContract(address signer, address target) external;
+
+    /**
+     *  @notice Disapproves a signer from being able to call `_selector` function on arbitrary smart contract.
+     *
+     *  @param signer The signer to remove approval for.
+     *  @param selector The function selector for which to remove the approval of the signer.
+     */
+    function disapproveSignerForFunction(address signer, bytes4 selector) external;
+
     /// @notice Returns all call targets approved for a given signer.
-    function getAllApprovedForSigner(address signer) external view returns (CallTarget[] memory approvedTargets);
+    function getAllApprovedTargets(address signer) external view returns (CallTarget[] memory approvedTargets);
+
+    /// @notice Returns all contract targets approved for a given signer.
+    function getAllApprovedContracts(address signer) external view returns (address[] memory contracts);
+
+    /// @notice Returns all function targets approved for a given signer.
+    function getAllApprovedFunctions(address signer) external view returns (bytes4[] memory functions);
 }

@@ -62,7 +62,7 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
     mapping(bytes32 => address) private pairHashToAccount;
 
     /// @dev Address => whether the address is of an account created via this admin contract.
-    mapping(address => bool) public isAssociatedAccount;
+    mapping(address => bool) private isAssociatedAccount;
 
     constructor(address[] memory _trustedForwarders)
         EIP712("thirdweb_wallet_admin", "1")
@@ -228,23 +228,13 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns all accounts that a signer is a part of.
-    function getAllAccountsOfSigner(address _signer) external view returns (address[] memory accounts) {
-        uint256 len = signerToAccounts[_signer].length();
-        accounts = new address[](len);
-
-        for (uint256 i = 0; i < len; i += 1) {
-            accounts[i] = signerToAccounts[_signer].at(i);
-        }
+    function getAllAccountsOfSigner(address _signer) external view returns (address[] memory) {
+        return signerToAccounts[_signer].values();
     }
 
     /// @notice Returns all signers that are part of an account.
-    function getAllSignersOfAccount(address _account) external view returns (address[] memory signers) {
-        uint256 len = accountToSigners[_account].length();
-        signers = new address[](len);
-
-        for (uint256 i = 0; i < len; i += 1) {
-            signers[i] = accountToSigners[_account].at(i);
-        }
+    function getAllSignersOfAccount(address _account) external view returns (address[] memory) {
+        return accountToSigners[_account].values();
     }
 
     /// @notice Returns the account associated with a particular signer-accountId pair.

@@ -11,6 +11,7 @@ import "../extension/PermissionsEnumerable.sol";
 import "../openzeppelin-presets/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 ////////// NOTE(S) //////////
 /**
@@ -33,6 +34,8 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
  *      - Own and transfer assets. (ERC-20/721/1155)
  */
 contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnumerable {
+    using EnumerableSet for EnumerableSet.AddressSet;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -61,8 +64,20 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
     /// @notice Mapping from Signer => CallTargets approved (at least once).
     mapping(address => CallTarget[]) private callTargets;
 
+    /// @notice Mapping from Signer => contracts approved to call.
+    mapping(address => EnumerableSet.AddressSet) private approvedContracts;
+
+    /// @notice Mapping from Signer => functions approved to call.
+    mapping(address => EnumerableSet.Bytes32Set) private approvedFunctions;
+
     /// @notice  Mapping from Signer => (fn sig, contract address) => approval to call.
     mapping(address => mapping(bytes32 => bool)) private isApprovedFor;
+
+    /// @notice  Mapping from Signer => contract address => approval to call.
+    mapping(address => mapping(address => bool)) private isApprovedForContract;
+
+    /// @notice  Mapping from Signer => function signature => approval to call.
+    mapping(address => mapping(bytes4 => bool)) private isApprovedForFunction;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
@@ -113,6 +128,7 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
             _params.validityEndTimestamp
         );
         _validateSignature(_params, _signature);
+        _validatePermissions(_params.signer, _params.target, _params.data);
 
         success = _call(_params);
 
@@ -201,7 +217,7 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Approves a signer to be able to call `_selector` function on `_target` smart contract.
-    function approveSignerFor(
+    function approveSignerForTarget(
         address _signer,
         bytes4 _selector,
         address _target
@@ -209,16 +225,32 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
         bytes32 targetHash = keccak256(abi.encode(_selector, _target));
         bool currentApproval = isApprovedFor[_signer][targetHash];
 
-        require(!currentApproval, "Account: signer already approved.");
+        require(!currentApproval, "Account: already approved.");
 
         isApprovedFor[_signer][targetHash] = true;
         callTargets[_signer].push(CallTarget(_selector, _target));
 
-        emit ApprovalForSigner(_signer, _selector, _target, true);
+        emit TargetApprovedForSigner(_signer, _selector, _target, true);
+    }
+
+    /// @notice Approves a signer to be able to call any function on `_target` smart contract.
+    function approveSignerForContract(address _signer, address _target) external onlySelf {
+        require(approvedContracts[_signer].add(_target), "Account: already approved.");
+        isApprovedForContract[_signer][_target] = true;
+
+        emit ContractApprovedForSigner(_signer, _target, true);
+    }
+
+    /// @notice Approves a signer to be able to call `_selector` function on any smart contract.
+    function approveSignerForFunction(address _signer, bytes4 _selector) external onlySelf {
+        require(approvedFunctions[_signer].add(bytes32(_selector)), "Account: already approved.");
+        isApprovedForFunction[_signer][_selector] = true;
+
+        emit FunctionApprovedForSigner(_signer, _selector, true);
     }
 
     /// @notice Removes approval of a signer from being able to call `_selector` function on `_target` smart contract.
-    function disapproveSignerFor(
+    function disapproveSignerForTarget(
         address _signer,
         bytes4 _selector,
         address _target
@@ -226,7 +258,7 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
         bytes32 targetHash = keccak256(abi.encode(_selector, _target));
         bool currentApproval = isApprovedFor[_signer][targetHash];
 
-        require(currentApproval, "Account: signer already not approved.");
+        require(currentApproval, "Account: already not approved.");
 
         isApprovedFor[_signer][targetHash] = false;
 
@@ -241,11 +273,27 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
             }
         }
 
-        emit ApprovalForSigner(_signer, _selector, _target, false);
+        emit TargetApprovedForSigner(_signer, _selector, _target, false);
+    }
+
+    /// @notice Disapproves a signer from being able to call arbitrary function on `_target` smart contract.
+    function disapproveSignerForContract(address _signer, address _target) external onlySelf {
+        require(approvedContracts[_signer].remove(_target), "Account: already not approved.");
+        isApprovedForContract[_signer][_target] = false;
+
+        emit ContractApprovedForSigner(_signer, _target, false);
+    }
+
+    /// @notice Disapproves a signer from being able to call `_selector` function on arbitrary smart contract.
+    function disapproveSignerForFunction(address _signer, bytes4 _selector) external onlySelf {
+        require(approvedFunctions[_signer].remove(bytes32(_selector)), "Account: already not approved.");
+        isApprovedForFunction[_signer][_selector] = false;
+
+        emit FunctionApprovedForSigner(_signer, _selector, false);
     }
 
     /// @notice Returns all call targets approved for a given signer.
-    function getAllApprovedForSigner(address _signer) external view returns (CallTarget[] memory approvedTargets) {
+    function getAllApprovedTargets(address _signer) external view returns (CallTarget[] memory approvedTargets) {
         CallTarget[] memory targets = callTargets[_signer];
         uint256 len = targets.length;
 
@@ -266,6 +314,21 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
 
                 idx += 1;
             }
+        }
+    }
+
+    /// @notice Returns all contract targets approved for a given signer.
+    function getAllApprovedContracts(address _signer) external view returns (address[] memory) {
+        return approvedContracts[_signer].values();
+    }
+
+    /// @notice Returns all function targets approved for a given signer.
+    function getAllApprovedFunctions(address _signer) external view returns (bytes4[] memory functions) {
+        uint256 len = approvedFunctions[_signer].length();
+        functions = new bytes4[](len);
+
+        for (uint256 i = 0; i < len; i += 1) {
+            functions[i] = bytes4(approvedFunctions[_signer].at(i));
         }
     }
 
@@ -336,14 +399,27 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
             }
         }
 
-        bool hasPermissions = hasRole(DEFAULT_ADMIN_ROLE, _params.signer);
+        require(validSignature, "Account: invalid signer.");
+    }
+
+    /// @dev Validates the permissions of the signer.
+    function _validatePermissions(
+        address _signer,
+        address _target,
+        bytes calldata _data
+    ) internal view {
+        bool hasPermissions = hasRole(DEFAULT_ADMIN_ROLE, _signer);
 
         if (!hasPermissions) {
-            bytes32 targetHash = keccak256(abi.encode(_getSelector(_params.data), _params.target));
-            hasPermissions = hasRole(SIGNER_ROLE, _params.signer) && isApprovedFor[_params.signer][targetHash];
+            bytes32 targetHash = keccak256(abi.encode(_getSelector(_data), _target));
+            hasPermissions =
+                hasRole(SIGNER_ROLE, _signer) &&
+                (isApprovedFor[_signer][targetHash] ||
+                    isApprovedForContract[_signer][_target] ||
+                    isApprovedForFunction[_signer][_getSelector(_data)]);
         }
 
-        require(validSignature && hasPermissions, "Account: invalid signer.");
+        require(hasPermissions, "Account: unauthorized signer.");
     }
 
     /// @dev Validates conditions for a call to account.
