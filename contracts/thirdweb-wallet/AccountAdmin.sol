@@ -131,9 +131,10 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
 
         /// @validate: (By Create2) No repeat deployment salt.
         address[] memory forwarders = trustedForwarders;
+        bytes32 salt = keccak256(abi.encode(_params.deploymentSalt, _msgSender()));
         account = Create2.deploy(
             _params.initialAccountBalance,
-            _params.deploymentSalt,
+            salt,
             abi.encodePacked(type(Account).creationCode, abi.encode(forwarders, address(this), _params.signer))
         );
 
