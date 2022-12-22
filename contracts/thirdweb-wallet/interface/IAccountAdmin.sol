@@ -56,8 +56,6 @@ interface IAccountAdmin {
      *  @param value Transaction option `value`: the native token amount to send with the transaction.
      *  @param gas Transaction option `gas`: The total amount of gas to pass in the call to the account.
      *  @param data The transaction data.
-     *  @param validityStartTimestamp The timestamp before which the account creation request is invalid.
-     *  @param validityEndTimestamp The timestamp at and after which the account creation request is invalid.
      */
     struct RelayRequestParams {
         address signer;
@@ -65,23 +63,17 @@ interface IAccountAdmin {
         uint256 value;
         uint256 gas;
         bytes data;
-        uint128 validityStartTimestamp;
-        uint128 validityEndTimestamp;
     }
 
     /**
      *  @notice Calls an account to execute a transaction on the instructions of its controlling signer.
      *
      *  @param params Parameters to pass when sending transaction data to an account.
-     *  @param signature Signature from the incumbent signer of the account, signing the parameters passed for sending transaction data to the account.
      *
      *  @return success Returns whether the call to the account was successful.
      *  @return result Returns the call result of the call to the account.
      */
-    function relay(RelayRequestParams calldata params, bytes memory signature)
-        external
-        payable
-        returns (bool success, bytes memory result);
+    function relay(RelayRequestParams calldata params) external payable returns (bool success, bytes memory result);
 
     ////////// Changes to signer composition of accounts //////////
 

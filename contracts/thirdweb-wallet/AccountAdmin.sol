@@ -139,28 +139,8 @@ contract AccountAdmin is IAccountAdmin, EIP712 {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Calls an account with transaction data.
-    function relay(RelayRequestParams calldata _params, bytes calldata _signature)
-        external
-        payable
-        onlyValidTimeWindow(_params.validityStartTimestamp, _params.validityEndTimestamp)
-        returns (bool, bytes memory)
-    {
+    function relay(RelayRequestParams calldata _params) external payable returns (bool, bytes memory) {
         require(_params.value == msg.value, "AccountAdmin: incorrect value sent.");
-
-        bytes32 messageHash = keccak256(
-            abi.encode(
-                RELAY_TYPEHASH,
-                _params.signer,
-                _params.credentials,
-                _params.value,
-                _params.gas,
-                keccak256(_params.data),
-                _params.validityStartTimestamp,
-                _params.validityEndTimestamp
-            )
-        );
-        /// @validate: signature-of-intent from target signer.
-        _validateSignature(messageHash, _signature, _params.signer);
 
         bytes32 pairHash = keccak256(abi.encode(_params.signer, _params.credentials));
         address account = pairHashToAccount[pairHash];
