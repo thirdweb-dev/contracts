@@ -54,7 +54,7 @@ interface IAccountAdmin {
      *  @param signer The signer of whose account will receive transaction instructions.
      *  @param credentials The credentials associated with the account that will receive transaction instructions.
      *  @param value Transaction option `value`: the native token amount to send with the transaction.
-     *  @param gas Transaction option `gas`: The total amount of gas to pass in the call to the account.
+     *  @param gas Transaction option `gas`: The total amount of gas to pass in the call to the account. (Optional: if 0 then no particular gas is specified in the call.)
      *  @param data The transaction data.
      */
     struct RelayRequestParams {
@@ -66,7 +66,7 @@ interface IAccountAdmin {
     }
 
     /**
-     *  @notice Calls an account to execute a transaction on the instructions of its controlling signer.
+     *  @notice Calls an Account to execute a transaction.
      *
      *  @param params Parameters to pass when sending transaction data to an account.
      *
