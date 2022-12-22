@@ -252,7 +252,7 @@ contract PackVRFDirect is
         require(openerToReqId[opener] == 0, "ReqInFlight");
 
         require(_amountToOpen > 0 && balanceOf(opener, _packId) >= _amountToOpen, "!Bal");
-        require(packInfo[_packId].openStartTimestamp <= block.timestamp, "cant open");
+        require(packInfo[_packId].openStartTimestamp <= block.timestamp, "!Open");
 
         // Transfer packs into the contract.
         _safeTransferFrom(opener, address(this), _packId, _amountToOpen, "");
@@ -275,13 +275,13 @@ contract PackVRFDirect is
     function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
         RequestInfo memory info = requestInfo[_requestId];
 
-        require(info.randomWords.length == 0, "request not found");
+        require(info.randomWords.length == 0, "!Req");
         requestInfo[_requestId].randomWords = _randomWords;
 
         emit PackRandomnessFulfilled(info.packId, _requestId);
 
         if (info.openOnFulfillRandomness) {
-            _claimRewards(info.opener);
+            try PackVRFDirect(payable(address(this))).sendRewardsIndirect(info.opener) {} catch {}
         }
     }
 
@@ -296,8 +296,13 @@ contract PackVRFDirect is
         return _claimRewards(_msgSender());
     }
 
-    function _claimRewards(address _opener) internal returns (Token[] memory) {
-        address opener = _opener;
+    /// @notice Lets a pack owner open packs and receive the packs' reward units.
+    function sendRewardsIndirect(address _opener) external {
+        require(msg.sender == address(this));
+        _claimRewards(_opener);
+    }
+
+    function _claimRewards(address opener) internal returns (Token[] memory) {
         require(isTrustedForwarder(msg.sender) || msg.sender == address(VRF_V2_WRAPPER) || opener == tx.origin, "!EOA");
 
         require(canClaimRewards(opener), "!ActiveReq");

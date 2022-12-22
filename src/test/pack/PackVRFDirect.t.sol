@@ -550,6 +550,40 @@ contract PackVRFDirectTest is BaseTest {
 
         vm.prank(vrfV2Wrapper);
         pack.rawFulfillRandomWords(requestId, randomValues);
+
+        assertFalse(pack.canClaimRewards(recipient));
+    }
+
+    /**
+     *  note: Testing state changes; pack owner calls `openPack` to redeem underlying rewards.
+     */
+    function test_state_openPackAndClaimRewards_lowGasFailsafe() public {
+        vm.warp(1000);
+        uint256 packId = pack.nextTokenIdToMint();
+        uint256 packsToOpen = 3;
+        address recipient = address(1);
+
+        vm.prank(address(tokenOwner));
+        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+
+        vm.prank(recipient, recipient);
+        uint256 requestId = pack.openPackAndClaimRewards(packId, packsToOpen, 2);
+        console2.log("request ID for opening pack:", requestId);
+
+        uint256[] memory randomValues = new uint256[](1);
+        randomValues[0] = 12345678;
+
+        // check state before
+        assertFalse(pack.canClaimRewards(recipient));
+        console.log(pack.canClaimRewards(recipient));
+
+        // mock the call with low gas, causing revert in _claimRewards
+        vm.prank(vrfV2Wrapper);
+        pack.rawFulfillRandomWords{ gas: 100_000 }(requestId, randomValues);
+
+        // check state after
+        assertTrue(pack.canClaimRewards(recipient));
+        console.log(pack.canClaimRewards(recipient));
     }
 
     /**
@@ -806,7 +840,7 @@ contract PackVRFDirectTest is BaseTest {
         pack.createPack(packContents, numOfRewardUnits, packUri, 1000, 1, recipient);
 
         vm.startPrank(recipient, recipient);
-        vm.expectRevert("cant open");
+        vm.expectRevert("!Open");
         pack.openPack(packId, 1);
     }
 
