@@ -9,14 +9,14 @@ interface IAccountAdmin {
         address indexed account,
         address indexed signerOfAccount,
         address indexed creator,
-        bytes32 credentials
+        bytes32 accountId
     );
 
     /**
      *  @notice Parameters to pass to create an account.
      *
      *  @param signer The address to set as the controlling signer of the account.
-     *  @param credentials Unique credentials to associate with the account, required to be signed by `signer` every time transaction data is passed to the account.
+     *  @param accountId Unique accountId to associate with the account, required to be signed by `signer` every time transaction data is passed to the account.
      *  @param deploymentSalt The create2 salt for account deployment.
      *  @param initialAccountBalance The native token amount to send to the account on its creation.
      *  @param validityStartTimestamp The timestamp before which the account creation request is invalid.
@@ -24,7 +24,7 @@ interface IAccountAdmin {
      */
     struct CreateAccountParams {
         address signer;
-        bytes32 credentials;
+        bytes32 accountId;
         bytes32 deploymentSalt;
         uint256 initialAccountBalance;
         uint128 validityStartTimestamp;
@@ -52,14 +52,14 @@ interface IAccountAdmin {
      *  @notice Parameters to pass to send transaction instructions to an account.
      *
      *  @param signer The signer of whose account will receive transaction instructions.
-     *  @param credentials The credentials associated with the account that will receive transaction instructions.
+     *  @param accountId The accountId associated with the account that will receive transaction instructions.
      *  @param value Transaction option `value`: the native token amount to send with the transaction.
      *  @param gas Transaction option `gas`: The total amount of gas to pass in the call to the account. (Optional: if 0 then no particular gas is specified in the call.)
      *  @param data The transaction data.
      */
     struct RelayRequestParams {
         address signer;
-        bytes32 credentials;
+        bytes32 accountId;
         uint256 value;
         uint256 gas;
         bytes data;
@@ -87,17 +87,17 @@ interface IAccountAdmin {
      *  @notice Called by an account (itself) when a signer is added to it.
      *
      *  @param signer The signer added to the account.
-     *  @param credentials The credentials of the signer used with the relevant account.
+     *  @param accountId The accountId of the signer used with the relevant account.
      */
-    function addSignerToAccount(address signer, bytes32 credentials) external;
+    function addSignerToAccount(address signer, bytes32 accountId) external;
 
     /**
      *  @notice Called by an account (itself) when a signer is removed from it.
      *
      *  @param signer The signer removed from the account.
-     *  @param credentials The credentials of the signer used with the relevant account.
+     *  @param accountId The accountId of the signer used with the relevant account.
      */
-    function removeSignerToAccount(address signer, bytes32 credentials) external;
+    function removeSignerToAccount(address signer, bytes32 accountId) external;
 
     ////////// Data fetching //////////
 
@@ -107,6 +107,6 @@ interface IAccountAdmin {
     /// @notice Returns all signers that are part of an account.
     function getAllSignersOfAccount(address account) external view returns (address[] memory signers);
 
-    /// @notice Returns the account associated with a particular signer-credential pair.
-    function getAccountForCredential(address signer, bytes32 credentials) external view returns (address);
+    /// @notice Returns the account associated with a particular signer-accountId pair.
+    function getAccount(address signer, bytes32 accountId) external view returns (address);
 }

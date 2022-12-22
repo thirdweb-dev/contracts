@@ -18,13 +18,13 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 /**
  *  - One Signer can be a part of many Accounts.
  *  - One Account can have many Signers.
- *  - A Signer-Credential pair hash can only be used/associated with one unique account.
- *    i.e. a Signer must use unique credentials for each Account it wants to be a part of.
+ *  - A Signer-AccountId pair hash can only be used/associated with one unique account.
+ *    i.e. a Signer must use unique accountId for each Account it wants to be a part of.
  *
  *  - How does data fetching work?
  *      - Fetch all accounts for a single signer.
  *      - Fetch all signers for a single account.
- *      - Fetch the unique account for a signer-credential pair.
+ *      - Fetch the unique account for a signer-accountId pair.
  */
 
 contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
@@ -39,11 +39,11 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
 
     bytes32 private constant CREATE_TYPEHASH =
         keccak256(
-            "CreateAccountParams(address signer,bytes32 credentials,bytes32 deploymentSalt,uint256 initialAccountBalance,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+            "CreateAccountParams(address signer,bytes32 accountId,bytes32 deploymentSalt,uint256 initialAccountBalance,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
     bytes32 private constant RELAY_TYPEHASH =
         keccak256(
-            "RelayRequestParam(address signer,bytes32 credentials,uint256 value,uint256 gas,bytes data,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+            "RelayRequestParam(address signer,bytes32 accountId,uint256 value,uint256 gas,bytes data,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
 
     /*///////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
     /// @dev Account => Signers that are actors in account.
     mapping(address => EnumerableSet.AddressSet) private accountToSigners;
 
-    /// @dev Signer-Credential pair => Account.
+    /// @dev Signer-AccountId pair => Account.
     mapping(bytes32 => address) private pairHashToAccount;
 
     /// @dev Address => whether the address is of an account created via this admin contract.
@@ -99,15 +99,15 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
                             Creating an account
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Creates an account for a (signer, credential) pair.
+    /// @notice Creates an account for a (signer, accountId) pair.
     function createAccount(CreateAccountParams calldata _params, bytes calldata _signature)
         external
         payable
         onlyValidTimeWindow(_params.validityStartTimestamp, _params.validityEndTimestamp)
         returns (address account)
     {
-        /// @validate: credentials not empty.
-        require(_params.credentials != bytes32(0), "AccountAdmin: invalid credentials.");
+        /// @validate: accountId not empty.
+        require(_params.accountId != bytes32(0), "AccountAdmin: invalid accountId.");
         /// @validate: sent initial account balance.
         require(_params.initialAccountBalance == msg.value, "AccountAdmin: incorrect value sent.");
 
@@ -115,7 +115,7 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
             abi.encode(
                 CREATE_TYPEHASH,
                 _params.signer,
-                _params.credentials,
+                _params.accountId,
                 _params.deploymentSalt,
                 _params.initialAccountBalance,
                 _params.validityStartTimestamp,
@@ -126,8 +126,8 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
         _validateSignature(messageHash, _signature, _params.signer);
 
         /// @validate: new signer to set does not already have an account.
-        bytes32 pairHash = keccak256(abi.encode(_params.signer, _params.credentials));
-        require(pairHashToAccount[pairHash] == address(0), "AccountAdmin: credentials already used.");
+        bytes32 pairHash = keccak256(abi.encode(_params.signer, _params.accountId));
+        require(pairHashToAccount[pairHash] == address(0), "AccountAdmin: accountId already used.");
 
         /// @validate: (By Create2) No repeat deployment salt.
         address[] memory forwarders = trustedForwarders;
@@ -143,7 +143,7 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
         signerToAccounts[_params.signer].add(account);
         pairHashToAccount[pairHash] = account;
 
-        emit AccountCreated(account, _params.signer, _msgSender(), _params.credentials);
+        emit AccountCreated(account, _params.signer, _msgSender(), _params.accountId);
         emit SignerAdded(_params.signer, account, pairHash);
     }
 
@@ -155,11 +155,11 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
     function relay(RelayRequestParams calldata _params) external payable returns (bool, bytes memory) {
         require(_params.value == msg.value, "AccountAdmin: incorrect value sent.");
 
-        bytes32 pairHash = keccak256(abi.encode(_params.signer, _params.credentials));
+        bytes32 pairHash = keccak256(abi.encode(_params.signer, _params.accountId));
         address account = pairHashToAccount[pairHash];
 
-        /// @validate: account exists for signer-credential pair.
-        require(account != address(0), "AccountAdmin: no account with given credentials.");
+        /// @validate: account exists for signer-accountId pair.
+        require(account != address(0), "AccountAdmin: no account with given accountId.");
 
         bool success;
         bytes memory result;
@@ -192,9 +192,9 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Called by an account (itself) when a signer is added to it.
-    function addSignerToAccount(address _signer, bytes32 _credentials) external onlyAssociatedAccount {
+    function addSignerToAccount(address _signer, bytes32 _accountId) external onlyAssociatedAccount {
         address account = _msgSender();
-        bytes32 pairHash = keccak256(abi.encode(_signer, _credentials));
+        bytes32 pairHash = keccak256(abi.encode(_signer, _accountId));
 
         require(
             accountToSigners[account].add(_signer) &&
@@ -209,9 +209,9 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
     }
 
     /// @notice Called by an account (itself) when a signer is removed from it.
-    function removeSignerToAccount(address _signer, bytes32 _credentials) external onlyAssociatedAccount {
+    function removeSignerToAccount(address _signer, bytes32 _accountId) external onlyAssociatedAccount {
         address account = _msgSender();
-        bytes32 pairHash = keccak256(abi.encode(_signer, _credentials));
+        bytes32 pairHash = keccak256(abi.encode(_signer, _accountId));
 
         require(
             accountToSigners[account].remove(_signer) && signerToAccounts[_signer].remove(account),
@@ -247,9 +247,9 @@ contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
         }
     }
 
-    /// @notice Returns the account associated with a particular signer-credential pair.
-    function getAccountForCredential(address _signer, bytes32 _credentials) external view returns (address) {
-        bytes32 pair = keccak256(abi.encode(_signer, _credentials));
+    /// @notice Returns the account associated with a particular signer-accountId pair.
+    function getAccount(address _signer, bytes32 _accountId) external view returns (address) {
+        bytes32 pair = keccak256(abi.encode(_signer, _accountId));
         return pairHashToAccount[pair];
     }
 

@@ -145,35 +145,35 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Adds an admin to the account.
-    function addAdmin(address _signer, bytes32 _credentials) external onlySelf {
+    function addAdmin(address _signer, bytes32 _accountId) external onlySelf {
         _setupRole(DEFAULT_ADMIN_ROLE, _signer);
         emit AdminAdded(_signer);
 
-        IAccountAdmin(controller).addSignerToAccount(_signer, _credentials);
+        IAccountAdmin(controller).addSignerToAccount(_signer, _accountId);
     }
 
     /// @notice Removes an admin from the account.
-    function removeAdmin(address _signer, bytes32 _credentials) external onlySelf {
+    function removeAdmin(address _signer, bytes32 _accountId) external onlySelf {
         _revokeRole(DEFAULT_ADMIN_ROLE, _signer);
         emit AdminRemoved(_signer);
 
-        IAccountAdmin(controller).removeSignerToAccount(_signer, _credentials);
+        IAccountAdmin(controller).removeSignerToAccount(_signer, _accountId);
     }
 
     /// @notice Adds a signer to the account.
-    function addSigner(address _signer, bytes32 _credentials) external onlySelf {
+    function addSigner(address _signer, bytes32 _accountId) external onlySelf {
         _setupRole(SIGNER_ROLE, _signer);
         emit SignerAdded(_signer);
 
-        IAccountAdmin(controller).addSignerToAccount(_signer, _credentials);
+        IAccountAdmin(controller).addSignerToAccount(_signer, _accountId);
     }
 
     /// @notice Removes a signer from the account.
-    function removeSigner(address _signer, bytes32 _credentials) external onlySelf {
+    function removeSigner(address _signer, bytes32 _accountId) external onlySelf {
         _revokeRole(SIGNER_ROLE, _signer);
         emit SignerRemoved(_signer);
 
-        IAccountAdmin(controller).removeSignerToAccount(_signer, _credentials);
+        IAccountAdmin(controller).removeSignerToAccount(_signer, _accountId);
     }
 
     /*///////////////////////////////////////////////////////////////

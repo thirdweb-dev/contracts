@@ -94,33 +94,33 @@ interface IAccount is IERC1271 {
      *  @notice Adds an admin to the account.
      *
      *  @param signer The address to make an admin of the Account.
-     *  @param credentials The credentials for the address; must be unique for the signer in the associated AccountAdmin.
+     *  @param accountId The accountId for the address; must be unique for the signer in the associated AccountAdmin.
      */
-    function addAdmin(address signer, bytes32 credentials) external;
+    function addAdmin(address signer, bytes32 accountId) external;
 
     /**
      *  @notice Removes an admin from the account.
      *
      *  @param signer The address to remove as an admin of the Account.
-     *  @param credentials The credentials for the address.
+     *  @param accountId The accountId for the address.
      */
-    function removeAdmin(address signer, bytes32 credentials) external;
+    function removeAdmin(address signer, bytes32 accountId) external;
 
     /**
      *  @notice Adds a signer to the account.
      *
      *  @param signer An address to add as a signer to the Account.
-     *  @param credentials The credentials for the address; must be unique for the signer in the associated AccountAdmin.
+     *  @param accountId The accountId for the address; must be unique for the signer in the associated AccountAdmin.
      */
-    function addSigner(address signer, bytes32 credentials) external;
+    function addSigner(address signer, bytes32 accountId) external;
 
     /**
      *  @notice Removes a signer from the account.
      *
      *  @param signer An address to remove as a signer to the Account.
-     *  @param credentials The credentials for the address.
+     *  @param accountId The accountId for the address.
      */
-    function removeSigner(address signer, bytes32 credentials) external;
+    function removeSigner(address signer, bytes32 accountId) external;
 
     ////////// Approve non-admin signers for function calls //////////
 
