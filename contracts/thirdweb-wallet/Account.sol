@@ -353,7 +353,6 @@ contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnum
         uint128 _validityStartTimestamp,
         uint128 _validityEndTimestamp
     ) internal {
-        require(controller == _msgSender(), "Account: caller not controller.");
         require(msg.value == _value, "Account: incorrect value sent.");
         require(
             _validityStartTimestamp <= block.timestamp && block.timestamp < _validityEndTimestamp,
