@@ -9,6 +9,7 @@ import "./interface/IAccount.sol";
 import "./Account.sol";
 
 ////////// Utils //////////
+import "../openzeppelin-presets/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
@@ -26,7 +27,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
  *      - Fetch the unique account for a signer-credential pair.
  */
 
-contract AccountAdmin is IAccountAdmin, EIP712 {
+contract AccountAdmin is IAccountAdmin, EIP712, ERC2771Context {
     using EnumerableSet for EnumerableSet.AddressSet;
     using ECDSA for bytes32;
 
@@ -49,6 +50,8 @@ contract AccountAdmin is IAccountAdmin, EIP712 {
                             State variables
     //////////////////////////////////////////////////////////////*/
 
+    address[] private trustedForwarders;
+
     /// @dev Signer => Accounts where signer is an actor.
     mapping(address => EnumerableSet.AddressSet) private signerToAccounts;
 
@@ -61,7 +64,15 @@ contract AccountAdmin is IAccountAdmin, EIP712 {
     /// @dev Address => whether the address is of an account created via this admin contract.
     mapping(address => bool) public isAssociatedAccount;
 
-    constructor() EIP712("thirdwebWallet_Admin", "1") {}
+    constructor(address[] memory _trustedForwarders)
+        EIP712("thirdwebWallet_Admin", "1")
+        ERC2771Context(_trustedForwarders)
+    {
+        uint256 len = _trustedForwarders.length;
+        for (uint256 i = 0; i < len; i += 1) {
+            trustedForwarders.push(_trustedForwarders[i]);
+        }
+    }
 
     /*///////////////////////////////////////////////////////////////
                                 Modifiers
@@ -80,7 +91,7 @@ contract AccountAdmin is IAccountAdmin, EIP712 {
 
     /// @dev Checks whether the caller is an account created via this admin contract.
     modifier onlyAssociatedAccount() {
-        require(isAssociatedAccount[msg.sender], "AccountAdmin: caller not account of this admin.");
+        require(isAssociatedAccount[_msgSender()], "AccountAdmin: caller not account of this admin.");
         _;
     }
 
@@ -119,10 +130,11 @@ contract AccountAdmin is IAccountAdmin, EIP712 {
         require(pairHashToAccount[pairHash] == address(0), "AccountAdmin: credentials already used.");
 
         /// @validate: (By Create2) No repeat deployment salt.
+        address[] memory forwarders = trustedForwarders;
         account = Create2.deploy(
             _params.initialAccountBalance,
             _params.deploymentSalt,
-            abi.encodePacked(type(Account).creationCode, abi.encode(address(this), _params.signer))
+            abi.encodePacked(type(Account).creationCode, abi.encode(forwarders, address(this), _params.signer))
         );
 
         isAssociatedAccount[account] = true;
@@ -130,7 +142,7 @@ contract AccountAdmin is IAccountAdmin, EIP712 {
         signerToAccounts[_params.signer].add(account);
         pairHashToAccount[pairHash] = account;
 
-        emit AccountCreated(account, _params.signer, msg.sender, _params.credentials);
+        emit AccountCreated(account, _params.signer, _msgSender(), _params.credentials);
         emit SignerAdded(_params.signer, account, pairHash);
     }
 
@@ -180,7 +192,7 @@ contract AccountAdmin is IAccountAdmin, EIP712 {
 
     /// @notice Called by an account (itself) when a signer is added to it.
     function addSignerToAccount(address _signer, bytes32 _credentials) external onlyAssociatedAccount {
-        address account = msg.sender;
+        address account = _msgSender();
         bytes32 pairHash = keccak256(abi.encode(_signer, _credentials));
 
         require(
@@ -197,7 +209,7 @@ contract AccountAdmin is IAccountAdmin, EIP712 {
 
     /// @notice Called by an account (itself) when a signer is removed from it.
     function removeSignerToAccount(address _signer, bytes32 _credentials) external onlyAssociatedAccount {
-        address account = msg.sender;
+        address account = _msgSender();
         bytes32 pairHash = keccak256(abi.encode(_signer, _credentials));
 
         require(

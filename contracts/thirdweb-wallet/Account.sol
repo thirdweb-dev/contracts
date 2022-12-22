@@ -8,6 +8,7 @@ import "./interface/IAccountAdmin.sol";
 ////////// Utils //////////
 import "../extension/Multicall.sol";
 import "../extension/PermissionsEnumerable.sol";
+import "../openzeppelin-presets/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
 
@@ -31,7 +32,7 @@ import "@openzeppelin/contracts/utils/cryptography/draft-EIP712.sol";
  *      - Sign messages. (EIP-1271)
  *      - Own and transfer assets. (ERC-20/721/1155)
  */
-contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
+contract Account is IAccount, EIP712, Multicall, ERC2771Context, PermissionsEnumerable {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -67,7 +68,11 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _controller, address _signer) payable EIP712("thirdwebWallet", "1") {
+    constructor(
+        address[] memory _trustedForwarders,
+        address _controller,
+        address _signer
+    ) payable ERC2771Context(_trustedForwarders) EIP712("thirdwebWallet", "1") {
         controller = _controller;
         _setupRole(DEFAULT_ADMIN_ROLE, _signer);
 
@@ -80,7 +85,7 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
 
     /// @dev Checks whether the caller is self.
     modifier onlySelf() {
-        require(msg.sender == address(this), "Account: caller not self.");
+        require(_msgSender() == address(this), "Account: caller not self.");
         _;
     }
 
@@ -348,7 +353,7 @@ contract Account is IAccount, EIP712, Multicall, PermissionsEnumerable {
         uint128 _validityStartTimestamp,
         uint128 _validityEndTimestamp
     ) internal {
-        require(controller == msg.sender, "Account: caller not controller.");
+        require(controller == _msgSender(), "Account: caller not controller.");
         require(msg.value == _value, "Account: incorrect value sent.");
         require(
             _validityStartTimestamp <= block.timestamp && block.timestamp < _validityEndTimestamp,
