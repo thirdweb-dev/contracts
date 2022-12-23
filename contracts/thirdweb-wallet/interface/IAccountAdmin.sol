@@ -68,12 +68,22 @@ interface IAccountAdmin {
     /**
      *  @notice Calls an Account to execute a transaction.
      *
-     *  @param params Parameters to pass when sending transaction data to an account.
+     *  @param signer The signer of whose account will receive transaction instructions.
+     *  @param accountId The accountId associated with the account that will receive transaction instructions.
+     *  @param value Transaction option `value`: the native token amount to send with the transaction.
+     *  @param gas Transaction option `gas`: The total amount of gas to pass in the call to the account. (Optional: if 0 then no particular gas is specified in the call.)
+     *  @param data The transaction data.
      *
      *  @return success Returns whether the call to the account was successful.
      *  @return result Returns the call result of the call to the account.
      */
-    function relay(RelayRequestParams calldata params) external payable returns (bool success, bytes memory result);
+    function relay(
+        address signer,
+        bytes32 accountId,
+        uint256 value,
+        uint256 gas,
+        bytes calldata data
+    ) external payable returns (bool success, bytes memory result);
 
     ////////// Changes to signer composition of accounts //////////
 

@@ -170,10 +170,16 @@ contract AccountAdmin is IAccountAdmin, Initializable, EIP712Upgradeable, ERC277
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Calls an account with transaction data.
-    function relay(RelayRequestParams calldata _params) external payable returns (bool, bytes memory) {
-        require(_params.value == msg.value, "AccountAdmin: incorrect value sent.");
+    function relay(
+        address _signer,
+        bytes32 _accountId,
+        uint256 _value,
+        uint256 _gas,
+        bytes calldata _data
+    ) external payable returns (bool, bytes memory) {
+        require(_value == msg.value, "AccountAdmin: incorrect value sent.");
 
-        bytes32 pairHash = keccak256(abi.encode(_params.signer, _params.accountId));
+        bytes32 pairHash = keccak256(abi.encode(_signer, _accountId));
         address account = pairHashToAccount[pairHash];
 
         /// @validate: account exists for signer-accountId pair.
@@ -181,12 +187,12 @@ contract AccountAdmin is IAccountAdmin, Initializable, EIP712Upgradeable, ERC277
 
         bool success;
         bytes memory result;
-        if (_params.gas > 0) {
+        if (_gas > 0) {
             // solhint-disable-next-line avoid-low-level-calls
-            (success, result) = account.call{ gas: _params.gas, value: _params.value }(_params.data);
+            (success, result) = account.call{ gas: _gas, value: _value }(_data);
         } else {
             // solhint-disable-next-line avoid-low-level-calls
-            (success, result) = account.call{ value: _params.value }(_params.data);
+            (success, result) = account.call{ value: _value }(_data);
         }
 
         if (!success) {
@@ -198,9 +204,9 @@ contract AccountAdmin is IAccountAdmin, Initializable, EIP712Upgradeable, ERC277
             revert(abi.decode(result, (string)));
         }
         // Check gas: https://ronan.eth.link/blog/ethereum-gas-dangers/
-        assert(gasleft() > _params.gas / 63);
+        assert(gasleft() > _gas / 63);
 
-        emit CallResult(account, _params.signer, success);
+        emit CallResult(account, _signer, success);
 
         return (success, result);
     }
