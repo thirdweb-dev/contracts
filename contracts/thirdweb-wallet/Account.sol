@@ -3,7 +3,6 @@ pragma solidity ^0.8.11;
 
 ////////// Interface //////////
 import "./interface/IAccount.sol";
-import "./interface/IAccountAdmin.sol";
 
 ////////// Utils //////////
 
@@ -34,6 +33,13 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
  *      - Sign messages. (EIP-1271)
  *      - Own and transfer assets. (ERC-20/721/1155)
  */
+
+interface ISignerTracker {
+    function addSignerToAccount(address signer, bytes32 accountId) external;
+
+    function removeSignerToAccount(address signer, bytes32 accountId) external;
+}
+
 contract Account is
     IAccount,
     Initializable,
@@ -178,7 +184,7 @@ contract Account is
         _setupRole(DEFAULT_ADMIN_ROLE, _signer);
         emit AdminAdded(_signer);
 
-        IAccountAdmin(controller).addSignerToAccount(_signer, _accountId);
+        try ISignerTracker(controller).addSignerToAccount(_signer, _accountId) {} catch {}
     }
 
     /// @notice Removes an admin from the account.
@@ -186,7 +192,7 @@ contract Account is
         _revokeRole(DEFAULT_ADMIN_ROLE, _signer);
         emit AdminRemoved(_signer);
 
-        IAccountAdmin(controller).removeSignerToAccount(_signer, _accountId);
+        try ISignerTracker(controller).removeSignerToAccount(_signer, _accountId) {} catch {}
     }
 
     /// @notice Adds a signer to the account.
@@ -194,7 +200,7 @@ contract Account is
         _setupRole(SIGNER_ROLE, _signer);
         emit SignerAdded(_signer);
 
-        IAccountAdmin(controller).addSignerToAccount(_signer, _accountId);
+        try ISignerTracker(controller).addSignerToAccount(_signer, _accountId) {} catch {}
     }
 
     /// @notice Removes a signer from the account.
@@ -202,7 +208,7 @@ contract Account is
         _revokeRole(SIGNER_ROLE, _signer);
         emit SignerRemoved(_signer);
 
-        IAccountAdmin(controller).removeSignerToAccount(_signer, _accountId);
+        try ISignerTracker(controller).removeSignerToAccount(_signer, _accountId) {} catch {}
     }
 
     /*///////////////////////////////////////////////////////////////
