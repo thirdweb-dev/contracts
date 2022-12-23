@@ -120,10 +120,10 @@ Returns all signers that are part of an account.
 ### relay
 
 ```solidity
-function relay(IAccountAdmin.RelayRequestParams params) external payable returns (bool success, bytes result)
+function relay(address signer, bytes32 accountId, uint256 value, uint256 gas, bytes data) external payable returns (bool success, bytes result)
 ```
 
-
+Calls an Account to execute a transaction.
 
 
 
@@ -131,14 +131,18 @@ function relay(IAccountAdmin.RelayRequestParams params) external payable returns
 
 | Name | Type | Description |
 |---|---|---|
-| params | IAccountAdmin.RelayRequestParams | undefined |
+| signer | address | The signer of whose account will receive transaction instructions. |
+| accountId | bytes32 | The accountId associated with the account that will receive transaction instructions. |
+| value | uint256 | Transaction option `value`: the native token amount to send with the transaction. |
+| gas | uint256 | Transaction option `gas`: The total amount of gas to pass in the call to the account. (Optional: if 0 then no particular gas is specified in the call.) |
+| data | bytes | The transaction data. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| success | bool | undefined |
-| result | bytes | undefined |
+| success | bool | Returns whether the call to the account was successful. |
+| result | bytes | Returns the call result of the call to the account. |
 
 ### removeSignerToAccount
 

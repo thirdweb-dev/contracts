@@ -197,10 +197,10 @@ Receives and executes a batch of function calls on this contract.
 ### relay
 
 ```solidity
-function relay(IAccountAdmin.RelayRequestParams _params) external payable returns (bool, bytes)
+function relay(address _signer, bytes32 _accountId, uint256 _value, uint256 _gas, bytes _data) external payable returns (bool, bytes)
 ```
 
-
+Calls an account with transaction data.
 
 
 
@@ -208,7 +208,11 @@ function relay(IAccountAdmin.RelayRequestParams _params) external payable return
 
 | Name | Type | Description |
 |---|---|---|
-| _params | IAccountAdmin.RelayRequestParams | undefined |
+| _signer | address | undefined |
+| _accountId | bytes32 | undefined |
+| _value | uint256 | undefined |
+| _gas | uint256 | undefined |
+| _data | bytes | undefined |
 
 #### Returns
 
