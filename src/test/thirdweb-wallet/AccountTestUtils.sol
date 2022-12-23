@@ -134,6 +134,36 @@ contract AccountAdminUtil is BaseTest {
 
         return sig;
     }
+
+    function signCreateAccountViaAccount(
+        IAccountAdmin.CreateAccountParams memory _params,
+        uint256 _privateKey,
+        address targetContract
+    ) internal view returns (bytes memory) {
+        bytes32 structHash = keccak256(
+            abi.encode(
+                CREATE_TYPEHASH,
+                _params.signer,
+                _params.accountId,
+                _params.deploymentSalt,
+                _params.initialAccountBalance,
+                _params.validityStartTimestamp,
+                _params.validityEndTimestamp
+            )
+        );
+
+        bytes32 accountNameHash = keccak256(bytes("thirdweb_wallet"));
+
+        bytes32 domainSeparator = keccak256(
+            abi.encode(typehashEip712, accountNameHash, versionHash, block.chainid, address(targetContract))
+        );
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
+        bytes memory sig = abi.encodePacked(r, s, v);
+
+        return sig;
+    }
 }
 
 contract DummyContract {

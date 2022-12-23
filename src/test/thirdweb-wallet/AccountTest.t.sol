@@ -1172,11 +1172,181 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         Test action: Admin deploys a smart contract with account.
     //////////////////////////////////////////////////////////////*/
 
+    function test_state_execute_deploy() external {
+        _setUp_account();
+
+        address relayer = address(0x12345);
+
+        bytes32 salt = keccak256("1");
+        bytes memory bytecode = type(DummyContract).creationCode;
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.deploy.selector, bytecode, salt, 0);
+
+        address predictedAddress = Create2.computeAddress(
+            keccak256(abi.encode(salt, relayer)),
+            keccak256(abi.encodePacked(bytecode)),
+            address(account)
+        );
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.prank(relayer, relayer);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        assertEq(DummyContract(payable(predictedAddress)).deployer(), address(account));
+    }
+
+    function test_revert_execute_deploy_repeatSalt() external {
+        _setUp_account();
+
+        address relayer = address(0x12345);
+
+        bytes32 salt = keccak256("1");
+        bytes memory bytecode = type(DummyContract).creationCode;
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.deploy.selector, bytecode, salt, 0);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.prank(relayer, relayer);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        params.nonce = account.nonce();
+        bytes memory signature2 = signExecute(params, privateKey1, address(account));
+        bytes memory data2 = abi.encodeWithSelector(Account.execute.selector, params, signature2);
+
+        vm.prank(relayer, relayer);
+        vm.expectRevert("Create2: Failed on deploy");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data2);
+    }
+
     /*///////////////////////////////////////////////////////////////
         Test action: One Account is a signer on another Account.
     //////////////////////////////////////////////////////////////*/
 
+    function test_state_execute_addAccountAsSigner() external {
+        ///// Deploy Account to add another Account as a signer. /////
+        _setUp_account();
+
+        ///// Create another Account /////
+
+        address altAdmin = signer2;
+
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
+            signer: altAdmin,
+            accountId: keccak256("1"),
+            deploymentSalt: keccak256("salt"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey2, address(accountAdmin));
+        vm.prank(altAdmin);
+        address altAccount = accountAdmin.createAccount(params, signature);
+
+        ///// Add Alt Account to original Account as a signer (admin, for simplicity) /////
+        bytes32 altAccountAccountId = keccak256("11");
+        IAccount.TransactionParams memory params2 = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: abi.encodeWithSelector(Account.addAdmin.selector, altAccount, altAccountAccountId),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature2 = signExecute(params2, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params2, signature2);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        ///// Alt Account signs (in the sense of EIP 1271) and sends tx instruction to original Account /////
+
+        uint256 number = 5;
+        uint256 currentNonce = account.nonce();
+        assertEq(counter.getNumber(), 0);
+
+        IAccount.TransactionParams memory params3 = IAccount.TransactionParams({
+            signer: altAccount,
+            target: address(counter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature3 = signExecute(params3, privateKey2, address(altAccount)); // signer on alt account signs
+
+        bytes memory data2 = abi.encodeWithSelector(Account.execute.selector, params3, signature3);
+        accountAdmin.relay(altAccount, altAccountAccountId, 0, 0, data2);
+
+        assertEq(account.nonce(), currentNonce + 1);
+        assertEq(counter.getNumber(), number);
+    }
+
     /*///////////////////////////////////////////////////////////////
     Test action: an Account creates another Account on AccountAdmin.
     //////////////////////////////////////////////////////////////*/
+
+    function test_state_createAccount_byAnotherAccount() external {
+        ///// Deploy Account to use to create another account. /////
+        _setUp_account();
+
+        ///// Create another Account /////
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
+            signer: address(account),
+            accountId: keccak256("xyz"),
+            deploymentSalt: keccak256("saltsalt"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccountViaAccount(params, privateKey1, address(account));
+
+        vm.prank(admin);
+        address altAccount = accountAdmin.createAccount(params, signature);
+
+        assertEq(Account(payable(altAccount)).hasRole(SIGNER_ROLE, address(account)), false);
+        assertEq(Account(payable(altAccount)).hasRole(DEFAULT_ADMIN_ROLE, address(account)), true);
+        assertEq(Account(payable(altAccount)).getRoleMemberCount(SIGNER_ROLE), 0);
+        assertEq(Account(payable(altAccount)).getRoleMemberCount(DEFAULT_ADMIN_ROLE), 1);
+        assertEq(Account(payable(altAccount)).nonce(), 0);
+        assertEq(Account(payable(altAccount)).controller(), address(accountAdmin));
+
+        address[] memory accountsOfSigner = accountAdmin.getAllAccountsOfSigner(address(account));
+        assertEq(accountsOfSigner.length, 1);
+        assertEq(accountsOfSigner[0], altAccount);
+
+        address[] memory signersOfAccount = accountAdmin.getAllSignersOfAccount(altAccount);
+        assertEq(signersOfAccount.length, 1);
+        assertEq(signersOfAccount[0], address(account));
+
+        assertEq(accountAdmin.getAccount(address(account), params.accountId), altAccount);
+    }
 }

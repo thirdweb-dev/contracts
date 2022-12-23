@@ -171,7 +171,8 @@ contract Account is
         bytes32 _salt,
         uint256 _value
     ) external payable onlySelf returns (address deployment) {
-        deployment = Create2.deploy(_value, _salt, _bytecode);
+        bytes32 safeSalt = keccak256(abi.encode(_salt, tx.origin));
+        deployment = Create2.deploy(_value, safeSalt, _bytecode);
         emit ContractDeployed(deployment);
     }
 
@@ -361,10 +362,10 @@ contract Account is
 
     /// @notice See EIP-1271. Returns whether a signature is a valid signature made on behalf of this contract.
     function isValidSignature(bytes32 _hash, bytes calldata _signature) external view override returns (bytes4) {
-        address signer = _hash.recover(_signature);
+        address signer = _hashTypedDataV4(_hash).recover(_signature);
 
         // Validate signatures
-        if (hasRole(SIGNER_ROLE, signer)) {
+        if (hasRole(SIGNER_ROLE, signer) || hasRole(DEFAULT_ADMIN_ROLE, signer)) {
             return MAGICVALUE;
         } else {
             return 0xffffffff;
