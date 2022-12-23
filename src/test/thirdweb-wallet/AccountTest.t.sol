@@ -6,17 +6,20 @@ import { Account, IAccount } from "contracts/thirdweb-wallet/Account.sol";
 import { AccountAdmin, IAccountAdmin } from "contracts/thirdweb-wallet/AccountAdmin.sol";
 
 ////////// Test utils: signing //////////
-import { AccountUtil, AccountData, AccountAdminUtil, AccountAdminData, DummyContract } from "./AccountTestUtils.sol";
+import { AccountUtil, AccountData, AccountAdminUtil, AccountAdminData, DummyContract, CounterContract } from "./AccountTestUtils.sol";
 
 ////////// Generic test imports //////////
-import { ERC20, ERC721, ERC1155, Create2 } from "../utils/BaseTest.sol";
+import "../utils/BaseTest.sol";
+import "contracts/TWProxy.sol";
 
-contract ThirdwebWalletTest is AccountUtil, AccountData, AccountAdminUtil, AccountAdminData {
+contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminUtil, AccountAdminData {
     bytes32 private constant SIGNER_ROLE = keccak256("SIGNER");
     bytes32 private constant DEFAULT_ADMIN_ROLE = 0x00;
 
+    address private accountImplementation;
+    address private accountAdminImplementation;
+
     AccountAdmin private accountAdmin;
-    Account private account;
 
     uint256 public privateKey1 = 1234;
     uint256 public privateKey2 = 6789;
@@ -30,7 +33,17 @@ contract ThirdwebWalletTest is AccountUtil, AccountData, AccountAdminUtil, Accou
         super.setUp();
 
         // Deploy Architecture:Admin i.e. the entrypoint for a client.
-        accountAdmin = new AccountAdmin();
+        accountImplementation = address(new Account());
+        accountAdminImplementation = address(new AccountAdmin(accountImplementation));
+
+        accountAdmin = AccountAdmin(
+            address(
+                new TWProxy(
+                    accountAdminImplementation,
+                    abi.encodeWithSelector(AccountAdmin.initialize.selector, forwarders())
+                )
+            )
+        );
 
         signer1 = vm.addr(privateKey1);
         signer2 = vm.addr(privateKey2);
@@ -44,7 +57,7 @@ contract ThirdwebWalletTest is AccountUtil, AccountData, AccountAdminUtil, Accou
     function test_state_createAccount() external {
         IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
-            credentials: keccak256("1"),
+            accountId: keccak256("1"),
             deploymentSalt: keccak256("salt"),
             initialAccountBalance: 0,
             validityStartTimestamp: 0,
@@ -60,22 +73,32 @@ contract ThirdwebWalletTest is AccountUtil, AccountData, AccountAdminUtil, Accou
         assertEq(Account(payable(accountAddress)).getRoleMemberCount(DEFAULT_ADMIN_ROLE), 1);
         assertEq(Account(payable(accountAddress)).nonce(), 0);
         assertEq(Account(payable(accountAddress)).controller(), address(accountAdmin));
+
+        address[] memory accountsOfSigner = accountAdmin.getAllAccountsOfSigner(signer1);
+        assertEq(accountsOfSigner.length, 1);
+        assertEq(accountsOfSigner[0], accountAddress);
+
+        address[] memory signersOfAccount = accountAdmin.getAllSignersOfAccount(accountAddress);
+        assertEq(signersOfAccount.length, 1);
+        assertEq(signersOfAccount[0], signer1);
+
+        assertEq(accountAdmin.getAccount(signer1, params.accountId), accountAddress);
     }
 
-    /// @dev Creates an account for a (signer, credentials) pair with a pre-determined address.
+    /// @dev Creates an account for a (signer, accountId) pair with a pre-determined address.
     function test_state_createAccount_deterministicAddress() external {
         bytes32 salt = keccak256("1");
-        bytes memory bytecode = abi.encodePacked(
-            type(Account).creationCode,
-            abi.encode(address(accountAdmin), signer1)
-        );
-        bytes32 bytecodeHash = keccak256(bytecode);
+        address relayer = address(0x12345);
 
-        address predictedAddress = Create2.computeAddress(salt, bytecodeHash, address(accountAdmin));
+        address predictedAddress = Clones.predictDeterministicAddress(
+            accountImplementation,
+            keccak256(abi.encode(salt, relayer)),
+            address(accountAdmin)
+        );
 
         IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
-            credentials: keccak256("1"),
+            accountId: keccak256("1"),
             deploymentSalt: salt,
             initialAccountBalance: 0,
             validityStartTimestamp: 0,
@@ -83,19 +106,20 @@ contract ThirdwebWalletTest is AccountUtil, AccountData, AccountAdminUtil, Accou
         });
 
         bytes memory signature = signCreateAccount(params, privateKey1, address(accountAdmin));
+        vm.prank(relayer);
         address accountAddress = accountAdmin.createAccount(params, signature);
 
         assertEq(accountAddress, predictedAddress);
     }
 
-    /// @dev Creates an account for a (signer, credentials) pair with an initial native token balance.
+    /// @dev Creates an account for a (signer, accountId) pair with an initial native token balance.
     function test_balances_createAccount_withInitialBalance() external {
         uint256 initialBalance = 1 ether;
         vm.deal(signer1, initialBalance);
 
         IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
-            credentials: keccak256("1"),
+            accountId: keccak256("1"),
             deploymentSalt: keccak256("1"),
             initialAccountBalance: initialBalance,
             validityStartTimestamp: 0,
@@ -111,17 +135,17 @@ contract ThirdwebWalletTest is AccountUtil, AccountData, AccountAdminUtil, Accou
     /// @dev On creation of an account, event `AccountCreated` is emitted with: account, signer-of-account and creator (i.e. caller) address.
     function test_events_createAccount_AccountCreated() external {
         bytes32 salt = keccak256("1");
-        bytes memory bytecode = abi.encodePacked(
-            type(Account).creationCode,
-            abi.encode(address(accountAdmin), signer1)
-        );
-        bytes32 bytecodeHash = keccak256(bytecode);
+        address relayer = address(0x12345);
 
-        address predictedAddress = Create2.computeAddress(salt, bytecodeHash, address(accountAdmin));
+        address predictedAddress = Clones.predictDeterministicAddress(
+            accountImplementation,
+            keccak256(abi.encode(salt, relayer)),
+            address(accountAdmin)
+        );
 
         IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: signer1,
-            credentials: keccak256("1"),
+            accountId: keccak256("1"),
             deploymentSalt: salt,
             initialAccountBalance: 0,
             validityStartTimestamp: 0,
@@ -131,187 +155,1028 @@ contract ThirdwebWalletTest is AccountUtil, AccountData, AccountAdminUtil, Accou
         bytes memory signature = signCreateAccount(params, privateKey1, address(accountAdmin));
 
         vm.expectEmit(true, true, true, true);
-        emit AccountCreated(predictedAddress, signer1, signer2, params.credentials);
-        vm.prank(signer2);
+        emit AccountCreated(predictedAddress, signer1, relayer, params.accountId);
+        vm.prank(relayer);
         accountAdmin.createAccount(params, signature);
     }
 
-    // /// @dev Cannot create an account with empty credentials (bytes32(0)).
-    // function test_revert_createAccount_emptyCredentials() external {
-    //     IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
-    //         signer: signer1,
-    //         credentials: bytes32(0), // empty credentials
-    //         deploymentSalt: keccak256("1"),
-    //         initialAccountBalance: 0,
-    //         validityStartTimestamp: 0,
-    //         validityEndTimestamp: 100
-    //     });
+    /// @dev Cannot create an account with empty accountId (bytes32(0)).
+    function test_revert_createAccount_emptyaccountId() external {
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
+            signer: signer1,
+            accountId: bytes32(0), // empty accountId
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
 
-    //     bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        bytes memory signature = signCreateAccount(params, privateKey1, address(accountAdmin));
 
-    //     vm.expectRevert("AccountAdmin: invalid credentials.");
-    //     admin.createAccount(params, signature);
-    // }
+        vm.expectRevert("AccountAdmin: invalid accountId.");
+        accountAdmin.createAccount(params, signature);
+    }
 
-    // /// @dev Must sent the exact native token value with transaction as the account's intended initial balance on creation.
-    // function test_revert_createAccount_incorrectValueSentForInitialBalance() external {
-    //     uint256 initialBalance = 1 ether;
+    /// @dev Must sent the exact native token value with transaction as the account's intended initial balance on creation.
+    function test_revert_createAccount_incorrectValueSentForInitialBalance() external {
+        uint256 initialBalance = 1 ether;
 
-    //     IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
-    //         signer: signer1,
-    //         credentials: keccak256("1"),
-    //         deploymentSalt: keccak256("1"),
-    //         initialAccountBalance: initialBalance,
-    //         validityStartTimestamp: 0,
-    //         validityEndTimestamp: 100
-    //     });
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
+            signer: signer1,
+            accountId: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: initialBalance,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
 
-    //     bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        bytes memory signature = signCreateAccount(params, privateKey1, address(accountAdmin));
 
-    //     vm.expectRevert("AccountAdmin: incorrect value sent.");
-    //     admin.createAccount{ value: initialBalance - 1 }(params, signature); // Incorrect value sent.
-    // }
+        vm.expectRevert("AccountAdmin: incorrect value sent.");
+        accountAdmin.createAccount{ value: initialBalance - 1 }(params, signature); // Incorrect value sent.
+    }
 
-    // /// @dev Must not repeat deployment salt.
-    // function test_revert_createAccount_repeatingDeploymentSalt() external {
-    //     IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
-    //         signer: signer1,
-    //         credentials: keccak256("1"),
-    //         deploymentSalt: keccak256("1"),
-    //         initialAccountBalance: 0,
-    //         validityStartTimestamp: 0,
-    //         validityEndTimestamp: 100
-    //     });
+    /// @dev Must not repeat deployment salt.
+    function test_revert_createAccount_repeatingDeploymentSalt() external {
+        address relayer = address(0x12345);
 
-    //     bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
-    //     admin.createAccount(params, signature);
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
+            signer: signer1,
+            accountId: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
 
-    //     IAccountAdmin.CreateAccountParams memory params2 = IAccountAdmin.CreateAccountParams({
-    //         signer: signer2,
-    //         credentials: keccak256("1"),
-    //         deploymentSalt: keccak256("1"),
-    //         initialAccountBalance: 0,
-    //         validityStartTimestamp: 0,
-    //         validityEndTimestamp: 100
-    //     });
+        bytes memory signature = signCreateAccount(params, privateKey1, address(accountAdmin));
+        vm.prank(relayer);
+        accountAdmin.createAccount(params, signature);
 
-    //     bytes memory signature2 = signCreateAccount(params2, privateKey2, address(admin));
-    //     vm.expectRevert();
-    //     admin.createAccount(params2, signature2);
-    // }
+        IAccountAdmin.CreateAccountParams memory params2 = IAccountAdmin.CreateAccountParams({
+            signer: signer2,
+            accountId: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
 
-    // /// @dev Signature of intent must be from the target signer for whom the account is created.
-    // function test_revert_createAccount_signatureNotFromTargetSigner() external {
-    //     IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
-    //         signer: signer2, // Signer2 is intended signer for account.
-    //         credentials: keccak256("1"),
-    //         deploymentSalt: keccak256("1"),
-    //         initialAccountBalance: 0,
-    //         validityStartTimestamp: 0,
-    //         validityEndTimestamp: 100
-    //     });
+        bytes memory signature2 = signCreateAccount(params2, privateKey2, address(accountAdmin));
+        vm.expectRevert("ERC1167: create2 failed");
+        vm.prank(relayer);
+        accountAdmin.createAccount(params2, signature2);
+    }
 
-    //     bytes memory signature = signCreateAccount(params, privateKey1, address(admin)); // Signature from Signer1 not Signer2
+    /// @dev Signature of intent must be from the target signer for whom the account is created.
+    function test_revert_createAccount_signatureNotFromTargetSigner() external {
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
+            signer: signer2, // Signer2 is intended signer for account.
+            accountId: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
 
-    //     vm.expectRevert("AccountAdmin: invalid signer.");
-    //     admin.createAccount(params, signature);
-    // }
+        bytes memory signature = signCreateAccount(params, privateKey1, address(accountAdmin)); // Signature from Signer1 not Signer2
 
-    // /// @dev The signer must not already have an associated account.
-    // function test_revert_createAccount_signerAlreadyHasAccount() external {
-    //     IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
-    //         signer: signer1,
-    //         credentials: keccak256("1"),
-    //         deploymentSalt: keccak256("1"),
-    //         initialAccountBalance: 0,
-    //         validityStartTimestamp: 0,
-    //         validityEndTimestamp: 100
-    //     });
+        vm.expectRevert("AccountAdmin: invalid signer.");
+        accountAdmin.createAccount(params, signature);
+    }
 
-    //     bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
-    //     admin.createAccount(params, signature);
+    /// @dev The signer must not already have an associated account.
+    function test_revert_createAccount_accountIdAlreadyUsed() external {
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
+            signer: signer1,
+            accountId: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
 
-    //     IAccountAdmin.CreateAccountParams memory params2 = IAccountAdmin.CreateAccountParams({
-    //         signer: signer1, // Same signer
-    //         credentials: keccak256("2"),
-    //         deploymentSalt: keccak256("2"),
-    //         initialAccountBalance: 0,
-    //         validityStartTimestamp: 0,
-    //         validityEndTimestamp: 100
-    //     });
+        bytes memory signature = signCreateAccount(params, privateKey1, address(accountAdmin));
+        accountAdmin.createAccount(params, signature);
 
-    //     bytes memory signature2 = signCreateAccount(params2, privateKey1, address(admin));
-    //     vm.expectRevert("AccountAdmin: signer already has account.");
-    //     admin.createAccount(params2, signature2);
-    // }
+        IAccountAdmin.CreateAccountParams memory params2 = IAccountAdmin.CreateAccountParams({
+            signer: signer1,
+            accountId: keccak256("1"), // Already used accountId
+            deploymentSalt: keccak256("2"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
 
-    // /// @dev The signer must not already have an associated account.
-    // function test_revert_createAccount_credentialsAlreadyUsed() external {
-    //     IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
-    //         signer: signer1,
-    //         credentials: keccak256("1"),
-    //         deploymentSalt: keccak256("1"),
-    //         initialAccountBalance: 0,
-    //         validityStartTimestamp: 0,
-    //         validityEndTimestamp: 100
-    //     });
+        bytes memory signature2 = signCreateAccount(params2, privateKey1, address(accountAdmin));
+        vm.expectRevert("AccountAdmin: accountId already used.");
+        accountAdmin.createAccount(params2, signature2);
+    }
 
-    //     bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
-    //     admin.createAccount(params, signature);
+    /// @dev The request to create account must not be processed at/after validity end timestamp.
+    function test_revert_createAccount_requestedAfterValidityEnd() external {
+        uint128 validityStart = 50;
+        uint128 validityEnd = 100;
 
-    //     IAccountAdmin.CreateAccountParams memory params2 = IAccountAdmin.CreateAccountParams({
-    //         signer: signer1,
-    //         credentials: keccak256("1"), // Already used credentials
-    //         deploymentSalt: keccak256("2"),
-    //         initialAccountBalance: 0,
-    //         validityStartTimestamp: 0,
-    //         validityEndTimestamp: 100
-    //     });
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
+            signer: signer1,
+            accountId: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: validityStart,
+            validityEndTimestamp: validityEnd
+        });
 
-    //     bytes memory signature2 = signCreateAccount(params2, privateKey1, address(admin));
-    //     vm.expectRevert("AccountAdmin: credentials already used.");
-    //     admin.createAccount(params2, signature2);
-    // }
+        bytes memory signature = signCreateAccount(params, privateKey1, address(accountAdmin));
 
-    // /// @dev The request to create account must not be processed at/after validity end timestamp.
-    // function test_revert_createAccount_requestedAfterValidityEnd() external {
-    //     uint128 validityStart = 50;
-    //     uint128 validityEnd = 100;
+        vm.warp(validityEnd);
+        vm.expectRevert("AccountAdmin: request premature or expired.");
+        accountAdmin.createAccount(params, signature);
+    }
 
-    //     IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
-    //         signer: signer1,
-    //         credentials: keccak256("1"),
-    //         deploymentSalt: keccak256("1"),
-    //         initialAccountBalance: 0,
-    //         validityStartTimestamp: validityStart,
-    //         validityEndTimestamp: validityEnd
-    //     });
+    /// @dev The request to create account must not be processed before validity start timestamp.
+    function test_revert_createAccount_requestedBeforeValidityStart() external {
+        uint128 validityStart = 50;
+        uint128 validityEnd = 100;
 
-    //     bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
+            signer: signer1,
+            accountId: keccak256("1"),
+            deploymentSalt: keccak256("1"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: validityStart,
+            validityEndTimestamp: validityEnd
+        });
 
-    //     vm.warp(validityEnd);
-    //     vm.expectRevert("AccountAdmin: request premature or expired.");
-    //     admin.createAccount(params, signature);
-    // }
+        bytes memory signature = signCreateAccount(params, privateKey1, address(accountAdmin));
 
-    // /// @dev The request to create account must not be processed before validity start timestamp.
-    // function test_revert_createAccount_requestedBeforeValidityStart() external {
-    //     uint128 validityStart = 50;
-    //     uint128 validityEnd = 100;
+        vm.warp(validityStart - 1);
+        vm.expectRevert("AccountAdmin: request premature or expired.");
+        accountAdmin.createAccount(params, signature);
+    }
 
-    //     IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
-    //         signer: signer1,
-    //         credentials: keccak256("1"),
-    //         deploymentSalt: keccak256("1"),
-    //         initialAccountBalance: 0,
-    //         validityStartTimestamp: validityStart,
-    //         validityEndTimestamp: validityEnd
-    //     });
+    /*///////////////////////////////////////////////////////////////
+                Performing actions with created Account.
+    //////////////////////////////////////////////////////////////*/
 
-    //     bytes memory signature = signCreateAccount(params, privateKey1, address(admin));
+    Account private account;
 
-    //     vm.warp(validityStart - 1);
-    //     vm.expectRevert("AccountAdmin: request premature or expired.");
-    //     admin.createAccount(params, signature);
-    // }
+    address private admin;
+    bytes32 private adminAccountId = keccak256("1");
+
+    address private nonAdmin;
+    bytes32 private nonAdminAccountId = keccak256("2");
+
+    address private newAdmin;
+    bytes32 private newAdminAccountId = keccak256("3");
+
+    DummyContract private dummy;
+    CounterContract private counter;
+
+    function _setUp_account() internal {
+        dummy = new DummyContract();
+        counter = new CounterContract();
+
+        admin = signer1;
+        nonAdmin = signer2;
+        newAdmin = signer3;
+
+        IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
+            signer: admin,
+            accountId: adminAccountId,
+            deploymentSalt: keccak256("salt"),
+            initialAccountBalance: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signCreateAccount(params, privateKey1, address(accountAdmin));
+        address accountAddress = accountAdmin.createAccount(params, signature);
+
+        account = Account(payable(accountAddress));
+
+        assertEq(account.hasRole(account.DEFAULT_ADMIN_ROLE(), admin), true);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Test action: Admin performs a transaction using Account.
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Admin of Account executes a regular contract call.
+    function test_state_execute_contractCallByAdmin() external {
+        _setUp_account();
+
+        uint256 number = 5;
+        assertEq(account.nonce(), 0);
+        assertEq(counter.getNumber(), 0);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(counter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        assertEq(account.nonce(), 1);
+        assertEq(counter.getNumber(), number);
+    }
+
+    /// @dev Admin of Account executes a regular contract call; sends value.
+    function test_state_execute_contractCallByAdmin_sendValue() external {
+        _setUp_account();
+
+        uint256 bal = 1 ether;
+
+        assertEq(account.nonce(), 0);
+        assertEq(address(dummy).balance, 0);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(dummy),
+            data: "",
+            nonce: account.nonce(),
+            value: bal,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay{ value: bal }(admin, adminAccountId, bal, 0, data);
+
+        assertEq(account.nonce(), 1);
+        assertEq(address(dummy).balance, bal);
+    }
+
+    /// @notice Incorrect nonce when sending transaction request to Account.
+    function test_revert_execute_contractCallByAdmin_incorrectNonce() external {
+        _setUp_account();
+
+        uint256 number = 5;
+        assertEq(account.nonce(), 0);
+        assertEq(counter.getNumber(), 0);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(counter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce() + 1,
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.expectRevert("Account: incorrect nonce.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    /// @notice Incorrect value sent when sending transaction request to Account.
+    function test_revert_execute_contractCallByAdmin_incorrectValueSent() external {
+        _setUp_account();
+
+        uint256 number = 5;
+        assertEq(account.nonce(), 0);
+        assertEq(counter.getNumber(), 0);
+
+        uint256 value = 1;
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(counter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce(),
+            value: value + 1,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.expectRevert("Account: incorrect value sent.");
+        accountAdmin.relay{ value: value }(admin, adminAccountId, value, 0, data);
+    }
+
+    /// @notice Pre-mature transaction request sent to Account.
+    function test_revert_execute_contractCallByAdmin_requestBeforeValidityStart() external {
+        _setUp_account();
+
+        uint256 number = 5;
+        assertEq(account.nonce(), 0);
+        assertEq(counter.getNumber(), 0);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(counter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 50,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.warp(params.validityStartTimestamp - 1);
+        vm.expectRevert("Account: request premature or expired.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    /// @notice Stale transaction request sent to Account.
+    function test_revert_execute_contractCallByAdmin_requestAfterValidityEnd() external {
+        _setUp_account();
+
+        uint256 number = 5;
+        assertEq(account.nonce(), 0);
+        assertEq(counter.getNumber(), 0);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(counter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 50,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.warp(params.validityEndTimestamp);
+        vm.expectRevert("Account: request premature or expired.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    /// @notice Invalid signer signs transaction request to Account.
+    function test_revert_execute_contractCallByAdmin_invalidSigner() external {
+        _setUp_account();
+
+        uint256 number = 5;
+        assertEq(account.nonce(), 0);
+        assertEq(counter.getNumber(), 0);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(counter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey2, address(account)); // Non admin signs transaction.
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.expectRevert("Account: invalid signer.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Test action: Admin adds a non-admin signer to account.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_execute_addSignerToAccount() external {
+        _setUp_account();
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin, nonAdminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        address[] memory accountsOfSigner1 = accountAdmin.getAllAccountsOfSigner(admin);
+        assertEq(accountsOfSigner1.length, 1);
+        assertEq(accountsOfSigner1[0], address(account));
+
+        address[] memory accountsOfSigner2 = accountAdmin.getAllAccountsOfSigner(nonAdmin);
+        assertEq(accountsOfSigner2.length, 1);
+        assertEq(accountsOfSigner2[0], address(account));
+
+        address[] memory signersOfAccount = accountAdmin.getAllSignersOfAccount(address(account));
+        assertEq(signersOfAccount.length, 2);
+        assertEq(signersOfAccount[0], admin);
+        assertEq(signersOfAccount[1], nonAdmin);
+
+        assertEq(accountAdmin.getAccount(admin, adminAccountId), address(account));
+        assertEq(accountAdmin.getAccount(nonAdmin, nonAdminAccountId), address(account));
+    }
+
+    function test_revert_execute_addSignerToAccount_signerAlreadyAdded() external {
+        _setUp_account();
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin, nonAdminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        params.nonce = account.nonce();
+        bytes memory signature2 = signExecute(params, privateKey1, address(account));
+        data = abi.encodeWithSelector(Account.execute.selector, params, signature2);
+
+        vm.expectRevert("Account: signer already exists.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Test action: Admin removes a non-admin signer from account.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_execute_removeSignerFromAccount() external {
+        _setUp_account();
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin, nonAdminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        params.nonce = account.nonce();
+        params.data = abi.encodeWithSelector(Account.removeSigner.selector, nonAdmin, nonAdminAccountId);
+        bytes memory signature2 = signExecute(params, privateKey1, address(account));
+        data = abi.encodeWithSelector(Account.execute.selector, params, signature2);
+
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        address[] memory accountsOfSigner1 = accountAdmin.getAllAccountsOfSigner(admin);
+        assertEq(accountsOfSigner1.length, 1);
+        assertEq(accountsOfSigner1[0], address(account));
+
+        address[] memory accountsOfSigner2 = accountAdmin.getAllAccountsOfSigner(nonAdmin);
+        assertEq(accountsOfSigner2.length, 0);
+
+        address[] memory signersOfAccount = accountAdmin.getAllSignersOfAccount(address(account));
+        assertEq(signersOfAccount.length, 1);
+        assertEq(signersOfAccount[0], admin);
+
+        assertEq(accountAdmin.getAccount(admin, adminAccountId), address(account));
+        assertEq(accountAdmin.getAccount(nonAdmin, nonAdminAccountId), address(0));
+    }
+
+    function test_revert_execute_removeSignerFromAccount_signerAlreadyDNE() external {
+        _setUp_account();
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.removeSigner.selector, nonAdmin, nonAdminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.expectRevert("Account: signer already does not exist.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Test action: Admin approves non-admin signer for target
+        i.e. (fn sig + contract address)
+    //////////////////////////////////////////////////////////////*/
+
+    function _setUp_NonAdminForAccount() internal {
+        _setUp_account();
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin, nonAdminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    function test_state_execute_approveSignerForTarget() external {
+        _setUp_NonAdminForAccount();
+
+        ////////// approve signer for target //////////
+
+        bytes memory dataToRelay = abi.encodeWithSelector(
+            Account.approveSignerForTarget.selector,
+            nonAdmin,
+            CounterContract.setNumber.selector,
+            address(counter)
+        );
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        ////////// signer calls target //////////
+
+        uint256 number = 5;
+        uint256 currentNonce = account.nonce();
+        assertEq(counter.getNumber(), 0);
+
+        IAccount.TransactionParams memory params2 = IAccount.TransactionParams({
+            signer: nonAdmin,
+            target: address(counter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature2 = signExecute(params2, privateKey2, address(account)); // nonAdmin signs
+
+        bytes memory data2 = abi.encodeWithSelector(Account.execute.selector, params2, signature2);
+        accountAdmin.relay(nonAdmin, nonAdminAccountId, 0, 0, data2);
+
+        assertEq(account.nonce(), currentNonce + 1);
+        assertEq(counter.getNumber(), number);
+    }
+
+    function test_revert_execute_approveSignerForTarget_alreadyApproved() external {
+        _setUp_NonAdminForAccount();
+
+        ////////// approve signer for target //////////
+
+        bytes memory dataToRelay = abi.encodeWithSelector(
+            Account.approveSignerForTarget.selector,
+            nonAdmin,
+            CounterContract.setNumber.selector,
+            address(counter)
+        );
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        ////////// signer already approved for target //////////
+
+        params.nonce = account.nonce();
+        signature = signExecute(params, privateKey1, address(account));
+
+        data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.expectRevert("Account: already approved.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Test action: Admin approves non-admin signer for contract.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_execute_approveSignerForContract() external {
+        _setUp_NonAdminForAccount();
+
+        ////////// approve signer for target //////////
+
+        bytes memory dataToRelay = abi.encodeWithSelector(
+            Account.approveSignerForContract.selector,
+            nonAdmin,
+            address(counter)
+        );
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        ////////// signer calls target //////////
+
+        uint256 number = 5;
+        uint256 currentNonce = account.nonce();
+        assertEq(counter.getNumber(), 0);
+
+        IAccount.TransactionParams memory params2 = IAccount.TransactionParams({
+            signer: nonAdmin,
+            target: address(counter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature2 = signExecute(params2, privateKey2, address(account)); // nonAdmin signs
+
+        bytes memory data2 = abi.encodeWithSelector(Account.execute.selector, params2, signature2);
+        accountAdmin.relay(nonAdmin, nonAdminAccountId, 0, 0, data2);
+
+        assertEq(account.nonce(), currentNonce + 1);
+        assertEq(counter.getNumber(), number);
+    }
+
+    function test_revert_execute_approveSignerForContract_alreadyApproved() external {
+        _setUp_NonAdminForAccount();
+
+        ////////// approve signer for target //////////
+
+        bytes memory dataToRelay = abi.encodeWithSelector(
+            Account.approveSignerForContract.selector,
+            nonAdmin,
+            address(counter)
+        );
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        ////////// signer already approved for target //////////
+
+        params.nonce = account.nonce();
+        signature = signExecute(params, privateKey, address(account));
+
+        data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.expectRevert("Account: already approved.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Test action: Admin approves non-admin signer for function.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_execute_approveSignerForFunction() external {
+        _setUp_NonAdminForAccount();
+
+        ////////// approve signer for target //////////
+
+        bytes memory dataToRelay = abi.encodeWithSelector(
+            Account.approveSignerForFunction.selector,
+            nonAdmin,
+            CounterContract.setNumber.selector
+        );
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        ////////// signer calls one contract //////////
+
+        uint256 number = 5;
+        uint256 currentNonce = account.nonce();
+        assertEq(counter.getNumber(), 0);
+
+        IAccount.TransactionParams memory params2 = IAccount.TransactionParams({
+            signer: nonAdmin,
+            target: address(counter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature2 = signExecute(params2, privateKey2, address(account)); // nonAdmin signs
+
+        bytes memory data2 = abi.encodeWithSelector(Account.execute.selector, params2, signature2);
+        accountAdmin.relay(nonAdmin, nonAdminAccountId, 0, 0, data2);
+
+        assertEq(account.nonce(), currentNonce + 1);
+        assertEq(counter.getNumber(), number);
+
+        ////////// signer calls another contract //////////
+
+        CounterContract newCounter = new CounterContract();
+
+        currentNonce = account.nonce();
+        assertEq(newCounter.getNumber(), 0);
+
+        IAccount.TransactionParams memory params3 = IAccount.TransactionParams({
+            signer: nonAdmin,
+            target: address(newCounter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature3 = signExecute(params3, privateKey2, address(account)); // nonAdmin signs
+
+        bytes memory data3 = abi.encodeWithSelector(Account.execute.selector, params3, signature3);
+        accountAdmin.relay(nonAdmin, nonAdminAccountId, 0, 0, data3);
+
+        assertEq(account.nonce(), currentNonce + 1);
+        assertEq(newCounter.getNumber(), number);
+    }
+
+    function test_revert_execute_approveSignerForFunction_alreadyApproved() external {
+        _setUp_NonAdminForAccount();
+
+        ////////// approve signer for target //////////
+
+        bytes memory dataToRelay = abi.encodeWithSelector(
+            Account.approveSignerForFunction.selector,
+            nonAdmin,
+            CounterContract.setNumber.selector
+        );
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        ////////// signer already approved for target //////////
+
+        params.nonce = account.nonce();
+        signature = signExecute(params, privateKey, address(account));
+
+        data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.expectRevert("Account: already approved.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+            Test action: Admin adds another admin to account.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_execute_addAdminToAccount() external {
+        _setUp_account();
+
+        ////////// Add admin //////////
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addAdmin.selector, newAdmin, newAdminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        address[] memory accountsOfSigner1 = accountAdmin.getAllAccountsOfSigner(admin);
+        assertEq(accountsOfSigner1.length, 1);
+        assertEq(accountsOfSigner1[0], address(account));
+
+        address[] memory accountsOfSigner2 = accountAdmin.getAllAccountsOfSigner(newAdmin);
+        assertEq(accountsOfSigner2.length, 1);
+        assertEq(accountsOfSigner2[0], address(account));
+
+        address[] memory signersOfAccount = accountAdmin.getAllSignersOfAccount(address(account));
+        assertEq(signersOfAccount.length, 2);
+        assertEq(signersOfAccount[0], admin);
+        assertEq(signersOfAccount[1], newAdmin);
+
+        assertEq(accountAdmin.getAccount(admin, adminAccountId), address(account));
+        assertEq(accountAdmin.getAccount(newAdmin, newAdminAccountId), address(account));
+
+        ////////// New admin performs transaction //////////
+
+        uint256 number = 5;
+        uint256 currentNonce = account.nonce();
+        assertEq(counter.getNumber(), 0);
+
+        IAccount.TransactionParams memory params2 = IAccount.TransactionParams({
+            signer: newAdmin,
+            target: address(counter),
+            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature2 = signExecute(params2, privateKey3, address(account)); // newAdmin signs
+
+        bytes memory data2 = abi.encodeWithSelector(Account.execute.selector, params2, signature2);
+        accountAdmin.relay(newAdmin, newAdminAccountId, 0, 0, data2);
+
+        assertEq(account.nonce(), currentNonce + 1);
+        assertEq(counter.getNumber(), number);
+    }
+
+    function test_revert_execute_addAdminToAccount_adminAlreadyAdded() external {
+        _setUp_account();
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addAdmin.selector, newAdmin, newAdminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        params.nonce = account.nonce();
+        bytes memory signature2 = signExecute(params, privateKey1, address(account));
+        data = abi.encodeWithSelector(Account.execute.selector, params, signature2);
+
+        vm.expectRevert("Account: admin already exists.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Test action: Admin removes another admin from account.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_execute_removeAdminFromAccount() external {
+        _setUp_account();
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addAdmin.selector, newAdmin, newAdminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        params.nonce = account.nonce();
+        params.data = abi.encodeWithSelector(Account.removeAdmin.selector, newAdmin, newAdminAccountId);
+        bytes memory signature2 = signExecute(params, privateKey1, address(account));
+        data = abi.encodeWithSelector(Account.execute.selector, params, signature2);
+
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        address[] memory accountsOfSigner1 = accountAdmin.getAllAccountsOfSigner(admin);
+        assertEq(accountsOfSigner1.length, 1);
+        assertEq(accountsOfSigner1[0], address(account));
+
+        address[] memory accountsOfSigner2 = accountAdmin.getAllAccountsOfSigner(newAdmin);
+        assertEq(accountsOfSigner2.length, 0);
+
+        address[] memory signersOfAccount = accountAdmin.getAllSignersOfAccount(address(account));
+        assertEq(signersOfAccount.length, 1);
+        assertEq(signersOfAccount[0], admin);
+
+        assertEq(accountAdmin.getAccount(admin, adminAccountId), address(account));
+        assertEq(accountAdmin.getAccount(newAdmin, newAdminAccountId), address(0));
+    }
+
+    function test_revert_execute_removeAdminFromAccount_adminAlreadyRemoved() external {
+        _setUp_account();
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.removeAdmin.selector, newAdmin, newAdminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.expectRevert("Account: admin already does not exist.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+        Test action: Admin deploys a smart contract with account.
+    //////////////////////////////////////////////////////////////*/
+
+    /*///////////////////////////////////////////////////////////////
+        Test action: One Account is a signer on another Account.
+    //////////////////////////////////////////////////////////////*/
+
+    /*///////////////////////////////////////////////////////////////
+    Test action: an Account creates another Account on AccountAdmin.
+    //////////////////////////////////////////////////////////////*/
 }

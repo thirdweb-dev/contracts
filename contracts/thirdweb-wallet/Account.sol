@@ -181,6 +181,7 @@ contract Account is
 
     /// @notice Adds an admin to the account.
     function addAdmin(address _signer, bytes32 _accountId) external onlySelf {
+        require(!hasRole(DEFAULT_ADMIN_ROLE, _signer), "Account: admin already exists.");
         _setupRole(DEFAULT_ADMIN_ROLE, _signer);
         emit AdminAdded(_signer);
 
@@ -189,6 +190,7 @@ contract Account is
 
     /// @notice Removes an admin from the account.
     function removeAdmin(address _signer, bytes32 _accountId) external onlySelf {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _signer), "Account: admin already does not exist.");
         _revokeRole(DEFAULT_ADMIN_ROLE, _signer);
         emit AdminRemoved(_signer);
 
@@ -197,6 +199,7 @@ contract Account is
 
     /// @notice Adds a signer to the account.
     function addSigner(address _signer, bytes32 _accountId) external onlySelf {
+        require(!hasRole(SIGNER_ROLE, _signer), "Account: signer already exists.");
         _setupRole(SIGNER_ROLE, _signer);
         emit SignerAdded(_signer);
 
@@ -205,6 +208,7 @@ contract Account is
 
     /// @notice Removes a signer from the account.
     function removeSigner(address _signer, bytes32 _accountId) external onlySelf {
+        require(hasRole(SIGNER_ROLE, _signer), "Account: signer already does not exist.");
         _revokeRole(SIGNER_ROLE, _signer);
         emit SignerRemoved(_signer);
 

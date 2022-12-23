@@ -11,7 +11,7 @@ contract AccountAdminData {
         address indexed account,
         address indexed signerOfAccount,
         address indexed creator,
-        bytes32 credentials
+        bytes32 accountId
     );
 
     /// @notice Emitted on a call to an account.
@@ -60,7 +60,7 @@ contract AccountUtil is BaseTest {
             "TransactionParams(address signer,address target,bytes data,uint256 nonce,uint256 value,uint256 gas,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
 
-    bytes32 internal nameHashWallet = keccak256(bytes("thirdwebWallet"));
+    bytes32 internal nameHashWallet = keccak256(bytes("thirdweb_wallet"));
     bytes32 internal versionHashWallet = keccak256(bytes("1"));
     bytes32 internal typehashEip712Wallet =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
@@ -73,8 +73,9 @@ contract AccountUtil is BaseTest {
         bytes32 structHash = keccak256(
             abi.encode(
                 EXECUTE_TYPEHASH,
+                _params.signer,
                 _params.target,
-                keccak256(bytes(_params.data)),
+                keccak256(_params.data),
                 _params.nonce,
                 _params.value,
                 _params.gas,
@@ -98,14 +99,10 @@ contract AccountUtil is BaseTest {
 contract AccountAdminUtil is BaseTest {
     bytes32 private constant CREATE_TYPEHASH =
         keccak256(
-            "CreateAccountParams(address signer,bytes32 credentials,bytes32 deploymentSalt,uint256 initialAccountBalance,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
-        );
-    bytes32 private constant RELAY_TYPEHASH =
-        keccak256(
-            "RelayRequestParam(address signer,bytes32 credentials,uint256 value,uint256 gas,bytes data,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+            "CreateAccountParams(address signer,bytes32 accountId,bytes32 deploymentSalt,uint256 initialAccountBalance,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
 
-    bytes32 internal nameHash = keccak256(bytes("thirdwebWallet_Admin"));
+    bytes32 internal nameHash = keccak256(bytes("thirdweb_wallet_admin"));
     bytes32 internal versionHash = keccak256(bytes("1"));
     bytes32 internal typehashEip712 =
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
@@ -119,38 +116,9 @@ contract AccountAdminUtil is BaseTest {
             abi.encode(
                 CREATE_TYPEHASH,
                 _params.signer,
-                _params.credentials,
+                _params.accountId,
                 _params.deploymentSalt,
                 _params.initialAccountBalance,
-                _params.validityStartTimestamp,
-                _params.validityEndTimestamp
-            )
-        );
-
-        bytes32 domainSeparator = keccak256(
-            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(targetContract))
-        );
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
-        bytes memory sig = abi.encodePacked(r, s, v);
-
-        return sig;
-    }
-
-    function signRelayRequest(
-        AccountAdmin.RelayRequestParams memory _params,
-        uint256 _privateKey,
-        address targetContract
-    ) internal view returns (bytes memory) {
-        bytes32 structHash = keccak256(
-            abi.encode(
-                RELAY_TYPEHASH,
-                _params.signer,
-                _params.credentials,
-                _params.value,
-                _params.gas,
-                keccak256(_params.data),
                 _params.validityStartTimestamp,
                 _params.validityEndTimestamp
             )
@@ -186,5 +154,21 @@ contract DummyContract {
         require(msg.sender == deployer);
         // solhint-disable-next-line
         (success, ) = (msg.sender).call{ value: address(this).balance }("");
+    }
+}
+
+contract CounterContract {
+    uint256 private num;
+
+    function getNumber() external view returns (uint256) {
+        return num;
+    }
+
+    function setNumber(uint256 _newNumber) external {
+        num = _newNumber;
+    }
+
+    function doubleNumber() external {
+        num *= 2;
     }
 }
