@@ -26,7 +26,7 @@ The contract creator 'lazy mints' i.e. defines the content for a batch of NFTs (
 
 The `SignatureDrop` contract supports both distribution mechanisms - of drop and signature minting - in the same contract. The following is an end-to-end flow, from the contract admin actions, to an end user wallet's actions when minting tokens:
 
-- A contract admin (particularly, a wallet with `MINTER_ROLE`) 'lazy mints' i.e. defines the content for a batch of NFTs. This batch of NFTs can optionally be a batch of [delayed-reveal](https://blog.thirdweb.com/delayed-reveal-nfts) NFTs.
+- A contract admin (particularly, a wallet with `MINTER_ROLE`) 'lazy mints' i.e. defines the content for a batch of NFTs. This batch of NFTs can optionally be a batch of [delayed-reveal](https://blog.thirdweb.com/delayed-reveal-nfts) NFTs (Delayed reveal not available for ERC1155 Drop).
 - A contract admin (particularly, a wallet with `DEFAULT_ADMIN_ROLE`) sets a claim phase, which defines restrictions around minting NFTs from the lazy minted batch of NFTs. 
   - **Note:** unlike the `NFT Drop` or `Edition Drop` contracts, where the contract admin can set a series of claim phases at once, the `SignatureDrop` contract lets the contract admin set only *one* claim phase at a time.
 - A wallet claims tokens from the batch of lazy minted tokens in one of two ways:
@@ -43,7 +43,7 @@ An example of using this added feature of the `SignatureDrop` contract is when y
 
 ## Technical Details
 
-`SignatureDrop`  is an ERC721 contract. 
+'Signature Drop' contracts are written in ERC721 and ERC1155 versions.
 
 A contract admin can lazy mint tokens, and establish phases for an audience to come claim those tokens under the restrictions of the active phase at the time. On a per wallet basis, a contract admin can let a wallet claim those tokens under restrictions different than the active claim phase, via signature minting.
 
