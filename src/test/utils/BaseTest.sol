@@ -25,6 +25,8 @@ import { TokenERC1155 } from "contracts/token/TokenERC1155.sol";
 import { Marketplace } from "contracts/marketplace/Marketplace.sol";
 import { VoteERC20 } from "contracts/vote/VoteERC20.sol";
 import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
+import { SignatureDrop1155 } from "contracts/signature-drop/SignatureDrop1155.sol";
+import { SignatureDrop1155OperatorCheck } from "contracts/signature-drop/SignatureDrop1155OperatorCheck.sol";
 import { ContractPublisher } from "contracts/ContractPublisher.sol";
 import { IContractPublisher } from "contracts/interfaces/IContractPublisher.sol";
 import "contracts/airdrop/AirdropERC721.sol";
@@ -115,6 +117,10 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new DropERC1155()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("SignatureDrop"), 1)));
         TWFactory(factory).addImplementation(address(new SignatureDrop()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("SignatureDrop1155"), 1)));
+        TWFactory(factory).addImplementation(address(new SignatureDrop1155()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("SignatureDrop1155OperatorCheck"), 1)));
+        TWFactory(factory).addImplementation(address(new SignatureDrop1155OperatorCheck()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Marketplace"), 1)));
         TWFactory(factory).addImplementation(address(new Marketplace(address(weth))));
         TWFactory(factory).addImplementation(address(new Split()));
@@ -245,6 +251,42 @@ abstract contract BaseTest is DSTest, Test {
             "SignatureDrop",
             abi.encodeCall(
                 SignatureDrop.initialize,
+                (
+                    signer,
+                    NAME,
+                    SYMBOL,
+                    CONTRACT_URI,
+                    forwarders(),
+                    saleRecipient,
+                    royaltyRecipient,
+                    royaltyBps,
+                    platformFeeBps,
+                    platformFeeRecipient
+                )
+            )
+        );
+        deployContractProxy(
+            "SignatureDrop1155",
+            abi.encodeCall(
+                SignatureDrop1155.initialize,
+                (
+                    signer,
+                    NAME,
+                    SYMBOL,
+                    CONTRACT_URI,
+                    forwarders(),
+                    saleRecipient,
+                    royaltyRecipient,
+                    royaltyBps,
+                    platformFeeBps,
+                    platformFeeRecipient
+                )
+            )
+        );
+        deployContractProxy(
+            "SignatureDrop1155OperatorCheck",
+            abi.encodeCall(
+                SignatureDrop1155OperatorCheck.initialize,
                 (
                     signer,
                     NAME,
