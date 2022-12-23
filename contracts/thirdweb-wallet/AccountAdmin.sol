@@ -51,10 +51,6 @@ contract AccountAdmin is IAccountAdmin, Initializable, EIP712Upgradeable, ERC277
         keccak256(
             "CreateAccountParams(address signer,bytes32 accountId,bytes32 deploymentSalt,uint256 initialAccountBalance,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
-    bytes32 private constant RELAY_TYPEHASH =
-        keccak256(
-            "RelayRequestParam(address signer,bytes32 accountId,uint256 value,uint256 gas,bytes data,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
-        );
 
     /*///////////////////////////////////////////////////////////////
                             State variables
