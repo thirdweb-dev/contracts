@@ -9,7 +9,6 @@ import "../extension/Staking721.sol";
 import "../eip/interface/IERC20.sol";
 
 /**
- *      note: This is a Beta release.
  *
  *  EXTENSION: Staking721
  *
@@ -39,9 +38,9 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721 {
     constructor(
         uint128 _timeUnit,
         uint128 _rewardsPerUnitTime,
-        address _nftCollection,
+        address _stakingToken,
         address _rewardToken
-    ) Staking721(_nftCollection) {
+    ) Staking721(_stakingToken) {
         _setupOwner(msg.sender);
         _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
 

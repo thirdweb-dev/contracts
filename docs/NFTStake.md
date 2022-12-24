@@ -89,10 +89,33 @@ function contractVersion() external pure returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined |
 
+<<<<<<< HEAD
+### depositRewardTokens
+
+```solidity
+function depositRewardTokens(uint256 _amount) external payable
+```
+
+
+
+*Admin deposits reward tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount | uint256 | undefined |
+
+### getRewardTokenBalance
+
+```solidity
+function getRewardTokenBalance() external view returns (uint256)
+=======
 ### getRewardTokenBalance
 
 ```solidity
 function getRewardTokenBalance() external view returns (uint256 _rewardsAvailableInContract)
+>>>>>>> main
 ```
 
 View total rewards available in the staking contract.
@@ -104,7 +127,11 @@ View total rewards available in the staking contract.
 
 | Name | Type | Description |
 |---|---|---|
+<<<<<<< HEAD
+| _0 | uint256 | undefined |
+=======
 | _rewardsAvailableInContract | uint256 | undefined |
+>>>>>>> main
 
 ### getRewardsPerUnitTime
 
@@ -720,6 +747,25 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
+<<<<<<< HEAD
+### RewardTokensDepositedByAdmin
+
+```solidity
+event RewardTokensDepositedByAdmin(uint256 _amount)
+```
+
+
+
+*Emitted when contract admin deposits reward tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount  | uint256 | undefined |
+
+=======
+>>>>>>> main
 ### RewardTokensWithdrawnByAdmin
 
 ```solidity

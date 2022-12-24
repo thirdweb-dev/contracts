@@ -6,7 +6,7 @@ import { chainIdToName } from "./constants";
 ////// To run this script: `npx ts-node scripts/release/approve_implementations_from_release.ts` //////
 ///// MAKE SURE TO PUT IN THE RIGHT CONTRACT NAME HERE AFTER CREATING A RELEASE FOR IT /////
 //// THE RELEASE SHOULD HAVE THE IMPLEMENTATIONS ALREADY DEPLOYED AND RECORDED (via dashboard) ////
-const releasedContractName = "AirdropERC1155Claimable";
+const releasedContractName = "TokenERC721";
 const privateKey: string = process.env.DEPLOYER_KEY as string; // should be the correct deployer key
 
 const polygonSDK = ThirdwebSDK.fromPrivateKey(privateKey, "polygon");

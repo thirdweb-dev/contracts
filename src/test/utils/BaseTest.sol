@@ -135,11 +135,11 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new Pack(address(weth), eoaForwarder)));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("NFTStake"), 1)));
-        TWFactory(factory).addImplementation(address(new NFTStake()));
+        TWFactory(factory).addImplementation(address(new NFTStake(address(weth))));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("EditionStake"), 1)));
-        TWFactory(factory).addImplementation(address(new EditionStake()));
+        TWFactory(factory).addImplementation(address(new EditionStake(address(weth))));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("TokenStake"), 1)));
-        TWFactory(factory).addImplementation(address(new TokenStake()));
+        TWFactory(factory).addImplementation(address(new TokenStake(address(weth))));
         vm.stopPrank();
 
         // setup airdrop logic

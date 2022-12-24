@@ -2,51 +2,54 @@
 pragma solidity ^0.8.0;
 
 import "contracts/extension/plugin/Map.sol";
+import "contracts/extension/plugin/RouterImmutable.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
+import "contracts/lib/TWStrings.sol";
 
 contract MapTest is BaseTest {
-    Map internal map;
+    using TWStrings for uint256;
+    RouterImmutable internal router;
 
-    address[] private extensions;
-    IMap.ExtensionMap[] private extensionMaps;
+    address[] private pluginAddresses;
+    IMap.Plugin[] private plugins;
 
     function setUp() public override {
         super.setUp();
 
         uint256 total = 50;
 
-        address extension;
+        address pluginAddress;
 
         for (uint256 i = 0; i < total; i += 1) {
             if (i % 10 == 0) {
-                extension = address(uint160(0x50000 + i));
-                extensions.push(extension);
+                pluginAddress = address(uint160(0x50000 + i));
+                pluginAddresses.push(pluginAddress);
             }
-            extensionMaps.push(IMap.ExtensionMap(bytes4(keccak256(abi.encode(i))), extension));
+            plugins.push(IMap.Plugin(bytes4(keccak256(abi.encodePacked(i.toString()))), pluginAddress, i.toString()));
         }
 
-        map = new Map(extensionMaps);
+        router = new RouterImmutable(plugins);
     }
 
-    function test_state_getExtensionForFunction() external {
-        uint256 len = extensionMaps.length;
+    function test_state_getPluginForFunction() external {
+        uint256 len = plugins.length;
         for (uint256 i = 0; i < len; i += 1) {
-            address extension = extensionMaps[i].extension;
-            bytes4 selector = extensionMaps[i].selector;
+            address pluginAddress = plugins[i].pluginAddress;
+            bytes4 selector = plugins[i].selector;
 
-            assertEq(extension, map.getExtensionForFunction(selector));
+            assertEq(pluginAddress, router.getPluginForFunction(selector));
         }
     }
 
-    function test_state_getAllFunctionsOfExtension() external {
-        uint256 len = extensions.length;
+    function test_state_getAllFunctionsOfPlugin() external {
+        uint256 len = plugins.length;
         for (uint256 i = 0; i < len; i += 1) {
-            address extension = extensions[i];
+            address pluginAddress = plugins[i].pluginAddress;
 
             uint256 expectedNum;
 
-            for (uint256 j = 0; j < extensionMaps.length; j += 1) {
-                if (extensionMaps[j].extension == extension) {
+            for (uint256 j = 0; j < plugins.length; j += 1) {
+                if (plugins[j].pluginAddress == pluginAddress) {
                     expectedNum += 1;
                 }
             }
@@ -54,14 +57,14 @@ contract MapTest is BaseTest {
             bytes4[] memory expectedFns = new bytes4[](expectedNum);
             uint256 idx;
 
-            for (uint256 j = 0; j < extensionMaps.length; j += 1) {
-                if (extensionMaps[j].extension == extension) {
-                    expectedFns[idx] = extensionMaps[j].selector;
+            for (uint256 j = 0; j < plugins.length; j += 1) {
+                if (plugins[j].pluginAddress == pluginAddress) {
+                    expectedFns[idx] = plugins[j].selector;
                     idx += 1;
                 }
             }
 
-            bytes4[] memory fns = map.getAllFunctionsOfExtension(extension);
+            bytes4[] memory fns = router.getAllFunctionsOfPlugin(pluginAddress);
 
             assertEq(fns.length, expectedNum);
 
@@ -72,11 +75,11 @@ contract MapTest is BaseTest {
     }
 
     function test_state_getAllRegistered() external {
-        IMap.ExtensionMap[] memory extensionMapsStored = map.getAllRegistered();
+        IMap.Plugin[] memory pluginsStored = router.getAllPlugins();
 
-        for (uint256 i = 0; i < extensionMapsStored.length; i += 1) {
-            assertEq(extensionMapsStored[i].extension, extensionMaps[i].extension);
-            assertEq(extensionMapsStored[i].selector, extensionMaps[i].selector);
+        for (uint256 i = 0; i < pluginsStored.length; i += 1) {
+            assertEq(pluginsStored[i].pluginAddress, plugins[i].pluginAddress);
+            assertEq(pluginsStored[i].selector, plugins[i].selector);
         }
     }
 }

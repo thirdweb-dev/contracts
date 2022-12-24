@@ -2,24 +2,16 @@
 pragma solidity ^0.8.0;
 
 import "../interface/plugin/IMap.sol";
-import "../interface/plugin/IEntrypoint.sol";
 import "../../extension/Multicall.sol";
 import "../../eip/ERC165.sol";
+import "./Map.sol";
 
-contract Entrypoint is Multicall, IEntrypoint, ERC165 {
-    /*///////////////////////////////////////////////////////////////
-                            State variables
-    //////////////////////////////////////////////////////////////*/
-
-    address private immutable functionMap;
-
+abstract contract Router is Multicall, Map, ERC165 {
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _functionMap) {
-        functionMap = _functionMap;
-    }
+    constructor(Plugin[] memory _pluginsToAdd) Map(_pluginsToAdd) {}
 
     /*///////////////////////////////////////////////////////////////
                                 ERC 165
@@ -29,20 +21,16 @@ contract Entrypoint is Multicall, IEntrypoint, ERC165 {
      * @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IEntrypoint).interfaceId || super.supportsInterface(interfaceId);
+        return interfaceId == type(IMap).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /*///////////////////////////////////////////////////////////////
                         Generic contract logic
     //////////////////////////////////////////////////////////////*/
 
-    function getFunctionMap() external view returns (address) {
-        return functionMap;
-    }
-
     fallback() external payable virtual {
-        address extension = IMap(functionMap).getExtensionForFunction(msg.sig);
-        _delegate(extension);
+        address _pluginAddress = getPluginForFunction(msg.sig);
+        _delegate(_pluginAddress);
     }
 
     receive() external payable {}
