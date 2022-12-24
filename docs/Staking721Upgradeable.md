@@ -4,7 +4,7 @@
 
 
 
-note: This is a Beta release.
+
 
 
 
@@ -139,23 +139,6 @@ function isIndexed(uint256) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined |
 
-### nftCollection
-
-```solidity
-function nftCollection() external view returns (address)
-```
-
-
-
-*Address of ERC721 NFT contract -- staked tokens belong to this contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### setRewardsPerUnitTime
 
 ```solidity
@@ -266,6 +249,23 @@ function stakersArray(uint256) external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### stakingToken
+
+```solidity
+function stakingToken() external view returns (address)
+```
+
+
+
+*Address of ERC721 NFT contract -- staked tokens belong to this contract.*
+
 
 #### Returns
 

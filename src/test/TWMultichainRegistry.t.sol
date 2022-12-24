@@ -6,7 +6,7 @@ import "./utils/BaseTest.sol";
 import "contracts/interfaces/ITWMultichainRegistry.sol";
 import "contracts/TWMultichainRegistry.sol";
 import "./mocks/MockThirdwebContract.sol";
-import "contracts/extension/interface/plugin/IEntrypoint.sol";
+import "contracts/extension/interface/plugin/IMap.sol";
 
 interface ITWMultichainRegistryData {
     event Added(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid, string metadataUri);
@@ -52,7 +52,7 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
     }
 
     function test_interfaceId() public view {
-        console2.logBytes4(type(IEntrypoint).interfaceId);
+        console2.logBytes4(type(IMap).interfaceId);
     }
 
     //  =====   Functionality tests   =====

@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 import "../extension/PermissionsEnumerableLogic.sol";
 import "../extension/ERC2771ContextLogic.sol";
 import "../../extension/Multicall.sol";
-import "../../extension/plugin/Entrypoint.sol";
+import "../../extension/plugin/RouterImmutable.sol";
 
 /**
  *
@@ -19,7 +19,7 @@ import "../../extension/plugin/Entrypoint.sol";
  *      - TWMultichainRegistry
  */
 
-contract TWMultichainRegistryEntrypoint is PermissionsEnumerableLogic, ERC2771ContextLogic, Multicall, Entrypoint {
+contract TWMultichainRegistryRouter is PermissionsEnumerableLogic, ERC2771ContextLogic, Multicall, RouterImmutable {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -31,9 +31,9 @@ contract TWMultichainRegistryEntrypoint is PermissionsEnumerableLogic, ERC2771Co
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _functionMap, address[] memory _trustedForwarders)
+    constructor(Plugin[] memory _pluginsToAdd, address[] memory _trustedForwarders)
         ERC2771ContextLogic(_trustedForwarders)
-        Entrypoint(_functionMap)
+        RouterImmutable(_pluginsToAdd)
     {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }

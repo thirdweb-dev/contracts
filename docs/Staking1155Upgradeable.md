@@ -4,7 +4,7 @@
 
 
 
-note: This is a Beta release.
+
 
 
 
@@ -25,23 +25,6 @@ Claim accumulated rewards.
 | Name | Type | Description |
 |---|---|---|
 | _tokenId | uint256 | Staked token Id. |
-
-### edition
-
-```solidity
-function edition() external view returns (address)
-```
-
-
-
-*Address of ERC1155 contract -- staked tokens belong to this contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
 
 ### getDefaultRewardsPerUnitTime
 
@@ -355,6 +338,23 @@ function stakersArray(uint256, uint256) external view returns (address)
 |---|---|---|
 | _0 | uint256 | undefined |
 | _1 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### stakingToken
+
+```solidity
+function stakingToken() external view returns (address)
+```
+
+
+
+*Address of ERC1155 contract -- staked tokens belong to this contract.*
+
 
 #### Returns
 
