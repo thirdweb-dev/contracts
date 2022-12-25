@@ -9,7 +9,7 @@ import "../../lib/TWStrings.sol";
  *  @title   Permissions
  *  @dev     This contracts provides extending-contracts with role-based access control mechanisms
  */
-contract Permissions is IPermissions {
+contract PermissionsLogic is IPermissions {
     /// @dev Default admin role for all roles. Only accounts with this role can grant/revoke other roles.
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 

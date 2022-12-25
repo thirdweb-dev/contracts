@@ -6,7 +6,7 @@ import "./ERC2771ContextStorage.sol";
 /**
  * @dev Context variant with ERC2771 support.
  */
-abstract contract ERC2771Context {
+abstract contract ERC2771ContextUpgradeableLogic {
     function __ERC2771Context_init(address[] memory trustedForwarder) internal {
         __ERC2771Context_init_unchained(trustedForwarder);
     }

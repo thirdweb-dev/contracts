@@ -5,9 +5,10 @@ pragma solidity ^0.8.0;
 import "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
-import { Map } from "contracts/marketplace/Map.sol";
-import { MarketplaceEntrypoint } from "contracts/marketplace/entrypoint/MarketplaceEntrypoint.sol";
-import { DirectListings } from "contracts/marketplace/direct-listings/DirectListingsLogic.sol";
+
+import "contracts/extension/interface/plugin/IMap.sol";
+import { MarketplaceRouter } from "contracts/marketplace/entrypoint/MarketplaceRouter.sol";
+import { DirectListingsLogic } from "contracts/marketplace/direct-listings/DirectListingsLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
 import { IDirectListings } from "contracts/marketplace/IMarketplace.sol";
@@ -36,48 +37,88 @@ contract MarketplaceDirectListingsTest is BaseTest {
     function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
         vm.startPrank(_adminDeployer);
 
-        // [1] Deploy `Map`.
-        Map map = new Map();
+        // [1] Deploy `DirectListings`
+        address directListings = address(new DirectListingsLogic(address(weth)));
 
-        // [2] Deploy `DirectListings`
-        address directListings = address(new DirectListings(address(weth)));
+        // [2] Index `DirectListings` functions in `Map`
+        IMap.Plugin[] memory pluginMaps = new IMap.Plugin[](13);
+        pluginMaps[0] = IMap.Plugin(DirectListingsLogic.totalListings.selector, directListings, "totalListings()");
+        pluginMaps[1] = IMap.Plugin(
+            DirectListingsLogic.isBuyerApprovedForListing.selector,
+            directListings,
+            "isBuyerApprovedForListing(uint256,address)"
+        );
+        pluginMaps[2] = IMap.Plugin(
+            DirectListingsLogic.isCurrencyApprovedForListing.selector,
+            directListings,
+            "isCurrencyApprovedForListing(uint256,address)"
+        );
+        pluginMaps[3] = IMap.Plugin(
+            DirectListingsLogic.currencyPriceForListing.selector,
+            directListings,
+            "currencyPriceForListing(uint256, address)"
+        );
+        pluginMaps[4] = IMap.Plugin(
+            DirectListingsLogic.createListing.selector,
+            directListings,
+            "createListing((address,uint256,uint256,address,uint256,uint128,uint128,bool))"
+        );
+        pluginMaps[5] = IMap.Plugin(
+            DirectListingsLogic.updateListing.selector,
+            directListings,
+            "updateListing(uint256,(address,uint256,uint256,address,uint256,uint128,uint128,bool))"
+        );
+        pluginMaps[6] = IMap.Plugin(
+            DirectListingsLogic.cancelListing.selector,
+            directListings,
+            "cancelListing(uint256)"
+        );
+        pluginMaps[7] = IMap.Plugin(
+            DirectListingsLogic.approveBuyerForListing.selector,
+            directListings,
+            "approveBuyerForListing(uint256,address,bool)"
+        );
+        pluginMaps[8] = IMap.Plugin(
+            DirectListingsLogic.approveCurrencyForListing.selector,
+            directListings,
+            "approveBuyerForListing(uint256,address,uint256)"
+        );
+        pluginMaps[9] = IMap.Plugin(
+            DirectListingsLogic.buyFromListing.selector,
+            directListings,
+            "buyFromListing(uint256,address,uint256,address,uint256)"
+        );
+        pluginMaps[10] = IMap.Plugin(
+            DirectListingsLogic.getAllListings.selector,
+            directListings,
+            "getAllListings(uint256,uint256)"
+        );
+        pluginMaps[11] = IMap.Plugin(
+            DirectListingsLogic.getAllValidListings.selector,
+            directListings,
+            "getAllValidListings(uint256,uint256)"
+        );
+        pluginMaps[12] = IMap.Plugin(DirectListingsLogic.getListing.selector, directListings, "getListing(uint256)");
 
-        // [3] Index `DirectListings` functions in `Map`
-        map.addExtension(DirectListings.totalListings.selector, directListings);
-        map.addExtension(DirectListings.isBuyerApprovedForListing.selector, directListings);
-        map.addExtension(DirectListings.isCurrencyApprovedForListing.selector, directListings);
-        map.addExtension(DirectListings.currencyPriceForListing.selector, directListings);
-        map.addExtension(DirectListings.createListing.selector, directListings);
-        map.addExtension(DirectListings.updateListing.selector, directListings);
-        map.addExtension(DirectListings.cancelListing.selector, directListings);
-        map.addExtension(DirectListings.approveBuyerForListing.selector, directListings);
-        map.addExtension(DirectListings.approveCurrencyForListing.selector, directListings);
-        map.addExtension(DirectListings.buyFromListing.selector, directListings);
-        map.addExtension(DirectListings.getAllListings.selector, directListings);
-        map.addExtension(DirectListings.getAllValidListings.selector, directListings);
-        map.addExtension(DirectListings.getListing.selector, directListings);
-
-        assertEq(map.getAllSelectorsRegistered().length, 13);
-
-        // [4] Deploy `MarketplaceEntrypoint`
-
-        MarketplaceEntrypoint entrypoint = new MarketplaceEntrypoint(address(map));
+        // [3] Deploy `MarketplaceRouter`
+        MarketplaceRouter router = new MarketplaceRouter(pluginMaps);
+        assertEq(router.getAllPlugins().length, 13);
 
         vm.stopPrank();
 
-        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        // [4] Deploy proxy pointing to `MarketplaceRouter`
         vm.prank(_marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(entrypoint),
+                address(router),
                 abi.encodeCall(
-                    MarketplaceEntrypoint.initialize,
+                    MarketplaceRouter.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
         );
 
-        // [6] Setup roles for seller and assets
+        // [5] Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
@@ -85,7 +126,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(entrypoint), "Entrypoint_Impl");
+        vm.label(address(router), "MarketplaceRouter_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(directListings, "DirectListings_Extension");
         vm.label(seller, "Seller");
@@ -99,7 +140,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
     }
 
     function test_state_initial() public {
-        uint256 totalListings = DirectListings(marketplace).totalListings();
+        uint256 totalListings = DirectListingsLogic(marketplace).totalListings();
         assertEq(totalListings, 0);
     }
 
@@ -115,17 +156,25 @@ contract MarketplaceDirectListingsTest is BaseTest {
         // Seller approves currency for listing.
         vm.prank(seller);
         vm.expectRevert("Marketplace: approving listing currency with different price.");
-        DirectListings(marketplace).approveCurrencyForListing(listingId, currencyToApprove, pricePerTokenForCurrency);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency
+        );
 
         // change currency
         currencyToApprove = NATIVE_TOKEN;
 
         vm.prank(seller);
-        DirectListings(marketplace).approveCurrencyForListing(listingId, currencyToApprove, pricePerTokenForCurrency);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency
+        );
 
-        assertEq(DirectListings(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), true);
+        assertEq(DirectListingsLogic(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), true);
         assertEq(
-            DirectListings(marketplace).currencyPriceForListing(listingId, NATIVE_TOKEN),
+            DirectListingsLogic(marketplace).currencyPriceForListing(listingId, NATIVE_TOKEN),
             pricePerTokenForCurrency
         );
 
@@ -133,27 +182,12 @@ contract MarketplaceDirectListingsTest is BaseTest {
         listingParams.currency = NATIVE_TOKEN;
         vm.prank(seller);
         vm.expectRevert("Marketplace: price different from approved price");
-        DirectListings(marketplace).updateListing(listingId, listingParams);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParams);
 
         // change listingParams.pricePerToken to approved price
         listingParams.pricePerToken = pricePerTokenForCurrency;
         vm.prank(seller);
-        DirectListings(marketplace).updateListing(listingId, listingParams);
-    }
-
-    function test_state_map_replaceExtension() public {
-        Map map = Map(MarketplaceEntrypoint(payable(marketplace)).functionMap());
-
-        // revert when adding an already set selector
-        vm.prank(adminDeployer);
-        vm.expectRevert("Extension already set");
-        map.addExtension(DirectListings.createListing.selector, address(0x1234));
-
-        // replace an already set selector
-        vm.prank(adminDeployer);
-        map.replaceExtension(DirectListings.createListing.selector, address(0x1234));
-
-        assertEq(map.getExtension(DirectListings.createListing.selector), address(0x1234));
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParams);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -195,7 +229,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        uint256 listingId = DirectListings(marketplace).createListing(listingParams);
+        uint256 listingId = DirectListingsLogic(marketplace).createListing(listingParams);
 
         // Test consequent state of the contract.
 
@@ -203,10 +237,10 @@ contract MarketplaceDirectListingsTest is BaseTest {
         assertIsOwnerERC721(address(erc721), seller, tokenIds);
 
         // Total listings incremented
-        assertEq(DirectListings(marketplace).totalListings(), 1);
+        assertEq(DirectListingsLogic(marketplace).totalListings(), 1);
 
         // Fetch listing and verify state.
-        IDirectListings.Listing memory listing = DirectListings(marketplace).getListing(listingId);
+        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(listingId);
 
         assertEq(listing.listingId, listingId);
         assertEq(listing.listingCreator, seller);
@@ -259,7 +293,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        DirectListings(marketplace).createListing(listingParams);
+        DirectListingsLogic(marketplace).createListing(listingParams);
     }
 
     function test_revert_createListing_notApprovedMarketplaceToTransferToken() public {
@@ -298,7 +332,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        DirectListings(marketplace).createListing(listingParams);
+        DirectListingsLogic(marketplace).createListing(listingParams);
     }
 
     function test_revert_createListing_listingZeroQuantity() public {
@@ -337,7 +371,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: listing zero quantity.");
-        DirectListings(marketplace).createListing(listingParams);
+        DirectListingsLogic(marketplace).createListing(listingParams);
     }
 
     function test_revert_createListing_listingInvalidQuantity() public {
@@ -376,7 +410,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: listing invalid quantity.");
-        DirectListings(marketplace).createListing(listingParams);
+        DirectListingsLogic(marketplace).createListing(listingParams);
     }
 
     function test_revert_createListing_invalidStartTimestamp() public {
@@ -419,7 +453,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: invalid startTimestamp.");
-        DirectListings(marketplace).createListing(listingParams);
+        DirectListingsLogic(marketplace).createListing(listingParams);
     }
 
     function test_revert_createListing_invalidEndTimestamp() public {
@@ -458,7 +492,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: endTimestamp not greater than startTimestamp.");
-        DirectListings(marketplace).createListing(listingParams);
+        DirectListingsLogic(marketplace).createListing(listingParams);
     }
 
     function test_revert_createListing_listingNonERC721OrERC1155Token() public {
@@ -490,7 +524,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: listed token must be ERC1155 or ERC721.");
-        DirectListings(marketplace).createListing(listingParams);
+        DirectListingsLogic(marketplace).createListing(listingParams);
     }
 
     function test_revert_createListing_noListerRoleWhenRestrictionsActive() public {
@@ -537,7 +571,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("!LISTER_ROLE");
-        DirectListings(marketplace).createListing(listingParams);
+        DirectListingsLogic(marketplace).createListing(listingParams);
     }
 
     function test_revert_createListing_noAssetRoleWhenRestrictionsActive() public {
@@ -584,7 +618,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("!ASSET_ROLE");
-        DirectListings(marketplace).createListing(listingParams);
+        DirectListingsLogic(marketplace).createListing(listingParams);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -629,7 +663,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        listingId = DirectListings(marketplace).createListing(listingParams);
+        listingId = DirectListingsLogic(marketplace).createListing(listingParams);
     }
 
     function test_state_updateListing() public {
@@ -646,7 +680,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         listingParamsToUpdate.pricePerToken = 2 ether;
 
         vm.prank(seller);
-        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParamsToUpdate);
 
         // Test consequent state of the contract.
 
@@ -654,10 +688,10 @@ contract MarketplaceDirectListingsTest is BaseTest {
         assertIsOwnerERC721(address(erc721), seller, tokenIds);
 
         // Total listings not incremented on update.
-        assertEq(DirectListings(marketplace).totalListings(), 1);
+        assertEq(DirectListingsLogic(marketplace).totalListings(), 1);
 
         // Fetch listing and verify state.
-        IDirectListings.Listing memory listing = DirectListings(marketplace).getListing(listingId);
+        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(listingId);
 
         assertEq(listing.listingId, listingId);
         assertEq(listing.listingCreator, seller);
@@ -686,7 +720,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         address notSeller = getActor(1000); // Someone other than the seller calls update.
         vm.prank(notSeller);
         vm.expectRevert("Marketplace: not listing creator.");
-        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
     function test_revert_updateListing_notOwnerOfListedToken() public {
@@ -706,7 +740,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
     function test_revert_updateListing_notApprovedMarketplaceToTransferToken() public {
@@ -726,7 +760,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
     function test_revert_updateListing_listingZeroQuantity() public {
@@ -744,7 +778,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: listing zero quantity.");
-        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
     function test_revert_updateListing_listingInvalidQuantity() public {
@@ -762,7 +796,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: listing invalid quantity.");
-        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
     function test_revert_updateListing_listingNonERC721OrERC1155Token() public {
@@ -784,7 +818,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: listed token must be ERC1155 or ERC721.");
-        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
     function test_revert_updateListing_invalidStartTimestamp() public {
@@ -804,7 +838,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.warp(currentStartTimestamp + 50);
         vm.prank(seller);
         vm.expectRevert("Marketplace: listing already active.");
-        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
     function test_revert_updateListing_invalidEndTimestamp() public {
@@ -823,7 +857,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: endTimestamp not greater than startTimestamp.");
-        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
     function test_revert_updateListing_noAssetRoleWhenRestrictionsActive() public {
@@ -847,7 +881,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("!ASSET_ROLE");
-        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParamsToUpdate);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -856,7 +890,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
     function _setup_cancelListing() private returns (uint256 listingId, IDirectListings.Listing memory listing) {
         (listingId, ) = _setup_updateListing();
-        listing = DirectListings(marketplace).getListing(listingId);
+        listing = DirectListingsLogic(marketplace).getListing(listingId);
     }
 
     function test_state_cancelListing() public {
@@ -866,11 +900,11 @@ contract MarketplaceDirectListingsTest is BaseTest {
         assertEq(existingListingAtId.assetContract, address(erc721));
 
         vm.prank(seller);
-        DirectListings(marketplace).cancelListing(listingId);
+        DirectListingsLogic(marketplace).cancelListing(listingId);
 
         // Verify listing at `listingId` doesn't exist
         vm.expectRevert("Marketplace: listing does not exist.");
-        DirectListings(marketplace).getListing(listingId);
+        DirectListingsLogic(marketplace).getListing(listingId);
     }
 
     function test_revert_cancelListing_notListingCreator() public {
@@ -882,18 +916,18 @@ contract MarketplaceDirectListingsTest is BaseTest {
         address notSeller = getActor(1000);
         vm.prank(notSeller);
         vm.expectRevert("Marketplace: not listing creator.");
-        DirectListings(marketplace).cancelListing(listingId);
+        DirectListingsLogic(marketplace).cancelListing(listingId);
     }
 
     function test_revert_cancelListing_nonExistentListing() public {
         _setup_cancelListing();
 
         // Verify no listing exists at `nexListingId`
-        uint256 nextListingId = DirectListings(marketplace).totalListings();
+        uint256 nextListingId = DirectListingsLogic(marketplace).totalListings();
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: listing does not exist.");
-        DirectListings(marketplace).cancelListing(nextListingId);
+        DirectListingsLogic(marketplace).cancelListing(nextListingId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -908,45 +942,45 @@ contract MarketplaceDirectListingsTest is BaseTest {
         uint256 listingId = _setup_approveBuyerForListing();
         bool toApprove = true;
 
-        assertEq(DirectListings(marketplace).getListing(listingId).reserved, true);
+        assertEq(DirectListingsLogic(marketplace).getListing(listingId).reserved, true);
 
         // Seller approves buyer for reserved listing.
         vm.prank(seller);
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
 
-        assertEq(DirectListings(marketplace).isBuyerApprovedForListing(listingId, buyer), true);
+        assertEq(DirectListingsLogic(marketplace).isBuyerApprovedForListing(listingId, buyer), true);
     }
 
     function test_revert_approveBuyerForListing_notListingCreator() public {
         uint256 listingId = _setup_approveBuyerForListing();
         bool toApprove = true;
 
-        assertEq(DirectListings(marketplace).getListing(listingId).reserved, true);
+        assertEq(DirectListingsLogic(marketplace).getListing(listingId).reserved, true);
 
         // Someone other than the seller approves buyer for reserved listing.
         address notSeller = getActor(1000);
         vm.prank(notSeller);
         vm.expectRevert("Marketplace: not listing creator.");
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
     }
 
     function test_revert_approveBuyerForListing_listingNotReserved() public {
         (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
         bool toApprove = true;
 
-        assertEq(DirectListings(marketplace).getListing(listingId).reserved, true);
+        assertEq(DirectListingsLogic(marketplace).getListing(listingId).reserved, true);
 
         listingParamsToUpdate.reserved = false;
 
         vm.prank(seller);
-        DirectListings(marketplace).updateListing(listingId, listingParamsToUpdate);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParamsToUpdate);
 
-        assertEq(DirectListings(marketplace).getListing(listingId).reserved, false);
+        assertEq(DirectListingsLogic(marketplace).getListing(listingId).reserved, false);
 
         // Seller approves buyer for reserved listing.
         vm.prank(seller);
         vm.expectRevert("Marketplace: listing not reserved.");
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, toApprove);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -964,11 +998,15 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Seller approves buyer for reserved listing.
         vm.prank(seller);
-        DirectListings(marketplace).approveCurrencyForListing(listingId, currencyToApprove, pricePerTokenForCurrency);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency
+        );
 
-        assertEq(DirectListings(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), true);
+        assertEq(DirectListingsLogic(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), true);
         assertEq(
-            DirectListings(marketplace).currencyPriceForListing(listingId, NATIVE_TOKEN),
+            DirectListingsLogic(marketplace).currencyPriceForListing(listingId, NATIVE_TOKEN),
             pricePerTokenForCurrency
         );
     }
@@ -982,18 +1020,26 @@ contract MarketplaceDirectListingsTest is BaseTest {
         address notSeller = getActor(1000);
         vm.prank(notSeller);
         vm.expectRevert("Marketplace: not listing creator.");
-        DirectListings(marketplace).approveCurrencyForListing(listingId, currencyToApprove, pricePerTokenForCurrency);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency
+        );
     }
 
     function test_revert_approveCurrencyForListing_reApprovingMainCurrency() public {
         uint256 listingId = _setup_approveCurrencyForListing();
-        address currencyToApprove = DirectListings(marketplace).getListing(listingId).currency;
+        address currencyToApprove = DirectListingsLogic(marketplace).getListing(listingId).currency;
         uint256 pricePerTokenForCurrency = 2 ether;
 
         // Seller approves buyer for reserved listing.
         vm.prank(seller);
         vm.expectRevert("Marketplace: approving listing currency with different price.");
-        DirectListings(marketplace).approveCurrencyForListing(listingId, currencyToApprove, pricePerTokenForCurrency);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency
+        );
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -1002,7 +1048,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
     function _setup_buyFromListing() private returns (uint256 listingId, IDirectListings.Listing memory listing) {
         (listingId, ) = _setup_updateListing();
-        listing = DirectListings(marketplace).getListing(listingId);
+        listing = DirectListingsLogic(marketplace).getListing(listingId);
     }
 
     function test_state_buyFromListing() public {
@@ -1016,7 +1062,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Seller approves buyer for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
         // Verify that seller is owner of listed tokens, pre-sale.
         uint256[] memory tokenIds = new uint256[](1);
@@ -1036,7 +1082,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         // Buy tokens from listing.
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
-        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+        DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
 
         // Verify that buyer is owner of listed tokens, post-sale.
         assertIsOwnerERC721(address(erc721), buyer, tokenIds);
@@ -1049,7 +1095,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         if (quantityToBuy == listing.quantity) {
             // Verify listing data is deleted if listing tokens are all bought.
             vm.expectRevert("Marketplace: listing does not exist.");
-            DirectListings(marketplace).getListing(listingId);
+            DirectListingsLogic(marketplace).getListing(listingId);
         }
     }
 
@@ -1064,11 +1110,11 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Approve NATIVE_TOKEN for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken);
 
         // Seller approves buyer for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
         // Verify that seller is owner of listed tokens, pre-sale.
         uint256[] memory tokenIds = new uint256[](1);
@@ -1084,7 +1130,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         // Buy tokens from listing.
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
-        DirectListings(marketplace).buyFromListing{ value: totalPrice }(
+        DirectListingsLogic(marketplace).buyFromListing{ value: totalPrice }(
             listingId,
             buyFor,
             quantityToBuy,
@@ -1103,7 +1149,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         if (quantityToBuy == listing.quantity) {
             // Verify listing data is deleted if listing tokens are all bought.
             vm.expectRevert("Marketplace: listing does not exist.");
-            DirectListings(marketplace).getListing(listingId);
+            DirectListingsLogic(marketplace).getListing(listingId);
         }
     }
 
@@ -1118,11 +1164,11 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Approve NATIVE_TOKEN for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken);
 
         // Seller approves buyer for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
         // Verify that seller is owner of listed tokens, pre-sale.
         uint256[] memory tokenIds = new uint256[](1);
@@ -1137,7 +1183,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         vm.expectRevert("Marketplace: msg.value must exactly be the total price.");
-        DirectListings(marketplace).buyFromListing{ value: totalPrice - 1 }( // sending insufficient value
+        DirectListingsLogic(marketplace).buyFromListing{ value: totalPrice - 1 }( // sending insufficient value
             listingId,
             buyFor,
             quantityToBuy,
@@ -1157,11 +1203,11 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Approve NATIVE_TOKEN for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(listingId, currency, pricePerToken);
 
         // Seller approves buyer for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
         // Verify that seller is owner of listed tokens, pre-sale.
         uint256[] memory tokenIds = new uint256[](1);
@@ -1176,7 +1222,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         vm.expectRevert("Unexpected total price");
-        DirectListings(marketplace).buyFromListing{ value: totalPrice }(
+        DirectListingsLogic(marketplace).buyFromListing{ value: totalPrice }(
             listingId,
             buyFor,
             quantityToBuy,
@@ -1195,7 +1241,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Seller approves buyer for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
         // Verify that seller is owner of listed tokens, pre-sale.
         uint256[] memory tokenIds = new uint256[](1);
@@ -1215,12 +1261,12 @@ contract MarketplaceDirectListingsTest is BaseTest {
         // Buy tokens from listing.
 
         assertEq(listing.currency, address(erc20));
-        assertEq(DirectListings(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), false);
+        assertEq(DirectListingsLogic(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), false);
 
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         vm.expectRevert("Paying in invalid currency.");
-        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, NATIVE_TOKEN, totalPrice);
+        DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, NATIVE_TOKEN, totalPrice);
     }
 
     function test_revert_buyFromListing_buyerBalanceLessThanPrice() public {
@@ -1234,7 +1280,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Seller approves buyer for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
         // Verify that seller is owner of listed tokens, pre-sale.
         uint256[] memory tokenIds = new uint256[](1);
@@ -1255,7 +1301,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         vm.expectRevert("!BAL20");
-        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+        DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
     }
 
     function test_revert_buyFromListing_notApprovedMarketplaceToTransferPrice() public {
@@ -1269,7 +1315,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Seller approves buyer for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
         // Verify that seller is owner of listed tokens, pre-sale.
         uint256[] memory tokenIds = new uint256[](1);
@@ -1290,7 +1336,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         vm.expectRevert("!BAL20");
-        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+        DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
     }
 
     function test_revert_buyFromListing_buyingZeroQuantity() public {
@@ -1304,7 +1350,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Seller approves buyer for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
         // Verify that seller is owner of listed tokens, pre-sale.
         uint256[] memory tokenIds = new uint256[](1);
@@ -1325,7 +1371,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         vm.expectRevert("Buying invalid quantity");
-        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+        DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
     }
 
     function test_revert_buyFromListing_buyingMoreQuantityThanListed() public {
@@ -1339,7 +1385,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Seller approves buyer for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
         // Verify that seller is owner of listed tokens, pre-sale.
         uint256[] memory tokenIds = new uint256[](1);
@@ -1360,7 +1406,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         vm.expectRevert("Buying invalid quantity");
-        DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+        DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -1402,7 +1448,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(_seller);
-        listingId = DirectListings(marketplace).createListing(listingParams);
+        listingId = DirectListingsLogic(marketplace).createListing(listingParams);
     }
 }
 
@@ -1430,46 +1476,88 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
     function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
         vm.startPrank(_adminDeployer);
 
-        // [1] Deploy `Map`.
-        Map map = new Map();
+        // [1] Deploy `DirectListings`
+        address directListings = address(new DirectListingsLogic(address(weth)));
 
-        // [2] Deploy `DirectListings`
-        address directListings = address(new DirectListings(address(weth)));
+        // [2] Index `DirectListings` functions in `Map`
+        IMap.Plugin[] memory pluginMaps = new IMap.Plugin[](13);
+        pluginMaps[0] = IMap.Plugin(DirectListingsLogic.totalListings.selector, directListings, "totalListings()");
+        pluginMaps[1] = IMap.Plugin(
+            DirectListingsLogic.isBuyerApprovedForListing.selector,
+            directListings,
+            "isBuyerApprovedForListing(uint256,address)"
+        );
+        pluginMaps[2] = IMap.Plugin(
+            DirectListingsLogic.isCurrencyApprovedForListing.selector,
+            directListings,
+            "isCurrencyApprovedForListing(uint256,address)"
+        );
+        pluginMaps[3] = IMap.Plugin(
+            DirectListingsLogic.currencyPriceForListing.selector,
+            directListings,
+            "currencyPriceForListing(uint256,address)"
+        );
+        pluginMaps[4] = IMap.Plugin(
+            DirectListingsLogic.createListing.selector,
+            directListings,
+            "createListing((address,uint256,uint256,address,uint256,uint128,uint128,bool))"
+        );
+        pluginMaps[5] = IMap.Plugin(
+            DirectListingsLogic.updateListing.selector,
+            directListings,
+            "updateListing(uint256,(address,uint256,uint256,address,uint256,uint128,uint128,bool))"
+        );
+        pluginMaps[6] = IMap.Plugin(
+            DirectListingsLogic.cancelListing.selector,
+            directListings,
+            "cancelListing(uint256)"
+        );
+        pluginMaps[7] = IMap.Plugin(
+            DirectListingsLogic.approveBuyerForListing.selector,
+            directListings,
+            "approveBuyerForListing(uint256,address,bool)"
+        );
+        pluginMaps[8] = IMap.Plugin(
+            DirectListingsLogic.approveCurrencyForListing.selector,
+            directListings,
+            "approveBuyerForListing(uint256,address,uint256)"
+        );
+        pluginMaps[9] = IMap.Plugin(
+            DirectListingsLogic.buyFromListing.selector,
+            directListings,
+            "buyFromListing(uint256,address,uint256,address,uint256)"
+        );
+        pluginMaps[10] = IMap.Plugin(
+            DirectListingsLogic.getAllListings.selector,
+            directListings,
+            "getAllListings(uint256,uint256)"
+        );
+        pluginMaps[11] = IMap.Plugin(
+            DirectListingsLogic.getAllValidListings.selector,
+            directListings,
+            "getAllValidListings(uint256,uint256)"
+        );
+        pluginMaps[12] = IMap.Plugin(DirectListingsLogic.getListing.selector, directListings, "getListing(uint256)");
 
-        // [3] Index `DirectListings` functions in `Map`
-        map.addExtension(DirectListings.totalListings.selector, directListings);
-        map.addExtension(DirectListings.isBuyerApprovedForListing.selector, directListings);
-        map.addExtension(DirectListings.isCurrencyApprovedForListing.selector, directListings);
-        map.addExtension(DirectListings.currencyPriceForListing.selector, directListings);
-        map.addExtension(DirectListings.createListing.selector, directListings);
-        map.addExtension(DirectListings.updateListing.selector, directListings);
-        map.addExtension(DirectListings.cancelListing.selector, directListings);
-        map.addExtension(DirectListings.approveBuyerForListing.selector, directListings);
-        map.addExtension(DirectListings.approveCurrencyForListing.selector, directListings);
-        map.addExtension(DirectListings.buyFromListing.selector, directListings);
-        map.addExtension(DirectListings.getAllListings.selector, directListings);
-        map.addExtension(DirectListings.getAllValidListings.selector, directListings);
-        map.addExtension(DirectListings.getListing.selector, directListings);
-
-        // [4] Deploy `MarketplaceEntrypoint`
-
-        MarketplaceEntrypoint entrypoint = new MarketplaceEntrypoint(address(map));
+        // [3] Deploy `MarketplaceRouter`
+        MarketplaceRouter router = new MarketplaceRouter(pluginMaps);
+        assertEq(router.getAllPlugins().length, 13);
 
         vm.stopPrank();
 
-        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        // [4] Deploy proxy pointing to `MarketplaceRouter`
         vm.prank(_marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(entrypoint),
+                address(router),
                 abi.encodeCall(
-                    MarketplaceEntrypoint.initialize,
+                    MarketplaceRouter.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
         );
 
-        // [6] Setup roles for seller and assets
+        // [5] Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
@@ -1477,7 +1565,7 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(entrypoint), "Entrypoint_Impl");
+        vm.label(address(router), "MarketplaceRouter_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(directListings, "DirectListings_Extension");
         vm.label(seller, "Seller");
@@ -1528,12 +1616,12 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        listingId = DirectListings(marketplace).createListing(listingParams);
+        listingId = DirectListingsLogic(marketplace).createListing(listingParams);
     }
 
     function _setup_buyFromListing() private returns (uint256 listingId, IDirectListings.Listing memory listing) {
         (listingId, ) = _setup_updateListing();
-        listing = DirectListings(marketplace).getListing(listingId);
+        listing = DirectListingsLogic(marketplace).getListing(listingId);
     }
 
     function test_state_buyFromListing_after_update() public {
@@ -1547,7 +1635,7 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
 
         // Seller approves buyer for listing
         vm.prank(seller);
-        DirectListings(marketplace).approveBuyerForListing(listingId, buyer, true);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
         // Verify that seller is owner of listed tokens, pre-sale.
         // This token (Id = 0) was created in the above _setup_buyFromListing
@@ -1591,12 +1679,12 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
         );
         vm.prank(seller);
         vm.expectRevert("Marketplace: cannot update what token is listed.");
-        DirectListings(marketplace).updateListing(listingId, listingParams);
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParams);
 
         // Buy listing
         // vm.warp(listing.startTimestamp);
         // vm.prank(buyer);
-        // DirectListings(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+        // DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
 
         // // Buyer is owner of the swapped out token (tokenId = 1) and not the expected (tokenId = 0)
         // assertIsOwnerERC721(address(erc721), buyer, swappedTokenIds);

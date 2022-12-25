@@ -2,14 +2,14 @@
 pragma solidity ^0.8.0;
 
 import "./PermissionsEnumerableStorage.sol";
-import "./Permissions.sol";
+import "./PermissionsLogic.sol";
 
 /**
  *  @title   PermissionsEnumerable
  *  @dev     This contracts provides extending-contracts with role-based access control mechanisms.
  *           Also provides interfaces to view all members with a given role, and total count of members.
  */
-contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
+contract PermissionsEnumerableLogic is IPermissionsEnumerable, PermissionsLogic {
     /**
      *  @notice         Returns the role-member from a list of members for a role,
      *                  at a given index.

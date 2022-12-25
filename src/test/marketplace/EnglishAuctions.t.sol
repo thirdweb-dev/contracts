@@ -5,9 +5,9 @@ pragma solidity ^0.8.0;
 import "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
-import { Map } from "contracts/marketplace/Map.sol";
-import { MarketplaceEntrypoint } from "contracts/marketplace/entrypoint/MarketplaceEntrypoint.sol";
-import { EnglishAuctions } from "contracts/marketplace/english-auctions/EnglishAuctionsLogic.sol";
+import "contracts/extension/interface/plugin/IMap.sol";
+import { MarketplaceRouter } from "contracts/marketplace/entrypoint/MarketplaceRouter.sol";
+import { EnglishAuctionsLogic } from "contracts/marketplace/english-auctions/EnglishAuctionsLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
 import { IEnglishAuctions } from "contracts/marketplace/IMarketplace.sol";
@@ -36,45 +36,84 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
         vm.startPrank(_adminDeployer);
 
-        // [1] Deploy `Map`.
-        Map map = new Map();
+        // [1] Deploy `EnglishAuctions`
+        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
 
-        // [2] Deploy `EnglishAuctions`
-        address englishAuctions = address(new EnglishAuctions(address(weth)));
+        // [2] Index `EnglishAuctions` functions in `Map`
+        IMap.Plugin[] memory pluginMaps = new IMap.Plugin[](12);
+        pluginMaps[0] = IMap.Plugin(EnglishAuctionsLogic.totalAuctions.selector, englishAuctions, "totalAuctions()");
+        pluginMaps[1] = IMap.Plugin(
+            EnglishAuctionsLogic.createAuction.selector,
+            englishAuctions,
+            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))"
+        );
+        pluginMaps[2] = IMap.Plugin(
+            EnglishAuctionsLogic.cancelAuction.selector,
+            englishAuctions,
+            "cancelAuction(uint256)"
+        );
+        pluginMaps[3] = IMap.Plugin(
+            EnglishAuctionsLogic.collectAuctionPayout.selector,
+            englishAuctions,
+            "collectAuctionPayout(uint256)"
+        );
+        pluginMaps[4] = IMap.Plugin(
+            EnglishAuctionsLogic.collectAuctionTokens.selector,
+            englishAuctions,
+            "collectAuctionTokens(uint256)"
+        );
+        pluginMaps[5] = IMap.Plugin(
+            EnglishAuctionsLogic.bidInAuction.selector,
+            englishAuctions,
+            "bidInAuction(uint256,uint256)"
+        );
+        pluginMaps[6] = IMap.Plugin(
+            EnglishAuctionsLogic.isNewWinningBid.selector,
+            englishAuctions,
+            "isNewWinningBid(uint256,uint256)"
+        );
+        pluginMaps[7] = IMap.Plugin(EnglishAuctionsLogic.getAuction.selector, englishAuctions, "getAuction(uint256)");
+        pluginMaps[8] = IMap.Plugin(
+            EnglishAuctionsLogic.getAllAuctions.selector,
+            englishAuctions,
+            "getAllAuctions(uint256,uint256)"
+        );
+        pluginMaps[9] = IMap.Plugin(
+            EnglishAuctionsLogic.getAllValidAuctions.selector,
+            englishAuctions,
+            "getAllValidAuctions(uint256,uint256)"
+        );
+        pluginMaps[10] = IMap.Plugin(
+            EnglishAuctionsLogic.getWinningBid.selector,
+            englishAuctions,
+            "getWinningBid(uint256)"
+        );
+        pluginMaps[11] = IMap.Plugin(
+            EnglishAuctionsLogic.isAuctionExpired.selector,
+            englishAuctions,
+            "isAuctionExpired(uint256)"
+        );
 
-        // [3] Index `EnglishAuctions` functions in `Map`
-        map.addExtension(EnglishAuctions.createAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getAllValidAuctions.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
+        // [3] Deploy `MarketplaceRouter`
 
-        // [4] Deploy `MarketplaceEntrypoint`
-
-        MarketplaceEntrypoint entrypoint = new MarketplaceEntrypoint(address(map));
+        MarketplaceRouter router = new MarketplaceRouter(pluginMaps);
+        assertEq(router.getAllPlugins().length, 12);
 
         vm.stopPrank();
 
-        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        // [4] Deploy proxy pointing to `MarketplaceRouter`
         vm.prank(_marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(entrypoint),
+                address(router),
                 abi.encodeCall(
-                    MarketplaceEntrypoint.initialize,
+                    MarketplaceRouter.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
         );
 
-        // [6] Setup roles for seller and assets
+        // [5] Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
@@ -82,7 +121,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(entrypoint), "Entrypoint_Impl");
+        vm.label(address(router), "MarketplaceRouter_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(englishAuctions, "EnglishAuctions_Extension");
         vm.label(seller, "Seller");
@@ -96,7 +135,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     }
 
     function test_state_initial() public {
-        uint256 totoalAuctions = EnglishAuctions(marketplace).totalAuctions();
+        uint256 totoalAuctions = EnglishAuctionsLogic(marketplace).totalAuctions();
         assertEq(totoalAuctions, 0);
     }
 
@@ -143,7 +182,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        uint256 auctionId = EnglishAuctions(marketplace).createAuction(auctionParams);
+        uint256 auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
 
         // Test consequent state of the contract.
 
@@ -151,10 +190,10 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         assertIsOwnerERC721(address(erc721), marketplace, tokenIds);
 
         // Total listings incremented
-        assertEq(EnglishAuctions(marketplace).totalAuctions(), 1);
+        assertEq(EnglishAuctionsLogic(marketplace).totalAuctions(), 1);
 
         // Fetch listing and verify state.
-        IEnglishAuctions.Auction memory auction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory auction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         assertEq(auction.auctionId, auctionId);
         assertEq(auction.auctionCreator, seller);
@@ -213,7 +252,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("ERC721: transfer from incorrect owner");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_revert_createAuction_notApprovedMarketplaceToTransferToken() public {
@@ -256,7 +295,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("ERC721: caller is not token owner nor approved");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_revert_createAuction_auctioningZeroQuantity() public {
@@ -299,7 +338,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: auctioning zero quantity.");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_revert_createAuction_invalidQuantity() public {
@@ -342,7 +381,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: auctioning invalid quantity.");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_revert_createAuction_noBidOrTimeBuffer() public {
@@ -385,7 +424,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: no time-buffer.");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
 
         timeBufferInSeconds = 10 seconds;
         bidBufferBps = 0;
@@ -405,7 +444,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: no bid-buffer.");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_revert_createAuction_invalidBidAmounts() public {
@@ -448,7 +487,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: invalid bid amounts.");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_revert_createAuction_invalidStartTimestamp() public {
@@ -495,7 +534,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: invalid timestamps.");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_revert_createAuction_invalidEndTimestamp() public {
@@ -538,7 +577,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: invalid timestamps.");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_revert_createAuction_invalidAssetContract() public {
@@ -574,7 +613,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: auctioned token must be ERC1155 or ERC721.");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_revert_createAuction_noListerRoleWhenRestrictionsActive() public {
@@ -625,7 +664,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("!LISTER_ROLE");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_revert_createAuction_noAssetRoleWhenRestrictionsActive() public {
@@ -676,7 +715,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.prank(seller);
         vm.expectRevert("!ASSET_ROLE");
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -722,12 +761,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        auctionId = EnglishAuctions(marketplace).createAuction(auctionParams);
+        auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_state_cancelAuction() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -736,7 +775,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         assertEq(existingAuction.assetContract, address(erc721));
 
         vm.prank(seller);
-        EnglishAuctions(marketplace).cancelAuction(auctionId);
+        EnglishAuctionsLogic(marketplace).cancelAuction(auctionId);
 
         // Test consequent states.
 
@@ -744,16 +783,16 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         assertIsOwnerERC721(address(erc721), seller, tokenIds);
 
         // Total auction count should include deleted auctions too
-        assertEq(EnglishAuctions(marketplace).totalAuctions(), 1);
+        assertEq(EnglishAuctionsLogic(marketplace).totalAuctions(), 1);
 
         // Revert when fetching deleted auction.
         vm.expectRevert("Marketplace: auction does not exist.");
-        EnglishAuctions(marketplace).getAuction(auctionId);
+        EnglishAuctionsLogic(marketplace).getAuction(auctionId);
     }
 
     function test_revert_cancelAuction_bidsAlreadyMade() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -767,12 +806,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 1 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 1 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: bids already made.");
-        EnglishAuctions(marketplace).cancelAuction(auctionId);
+        EnglishAuctionsLogic(marketplace).cancelAuction(auctionId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -781,7 +820,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
     function test_state_bidInAuction_firstBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -795,10 +834,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 1 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 1 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -812,7 +853,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
     function test_state_bidInAuction_secondBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -826,10 +867,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 1 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 1 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -844,10 +887,10 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(address(0x345), 2 ether);
         vm.startPrank(address(0x345));
         erc20.approve(marketplace, 2 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 2 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 2 ether);
         vm.stopPrank();
 
-        (bidder, currency, bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+        (bidder, currency, bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(auctionId);
 
         // Test consequent states.
         // Seller is owner of token.
@@ -862,7 +905,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
     function test_state_bidInAuction_buyoutBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -876,10 +919,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 1 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 1 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -894,10 +939,10 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(address(0x345), 10 ether);
         vm.startPrank(address(0x345));
         erc20.approve(marketplace, 10 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 10 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 10 ether);
         vm.stopPrank();
 
-        (bidder, currency, bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+        (bidder, currency, bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(auctionId);
 
         // Test consequent states.
         // Seller is owner of token.
@@ -912,7 +957,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
     function test_revert_bidInAuction_inactiveAuction() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -925,7 +970,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         vm.startPrank(buyer);
         erc20.approve(marketplace, 1 ether);
         vm.expectRevert("Marketplace: inactive auction.");
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
 
         // place bid after end-time
@@ -935,13 +980,13 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         vm.startPrank(buyer);
         erc20.approve(marketplace, 1 ether);
         vm.expectRevert("Marketplace: inactive auction.");
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
     }
 
     function test_revert_bidInAuction_notOwnerOfBidTokens() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -955,13 +1000,13 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         vm.startPrank(buyer);
         erc20.approve(marketplace, 1 ether);
         vm.expectRevert("ERC20: transfer amount exceeds balance");
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
     }
 
     function test_revert_bidInAuction_notApprovedMarketplaceToTransferToken() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -975,13 +1020,13 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 1 ether);
         vm.startPrank(buyer);
         vm.expectRevert("ERC20: insufficient allowance");
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
     }
 
     function test_revert_bidInAuction_notNewWinningBid_firstBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -996,13 +1041,13 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         vm.startPrank(buyer);
         erc20.approve(marketplace, 0.5 ether);
         vm.expectRevert("Marketplace: not winning bid.");
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 0.5 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 0.5 ether);
         vm.stopPrank();
     }
 
     function test_revert_bidInAuction_notNewWinningBid_secondBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1016,10 +1061,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 1 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 1 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1035,7 +1082,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         vm.startPrank(address(0x345));
         erc20.approve(marketplace, 1 ether);
         vm.expectRevert("Marketplace: not winning bid.");
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 1 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
     }
 
@@ -1045,7 +1092,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
     function test_state_collectAuctionPayout_buyoutBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1059,10 +1106,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 10 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 10 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 10 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 10 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1075,7 +1124,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         // collect auction payout
         vm.prank(seller);
-        EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
 
         assertEq(erc20.balanceOf(marketplace), 0);
         assertEq(erc20.balanceOf(seller), 10 ether);
@@ -1083,7 +1132,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
     function test_state_collectAuctionPayout_afterAuctionEnds() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1097,10 +1146,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 5 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 5 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 5 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 5 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1115,7 +1166,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         // collect auction payout
         vm.prank(seller);
-        EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
 
         assertIsOwnerERC721(address(erc721), marketplace, tokenIds);
         assertEq(erc20.balanceOf(marketplace), 0);
@@ -1124,7 +1175,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
     function test_revert_collectAuctionPayout_auctionNotExpired() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1138,18 +1189,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 5 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 5 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 5 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 5 ether);
         vm.stopPrank();
 
         // collect auction payout before auction has ended
         vm.prank(seller);
         vm.expectRevert("Marketplace: auction still active.");
-        EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
     }
 
     function test_revert_collectAuctionPayout_noBidsInAuction() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1162,7 +1213,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         // collect auction payout without any bids made
         vm.prank(seller);
         vm.expectRevert("Marketplace: no bids were made.");
-        EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -1171,7 +1222,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
     function test_state_collectAuctionTokens() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1185,10 +1236,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 5 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 5 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 5 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 5 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1203,7 +1256,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         // collect auction tokens
         vm.prank(buyer);
-        EnglishAuctions(marketplace).collectAuctionTokens(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionTokens(auctionId);
 
         assertIsOwnerERC721(address(erc721), buyer, tokenIds);
         assertEq(erc20.balanceOf(marketplace), 5 ether);
@@ -1211,7 +1264,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
     function test_revert_collectAuctionTokens_auctionNotExpired() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1225,10 +1278,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 5 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 5 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 5 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 5 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1242,7 +1297,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         // collect auction tokens before auction has ended
         vm.prank(buyer);
         vm.expectRevert("Marketplace: auction still active.");
-        EnglishAuctions(marketplace).collectAuctionTokens(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionTokens(auctionId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -1251,7 +1306,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
     function test_state_isNewWinningBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1265,18 +1320,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 5 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 5 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 5 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 5 ether);
         vm.stopPrank();
 
         // check if new winning bid
-        assertTrue(EnglishAuctions(marketplace).isNewWinningBid(auctionId, 6 ether));
-        assertFalse(EnglishAuctions(marketplace).isNewWinningBid(auctionId, 5 ether));
-        assertFalse(EnglishAuctions(marketplace).isNewWinningBid(auctionId, 4 ether));
+        assertTrue(EnglishAuctionsLogic(marketplace).isNewWinningBid(auctionId, 6 ether));
+        assertFalse(EnglishAuctionsLogic(marketplace).isNewWinningBid(auctionId, 5 ether));
+        assertFalse(EnglishAuctionsLogic(marketplace).isNewWinningBid(auctionId, 4 ether));
     }
 
     function test_revert_isNewWinningBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1290,12 +1345,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 5 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 5 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 5 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 5 ether);
         vm.stopPrank();
 
         // check winning bid for a non-existent auction
         vm.expectRevert("Marketplace: auction does not exist.");
-        EnglishAuctions(marketplace).isNewWinningBid(auctionId + 1, 6 ether);
+        EnglishAuctionsLogic(marketplace).isNewWinningBid(auctionId + 1, 6 ether);
     }
 
     function test_state_getAllAuctions() public {
@@ -1340,10 +1395,10 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
             );
 
             vm.prank(seller);
-            auctionIds[i] = EnglishAuctions(marketplace).createAuction(auctionParams);
+            auctionIds[i] = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
         }
 
-        IEnglishAuctions.Auction[] memory activeAuctions = EnglishAuctions(marketplace).getAllAuctions(0, 4);
+        IEnglishAuctions.Auction[] memory activeAuctions = EnglishAuctionsLogic(marketplace).getAllAuctions(0, 4);
         assertEq(activeAuctions.length, 5);
 
         for (uint256 i = 0; i < 5; i += 1) {
@@ -1405,10 +1460,10 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
             );
 
             vm.prank(seller);
-            auctionIds[i] = EnglishAuctions(marketplace).createAuction(auctionParams);
+            auctionIds[i] = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
         }
 
-        IEnglishAuctions.Auction[] memory activeAuctions = EnglishAuctions(marketplace).getAllValidAuctions(0, 4);
+        IEnglishAuctions.Auction[] memory activeAuctions = EnglishAuctionsLogic(marketplace).getAllValidAuctions(0, 4);
         assertEq(activeAuctions.length, 5);
 
         for (uint256 i = 0; i < 5; i += 1) {
@@ -1442,25 +1497,25 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        EnglishAuctions(marketplace).createAuction(auctionParams);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
 
-        activeAuctions = EnglishAuctions(marketplace).getAllValidAuctions(0, 5);
+        activeAuctions = EnglishAuctionsLogic(marketplace).getAllValidAuctions(0, 5);
         assertEq(activeAuctions.length, 5);
     }
 
     function test_state_isAuctionExpired() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         vm.warp(existingAuction.endTimestamp);
-        assertTrue(EnglishAuctions(marketplace).isAuctionExpired(auctionId));
+        assertTrue(EnglishAuctionsLogic(marketplace).isAuctionExpired(auctionId));
     }
 
     function test_revert_isAuctionExpired() public {
         uint256 auctionId = _setup_newAuction();
 
         vm.expectRevert("Marketplace: auction does not exist.");
-        EnglishAuctions(marketplace).isAuctionExpired(auctionId + 1);
+        EnglishAuctionsLogic(marketplace).isAuctionExpired(auctionId + 1);
     }
 }
 
@@ -1501,44 +1556,83 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
     function setupMarketplaceEnglish(address _adminDeployer, address _marketplaceDeployer) private {
         vm.startPrank(_adminDeployer);
 
-        // [1] Deploy `Map`.
-        Map map = new Map();
+        // [1] Deploy `EnglishAuctions`
+        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
 
-        // [2] Deploy `EnglishAuctions`
-        address englishAuctions = address(new EnglishAuctions(address(weth)));
+        // [2] Index `EnglishAuctions` functions in `Map`
+        IMap.Plugin[] memory pluginMaps = new IMap.Plugin[](12);
+        pluginMaps[0] = IMap.Plugin(EnglishAuctionsLogic.totalAuctions.selector, englishAuctions, "totalAuctions()");
+        pluginMaps[1] = IMap.Plugin(
+            EnglishAuctionsLogic.createAuction.selector,
+            englishAuctions,
+            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))"
+        );
+        pluginMaps[2] = IMap.Plugin(
+            EnglishAuctionsLogic.cancelAuction.selector,
+            englishAuctions,
+            "cancelAuction(uint256)"
+        );
+        pluginMaps[3] = IMap.Plugin(
+            EnglishAuctionsLogic.collectAuctionPayout.selector,
+            englishAuctions,
+            "collectAuctionPayout(uint256)"
+        );
+        pluginMaps[4] = IMap.Plugin(
+            EnglishAuctionsLogic.collectAuctionTokens.selector,
+            englishAuctions,
+            "collectAuctionTokens(uint256)"
+        );
+        pluginMaps[5] = IMap.Plugin(
+            EnglishAuctionsLogic.bidInAuction.selector,
+            englishAuctions,
+            "bidInAuction(uint256,uint256)"
+        );
+        pluginMaps[6] = IMap.Plugin(
+            EnglishAuctionsLogic.isNewWinningBid.selector,
+            englishAuctions,
+            "isNewWinningBid(uint256,uint256)"
+        );
+        pluginMaps[7] = IMap.Plugin(EnglishAuctionsLogic.getAuction.selector, englishAuctions, "getAuction(uint256)");
+        pluginMaps[8] = IMap.Plugin(
+            EnglishAuctionsLogic.getAllAuctions.selector,
+            englishAuctions,
+            "getAllAuctions(uint256,uint256)"
+        );
+        pluginMaps[9] = IMap.Plugin(
+            EnglishAuctionsLogic.getAllValidAuctions.selector,
+            englishAuctions,
+            "getAllValidAuctions(uint256,uint256)"
+        );
+        pluginMaps[10] = IMap.Plugin(
+            EnglishAuctionsLogic.getWinningBid.selector,
+            englishAuctions,
+            "getWinningBid(uint256)"
+        );
+        pluginMaps[11] = IMap.Plugin(
+            EnglishAuctionsLogic.isAuctionExpired.selector,
+            englishAuctions,
+            "isAuctionExpired(uint256)"
+        );
 
-        // [3] Index `EnglishAuctions` functions in `Map`
-        map.addExtension(EnglishAuctions.createAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
+        // [3] Deploy `MarketplaceRouter`
 
-        // [4] Deploy `MarketplaceEntrypoint`
-
-        MarketplaceEntrypoint entrypoint = new MarketplaceEntrypoint(address(map));
+        MarketplaceRouter router = new MarketplaceRouter(pluginMaps);
 
         vm.stopPrank();
 
-        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        // [4] Deploy proxy pointing to `MarketplaceRouter`
         vm.prank(_marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(entrypoint),
+                address(router),
                 abi.encodeCall(
-                    MarketplaceEntrypoint.initialize,
+                    MarketplaceRouter.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
         );
 
-        // [6] Setup roles for seller and assets
+        // [5] Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
@@ -1546,7 +1640,7 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
 
         vm.stopPrank();
 
-        vm.label(address(entrypoint), "Entrypoint_Impl");
+        vm.label(address(router), "MarketplaceRouter_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(englishAuctions, "EnglishAuctions_Extension");
         vm.label(seller, "Seller");
@@ -1595,7 +1689,7 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
             endTimestamp
         );
         vm.prank(seller);
-        uint256 auctionId = EnglishAuctions(marketplace).createAuction(auctionParams);
+        uint256 auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
 
         /////////////////////////// Setup: marketplace has currency /////////////
         uint256 mbalance = 100 ether;
@@ -1611,17 +1705,17 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
         vm.startPrank(seller);
 
         erc20.approve(marketplace, buyoutBidAmount);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, buyoutBidAmount);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, buyoutBidAmount);
 
         // 2. Collect their own bid.
-        EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
         assertEq(erc20.balanceOf(seller), buyoutBidAmount);
 
         // 3. Profit. (FIXED)
 
         vm.expectRevert("Marketplace: payout already completed.");
-        EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
-        // EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
+        // EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
         // assertEq(erc20.balanceOf(seller), buyoutBidAmount + mbalance);
     }
 }
@@ -1654,44 +1748,83 @@ contract BreitwieserTheBidder is BaseTest {
     function setupMarketplaceEnglish(address _adminDeployer, address _marketplaceDeployer) private {
         vm.startPrank(_adminDeployer);
 
-        // [1] Deploy `Map`.
-        Map map = new Map();
+        // [1] Deploy `EnglishAuctions`
+        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
 
-        // [2] Deploy `EnglishAuctions`
-        address englishAuctions = address(new EnglishAuctions(address(weth)));
+        // [2] Index `EnglishAuctions` functions in `Map`
+        IMap.Plugin[] memory pluginMaps = new IMap.Plugin[](12);
+        pluginMaps[0] = IMap.Plugin(EnglishAuctionsLogic.totalAuctions.selector, englishAuctions, "totalAuctions()");
+        pluginMaps[1] = IMap.Plugin(
+            EnglishAuctionsLogic.createAuction.selector,
+            englishAuctions,
+            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))"
+        );
+        pluginMaps[2] = IMap.Plugin(
+            EnglishAuctionsLogic.cancelAuction.selector,
+            englishAuctions,
+            "cancelAuction(uint256)"
+        );
+        pluginMaps[3] = IMap.Plugin(
+            EnglishAuctionsLogic.collectAuctionPayout.selector,
+            englishAuctions,
+            "collectAuctionPayout(uint256)"
+        );
+        pluginMaps[4] = IMap.Plugin(
+            EnglishAuctionsLogic.collectAuctionTokens.selector,
+            englishAuctions,
+            "collectAuctionTokens(uint256)"
+        );
+        pluginMaps[5] = IMap.Plugin(
+            EnglishAuctionsLogic.bidInAuction.selector,
+            englishAuctions,
+            "bidInAuction(uint256,uint256)"
+        );
+        pluginMaps[6] = IMap.Plugin(
+            EnglishAuctionsLogic.isNewWinningBid.selector,
+            englishAuctions,
+            "isNewWinningBid(uint256,uint256)"
+        );
+        pluginMaps[7] = IMap.Plugin(EnglishAuctionsLogic.getAuction.selector, englishAuctions, "getAuction(uint256)");
+        pluginMaps[8] = IMap.Plugin(
+            EnglishAuctionsLogic.getAllAuctions.selector,
+            englishAuctions,
+            "getAllAuctions(uint256,uint256)"
+        );
+        pluginMaps[9] = IMap.Plugin(
+            EnglishAuctionsLogic.getAllValidAuctions.selector,
+            englishAuctions,
+            "getAllValidAuctions(uint256,uint256)"
+        );
+        pluginMaps[10] = IMap.Plugin(
+            EnglishAuctionsLogic.getWinningBid.selector,
+            englishAuctions,
+            "getWinningBid(uint256)"
+        );
+        pluginMaps[11] = IMap.Plugin(
+            EnglishAuctionsLogic.isAuctionExpired.selector,
+            englishAuctions,
+            "isAuctionExpired(uint256)"
+        );
 
-        // [3] Index `EnglishAuctions` functions in `Map`
-        map.addExtension(EnglishAuctions.createAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
+        // [3] Deploy `MarketplaceRouter`
 
-        // [4] Deploy `MarketplaceEntrypoint`
-
-        MarketplaceEntrypoint entrypoint = new MarketplaceEntrypoint(address(map));
+        MarketplaceRouter router = new MarketplaceRouter(pluginMaps);
 
         vm.stopPrank();
 
-        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        // [4] Deploy proxy pointing to `MarketplaceRouter`
         vm.prank(_marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(entrypoint),
+                address(router),
                 abi.encodeCall(
-                    MarketplaceEntrypoint.initialize,
+                    MarketplaceRouter.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
         );
 
-        // [6] Setup roles for seller and assets
+        // [5] Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
@@ -1699,7 +1832,7 @@ contract BreitwieserTheBidder is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(entrypoint), "Entrypoint_Impl");
+        vm.label(address(router), "MarketplaceRouter_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(englishAuctions, "EnglishAuctions_Extension");
         vm.label(seller, "Seller");
@@ -1750,7 +1883,7 @@ contract BreitwieserTheBidder is BaseTest {
         vm.startPrank(seller);
 
         erc1155.setApprovalForAll(marketplace, true);
-        EnglishAuctions(marketplace).createAuction(auctionParams1);
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams1);
 
         assertEq(erc1155.balanceOf(marketplace, tokenId), 1, "Marketplace should have the token.");
 
@@ -1788,14 +1921,14 @@ contract BreitwieserTheBidder is BaseTest {
                 endTimestamp
             );
         }
-        uint256 auctionId2 = EnglishAuctions(marketplace).createAuction(auctionParams2);
+        uint256 auctionId2 = EnglishAuctionsLogic(marketplace).createAuction(auctionParams2);
 
         assertEq(erc1155.balanceOf(marketplace, tokenId), 2, "Marketplace should have 2 tokens.");
 
         // 2. Bid and collect back token.
         erc20.increaseAllowance(marketplace, 1);
         // Bid a small amount: 1 wei.
-        EnglishAuctions(marketplace).bidInAuction(auctionId2, 1);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId2, 1);
 
         assertEq(erc1155.balanceOf(attacker, tokenId), 1, "Attack should have collected back their token.");
 
@@ -1805,7 +1938,7 @@ contract BreitwieserTheBidder is BaseTest {
         assertEq(erc1155.balanceOf(marketplace, tokenId), 1);
 
         vm.expectRevert("Marketplace: payout already completed.");
-        EnglishAuctions(marketplace).collectAuctionTokens(auctionId2);
+        EnglishAuctionsLogic(marketplace).collectAuctionTokens(auctionId2);
 
         // assertEq(erc1155.balanceOf(attacker, tokenId), 2, "Attacker should have collected the 2nd token for free.");
 
@@ -1837,44 +1970,83 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
     function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
         vm.startPrank(_adminDeployer);
 
-        // [1] Deploy `Map`.
-        Map map = new Map();
+        // [1] Deploy `EnglishAuctions`
+        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
 
-        // [2] Deploy `EnglishAuctions`
-        address englishAuctions = address(new EnglishAuctions(address(weth)));
+        // [2] Index `EnglishAuctions` functions in `Map`
+        IMap.Plugin[] memory pluginMaps = new IMap.Plugin[](12);
+        pluginMaps[0] = IMap.Plugin(EnglishAuctionsLogic.totalAuctions.selector, englishAuctions, "totalAuctions()");
+        pluginMaps[1] = IMap.Plugin(
+            EnglishAuctionsLogic.createAuction.selector,
+            englishAuctions,
+            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))"
+        );
+        pluginMaps[2] = IMap.Plugin(
+            EnglishAuctionsLogic.cancelAuction.selector,
+            englishAuctions,
+            "cancelAuction(uint256)"
+        );
+        pluginMaps[3] = IMap.Plugin(
+            EnglishAuctionsLogic.collectAuctionPayout.selector,
+            englishAuctions,
+            "collectAuctionPayout(uint256)"
+        );
+        pluginMaps[4] = IMap.Plugin(
+            EnglishAuctionsLogic.collectAuctionTokens.selector,
+            englishAuctions,
+            "collectAuctionTokens(uint256)"
+        );
+        pluginMaps[5] = IMap.Plugin(
+            EnglishAuctionsLogic.bidInAuction.selector,
+            englishAuctions,
+            "bidInAuction(uint256,uint256)"
+        );
+        pluginMaps[6] = IMap.Plugin(
+            EnglishAuctionsLogic.isNewWinningBid.selector,
+            englishAuctions,
+            "isNewWinningBid(uint256,uint256)"
+        );
+        pluginMaps[7] = IMap.Plugin(EnglishAuctionsLogic.getAuction.selector, englishAuctions, "getAuction(uint256)");
+        pluginMaps[8] = IMap.Plugin(
+            EnglishAuctionsLogic.getAllAuctions.selector,
+            englishAuctions,
+            "getAllAuctions(uint256,uint256)"
+        );
+        pluginMaps[9] = IMap.Plugin(
+            EnglishAuctionsLogic.getAllValidAuctions.selector,
+            englishAuctions,
+            "getAllValidAuctions(uint256,uint256)"
+        );
+        pluginMaps[10] = IMap.Plugin(
+            EnglishAuctionsLogic.getWinningBid.selector,
+            englishAuctions,
+            "getWinningBid(uint256)"
+        );
+        pluginMaps[11] = IMap.Plugin(
+            EnglishAuctionsLogic.isAuctionExpired.selector,
+            englishAuctions,
+            "isAuctionExpired(uint256)"
+        );
 
-        // [3] Index `EnglishAuctions` functions in `Map`
-        map.addExtension(EnglishAuctions.createAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.cancelAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.collectAuctionPayout.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.collectAuctionTokens.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.bidInAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.isNewWinningBid.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getAuction.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getAllAuctions.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.getWinningBid.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.isAuctionExpired.selector, englishAuctions);
-        map.addExtension(EnglishAuctions.totalAuctions.selector, englishAuctions);
+        // [3] Deploy `MarketplaceRouter`
 
-        // [4] Deploy `MarketplaceEntrypoint`
-
-        MarketplaceEntrypoint entrypoint = new MarketplaceEntrypoint(address(map));
+        MarketplaceRouter router = new MarketplaceRouter(pluginMaps);
 
         vm.stopPrank();
 
-        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        // [4] Deploy proxy pointing to `MarketplaceRouter`
         vm.prank(_marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(entrypoint),
+                address(router),
                 abi.encodeCall(
-                    MarketplaceEntrypoint.initialize,
+                    MarketplaceRouter.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
         );
 
-        // [6] Setup roles for seller and assets
+        // [5] Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
@@ -1882,7 +2054,7 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(entrypoint), "Entrypoint_Impl");
+        vm.label(address(router), "MarketplaceRouter_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(englishAuctions, "EnglishAuctions_Extension");
         vm.label(seller, "Seller");
@@ -1930,12 +2102,12 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
         );
 
         vm.prank(seller);
-        auctionId = EnglishAuctions(marketplace).createAuction(auctionParams);
+        auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
     function test_state_collectAuctionTokens_afterAuctionPayout() public {
         uint256 auctionId = _setup_newAuction_1155();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctions(marketplace).getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         // Verify existing auction at `auctionId`
         assertEq(existingAuction.assetContract, address(erc1155));
@@ -1946,10 +2118,12 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
         erc20.mint(buyer, 5 ether);
         vm.startPrank(buyer);
         erc20.approve(marketplace, 5 ether);
-        EnglishAuctions(marketplace).bidInAuction(auctionId, 5 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 5 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctions(marketplace).getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Seller is owner of token.
         assertEq(erc20.balanceOf(marketplace), 5 ether);
@@ -1962,11 +2136,11 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
 
         // collect auction payout
         vm.prank(seller);
-        EnglishAuctions(marketplace).collectAuctionPayout(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
 
         // collect buyer token
         vm.prank(buyer);
-        EnglishAuctions(marketplace).collectAuctionTokens(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionTokens(auctionId);
 
         // token is NOT stuck in the marketplace
         assertEq(erc1155.balanceOf(marketplace, 0), 0);

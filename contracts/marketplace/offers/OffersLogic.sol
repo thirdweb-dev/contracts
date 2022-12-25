@@ -17,11 +17,11 @@ import "../extension/ERC2771ContextConsumer.sol";
 
 import "../../extension/interface/IPlatformFee.sol";
 
-import "../extension/ReentrancyGuard.sol";
-import "../extension/PermissionsEnumerable.sol";
+import "../extension/ReentrancyGuardLogic.sol";
+import "../extension/PermissionsEnumerableLogic.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
-contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
+contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -36,7 +36,7 @@ contract Offers is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyAssetRole(address _asset) {
-        require(Permissions(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(PermissionsEnumerableLogic(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 
