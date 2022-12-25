@@ -89,6 +89,67 @@ function contractVersion() external pure returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined |
 
+<<<<<<< HEAD
+### depositRewardTokens
+
+```solidity
+function depositRewardTokens(uint256 _amount) external payable
+```
+
+
+
+*Admin deposits reward tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount | uint256 | undefined |
+
+### getRewardTokenBalance
+
+```solidity
+function getRewardTokenBalance() external view returns (uint256)
+=======
+### getRewardTokenBalance
+
+```solidity
+function getRewardTokenBalance() external view returns (uint256 _rewardsAvailableInContract)
+>>>>>>> main
+```
+
+View total rewards available in the staking contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+<<<<<<< HEAD
+| _0 | uint256 | undefined |
+=======
+| _rewardsAvailableInContract | uint256 | undefined |
+>>>>>>> main
+
+### getRewardsPerUnitTime
+
+```solidity
+function getRewardsPerUnitTime() external view returns (uint256 _rewardsPerUnitTime)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _rewardsPerUnitTime | uint256 | undefined |
+
 ### getRoleAdmin
 
 ```solidity
@@ -178,6 +239,23 @@ View amount staked and total rewards for a user.
 |---|---|---|
 | _tokensStaked | uint256[] |   List of token-ids staked by staker. |
 | _rewards | uint256 |        Available reward amount. |
+
+### getTimeUnit
+
+```solidity
+function getTimeUnit() external view returns (uint256 _timeUnit)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _timeUnit | uint256 | undefined |
 
 ### grantRole
 
@@ -372,7 +450,7 @@ function nftCollection() external view returns (address)
 ### onERC721Received
 
 ```solidity
-function onERC721Received(address, address, uint256, bytes) external pure returns (bytes4)
+function onERC721Received(address, address, uint256, bytes) external view returns (bytes4)
 ```
 
 
@@ -444,23 +522,6 @@ function rewardToken() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### rewardsPerUnitTime
-
-```solidity
-function rewardsPerUnitTime() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### setContractURI
 
@@ -551,7 +612,7 @@ function stakerAddress(uint256) external view returns (address)
 ### stakers
 
 ```solidity
-function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards)
+function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards, uint256 conditionIdOflastUpdate)
 ```
 
 
@@ -571,6 +632,7 @@ function stakers(address) external view returns (uint256 amountStaked, uint256 t
 | amountStaked | uint256 | undefined |
 | timeOfLastUpdate | uint256 | undefined |
 | unclaimedRewards | uint256 | undefined |
+| conditionIdOflastUpdate | uint256 | undefined |
 
 ### stakersArray
 
@@ -602,7 +664,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-
+*See {IERC165-supportsInterface}.*
 
 #### Parameters
 
@@ -615,23 +677,6 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined |
-
-### timeUnit
-
-```solidity
-function timeUnit() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### withdraw
 
@@ -701,6 +746,41 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+<<<<<<< HEAD
+### RewardTokensDepositedByAdmin
+
+```solidity
+event RewardTokensDepositedByAdmin(uint256 _amount)
+```
+
+
+
+*Emitted when contract admin deposits reward tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount  | uint256 | undefined |
+
+=======
+>>>>>>> main
+### RewardTokensWithdrawnByAdmin
+
+```solidity
+event RewardTokensWithdrawnByAdmin(uint256 _amount)
+```
+
+
+
+*Emitted when contract admin withdraws reward tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount  | uint256 | undefined |
 
 ### RewardsClaimed
 

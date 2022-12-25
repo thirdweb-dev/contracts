@@ -3,6 +3,7 @@ pragma solidity ^0.8.11;
 
 // Token
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
+import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgradeable.sol";
 
 // Meta transactions
@@ -17,6 +18,7 @@ import "../lib/CurrencyTransferLib.sol";
 import "../extension/ContractMetadata.sol";
 import "../extension/PermissionsEnumerable.sol";
 import { Staking1155Upgradeable } from "../extension/Staking1155Upgradeable.sol";
+import "../interfaces/staking/IEditionStake.sol";
 
 contract EditionStake is
     Initializable,
@@ -24,16 +26,26 @@ contract EditionStake is
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
+    Staking1155Upgradeable,
+    ERC165Upgradeable,
     IERC1155ReceiverUpgradeable,
-    Staking1155Upgradeable
+    IEditionStake
 {
     bytes32 private constant MODULE_TYPE = bytes32("EditionStake");
     uint256 private constant VERSION = 1;
 
+    /// @dev The address of the native token wrapper contract.
+    address internal immutable nativeTokenWrapper;
+
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
 
-    constructor() initializer {}
+    /// @dev Total amount of reward tokens in the contract.
+    uint256 private rewardTokenBalance;
+
+    constructor(address _nativeTokenWrapper) initializer {
+        nativeTokenWrapper = _nativeTokenWrapper;
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -41,17 +53,15 @@ contract EditionStake is
         string memory _contractURI,
         address[] memory _trustedForwarders,
         address _rewardToken,
-        address _edition,
+        address _stakingToken,
         uint256 _defaultTimeUnit,
         uint256 _defaultRewardsPerUnitTime
     ) external initializer {
-        __ReentrancyGuard_init();
         __ERC2771Context_init_unchained(_trustedForwarders);
 
         rewardToken = _rewardToken;
-        __Staking1155_init(_edition);
-        _setDefaultTimeUnit(_defaultTimeUnit);
-        _setDefaultRewardsPerUnitTime(_defaultRewardsPerUnitTime);
+        __Staking1155_init(_stakingToken);
+        _setDefaultStakingCondition(_defaultTimeUnit, _defaultRewardsPerUnitTime);
 
         _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -67,11 +77,53 @@ contract EditionStake is
         return uint8(VERSION);
     }
 
+    /// @dev Lets the contract receive ether to unwrap native tokens.
+    receive() external payable {
+        require(msg.sender == nativeTokenWrapper, "caller not native token wrapper.");
+    }
+
+    /// @dev Admin deposits reward tokens.
+    function depositRewardTokens(uint256 _amount) external payable nonReentrant {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
+
+        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : rewardToken;
+
+        uint256 balanceBefore = IERC20(_rewardToken).balanceOf(address(this));
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            rewardToken,
+            _msgSender(),
+            address(this),
+            _amount,
+            nativeTokenWrapper
+        );
+        uint256 actualAmount = IERC20(_rewardToken).balanceOf(address(this)) - balanceBefore;
+
+        rewardTokenBalance += actualAmount;
+
+        emit RewardTokensDepositedByAdmin(actualAmount);
+    }
+
     /// @dev Admin can withdraw excess reward tokens.
     function withdrawRewardTokens(uint256 _amount) external {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
-        CurrencyTransferLib.transferCurrency(rewardToken, address(this), _msgSender(), _amount);
+        // to prevent locking of direct-transferred tokens
+        rewardTokenBalance = _amount > rewardTokenBalance ? 0 : rewardTokenBalance - _amount;
+
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            rewardToken,
+            address(this),
+            _msgSender(),
+            _amount,
+            nativeTokenWrapper
+        );
+
+        emit RewardTokensWithdrawnByAdmin(_amount);
+    }
+
+    /// @notice View total rewards available in the staking contract.
+    function getRewardTokenBalance() external view override returns (uint256 _rewardsAvailableInContract) {
+        return rewardTokenBalance;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -85,6 +137,7 @@ contract EditionStake is
         uint256,
         bytes calldata
     ) external returns (bytes4) {
+        require(isStaking == 2, "Direct transfer");
         return this.onERC1155Received.selector;
     }
 
@@ -96,8 +149,13 @@ contract EditionStake is
         bytes calldata data
     ) external returns (bytes4) {}
 
-    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
-        return interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId;
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC165Upgradeable, IERC165Upgradeable)
+        returns (bool)
+    {
+        return interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -106,7 +164,15 @@ contract EditionStake is
 
     /// @dev Mint/Transfer ERC20 rewards to the staker.
     function _mintRewards(address _staker, uint256 _rewards) internal override {
-        CurrencyTransferLib.transferCurrency(rewardToken, address(this), _staker, _rewards);
+        require(_rewards <= rewardTokenBalance, "Not enough reward tokens");
+        rewardTokenBalance -= _rewards;
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            rewardToken,
+            address(this),
+            _staker,
+            _rewards,
+            nativeTokenWrapper
+        );
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -126,6 +192,10 @@ contract EditionStake is
     /*///////////////////////////////////////////////////////////////
                             Miscellaneous
     //////////////////////////////////////////////////////////////*/
+
+    function _stakeMsgSender() internal view virtual override returns (address) {
+        return _msgSender();
+    }
 
     function _msgSender() internal view virtual override returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();

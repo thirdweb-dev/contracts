@@ -49,6 +49,7 @@ contract ForwarderTest is BaseTest {
 
     function signForwarderRequest(Forwarder.ForwardRequest memory forwardRequest, uint256 privateKey)
         internal
+        view
         returns (bytes memory)
     {
         bytes memory encodedRequest = abi.encode(
