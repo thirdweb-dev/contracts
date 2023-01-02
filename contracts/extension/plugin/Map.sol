@@ -5,7 +5,7 @@ import "../interface/plugin/IMap.sol";
 
 import "../../openzeppelin-presets/utils/EnumerableSet.sol";
 
-abstract contract Map is IMap {
+contract Map is IMap {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     EnumerableSet.Bytes32Set private allSelectors;
@@ -20,33 +20,8 @@ abstract contract Map is IMap {
     constructor(Plugin[] memory _pluginsToAdd) {
         uint256 len = _pluginsToAdd.length;
         for (uint256 i = 0; i < len; i += 1) {
-            _addPlugin(_pluginsToAdd[i]);
+            _setPlugin(_pluginsToAdd[i]);
         }
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        External functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Add functionality to the contract.
-    function addPlugin(Plugin memory _plugin) external {
-        require(_canSetPlugin(), "Map: Not authorized");
-
-        _addPlugin(_plugin);
-    }
-
-    /// @dev Update or override existing functionality.
-    function updatePlugin(Plugin memory _plugin) external {
-        require(_canSetPlugin(), "Map: Not authorized");
-
-        _updatePlugin(_plugin);
-    }
-
-    /// @dev Remove existing functionality from the contract.
-    function removePlugin(bytes4 _selector) external {
-        require(_canSetPlugin(), "Map: Not authorized");
-
-        _removePlugin(_selector);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -87,7 +62,7 @@ abstract contract Map is IMap {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Add functionality to the contract.
-    function _addPlugin(Plugin memory _plugin) internal {
+    function _setPlugin(Plugin memory _plugin) internal {
         require(allSelectors.add(bytes32(_plugin.selector)), "Map: Selector exists");
         require(
             _plugin.selector == bytes4(keccak256(abi.encodePacked(_plugin.functionString))),
@@ -97,35 +72,6 @@ abstract contract Map is IMap {
         pluginForSelector[_plugin.selector] = _plugin;
         selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.selector));
 
-        emit PluginAdded(_plugin.selector, _plugin.pluginAddress);
+        emit PluginSet(_plugin.selector, _plugin.pluginAddress);
     }
-
-    /// @dev Update or override existing functionality.
-    function _updatePlugin(Plugin memory _plugin) internal {
-        address currentPlugin = getPluginForFunction(_plugin.selector);
-        require(
-            _plugin.selector == bytes4(keccak256(abi.encodePacked(_plugin.functionString))),
-            "Map: Incorrect selector"
-        );
-
-        pluginForSelector[_plugin.selector] = _plugin;
-        selectorsForPlugin[currentPlugin].remove(bytes32(_plugin.selector));
-        selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.selector));
-
-        emit PluginUpdated(_plugin.selector, currentPlugin, _plugin.pluginAddress);
-    }
-
-    /// @dev Remove existing functionality from the contract.
-    function _removePlugin(bytes4 _selector) internal {
-        address currentPlugin = getPluginForFunction(_selector);
-
-        delete pluginForSelector[_selector];
-        allSelectors.remove(_selector);
-        selectorsForPlugin[currentPlugin].remove(bytes32(_selector));
-
-        emit PluginRemoved(_selector, currentPlugin);
-    }
-
-    /// @dev Returns whether plug-in can be set in the given execution context.
-    function _canSetPlugin() internal view virtual returns (bool);
 }
