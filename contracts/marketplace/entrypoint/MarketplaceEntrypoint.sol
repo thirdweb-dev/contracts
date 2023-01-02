@@ -47,7 +47,7 @@ contract MarketplaceEntrypoint is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("Marketplace");
-    uint256 private constant VERSION = 2;
+    uint256 private constant VERSION = 3;
 
     address public immutable functionMap;
 
