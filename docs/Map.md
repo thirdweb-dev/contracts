@@ -4,27 +4,27 @@
 
 
 
-TODO:      - Remove OZ EnumerableSet external dependency.
+
 
 
 
 ## Methods
 
-### getAllFunctionsOfExtension
+### getAllFunctionsOfPlugin
 
 ```solidity
-function getAllFunctionsOfExtension(address _extension) external view returns (bytes4[] registered)
+function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] registered)
 ```
 
 
 
-
+*View all funtionality as list of function signatures.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _extension | address | undefined |
+| _pluginAddress | address | undefined |
 
 #### Returns
 
@@ -32,32 +32,32 @@ function getAllFunctionsOfExtension(address _extension) external view returns (b
 |---|---|---|
 | registered | bytes4[] | undefined |
 
-### getAllRegistered
+### getAllPlugins
 
 ```solidity
-function getAllRegistered() external view returns (struct IMap.ExtensionMap[] functionExtensionPairs)
+function getAllPlugins() external view returns (struct IMap.Plugin[] _plugins)
 ```
 
 
 
-
+*View all funtionality existing on the contract.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| functionExtensionPairs | IMap.ExtensionMap[] | undefined |
+| _plugins | IMap.Plugin[] | undefined |
 
-### getExtensionForFunction
+### getPluginForFunction
 
 ```solidity
-function getExtensionForFunction(bytes4 _selector) external view returns (address)
+function getPluginForFunction(bytes4 _selector) external view returns (address)
 ```
 
 
 
-
+*View address of the plugged-in functionality contract for a given function signature.*
 
 #### Parameters
 
@@ -71,36 +71,14 @@ function getExtensionForFunction(bytes4 _selector) external view returns (addres
 |---|---|---|
 | _0 | address | undefined |
 
-### multicall
-
-```solidity
-function multicall(bytes[] data) external nonpayable returns (bytes[] results)
-```
-
-Receives and executes a batch of function calls on this contract.
-
-*Receives and executes a batch of function calls on this contract.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
-
 
 
 ## Events
 
-### ExtensionRegistered
+### PluginSet
 
 ```solidity
-event ExtensionRegistered(bytes4 indexed selector, address indexed extension)
+event PluginSet(bytes4 indexed functionSelector, string indexed functionSignature, address indexed pluginAddress)
 ```
 
 
@@ -111,8 +89,9 @@ event ExtensionRegistered(bytes4 indexed selector, address indexed extension)
 
 | Name | Type | Description |
 |---|---|---|
-| selector `indexed` | bytes4 | undefined |
-| extension `indexed` | address | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
+| functionSignature `indexed` | string | undefined |
+| pluginAddress `indexed` | address | undefined |
 
 
 

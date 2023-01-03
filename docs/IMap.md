@@ -10,60 +10,60 @@
 
 ## Methods
 
-### getAllFunctionsOfExtension
+### getAllFunctionsOfPlugin
 
 ```solidity
-function getAllFunctionsOfExtension(address _extension) external view returns (bytes4[] registered)
+function getAllFunctionsOfPlugin(address pluginAddress) external view returns (bytes4[])
 ```
 
 
 
-
+*Returns all functions that are mapped to the given plug-in contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _extension | address | undefined |
+| pluginAddress | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| registered | bytes4[] | undefined |
+| _0 | bytes4[] | undefined |
 
-### getAllRegistered
+### getAllPlugins
 
 ```solidity
-function getAllRegistered() external view returns (struct IMap.ExtensionMap[] registered)
+function getAllPlugins() external view returns (struct IMap.Plugin[])
 ```
 
 
 
-
+*Returns all plug-ins known by Map.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| registered | IMap.ExtensionMap[] | undefined |
+| _0 | IMap.Plugin[] | undefined |
 
-### getExtensionForFunction
+### getPluginForFunction
 
 ```solidity
-function getExtensionForFunction(bytes4 _selector) external view returns (address)
+function getPluginForFunction(bytes4 selector) external view returns (address)
 ```
 
 
 
-
+*Returns the plug-in contract for a given function.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _selector | bytes4 | undefined |
+| selector | bytes4 | undefined |
 
 #### Returns
 
@@ -75,22 +75,23 @@ function getExtensionForFunction(bytes4 _selector) external view returns (addres
 
 ## Events
 
-### ExtensionRegistered
+### PluginSet
 
 ```solidity
-event ExtensionRegistered(bytes4 indexed selector, address indexed extension)
+event PluginSet(bytes4 indexed functionSelector, string indexed functionSignature, address indexed pluginAddress)
 ```
 
 
 
-
+*Emitted when a function selector is mapped to a particular plug-in smart contract, during construction of Map.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| selector `indexed` | bytes4 | undefined |
-| extension `indexed` | address | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
+| functionSignature `indexed` | string | undefined |
+| pluginAddress `indexed` | address | undefined |
 
 
 
