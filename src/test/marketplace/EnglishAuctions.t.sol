@@ -76,6 +76,8 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         // [6] Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
+        Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(0));
+        Permissions(marketplace).revokeRole(keccak256("LISTER_ROLE"), address(0));
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));

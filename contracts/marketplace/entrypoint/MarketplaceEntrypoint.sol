@@ -79,7 +79,10 @@ contract MarketplaceEntrypoint is
         // Initialize this contract's state.
         _setupContractURI(_contractURI);
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(keccak256("LISTER_ROLE"), address(0));
+        _setupRole(keccak256("ASSET_ROLE"), address(0));
     }
 
     /*///////////////////////////////////////////////////////////////
