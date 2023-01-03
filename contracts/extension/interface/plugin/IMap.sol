@@ -3,9 +3,9 @@ pragma solidity ^0.8.11;
 
 interface IMap {
     /**
-     *  @notice An interface to describe a plug-in functionality.
+     *  @notice An interface to describe a plug-in.
      *
-     *  @param selector         4-byte function signature.
+     *  @param selector         4-byte function selector.
      *  @param pluginAddress    Address of the contract containing the function.
      *  @param functionString   Function representation as a string. E.g. "transfer(address,address,uint256)"
      */
@@ -15,15 +15,15 @@ interface IMap {
         string functionString;
     }
 
-    /// @dev Emitted when a functionality is set, or plugged-in, during construction of Map.
+    /// @dev Emitted when a function selector is mapped to a particular plug-in smart contract, during construction of Map.
     event PluginSet(bytes4 indexed selector, address indexed pluginAddress);
 
-    /// @dev View address of the plugged-in functionality contract for a given function signature.
+    /// @dev Returns the plug-in contract for a given function.
     function getPluginForFunction(bytes4 _selector) external view returns (address);
 
-    /// @dev View all funtionality as list of function signatures.
+    /// @dev Returns all functions that are mapped to the given plug-in contract.
     function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] memory);
 
-    /// @dev View all funtionality existing on the contract.
+    /// @dev Returns all plug-ins known by Map.
     function getAllPlugins() external view returns (Plugin[] memory);
 }
