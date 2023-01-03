@@ -63,15 +63,15 @@ contract Map is IMap {
 
     /// @dev Add functionality to the contract.
     function _setPlugin(Plugin memory _plugin) internal {
-        require(allSelectors.add(bytes32(_plugin.selector)), "Map: Selector exists");
+        require(allSelectors.add(bytes32(_plugin.functionSelector)), "Map: Selector exists");
         require(
-            _plugin.selector == bytes4(keccak256(abi.encodePacked(_plugin.functionString))),
+            _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
             "Map: Incorrect selector"
         );
 
-        pluginForSelector[_plugin.selector] = _plugin;
-        selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.selector));
+        pluginForSelector[_plugin.functionSelector] = _plugin;
+        selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.functionSelector));
 
-        emit PluginSet(_plugin.selector, _plugin.pluginAddress);
+        emit PluginSet(_plugin.functionSelector, _plugin.functionSignature, _plugin.pluginAddress);
     }
 }

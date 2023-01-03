@@ -166,9 +166,9 @@ abstract contract Router is Multicall, ERC165, IRouter {
         uint256 count = _allSelectors.length() + _defaultPlugins.length;
         for (uint256 i = 0; i < _allSelectors.length(); i += 1) {
             for (uint256 j = 0; j < _defaultPlugins.length; j += 1) {
-                if (bytes4(_allSelectors.at(i)) == _defaultPlugins[j].selector) {
+                if (bytes4(_allSelectors.at(i)) == _defaultPlugins[j].functionSelector) {
                     count -= 1;
-                    _defaultPlugins[j].selector = bytes4(0);
+                    _defaultPlugins[j].functionSelector = bytes4(0);
                 }
             }
         }
@@ -178,7 +178,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
 
         len = _defaultPlugins.length;
         for (uint256 i = 0; i < len; i += 1) {
-            if (_defaultPlugins[i].selector != bytes4(0)) {
+            if (_defaultPlugins[i].functionSelector != bytes4(0)) {
                 registered[index++] = _defaultPlugins[i];
             }
         }
@@ -204,33 +204,33 @@ abstract contract Router is Multicall, ERC165, IRouter {
     /// @dev Add functionality to the contract.
     function _addPlugin(Plugin memory _plugin) internal {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
-        require(data.allSelectors.add(bytes32(_plugin.selector)), "Router: Selector exists");
+        require(data.allSelectors.add(bytes32(_plugin.functionSelector)), "Router: Selector exists");
         require(
-            _plugin.selector == bytes4(keccak256(abi.encodePacked(_plugin.functionString))),
+            _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
             "Router: Incorrect selector"
         );
 
-        data.pluginForSelector[_plugin.selector] = _plugin;
-        data.selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.selector));
+        data.pluginForSelector[_plugin.functionSelector] = _plugin;
+        data.selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.functionSelector));
 
-        emit PluginAdded(_plugin.selector, _plugin.pluginAddress);
+        emit PluginAdded(_plugin.functionSelector, _plugin.pluginAddress);
     }
 
     /// @dev Update or override existing functionality.
     function _updatePlugin(Plugin memory _plugin) internal {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
-        address currentPlugin = _getPluginForFunction(_plugin.selector);
+        address currentPlugin = _getPluginForFunction(_plugin.functionSelector);
         require(currentPlugin != address(0), "Router: No plugin available for selector");
         require(
-            _plugin.selector == bytes4(keccak256(abi.encodePacked(_plugin.functionString))),
+            _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
             "Router: Incorrect selector"
         );
 
-        data.pluginForSelector[_plugin.selector] = _plugin;
-        data.selectorsForPlugin[currentPlugin].remove(bytes32(_plugin.selector));
-        data.selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.selector));
+        data.pluginForSelector[_plugin.functionSelector] = _plugin;
+        data.selectorsForPlugin[currentPlugin].remove(bytes32(_plugin.functionSelector));
+        data.selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.functionSelector));
 
-        emit PluginUpdated(_plugin.selector, currentPlugin, _plugin.pluginAddress);
+        emit PluginUpdated(_plugin.functionSelector, currentPlugin, _plugin.pluginAddress);
     }
 
     /// @dev Remove existing functionality from the contract.
