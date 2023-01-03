@@ -10,9 +10,9 @@ library RouterStorage {
     bytes32 public constant ROUTER_STORAGE_POSITION = keccak256("router.storage");
 
     struct Data {
-        EnumerableSet.Bytes32Set allSelectors; // previously `functions`
+        EnumerableSet.Bytes32Set allSelectors;
         mapping(address => EnumerableSet.Bytes32Set) selectorsForPlugin;
-        mapping(bytes4 => IMap.Plugin) pluginForSelector; // previously `plugins`
+        mapping(bytes4 => IMap.Plugin) pluginForSelector;
     }
 
     function routerStorage() internal pure returns (Data storage routerData) {
@@ -159,15 +159,16 @@ abstract contract Router is Multicall, ERC165, IRouter {
     function getAllPlugins() external view returns (Plugin[] memory registered) {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
         uint256 len = data.allSelectors.length();
-        Plugin[] memory _plugins = new Plugin[](len);
+
+        EnumerableSet.Bytes32Set storage _allSelectors = data.allSelectors;
         Plugin[] memory _defaultPlugins = IMap(functionMap).getAllPlugins();
 
-        uint256 count = _plugins.length + _defaultPlugins.length;
-        for (uint256 i = 0; i < _plugins.length; i += 1) {
+        uint256 count = _allSelectors.length() + _defaultPlugins.length;
+        for (uint256 i = 0; i < _allSelectors.length(); i += 1) {
             for (uint256 j = 0; j < _defaultPlugins.length; j += 1) {
-                if (_plugins[i].selector == _defaultPlugins[j].selector) {
+                if (bytes4(_allSelectors.at(i)) == _defaultPlugins[j].selector) {
                     count -= 1;
-                    _defaultPlugins[i].selector = bytes4(0);
+                    _defaultPlugins[j].selector = bytes4(0);
                 }
             }
         }
@@ -182,9 +183,9 @@ abstract contract Router is Multicall, ERC165, IRouter {
             }
         }
 
-        len = _plugins.length;
+        len = _allSelectors.length();
         for (uint256 i = 0; i < len; i += 1) {
-            registered[index++] = _plugins[i];
+            registered[index++] = data.pluginForSelector[bytes4(_allSelectors.at(i))];
         }
     }
 

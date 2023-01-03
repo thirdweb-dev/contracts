@@ -22,7 +22,8 @@ contract Counter {
 }
 
 contract RouterImmutableTest is BaseTest {
-    address router;
+    address internal map;
+    address internal router;
 
     function setUp() public override {
         super.setUp();
@@ -33,7 +34,8 @@ contract RouterImmutableTest is BaseTest {
         pluginMaps[0] = IMap.Plugin(Counter.number.selector, counter, "number()");
         pluginMaps[1] = IMap.Plugin(Counter.setNumber.selector, counter, "setNumber(uint256)");
 
-        router = address(new RouterImmutable(pluginMaps));
+        map = address(new Map(pluginMaps));
+        router = address(new RouterImmutable(map));
     }
 
     function test_state_callWithRouter() external {

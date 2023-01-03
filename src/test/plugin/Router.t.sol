@@ -4,9 +4,10 @@ pragma solidity ^0.8.0;
 import "contracts/extension/plugin/Map.sol";
 import "contracts/extension/plugin/Router.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
+import "lib/forge-std/src/console.sol";
 
 contract RouterImplementation is Router {
-    constructor(Plugin[] memory _pluginsToRegister) Router(_pluginsToRegister) {}
+    constructor(address _functionMap) Router(_functionMap) {}
 
     function _canSetPlugin() internal pure override returns (bool) {
         return true;
@@ -43,6 +44,8 @@ contract Counter {
         CounterStorage.Data storage data = CounterStorage.counterStorage();
         data.number *= 4; // Buggy!
     }
+
+    function extraFunction() external pure {}
 }
 
 contract CounterAlternate {
@@ -70,10 +73,11 @@ contract RouterTest is BaseTest {
         pluginMaps[1] = IMap.Plugin(Counter.setNumber.selector, counter, "setNumber(uint256)");
         pluginMaps[2] = IMap.Plugin(Counter.doubleNumber.selector, counter, "doubleNumber()");
 
-        router = address(new RouterImplementation(pluginMaps));
+        map = address(new Map(pluginMaps));
+        router = address(new RouterImplementation(map));
     }
 
-    function test_state_updatePlugin() external {
+    function test_state_addPlugin() external {
         // Set number.
         uint256 num = 5;
         Counter(router).setNumber(num);
@@ -88,7 +92,7 @@ contract RouterTest is BaseTest {
         assertEq(Counter(router).number(), num);
 
         // Fix the extension for `doubleNumber`.
-        RouterImplementation(payable(router)).updatePlugin(
+        RouterImplementation(payable(router)).addPlugin(
             IMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
         );
 
@@ -105,5 +109,53 @@ contract RouterTest is BaseTest {
                 assertEq(pluginsStored[i].pluginAddress, counterAlternate);
             }
         }
+    }
+
+    function test_state_getAllFunctionsOfPlugin() public {
+        // add fixed function from counterAlternate
+        RouterImplementation(payable(router)).addPlugin(
+            IMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
+        );
+
+        // add previously not added function of counter
+        RouterImplementation(payable(router)).addPlugin(
+            IMap.Plugin(Counter.extraFunction.selector, counter, "extraFunction()")
+        );
+
+        // re-add an already added function of counter
+        RouterImplementation(payable(router)).addPlugin(IMap.Plugin(Counter.number.selector, counter, "number()"));
+
+        // check plugins for counter
+        bytes4[] memory functions = RouterImplementation(payable(router)).getAllFunctionsOfPlugin(counter);
+        assertEq(functions.length, 4);
+        console.logBytes4(functions[0]);
+        console.logBytes4(functions[1]);
+        console.logBytes4(functions[2]);
+        console.logBytes4(functions[3]);
+
+        // check plugins for counterAlternate
+        functions = RouterImplementation(payable(router)).getAllFunctionsOfPlugin(counterAlternate);
+        assertEq(functions.length, 1);
+        console.logBytes4(functions[0]);
+    }
+
+    function test_state_getPluginForFunction() public {
+        // add fixed function from counterAlternate
+        RouterImplementation(payable(router)).addPlugin(
+            IMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
+        );
+
+        // add previously not added function of counter
+        RouterImplementation(payable(router)).addPlugin(
+            IMap.Plugin(Counter.extraFunction.selector, counter, "extraFunction()")
+        );
+
+        address pluginAddress = RouterImplementation(payable(router)).getPluginForFunction(
+            Counter.doubleNumber.selector
+        );
+        assertEq(pluginAddress, counterAlternate);
+
+        pluginAddress = RouterImplementation(payable(router)).getPluginForFunction(Counter.extraFunction.selector);
+        assertEq(pluginAddress, counter);
     }
 }

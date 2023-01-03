@@ -2,13 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "contracts/extension/plugin/Map.sol";
-import "contracts/extension/plugin/RouterImmutable.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 import "contracts/lib/TWStrings.sol";
 
 contract MapTest is BaseTest {
     using TWStrings for uint256;
-    RouterImmutable internal router;
+    Map internal map;
 
     address[] private pluginAddresses;
     IMap.Plugin[] private plugins;
@@ -28,7 +27,7 @@ contract MapTest is BaseTest {
             plugins.push(IMap.Plugin(bytes4(keccak256(abi.encodePacked(i.toString()))), pluginAddress, i.toString()));
         }
 
-        router = new RouterImmutable(plugins);
+        map = new Map(plugins);
     }
 
     function test_state_getPluginForFunction() external {
@@ -37,7 +36,7 @@ contract MapTest is BaseTest {
             address pluginAddress = plugins[i].pluginAddress;
             bytes4 selector = plugins[i].selector;
 
-            assertEq(pluginAddress, router.getPluginForFunction(selector));
+            assertEq(pluginAddress, map.getPluginForFunction(selector));
         }
     }
 
@@ -64,7 +63,7 @@ contract MapTest is BaseTest {
                 }
             }
 
-            bytes4[] memory fns = router.getAllFunctionsOfPlugin(pluginAddress);
+            bytes4[] memory fns = map.getAllFunctionsOfPlugin(pluginAddress);
 
             assertEq(fns.length, expectedNum);
 
@@ -75,7 +74,7 @@ contract MapTest is BaseTest {
     }
 
     function test_state_getAllRegistered() external {
-        IMap.Plugin[] memory pluginsStored = router.getAllPlugins();
+        IMap.Plugin[] memory pluginsStored = map.getAllPlugins();
 
         for (uint256 i = 0; i < pluginsStored.length; i += 1) {
             assertEq(pluginsStored[i].pluginAddress, plugins[i].pluginAddress);
