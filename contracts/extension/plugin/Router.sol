@@ -29,14 +29,14 @@ abstract contract Router is Multicall, ERC165, IRouter {
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    address public immutable functionMap;
+    address public immutable pluginMap;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _functionMap) {
-        functionMap = _functionMap;
+    constructor(address _pluginMap) {
+        pluginMap = _pluginMap;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -57,7 +57,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
     fallback() external payable virtual {
         address _pluginAddress = _getPluginForFunction(msg.sig);
         if (_pluginAddress == address(0)) {
-            _pluginAddress = IPluginMap(functionMap).getPluginForFunction(msg.sig);
+            _pluginAddress = IPluginMap(pluginMap).getPluginForFunction(msg.sig);
         }
         _delegate(_pluginAddress);
     }
@@ -122,7 +122,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
     function getPluginForFunction(bytes4 _selector) public view returns (address) {
         address pluginAddress = _getPluginForFunction(_selector);
 
-        return pluginAddress != address(0) ? pluginAddress : IPluginMap(functionMap).getPluginForFunction(_selector);
+        return pluginAddress != address(0) ? pluginAddress : IPluginMap(pluginMap).getPluginForFunction(_selector);
     }
 
     /// @dev View all funtionality as list of function signatures.
@@ -130,7 +130,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
 
         EnumerableSet.Bytes32Set storage selectorsForPlugin = data.selectorsForPlugin[_pluginAddress];
-        bytes4[] memory defaultSelectors = IPluginMap(functionMap).getAllFunctionsOfPlugin(_pluginAddress);
+        bytes4[] memory defaultSelectors = IPluginMap(pluginMap).getAllFunctionsOfPlugin(_pluginAddress);
 
         uint256 len = defaultSelectors.length;
         uint256 count = selectorsForPlugin.length() + defaultSelectors.length;
@@ -162,7 +162,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
 
         EnumerableSet.Bytes32Set storage overrideSelectors = data.allSelectors;
-        Plugin[] memory defaultPlugins = IPluginMap(functionMap).getAllPlugins();
+        Plugin[] memory defaultPlugins = IPluginMap(pluginMap).getAllPlugins();
 
         uint256 overrideSelectorsLen = overrideSelectors.length();
         uint256 defaultPluginsLen = defaultPlugins.length;
@@ -211,7 +211,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
 
         // Revert: default plugin exists for function; use updatePlugin instead.
-        try IPluginMap(functionMap).getPluginForFunction(_plugin.functionSelector) returns (address) {
+        try IPluginMap(pluginMap).getPluginForFunction(_plugin.functionSelector) returns (address) {
             revert("Router: default plugin exists for function.");
         } catch {
             require(data.allSelectors.add(bytes32(_plugin.functionSelector)), "Router: plugin exists for function.");

@@ -48,23 +48,6 @@ function addPlugin(IPluginMap.Plugin _plugin) external nonpayable
 |---|---|---|
 | _plugin | IPluginMap.Plugin | undefined |
 
-### functionMap
-
-```solidity
-function functionMap() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### getAllFunctionsOfPlugin
 
 ```solidity
@@ -147,6 +130,23 @@ Receives and executes a batch of function calls on this contract.
 | Name | Type | Description |
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
+
+### pluginMap
+
+```solidity
+function pluginMap() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### removePlugin
 
