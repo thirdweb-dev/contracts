@@ -4,7 +4,7 @@
 
 
 
-
+NOTE: This contract is a work in progress.
 
 
 
@@ -785,6 +785,22 @@ function safeTransferFrom(address from, address to, uint256 id, uint256 amount, 
 | id | uint256 | undefined |
 | amount | uint256 | undefined |
 | data | bytes | undefined |
+
+### sendRewardsIndirect
+
+```solidity
+function sendRewardsIndirect(address _opener) external nonpayable
+```
+
+Lets a pack owner open packs and receive the packs&#39; reward units.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _opener | address | undefined |
 
 ### setApprovalForAll
 
