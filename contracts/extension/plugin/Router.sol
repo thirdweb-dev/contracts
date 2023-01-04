@@ -225,14 +225,13 @@ abstract contract Router is Multicall, ERC165, IRouter {
 
     /// @dev Update or override existing functionality.
     function _updatePlugin(Plugin memory _plugin) internal {
-        RouterStorage.Data storage data = RouterStorage.routerStorage();
-        address currentPlugin = _getPluginForFunction(_plugin.functionSelector);
-        require(currentPlugin != address(0), "Router: No plugin available for selector");
+        address currentPlugin = getPluginForFunction(_plugin.functionSelector);
         require(
             _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
             "Router: fn selector and signature mismatch."
         );
 
+        RouterStorage.Data storage data = RouterStorage.routerStorage();
         data.pluginForSelector[_plugin.functionSelector] = _plugin;
         data.selectorsForPlugin[currentPlugin].remove(bytes32(_plugin.functionSelector));
         data.selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.functionSelector));
