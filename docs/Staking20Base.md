@@ -4,7 +4,7 @@
 
 
 
-note: This is a Beta release.  EXTENSION: Staking20  The `Staking20Base` smart contract implements Token staking mechanism.  Allows users to stake their ERC-20 Tokens and earn rewards in form of another ERC-20 tokens.  Following features and implementation setup must be noted:      - ERC-20 Tokens from only one contract can be staked.      - Contract admin can choose to give out rewards by either transferring or minting the rewardToken,        which is ideally a different ERC20 token. See {_mintRewards}.      - To implement custom logic for staking, reward calculation, etc. corresponding functions can be        overridden from the extension `Staking20`.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically.
+EXTENSION: Staking20  The `Staking20Base` smart contract implements Token staking mechanism.  Allows users to stake their ERC-20 Tokens and earn rewards in form of another ERC-20 tokens.  Following features and implementation setup must be noted:      - ERC-20 Tokens from only one contract can be staked.      - Contract admin can choose to give out rewards by either transferring or minting the rewardToken,        which is ideally a different ERC20 token. See {_mintRewards}.      - To implement custom logic for staking, reward calculation, etc. corresponding functions can be        overridden from the extension `Staking20`.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically.
 
 
 
@@ -314,6 +314,23 @@ function stakersArray(uint256) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### stakingToken
+
+```solidity
+function stakingToken() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### stakingTokenBalance
 
 ```solidity
@@ -347,23 +364,6 @@ function stakingTokenDecimals() external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
-
-### token
-
-```solidity
-function token() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
 
 ### withdraw
 

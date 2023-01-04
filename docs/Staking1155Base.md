@@ -4,7 +4,7 @@
 
 
 
-note: This is a Beta release.  EXTENSION: Staking1155  The `Staking1155Base` smart contract implements NFT staking mechanism.  Allows users to stake their ERC-1155 NFTs and earn rewards in form of ERC-20 tokens.  Following features and implementation setup must be noted:      - ERC-1155 NFTs from only one collection can be staked.      - Contract admin can choose to give out rewards by either transferring or minting the rewardToken,        which is an ERC20 token. See {_mintRewards}.      - To implement custom logic for staking, reward calculation, etc. corresponding functions can be        overridden from the extension `Staking1155`.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically.
+EXTENSION: Staking1155  The `Staking1155Base` smart contract implements NFT staking mechanism.  Allows users to stake their ERC-1155 NFTs and earn rewards in form of ERC-20 tokens.  Following features and implementation setup must be noted:      - ERC-1155 NFTs from only one collection can be staked.      - Contract admin can choose to give out rewards by either transferring or minting the rewardToken,        which is an ERC20 token. See {_mintRewards}.      - To implement custom logic for staking, reward calculation, etc. corresponding functions can be        overridden from the extension `Staking1155`.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically.
 
 
 
@@ -42,23 +42,6 @@ Returns the contract metadata URI.
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined |
-
-### edition
-
-```solidity
-function edition() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
 
 ### getDefaultRewardsPerUnitTime
 
@@ -460,6 +443,23 @@ function stakersArray(uint256, uint256) external view returns (address)
 |---|---|---|
 | _0 | uint256 | undefined |
 | _1 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### stakingToken
+
+```solidity
+function stakingToken() external view returns (address)
+```
+
+
+
+
+
 
 #### Returns
 

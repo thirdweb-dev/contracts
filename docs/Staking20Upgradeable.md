@@ -4,7 +4,7 @@
 
 
 
-note: This is a Beta release.
+
 
 
 
@@ -209,6 +209,23 @@ function stakersArray(uint256) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### stakingToken
+
+```solidity
+function stakingToken() external view returns (address)
+```
+
+
+
+*Address of ERC20 contract -- staked tokens belong to this contract.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### stakingTokenBalance
 
 ```solidity
@@ -242,23 +259,6 @@ function stakingTokenDecimals() external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
-
-### token
-
-```solidity
-function token() external view returns (address)
-```
-
-
-
-*Address of ERC20 contract -- staked tokens belong to this contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
 
 ### withdraw
 
