@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "../extension/ERC2771ContextConsumer.sol";
 import "../extension/PermissionsEnumerableLogic.sol";
 
-import "../ITWMultichainRegistry.sol";
+import "../../interfaces/ITWMultichainRegistry.sol";
 import "./TWMultichainRegistryStorage.sol";
 
 contract TWMultichainRegistryLogic is ITWMultichainRegistry, ERC2771ContextConsumer {
