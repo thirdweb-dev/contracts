@@ -15,6 +15,24 @@ contract TWMultichainRegistryLogic is ITWMultichainRegistry, ERC2771ContextConsu
     using EnumerableSet for EnumerableSet.AddressSet;
     using EnumerableSet for EnumerableSet.UintSet;
 
+    /*///////////////////////////////////////////////////////////////
+                        Generic contract logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Returns the type of the contract.
+    function contractType() external pure returns (bytes32) {
+        return bytes32("TWMultichainRegistry");
+    }
+
+    /// @dev Returns the version of the contract.
+    function contractVersion() external pure returns (uint8) {
+        return uint8(1);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Core Functions
+    //////////////////////////////////////////////////////////////*/
+
     // slither-disable-next-line similar-names
     function add(
         address _deployer,

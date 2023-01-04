@@ -8,7 +8,7 @@ contract RouterImmutable is Router {
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _functionMap) Router(_functionMap) {}
+    constructor(address _pluginMap) Router(_pluginMap) {}
 
     /*///////////////////////////////////////////////////////////////
                         Internal functions

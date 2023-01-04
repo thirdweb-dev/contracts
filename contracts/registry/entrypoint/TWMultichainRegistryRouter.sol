@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 import "../extension/PermissionsEnumerableLogic.sol";
 import "../extension/ERC2771ContextLogic.sol";
 import "../../extension/Multicall.sol";
-import "../../extension/plugin/RouterImmutable.sol";
+import "../../extension/plugin/Router.sol";
 
 /**
  *
@@ -19,42 +19,26 @@ import "../../extension/plugin/RouterImmutable.sol";
  *      - TWMultichainRegistry
  */
 
-contract TWMultichainRegistryRouter is PermissionsEnumerableLogic, ERC2771ContextLogic, Multicall, RouterImmutable {
-    /*///////////////////////////////////////////////////////////////
-                            State variables
-    //////////////////////////////////////////////////////////////*/
-
-    bytes32 private constant MODULE_TYPE = bytes32("TWMultichainRegistry");
-    uint256 private constant VERSION = 1;
-
+contract TWMultichainRegistryRouter is PermissionsEnumerableLogic, ERC2771ContextLogic, Router {
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Plugin[] memory _pluginsToAdd, address[] memory _trustedForwarders)
+    constructor(address _pluginMap, address[] memory _trustedForwarders)
         ERC2771ContextLogic(_trustedForwarders)
-        RouterImmutable(_pluginsToAdd)
+        Router(_pluginMap)
     {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Generic contract logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
-    }
-
-    /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
-    }
-
-    /*///////////////////////////////////////////////////////////////
                         Overridable Permissions
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev Returns whether plug-in can be set in the given execution context.
+    function _canSetPlugin() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
 
     function _msgSender() internal view override(ERC2771ContextLogic, PermissionsLogic) returns (address sender) {
         if (isTrustedForwarder(msg.sender)) {
