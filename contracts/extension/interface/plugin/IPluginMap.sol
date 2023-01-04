@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-interface IMap {
+interface IPluginMap {
     /**
      *  @notice An interface to describe a plug-in.
      *
@@ -19,7 +19,7 @@ interface IMap {
     event PluginSet(bytes4 indexed functionSelector, string indexed functionSignature, address indexed pluginAddress);
 
     /// @dev Returns the plug-in contract for a given function.
-    function getPluginForFunction(bytes4 selector) external view returns (address);
+    function getPluginForFunction(bytes4 functionSelector) external view returns (address);
 
     /// @dev Returns all functions that are mapped to the given plug-in contract.
     function getAllFunctionsOfPlugin(address pluginAddress) external view returns (bytes4[] memory);

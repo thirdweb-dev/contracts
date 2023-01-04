@@ -1,4 +1,4 @@
-# Map
+# IPluginMap
 
 
 
@@ -13,57 +13,57 @@
 ### getAllFunctionsOfPlugin
 
 ```solidity
-function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] registered)
+function getAllFunctionsOfPlugin(address pluginAddress) external view returns (bytes4[])
 ```
 
 
 
-*View all funtionality as list of function signatures.*
+*Returns all functions that are mapped to the given plug-in contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _pluginAddress | address | undefined |
+| pluginAddress | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| registered | bytes4[] | undefined |
+| _0 | bytes4[] | undefined |
 
 ### getAllPlugins
 
 ```solidity
-function getAllPlugins() external view returns (struct IMap.Plugin[] _plugins)
+function getAllPlugins() external view returns (struct IPluginMap.Plugin[])
 ```
 
 
 
-*View all funtionality existing on the contract.*
+*Returns all plug-ins known by Map.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _plugins | IMap.Plugin[] | undefined |
+| _0 | IPluginMap.Plugin[] | undefined |
 
 ### getPluginForFunction
 
 ```solidity
-function getPluginForFunction(bytes4 _selector) external view returns (address)
+function getPluginForFunction(bytes4 functionSelector) external view returns (address)
 ```
 
 
 
-*View address of the plugged-in functionality contract for a given function signature.*
+*Returns the plug-in contract for a given function.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _selector | bytes4 | undefined |
+| functionSelector | bytes4 | undefined |
 
 #### Returns
 
@@ -83,7 +83,7 @@ event PluginSet(bytes4 indexed functionSelector, string indexed functionSignatur
 
 
 
-
+*Emitted when a function selector is mapped to a particular plug-in smart contract, during construction of Map.*
 
 #### Parameters
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/extension/plugin/Map.sol";
+import "contracts/extension/plugin/PluginMap.sol";
 import "contracts/extension/plugin/RouterImmutable.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 
@@ -30,11 +30,11 @@ contract RouterImmutableTest is BaseTest {
 
         address counter = address(new Counter());
 
-        IMap.Plugin[] memory pluginMaps = new IMap.Plugin[](2);
-        pluginMaps[0] = IMap.Plugin(Counter.number.selector, counter, "number()");
-        pluginMaps[1] = IMap.Plugin(Counter.setNumber.selector, counter, "setNumber(uint256)");
+        IPluginMap.Plugin[] memory pluginMaps = new IPluginMap.Plugin[](2);
+        pluginMaps[0] = IPluginMap.Plugin(Counter.number.selector, counter, "number()");
+        pluginMaps[1] = IPluginMap.Plugin(Counter.setNumber.selector, counter, "setNumber(uint256)");
 
-        map = address(new Map(pluginMaps));
+        map = address(new PluginMap(pluginMaps));
         router = address(new RouterImmutable(map));
     }
 

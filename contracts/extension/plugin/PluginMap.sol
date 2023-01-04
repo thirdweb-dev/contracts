@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../interface/plugin/IMap.sol";
-
+import "../interface/plugin/IPluginMap.sol";
 import "../../openzeppelin-presets/utils/EnumerableSet.sol";
 
-contract Map is IMap {
+contract PluginMap is IPluginMap {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     EnumerableSet.Bytes32Set private allSelectors;

@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/extension/plugin/Map.sol";
+import "contracts/extension/plugin/PluginMap.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 import "contracts/lib/TWStrings.sol";
 
 contract MapTest is BaseTest {
     using TWStrings for uint256;
-    Map internal map;
+    PluginMap internal map;
 
     address[] private pluginAddresses;
-    IMap.Plugin[] private plugins;
+    IPluginMap.Plugin[] private plugins;
 
     function setUp() public override {
         super.setUp();
@@ -24,10 +24,12 @@ contract MapTest is BaseTest {
                 pluginAddress = address(uint160(0x50000 + i));
                 pluginAddresses.push(pluginAddress);
             }
-            plugins.push(IMap.Plugin(bytes4(keccak256(abi.encodePacked(i.toString()))), pluginAddress, i.toString()));
+            plugins.push(
+                IPluginMap.Plugin(bytes4(keccak256(abi.encodePacked(i.toString()))), pluginAddress, i.toString())
+            );
         }
 
-        map = new Map(plugins);
+        map = new PluginMap(plugins);
     }
 
     function test_state_getPluginForFunction() external {
@@ -74,7 +76,7 @@ contract MapTest is BaseTest {
     }
 
     function test_state_getAllRegistered() external {
-        IMap.Plugin[] memory pluginsStored = map.getAllPlugins();
+        IPluginMap.Plugin[] memory pluginsStored = map.getAllPlugins();
 
         for (uint256 i = 0; i < pluginsStored.length; i += 1) {
             assertEq(pluginsStored[i].pluginAddress, plugins[i].pluginAddress);

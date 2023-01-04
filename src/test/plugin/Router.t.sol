@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/extension/plugin/Map.sol";
+import "contracts/extension/plugin/PluginMap.sol";
 import "contracts/extension/plugin/Router.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 import "lib/forge-std/src/console.sol";
@@ -68,12 +68,12 @@ contract RouterTest is BaseTest {
         counter = address(new Counter());
         counterAlternate = address(new CounterAlternate());
 
-        IMap.Plugin[] memory pluginMaps = new IMap.Plugin[](3);
-        pluginMaps[0] = IMap.Plugin(Counter.number.selector, counter, "number()");
-        pluginMaps[1] = IMap.Plugin(Counter.setNumber.selector, counter, "setNumber(uint256)");
-        pluginMaps[2] = IMap.Plugin(Counter.doubleNumber.selector, counter, "doubleNumber()");
+        IPluginMap.Plugin[] memory pluginMaps = new IPluginMap.Plugin[](3);
+        pluginMaps[0] = IPluginMap.Plugin(Counter.number.selector, counter, "number()");
+        pluginMaps[1] = IPluginMap.Plugin(Counter.setNumber.selector, counter, "setNumber(uint256)");
+        pluginMaps[2] = IPluginMap.Plugin(Counter.doubleNumber.selector, counter, "doubleNumber()");
 
-        map = address(new Map(pluginMaps));
+        map = address(new PluginMap(pluginMaps));
         router = address(new RouterImplementation(map));
     }
 
@@ -93,7 +93,7 @@ contract RouterTest is BaseTest {
 
         // Fix the extension for `doubleNumber`.
         RouterImplementation(payable(router)).addPlugin(
-            IMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
+            IPluginMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
         );
 
         // Double number. Fixed: it doubles the number.
@@ -101,7 +101,7 @@ contract RouterTest is BaseTest {
         assertEq(Counter(router).number(), num * 2);
 
         // Get and check all overriden extensions.
-        IMap.Plugin[] memory pluginsStored = RouterImplementation(payable(router)).getAllPlugins();
+        IPluginMap.Plugin[] memory pluginsStored = RouterImplementation(payable(router)).getAllPlugins();
         assertEq(pluginsStored.length, 3);
 
         for (uint256 i = 0; i < pluginsStored.length; i += 1) {
@@ -114,16 +114,18 @@ contract RouterTest is BaseTest {
     function test_state_getAllFunctionsOfPlugin() public {
         // add fixed function from counterAlternate
         RouterImplementation(payable(router)).addPlugin(
-            IMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
+            IPluginMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
         );
 
         // add previously not added function of counter
         RouterImplementation(payable(router)).addPlugin(
-            IMap.Plugin(Counter.extraFunction.selector, counter, "extraFunction()")
+            IPluginMap.Plugin(Counter.extraFunction.selector, counter, "extraFunction()")
         );
 
         // re-add an already added function of counter
-        RouterImplementation(payable(router)).addPlugin(IMap.Plugin(Counter.number.selector, counter, "number()"));
+        RouterImplementation(payable(router)).addPlugin(
+            IPluginMap.Plugin(Counter.number.selector, counter, "number()")
+        );
 
         // check plugins for counter
         bytes4[] memory functions = RouterImplementation(payable(router)).getAllFunctionsOfPlugin(counter);
@@ -142,12 +144,12 @@ contract RouterTest is BaseTest {
     function test_state_getPluginForFunction() public {
         // add fixed function from counterAlternate
         RouterImplementation(payable(router)).addPlugin(
-            IMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
+            IPluginMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
         );
 
         // add previously not added function of counter
         RouterImplementation(payable(router)).addPlugin(
-            IMap.Plugin(Counter.extraFunction.selector, counter, "extraFunction()")
+            IPluginMap.Plugin(Counter.extraFunction.selector, counter, "extraFunction()")
         );
 
         address pluginAddress = RouterImplementation(payable(router)).getPluginForFunction(

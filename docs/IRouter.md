@@ -13,7 +13,7 @@
 ### addPlugin
 
 ```solidity
-function addPlugin(IMap.Plugin _plugin) external nonpayable
+function addPlugin(IPluginMap.Plugin plugin) external nonpayable
 ```
 
 
@@ -24,7 +24,7 @@ function addPlugin(IMap.Plugin _plugin) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _plugin | IMap.Plugin | undefined |
+| plugin | IPluginMap.Plugin | undefined |
 
 ### getAllFunctionsOfPlugin
 
@@ -51,7 +51,7 @@ function getAllFunctionsOfPlugin(address pluginAddress) external view returns (b
 ### getAllPlugins
 
 ```solidity
-function getAllPlugins() external view returns (struct IMap.Plugin[])
+function getAllPlugins() external view returns (struct IPluginMap.Plugin[])
 ```
 
 
@@ -63,12 +63,12 @@ function getAllPlugins() external view returns (struct IMap.Plugin[])
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | IMap.Plugin[] | undefined |
+| _0 | IPluginMap.Plugin[] | undefined |
 
 ### getPluginForFunction
 
 ```solidity
-function getPluginForFunction(bytes4 selector) external view returns (address)
+function getPluginForFunction(bytes4 functionSelector) external view returns (address)
 ```
 
 
@@ -79,7 +79,7 @@ function getPluginForFunction(bytes4 selector) external view returns (address)
 
 | Name | Type | Description |
 |---|---|---|
-| selector | bytes4 | undefined |
+| functionSelector | bytes4 | undefined |
 
 #### Returns
 
@@ -90,23 +90,23 @@ function getPluginForFunction(bytes4 selector) external view returns (address)
 ### removePlugin
 
 ```solidity
-function removePlugin(bytes4 _selector) external nonpayable
+function removePlugin(bytes4 functionSelector) external nonpayable
 ```
 
 
 
-*Remove existing functionality from the contract.*
+*Remove an existing plugin from the contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _selector | bytes4 | undefined |
+| functionSelector | bytes4 | undefined |
 
 ### updatePlugin
 
 ```solidity
-function updatePlugin(IMap.Plugin _plugin) external nonpayable
+function updatePlugin(IPluginMap.Plugin plugin) external nonpayable
 ```
 
 
@@ -117,7 +117,7 @@ function updatePlugin(IMap.Plugin _plugin) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _plugin | IMap.Plugin | undefined |
+| plugin | IPluginMap.Plugin | undefined |
 
 
 
@@ -126,7 +126,7 @@ function updatePlugin(IMap.Plugin _plugin) external nonpayable
 ### PluginAdded
 
 ```solidity
-event PluginAdded(bytes4 indexed selector, address indexed pluginAddress)
+event PluginAdded(bytes4 indexed functionSelector, address indexed pluginAddress)
 ```
 
 
@@ -137,13 +137,13 @@ event PluginAdded(bytes4 indexed selector, address indexed pluginAddress)
 
 | Name | Type | Description |
 |---|---|---|
-| selector `indexed` | bytes4 | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
 | pluginAddress `indexed` | address | undefined |
 
 ### PluginRemoved
 
 ```solidity
-event PluginRemoved(bytes4 indexed selector, address indexed pluginAddress)
+event PluginRemoved(bytes4 indexed functionSelector, address indexed pluginAddress)
 ```
 
 
@@ -154,7 +154,7 @@ event PluginRemoved(bytes4 indexed selector, address indexed pluginAddress)
 
 | Name | Type | Description |
 |---|---|---|
-| selector `indexed` | bytes4 | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
 | pluginAddress `indexed` | address | undefined |
 
 ### PluginSet
@@ -178,7 +178,7 @@ event PluginSet(bytes4 indexed functionSelector, string indexed functionSignatur
 ### PluginUpdated
 
 ```solidity
-event PluginUpdated(bytes4 indexed selector, address indexed oldPluginAddress, address indexed newPluginAddress)
+event PluginUpdated(bytes4 indexed functionSelector, address indexed oldPluginAddress, address indexed newPluginAddress)
 ```
 
 
@@ -189,7 +189,7 @@ event PluginUpdated(bytes4 indexed selector, address indexed oldPluginAddress, a
 
 | Name | Type | Description |
 |---|---|---|
-| selector `indexed` | bytes4 | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
 | oldPluginAddress `indexed` | address | undefined |
 | newPluginAddress `indexed` | address | undefined |
 

@@ -12,7 +12,7 @@ library RouterStorage {
     struct Data {
         EnumerableSet.Bytes32Set allSelectors;
         mapping(address => EnumerableSet.Bytes32Set) selectorsForPlugin;
-        mapping(bytes4 => IMap.Plugin) pluginForSelector;
+        mapping(bytes4 => IPluginMap.Plugin) pluginForSelector;
     }
 
     function routerStorage() internal pure returns (Data storage routerData) {
@@ -57,7 +57,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
     fallback() external payable virtual {
         address _pluginAddress = _getPluginForFunction(msg.sig);
         if (_pluginAddress == address(0)) {
-            _pluginAddress = IMap(functionMap).getPluginForFunction(msg.sig);
+            _pluginAddress = IPluginMap(functionMap).getPluginForFunction(msg.sig);
         }
         _delegate(_pluginAddress);
     }
@@ -122,14 +122,14 @@ abstract contract Router is Multicall, ERC165, IRouter {
     function getPluginForFunction(bytes4 _selector) public view returns (address) {
         address _pluginAddress = _getPluginForFunction(_selector);
 
-        return _pluginAddress != address(0) ? _pluginAddress : IMap(functionMap).getPluginForFunction(_selector);
+        return _pluginAddress != address(0) ? _pluginAddress : IPluginMap(functionMap).getPluginForFunction(_selector);
     }
 
     /// @dev View all funtionality as list of function signatures.
     function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] memory registered) {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
         EnumerableSet.Bytes32Set storage _selectorsForPlugin = data.selectorsForPlugin[_pluginAddress];
-        bytes4[] memory _defaultSelectors = IMap(functionMap).getAllFunctionsOfPlugin(_pluginAddress);
+        bytes4[] memory _defaultSelectors = IPluginMap(functionMap).getAllFunctionsOfPlugin(_pluginAddress);
         uint256 len = _defaultSelectors.length;
         uint256 count = _selectorsForPlugin.length() + _defaultSelectors.length;
 
@@ -161,7 +161,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
         uint256 len = data.allSelectors.length();
 
         EnumerableSet.Bytes32Set storage _allSelectors = data.allSelectors;
-        Plugin[] memory _defaultPlugins = IMap(functionMap).getAllPlugins();
+        Plugin[] memory _defaultPlugins = IPluginMap(functionMap).getAllPlugins();
 
         uint256 count = _allSelectors.length() + _defaultPlugins.length;
         for (uint256 i = 0; i < _allSelectors.length(); i += 1) {
