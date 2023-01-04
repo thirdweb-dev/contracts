@@ -33,6 +33,9 @@ import "../lib/FeeType.sol";
 // Helper interfaces
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
+// OpenSea operator filter
+import "../extension/DefaultOperatorFiltererUpgradeable.sol";
+
 contract TokenERC721 is
     Initializable,
     IThirdwebContract,
@@ -45,6 +48,7 @@ contract TokenERC721 is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
+    DefaultOperatorFiltererUpgradeable,
     ERC721EnumerableUpgradeable,
     ITokenERC721
 {
@@ -120,6 +124,7 @@ contract TokenERC721 is
         __EIP712_init("TokenERC721", "1");
         __ERC2771Context_init(_trustedForwarders);
         __ERC721_init(_name, _symbol);
+        __DefaultOperatorFilterer_init();
 
         // Initialize this contract's state.
         royaltyRecipient = _royaltyRecipient;
@@ -393,6 +398,52 @@ contract TokenERC721 is
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders");
         }
+    }
+
+    /// @dev See {ERC721-setApprovalForAll}.
+    function setApprovalForAll(address operator, bool approved)
+        public
+        override(ERC721Upgradeable, IERC721Upgradeable)
+        onlyAllowedOperatorApproval(operator)
+    {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    /// @dev See {ERC721-approve}.
+    function approve(address operator, uint256 tokenId)
+        public
+        override(ERC721Upgradeable, IERC721Upgradeable)
+        onlyAllowedOperatorApproval(operator)
+    {
+        super.approve(operator, tokenId);
+    }
+
+    /// @dev See {ERC721-_transferFrom}.
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperator(from) {
+        super.transferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     function supportsInterface(bytes4 interfaceId)

@@ -30,18 +30,18 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 ### approve
 
 ```solidity
-function approve(address to, uint256 tokenId) external nonpayable
+function approve(address operator, uint256 tokenId) external nonpayable
 ```
 
 
 
-*See {IERC721-approve}.*
+*See {ERC721-approve}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined |
+| operator | address | undefined |
 | tokenId | uint256 | undefined |
 
 ### balanceOf
@@ -493,6 +493,23 @@ function nextTokenIdToMint() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### operatorRestriction
+
+```solidity
+function operatorRestriction() external view returns (bool)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### owner
 
 ```solidity
@@ -632,7 +649,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId) external no
 
 
 
-*See {IERC721-safeTransferFrom}.*
+*See {ERC721-_safeTransferFrom}.*
 
 #### Parameters
 
@@ -650,7 +667,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes data)
 
 
 
-*See {IERC721-safeTransferFrom}.*
+*See {ERC721-_safeTransferFrom}.*
 
 #### Parameters
 
@@ -669,7 +686,7 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 
 
-*See {IERC721-setApprovalForAll}.*
+*See {ERC721-setApprovalForAll}.*
 
 #### Parameters
 
@@ -710,6 +727,22 @@ function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) e
 |---|---|---|
 | _royaltyRecipient | address | undefined |
 | _royaltyBps | uint256 | undefined |
+
+### setOperatorRestriction
+
+```solidity
+function setOperatorRestriction(bool _restriction) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _restriction | bool | undefined |
 
 ### setOwner
 
@@ -909,7 +942,7 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 
 
 
-*See {IERC721-transferFrom}.*
+*See {ERC721-_transferFrom}.*
 
 #### Parameters
 
@@ -1015,6 +1048,22 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+### OperatorRestriction
+
+```solidity
+event OperatorRestriction(bool restriction)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| restriction  | bool | undefined |
 
 ### OwnerUpdated
 
@@ -1193,5 +1242,24 @@ event Transfer(address indexed from, address indexed to, uint256 indexed tokenId
 | to `indexed` | address | undefined |
 | tokenId `indexed` | uint256 | undefined |
 
+
+
+## Errors
+
+### OperatorNotAllowed
+
+```solidity
+error OperatorNotAllowed(address operator)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| operator | address | undefined |
 
 
