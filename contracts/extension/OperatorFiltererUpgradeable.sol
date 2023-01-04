@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.12;
 
-import { IOperatorFilterRegistry } from "./interface/IOperatorFilterRegistry.sol";
+import "./interface/IOperatorFilterRegistry.sol";
+import "./OperatorFilterToggle.sol";
 
-abstract contract OperatorFiltererUpgradeable {
+abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
     error OperatorNotAllowed(address operator);
 
-    // solhint-disable-next-line
     IOperatorFilterRegistry constant operatorFilterRegistry =
         IOperatorFilterRegistry(0x000000000000AAeB6D7670E522A718067333cd4E);
 
@@ -31,19 +31,30 @@ abstract contract OperatorFiltererUpgradeable {
 
     modifier onlyAllowedOperator(address from) virtual {
         // Check registry code length to facilitate testing in environments without a deployed registry.
-        if (address(operatorFilterRegistry).code.length > 0) {
-            // Allow spending tokens from addresses with balance
-            // Note that this still allows listings and marketplaces with escrow to transfer tokens if transferred
-            // from an EOA.
-            if (from == msg.sender) {
-                _;
-                return;
+        if (operatorRestriction) {
+            if (address(operatorFilterRegistry).code.length > 0) {
+                // Allow spending tokens from addresses with balance
+                // Note that this still allows listings and marketplaces with escrow to transfer tokens if transferred
+                // from an EOA.
+                if (from == msg.sender) {
+                    _;
+                    return;
+                }
+                if (!operatorFilterRegistry.isOperatorAllowed(address(this), msg.sender)) {
+                    revert OperatorNotAllowed(msg.sender);
+                }
             }
-            if (
-                !(operatorFilterRegistry.isOperatorAllowed(address(this), msg.sender) &&
-                    operatorFilterRegistry.isOperatorAllowed(address(this), from))
-            ) {
-                revert OperatorNotAllowed(msg.sender);
+        }
+        _;
+    }
+
+    modifier onlyAllowedOperatorApproval(address operator) virtual {
+        // Check registry code length to facilitate testing in environments without a deployed registry.
+        if (operatorRestriction) {
+            if (address(operatorFilterRegistry).code.length > 0) {
+                if (!operatorFilterRegistry.isOperatorAllowed(address(this), operator)) {
+                    revert OperatorNotAllowed(operator);
+                }
             }
         }
         _;
