@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/extension/plugin/Map.sol";
-import "contracts/extension/plugin/RouterImmutable.sol";
+import "contracts/extension/plugin/PluginMap.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 import "contracts/lib/TWStrings.sol";
 
 contract MapTest is BaseTest {
     using TWStrings for uint256;
-    RouterImmutable internal router;
+    PluginMap internal map;
 
     address[] private pluginAddresses;
-    IMap.Plugin[] private plugins;
+    IPluginMap.Plugin[] private plugins;
 
     function setUp() public override {
         super.setUp();
@@ -25,19 +24,21 @@ contract MapTest is BaseTest {
                 pluginAddress = address(uint160(0x50000 + i));
                 pluginAddresses.push(pluginAddress);
             }
-            plugins.push(IMap.Plugin(bytes4(keccak256(abi.encodePacked(i.toString()))), pluginAddress, i.toString()));
+            plugins.push(
+                IPluginMap.Plugin(bytes4(keccak256(abi.encodePacked(i.toString()))), i.toString(), pluginAddress)
+            );
         }
 
-        router = new RouterImmutable(plugins);
+        map = new PluginMap(plugins);
     }
 
     function test_state_getPluginForFunction() external {
         uint256 len = plugins.length;
         for (uint256 i = 0; i < len; i += 1) {
             address pluginAddress = plugins[i].pluginAddress;
-            bytes4 selector = plugins[i].selector;
+            bytes4 selector = plugins[i].functionSelector;
 
-            assertEq(pluginAddress, router.getPluginForFunction(selector));
+            assertEq(pluginAddress, map.getPluginForFunction(selector));
         }
     }
 
@@ -59,12 +60,12 @@ contract MapTest is BaseTest {
 
             for (uint256 j = 0; j < plugins.length; j += 1) {
                 if (plugins[j].pluginAddress == pluginAddress) {
-                    expectedFns[idx] = plugins[j].selector;
+                    expectedFns[idx] = plugins[j].functionSelector;
                     idx += 1;
                 }
             }
 
-            bytes4[] memory fns = router.getAllFunctionsOfPlugin(pluginAddress);
+            bytes4[] memory fns = map.getAllFunctionsOfPlugin(pluginAddress);
 
             assertEq(fns.length, expectedNum);
 
@@ -74,12 +75,12 @@ contract MapTest is BaseTest {
         }
     }
 
-    function test_state_getAllRegistered() external {
-        IMap.Plugin[] memory pluginsStored = router.getAllPlugins();
+    function test_state_getAllPlugins() external {
+        IPluginMap.Plugin[] memory pluginsStored = map.getAllPlugins();
 
         for (uint256 i = 0; i < pluginsStored.length; i += 1) {
             assertEq(pluginsStored[i].pluginAddress, plugins[i].pluginAddress);
-            assertEq(pluginsStored[i].selector, plugins[i].selector);
+            assertEq(pluginsStored[i].functionSelector, plugins[i].functionSelector);
         }
     }
 }
