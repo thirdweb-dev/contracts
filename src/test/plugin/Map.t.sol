@@ -34,7 +34,7 @@ contract MapTest is BaseTest {
         uint256 len = plugins.length;
         for (uint256 i = 0; i < len; i += 1) {
             address pluginAddress = plugins[i].pluginAddress;
-            bytes4 selector = plugins[i].selector;
+            bytes4 selector = plugins[i].functionSelector;
 
             assertEq(pluginAddress, map.getPluginForFunction(selector));
         }
@@ -58,7 +58,7 @@ contract MapTest is BaseTest {
 
             for (uint256 j = 0; j < plugins.length; j += 1) {
                 if (plugins[j].pluginAddress == pluginAddress) {
-                    expectedFns[idx] = plugins[j].selector;
+                    expectedFns[idx] = plugins[j].functionSelector;
                     idx += 1;
                 }
             }
@@ -78,7 +78,7 @@ contract MapTest is BaseTest {
 
         for (uint256 i = 0; i < pluginsStored.length; i += 1) {
             assertEq(pluginsStored[i].pluginAddress, plugins[i].pluginAddress);
-            assertEq(pluginsStored[i].selector, plugins[i].selector);
+            assertEq(pluginsStored[i].functionSelector, plugins[i].functionSelector);
         }
     }
 }

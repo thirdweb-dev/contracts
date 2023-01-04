@@ -105,7 +105,7 @@ contract RouterTest is BaseTest {
         assertEq(pluginsStored.length, 3);
 
         for (uint256 i = 0; i < pluginsStored.length; i += 1) {
-            if (pluginsStored[i].selector == Counter.doubleNumber.selector) {
+            if (pluginsStored[i].functionSelector == Counter.doubleNumber.selector) {
                 assertEq(pluginsStored[i].pluginAddress, counterAlternate);
             }
         }
