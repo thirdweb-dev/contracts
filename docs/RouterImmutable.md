@@ -1,30 +1,50 @@
 # RouterImmutable
 
-
-
-
-
-
-
-
-
 ## Methods
+
+### \_getPluginForFunction
+
+```solidity
+function _getPluginForFunction(bytes4 _selector) external view returns (address)
+```
+
+_View address of the plugged-in functionality contract for a given function signature._
+
+#### Parameters
+
+| Name       | Type   | Description |
+| ---------- | ------ | ----------- |
+| \_selector | bytes4 | undefined   |
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ### addPlugin
 
 ```solidity
-function addPlugin(IMap.Plugin _plugin) external nonpayable
+function addPlugin(IPluginMap.Plugin _plugin) external nonpayable
 ```
-
-
-
-
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _plugin | IMap.Plugin | undefined |
+| Name     | Type              | Description |
+| -------- | ----------------- | ----------- |
+| \_plugin | IPluginMap.Plugin | undefined   |
+
+### functionMap
+
+```solidity
+function functionMap() external view returns (address)
+```
+
+#### Returns
+
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ### getAllFunctionsOfPlugin
 
@@ -32,38 +52,33 @@ function addPlugin(IMap.Plugin _plugin) external nonpayable
 function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] registered)
 ```
 
-
-
-*View all funtionality as list of function signatures.*
+_View all funtionality as list of function signatures._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _pluginAddress | address | undefined |
+| Name            | Type    | Description |
+| --------------- | ------- | ----------- |
+| \_pluginAddress | address | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| registered | bytes4[] | undefined |
+| Name       | Type     | Description |
+| ---------- | -------- | ----------- |
+| registered | bytes4[] | undefined   |
 
 ### getAllPlugins
 
 ```solidity
-function getAllPlugins() external view returns (struct IMap.Plugin[] _plugins)
+function getAllPlugins() external view returns (struct IPluginMap.Plugin[] registered)
 ```
 
-
-
-*View all funtionality existing on the contract.*
-
+_View all funtionality existing on the contract._
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _plugins | IMap.Plugin[] | undefined |
+| Name       | Type                | Description |
+| ---------- | ------------------- | ----------- |
+| registered | IPluginMap.Plugin[] | undefined   |
 
 ### getPluginForFunction
 
@@ -71,21 +86,19 @@ function getAllPlugins() external view returns (struct IMap.Plugin[] _plugins)
 function getPluginForFunction(bytes4 _selector) external view returns (address)
 ```
 
-
-
-*View address of the plugged-in functionality contract for a given function signature.*
+_View address of the plugged-in functionality contract for a given function signature._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _selector | bytes4 | undefined |
+| Name       | Type   | Description |
+| ---------- | ------ | ----------- |
+| \_selector | bytes4 | undefined   |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| Name | Type    | Description |
+| ---- | ------- | ----------- |
+| \_0  | address | undefined   |
 
 ### multicall
 
@@ -95,18 +108,18 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 Receives and executes a batch of function calls on this contract.
 
-*Receives and executes a batch of function calls on this contract.*
+_Receives and executes a batch of function calls on this contract._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
+| Name | Type    | Description                                                          |
+| ---- | ------- | -------------------------------------------------------------------- |
 | data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
 
 #### Returns
 
-| Name | Type | Description |
-|---|---|---|
+| Name    | Type    | Description                                                                      |
+| ------- | ------- | -------------------------------------------------------------------------------- |
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
 ### removePlugin
@@ -115,15 +128,13 @@ Receives and executes a batch of function calls on this contract.
 function removePlugin(bytes4 _selector) external nonpayable
 ```
 
-
-
-*Remove existing functionality from the contract.*
+_Remove existing functionality from the contract._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _selector | bytes4 | undefined |
+| Name       | Type   | Description |
+| ---------- | ------ | ----------- |
+| \_selector | bytes4 | undefined   |
 
 ### supportsInterface
 
@@ -131,93 +142,84 @@ function removePlugin(bytes4 _selector) external nonpayable
 function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ```
 
-
-
-*See {IERC165-supportsInterface}.*
+_See {IERC165-supportsInterface}._
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| interfaceId | bytes4 | undefined |
+| Name        | Type   | Description |
+| ----------- | ------ | ----------- |
+| interfaceId | bytes4 | undefined   |
 
 #### Returns
 
 | Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
+| ---- | ---- | ----------- |
+| \_0  | bool | undefined   |
 
 ### updatePlugin
 
 ```solidity
-function updatePlugin(IMap.Plugin _plugin) external nonpayable
+function updatePlugin(IPluginMap.Plugin _plugin) external nonpayable
 ```
-
-
-
-
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| _plugin | IMap.Plugin | undefined |
-
-
+| Name     | Type              | Description |
+| -------- | ----------------- | ----------- |
+| \_plugin | IPluginMap.Plugin | undefined   |
 
 ## Events
 
 ### PluginAdded
 
 ```solidity
-event PluginAdded(bytes4 indexed selector, address indexed pluginAddress)
+event PluginAdded(bytes4 indexed functionSelector, address indexed pluginAddress)
 ```
-
-
-
-
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| selector `indexed` | bytes4 | undefined |
-| pluginAddress `indexed` | address | undefined |
+| Name                       | Type    | Description |
+| -------------------------- | ------- | ----------- |
+| functionSelector `indexed` | bytes4  | undefined   |
+| pluginAddress `indexed`    | address | undefined   |
 
 ### PluginRemoved
 
 ```solidity
-event PluginRemoved(bytes4 indexed selector, address indexed pluginAddress)
+event PluginRemoved(bytes4 indexed functionSelector, address indexed pluginAddress)
 ```
-
-
-
-
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| selector `indexed` | bytes4 | undefined |
-| pluginAddress `indexed` | address | undefined |
+| Name                       | Type    | Description |
+| -------------------------- | ------- | ----------- |
+| functionSelector `indexed` | bytes4  | undefined   |
+| pluginAddress `indexed`    | address | undefined   |
+
+### PluginSet
+
+```solidity
+event PluginSet(bytes4 indexed functionSelector, string indexed functionSignature, address indexed pluginAddress)
+```
+
+#### Parameters
+
+| Name                        | Type    | Description |
+| --------------------------- | ------- | ----------- |
+| functionSelector `indexed`  | bytes4  | undefined   |
+| functionSignature `indexed` | string  | undefined   |
+| pluginAddress `indexed`     | address | undefined   |
 
 ### PluginUpdated
 
 ```solidity
-event PluginUpdated(bytes4 indexed selector, address indexed oldPluginAddress, address indexed newPluginAddress)
+event PluginUpdated(bytes4 indexed functionSelector, address indexed oldPluginAddress, address indexed newPluginAddress)
 ```
-
-
-
-
 
 #### Parameters
 
-| Name | Type | Description |
-|---|---|---|
-| selector `indexed` | bytes4 | undefined |
-| oldPluginAddress `indexed` | address | undefined |
-| newPluginAddress `indexed` | address | undefined |
-
-
-
+| Name                       | Type    | Description |
+| -------------------------- | ------- | ----------- |
+| functionSelector `indexed` | bytes4  | undefined   |
+| oldPluginAddress `indexed` | address | undefined   |
+| newPluginAddress `indexed` | address | undefined   |
