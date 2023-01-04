@@ -1,4 +1,4 @@
-# DefaultOperatorFiltererUpgradeable
+# IOperatorFilterToggle
 
 
 
@@ -30,7 +30,7 @@ function operatorRestriction() external view returns (bool)
 ### setOperatorRestriction
 
 ```solidity
-function setOperatorRestriction(bool _restriction) external nonpayable
+function setOperatorRestriction(bool restriction) external nonpayable
 ```
 
 
@@ -41,7 +41,7 @@ function setOperatorRestriction(bool _restriction) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _restriction | bool | undefined |
+| restriction | bool | undefined |
 
 
 
@@ -63,24 +63,5 @@ event OperatorRestriction(bool restriction)
 |---|---|---|
 | restriction  | bool | undefined |
 
-
-
-## Errors
-
-### OperatorNotAllowed
-
-```solidity
-error OperatorNotAllowed(address operator)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| operator | address | undefined |
 
 
