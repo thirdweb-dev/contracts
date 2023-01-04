@@ -135,6 +135,7 @@ contract TokenERC1155 is
         __ERC1155_init("");
 
         // Initialize this contract's state.
+        _setOperatorRestriction(true);
         name = _name;
         symbol = _symbol;
         royaltyRecipient = _royaltyRecipient;
@@ -519,6 +520,11 @@ contract TokenERC1155 is
             super.supportsInterface(interfaceId) ||
             interfaceId == type(IERC1155Upgradeable).interfaceId ||
             interfaceId == type(IERC2981Upgradeable).interfaceId;
+    }
+
+    /// @dev Returns whether operator restriction can be set in the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     function _msgSender()

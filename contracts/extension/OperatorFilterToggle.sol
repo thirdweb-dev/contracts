@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./interface/IOperatorFilterToggle.sol";
 
-contract OperatorFilterToggle is IOperatorFilterToggle {
+abstract contract OperatorFilterToggle is IOperatorFilterToggle {
     bool public operatorRestriction;
 
     function setOperatorRestriction(bool _restriction) external {
@@ -16,5 +16,5 @@ contract OperatorFilterToggle is IOperatorFilterToggle {
         emit OperatorRestriction(_restriction);
     }
 
-    function _canSetOperatorRestriction() internal virtual returns (bool) {}
+    function _canSetOperatorRestriction() internal virtual returns (bool);
 }

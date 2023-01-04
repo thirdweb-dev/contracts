@@ -127,6 +127,7 @@ contract TokenERC721 is
         __DefaultOperatorFilterer_init();
 
         // Initialize this contract's state.
+        _setOperatorRestriction(true);
         royaltyRecipient = _royaltyRecipient;
         royaltyBps = _royaltyBps;
         platformFeeRecipient = _platformFeeRecipient;
@@ -444,6 +445,11 @@ contract TokenERC721 is
         bytes memory data
     ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, tokenId, data);
+    }
+
+    /// @dev Returns whether operator restriction can be set in the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     function supportsInterface(bytes4 interfaceId)

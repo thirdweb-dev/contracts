@@ -116,6 +116,7 @@ contract DropERC1155 is
         // Initialize this contract's state.
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
+        _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(_minterRole, _defaultAdmin);
@@ -274,6 +275,11 @@ contract DropERC1155 is
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
         return hasRole(minterRole, _msgSender());
+    }
+
+    /// @dev Returns whether operator restriction can be set in the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
