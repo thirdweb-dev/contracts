@@ -204,10 +204,17 @@ abstract contract Router is Multicall, ERC165, IRouter {
     /// @dev Add functionality to the contract.
     function _addPlugin(Plugin memory _plugin) internal {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
-        require(data.allSelectors.add(bytes32(_plugin.functionSelector)), "Router: Selector exists");
+
+        // Revert: default plugin exists for function; use updatePlugin instead.
+        try IPluginMap(functionMap).getPluginForFunction(_plugin.functionSelector) returns (address) {
+            revert("Router: default plugin exists for function.");
+        } catch {
+            require(data.allSelectors.add(bytes32(_plugin.functionSelector)), "Router: plugin exists for function.");
+        }
+
         require(
             _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
-            "Router: Incorrect selector"
+            "Router: fn selector and signature mismatch."
         );
 
         data.pluginForSelector[_plugin.functionSelector] = _plugin;
@@ -223,7 +230,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
         require(currentPlugin != address(0), "Router: No plugin available for selector");
         require(
             _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
-            "Router: Incorrect selector"
+            "Router: fn selector and signature mismatch."
         );
 
         data.pluginForSelector[_plugin.functionSelector] = _plugin;
