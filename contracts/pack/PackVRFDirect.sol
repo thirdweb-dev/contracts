@@ -27,6 +27,10 @@ import "../extension/Ownable.sol";
 import "../extension/PermissionsEnumerable.sol";
 import { TokenStore, ERC1155Receiver } from "../extension/TokenStore.sol";
 
+/**
+    NOTE: This contract is a work in progress.
+ */
+
 contract PackVRFDirect is
     Initializable,
     VRFV2WrapperConsumerBase,
