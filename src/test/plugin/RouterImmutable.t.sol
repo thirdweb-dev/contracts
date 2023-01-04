@@ -31,8 +31,8 @@ contract RouterImmutableTest is BaseTest {
         address counter = address(new Counter());
 
         IPluginMap.Plugin[] memory pluginMaps = new IPluginMap.Plugin[](2);
-        pluginMaps[0] = IPluginMap.Plugin(Counter.number.selector, counter, "number()");
-        pluginMaps[1] = IPluginMap.Plugin(Counter.setNumber.selector, counter, "setNumber(uint256)");
+        pluginMaps[0] = IPluginMap.Plugin(Counter.number.selector, "number()", counter);
+        pluginMaps[1] = IPluginMap.Plugin(Counter.setNumber.selector, "setNumber(uint256)", counter);
 
         map = address(new PluginMap(pluginMaps));
         router = address(new RouterImmutable(map));

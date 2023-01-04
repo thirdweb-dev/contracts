@@ -6,13 +6,13 @@ interface IPluginMap {
      *  @notice An interface to describe a plug-in.
      *
      *  @param functionSelector     4-byte function selector.
-     *  @param pluginAddress        Address of the contract containing the function.
      *  @param functionSignature    Function representation as a string. E.g. "transfer(address,address,uint256)"
+     *  @param pluginAddress        Address of the contract containing the function.
      */
     struct Plugin {
         bytes4 functionSelector;
-        address pluginAddress;
         string functionSignature;
+        address pluginAddress;
     }
 
     /// @dev Emitted when a function selector is mapped to a particular plug-in smart contract, during construction of Map.

@@ -69,9 +69,9 @@ contract RouterTest is BaseTest {
         counterAlternate = address(new CounterAlternate());
 
         IPluginMap.Plugin[] memory pluginMaps = new IPluginMap.Plugin[](3);
-        pluginMaps[0] = IPluginMap.Plugin(Counter.number.selector, counter, "number()");
-        pluginMaps[1] = IPluginMap.Plugin(Counter.setNumber.selector, counter, "setNumber(uint256)");
-        pluginMaps[2] = IPluginMap.Plugin(Counter.doubleNumber.selector, counter, "doubleNumber()");
+        pluginMaps[0] = IPluginMap.Plugin(Counter.number.selector, "number()", counter);
+        pluginMaps[1] = IPluginMap.Plugin(Counter.setNumber.selector, "setNumber(uint256)", counter);
+        pluginMaps[2] = IPluginMap.Plugin(Counter.doubleNumber.selector, "doubleNumber()", counter);
 
         map = address(new PluginMap(pluginMaps));
         router = address(new RouterImplementation(map));
@@ -93,7 +93,7 @@ contract RouterTest is BaseTest {
 
         // Fix the extension for `doubleNumber`.
         RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
+            IPluginMap.Plugin(Counter.doubleNumber.selector, "doubleNumber()", counterAlternate)
         );
 
         // Double number. Fixed: it doubles the number.
@@ -114,17 +114,17 @@ contract RouterTest is BaseTest {
     function test_state_getAllFunctionsOfPlugin() public {
         // add fixed function from counterAlternate
         RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
+            IPluginMap.Plugin(Counter.doubleNumber.selector, "doubleNumber()", counterAlternate)
         );
 
         // add previously not added function of counter
         RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(Counter.extraFunction.selector, counter, "extraFunction()")
+            IPluginMap.Plugin(Counter.extraFunction.selector, "extraFunction()", counter)
         );
 
         // re-add an already added function of counter
         RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(Counter.number.selector, counter, "number()")
+            IPluginMap.Plugin(Counter.number.selector, "number()", counter)
         );
 
         // check plugins for counter
@@ -144,12 +144,12 @@ contract RouterTest is BaseTest {
     function test_state_getPluginForFunction() public {
         // add fixed function from counterAlternate
         RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(Counter.doubleNumber.selector, counterAlternate, "doubleNumber()")
+            IPluginMap.Plugin(Counter.doubleNumber.selector, "doubleNumber()", counterAlternate)
         );
 
         // add previously not added function of counter
         RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(Counter.extraFunction.selector, counter, "extraFunction()")
+            IPluginMap.Plugin(Counter.extraFunction.selector, "extraFunction()", counter)
         );
 
         address pluginAddress = RouterImplementation(payable(router)).getPluginForFunction(
