@@ -120,23 +120,25 @@ abstract contract Router is Multicall, ERC165, IRouter {
 
     /// @dev View address of the plugged-in functionality contract for a given function signature.
     function getPluginForFunction(bytes4 _selector) public view returns (address) {
-        address _pluginAddress = _getPluginForFunction(_selector);
+        address pluginAddress = _getPluginForFunction(_selector);
 
-        return _pluginAddress != address(0) ? _pluginAddress : IPluginMap(functionMap).getPluginForFunction(_selector);
+        return pluginAddress != address(0) ? pluginAddress : IPluginMap(functionMap).getPluginForFunction(_selector);
     }
 
     /// @dev View all funtionality as list of function signatures.
     function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] memory registered) {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
-        EnumerableSet.Bytes32Set storage _selectorsForPlugin = data.selectorsForPlugin[_pluginAddress];
-        bytes4[] memory _defaultSelectors = IPluginMap(functionMap).getAllFunctionsOfPlugin(_pluginAddress);
-        uint256 len = _defaultSelectors.length;
-        uint256 count = _selectorsForPlugin.length() + _defaultSelectors.length;
+
+        EnumerableSet.Bytes32Set storage selectorsForPlugin = data.selectorsForPlugin[_pluginAddress];
+        bytes4[] memory defaultSelectors = IPluginMap(functionMap).getAllFunctionsOfPlugin(_pluginAddress);
+
+        uint256 len = defaultSelectors.length;
+        uint256 count = selectorsForPlugin.length() + defaultSelectors.length;
 
         for (uint256 i = 0; i < len; i += 1) {
-            if (_selectorsForPlugin.contains(_defaultSelectors[i])) {
+            if (selectorsForPlugin.contains(defaultSelectors[i])) {
                 count -= 1;
-                _defaultSelectors[i] = bytes4(0);
+                defaultSelectors[i] = bytes4(0);
             }
         }
 
@@ -144,12 +146,12 @@ abstract contract Router is Multicall, ERC165, IRouter {
         uint256 index;
 
         for (uint256 i = 0; i < len; i += 1) {
-            if (_defaultSelectors[i] != bytes4(0)) {
-                registered[index++] = _defaultSelectors[i];
+            if (defaultSelectors[i] != bytes4(0)) {
+                registered[index++] = defaultSelectors[i];
             }
         }
 
-        len = _selectorsForPlugin.length();
+        len = selectorsForPlugin.length();
         for (uint256 i = 0; i < len; i += 1) {
             registered[index++] = bytes4(data.selectorsForPlugin[_pluginAddress].at(i));
         }
@@ -158,34 +160,37 @@ abstract contract Router is Multicall, ERC165, IRouter {
     /// @dev View all funtionality existing on the contract.
     function getAllPlugins() external view returns (Plugin[] memory registered) {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
-        uint256 len = data.allSelectors.length();
 
-        EnumerableSet.Bytes32Set storage _allSelectors = data.allSelectors;
-        Plugin[] memory _defaultPlugins = IPluginMap(functionMap).getAllPlugins();
+        EnumerableSet.Bytes32Set storage overrideSelectors = data.allSelectors;
+        Plugin[] memory defaultPlugins = IPluginMap(functionMap).getAllPlugins();
 
-        uint256 count = _allSelectors.length() + _defaultPlugins.length;
-        for (uint256 i = 0; i < _allSelectors.length(); i += 1) {
-            for (uint256 j = 0; j < _defaultPlugins.length; j += 1) {
-                if (bytes4(_allSelectors.at(i)) == _defaultPlugins[j].functionSelector) {
-                    count -= 1;
-                    _defaultPlugins[j].functionSelector = bytes4(0);
+        uint256 overrideSelectorsLen = overrideSelectors.length();
+        uint256 defaultPluginsLen = defaultPlugins.length;
+
+        uint256 totalCount = overrideSelectorsLen + defaultPluginsLen;
+
+        for (uint256 i = 0; i < overrideSelectorsLen; i += 1) {
+            for (uint256 j = 0; j < defaultPluginsLen; j += 1) {
+                if (bytes4(overrideSelectors.at(i)) == defaultPlugins[j].functionSelector) {
+                    totalCount -= 1;
+                    defaultPlugins[j].functionSelector = bytes4(0);
                 }
             }
         }
 
-        registered = new Plugin[](count);
+        registered = new Plugin[](totalCount);
         uint256 index;
 
-        len = _defaultPlugins.length;
-        for (uint256 i = 0; i < len; i += 1) {
-            if (_defaultPlugins[i].functionSelector != bytes4(0)) {
-                registered[index++] = _defaultPlugins[i];
+        for (uint256 i = 0; i < defaultPluginsLen; i += 1) {
+            if (defaultPlugins[i].functionSelector != bytes4(0)) {
+                registered[index] = defaultPlugins[i];
+                index += 1;
             }
         }
 
-        len = _allSelectors.length();
-        for (uint256 i = 0; i < len; i += 1) {
-            registered[index++] = data.pluginForSelector[bytes4(_allSelectors.at(i))];
+        for (uint256 i = 0; i < overrideSelectorsLen; i += 1) {
+            registered[index] = data.pluginForSelector[bytes4(overrideSelectors.at(i))];
+            index += 1;
         }
     }
 
@@ -232,6 +237,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
         );
 
         RouterStorage.Data storage data = RouterStorage.routerStorage();
+        data.allSelectors.add(bytes32(_plugin.functionSelector));
         data.pluginForSelector[_plugin.functionSelector] = _plugin;
         data.selectorsForPlugin[currentPlugin].remove(bytes32(_plugin.functionSelector));
         data.selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.functionSelector));
