@@ -75,7 +75,7 @@ contract MapTest is BaseTest {
         }
     }
 
-    function test_state_getAllRegistered() external {
+    function test_state_getAllPlugins() external {
         IPluginMap.Plugin[] memory pluginsStored = map.getAllPlugins();
 
         for (uint256 i = 0; i < pluginsStored.length; i += 1) {
