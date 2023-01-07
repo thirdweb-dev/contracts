@@ -16,5 +16,5 @@ abstract contract OperatorFilterToggle is IOperatorFilterToggle {
         emit OperatorRestriction(_restriction);
     }
 
-    function _canSetOperatorRestriction() internal virtual returns (bool);
+    function _canSetOperatorRestriction() internal virtual returns (bool){}
 }
