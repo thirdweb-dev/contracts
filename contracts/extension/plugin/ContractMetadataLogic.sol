@@ -11,7 +11,7 @@ import "../../extension/interface/IContractMetadata.sol";
  *           Additionally, `ContractMetadata` is necessary for NFT contracts that want royalties to get distributed on OpenSea.
  */
 
-abstract contract ContractMetadata is IContractMetadata {
+abstract contract ContractMetadataLogic is IContractMetadata {
     /// @dev Returns the metadata URI of the contract.
     function contractURI() public view returns (string memory) {
         ContractMetadataStorage.Data storage data = ContractMetadataStorage.contractMetadataStorage();

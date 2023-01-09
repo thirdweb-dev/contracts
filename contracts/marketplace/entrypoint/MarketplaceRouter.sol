@@ -7,14 +7,13 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 //  ==========  Internal imports    ==========
 import "./InitStorage.sol";
-import "../IMap.sol";
+import { RouterImmutable, Router } from "../../extension/plugin/RouterImmutable.sol";
 
-import "../extension/ContractMetadata.sol";
-import "../extension/PlatformFee.sol";
-import "../extension/PermissionsEnumerable.sol";
-import "../extension/ReentrancyGuard.sol";
-import "../extension/ERC2771Context.sol";
-import "../../extension/Multicall.sol";
+import "../../extension/plugin/ContractMetadataLogic.sol";
+import "../../extension/plugin/PlatformFeeLogic.sol";
+import "../../extension/plugin/PermissionsEnumerableLogic.sol";
+import "../../extension/plugin/ReentrancyGuardLogic.sol";
+import "../../extension/plugin/ERC2771ContextUpgradeableLogic.sol";
 
 /**
  *
@@ -32,13 +31,13 @@ import "../../extension/Multicall.sol";
  *      - Offers
  */
 
-contract MarketplaceEntrypoint is
-    ContractMetadata,
-    PlatformFee,
-    PermissionsEnumerable,
-    ReentrancyGuard,
-    ERC2771Context,
-    Multicall,
+contract MarketplaceRouter is
+    ContractMetadataLogic,
+    PlatformFeeLogic,
+    PermissionsEnumerableLogic,
+    ReentrancyGuardLogic,
+    ERC2771ContextUpgradeableLogic,
+    RouterImmutable,
     IERC721Receiver,
     IERC1155Receiver
 {
@@ -49,15 +48,11 @@ contract MarketplaceEntrypoint is
     bytes32 private constant MODULE_TYPE = bytes32("Marketplace");
     uint256 private constant VERSION = 3;
 
-    address public immutable functionMap;
-
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _functionMap) {
-        functionMap = _functionMap;
-    }
+    constructor(address _pluginMap) RouterImmutable(_pluginMap) {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -88,40 +83,6 @@ contract MarketplaceEntrypoint is
     /*///////////////////////////////////////////////////////////////
                         Generic contract logic
     //////////////////////////////////////////////////////////////*/
-
-    fallback() external payable virtual {
-        address extension = IMap(functionMap).getExtension(msg.sig);
-        require(extension != address(0), "Function does not exist");
-
-        _delegate(extension);
-    }
-
-    receive() external payable {}
-
-    function _delegate(address implementation) internal virtual {
-        assembly {
-            // Copy msg.data. We take full control of memory in this inline assembly
-            // block because it will not return to Solidity code. We overwrite the
-            // Solidity scratch pad at memory position 0.
-            calldatacopy(0, 0, calldatasize())
-
-            // Call the implementation.
-            // out and outsize are 0 because we don't know the size yet.
-            let result := delegatecall(gas(), implementation, 0, calldatasize(), 0, 0)
-
-            // Copy the returned data.
-            returndatacopy(0, 0, returndatasize())
-
-            switch result
-            // delegatecall returns 0 on error.
-            case 0 {
-                revert(0, returndatasize())
-            }
-            default {
-                return(0, returndatasize())
-            }
-        }
-    }
 
     /// @dev Returns the type of the contract.
     function contractType() external pure returns (bytes32) {
@@ -166,8 +127,11 @@ contract MarketplaceEntrypoint is
         return this.onERC721Received.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IERC1155Receiver).interfaceId || interfaceId == type(IERC721Receiver).interfaceId;
+    function supportsInterface(bytes4 interfaceId) public view virtual override(Router, IERC165) returns (bool) {
+        return
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            interfaceId == type(IERC721Receiver).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -184,7 +148,12 @@ contract MarketplaceEntrypoint is
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    function _msgSender() internal view override(ERC2771Context, Permissions) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        override(ERC2771ContextUpgradeableLogic, PermissionsLogic)
+        returns (address sender)
+    {
         if (isTrustedForwarder(msg.sender)) {
             // The assembly code is more direct than the Solidity version using `abi.decode`.
             assembly {
@@ -195,7 +164,12 @@ contract MarketplaceEntrypoint is
         }
     }
 
-    function _msgData() internal view override(ERC2771Context, Permissions) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        override(ERC2771ContextUpgradeableLogic, PermissionsLogic)
+        returns (bytes calldata)
+    {
         if (isTrustedForwarder(msg.sender)) {
             return msg.data[:msg.data.length - 20];
         } else {

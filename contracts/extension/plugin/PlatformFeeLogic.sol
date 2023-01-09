@@ -11,7 +11,7 @@ import "../../extension/interface/IPlatformFee.sol";
  *           that uses information about platform fees, if desired.
  */
 
-abstract contract PlatformFee is IPlatformFee {
+abstract contract PlatformFeeLogic is IPlatformFee {
     /// @dev Returns the platform fee recipient and bps.
     function getPlatformFeeInfo() public view override returns (address, uint16) {
         PlatformFeeStorage.Data storage data = PlatformFeeStorage.platformFeeStorage();

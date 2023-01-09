@@ -11,13 +11,13 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../extension//PlatformFee.sol";
-import "../extension/ERC2771ContextConsumer.sol";
-import "../extension/ReentrancyGuard.sol";
-import "../extension/PermissionsEnumerable.sol";
+import "../../extension/plugin/PlatformFeeLogic.sol";
+import "../../extension/plugin/ERC2771ContextConsumer.sol";
+import "../../extension/plugin/ReentrancyGuardLogic.sol";
+import "../../extension/plugin/PermissionsEnumerableLogic.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
-contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsumer {
+contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771ContextConsumer {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -39,13 +39,13 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
 
     /// @dev Checks whether the caller has LISTER_ROLE.
     modifier onlyListerRole() {
-        require(PermissionsEnumerable(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
+        require(PermissionsEnumerableLogic(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
         _;
     }
 
     /// @dev Checks whether the caller has ASSET_ROLE.
     modifier onlyAssetRole(address _asset) {
-        require(PermissionsEnumerable(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(PermissionsEnumerableLogic(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 
@@ -515,7 +515,7 @@ contract DirectListings is IDirectListings, ReentrancyGuard, ERC2771ContextConsu
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-        (address platformFeeRecipient, uint16 platformFeeBps) = PlatformFee(address(this)).getPlatformFeeInfo();
+        (address platformFeeRecipient, uint16 platformFeeBps) = PlatformFeeLogic(address(this)).getPlatformFeeInfo();
         uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
         uint256 royaltyCut;

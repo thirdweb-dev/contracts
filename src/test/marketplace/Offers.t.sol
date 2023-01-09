@@ -6,9 +6,9 @@ import "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
 
-import { Map } from "contracts/marketplace/Map.sol";
-import { MarketplaceEntrypoint } from "contracts/marketplace/entrypoint/MarketplaceEntrypoint.sol";
-import { Offers } from "contracts/marketplace/offers/OffersLogic.sol";
+import { PluginMap, IPluginMap } from "contracts/extension/plugin/PluginMap.sol";
+import { MarketplaceRouter } from "contracts/marketplace/entrypoint/MarketplaceRouter.sol";
+import { OffersLogic } from "contracts/marketplace/offers/OffersLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
 import { IOffers } from "contracts/marketplace/IMarketplace.sol";
@@ -37,34 +37,43 @@ contract MarketplaceOffersTest is BaseTest {
     function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
         vm.startPrank(_adminDeployer);
 
-        // [1] Deploy `Map`.
-        Map map = new Map();
+        // [1] Deploy `Offers`
+        address offers = address(new OffersLogic());
 
-        // [2] Deploy `Offers`
-        address offers = address(new Offers());
+        // [2] Index `Offers` functions in `Map`
+        IPluginMap.Plugin[] memory plugins = new IPluginMap.Plugin[](7);
+        plugins[0] = IPluginMap.Plugin(OffersLogic.totalOffers.selector, "totalOffers()", offers);
+        plugins[1] = IPluginMap.Plugin(
+            OffersLogic.makeOffer.selector,
+            "makeOffer((address,uint256,uint256,address,uint256,uint256))",
+            offers
+        );
+        plugins[2] = IPluginMap.Plugin(OffersLogic.cancelOffer.selector, "cancelOffer(uint256)", offers);
+        plugins[3] = IPluginMap.Plugin(OffersLogic.acceptOffer.selector, "acceptOffer(uint256)", offers);
+        plugins[4] = IPluginMap.Plugin(
+            OffersLogic.getAllValidOffers.selector,
+            "getAllValidOffers(uint256,uint256)",
+            offers
+        );
+        plugins[5] = IPluginMap.Plugin(OffersLogic.getAllOffers.selector, "getAllOffers(uint256,uint256)", offers);
+        plugins[6] = IPluginMap.Plugin(OffersLogic.getOffer.selector, "getOffer(uint256)", offers);
 
-        // [3] Index `Offers` functions in `Map`
-        map.addExtension(Offers.totalOffers.selector, offers);
-        map.addExtension(Offers.makeOffer.selector, offers);
-        map.addExtension(Offers.cancelOffer.selector, offers);
-        map.addExtension(Offers.acceptOffer.selector, offers);
-        map.addExtension(Offers.getAllValidOffers.selector, offers);
-        map.addExtension(Offers.getAllOffers.selector, offers);
-        map.addExtension(Offers.getOffer.selector, offers);
+        // [3] Deploy `PluginMap`.
+        PluginMap map = new PluginMap(plugins);
+        assertEq(map.getAllFunctionsOfPlugin(offers).length, 7);
 
-        // [4] Deploy `MarketplaceEntrypoint`
-
-        MarketplaceEntrypoint entrypoint = new MarketplaceEntrypoint(address(map));
+        // [4] Deploy `MarketplaceRouter`
+        MarketplaceRouter router = new MarketplaceRouter(address(map));
 
         vm.stopPrank();
 
-        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        // [5] Deploy proxy pointing to `MarketplaceRouter`
         vm.prank(_marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(entrypoint),
+                address(router),
                 abi.encodeCall(
-                    MarketplaceEntrypoint.initialize,
+                    MarketplaceRouter.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
@@ -78,7 +87,7 @@ contract MarketplaceOffersTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(entrypoint), "Entrypoint_Impl");
+        vm.label(address(router), "MarketplaceRouter_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(offers, "Offers_Extension");
         vm.label(seller, "Seller");
@@ -88,7 +97,7 @@ contract MarketplaceOffersTest is BaseTest {
     }
 
     function test_state_initial() public {
-        uint256 totalOffers = Offers(marketplace).totalOffers();
+        uint256 totalOffers = OffersLogic(marketplace).totalOffers();
         assertEq(totalOffers, 0);
     }
 
@@ -123,15 +132,15 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+        uint256 offerId = OffersLogic(marketplace).makeOffer(offerParams);
 
         // Test consequent state of the contract.
 
         // Total offers incremented
-        assertEq(Offers(marketplace).totalOffers(), 1);
+        assertEq(OffersLogic(marketplace).totalOffers(), 1);
 
         // Fetch listing and verify state.
-        IOffers.Offer memory offer = Offers(marketplace).getOffer(offerId);
+        IOffers.Offer memory offer = OffersLogic(marketplace).getOffer(offerId);
 
         assertEq(offer.offerId, offerId);
         assertEq(offer.offeror, buyer);
@@ -169,7 +178,7 @@ contract MarketplaceOffersTest is BaseTest {
 
         vm.prank(buyer);
         vm.expectRevert("Marketplace: insufficient currency balance.");
-        Offers(marketplace).makeOffer(offerParams);
+        OffersLogic(marketplace).makeOffer(offerParams);
     }
 
     function test_revert_makeOffer_notApprovedMarketplaceToTransferTokens() public {
@@ -196,7 +205,7 @@ contract MarketplaceOffersTest is BaseTest {
 
         vm.prank(buyer);
         vm.expectRevert("Marketplace: insufficient currency balance.");
-        Offers(marketplace).makeOffer(offerParams);
+        OffersLogic(marketplace).makeOffer(offerParams);
     }
 
     function test_revert_makeOffer_wantedZeroTokens() public {
@@ -227,7 +236,7 @@ contract MarketplaceOffersTest is BaseTest {
 
         vm.prank(buyer);
         vm.expectRevert("Marketplace: wanted zero tokens.");
-        Offers(marketplace).makeOffer(offerParams);
+        OffersLogic(marketplace).makeOffer(offerParams);
     }
 
     function test_revert_makeOffer_invalidQuantity() public {
@@ -258,7 +267,7 @@ contract MarketplaceOffersTest is BaseTest {
 
         vm.prank(buyer);
         vm.expectRevert("Marketplace: wanted invalid quantity.");
-        Offers(marketplace).makeOffer(offerParams);
+        OffersLogic(marketplace).makeOffer(offerParams);
     }
 
     function test_revert_makeOffer_invalidExpirationTimestamp() public {
@@ -293,7 +302,7 @@ contract MarketplaceOffersTest is BaseTest {
 
         vm.prank(buyer);
         vm.expectRevert("Marketplace: invalid expiration timestamp.");
-        Offers(marketplace).makeOffer(offerParams);
+        OffersLogic(marketplace).makeOffer(offerParams);
     }
 
     function test_revert_makeOffer_invalidAssetContract() public {
@@ -328,7 +337,7 @@ contract MarketplaceOffersTest is BaseTest {
 
         vm.prank(buyer);
         vm.expectRevert("Marketplace: token must be ERC1155 or ERC721.");
-        Offers(marketplace).makeOffer(offerParams);
+        OffersLogic(marketplace).makeOffer(offerParams);
     }
 
     function test_revert_createListing_noAssetRoleWhenRestrictionsActive() public {
@@ -367,7 +376,7 @@ contract MarketplaceOffersTest is BaseTest {
 
         vm.prank(buyer);
         vm.expectRevert("!ASSET_ROLE");
-        Offers(marketplace).makeOffer(offerParams);
+        OffersLogic(marketplace).makeOffer(offerParams);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -401,9 +410,9 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+        uint256 offerId = OffersLogic(marketplace).makeOffer(offerParams);
 
-        IOffers.Offer memory offer = Offers(marketplace).getOffer(offerId);
+        IOffers.Offer memory offer = OffersLogic(marketplace).getOffer(offerId);
 
         assertEq(offer.offerId, offerId);
         assertEq(offer.offeror, buyer);
@@ -416,14 +425,14 @@ contract MarketplaceOffersTest is BaseTest {
         assertEq(uint256(offer.tokenType), uint256(IOffers.TokenType.ERC721));
 
         vm.prank(buyer);
-        Offers(marketplace).cancelOffer(offerId);
+        OffersLogic(marketplace).cancelOffer(offerId);
 
         // Total offers count shouldn't change
-        assertEq(Offers(marketplace).totalOffers(), 1);
+        assertEq(OffersLogic(marketplace).totalOffers(), 1);
 
         bytes memory err = "DNE";
         vm.expectRevert(err);
-        offer = Offers(marketplace).getOffer(offerId);
+        offer = OffersLogic(marketplace).getOffer(offerId);
     }
 
     function test_revert_cancelOffer_callerNotOfferor() public {
@@ -453,11 +462,11 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+        uint256 offerId = OffersLogic(marketplace).makeOffer(offerParams);
 
         vm.prank(address(0x345));
         vm.expectRevert("!Offeror");
-        Offers(marketplace).cancelOffer(offerId);
+        OffersLogic(marketplace).cancelOffer(offerId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -494,21 +503,21 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+        uint256 offerId = OffersLogic(marketplace).makeOffer(offerParams);
 
         // accept offer
         vm.startPrank(seller);
         erc721.setApprovalForAll(marketplace, true);
-        Offers(marketplace).acceptOffer(offerId);
+        OffersLogic(marketplace).acceptOffer(offerId);
         vm.stopPrank();
 
         // Total offers count shouldn't change
-        assertEq(Offers(marketplace).totalOffers(), 1);
+        assertEq(OffersLogic(marketplace).totalOffers(), 1);
 
         // offer deleted
         bytes memory err = "DNE";
         vm.expectRevert(err);
-        Offers(marketplace).getOffer(offerId);
+        OffersLogic(marketplace).getOffer(offerId);
 
         // check states after accepting offer
         assertEq(erc721.ownerOf(tokenId), buyer);
@@ -546,13 +555,13 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+        uint256 offerId = OffersLogic(marketplace).makeOffer(offerParams);
 
         // accept offer
         vm.startPrank(seller);
         erc721.setApprovalForAll(marketplace, true);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        Offers(marketplace).acceptOffer(offerId);
+        OffersLogic(marketplace).acceptOffer(offerId);
         vm.stopPrank();
     }
 
@@ -586,12 +595,12 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+        uint256 offerId = OffersLogic(marketplace).makeOffer(offerParams);
 
         // accept offer, without approving NFT to marketplace
         vm.startPrank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        Offers(marketplace).acceptOffer(offerId);
+        OffersLogic(marketplace).acceptOffer(offerId);
         vm.stopPrank();
     }
 
@@ -625,7 +634,7 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+        uint256 offerId = OffersLogic(marketplace).makeOffer(offerParams);
 
         // reduce erc20 balance of buyer
         vm.prank(buyer);
@@ -635,7 +644,7 @@ contract MarketplaceOffersTest is BaseTest {
         vm.startPrank(seller);
         erc721.setApprovalForAll(marketplace, true);
         vm.expectRevert("Marketplace: insufficient currency balance.");
-        Offers(marketplace).acceptOffer(offerId);
+        OffersLogic(marketplace).acceptOffer(offerId);
         vm.stopPrank();
     }
 
@@ -669,7 +678,7 @@ contract MarketplaceOffersTest is BaseTest {
         );
 
         vm.prank(buyer);
-        uint256 offerId = Offers(marketplace).makeOffer(offerParams);
+        uint256 offerId = OffersLogic(marketplace).makeOffer(offerParams);
 
         // remove erc20 approval
         vm.prank(buyer);
@@ -679,7 +688,7 @@ contract MarketplaceOffersTest is BaseTest {
         vm.startPrank(seller);
         erc721.setApprovalForAll(marketplace, true);
         vm.expectRevert("Marketplace: insufficient currency balance.");
-        Offers(marketplace).acceptOffer(offerId);
+        OffersLogic(marketplace).acceptOffer(offerId);
         vm.stopPrank();
     }
 
@@ -721,10 +730,10 @@ contract MarketplaceOffersTest is BaseTest {
             );
 
             vm.prank(buyer);
-            offerIds[i] = Offers(marketplace).makeOffer(offerParams);
+            offerIds[i] = OffersLogic(marketplace).makeOffer(offerParams);
         }
 
-        IOffers.Offer[] memory allOffers = Offers(marketplace).getAllOffers(0, 4);
+        IOffers.Offer[] memory allOffers = OffersLogic(marketplace).getAllOffers(0, 4);
         assertEq(allOffers.length, 5);
 
         for (uint256 i = 0; i < 5; i += 1) {
@@ -773,13 +782,13 @@ contract MarketplaceOffersTest is BaseTest {
             );
 
             vm.prank(buyer);
-            offerIds[i] = Offers(marketplace).makeOffer(offerParams);
+            offerIds[i] = OffersLogic(marketplace).makeOffer(offerParams);
         }
 
         vm.prank(buyer);
         erc20.burn(2 ether); // reduce balance to make some offers invalid
 
-        IOffers.Offer[] memory allOffers = Offers(marketplace).getAllValidOffers(0, 4);
+        IOffers.Offer[] memory allOffers = OffersLogic(marketplace).getAllValidOffers(0, 4);
         assertEq(allOffers.length, 3);
 
         for (uint256 i = 0; i < 3; i += 1) {
@@ -798,10 +807,10 @@ contract MarketplaceOffersTest is BaseTest {
         offerParams = IOffers.OfferParams(assetContract, 5, quantity, currency, 10, 10);
 
         vm.prank(buyer);
-        Offers(marketplace).makeOffer(offerParams);
+        OffersLogic(marketplace).makeOffer(offerParams);
 
         vm.warp(10);
-        allOffers = Offers(marketplace).getAllValidOffers(0, 5);
+        allOffers = OffersLogic(marketplace).getAllValidOffers(0, 5);
         assertEq(allOffers.length, 3);
     }
 }
