@@ -94,7 +94,6 @@ function contractVersion() external pure returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined |
 
-<<<<<<< HEAD
 ### depositRewardTokens
 
 ```solidity
@@ -110,25 +109,6 @@ function depositRewardTokens(uint256 _amount) external payable
 | Name | Type | Description |
 |---|---|---|
 | _amount | uint256 | undefined |
-
-=======
->>>>>>> main
-### edition
-
-```solidity
-function edition() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
 
 ### getDefaultRewardsPerUnitTime
 
@@ -428,7 +408,7 @@ function indexedTokens(uint256) external view returns (uint256)
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin, string _contractURI, address[] _trustedForwarders, address _rewardToken, address _edition, uint256 _defaultTimeUnit, uint256 _defaultRewardsPerUnitTime) external nonpayable
+function initialize(address _defaultAdmin, string _contractURI, address[] _trustedForwarders, address _rewardToken, address _stakingToken, uint256 _defaultTimeUnit, uint256 _defaultRewardsPerUnitTime) external nonpayable
 ```
 
 
@@ -443,7 +423,7 @@ function initialize(address _defaultAdmin, string _contractURI, address[] _trust
 | _contractURI | string | undefined |
 | _trustedForwarders | address[] | undefined |
 | _rewardToken | address | undefined |
-| _edition | address | undefined |
+| _stakingToken | address | undefined |
 | _defaultTimeUnit | uint256 | undefined |
 | _defaultRewardsPerUnitTime | uint256 | undefined |
 
@@ -764,6 +744,23 @@ function stakersArray(uint256, uint256) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### stakingToken
+
+```solidity
+function stakingToken() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### supportsInterface
 
 ```solidity
@@ -856,7 +853,6 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-<<<<<<< HEAD
 ### RewardTokensDepositedByAdmin
 
 ```solidity
@@ -865,7 +861,7 @@ event RewardTokensDepositedByAdmin(uint256 _amount)
 
 
 
-*Emitted when contract admin deposits reward tokens.*
+
 
 #### Parameters
 
@@ -873,8 +869,6 @@ event RewardTokensDepositedByAdmin(uint256 _amount)
 |---|---|---|
 | _amount  | uint256 | undefined |
 
-=======
->>>>>>> main
 ### RewardTokensWithdrawnByAdmin
 
 ```solidity
@@ -883,7 +877,7 @@ event RewardTokensWithdrawnByAdmin(uint256 _amount)
 
 
 
-*Emitted when contract admin withdraws reward tokens.*
+
 
 #### Parameters
 

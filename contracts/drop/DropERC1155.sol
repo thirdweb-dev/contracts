@@ -25,6 +25,9 @@ import "../extension/LazyMint.sol";
 import "../extension/PermissionsEnumerable.sol";
 import "../extension/Drop1155.sol";
 
+// OpenSea operator filter
+import "../extension/DefaultOperatorFiltererUpgradeable.sol";
+
 contract DropERC1155 is
     Initializable,
     ContractMetadata,
@@ -37,6 +40,7 @@ contract DropERC1155 is
     Drop1155,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
+    DefaultOperatorFiltererUpgradeable,
     ERC1155Upgradeable
 {
     using StringsUpgradeable for uint256;
@@ -107,10 +111,12 @@ contract DropERC1155 is
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC1155_init_unchained("");
+        __DefaultOperatorFilterer_init();
 
         // Initialize this contract's state.
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
+        _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(_minterRole, _defaultAdmin);
@@ -271,6 +277,11 @@ contract DropERC1155 is
         return hasRole(minterRole, _msgSender());
     }
 
+    /// @dev Returns whether operator restriction can be set in the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
@@ -323,6 +334,37 @@ contract DropERC1155 is
                 totalSupply[ids[i]] -= amounts[i];
             }
         }
+    }
+
+    /// @dev See {ERC1155-setApprovalForAll}
+    function setApprovalForAll(address operator, bool approved) public override onlyAllowedOperatorApproval(operator) {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    /**
+     * @dev See {IERC1155-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override(ERC1155Upgradeable) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, id, amount, data);
+    }
+
+    /**
+     * @dev See {IERC1155-safeBatchTransferFrom}.
+     */
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public override(ERC1155Upgradeable) onlyAllowedOperator(from) {
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
     function _dropMsgSender() internal view virtual override returns (address) {
