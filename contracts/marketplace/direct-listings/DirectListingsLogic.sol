@@ -340,7 +340,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
     function getAllListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory _allListings) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        require(_startId < _endId && _endId < data.totalListings, "invalid range");
+        require(_startId <= _endId && _endId < data.totalListings, "invalid range");
 
         Listing[] memory _listings = new Listing[](_endId - _startId + 1);
         uint256 _listingCount;
@@ -353,9 +353,10 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
         }
 
         _allListings = new Listing[](_listingCount);
+        uint256 index = 0;
         for (uint256 i = _startId; i <= _endId; i += 1) {
             if (_listings[i].listingCreator != address(0)) {
-                _allListings[i] = _listings[i];
+                _allListings[index++] = _listings[i];
             }
         }
     }
@@ -372,7 +373,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
     {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        require(_startId < _endId && _endId < data.totalListings, "invalid range");
+        require(_startId <= _endId && _endId < data.totalListings, "invalid range");
 
         Listing[] memory _listings = new Listing[](_endId - _startId + 1);
         uint256 _listingCount;
@@ -385,9 +386,10 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
         }
 
         _validListings = new Listing[](_listingCount);
+        uint256 index = 0;
         for (uint256 i = _startId; i <= _endId; i += 1) {
             if (_validateExistingListing(_listings[i])) {
-                _validListings[i] = _listings[i];
+                _validListings[index++] = _listings[i];
             }
         }
     }

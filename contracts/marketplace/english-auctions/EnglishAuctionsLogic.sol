@@ -220,7 +220,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
 
     function getAllAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory _allAuctions) {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        require(_startId < _endId && _endId < data.totalAuctions, "invalid range");
+        require(_startId <= _endId && _endId < data.totalAuctions, "invalid range");
 
         Auction[] memory _auctions = new Auction[](_endId - _startId + 1);
         uint256 _auctionCount;
@@ -233,9 +233,10 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         }
 
         _allAuctions = new Auction[](_auctionCount);
+        uint256 index = 0;
         for (uint256 i = _startId; i <= _endId; i += 1) {
             if (_auctions[i].assetContract != address(0)) {
-                _allAuctions[i] = _auctions[i];
+                _allAuctions[index++] = _auctions[i];
             }
         }
     }
@@ -246,7 +247,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         returns (Auction[] memory _validAuctions)
     {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        require(_startId < _endId && _endId < data.totalAuctions, "invalid range");
+        require(_startId <= _endId && _endId < data.totalAuctions, "invalid range");
 
         Auction[] memory _auctions = new Auction[](_endId - _startId + 1);
         uint256 _auctionCount;
@@ -263,13 +264,14 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         }
 
         _validAuctions = new Auction[](_auctionCount);
+        uint256 index = 0;
         for (uint256 i = _startId; i <= _endId; i += 1) {
             if (
                 _auctions[i].startTimestamp <= block.timestamp &&
                 _auctions[i].endTimestamp > block.timestamp &&
                 _auctions[i].assetContract != address(0)
             ) {
-                _validAuctions[i] = _auctions[i];
+                _validAuctions[index++] = _auctions[i];
             }
         }
     }
