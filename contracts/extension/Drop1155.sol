@@ -134,6 +134,9 @@ abstract contract Drop1155 is IDrop1155 {
         AllowlistProof calldata _allowlistProof
     ) public view returns (bool isOverride) {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].conditions[_conditionId];
+        if (currentClaimPhase.restrictClaimingViaContracts) {
+            require(_botCheck(), "BOT");
+        }
         uint256 claimLimit = currentClaimPhase.quantityLimitPerWallet;
         uint256 claimPrice = currentClaimPhase.pricePerToken;
         address claimCurrency = currentClaimPhase.currency;
@@ -219,8 +222,13 @@ abstract contract Drop1155 is IDrop1155 {
     ///////////////////////////////////////////////////////////////////*/
 
     /// @dev Exposes the ability to override the msg sender.
-    function _dropMsgSender() internal virtual returns (address) {
+    function _dropMsgSender() internal view virtual returns (address) {
         return msg.sender;
+    }
+
+    /// @dev Check if the claimer is EOA.
+    function _botCheck() internal view virtual returns (bool) {
+        return _dropMsgSender() == tx.origin;
     }
 
     /// @dev Runs before every `claim` function call.

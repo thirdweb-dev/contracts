@@ -274,6 +274,44 @@ contract DropERC721Test is BaseTest {
         drop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
+    function test_claimCondition_botCheck() public {
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        DropERC721.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerWallet = 100;
+        conditions[0].restrictClaimingViaContracts = true;
+
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        vm.prank(deployer);
+        drop.setClaimConditions(conditions, false);
+
+        vm.prank(getActor(5));
+        vm.expectRevert(bytes("BOT"));
+        drop.claim(receiver, 1, address(0), 0, alp, "");
+
+        vm.prank(getActor(5), getActor(5));
+        drop.claim(receiver, 1, address(0), 0, alp, "");
+
+        // remove bot check, and set claim conditions without resetting eligibility
+        conditions[0].restrictClaimingViaContracts = false;
+
+        vm.prank(deployer);
+        drop.setClaimConditions(conditions, false);
+
+        // now a smart contract can claim
+        vm.prank(getActor(5));
+        drop.claim(receiver, 1, address(0), 0, alp, "");
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Lazy Mint Tests
     //////////////////////////////////////////////////////////////*/

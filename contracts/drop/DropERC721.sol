@@ -379,6 +379,11 @@ contract DropERC721 is
         return _msgSender();
     }
 
+    /// @dev Check if the claimer is EOA.
+    function _botCheck() internal view virtual override returns (bool) {
+        return isTrustedForwarder(msg.sender) || _dropMsgSender() == tx.origin;
+    }
+
     function _msgSender()
         internal
         view
