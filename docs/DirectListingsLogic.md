@@ -1,4 +1,4 @@
-# DirectListings
+# DirectListingsLogic
 
 
 
@@ -82,7 +82,7 @@ Approve a buyer to buy from a reserved listing.
 ### approveCurrencyForListing
 
 ```solidity
-function approveCurrencyForListing(uint256 _listingId, address _currency, uint256 _pricePerTokenInCurrency, bool _toApprove) external nonpayable
+function approveCurrencyForListing(uint256 _listingId, address _currency, uint256 _pricePerTokenInCurrency) external nonpayable
 ```
 
 Approve a currency as a form of payment for the listing.
@@ -96,7 +96,6 @@ Approve a currency as a form of payment for the listing.
 | _listingId | uint256 | undefined |
 | _currency | address | undefined |
 | _pricePerTokenInCurrency | uint256 | undefined |
-| _toApprove | bool | undefined |
 
 ### buyFromListing
 
@@ -369,7 +368,7 @@ Emitted when a listing is cancelled.
 ### CurrencyApprovedForListing
 
 ```solidity
-event CurrencyApprovedForListing(uint256 indexed listingId, address indexed currency, uint256 pricePerToken, bool approved)
+event CurrencyApprovedForListing(uint256 indexed listingId, address indexed currency, uint256 pricePerToken)
 ```
 
 Emitted when a currency is approved as a form of payment for the listing.
@@ -383,7 +382,6 @@ Emitted when a currency is approved as a form of payment for the listing.
 | listingId `indexed` | uint256 | undefined |
 | currency `indexed` | address | undefined |
 | pricePerToken  | uint256 | undefined |
-| approved  | bool | undefined |
 
 ### NewListing
 

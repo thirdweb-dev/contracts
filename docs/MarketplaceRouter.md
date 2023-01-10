@@ -1,4 +1,4 @@
-# MarketplaceEntrypoint
+# MarketplaceRouter
 
 
 
@@ -26,6 +26,44 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bytes32 | undefined |
+
+### _getPluginForFunction
+
+```solidity
+function _getPluginForFunction(bytes4 _selector) external view returns (address)
+```
+
+
+
+*View address of the plugged-in functionality contract for a given function signature.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _selector | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### addPlugin
+
+```solidity
+function addPlugin(IPluginMap.Plugin _plugin) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _plugin | IPluginMap.Plugin | undefined |
 
 ### contractType
 
@@ -78,22 +116,44 @@ function contractVersion() external pure returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined |
 
-### functionMap
+### getAllFunctionsOfPlugin
 
 ```solidity
-function functionMap() external view returns (address)
+function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] registered)
 ```
 
 
 
+*View all funtionality as list of function signatures.*
 
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _pluginAddress | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| registered | bytes4[] | undefined |
+
+### getAllPlugins
+
+```solidity
+function getAllPlugins() external view returns (struct IPluginMap.Plugin[] registered)
+```
+
+
+
+*View all funtionality existing on the contract.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| registered | IPluginMap.Plugin[] | undefined |
 
 ### getPlatformFeeInfo
 
@@ -112,6 +172,28 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 |---|---|---|
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
+
+### getPluginForFunction
+
+```solidity
+function getPluginForFunction(bytes4 _selector) external view returns (address)
+```
+
+
+
+*View address of the plugged-in functionality contract for a given function signature.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _selector | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### getRoleAdmin
 
@@ -384,6 +466,39 @@ function onERC721Received(address, address, uint256, bytes) external pure return
 |---|---|---|
 | _0 | bytes4 | undefined |
 
+### pluginMap
+
+```solidity
+function pluginMap() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### removePlugin
+
+```solidity
+function removePlugin(bytes4 _selector) external nonpayable
+```
+
+
+
+*Remove existing functionality from the contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _selector | bytes4 | undefined |
+
 ### renounceRole
 
 ```solidity
@@ -459,7 +574,7 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 
 
 
-*Returns true if this contract implements the interface defined by `interfaceId`. See the corresponding https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified[EIP section] to learn more about how these ids are created. This function call must use less than 30 000 gas.*
+
 
 #### Parameters
 
@@ -472,6 +587,22 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined |
+
+### updatePlugin
+
+```solidity
+function updatePlugin(IPluginMap.Plugin _plugin) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _plugin | IPluginMap.Plugin | undefined |
 
 
 
@@ -510,6 +641,76 @@ event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platf
 |---|---|---|
 | platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
+
+### PluginAdded
+
+```solidity
+event PluginAdded(bytes4 indexed functionSelector, address indexed pluginAddress)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| functionSelector `indexed` | bytes4 | undefined |
+| pluginAddress `indexed` | address | undefined |
+
+### PluginRemoved
+
+```solidity
+event PluginRemoved(bytes4 indexed functionSelector, address indexed pluginAddress)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| functionSelector `indexed` | bytes4 | undefined |
+| pluginAddress `indexed` | address | undefined |
+
+### PluginSet
+
+```solidity
+event PluginSet(bytes4 indexed functionSelector, string indexed functionSignature, address indexed pluginAddress)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| functionSelector `indexed` | bytes4 | undefined |
+| functionSignature `indexed` | string | undefined |
+| pluginAddress `indexed` | address | undefined |
+
+### PluginUpdated
+
+```solidity
+event PluginUpdated(bytes4 indexed functionSelector, address indexed oldPluginAddress, address indexed newPluginAddress)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| functionSelector `indexed` | bytes4 | undefined |
+| oldPluginAddress `indexed` | address | undefined |
+| newPluginAddress `indexed` | address | undefined |
 
 ### RoleAdminChanged
 
