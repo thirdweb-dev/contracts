@@ -45,8 +45,8 @@ contract MarketplaceRouter is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("Marketplace");
-    uint256 private constant VERSION = 3;
+    bytes32 private constant MODULE_TYPE = bytes32("MarketplaceRouter");
+    uint256 private constant VERSION = 1;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
