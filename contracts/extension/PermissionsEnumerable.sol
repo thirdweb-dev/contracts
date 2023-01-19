@@ -37,7 +37,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
      *
      *  @return member  Address of account that has `role`
      */
-    function getRoleMember(bytes32 role, uint256 index) external view override returns (address member) {
+    function getRoleMember(bytes32 role, uint256 index) public view override returns (address member) {
         uint256 currentIndex = roleMembers[role].index;
         uint256 check;
 
@@ -63,7 +63,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
      *
      *  @return count   Total number of accounts that have `role`
      */
-    function getRoleMemberCount(bytes32 role) external view override returns (uint256 count) {
+    function getRoleMemberCount(bytes32 role) public view override returns (uint256 count) {
         uint256 currentIndex = roleMembers[role].index;
 
         for (uint256 i = 0; i < currentIndex; i += 1) {

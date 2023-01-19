@@ -188,6 +188,10 @@ contract Account is
     function removeAdmin(address _signer, bytes32 _accountId) external onlySelf {
         require(hasRole(DEFAULT_ADMIN_ROLE, _signer), "Account: admin already does not exist.");
         _revokeRole(DEFAULT_ADMIN_ROLE, _signer);
+
+        uint256 adminCount = getRoleMemberCount(DEFAULT_ADMIN_ROLE);
+        require(adminCount > 0, "Account: must have at least one admin.");
+
         emit AdminRemoved(_signer);
 
         try ISignerTracker(controller).removeSignerToAccount(_signer, _accountId) {} catch {}

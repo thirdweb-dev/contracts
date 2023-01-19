@@ -1410,4 +1410,34 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         // assertEq(address(account).balance, 100 ether); // ether still in account
         // assertEq(address(this).balance, 0 ether); // ether in recipient came from test contract
     }
+
+    function test_H_1() external {
+        _setUp_account();
+
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.removeAdmin.selector, admin, adminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.expectRevert("Account: must have at least one admin.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        assertEq(account.hasRole(DEFAULT_ADMIN_ROLE, address(admin)), true);
+
+        address[] memory accountsOfSigner = accountAdmin.getAllAccountsOfSigner(admin);
+        assertEq(accountsOfSigner.length, 1);
+
+        address[] memory signersOfAccount = accountAdmin.getAllSignersOfAccount(address(account));
+        assertEq(signersOfAccount.length, 1);
+    }
 }
