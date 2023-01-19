@@ -140,12 +140,7 @@ contract Account is
         payable
         returns (bool success)
     {
-        _validateCallConditions(
-            _params.nonce,
-            _params.value,
-            _params.validityStartTimestamp,
-            _params.validityEndTimestamp
-        );
+        _validateCallConditions(_params.nonce, _params.validityStartTimestamp, _params.validityEndTimestamp);
         _validateSignature(_params, _signature);
         _validatePermissions(_params.signer, _params.target, _params.data);
 
@@ -449,11 +444,9 @@ contract Account is
     /// @dev Validates conditions for a call to account.
     function _validateCallConditions(
         uint256 _nonce,
-        uint256 _value,
         uint128 _validityStartTimestamp,
         uint128 _validityEndTimestamp
     ) internal {
-        require(msg.value == _value, "Account: incorrect value sent.");
         require(
             _validityStartTimestamp <= block.timestamp && block.timestamp < _validityEndTimestamp,
             "Account: request premature or expired."

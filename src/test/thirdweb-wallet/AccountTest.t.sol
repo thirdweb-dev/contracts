@@ -442,33 +442,6 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         accountAdmin.relay(admin, adminAccountId, 0, 0, data);
     }
 
-    /// @notice Incorrect value sent when sending transaction request to Account.
-    function test_revert_execute_contractCallByAdmin_incorrectValueSent() external {
-        _setUp_account();
-
-        uint256 number = 5;
-        assertEq(account.nonce(), 0);
-        assertEq(counter.getNumber(), 0);
-
-        uint256 value = 1;
-
-        IAccount.TransactionParams memory params = IAccount.TransactionParams({
-            signer: admin,
-            target: address(counter),
-            data: abi.encodeWithSelector(CounterContract.setNumber.selector, number),
-            nonce: account.nonce(),
-            value: value + 1,
-            gas: 0,
-            validityStartTimestamp: 0,
-            validityEndTimestamp: 100
-        });
-        bytes memory signature = signExecute(params, privateKey1, address(account));
-
-        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
-        vm.expectRevert("Account: incorrect value sent.");
-        accountAdmin.relay{ value: value }(admin, adminAccountId, value, 0, data);
-    }
-
     /// @notice Pre-mature transaction request sent to Account.
     function test_revert_execute_contractCallByAdmin_requestBeforeValidityStart() external {
         _setUp_account();
@@ -1348,5 +1321,93 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         assertEq(signersOfAccount[0], address(account));
 
         assertEq(accountAdmin.getAccount(address(account), params.accountId), altAccount);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+
+    function test_C_1() public {
+        _setUp_account();
+
+        address recipient = address(0xb0b);
+        vm.deal(address(recipient), 0 ether);
+        vm.deal(address(account), 100 ether); // send ether into account
+
+        bytes memory dataToRelay = abi.encodeWithSelector(""); // vanilla call
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(recipient),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 100 ether,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+
+        // --------Revert relay call with eth coming from this test contract--------
+
+        // vm.expectRevert("Account: incorrect value sent."); // revert in _validateCallConditions()
+        // Don't send eth in with `{value: 100 ether}`. We want the ether to come from `account`, not this test contract
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        assertEq(recipient.balance, 100 ether);
+        assertEq(address(account).balance, 0);
+
+        // --------Successful relay call with eth coming from this test contract--------
+
+        // vm.deal(address(this), 100 ether);
+
+        // accountAdmin.relay{ value: 100 ether }(admin, adminAccountId, 100 ether, 0, data);
+
+        // assertEq(recipient.balance, 100 ether);
+        // assertEq(address(account).balance, 100 ether); // ether still in account
+        // assertEq(address(this).balance, 0 ether); // ether in recipient came from test contract
+    }
+
+    function testEthStuckExecute() public {
+        _setUp_account();
+
+        address recipient = address(0xb0b);
+        vm.deal(address(recipient), 0 ether);
+        vm.deal(address(account), 100 ether); // send ether into account
+
+        bytes memory dataToRelay = abi.encodeWithSelector(""); // vanilla call
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(recipient),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 100 ether,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey, address(account));
+
+        // --------Revert execute call with eth coming from this test contract--------
+
+        // vm.expectRevert("Account: incorrect value sent."); // revert in _validateCallConditions()
+        // Don't send eth in with `{value: 100 ether}`. We want the ether to come from `account`, not this test contract
+        account.execute(params, signature);
+
+        assertEq(recipient.balance, 100 ether);
+        assertEq(address(account).balance, 0);
+
+        // --------Successful direct execute call with ether coming from this test contract
+
+        // vm.deal(address(this), 100 ether);
+
+        // account.execute{ value: 100 ether }(params, signature);
+
+        // assertEq(recipient.balance, 100 ether);
+        // assertEq(address(account).balance, 100 ether); // ether still in account
+        // assertEq(address(this).balance, 0 ether); // ether in recipient came from test contract
     }
 }
