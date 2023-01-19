@@ -1532,4 +1532,46 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         assertEq(account.hasRole(DEFAULT_ADMIN_ROLE, address(newAdmin)), false);
         assertEq(accountAdmin.getAccount(newAdmin, newAdminAccountId), address(0));
     }
+
+    function test_M_2_fixed() external {
+        _setUp_account();
+
+        //----- Add non Admin Signer ---------//
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin, adminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        ////////// approve signer for target //////////
+
+        dataToRelay = abi.encodeWithSelector(Account.approveSignerForContract.selector, nonAdmin, address(account));
+
+        params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        signature = signExecute(params, privateKey1, address(account));
+
+        data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.expectRevert("Account: can't approve signer for entire account contract.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
 }

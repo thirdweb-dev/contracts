@@ -270,6 +270,7 @@ contract Account is
 
     /// @notice Approves a signer to be able to call any function on `_target` smart contract.
     function approveSignerForContract(address _signer, address _target) external onlySelf {
+        require(_target != address(this), "Account: can't approve signer for entire account contract.");
         require(approvedContracts[_signer].add(_target), "Account: already approved.");
         isApprovedForContract[_signer][_target] = true;
 
