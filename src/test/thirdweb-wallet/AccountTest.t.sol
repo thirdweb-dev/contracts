@@ -1327,7 +1327,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
                             Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
-    function test_C_1() public {
+    function test_C_1_fixed() public {
         _setUp_account();
 
         address recipient = address(0xb0b);
@@ -1370,7 +1370,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         // assertEq(address(this).balance, 0 ether); // ether in recipient came from test contract
     }
 
-    function testEthStuckExecute() public {
+    function testEthStuckExecute_fixed() public {
         _setUp_account();
 
         address recipient = address(0xb0b);
@@ -1411,7 +1411,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         // assertEq(address(this).balance, 0 ether); // ether in recipient came from test contract
     }
 
-    function test_H_1() external {
+    function test_H_1_fixed() external {
         _setUp_account();
 
         bytes memory dataToRelay = abi.encodeWithSelector(Account.removeAdmin.selector, admin, adminAccountId);
@@ -1439,5 +1439,97 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
 
         address[] memory signersOfAccount = accountAdmin.getAllSignersOfAccount(address(account));
         assertEq(signersOfAccount.length, 1);
+    }
+
+    function test_M_1_fixed() external {
+        _setUp_account();
+
+        // ------------- ADD newAdmin as Signer -------------------/
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, newAdmin, newAdminAccountId);
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+
+        // ------------- ADD newAdmin as Admin -------------------/
+        bytes memory dataToRelay2 = abi.encodeWithSelector(Account.addAdmin.selector, newAdmin, newAdminAccountId);
+
+        IAccount.TransactionParams memory params2 = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay2,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature2 = signExecute(params2, privateKey1, address(account));
+
+        bytes memory data2 = abi.encodeWithSelector(Account.execute.selector, params2, signature2);
+        vm.expectRevert("Account: signer already has SIGNER_ROLE.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data2);
+
+        address[] memory accountsOfSigner1 = accountAdmin.getAllAccountsOfSigner(admin);
+        assertEq(accountsOfSigner1.length, 1);
+        assertEq(accountsOfSigner1[0], address(account));
+
+        address[] memory accountsOfSigner2 = accountAdmin.getAllAccountsOfSigner(newAdmin);
+        assertEq(accountsOfSigner2.length, 1);
+        assertEq(accountsOfSigner2[0], address(account));
+
+        address[] memory signersOfAccount = accountAdmin.getAllSignersOfAccount(address(account));
+        assertEq(signersOfAccount.length, 2);
+        assertEq(signersOfAccount[0], admin);
+        assertEq(signersOfAccount[1], newAdmin);
+
+        assertEq(accountAdmin.getAccount(admin, adminAccountId), address(account));
+        assertEq(accountAdmin.getAccount(newAdmin, newAdminAccountId), address(account));
+
+        // ------------- REMOVE newAdmin from being Signer -------------------/
+        bytes memory dataToRelay3 = abi.encodeWithSelector(Account.removeSigner.selector, newAdmin, newAdminAccountId);
+
+        IAccount.TransactionParams memory params3 = IAccount.TransactionParams({
+            signer: admin,
+            target: address(account),
+            data: dataToRelay3,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+
+        bytes memory signature3 = signExecute(params3, privateKey1, address(account));
+
+        bytes memory data3 = abi.encodeWithSelector(Account.execute.selector, params3, signature3);
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data3);
+
+        accountsOfSigner1 = accountAdmin.getAllAccountsOfSigner(admin);
+        assertEq(accountsOfSigner1.length, 1);
+        assertEq(accountsOfSigner1[0], address(account));
+
+        accountsOfSigner2 = accountAdmin.getAllAccountsOfSigner(newAdmin);
+        assertEq(accountsOfSigner2.length, 0);
+
+        signersOfAccount = accountAdmin.getAllSignersOfAccount(address(account));
+        assertEq(signersOfAccount.length, 1);
+        assertEq(signersOfAccount[0], admin);
+
+        assertEq(account.hasRole(DEFAULT_ADMIN_ROLE, address(newAdmin)), false);
+        assertEq(accountAdmin.getAccount(newAdmin, newAdminAccountId), address(0));
     }
 }

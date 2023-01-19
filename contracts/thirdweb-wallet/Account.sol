@@ -177,11 +177,15 @@ contract Account is
 
     /// @notice Adds an admin to the account.
     function addAdmin(address _signer, bytes32 _accountId) external onlySelf {
+        require(!hasRole(SIGNER_ROLE, _signer), "Account: signer already has SIGNER_ROLE.");
         require(!hasRole(DEFAULT_ADMIN_ROLE, _signer), "Account: admin already exists.");
+
         _setupRole(DEFAULT_ADMIN_ROLE, _signer);
         emit AdminAdded(_signer);
 
-        try ISignerTracker(controller).addSignerToAccount(_signer, _accountId) {} catch {}
+        if (controller != address(0)) {
+            ISignerTracker(controller).addSignerToAccount(_signer, _accountId);
+        }
     }
 
     /// @notice Removes an admin from the account.
@@ -194,16 +198,22 @@ contract Account is
 
         emit AdminRemoved(_signer);
 
-        try ISignerTracker(controller).removeSignerToAccount(_signer, _accountId) {} catch {}
+        if (controller != address(0)) {
+            ISignerTracker(controller).removeSignerToAccount(_signer, _accountId);
+        }
     }
 
     /// @notice Adds a signer to the account.
     function addSigner(address _signer, bytes32 _accountId) external onlySelf {
+        require(!hasRole(DEFAULT_ADMIN_ROLE, _signer), "Account: signer already has DEFAULT_ADMIN_ROLE.");
         require(!hasRole(SIGNER_ROLE, _signer), "Account: signer already exists.");
+
         _setupRole(SIGNER_ROLE, _signer);
         emit SignerAdded(_signer);
 
-        try ISignerTracker(controller).addSignerToAccount(_signer, _accountId) {} catch {}
+        if (controller != address(0)) {
+            ISignerTracker(controller).addSignerToAccount(_signer, _accountId);
+        }
     }
 
     /// @notice Removes a signer from the account.
@@ -212,7 +222,9 @@ contract Account is
         _revokeRole(SIGNER_ROLE, _signer);
         emit SignerRemoved(_signer);
 
-        try ISignerTracker(controller).removeSignerToAccount(_signer, _accountId) {} catch {}
+        if (controller != address(0)) {
+            ISignerTracker(controller).removeSignerToAccount(_signer, _accountId);
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
