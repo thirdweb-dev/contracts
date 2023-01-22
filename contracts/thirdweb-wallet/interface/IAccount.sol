@@ -135,9 +135,6 @@ interface IAccount is IERC1271 {
     /// @notice Emitted when a signer is approved to call arbitrary function on `target` smart contract.
     event ContractApprovedForSigner(address indexed signer, address indexed targetContract, bool approval);
 
-    /// @notice Emitted when a signer is approved to call `selector` function on arbitrary smart contract.
-    event FunctionApprovedForSigner(address indexed signer, bytes4 indexed selector, bool approval);
-
     /// @notice A struct representing a call target (fn selector + smart contract).
     struct CallTarget {
         bytes4 selector;
@@ -166,14 +163,6 @@ interface IAccount is IERC1271 {
     function approveSignerForContract(address signer, address target) external;
 
     /**
-     *  @notice Approves a signer to be able to call `selector` function on any smart contract.
-     *
-     *  @param signer The signer to approve.
-     *  @param selector The function selector to approve the signer for.
-     */
-    function approveSignerForFunction(address signer, bytes4 selector) external;
-
-    /**
      *  @notice Removes approval of a signer from being able to call `_selector` function on `_target` smart contract.
      *
      *  @param signer The signer to remove approval for.
@@ -194,20 +183,9 @@ interface IAccount is IERC1271 {
      */
     function disapproveSignerForContract(address signer, address target) external;
 
-    /**
-     *  @notice Disapproves a signer from being able to call `_selector` function on arbitrary smart contract.
-     *
-     *  @param signer The signer to remove approval for.
-     *  @param selector The function selector for which to remove the approval of the signer.
-     */
-    function disapproveSignerForFunction(address signer, bytes4 selector) external;
-
     /// @notice Returns all call targets approved for a given signer.
     function getAllApprovedTargets(address signer) external view returns (CallTarget[] memory approvedTargets);
 
     /// @notice Returns all contract targets approved for a given signer.
     function getAllApprovedContracts(address signer) external view returns (address[] memory contracts);
-
-    /// @notice Returns all function targets approved for a given signer.
-    function getAllApprovedFunctions(address signer) external view returns (bytes4[] memory functions);
 }

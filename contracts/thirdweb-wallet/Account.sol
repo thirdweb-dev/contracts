@@ -81,17 +81,11 @@ contract Account is
     /// @notice Mapping from Signer => contracts approved to call.
     mapping(address => EnumerableSet.AddressSet) private approvedContracts;
 
-    /// @notice Mapping from Signer => functions approved to call.
-    mapping(address => EnumerableSet.Bytes32Set) private approvedFunctions;
-
     /// @notice  Mapping from Signer => (fn sig, contract address) => approval to call.
     mapping(address => mapping(bytes32 => bool)) private isApprovedFor;
 
     /// @notice  Mapping from Signer => contract address => approval to call.
     mapping(address => mapping(address => bool)) private isApprovedForContract;
-
-    /// @notice  Mapping from Signer => function signature => approval to call.
-    mapping(address => mapping(bytes4 => bool)) private isApprovedForFunction;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer
@@ -277,14 +271,6 @@ contract Account is
         emit ContractApprovedForSigner(_signer, _target, true);
     }
 
-    /// @notice Approves a signer to be able to call `_selector` function on any smart contract.
-    function approveSignerForFunction(address _signer, bytes4 _selector) external onlySelf {
-        require(approvedFunctions[_signer].add(bytes32(_selector)), "Account: already approved.");
-        isApprovedForFunction[_signer][_selector] = true;
-
-        emit FunctionApprovedForSigner(_signer, _selector, true);
-    }
-
     /// @notice Removes approval of a signer from being able to call `_selector` function on `_target` smart contract.
     function disapproveSignerForTarget(
         address _signer,
@@ -320,14 +306,6 @@ contract Account is
         emit ContractApprovedForSigner(_signer, _target, false);
     }
 
-    /// @notice Disapproves a signer from being able to call `_selector` function on arbitrary smart contract.
-    function disapproveSignerForFunction(address _signer, bytes4 _selector) external onlySelf {
-        require(approvedFunctions[_signer].remove(bytes32(_selector)), "Account: already not approved.");
-        isApprovedForFunction[_signer][_selector] = false;
-
-        emit FunctionApprovedForSigner(_signer, _selector, false);
-    }
-
     /// @notice Returns all call targets approved for a given signer.
     function getAllApprovedTargets(address _signer) external view returns (CallTarget[] memory approvedTargets) {
         CallTarget[] memory targets = callTargets[_signer];
@@ -356,16 +334,6 @@ contract Account is
     /// @notice Returns all contract targets approved for a given signer.
     function getAllApprovedContracts(address _signer) external view returns (address[] memory) {
         return approvedContracts[_signer].values();
-    }
-
-    /// @notice Returns all function targets approved for a given signer.
-    function getAllApprovedFunctions(address _signer) external view returns (bytes4[] memory functions) {
-        uint256 len = approvedFunctions[_signer].length();
-        functions = new bytes4[](len);
-
-        for (uint256 i = 0; i < len; i += 1) {
-            functions[i] = bytes4(approvedFunctions[_signer].at(i));
-        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -450,9 +418,7 @@ contract Account is
             bytes32 targetHash = keccak256(abi.encode(_getSelector(_data), _target));
             hasPermissions =
                 hasRole(SIGNER_ROLE, _signer) &&
-                (isApprovedFor[_signer][targetHash] ||
-                    isApprovedForContract[_signer][_target] ||
-                    isApprovedForFunction[_signer][_getSelector(_data)]);
+                (isApprovedFor[_signer][targetHash] || isApprovedForContract[_signer][_target]);
         }
 
         require(hasPermissions, "Account: unauthorized signer.");
