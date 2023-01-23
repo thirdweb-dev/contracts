@@ -272,9 +272,9 @@ contract SignatureDrop1155OperatorCheck is
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
-                revert("!PRICE");
-            }
+            require(msg.value == totalPrice, "!PRICE");
+        } else {
+            require(msg.value == 0, "!VALUE");
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
