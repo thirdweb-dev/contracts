@@ -1288,6 +1288,43 @@ contract SignatureDrop1155Test is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
-                            Miscellaneous
+                            Audit
     //////////////////////////////////////////////////////////////*/
+
+    function test_M_3() public {
+        vm.prank(deployerSigner);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+        uint256 id = 0;
+        SignatureDrop1155.MintRequest memory mintrequest;
+
+        mintrequest.to = address(0x567);
+        mintrequest.royaltyRecipient = address(0x567);
+        mintrequest.royaltyBps = 100;
+        mintrequest.primarySaleRecipient = address(0x567);
+        mintrequest.tokenId = 0;
+        mintrequest.uri = "ipfs://";
+        mintrequest.quantity = 1;
+        mintrequest.pricePerToken = 1 ether;
+        mintrequest.currency = address(erc20);
+        mintrequest.validityStartTimestamp = 1000;
+        mintrequest.validityEndTimestamp = 2000;
+        mintrequest.uid = bytes32(id);
+
+        // Test with ERC20 and NATIVE currency
+        {
+            erc20.mint(address(0x345), 1 ether);
+            vm.deal(address(0x345), 1 ether);
+
+            bytes memory signature = signMintRequest(mintrequest, privateKey);
+            vm.startPrank(address(0x345));
+            vm.warp(1000);
+            erc20.approve(address(drop), 1 ether);
+
+            vm.expectRevert(bytes("!VALUE"));
+
+            // Send eth with a mint request of erc20 payment
+            drop.mintWithSignature{ value: mintrequest.pricePerToken }(mintrequest, signature);
+            vm.stopPrank();
+        }
+    }
 }
