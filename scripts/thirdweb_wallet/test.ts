@@ -34,6 +34,7 @@ async function main() {
 
   const ACCOUNT_ADMIN: string = "0xaedDA1a968aC9d26BbE5Ce5be65a5E77a0aA0339"; // Get value from `scripts/thirdweb_wallet/setup.ts`
 
+<<<<<<< HEAD
   const sdk = ThirdwebSDK.fromPrivateKey(
     process.env.THIRDWEB_WALLET_TEST_PKEY as string,
     "goerli",
@@ -50,6 +51,18 @@ async function main() {
     ACCOUNT_ADMIN,
     JSON.parse(readFileSync("artifacts_forge/AccountAdmin.sol/AccountAdmin.json", "utf-8")).abi
   );
+=======
+  const sdk = ThirdwebSDK.fromPrivateKey(process.env.THIRDWEB_WALLET_TEST_PKEY as string, "goerli", {
+    gasless: {
+      openzeppelin: {
+        relayerUrl:
+          "https://api.defender.openzeppelin.com/autotasks/23a23d0f-886a-4858-a14d-ab08ed487c4a/runs/webhook/74b0e036-fd2e-418b-97d7-69ac094edf7b/8RTrzhrMW56WEcNYXd54Bg",
+        relayerForwarderAddress: "0x5001A14CA6163143316a7C614e30e6041033Ac20",
+      },
+    },
+  });
+  const entrypoint = await sdk.getContract(WALLET_ADMIN);
+>>>>>>> bee319365492a3d989b495b8e424fad82c5136ad
 
   /*///////////////////////////////////////////////////////////////
             Create an account / get an account for signer
@@ -67,11 +80,17 @@ async function main() {
     validityEndTimestamp: Math.floor(Date.now() / 1000) + 10_000,
   };
 
+<<<<<<< HEAD
   const wrapper = (accountAdmin as any).contractWrapper;
   const chainId = (await sdk.getProvider().getNetwork()).chainId;
 
   const signatureForCreateAccount = await wrapper.signTypedData(
     sdk.getSigner(),
+=======
+  const chainId = (await sdk.getProvider().getNetwork()).chainId;
+
+  const signaturForCreateAccount = await sdk.wallet.signTypedData(
+>>>>>>> bee319365492a3d989b495b8e424fad82c5136ad
     {
       name: "thirdweb_wallet_admin",
       version: "1",
@@ -118,8 +137,7 @@ async function main() {
 
   console.log("Account transaction params: ", accountTransactionParams);
 
-  const signaturForTransactionParams = await wrapper.signTypedData(
-    sdk.getSigner(),
+  const signaturForTransactionParams = await sdk.wallet.signTypedData(
     {
       name: "thirdweb_wallet",
       version: "1",
@@ -148,7 +166,25 @@ async function main() {
     data: accountTransactionData,
   };
 
+<<<<<<< HEAD
   const tx = await accountAdmin.call("relay", ...Object.values(relayRequestParams));
+=======
+  const signaturForTransactionRequest = await sdk.wallet.signTypedData(
+    {
+      name: "thirdwebWallet_Admin",
+      version: "1",
+      chainId,
+      verifyingContract: WALLET_ADMIN,
+    },
+    { TransactionRequest: TransactionRequest },
+    adminTransactionParams,
+  );
+
+  console.log("Signature for Wallet Admin calling execute: ", signaturForTransactionRequest);
+  console.log("signaturForTransactionRequest", adminTransactionParams);
+
+  const tx = await entrypoint.call("execute", adminTransactionParams, signaturForTransactionRequest);
+>>>>>>> bee319365492a3d989b495b8e424fad82c5136ad
 
   console.log(tx);
 }

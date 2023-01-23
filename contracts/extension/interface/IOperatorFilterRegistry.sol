@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache 2.0
-// Credit: OpenSea
 pragma solidity ^0.8.0;
 
 interface IOperatorFilterRegistry {
@@ -10,6 +9,8 @@ interface IOperatorFilterRegistry {
     function registerAndSubscribe(address registrant, address subscription) external;
 
     function registerAndCopyEntries(address registrant, address registrantToCopy) external;
+
+    function unregister(address addr) external;
 
     function updateOperator(
         address registrant,

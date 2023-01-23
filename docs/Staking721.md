@@ -4,7 +4,7 @@
 
 
 
-note: This is a Beta release.
+
 
 
 
@@ -21,10 +21,44 @@ Claim accumulated rewards.
 *See {_claimRewards}. Override that to implement custom logic.             See {_calculateRewards} for reward-calculation logic.*
 
 
+### getRewardTokenBalance
+
+```solidity
+function getRewardTokenBalance() external view returns (uint256 _rewardsAvailableInContract)
+```
+
+View total rewards available in the staking contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _rewardsAvailableInContract | uint256 | undefined |
+
+### getRewardsPerUnitTime
+
+```solidity
+function getRewardsPerUnitTime() external view returns (uint256 _rewardsPerUnitTime)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _rewardsPerUnitTime | uint256 | undefined |
+
 ### getStakeInfo
 
 ```solidity
-function getStakeInfo(address _staker) external view returns (uint256 _tokensStaked, uint256 _rewards)
+function getStakeInfo(address _staker) external view returns (uint256[] _tokensStaked, uint256 _rewards)
 ```
 
 View amount staked and total rewards for a user.
@@ -41,42 +75,69 @@ View amount staked and total rewards for a user.
 
 | Name | Type | Description |
 |---|---|---|
-| _tokensStaked | uint256 | undefined |
-| _rewards | uint256 | undefined |
+| _tokensStaked | uint256[] |   List of token-ids staked by staker. |
+| _rewards | uint256 |        Available reward amount. |
 
-### nftCollection
+### getTimeUnit
 
 ```solidity
-function nftCollection() external view returns (address)
+function getTimeUnit() external view returns (uint256 _timeUnit)
 ```
 
 
 
-*Address of ERC721 NFT contract -- staked tokens belong to this contract.*
+
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| _timeUnit | uint256 | undefined |
 
-### rewardsPerUnitTime
+### indexedTokens
 
 ```solidity
-function rewardsPerUnitTime() external view returns (uint256)
+function indexedTokens(uint256) external view returns (uint256)
 ```
 
 
 
-*Rewards accumulated per unit of time.*
+*List of token-ids ever staked.*
 
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
+
+### isIndexed
+
+```solidity
+function isIndexed(uint256) external view returns (bool)
+```
+
+
+
+*Mapping from token-id to whether it is indexed or not.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### setRewardsPerUnitTime
 
@@ -151,12 +212,12 @@ function stakerAddress(uint256) external view returns (address)
 ### stakers
 
 ```solidity
-function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards)
+function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards, uint256 conditionIdOflastUpdate)
 ```
 
 
 
-*Mapping from staker address to Staker struct. See {struct IStaking.Staker}.*
+*Mapping from staker address to Staker struct. See {struct IStaking721.Staker}.*
 
 #### Parameters
 
@@ -171,6 +232,7 @@ function stakers(address) external view returns (uint256 amountStaked, uint256 t
 | amountStaked | uint256 | undefined |
 | timeOfLastUpdate | uint256 | undefined |
 | unclaimedRewards | uint256 | undefined |
+| conditionIdOflastUpdate | uint256 | undefined |
 
 ### stakersArray
 
@@ -194,22 +256,22 @@ function stakersArray(uint256) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### timeUnit
+### stakingToken
 
 ```solidity
-function timeUnit() external view returns (uint256)
+function stakingToken() external view returns (address)
 ```
 
 
 
-*Unit of time specified in number of seconds. Can be set as 1 seconds, 1 days, 1 hours, etc.*
+*Address of ERC721 NFT contract -- staked tokens belong to this contract.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| _0 | address | undefined |
 
 ### withdraw
 

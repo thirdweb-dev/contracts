@@ -5,6 +5,7 @@ import "@std/Test.sol";
 import "@ds-test/test.sol";
 // import "./Console.sol";
 import "./TestWallet.sol";
+import "./ChainlinkVRF.sol";
 import "../mocks/WETH9.sol";
 import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
@@ -15,6 +16,7 @@ import "contracts/TWRegistry.sol";
 import "contracts/TWFactory.sol";
 import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
 import { Pack } from "contracts/pack/Pack.sol";
+import { PackVRFDirect } from "contracts/pack/PackVRFDirect.sol";
 import { Split } from "contracts/Split.sol";
 import { DropERC20 } from "contracts/drop/DropERC20.sol";
 import { DropERC721 } from "contracts/drop/DropERC721.sol";
@@ -33,6 +35,9 @@ import "contracts/airdrop/AirdropERC20.sol";
 import "contracts/airdrop/AirdropERC20Claimable.sol";
 import "contracts/airdrop/AirdropERC1155.sol";
 import "contracts/airdrop/AirdropERC1155Claimable.sol";
+import { NFTStake } from "contracts/staking/NFTStake.sol";
+import { EditionStake } from "contracts/staking/EditionStake.sol";
+import { TokenStake } from "contracts/staking/TokenStake.sol";
 import "contracts/mock/Mock.sol";
 import "contracts/mock/MockContractPublisher.sol";
 
@@ -43,6 +48,7 @@ abstract contract BaseTest is DSTest, Test {
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     MockERC20 public erc20;
+    MockERC20 public erc20Aux;
     MockERC721 public erc721;
     MockERC1155 public erc1155;
     WETH9 public weth;
@@ -53,6 +59,8 @@ abstract contract BaseTest is DSTest, Test {
     address public factory;
     address public fee;
     address public contractPublisher;
+    address public linkToken;
+    address public vrfV2Wrapper;
 
     address public factoryAdmin = address(0x10000);
     address public deployer = address(0x20000);
@@ -89,6 +97,7 @@ abstract contract BaseTest is DSTest, Test {
         signer = vm.addr(privateKey);
 
         erc20 = new MockERC20();
+        erc20Aux = new MockERC20();
         erc721 = new MockERC721();
         erc1155 = new MockERC1155();
         weth = new WETH9();
@@ -97,6 +106,8 @@ abstract contract BaseTest is DSTest, Test {
         registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
         contractPublisher = address(new ContractPublisher(forwarder, new MockContractPublisher()));
+        linkToken = address(new Link());
+        vrfV2Wrapper = address(new VRFV2Wrapper());
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), contractPublisher);
 
@@ -127,8 +138,17 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new AirdropERC20Claimable()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC1155Claimable"), 1)));
         TWFactory(factory).addImplementation(address(new AirdropERC1155Claimable()));
+        TWFactory(factory).addImplementation(
+            address(new PackVRFDirect(address(weth), eoaForwarder, linkToken, vrfV2Wrapper))
+        );
         TWFactory(factory).addImplementation(address(new Pack(address(weth), eoaForwarder)));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("NFTStake"), 1)));
+        TWFactory(factory).addImplementation(address(new NFTStake(address(weth))));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("EditionStake"), 1)));
+        TWFactory(factory).addImplementation(address(new EditionStake(address(weth))));
+        TWFactory(factory).addImplementation(address(new MockContract(bytes32("TokenStake"), 1)));
+        TWFactory(factory).addImplementation(address(new TokenStake(address(weth))));
         vm.stopPrank();
 
         // setup airdrop logic
@@ -269,6 +289,15 @@ abstract contract BaseTest is DSTest, Test {
                 (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
             )
         );
+
+        deployContractProxy(
+            "PackVRFDirect",
+            abi.encodeCall(
+                PackVRFDirect.initialize,
+                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
+            )
+        );
+
         deployContractProxy("AirdropERC721", abi.encodeCall(AirdropERC721.initialize, (deployer)));
         deployContractProxy("AirdropERC20", abi.encodeCall(AirdropERC20.initialize, (deployer)));
         deployContractProxy("AirdropERC1155", abi.encodeCall(AirdropERC1155.initialize, (deployer)));
@@ -319,6 +348,27 @@ abstract contract BaseTest is DSTest, Test {
                     1,
                     _airdropMerkleRootERC20
                 )
+            )
+        );
+        deployContractProxy(
+            "NFTStake",
+            abi.encodeCall(
+                NFTStake.initialize,
+                (deployer, CONTRACT_URI, forwarders(), address(erc20), address(erc721), 60, 1)
+            )
+        );
+        deployContractProxy(
+            "EditionStake",
+            abi.encodeCall(
+                EditionStake.initialize,
+                (deployer, CONTRACT_URI, forwarders(), address(erc20), address(erc1155), 60, 1)
+            )
+        );
+        deployContractProxy(
+            "TokenStake",
+            abi.encodeCall(
+                TokenStake.initialize,
+                (deployer, CONTRACT_URI, forwarders(), address(erc20), address(erc20Aux), 60, 3, 50)
             )
         );
     }

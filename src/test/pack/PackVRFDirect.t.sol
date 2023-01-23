@@ -1,18 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { Pack, IERC2981Upgradeable, IERC721Receiver, IERC1155Upgradeable } from "contracts/pack/Pack.sol";
+import { PackVRFDirect, IERC2981Upgradeable, IERC721Receiver, IERC1155Upgradeable } from "contracts/pack/PackVRFDirect.sol";
 import { IPack } from "contracts/interfaces/IPack.sol";
 import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 // Test imports
-import { MockERC20 } from "./mocks/MockERC20.sol";
-import { TestWallet } from "./utils/TestWallet.sol";
-import "./utils/BaseTest.sol";
+import { MockERC20 } from "../mocks/MockERC20.sol";
+import { TestWallet } from "../utils/TestWallet.sol";
+import "../utils/BaseTest.sol";
 
-contract PackTest is BaseTest {
+contract PackVRFDirectTest is BaseTest {
     /// @notice Emitted when a set of packs is created.
     event PackCreated(uint256 indexed packId, address recipient, uint256 totalPacksCreated);
+
+    /// @notice Emitted when the opening of a pack is requested.
+    event PackOpenRequested(address indexed opener, uint256 indexed packId, uint256 amountToOpen, uint256 requestId);
+
+    /// @notice Emitted when Chainlink VRF fulfills a random number request.
+    event PackRandomnessFulfilled(uint256 indexed packId, uint256 indexed requestId);
 
     /// @notice Emitted when a pack is opened.
     event PackOpened(
@@ -22,7 +28,7 @@ contract PackTest is BaseTest {
         ITokenBundle.Token[] rewardUnitsDistributed
     );
 
-    Pack internal pack;
+    PackVRFDirect internal pack;
 
     TestWallet internal tokenOwner;
     string internal packUri;
@@ -31,10 +37,10 @@ contract PackTest is BaseTest {
     uint256[] internal numOfRewardUnits;
     uint256[] internal additionalContentsRewardUnits;
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
 
-        pack = Pack(payable(getContract("Pack")));
+        pack = PackVRFDirect(payable(getContract("PackVRFDirect")));
 
         tokenOwner = getWallet();
         packUri = "ipfs://";
@@ -174,38 +180,6 @@ contract PackTest is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Unit tests: Miscellaneous
-    //////////////////////////////////////////////////////////////*/
-
-    function test_revert_addPackContents_RandomAccountGrief() public {
-        uint256 packId = pack.nextTokenIdToMint();
-        address recipient = address(1);
-
-        vm.prank(address(tokenOwner));
-        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
-
-        // random address tries to transfer zero amount
-        address randomAccount = address(0x123);
-        vm.prank(randomAccount);
-        pack.safeTransferFrom(randomAccount, address(567), packId, 0, ""); // zero transfer
-
-        // canUpdatePack should remain true, since no packs were transferred
-        assertTrue(pack.canUpdatePack(packId));
-
-        erc20.mint(address(tokenOwner), 1000 ether);
-        erc1155.mint(address(tokenOwner), 2, 200);
-
-        vm.prank(address(tokenOwner));
-        // Should not revert
-        pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, recipient);
-    }
-
-    function test_checkForwarders() public {
-        assertTrue(pack.isTrustedForwarder(eoaForwarder));
-        assertTrue(pack.isTrustedForwarder(forwarder));
-    }
-
-    /*///////////////////////////////////////////////////////////////
                         Unit tests: `createPack`
     //////////////////////////////////////////////////////////////*/
 
@@ -266,40 +240,6 @@ contract PackTest is BaseTest {
 
         vm.prank(address(tokenOwner));
         pack.createPack{ value: 20 ether }(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
-
-        assertEq(packId + 1, pack.nextTokenIdToMint());
-
-        (ITokenBundle.Token[] memory packed, ) = pack.getPackContents(packId);
-        assertEq(packed.length, packContents.length);
-        for (uint256 i = 0; i < packed.length; i += 1) {
-            assertEq(packed[i].assetContract, packContents[i].assetContract);
-            assertEq(uint256(packed[i].tokenType), uint256(packContents[i].tokenType));
-            assertEq(packed[i].tokenId, packContents[i].tokenId);
-            assertEq(packed[i].totalAmount, packContents[i].totalAmount);
-        }
-
-        assertEq(packUri, pack.uri(packId));
-    }
-
-    /**
-     *  note: Testing state changes; token owner calls `createPack` to pack owned tokens.
-     *        Only assets with ASSET_ROLE can be packed.
-     */
-    function test_state_createPack_withAssetRoleRestriction() public {
-        vm.startPrank(deployer);
-        pack.revokeRole(keccak256("ASSET_ROLE"), address(0));
-        for (uint256 i = 0; i < packContents.length; i += 1) {
-            if (!pack.hasRole(keccak256("ASSET_ROLE"), packContents[i].assetContract)) {
-                pack.grantRole(keccak256("ASSET_ROLE"), packContents[i].assetContract);
-            }
-        }
-        vm.stopPrank();
-
-        uint256 packId = pack.nextTokenIdToMint();
-        address recipient = address(0x123);
-
-        vm.prank(address(tokenOwner));
-        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
 
         assertEq(packId + 1, pack.nextTokenIdToMint());
 
@@ -381,30 +321,6 @@ contract PackTest is BaseTest {
 
         // Pack wrapped token balance
         assertEq(pack.balanceOf(address(recipient), packId), totalSupply);
-    }
-
-    /**
-     *  note: Testing revert condition; token owner calls `createPack` to pack owned tokens.
-     *        Only assets with ASSET_ROLE can be packed, but assets being packed don't have that role.
-     */
-    function test_revert_createPack_access_ASSET_ROLE() public {
-        vm.prank(deployer);
-        pack.revokeRole(keccak256("ASSET_ROLE"), address(0));
-
-        address recipient = address(0x123);
-
-        string memory errorMsg = string(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(packContents[0].assetContract), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(keccak256("ASSET_ROLE")), 32)
-            )
-        );
-
-        vm.prank(address(tokenOwner));
-        vm.expectRevert(bytes(errorMsg));
-        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
     }
 
     /**
@@ -605,170 +521,96 @@ contract PackTest is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Unit tests: `addPackContents`
+                        Unit tests: `openPackAndClaimRewards`
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  note: Testing state changes; token owner calls `addPackContents` to pack more tokens.
+     *  note: Testing state changes; pack owner calls `openPack` to redeem underlying rewards.
      */
-    function test_state_addPackContents() public {
+    function test_state_openPackAndClaimRewards() public {
+        vm.warp(1000);
         uint256 packId = pack.nextTokenIdToMint();
+        uint256 packsToOpen = 3;
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
+        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
 
-        (ITokenBundle.Token[] memory packed, ) = pack.getPackContents(packId);
-        assertEq(packed.length, packContents.length);
-        for (uint256 i = 0; i < packed.length; i += 1) {
-            assertEq(packed[i].assetContract, packContents[i].assetContract);
-            assertEq(uint256(packed[i].tokenType), uint256(packContents[i].tokenType));
-            assertEq(packed[i].tokenId, packContents[i].tokenId);
-            assertEq(packed[i].totalAmount, packContents[i].totalAmount);
-        }
+        vm.prank(recipient, recipient);
+        uint256 requestId = pack.openPackAndClaimRewards(packId, packsToOpen, 2_500_000);
+        console2.log("request ID for opening pack:", requestId);
 
-        erc20.mint(address(tokenOwner), 1000 ether);
-        erc1155.mint(address(tokenOwner), 2, 200);
+        uint256[] memory randomValues = new uint256[](1);
+        randomValues[0] = 12345678;
 
-        vm.prank(address(tokenOwner));
-        pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, recipient);
+        ITokenBundle.Token[] memory emptyRewardUnitsForTestingEvent;
 
-        (packed, ) = pack.getPackContents(packId);
-        assertEq(packed.length, packContents.length + additionalContents.length);
-        for (uint256 i = packContents.length; i < packed.length; i += 1) {
-            assertEq(packed[i].assetContract, additionalContents[i - packContents.length].assetContract);
-            assertEq(uint256(packed[i].tokenType), uint256(additionalContents[i - packContents.length].tokenType));
-            assertEq(packed[i].tokenId, additionalContents[i - packContents.length].tokenId);
-            assertEq(packed[i].totalAmount, additionalContents[i - packContents.length].totalAmount);
-        }
+        vm.expectEmit(true, true, false, false);
+        emit PackOpened(packId, recipient, 1, emptyRewardUnitsForTestingEvent);
+
+        vm.prank(vrfV2Wrapper);
+        pack.rawFulfillRandomWords(requestId, randomValues);
+
+        assertFalse(pack.canClaimRewards(recipient));
     }
 
     /**
-     *  note: Testing token balances; token owner calls `addPackContents` to pack more tokens
-     *        in an already existing pack.
+     *  note: Testing state changes; pack owner calls `openPack` to redeem underlying rewards.
      */
-    function test_balances_addPackContents() public {
+    function test_state_openPackAndClaimRewards_lowGasFailsafe() public {
+        vm.warp(1000);
         uint256 packId = pack.nextTokenIdToMint();
+        uint256 packsToOpen = 3;
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
+        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
 
-        // ERC20 balance
-        assertEq(erc20.balanceOf(address(tokenOwner)), 0);
-        assertEq(erc20.balanceOf(address(pack)), 2000 ether);
+        vm.prank(recipient, recipient);
+        uint256 requestId = pack.openPackAndClaimRewards(packId, packsToOpen, 2);
+        console2.log("request ID for opening pack:", requestId);
 
-        // ERC721 balance
-        assertEq(erc721.ownerOf(0), address(pack));
-        assertEq(erc721.ownerOf(1), address(pack));
-        assertEq(erc721.ownerOf(2), address(pack));
-        assertEq(erc721.ownerOf(3), address(pack));
-        assertEq(erc721.ownerOf(4), address(pack));
-        assertEq(erc721.ownerOf(5), address(pack));
+        uint256[] memory randomValues = new uint256[](1);
+        randomValues[0] = 12345678;
 
-        // ERC1155 balance
-        assertEq(erc1155.balanceOf(address(tokenOwner), 0), 0);
-        assertEq(erc1155.balanceOf(address(pack), 0), 100);
+        // check state before
+        assertFalse(pack.canClaimRewards(recipient));
+        console.log(pack.canClaimRewards(recipient));
 
-        assertEq(erc1155.balanceOf(address(tokenOwner), 1), 0);
-        assertEq(erc1155.balanceOf(address(pack), 1), 500);
+        // mock the call with low gas, causing revert in _claimRewards
+        vm.prank(vrfV2Wrapper);
+        pack.rawFulfillRandomWords{ gas: 100_000 }(requestId, randomValues);
 
-        // Pack wrapped token balance
-        assertEq(pack.balanceOf(address(recipient), packId), totalSupply);
-
-        erc20.mint(address(tokenOwner), 1000 ether);
-        erc1155.mint(address(tokenOwner), 2, 200);
-
-        vm.prank(address(tokenOwner));
-        (uint256 newTotalSupply, uint256 additionalSupply) = pack.addPackContents(
-            packId,
-            additionalContents,
-            additionalContentsRewardUnits,
-            recipient
-        );
-
-        // ERC20 balance after adding more tokens
-        assertEq(erc20.balanceOf(address(tokenOwner)), 0);
-        assertEq(erc20.balanceOf(address(pack)), 3000 ether);
-
-        // ERC1155 balance after adding more tokens
-        assertEq(erc1155.balanceOf(address(tokenOwner), 2), 0);
-        assertEq(erc1155.balanceOf(address(pack), 2), 200);
-
-        // Pack wrapped token balance
-        assertEq(pack.balanceOf(address(recipient), packId), newTotalSupply);
-        assertEq(totalSupply + additionalSupply, newTotalSupply);
+        // check state after
+        assertTrue(pack.canClaimRewards(recipient));
+        console.log(pack.canClaimRewards(recipient));
     }
 
     /**
-     *  note: Testing revert condition; non-creator calls `addPackContents`.
+     *  note: Cannot open pack again while a previous openPack request is in flight.
      */
-    function test_revert_addPackContents_NotMinterRole() public {
+    function test_revert_openPackAndClaimRewards_ReqInFlight() public {
+        vm.warp(1000);
         uint256 packId = pack.nextTokenIdToMint();
+        uint256 packsToOpen = 3;
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
+        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
 
-        address randomAccount = address(0x123);
+        vm.prank(recipient, recipient);
+        uint256 requestId = pack.openPackAndClaimRewards(packId, packsToOpen, 2_500_000);
+        console2.log("request ID for opening pack:", requestId);
 
-        string memory errorMsg = string(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(address(randomAccount)), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
-            )
-        );
+        vm.expectRevert("ReqInFlight");
 
-        vm.prank(randomAccount);
-        vm.expectRevert(bytes(errorMsg));
-        pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, recipient);
-    }
+        vm.prank(recipient, recipient);
+        pack.openPackAndClaimRewards(packId, packsToOpen, 2_500_000);
 
-    /**
-     *  note: Testing revert condition; adding tokens to non-existent pack.
-     */
-    function test_revert_addPackContents_PackNonExistent() public {
-        vm.prank(address(tokenOwner));
-        vm.expectRevert("!Allowed");
-        pack.addPackContents(0, packContents, numOfRewardUnits, address(1));
-    }
+        vm.expectRevert("ReqInFlight");
 
-    /**
-     *  note: Testing revert condition; adding tokens after packs have been distributed.
-     */
-    function test_revert_addPackContents_CantUpdateAnymore() public {
-        uint256 packId = pack.nextTokenIdToMint();
-        address recipient = address(1);
-
-        vm.prank(address(tokenOwner));
-        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
-
-        vm.prank(recipient);
-        pack.safeTransferFrom(recipient, address(567), packId, 1, "");
-
-        vm.prank(address(tokenOwner));
-        vm.expectRevert("!Allowed");
-        pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, recipient);
-    }
-
-    /**
-     *  note: Testing revert condition; adding tokens with a different recipient.
-     */
-    function test_revert_addPackContents_NotRecipient() public {
-        uint256 packId = pack.nextTokenIdToMint();
-        address recipient = address(1);
-
-        vm.prank(address(tokenOwner));
-        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
-
-        address randomRecipient = address(0x12345);
-
-        bytes memory err = "!Bal";
-        vm.expectRevert(err);
-        vm.prank(address(tokenOwner));
-        pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, randomRecipient);
+        vm.prank(recipient, recipient);
+        pack.openPack(packId, packsToOpen);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -788,7 +630,17 @@ contract PackTest is BaseTest {
         (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
 
         vm.prank(recipient, recipient);
-        ITokenBundle.Token[] memory rewardUnits = pack.openPack(packId, packsToOpen);
+        uint256 requestId = pack.openPack(packId, packsToOpen);
+        console2.log("request ID for opening pack:", requestId);
+
+        uint256[] memory randomValues = new uint256[](1);
+        randomValues[0] = 12345678;
+
+        vm.prank(vrfV2Wrapper);
+        pack.rawFulfillRandomWords(requestId, randomValues);
+
+        vm.prank(recipient, recipient);
+        ITokenBundle.Token[] memory rewardUnits = pack.claimRewards();
         console2.log("total reward units: ", rewardUnits.length);
 
         for (uint256 i = 0; i < rewardUnits.length; i++) {
@@ -814,20 +666,35 @@ contract PackTest is BaseTest {
     /**
      *  note: Testing event emission; pack owner calls `openPack` to open owned packs.
      */
-    function test_event_openPack_PackOpened() public {
+    function test_event_openPack() public {
         uint256 packId = pack.nextTokenIdToMint();
         address recipient = address(0x123);
-
-        ITokenBundle.Token[] memory emptyRewardUnitsForTestingEvent;
 
         vm.prank(address(tokenOwner));
         pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
 
         vm.expectEmit(true, true, false, false);
+        emit PackOpenRequested(recipient, packId, 1, VRFV2Wrapper(vrfV2Wrapper).lastRequestId());
+
+        vm.prank(recipient, recipient);
+        uint256 requestId = pack.openPack(packId, 1);
+
+        vm.expectEmit(true, true, false, true);
+        emit PackRandomnessFulfilled(packId, requestId);
+
+        uint256[] memory randomValues = new uint256[](1);
+        randomValues[0] = 12345678;
+
+        vm.prank(vrfV2Wrapper);
+        pack.rawFulfillRandomWords(requestId, randomValues);
+
+        ITokenBundle.Token[] memory emptyRewardUnitsForTestingEvent;
+
+        vm.expectEmit(true, true, false, false);
         emit PackOpened(packId, recipient, 1, emptyRewardUnitsForTestingEvent);
 
         vm.prank(recipient, recipient);
-        pack.openPack(packId, 1);
+        pack.claimRewards();
     }
 
     function test_balances_openPack() public {
@@ -858,7 +725,17 @@ contract PackTest is BaseTest {
         assertEq(erc1155.balanceOf(address(pack), 1), 500);
 
         vm.prank(recipient, recipient);
-        ITokenBundle.Token[] memory rewardUnits = pack.openPack(packId, packsToOpen);
+        uint256 requestId = pack.openPack(packId, packsToOpen);
+        console2.log("request ID for opening pack:", requestId);
+
+        uint256[] memory randomValues = new uint256[](1);
+        randomValues[0] = 12345678;
+
+        vm.prank(vrfV2Wrapper);
+        pack.rawFulfillRandomWords(requestId, randomValues);
+
+        vm.prank(recipient, recipient);
+        ITokenBundle.Token[] memory rewardUnits = pack.claimRewards();
         console2.log("total reward units: ", rewardUnits.length);
 
         uint256 erc20Amount;
@@ -911,6 +788,33 @@ contract PackTest is BaseTest {
     }
 
     /**
+     *  note: Cannot open pack again while a previous openPack request is in flight.
+     */
+    function test_revert_openPack_ReqInFlight() public {
+        vm.warp(1000);
+        uint256 packId = pack.nextTokenIdToMint();
+        uint256 packsToOpen = 3;
+        address recipient = address(1);
+
+        vm.prank(address(tokenOwner));
+        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+
+        vm.prank(recipient, recipient);
+        uint256 requestId = pack.openPack(packId, packsToOpen);
+        console2.log("request ID for opening pack:", requestId);
+
+        vm.expectRevert("ReqInFlight");
+
+        vm.prank(recipient, recipient);
+        pack.openPack(packId, packsToOpen);
+
+        vm.expectRevert("ReqInFlight");
+
+        vm.prank(recipient, recipient);
+        pack.openPackAndClaimRewards(packId, packsToOpen, 2_500_000);
+    }
+
+    /**
      *  note: Testing revert condition; pack owner calls `openPack` to open more than owned packs.
      */
     function test_revert_openPack_openMoreThanOwned() public {
@@ -936,7 +840,7 @@ contract PackTest is BaseTest {
         pack.createPack(packContents, numOfRewardUnits, packUri, 1000, 1, recipient);
 
         vm.startPrank(recipient, recipient);
-        vm.expectRevert("cant open");
+        vm.expectRevert("!Open");
         pack.openPack(packId, 1);
     }
 
@@ -1154,5 +1058,179 @@ contract MaliciousERC20 is MockERC20, ITokenBundle {
         address recipient = address(0x123);
         pack.createPack(content, rewards, "", 0, 1, recipient);
         return super.transferFrom(from, to, amount);
+    }
+}
+
+contract PackVRFDirectBenchmarkTest is BaseTest {
+    PackVRFDirect internal pack;
+
+    TestWallet internal tokenOwner;
+    string internal packUri;
+    ITokenBundle.Token[] internal packContents;
+    ITokenBundle.Token[] internal additionalContents;
+    uint256[] internal numOfRewardUnits;
+    uint256[] internal additionalContentsRewardUnits;
+
+    uint256 private requestId;
+    uint256[] private randomValues;
+
+    function setUp() public virtual override {
+        super.setUp();
+
+        pack = PackVRFDirect(payable(getContract("PackVRFDirect")));
+
+        tokenOwner = getWallet();
+        packUri = "ipfs://";
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 0,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc1155),
+                tokenType: ITokenBundle.TokenType.ERC1155,
+                tokenId: 0,
+                totalAmount: 100
+            })
+        );
+        numOfRewardUnits.push(20);
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc20),
+                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenId: 0,
+                totalAmount: 1000 ether
+            })
+        );
+        numOfRewardUnits.push(50);
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 1,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 2,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc20),
+                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenId: 0,
+                totalAmount: 1000 ether
+            })
+        );
+        numOfRewardUnits.push(100);
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 3,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 4,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 5,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
+
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc1155),
+                tokenType: ITokenBundle.TokenType.ERC1155,
+                tokenId: 1,
+                totalAmount: 500
+            })
+        );
+        numOfRewardUnits.push(50);
+
+        erc20.mint(address(tokenOwner), 2000 ether);
+        erc721.mint(address(tokenOwner), 6);
+        erc1155.mint(address(tokenOwner), 0, 100);
+        erc1155.mint(address(tokenOwner), 1, 500);
+
+        // additional contents, to check `addPackContents`
+        additionalContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc1155),
+                tokenType: ITokenBundle.TokenType.ERC1155,
+                tokenId: 2,
+                totalAmount: 200
+            })
+        );
+        additionalContentsRewardUnits.push(50);
+
+        additionalContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc20),
+                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenId: 0,
+                totalAmount: 1000 ether
+            })
+        );
+        additionalContentsRewardUnits.push(100);
+
+        tokenOwner.setAllowanceERC20(address(erc20), address(pack), type(uint256).max);
+        tokenOwner.setApprovalForAllERC721(address(erc721), address(pack), true);
+        tokenOwner.setApprovalForAllERC1155(address(erc1155), address(pack), true);
+
+        vm.prank(deployer);
+        pack.grantRole(keccak256("MINTER_ROLE"), address(tokenOwner));
+
+        ////////// ========== //////////
+
+        uint256 packId = pack.nextTokenIdToMint();
+        address recipient = address(0x123);
+
+        vm.prank(address(tokenOwner));
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
+
+        vm.prank(recipient, recipient);
+        requestId = pack.openPack(packId, 1);
+
+        randomValues.push(12345678);
+    }
+
+    function test_benchmark_fulfillRandomness() external {
+        vm.prank(vrfV2Wrapper);
+        pack.rawFulfillRandomWords(requestId, randomValues);
     }
 }

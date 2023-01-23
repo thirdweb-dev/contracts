@@ -32,7 +32,7 @@ const chainIds = {
   arbitrum_rinkeby: 421611,
   arbitrum_goerli: 421613,
   binance: 56,
-  binance_testnet: 97
+  binance_testnet: 97,
 };
 
 // Ensure that we have all the environment variables we need.
@@ -115,7 +115,7 @@ const config: HardhatUserConfig = {
       // https://hardhat.org/hardhat-network/#solidity-optimizer-support
       optimizer: {
         enabled: true,
-        runs: 490,
+        runs: 300,
       },
     },
   },
