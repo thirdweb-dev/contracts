@@ -82,7 +82,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         assertEq(signersOfAccount.length, 1);
         assertEq(signersOfAccount[0], signer1);
 
-        assertEq(accountAdmin.getAccount(signer1, params.accountId), accountAddress);
+        assertEq(accountAdmin.getAccount(params.accountId), accountAddress);
     }
 
     /// @dev Creates an account for a (signer, accountId) pair with a pre-determined address.
@@ -215,7 +215,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
 
         IAccountAdmin.CreateAccountParams memory params2 = IAccountAdmin.CreateAccountParams({
             signer: signer2,
-            accountId: keccak256("1"),
+            accountId: keccak256("2"),
             deploymentSalt: keccak256("1"),
             initialAccountBalance: 0,
             validityStartTimestamp: 0,
@@ -526,7 +526,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
     function test_state_execute_addSignerToAccount() external {
         _setUp_account();
 
-        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin, nonAdminAccountId);
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin);
 
         IAccount.TransactionParams memory params = IAccount.TransactionParams({
             signer: admin,
@@ -556,14 +556,13 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         assertEq(signersOfAccount[0], admin);
         assertEq(signersOfAccount[1], nonAdmin);
 
-        assertEq(accountAdmin.getAccount(admin, adminAccountId), address(account));
-        assertEq(accountAdmin.getAccount(nonAdmin, nonAdminAccountId), address(account));
+        assertEq(accountAdmin.getAccount(adminAccountId), address(account));
     }
 
     function test_revert_execute_addSignerToAccount_signerAlreadyAdded() external {
         _setUp_account();
 
-        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin, nonAdminAccountId);
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin);
 
         IAccount.TransactionParams memory params = IAccount.TransactionParams({
             signer: admin,
@@ -588,6 +587,32 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         accountAdmin.relay(admin, adminAccountId, 0, 0, data);
     }
 
+    function test_revert_execute_restrictedFunctionsOnController() external {
+        _setUp_account();
+
+        bytes memory dataToRelay = abi.encodeWithSelector(
+            IAccountAdmin.addSignerToAccount.selector,
+            nonAdmin,
+            adminAccountId
+        );
+
+        IAccount.TransactionParams memory params = IAccount.TransactionParams({
+            signer: admin,
+            target: address(accountAdmin),
+            data: dataToRelay,
+            nonce: account.nonce(),
+            value: 0,
+            gas: 0,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: 100
+        });
+        bytes memory signature = signExecute(params, privateKey1, address(account));
+
+        bytes memory data = abi.encodeWithSelector(Account.execute.selector, params, signature);
+        vm.expectRevert("Account: Calling restricted functions on controller.");
+        accountAdmin.relay(admin, adminAccountId, 0, 0, data);
+    }
+
     /*///////////////////////////////////////////////////////////////
         Test action: Admin removes a non-admin signer from account.
     //////////////////////////////////////////////////////////////*/
@@ -595,7 +620,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
     function test_state_execute_removeSignerFromAccount() external {
         _setUp_account();
 
-        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin, nonAdminAccountId);
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin);
 
         IAccount.TransactionParams memory params = IAccount.TransactionParams({
             signer: admin,
@@ -613,7 +638,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         accountAdmin.relay(admin, adminAccountId, 0, 0, data);
 
         params.nonce = account.nonce();
-        params.data = abi.encodeWithSelector(Account.removeSigner.selector, nonAdmin, nonAdminAccountId);
+        params.data = abi.encodeWithSelector(Account.removeSigner.selector, nonAdmin);
         bytes memory signature2 = signExecute(params, privateKey1, address(account));
         data = abi.encodeWithSelector(Account.execute.selector, params, signature2);
 
@@ -630,14 +655,14 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         assertEq(signersOfAccount.length, 1);
         assertEq(signersOfAccount[0], admin);
 
-        assertEq(accountAdmin.getAccount(admin, adminAccountId), address(account));
-        assertEq(accountAdmin.getAccount(nonAdmin, nonAdminAccountId), address(0));
+        assertEq(accountAdmin.getAccount(adminAccountId), address(account));
+        assertEq(accountAdmin.getAccount(nonAdminAccountId), address(0));
     }
 
     function test_revert_execute_removeSignerFromAccount_signerAlreadyDNE() external {
         _setUp_account();
 
-        bytes memory dataToRelay = abi.encodeWithSelector(Account.removeSigner.selector, nonAdmin, nonAdminAccountId);
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.removeSigner.selector, nonAdmin);
 
         IAccount.TransactionParams memory params = IAccount.TransactionParams({
             signer: admin,
@@ -664,7 +689,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
     function _setUp_NonAdminForAccount() internal {
         _setUp_account();
 
-        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin, nonAdminAccountId);
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin);
 
         IAccount.TransactionParams memory params = IAccount.TransactionParams({
             signer: admin,
@@ -728,7 +753,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         bytes memory signature2 = signExecute(params2, privateKey2, address(account)); // nonAdmin signs
 
         bytes memory data2 = abi.encodeWithSelector(Account.execute.selector, params2, signature2);
-        accountAdmin.relay(nonAdmin, nonAdminAccountId, 0, 0, data2);
+        accountAdmin.relay(nonAdmin, adminAccountId, 0, 0, data2);
 
         assertEq(account.nonce(), currentNonce + 1);
         assertEq(counter.getNumber(), number);
@@ -820,7 +845,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         bytes memory signature2 = signExecute(params2, privateKey2, address(account)); // nonAdmin signs
 
         bytes memory data2 = abi.encodeWithSelector(Account.execute.selector, params2, signature2);
-        accountAdmin.relay(nonAdmin, nonAdminAccountId, 0, 0, data2);
+        accountAdmin.relay(nonAdmin, adminAccountId, 0, 0, data2);
 
         assertEq(account.nonce(), currentNonce + 1);
         assertEq(counter.getNumber(), number);
@@ -871,7 +896,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
 
         ////////// Add admin //////////
 
-        bytes memory dataToRelay = abi.encodeWithSelector(Account.addAdmin.selector, newAdmin, newAdminAccountId);
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addAdmin.selector, newAdmin);
 
         IAccount.TransactionParams memory params = IAccount.TransactionParams({
             signer: admin,
@@ -901,8 +926,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         assertEq(signersOfAccount[0], admin);
         assertEq(signersOfAccount[1], newAdmin);
 
-        assertEq(accountAdmin.getAccount(admin, adminAccountId), address(account));
-        assertEq(accountAdmin.getAccount(newAdmin, newAdminAccountId), address(account));
+        assertEq(accountAdmin.getAccount(adminAccountId), address(account));
 
         ////////// New admin performs transaction //////////
 
@@ -923,7 +947,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         bytes memory signature2 = signExecute(params2, privateKey3, address(account)); // newAdmin signs
 
         bytes memory data2 = abi.encodeWithSelector(Account.execute.selector, params2, signature2);
-        accountAdmin.relay(newAdmin, newAdminAccountId, 0, 0, data2);
+        accountAdmin.relay(newAdmin, adminAccountId, 0, 0, data2);
 
         assertEq(account.nonce(), currentNonce + 1);
         assertEq(counter.getNumber(), number);
@@ -999,8 +1023,8 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         assertEq(signersOfAccount.length, 1);
         assertEq(signersOfAccount[0], admin);
 
-        assertEq(accountAdmin.getAccount(admin, adminAccountId), address(account));
-        assertEq(accountAdmin.getAccount(newAdmin, newAdminAccountId), address(0));
+        assertEq(accountAdmin.getAccount(adminAccountId), address(account));
+        assertEq(accountAdmin.getAccount(newAdminAccountId), address(0));
     }
 
     function test_revert_execute_removeAdminFromAccount_adminAlreadyRemoved() external {
@@ -1113,7 +1137,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
 
         IAccountAdmin.CreateAccountParams memory params = IAccountAdmin.CreateAccountParams({
             signer: altAdmin,
-            accountId: keccak256("1"),
+            accountId: keccak256("11"),
             deploymentSalt: keccak256("salt"),
             initialAccountBalance: 0,
             validityStartTimestamp: 0,
@@ -1129,7 +1153,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         IAccount.TransactionParams memory params2 = IAccount.TransactionParams({
             signer: admin,
             target: address(account),
-            data: abi.encodeWithSelector(Account.addAdmin.selector, altAccount, altAccountAccountId),
+            data: abi.encodeWithSelector(Account.addAdmin.selector, altAccount),
             nonce: account.nonce(),
             value: 0,
             gas: 0,
@@ -1160,7 +1184,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         bytes memory signature3 = signExecute(params3, privateKey2, address(altAccount)); // signer on alt account signs
 
         bytes memory data2 = abi.encodeWithSelector(Account.execute.selector, params3, signature3);
-        accountAdmin.relay(altAccount, altAccountAccountId, 0, 0, data2);
+        accountAdmin.relay(altAccount, adminAccountId, 0, 0, data2);
 
         assertEq(account.nonce(), currentNonce + 1);
         assertEq(counter.getNumber(), number);
@@ -1204,7 +1228,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         assertEq(signersOfAccount.length, 1);
         assertEq(signersOfAccount[0], address(account));
 
-        assertEq(accountAdmin.getAccount(address(account), params.accountId), altAccount);
+        assertEq(accountAdmin.getAccount(params.accountId), altAccount);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -1329,7 +1353,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         _setUp_account();
 
         // ------------- ADD newAdmin as Signer -------------------/
-        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, newAdmin, newAdminAccountId);
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, newAdmin);
 
         IAccount.TransactionParams memory params = IAccount.TransactionParams({
             signer: admin,
@@ -1348,7 +1372,7 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         accountAdmin.relay(admin, adminAccountId, 0, 0, data);
 
         // ------------- ADD newAdmin as Admin -------------------/
-        bytes memory dataToRelay2 = abi.encodeWithSelector(Account.addAdmin.selector, newAdmin, newAdminAccountId);
+        bytes memory dataToRelay2 = abi.encodeWithSelector(Account.addAdmin.selector, newAdmin);
 
         IAccount.TransactionParams memory params2 = IAccount.TransactionParams({
             signer: admin,
@@ -1380,11 +1404,10 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         assertEq(signersOfAccount[0], admin);
         assertEq(signersOfAccount[1], newAdmin);
 
-        assertEq(accountAdmin.getAccount(admin, adminAccountId), address(account));
-        assertEq(accountAdmin.getAccount(newAdmin, newAdminAccountId), address(account));
+        assertEq(accountAdmin.getAccount(adminAccountId), address(account));
 
         // ------------- REMOVE newAdmin from being Signer -------------------/
-        bytes memory dataToRelay3 = abi.encodeWithSelector(Account.removeSigner.selector, newAdmin, newAdminAccountId);
+        bytes memory dataToRelay3 = abi.encodeWithSelector(Account.removeSigner.selector, newAdmin);
 
         IAccount.TransactionParams memory params3 = IAccount.TransactionParams({
             signer: admin,
@@ -1414,14 +1437,13 @@ contract ThirdwebWalletTest is BaseTest, AccountUtil, AccountData, AccountAdminU
         assertEq(signersOfAccount[0], admin);
 
         assertEq(account.hasRole(DEFAULT_ADMIN_ROLE, address(newAdmin)), false);
-        assertEq(accountAdmin.getAccount(newAdmin, newAdminAccountId), address(0));
     }
 
     function test_M_2_fixed() external {
         _setUp_account();
 
         //----- Add non Admin Signer ---------//
-        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin, adminAccountId);
+        bytes memory dataToRelay = abi.encodeWithSelector(Account.addSigner.selector, nonAdmin);
 
         IAccount.TransactionParams memory params = IAccount.TransactionParams({
             signer: admin,

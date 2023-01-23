@@ -88,10 +88,10 @@ interface IAccountAdmin {
     ////////// Changes to signer composition of accounts //////////
 
     /// @notice Emitted when a signer is added to an account.
-    event SignerAdded(address signer, address account, bytes32 pairHash);
+    event SignerAdded(address signer, address account, bytes32 accountId);
 
     /// @notice Emitted when a signer is removed from an account.
-    event SignerRemoved(address signer, address account, bytes32 pairHash);
+    event SignerRemoved(address signer, address account, bytes32 accountId);
 
     /**
      *  @notice Called by an account (itself) when a signer is added to it.
@@ -117,6 +117,6 @@ interface IAccountAdmin {
     /// @notice Returns all signers that are part of an account.
     function getAllSignersOfAccount(address account) external view returns (address[] memory signers);
 
-    /// @notice Returns the account associated with a particular signer-accountId pair.
-    function getAccount(address signer, bytes32 accountId) external view returns (address);
+    /// @notice Returns the account associated with a particular accountId.
+    function getAccount(bytes32 accountId) external view returns (address);
 }

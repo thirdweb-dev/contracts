@@ -75,6 +75,9 @@ contract Account is
     /// @notice The nonce of the account.
     uint256 public nonce;
 
+    /// @dev Unique Id associated with account.
+    bytes32 public accountId;
+
     /// @notice Mapping from Signer => CallTargets approved (at least once).
     mapping(address => CallTarget[]) private callTargets;
 
@@ -96,12 +99,14 @@ contract Account is
     function initialize(
         address[] memory _trustedForwarders,
         address _controller,
-        address _signer
+        address _signer,
+        bytes32 _accountId
     ) external payable initializer {
         __EIP712_init("thirdweb_wallet", "1");
         __ERC2771Context_init(_trustedForwarders);
 
         controller = _controller;
+        accountId = _accountId;
         _setupRole(DEFAULT_ADMIN_ROLE, _signer);
 
         emit AdminAdded(_signer);
@@ -170,7 +175,7 @@ contract Account is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Adds an admin to the account.
-    function addAdmin(address _signer, bytes32 _accountId) external onlySelf {
+    function addAdmin(address _signer) external onlySelf {
         require(!hasRole(SIGNER_ROLE, _signer), "Account: signer already has SIGNER_ROLE.");
         require(!hasRole(DEFAULT_ADMIN_ROLE, _signer), "Account: admin already exists.");
 
@@ -178,12 +183,12 @@ contract Account is
         emit AdminAdded(_signer);
 
         if (controller != address(0)) {
-            ISignerTracker(controller).addSignerToAccount(_signer, _accountId);
+            ISignerTracker(controller).addSignerToAccount(_signer, accountId);
         }
     }
 
     /// @notice Removes an admin from the account.
-    function removeAdmin(address _signer, bytes32 _accountId) external onlySelf {
+    function removeAdmin(address _signer) external onlySelf {
         require(hasRole(DEFAULT_ADMIN_ROLE, _signer), "Account: admin already does not exist.");
         _revokeRole(DEFAULT_ADMIN_ROLE, _signer);
 
@@ -193,12 +198,12 @@ contract Account is
         emit AdminRemoved(_signer);
 
         if (controller != address(0)) {
-            ISignerTracker(controller).removeSignerToAccount(_signer, _accountId);
+            ISignerTracker(controller).removeSignerToAccount(_signer, accountId);
         }
     }
 
     /// @notice Adds a signer to the account.
-    function addSigner(address _signer, bytes32 _accountId) external onlySelf {
+    function addSigner(address _signer) external onlySelf {
         require(!hasRole(DEFAULT_ADMIN_ROLE, _signer), "Account: signer already has DEFAULT_ADMIN_ROLE.");
         require(!hasRole(SIGNER_ROLE, _signer), "Account: signer already exists.");
 
@@ -206,18 +211,18 @@ contract Account is
         emit SignerAdded(_signer);
 
         if (controller != address(0)) {
-            ISignerTracker(controller).addSignerToAccount(_signer, _accountId);
+            ISignerTracker(controller).addSignerToAccount(_signer, accountId);
         }
     }
 
     /// @notice Removes a signer from the account.
-    function removeSigner(address _signer, bytes32 _accountId) external onlySelf {
+    function removeSigner(address _signer) external onlySelf {
         require(hasRole(SIGNER_ROLE, _signer), "Account: signer already does not exist.");
         _revokeRole(SIGNER_ROLE, _signer);
         emit SignerRemoved(_signer);
 
         if (controller != address(0)) {
-            ISignerTracker(controller).removeSignerToAccount(_signer, _accountId);
+            ISignerTracker(controller).removeSignerToAccount(_signer, accountId);
         }
     }
 
@@ -412,10 +417,18 @@ contract Account is
         address _target,
         bytes calldata _data
     ) internal view {
+        bytes4 selector = _getSelector(_data);
+        require(
+            _target != controller ||
+                (selector != ISignerTracker.addSignerToAccount.selector &&
+                    selector != ISignerTracker.removeSignerToAccount.selector),
+            "Account: Calling restricted functions on controller."
+        );
+
         bool hasPermissions = hasRole(DEFAULT_ADMIN_ROLE, _signer);
 
         if (!hasPermissions) {
-            bytes32 targetHash = keccak256(abi.encode(_getSelector(_data), _target));
+            bytes32 targetHash = keccak256(abi.encode(selector, _target));
             hasPermissions =
                 hasRole(SIGNER_ROLE, _signer) &&
                 (isApprovedFor[_signer][targetHash] || isApprovedForContract[_signer][_target]);

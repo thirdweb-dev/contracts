@@ -33,7 +33,8 @@ interface IAccountInitialize {
     function initialize(
         address[] memory trustedForwarders,
         address controller,
-        address signer
+        address signer,
+        bytes32 accountId
     ) external payable;
 }
 
@@ -68,8 +69,8 @@ contract AccountAdmin is IAccountAdmin, Initializable, EIP712Upgradeable, ERC277
     /// @dev Account => Signers that are actors in account.
     mapping(address => EnumerableSet.AddressSet) private accountToSigners;
 
-    /// @dev Signer-AccountId pair => Account.
-    mapping(bytes32 => address) private pairHashToAccount;
+    /// @dev AccountId => Account.
+    mapping(bytes32 => address) private idToAccount;
 
     /// @dev Address => whether the address is of an account created via this admin contract.
     mapping(address => bool) private isAssociatedAccount;
@@ -143,9 +144,8 @@ contract AccountAdmin is IAccountAdmin, Initializable, EIP712Upgradeable, ERC277
         /// @validate: signature-of-intent from target signer.
         _validateSignature(messageHash, _signature, _params.signer);
 
-        /// @validate: new signer to set does not already have an account.
-        bytes32 pairHash = keccak256(abi.encode(_params.signer, _params.accountId));
-        require(pairHashToAccount[pairHash] == address(0), "AccountAdmin: accountId already used.");
+        /// @validate: new accountId to set does not already have an associated account.
+        require(idToAccount[_params.accountId] == address(0), "AccountAdmin: accountId already used.");
 
         /// @validate: (By Create2) No repeat deployment salt.
         bytes32 salt = keccak256(abi.encode(_params.deploymentSalt, _msgSender()));
@@ -153,16 +153,17 @@ contract AccountAdmin is IAccountAdmin, Initializable, EIP712Upgradeable, ERC277
         IAccountInitialize(account).initialize{ value: _params.initialAccountBalance }(
             trustedForwarders,
             address(this),
-            _params.signer
+            _params.signer,
+            _params.accountId
         );
 
         isAssociatedAccount[account] = true;
         accountToSigners[account].add(_params.signer);
         signerToAccounts[_params.signer].add(account);
-        pairHashToAccount[pairHash] = account;
+        idToAccount[_params.accountId] = account;
 
         emit AccountCreated(account, _params.signer, _msgSender(), _params.accountId);
-        emit SignerAdded(_params.signer, account, pairHash);
+        emit SignerAdded(_params.signer, account, _params.accountId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -179,10 +180,9 @@ contract AccountAdmin is IAccountAdmin, Initializable, EIP712Upgradeable, ERC277
     ) external payable returns (bool, bytes memory) {
         require(_value == msg.value, "AccountAdmin: incorrect value sent.");
 
-        bytes32 pairHash = keccak256(abi.encode(_signer, _accountId));
-        address account = pairHashToAccount[pairHash];
+        address account = idToAccount[_accountId];
 
-        /// @validate: account exists for signer-accountId pair.
+        /// @validate: account exists for given accountId.
         require(account != address(0), "AccountAdmin: no account with given accountId.");
 
         bool success;
@@ -217,34 +217,26 @@ contract AccountAdmin is IAccountAdmin, Initializable, EIP712Upgradeable, ERC277
 
     /// @notice Called by an account (itself) when a signer is added to it.
     function addSignerToAccount(address _signer, bytes32 _accountId) external onlyAssociatedAccount {
-        address account = _msgSender();
-        bytes32 pairHash = keccak256(abi.encode(_signer, _accountId));
+        address account = idToAccount[_accountId];
 
         require(
-            accountToSigners[account].add(_signer) &&
-                signerToAccounts[_signer].add(account) &&
-                pairHashToAccount[pairHash] == address(0),
+            accountToSigners[account].add(_signer) && signerToAccounts[_signer].add(account),
             "AccountAdmin: already added."
         );
 
-        pairHashToAccount[pairHash] = account;
-
-        emit SignerAdded(_signer, account, pairHash);
+        emit SignerAdded(_signer, account, _accountId);
     }
 
     /// @notice Called by an account (itself) when a signer is removed from it.
     function removeSignerToAccount(address _signer, bytes32 _accountId) external onlyAssociatedAccount {
         address account = _msgSender();
-        bytes32 pairHash = keccak256(abi.encode(_signer, _accountId));
 
         require(
             accountToSigners[account].remove(_signer) && signerToAccounts[_signer].remove(account),
             "AccountAdmin: already removed."
         );
 
-        delete pairHashToAccount[pairHash];
-
-        emit SignerRemoved(_signer, account, pairHash);
+        emit SignerRemoved(_signer, account, _accountId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -261,10 +253,9 @@ contract AccountAdmin is IAccountAdmin, Initializable, EIP712Upgradeable, ERC277
         return accountToSigners[_account].values();
     }
 
-    /// @notice Returns the account associated with a particular signer-accountId pair.
-    function getAccount(address _signer, bytes32 _accountId) external view returns (address) {
-        bytes32 pair = keccak256(abi.encode(_signer, _accountId));
-        return pairHashToAccount[pair];
+    /// @notice Returns the account associated with a particular accountId.
+    function getAccount(bytes32 _accountId) external view returns (address) {
+        return idToAccount[_accountId];
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -18,10 +18,10 @@ contract AccountAdminData {
     event CallResult(bool success, bytes result);
 
     /// @notice Emitted when a signer is added to an account.
-    event SignerAdded(address signer, address account, bytes32 pairHash);
+    event SignerAdded(address signer, address account, bytes32 accountId);
 
     /// @notice Emitted when a signer is removed from an account.
-    event SignerRemoved(address signer, address account, bytes32 pairHash);
+    event SignerRemoved(address signer, address account, bytes32 accountId);
 }
 
 contract AccountData {
