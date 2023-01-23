@@ -186,6 +186,10 @@ contract SignatureDrop is
             revert("!Tokens");
         }
 
+        if (_req.currency != CurrencyTransferLib.NATIVE_TOKEN) {
+            require(msg.value == 0, "!VALUE");
+        }
+
         // Verify and process payload.
         signer = _processRequest(_req, _signature);
 
@@ -240,9 +244,9 @@ contract SignatureDrop is
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
-                revert("!Price");
-            }
+            require(msg.value == totalPrice, "!Price");
+        } else {
+            require(msg.value == 0, "!Value");
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
