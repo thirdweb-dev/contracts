@@ -18,6 +18,10 @@ contract MyDropSinglePhase is DropSinglePhase {
         return condition;
     }
 
+    function _canSetBotRestriction() internal view override returns (bool) {
+        return condition;
+    }
+
     function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,

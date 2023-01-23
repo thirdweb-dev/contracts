@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IDrop1155.sol";
+import "./BotRestrictionToggle.sol";
 import "../lib/MerkleProof.sol";
 
-abstract contract Drop1155 is IDrop1155 {
+abstract contract Drop1155 is BotRestrictionToggle, IDrop1155 {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -134,7 +135,7 @@ abstract contract Drop1155 is IDrop1155 {
         AllowlistProof calldata _allowlistProof
     ) public view returns (bool isOverride) {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].conditions[_conditionId];
-        if (currentClaimPhase.restrictClaimingViaContracts) {
+        if (botRestriction) {
             require(_botCheck(), "BOT");
         }
         uint256 claimLimit = currentClaimPhase.quantityLimitPerWallet;
@@ -227,7 +228,7 @@ abstract contract Drop1155 is IDrop1155 {
     }
 
     /// @dev Check if the claimer is EOA.
-    function _botCheck() internal view virtual returns (bool) {
+    function _botCheck() internal view virtual override returns (bool) {
         return _dropMsgSender() == tx.origin;
     }
 

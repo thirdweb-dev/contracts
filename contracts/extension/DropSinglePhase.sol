@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "./interface/IDropSinglePhase.sol";
+import "./BotRestrictionToggle.sol";
 import "../lib/MerkleProof.sol";
 
-abstract contract DropSinglePhase is IDropSinglePhase {
+abstract contract DropSinglePhase is BotRestrictionToggle, IDropSinglePhase {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -84,7 +85,6 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             merkleRoot: _condition.merkleRoot,
             pricePerToken: _condition.pricePerToken,
             currency: _condition.currency,
-            restrictClaimingViaContracts: _condition.restrictClaimingViaContracts,
             metadata: _condition.metadata
         });
         conditionId = targetConditionId;
@@ -101,7 +101,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         AllowlistProof calldata _allowlistProof
     ) public view returns (bool isOverride) {
         ClaimCondition memory currentClaimPhase = claimCondition;
-        if (currentClaimPhase.restrictClaimingViaContracts) {
+        if (botRestriction) {
             require(_botCheck(), "BOT");
         }
         uint256 claimLimit = currentClaimPhase.quantityLimitPerWallet;
@@ -169,7 +169,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     }
 
     /// @dev Check if the claimer is EOA.
-    function _botCheck() internal view virtual returns (bool) {
+    function _botCheck() internal view virtual override returns (bool) {
         return _dropMsgSender() == tx.origin;
     }
 

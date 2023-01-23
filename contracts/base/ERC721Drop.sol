@@ -264,6 +264,11 @@ contract ERC721Drop is
         return msg.sender == owner();
     }
 
+    /// @dev Returns whether automated claims can be restricted in the given execution context.
+    function _canSetBotRestriction() internal virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/

@@ -31,9 +31,6 @@ interface IClaimCondition {
      *
      *  @param currency                       The currency in which the `pricePerToken` must be paid.
      *
-     *  @param restrictClaimingViaContracts   Restrict automated claims via smart contracts.
-     *                                        If `true`, allows only EOAs.
-     *
      *  @param metadata                       Claim condition metadata.
      */
     struct ClaimCondition {
@@ -44,7 +41,6 @@ interface IClaimCondition {
         bytes32 merkleRoot;
         uint256 pricePerToken;
         address currency;
-        bool restrictClaimingViaContracts;
         string metadata;
     }
 }

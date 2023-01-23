@@ -49,6 +49,23 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### botRestriction
+
+```solidity
+function botRestriction() external view returns (bool)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### burn
 
 ```solidity
@@ -618,6 +635,22 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 | operator | address | undefined |
 | approved | bool | undefined |
 
+### setBotRestriction
+
+```solidity
+function setBotRestriction(bool _restriction) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _restriction | bool | undefined |
+
 ### setClaimConditions
 
 ```solidity
@@ -879,6 +912,22 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 | owner `indexed` | address | undefined |
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
+
+### BotRestriction
+
+```solidity
+event BotRestriction(bool restriction)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| restriction  | bool | undefined |
 
 ### ClaimConditionUpdated
 

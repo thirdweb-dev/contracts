@@ -10,6 +10,23 @@
 
 ## Methods
 
+### botRestriction
+
+```solidity
+function botRestriction() external view returns (bool)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### claim
 
 ```solidity
@@ -84,6 +101,22 @@ function getSupplyClaimedByWallet(uint256 _tokenId, address _claimer) external v
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### setBotRestriction
+
+```solidity
+function setBotRestriction(bool _restriction) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _restriction | bool | undefined |
+
 ### setClaimConditions
 
 ```solidity
@@ -132,6 +165,22 @@ function verifyClaim(uint256 _tokenId, address _claimer, uint256 _quantity, addr
 
 
 ## Events
+
+### BotRestriction
+
+```solidity
+event BotRestriction(bool restriction)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| restriction  | bool | undefined |
 
 ### ClaimConditionUpdated
 

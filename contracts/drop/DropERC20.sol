@@ -76,6 +76,7 @@ contract DropERC20 is
         __ERC20_init_unchained(_name, _symbol);
 
         _setupContractURI(_contractURI);
+        _setBotRestriction(true); // restrict automated claims by default
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(_transferRole, _defaultAdmin);
@@ -183,6 +184,11 @@ contract DropERC20 is
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
+    /// @dev Returns whether automated claims can be restricted in the given execution context.
+    function _canSetBotRestriction() internal virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
@@ -218,6 +224,11 @@ contract DropERC20 is
 
     function _dropMsgSender() internal view virtual override returns (address) {
         return _msgSender();
+    }
+
+    /// @dev Check if the claimer is EOA.
+    function _botCheck() internal view virtual override returns (bool) {
+        return isTrustedForwarder(msg.sender) || _dropMsgSender() == tx.origin;
     }
 
     function _msgSender()

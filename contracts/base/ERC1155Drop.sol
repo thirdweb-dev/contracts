@@ -325,4 +325,9 @@ contract ERC1155Drop is
     function _canReveal() internal view virtual returns (bool) {
         return msg.sender == owner();
     }
+
+    /// @dev Returns whether automated claims can be restricted in the given execution context.
+    function _canSetBotRestriction() internal virtual override returns (bool) {
+        return msg.sender == owner();
+    }
 }

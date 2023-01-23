@@ -121,4 +121,9 @@ contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, Primary
     function _canSetPrimarySaleRecipient() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
+
+    /// @dev Returns whether automated claims can be restricted in the given execution context.
+    function _canSetBotRestriction() internal virtual override returns (bool) {
+        return msg.sender == owner();
+    }
 }

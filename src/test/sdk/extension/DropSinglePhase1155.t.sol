@@ -17,6 +17,10 @@ contract MyDropSinglePhase1155 is DropSinglePhase1155 {
         return condition;
     }
 
+    function _canSetBotRestriction() internal view override returns (bool) {
+        return condition;
+    }
+
     function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
