@@ -32,6 +32,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
 
     function signMintRequest(ERC1155SignatureMint.MintRequest memory _request, uint256 privateKey)
         internal
+        view
         returns (bytes memory)
     {
         bytes memory encodedRequest = abi.encode(

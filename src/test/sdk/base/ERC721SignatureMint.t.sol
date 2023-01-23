@@ -58,6 +58,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
 
     function signMintRequest(ERC721SignatureMint.MintRequest memory _request, uint256 _privateKey)
         internal
+        view
         returns (bytes memory)
     {
         bytes memory encodedRequest = abi.encode(

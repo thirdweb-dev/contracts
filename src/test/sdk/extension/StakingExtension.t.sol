@@ -7,10 +7,11 @@ import "@ds-test/test.sol";
 import { Staking721 } from "contracts/extension/Staking721.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 import "../../mocks/MockERC721.sol";
 
-contract MyStakingContract is ERC20, Staking721 {
+contract MyStakingContract is ERC20, Staking721, IERC721Receiver {
     bool condition;
 
     constructor(
@@ -21,8 +22,28 @@ contract MyStakingContract is ERC20, Staking721 {
         uint256 _rewardsPerUnitTime
     ) ERC20(_name, _symbol) Staking721(_nftCollection) {
         condition = true;
-        _setTimeUnit(_timeUnit);
-        _setRewardsPerUnitTime(_rewardsPerUnitTime);
+        _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
+    }
+
+    /// @notice View total rewards available in the staking contract.
+    function getRewardTokenBalance() external view override returns (uint256) {}
+
+    /*///////////////////////////////////////////////////////////////
+                        ERC 165 / 721 logic
+    //////////////////////////////////////////////////////////////*/
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external view override returns (bytes4) {
+        require(isStaking == 2, "Direct transfer");
+        return this.onERC721Received.selector;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+        return interfaceId == type(IERC721Receiver).interfaceId;
     }
 
     function setCondition(bool _condition) external {
@@ -98,9 +119,9 @@ contract StakingExtensionTest is DSTest, Test {
         assertEq(erc721.balanceOf(address(ext)), _tokenIdsOne.length);
 
         // check available rewards right after staking
-        (uint256 _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
 
-        assertEq(_amountStaked, _tokenIdsOne.length);
+        assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
 
         //=================== warp timestamp to calculate rewards
@@ -138,7 +159,7 @@ contract StakingExtensionTest is DSTest, Test {
         // check available rewards right after staking
         (_amountStaked, _availableRewards) = ext.getStakeInfo(stakerTwo);
 
-        assertEq(_amountStaked, _tokenIdsTwo.length);
+        assertEq(_amountStaked.length, _tokenIdsTwo.length);
         assertEq(_availableRewards, 0);
 
         //=================== warp timestamp to calculate rewards
@@ -177,7 +198,7 @@ contract StakingExtensionTest is DSTest, Test {
         _tokenIds[0] = 6;
 
         vm.prank(stakerOne);
-        vm.expectRevert("Not owner");
+        vm.expectRevert("Not owned or approved");
         ext.stake(_tokenIds);
     }
 
@@ -212,9 +233,9 @@ contract StakingExtensionTest is DSTest, Test {
         );
 
         // check available rewards after claiming
-        (uint256 _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
 
-        assertEq(_amountStaked, _tokenIdsOne.length);
+        assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
     }
 
@@ -258,12 +279,12 @@ contract StakingExtensionTest is DSTest, Test {
 
     function test_state_setRewardsPerUnitTime() public {
         // check current value
-        assertEq(rewardsPerUnitTime, ext.rewardsPerUnitTime());
+        assertEq(rewardsPerUnitTime, ext.getRewardsPerUnitTime());
 
         // set new value and check
         uint256 newRewardsPerUnitTime = 50;
         ext.setRewardsPerUnitTime(newRewardsPerUnitTime);
-        assertEq(newRewardsPerUnitTime, ext.rewardsPerUnitTime());
+        assertEq(newRewardsPerUnitTime, ext.getRewardsPerUnitTime());
 
         //================ stake tokens
         vm.warp(1);
@@ -282,7 +303,7 @@ contract StakingExtensionTest is DSTest, Test {
         vm.warp(1000);
 
         ext.setRewardsPerUnitTime(200);
-        assertEq(200, ext.rewardsPerUnitTime());
+        assertEq(200, ext.getRewardsPerUnitTime());
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
@@ -314,12 +335,12 @@ contract StakingExtensionTest is DSTest, Test {
 
     function test_state_setTimeUnit() public {
         // check current value
-        assertEq(timeUnit, ext.timeUnit());
+        assertEq(timeUnit, ext.getTimeUnit());
 
         // set new value and check
         uint256 newTimeUnit = 1 minutes;
         ext.setTimeUnit(newTimeUnit);
-        assertEq(newTimeUnit, ext.timeUnit());
+        assertEq(newTimeUnit, ext.getTimeUnit());
 
         //================ stake tokens
         vm.warp(1);
@@ -338,7 +359,7 @@ contract StakingExtensionTest is DSTest, Test {
         vm.warp(1000);
 
         ext.setTimeUnit(1 seconds);
-        assertEq(1 seconds, ext.timeUnit());
+        assertEq(1 seconds, ext.getTimeUnit());
         uint256 newTimeOfLastUpdate = block.timestamp;
 
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
@@ -395,9 +416,9 @@ contract StakingExtensionTest is DSTest, Test {
         assertEq(erc721.balanceOf(address(ext)), _tokenIdsOne.length);
 
         // check available rewards right after staking
-        (uint256 _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = ext.getStakeInfo(stakerOne);
 
-        assertEq(_amountStaked, _tokenIdsOne.length);
+        assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
 
         //========== warp timestamp before withdraw

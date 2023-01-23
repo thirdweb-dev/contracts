@@ -799,6 +799,144 @@ contract TieredDropTest is BaseTest {
     //     assertEq(baseURIs3.length, 1);
     //     assertEq(baseURIs3[0], baseURITier3);
     // }
+
+    ////////////////////////////////////////////////
+    //                                            //
+    //                audit tests                 //
+    //                                            //
+    ////////////////////////////////////////////////
+
+    function test_state_claimWithSignature_IssueH1() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 20 non-inclusive.
+        tieredDrop.lazyMint(10, baseURITier2, tier2, "");
+        // Tier 3: tokenIds assigned 20 -> 50 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
+
+        // Tier 2: tokenIds assigned 50 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2 - 10, baseURITier2, tier2, "");
+
+        vm.stopPrank();
+
+        string[] memory tiers = new string[](2);
+        tiers[0] = tier2;
+        tiers[1] = tier1;
+
+        uint256 claimQuantity = 25;
+
+        _setupClaimSignature(tiers, claimQuantity);
+
+        assertEq(tieredDrop.hasRole(keccak256("MINTER_ROLE"), deployerSigner), true);
+
+        vm.warp(claimRequest.validityStartTimestamp);
+        vm.prank(claimer);
+        tieredDrop.claimWithSignature(claimRequest, claimSignature);
+        assertEq(tieredDrop.balanceOf(claimer), claimQuantity);
+
+        for (uint256 i = 0; i < claimQuantity; i += 1) {
+            // Outputs:
+            //   Checking 0 baseURI2/10
+            //   Checking 1 baseURI2/11
+            //   Checking 2 baseURI2/12
+            //   Checking 3 baseURI2/13
+            //   Checking 4 baseURI2/14
+            //   Checking 5 baseURI2/15
+            //   Checking 6 baseURI2/16
+            //   Checking 7 baseURI2/17
+            //   Checking 8 baseURI2/18
+            //   Checking 9 baseURI2/19
+            //   Checking 10 baseURI3/50
+            //   Checking 11 baseURI3/51
+            //   Checking 12 baseURI3/52
+            //   Checking 13 baseURI3/53
+            //   Checking 14 baseURI3/54
+            //   Checking 15 baseURI3/55
+            //   Checking 16 baseURI3/56
+            //   Checking 17 baseURI3/57
+            //   Checking 18 baseURI3/58
+            //   Checking 19 baseURI3/59
+            //   Checking 20 baseURI1/0
+            //   Checking 21 baseURI1/1
+            //   Checking 22 baseURI1/2
+            //   Checking 23 baseURI1/3
+            //   Checking 24 baseURI1/4
+            console.log("Checking", i, tieredDrop.tokenURI(i));
+        }
+    }
+
+    function test_state_claimWithSignature_IssueH1_2() public {
+        // Lazy mint tokens: 3 different tiers
+        vm.startPrank(dropAdmin);
+
+        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+        tieredDrop.lazyMint(quantityTier1, baseURITier1, tier1, "");
+        // Tier 2: tokenIds assigned 10 -> 20 non-inclusive.
+        tieredDrop.lazyMint(1, baseURITier2, tier2, ""); // 10 -> 11
+        tieredDrop.lazyMint(9, baseURITier2, tier2, ""); // 11 -> 20
+        // Tier 3: tokenIds assigned 20 -> 50 non-inclusive.
+        tieredDrop.lazyMint(quantityTier3, baseURITier3, tier3, "");
+
+        // Tier 2: tokenIds assigned 50 -> 60 non-inclusive.
+        tieredDrop.lazyMint(quantityTier2 - 10, baseURITier2, tier2, "");
+
+        vm.stopPrank();
+
+        string[] memory tiers = new string[](2);
+        tiers[0] = tier2;
+        tiers[1] = tier1;
+
+        uint256[3] memory claimQuantities = [uint256(1), uint256(3), uint256(21)];
+        uint256 claimedCount = 0;
+        for (uint256 loop = 0; loop < 3; loop++) {
+            uint256 claimQuantity = claimQuantities[loop];
+            uint256 offset = claimedCount;
+
+            _setupClaimSignature(tiers, claimQuantity);
+
+            assertEq(tieredDrop.hasRole(keccak256("MINTER_ROLE"), deployerSigner), true);
+
+            vm.warp(claimRequest.validityStartTimestamp);
+            vm.prank(claimer);
+            tieredDrop.claimWithSignature(claimRequest, claimSignature);
+
+            claimedCount += claimQuantity;
+            assertEq(tieredDrop.balanceOf(claimer), claimedCount);
+
+            for (uint256 i = offset; i < claimQuantity + (offset); i += 1) {
+                // Outputs:
+                //   Checking 0 baseURI2/10
+                //   Checking 1 baseURI2/11
+                //   Checking 2 baseURI2/12
+                //   Checking 3 baseURI2/13
+                //   Checking 4 baseURI2/14
+                //   Checking 5 baseURI2/15
+                //   Checking 6 baseURI2/16
+                //   Checking 7 baseURI2/17
+                //   Checking 8 baseURI2/18
+                //   Checking 9 baseURI2/19
+                //   Checking 10 baseURI3/50
+                //   Checking 11 baseURI3/51
+                //   Checking 12 baseURI3/52
+                //   Checking 13 baseURI3/53
+                //   Checking 14 baseURI3/54
+                //   Checking 15 baseURI3/55
+                //   Checking 16 baseURI3/56
+                //   Checking 17 baseURI3/57
+                //   Checking 18 baseURI3/58
+                //   Checking 19 baseURI3/59
+                //   Checking 20 baseURI1/0
+                //   Checking 21 baseURI1/1
+                //   Checking 22 baseURI1/2
+                //   Checking 23 baseURI1/3
+                //   Checking 24 baseURI1/4
+                console.log("Checking", i, tieredDrop.tokenURI(i));
+            }
+        }
+    }
 }
 
 contract TieredDropBechmarkTest is BaseTest {
