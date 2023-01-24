@@ -51,7 +51,7 @@ contract ExtensionSignatureMintERC1155 is DSTest, Test {
         signer = vm.addr(privateKey);
 
         typehashMintRequest = keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address signer,address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
         nameHash = keccak256(bytes("SignatureMintERC1155"));
         versionHash = keccak256(bytes("1"));
@@ -60,6 +60,7 @@ contract ExtensionSignatureMintERC1155 is DSTest, Test {
         );
         domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(ext)));
 
+        _mintrequest.signer = signer;
         _mintrequest.to = address(1);
         _mintrequest.royaltyRecipient = address(2);
         _mintrequest.royaltyBps = 0;
@@ -81,28 +82,34 @@ contract ExtensionSignatureMintERC1155 is DSTest, Test {
         view
         returns (bytes memory)
     {
-        bytes memory encodedRequest = abi.encode(
-            typehashMintRequest,
-            _request.to,
-            _request.royaltyRecipient,
-            _request.royaltyBps,
-            _request.primarySaleRecipient,
-            _request.tokenId,
-            keccak256(bytes(_request.uri)),
-            _request.quantity,
-            _request.pricePerToken,
-            _request.currency,
-            _request.validityStartTimestamp,
-            _request.validityEndTimestamp,
-            _request.uid
-        );
-        bytes32 structHash = keccak256(encodedRequest);
+        bytes32 structHash = keccak256(_encodeRequest(_request));
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
 
         return sig;
+    }
+
+    /// @dev Resolves 'stack too deep' error in `recoverAddress`.
+    function _encodeRequest(MySigMint1155.MintRequest memory _req) internal view returns (bytes memory) {
+        return
+            abi.encode(
+                typehashMintRequest,
+                _req.signer,
+                _req.to,
+                _req.royaltyRecipient,
+                _req.royaltyBps,
+                _req.primarySaleRecipient,
+                _req.tokenId,
+                keccak256(bytes(_req.uri)),
+                _req.quantity,
+                _req.pricePerToken,
+                _req.currency,
+                _req.validityStartTimestamp,
+                _req.validityEndTimestamp,
+                _req.uid
+            );
     }
 
     function test_state_mintWithSignature() public {

@@ -51,7 +51,7 @@ contract ExtensionSignatureMintERC721 is DSTest, Test {
         signer = vm.addr(privateKey);
 
         typehashMintRequest = keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address signer,address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
         nameHash = keccak256(bytes("SignatureMintERC721"));
         versionHash = keccak256(bytes("1"));
@@ -60,6 +60,7 @@ contract ExtensionSignatureMintERC721 is DSTest, Test {
         );
         domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(ext)));
 
+        _mintrequest.signer = signer;
         _mintrequest.to = address(1);
         _mintrequest.royaltyRecipient = address(2);
         _mintrequest.royaltyBps = 0;
@@ -82,6 +83,7 @@ contract ExtensionSignatureMintERC721 is DSTest, Test {
     {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
+            _request.signer,
             _request.to,
             _request.royaltyRecipient,
             _request.royaltyBps,

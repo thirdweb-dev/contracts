@@ -35,28 +35,34 @@ contract ERC1155SignatureMintTest is DSTest, Test {
         view
         returns (bytes memory)
     {
-        bytes memory encodedRequest = abi.encode(
-            typehashMintRequest,
-            _request.to,
-            _request.royaltyRecipient,
-            _request.royaltyBps,
-            _request.primarySaleRecipient,
-            _request.tokenId,
-            keccak256(bytes(_request.uri)),
-            _request.quantity,
-            _request.pricePerToken,
-            _request.currency,
-            _request.validityStartTimestamp,
-            _request.validityEndTimestamp,
-            _request.uid
-        );
-        bytes32 structHash = keccak256(encodedRequest);
+        bytes32 structHash = keccak256(_encodeRequest(_request));
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
 
         return sig;
+    }
+
+    /// @dev Resolves 'stack too deep' error in `recoverAddress`.
+    function _encodeRequest(ERC1155SignatureMint.MintRequest memory _req) internal view returns (bytes memory) {
+        return
+            abi.encode(
+                typehashMintRequest,
+                _req.signer,
+                _req.to,
+                _req.royaltyRecipient,
+                _req.royaltyBps,
+                _req.primarySaleRecipient,
+                _req.tokenId,
+                keccak256(bytes(_req.uri)),
+                _req.quantity,
+                _req.pricePerToken,
+                _req.currency,
+                _req.validityStartTimestamp,
+                _req.validityEndTimestamp,
+                _req.uid
+            );
     }
 
     function setUp() public {
@@ -73,7 +79,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
         base = new ERC1155SignatureMint("name", "symbol", admin, 0, saleRecipient);
 
         typehashMintRequest = keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address signer,address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
         nameHash = keccak256(bytes("SignatureMintERC1155"));
         versionHash = keccak256(bytes("1"));
@@ -84,6 +90,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
     }
 
     function test_state_mintWithSignature_newNFTs() public {
+        req.signer = admin;
         req.to = nftHolder;
         req.royaltyRecipient = admin;
         req.royaltyBps = 0;
@@ -111,6 +118,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
     }
 
     function test_state_mintWithSignature_existingNFTs() public {
+        req.signer = admin;
         req.to = nftHolder;
         req.royaltyRecipient = admin;
         req.royaltyBps = 0;
@@ -150,6 +158,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
     }
 
     function test_state_mintWithSignature_withPrice() public {
+        req.signer = admin;
         req.to = nftHolder;
         req.royaltyRecipient = admin;
         req.royaltyBps = 0;
@@ -174,6 +183,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
     }
 
     function test_revert_mintWithSignature_withPrice_incorrectPrice() public {
+        req.signer = admin;
         req.to = nftHolder;
         req.royaltyRecipient = admin;
         req.royaltyBps = 0;
@@ -195,6 +205,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
     }
 
     function test_revert_mintWithSignature_mintingZeroTokens() public {
+        req.signer = admin;
         req.to = nftHolder;
         req.royaltyRecipient = admin;
         req.royaltyBps = 0;
@@ -216,7 +227,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
 
     function test_revert_mintWithSignature_invalidId() public {
         uint256 nextId = base.nextTokenIdToMint();
-
+        req.signer = admin;
         req.to = nftHolder;
         req.royaltyRecipient = admin;
         req.royaltyBps = 0;

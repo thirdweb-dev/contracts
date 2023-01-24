@@ -32,7 +32,7 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
         vm.deal(recipient, 1_000_000 ether);
 
         typehashMintRequest = keccak256(
-            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address signer,address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
         nameHash = keccak256(bytes("SignatureMintERC20"));
         versionHash = keccak256(bytes("1"));
@@ -41,6 +41,7 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
         );
         domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(base)));
 
+        _mintrequest.signer = signer;
         _mintrequest.to = recipient;
         _mintrequest.primarySaleRecipient = saleRecipient;
         _mintrequest.quantity = 100 ether;
@@ -60,6 +61,7 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
     {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
+            _request.signer,
             _request.to,
             _request.primarySaleRecipient,
             _request.quantity,
