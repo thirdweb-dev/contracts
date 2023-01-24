@@ -2,14 +2,15 @@
 pragma solidity ^0.8.0;
 
 import "./interface/ISignatureMintERC1155.sol";
+import "./ERC1271Support.sol";
 import "../openzeppelin-presets/utils/cryptography/EIP712.sol";
 
-abstract contract SignatureMintERC1155 is EIP712, ISignatureMintERC1155 {
+abstract contract SignatureMintERC1155 is EIP712, ERC1271Support, ISignatureMintERC1155 {
     using ECDSA for bytes32;
 
     bytes32 internal constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address signer,address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
@@ -24,7 +25,9 @@ abstract contract SignatureMintERC1155 is EIP712, ISignatureMintERC1155 {
         override
         returns (bool success, address signer)
     {
-        signer = _recoverAddress(_req, _signature);
+        signer = _req.signer;
+        bytes32 messageHash = keccak256(_encodeRequest(_req));
+        _validateSignature(messageHash, _signature, signer);
         success = !minted[_req.uid] && _canSignMintRequest(signer);
     }
 
@@ -47,9 +50,9 @@ abstract contract SignatureMintERC1155 is EIP712, ISignatureMintERC1155 {
         minted[_req.uid] = true;
     }
 
-    /// @dev Returns the address of the signer of the mint request.
-    function _recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
-        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
+    /// @dev Recovers the signer from a message hash and signature.
+    function _recoverSigner(bytes32 _messageHash, bytes memory _signature) internal view override returns (address) {
+        return _hashTypedDataV4(_messageHash).recover(_signature);
     }
 
     /// @dev Resolves 'stack too deep' error in `recoverAddress`.
@@ -57,6 +60,7 @@ abstract contract SignatureMintERC1155 is EIP712, ISignatureMintERC1155 {
         return
             abi.encode(
                 TYPEHASH,
+                _req.signer,
                 _req.to,
                 _req.royaltyRecipient,
                 _req.royaltyBps,

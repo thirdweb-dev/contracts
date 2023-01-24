@@ -12,6 +12,7 @@ interface ISignatureMintERC20 {
     /**
      *  @notice The body of a request to mint tokens.
      *
+     *  @param signer The authorized signer signing off the mint request.
      *  @param to The receiver of the tokens to mint.
      *  @param primarySaleRecipient The recipient of the minted token's primary sales proceeds.
      *  @param quantity The quantity of tokens to mint.
@@ -22,6 +23,7 @@ interface ISignatureMintERC20 {
      *  @param uid A unique identifier for the payload.
      */
     struct MintRequest {
+        address signer;
         address to;
         address primarySaleRecipient;
         uint256 quantity;

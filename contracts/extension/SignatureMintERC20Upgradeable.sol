@@ -2,16 +2,21 @@
 pragma solidity ^0.8.0;
 
 import "./interface/ISignatureMintERC20.sol";
-
+import "./ERC1271Support.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
-abstract contract SignatureMintERC20Upgradeable is Initializable, EIP712Upgradeable, ISignatureMintERC20 {
+abstract contract SignatureMintERC20Upgradeable is
+    Initializable,
+    EIP712Upgradeable,
+    ERC1271Support,
+    ISignatureMintERC20
+{
     using ECDSAUpgradeable for bytes32;
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address signer,address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
@@ -30,7 +35,9 @@ abstract contract SignatureMintERC20Upgradeable is Initializable, EIP712Upgradea
         override
         returns (bool success, address signer)
     {
-        signer = _recoverAddress(_req, _signature);
+        signer = _req.signer;
+        bytes32 messageHash = keccak256(_encodeRequest(_req));
+        _validateSignature(messageHash, _signature, signer);
         success = !minted[_req.uid] && _isAuthorizedSigner(signer);
     }
 
@@ -53,9 +60,9 @@ abstract contract SignatureMintERC20Upgradeable is Initializable, EIP712Upgradea
         minted[_req.uid] = true;
     }
 
-    /// @dev Returns the address of the signer of the mint request.
-    function _recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
-        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
+    /// @dev Recovers the signer from a message hash and signature.
+    function _recoverSigner(bytes32 _messageHash, bytes memory _signature) internal view override returns (address) {
+        return _hashTypedDataV4(_messageHash).recover(_signature);
     }
 
     /// @dev Resolves 'stack too deep' error in `recoverAddress`.
@@ -63,6 +70,7 @@ abstract contract SignatureMintERC20Upgradeable is Initializable, EIP712Upgradea
         return
             abi.encode(
                 TYPEHASH,
+                _req.signer,
                 _req.to,
                 _req.primarySaleRecipient,
                 _req.quantity,

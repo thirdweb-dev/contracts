@@ -12,6 +12,7 @@ interface ISignatureMintERC721 {
     /**
      *  @notice The body of a request to mint tokens.
      *
+     *  @param signer The authorized signer signing off the mint request.
      *  @param to The receiver of the tokens to mint.
      *  @param royaltyRecipient The recipient of the minted token's secondary sales royalties. (Not applicable for ERC20 tokens)
      *  @param royaltyBps The percentage of the minted token's secondary sales to take as royalties. (Not applicable for ERC20 tokens)
@@ -25,6 +26,7 @@ interface ISignatureMintERC721 {
      *  @param uid A unique identifier for the payload.
      */
     struct MintRequest {
+        address signer;
         address to;
         address royaltyRecipient;
         uint256 royaltyBps;
