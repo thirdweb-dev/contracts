@@ -210,12 +210,8 @@ abstract contract Router is Multicall, ERC165, IRouter {
     function _addPlugin(Plugin memory _plugin) internal {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
 
-        // Revert: default plugin exists for function; use updatePlugin instead.
-        try IPluginMap(pluginMap).getPluginForFunction(_plugin.functionSelector) returns (address) {
-            revert("Router: default plugin exists for function.");
-        } catch {
-            require(data.allSelectors.add(bytes32(_plugin.functionSelector)), "Router: plugin exists for function.");
-        }
+        // Revert: plugin exists for function; use updatePlugin instead.
+        require(data.allSelectors.add(bytes32(_plugin.functionSelector)), "Router: plugin exists for function.");
 
         require(
             _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
