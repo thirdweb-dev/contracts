@@ -226,15 +226,17 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         uint256 _auctionCount;
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            _auctions[i] = data.auctions[i];
-            if (_auctions[i].assetContract != address(0)) {
+            uint256 j = i - _startId;
+            _auctions[j] = data.auctions[i];
+            if (_auctions[j].assetContract != address(0)) {
                 _auctionCount += 1;
             }
         }
 
         _allAuctions = new Auction[](_auctionCount);
         uint256 index = 0;
-        for (uint256 i = _startId; i <= _endId; i += 1) {
+        uint256 count = _auctions.length;
+        for (uint256 i = 0; i < count; i += 1) {
             if (_auctions[i].assetContract != address(0)) {
                 _allAuctions[index++] = _auctions[i];
             }
@@ -253,11 +255,12 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         uint256 _auctionCount;
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            _auctions[i] = data.auctions[i];
+            uint256 j = i - _startId;
+            _auctions[j] = data.auctions[i];
             if (
-                _auctions[i].startTimestamp <= block.timestamp &&
-                _auctions[i].endTimestamp > block.timestamp &&
-                _auctions[i].assetContract != address(0)
+                _auctions[j].startTimestamp <= block.timestamp &&
+                _auctions[j].endTimestamp > block.timestamp &&
+                _auctions[j].assetContract != address(0)
             ) {
                 _auctionCount += 1;
             }
@@ -265,7 +268,8 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
 
         _validAuctions = new Auction[](_auctionCount);
         uint256 index = 0;
-        for (uint256 i = _startId; i <= _endId; i += 1) {
+        uint256 count = _auctions.length;
+        for (uint256 i = 0; i < count; i += 1) {
             if (
                 _auctions[i].startTimestamp <= block.timestamp &&
                 _auctions[i].endTimestamp > block.timestamp &&

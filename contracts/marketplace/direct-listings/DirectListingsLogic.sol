@@ -346,15 +346,16 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
         uint256 _listingCount;
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            _listings[i] = data.listings[i];
-            if (data.listings[i].listingCreator != address(0)) {
+            _listings[i - _startId] = data.listings[i];
+            if (_listings[i - _startId].listingCreator != address(0)) {
                 _listingCount += 1;
             }
         }
 
         _allListings = new Listing[](_listingCount);
         uint256 index = 0;
-        for (uint256 i = _startId; i <= _endId; i += 1) {
+        uint256 count = _listings.length;
+        for (uint256 i = 0; i < count; i += 1) {
             if (_listings[i].listingCreator != address(0)) {
                 _allListings[index++] = _listings[i];
             }
@@ -379,15 +380,16 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
         uint256 _listingCount;
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            _listings[i] = data.listings[i];
-            if (_validateExistingListing(_listings[i])) {
+            _listings[i - _startId] = data.listings[i];
+            if (_validateExistingListing(_listings[i - _startId])) {
                 _listingCount += 1;
             }
         }
 
         _validListings = new Listing[](_listingCount);
         uint256 index = 0;
-        for (uint256 i = _startId; i <= _endId; i += 1) {
+        uint256 count = _listings.length;
+        for (uint256 i = 0; i < count; i += 1) {
             if (_validateExistingListing(_listings[i])) {
                 _validListings[index++] = _listings[i];
             }

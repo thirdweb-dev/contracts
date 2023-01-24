@@ -160,15 +160,17 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
         uint256 _offerCount;
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            _offers[i] = data.offers[i];
-            if (_offers[i].assetContract != address(0)) {
+            uint256 j = i - _startId;
+            _offers[j] = data.offers[i];
+            if (_offers[j].assetContract != address(0)) {
                 _offerCount += 1;
             }
         }
 
         _allOffers = new Offer[](_offerCount);
         uint256 index = 0;
-        for (uint256 i = _startId; i <= _endId; i += 1) {
+        uint256 count = _offers.length;
+        for (uint256 i = 0; i < count; i += 1) {
             if (_offers[i].assetContract != address(0)) {
                 _allOffers[index++] = _offers[i];
             }
@@ -184,15 +186,17 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
         uint256 _offerCount;
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            _offers[i] = data.offers[i];
-            if (_validateExistingOffer(_offers[i])) {
+            uint256 j = i - _startId;
+            _offers[j] = data.offers[i];
+            if (_validateExistingOffer(_offers[j])) {
                 _offerCount += 1;
             }
         }
 
         _validOffers = new Offer[](_offerCount);
         uint256 index = 0;
-        for (uint256 i = 0; i < _offerCount; i += 1) {
+        uint256 count = _offers.length;
+        for (uint256 i = 0; i < count; i += 1) {
             if (_validateExistingOffer(_offers[i])) {
                 _validOffers[index++] = _offers[i];
             }
