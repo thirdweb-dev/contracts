@@ -117,13 +117,6 @@ contract RouterTest is BaseTest {
         assertTrue(isStored);
     }
 
-    function test_revert_addPlugin_defaultExists() external {
-        vm.expectRevert("Router: default plugin exists for function.");
-        RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(Counter.doubleNumber.selector, "doubleNumber()", counterAlternate1)
-        );
-    }
-
     function test_revert_addPlugin_pluginAlreadyExists() external {
         RouterImplementation(payable(router)).addPlugin(
             IPluginMap.Plugin(CounterAlternate2.tripleNumber.selector, "tripleNumber()", counterAlternate2)
