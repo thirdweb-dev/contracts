@@ -34,21 +34,21 @@ async function main() {
 
   const ACCOUNT_ADMIN: string = "0xaedDA1a968aC9d26BbE5Ce5be65a5E77a0aA0339"; // Get value from `scripts/thirdweb_wallet/setup.ts`
 
-  const sdk = ThirdwebSDK.fromPrivateKey(
-    process.env.THIRDWEB_WALLET_TEST_PKEY as string,
-    "goerli",
-    {
-      gasless: {
-        openzeppelin: {
-          relayerUrl: "https://api.defender.openzeppelin.com/autotasks/23a23d0f-886a-4858-a14d-ab08ed487c4a/runs/webhook/74b0e036-fd2e-418b-97d7-69ac094edf7b/8RTrzhrMW56WEcNYXd54Bg",
-          relayerForwarderAddress: "0x5001A14CA6163143316a7C614e30e6041033Ac20"
-        }
-      }
-    }
-  );
+  const sdk = ThirdwebSDK.fromPrivateKey(process.env.THIRDWEB_WALLET_TEST_PKEY as string, "goerli", {
+    gasless: {
+      openzeppelin: {
+        relayerUrl:
+          "https://api.defender.openzeppelin.com/autotasks/23a23d0f-886a-4858-a14d-ab08ed487c4a/runs/webhook/74b0e036-fd2e-418b-97d7-69ac094edf7b/8RTrzhrMW56WEcNYXd54Bg",
+        relayerForwarderAddress: "0x5001A14CA6163143316a7C614e30e6041033Ac20",
+      },
+    },
+  });
+
+  const signer = await sdk.wallet.getAddress();
+  console.log("Connected as", signer);
   const accountAdmin = await sdk.getContract(
     ACCOUNT_ADMIN,
-    JSON.parse(readFileSync("artifacts_forge/AccountAdmin.sol/AccountAdmin.json", "utf-8")).abi
+    JSON.parse(readFileSync("artifacts_forge/AccountAdmin.sol/AccountAdmin.json", "utf-8")).abi,
   );
 
   /*///////////////////////////////////////////////////////////////
@@ -57,37 +57,37 @@ async function main() {
 
   const username = "test_user";
   const password = "super_secret";
-
-  const createParams = {
-    signer: await sdk.wallet.getAddress(),
-    accountId: ethers.utils.solidityKeccak256(["string", "string"], [username, password]),
-    deploymentSalt: ethers.utils.formatBytes32String("randomSaltSalt"),
-    initialAccountBalance: 0,
-    validityStartTimestamp: 0,
-    validityEndTimestamp: Math.floor(Date.now() / 1000) + 10_000,
-  };
-
-  const wrapper = (accountAdmin as any).contractWrapper;
+  const accountId = ethers.utils.solidityKeccak256(["string", "string"], [username, password]);
   const chainId = (await sdk.getProvider().getNetwork()).chainId;
 
-  const signatureForCreateAccount = await wrapper.signTypedData(
-    sdk.getSigner(),
-    {
-      name: "thirdweb_wallet_admin",
-      version: "1",
-      chainId,
-      verifyingContract: ACCOUNT_ADMIN,
-    },
-    { CreateAccountParams: CreateAccountParams },
-    createParams,
-  );
+  let accountAddress: string = await accountAdmin.call("getAccount", signer, accountId);
+  if (accountAddress === ethers.constants.AddressZero) {
+    const createParams = {
+      signer,
+      accountId,
+      deploymentSalt: ethers.utils.formatBytes32String("randomSaltSalt"),
+      initialAccountBalance: 0,
+      validityStartTimestamp: 0,
+      validityEndTimestamp: Math.floor(Date.now() / 1000) + 10_000,
+    };
 
-  console.log("\nSignature generated for account creation: ", signatureForCreateAccount);
+    const { signature: signatureForCreateAccount } = await sdk.wallet.signTypedData(
+      {
+        name: "thirdweb_wallet_admin",
+        version: "1",
+        chainId,
+        verifyingContract: ACCOUNT_ADMIN,
+      },
+      { CreateAccountParams: CreateAccountParams },
+      createParams,
+    );
 
-  // UNCOMMENT TO CREATE NEW ACCOUNT
-  // await accountAdmin.call("createAccount", createParams, signatureForCreateAccount);
+    console.log("\nSignature generated for account creation: ", signatureForCreateAccount);
 
-  const accountAddress: string = await accountAdmin.call("getAccount", createParams.signer, createParams.accountId);
+    await accountAdmin.call("createAccount", createParams, signatureForCreateAccount);
+    accountAddress = await accountAdmin.call("getAccount", signer, accountId);
+  }
+
   console.log("Your account is: ", accountAddress); // 0xFE6bE0586560A48d2AF255B6149820382A947899
 
   /*///////////////////////////////////////////////////////////////
@@ -106,7 +106,7 @@ async function main() {
   console.log("Account nonce: ", nonce);
 
   const accountTransactionParams = {
-    signer: createParams.signer,
+    signer: signer,
     target: TOKEN_ADDRESS,
     data: tokenContract.encoder.encode("mintTo", [accountAddress, ethers.utils.parseEther("1")]),
     nonce: nonce,
@@ -118,7 +118,7 @@ async function main() {
 
   console.log("Account transaction params: ", accountTransactionParams);
 
-  const signaturForTransactionParams = await sdk.wallet.signTypedData(
+  const { signature: signaturForTransactionParams } = await sdk.wallet.signTypedData(
     {
       name: "thirdweb_wallet",
       version: "1",
@@ -140,8 +140,8 @@ async function main() {
   // const gasForAdminTransaction = await accountContract.estimator.gasLimitOf("execute", [accountTransactionParams, signaturForTransactionParams]);
 
   const relayRequestParams = {
-    signer: createParams.signer,
-    accountId: createParams.accountId,
+    signer,
+    accountId,
     value: 0,
     gas: 0,
     data: accountTransactionData,
@@ -150,6 +150,7 @@ async function main() {
   const tx = await accountAdmin.call("relay", ...Object.values(relayRequestParams));
 
   console.log(tx);
+  console.log("Done.");
 }
 
 main()
