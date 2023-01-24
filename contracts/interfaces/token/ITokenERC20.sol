@@ -7,6 +7,7 @@ interface ITokenERC20 is IERC20MetadataUpgradeable {
     /**
      *  @notice The body of a request to mint tokens.
      *
+     *  @param signer The authorized signer signing off the mint request.
      *  @param to The receiver of the tokens to mint.
      *  @param primarySaleRecipient The receiver of the primary sale funds from the mint.
      *  @param quantity The quantity of tpkens to mint.
@@ -17,6 +18,7 @@ interface ITokenERC20 is IERC20MetadataUpgradeable {
      *  @param uid A unique identifier for the request.
      */
     struct MintRequest {
+        address signer;
         address to;
         address primarySaleRecipient;
         uint256 quantity;

@@ -55,7 +55,7 @@ contract TokenERC721Test is BaseTest {
         vm.deal(recipient, 1_000);
 
         typehashMintRequest = keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address signer,address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
         nameHash = keccak256(bytes("TokenERC721"));
         versionHash = keccak256(bytes("1"));
@@ -67,6 +67,7 @@ contract TokenERC721Test is BaseTest {
         );
 
         // construct default mintrequest
+        _mintrequest.signer = deployerSigner;
         _mintrequest.to = recipient;
         _mintrequest.royaltyRecipient = royaltyRecipient;
         _mintrequest.royaltyBps = royaltyBps;
@@ -88,6 +89,7 @@ contract TokenERC721Test is BaseTest {
     {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
+            _request.signer,
             _request.to,
             _request.royaltyRecipient,
             _request.royaltyBps,
@@ -231,10 +233,22 @@ contract TokenERC721Test is BaseTest {
         vm.warp(1000);
 
         uint256 incorrectKey = 3456;
+        _mintrequest.signer = vm.addr(incorrectKey);
         _signature = signMintRequest(_mintrequest, incorrectKey);
 
         vm.prank(recipient);
         vm.expectRevert("invalid signature");
+        tokenContract.mintWithSignature(_mintrequest, _signature);
+    }
+
+    function test_revert_mintWithSignature_InvalidSigner() public {
+        vm.warp(1000);
+
+        uint256 incorrectKey = 3456;
+        _signature = signMintRequest(_mintrequest, incorrectKey);
+
+        vm.prank(recipient);
+        vm.expectRevert("Invalid signer.");
         tokenContract.mintWithSignature(_mintrequest, _signature);
     }
 

@@ -11,6 +11,7 @@ interface ITokenERC1155 is IERC1155Upgradeable {
     /**
      *  @notice The body of a request to mint NFTs.
      *
+     *  @param signer The authorized signer signing off the mint request.
      *  @param to The receiver of the NFTs to mint.
      *  @param royaltyRecipient The recipient of the minted NFT's secondary sales royalties.
      *  @param primarySaleRecipient The recipient of the minted NFT's primary sales proceeds.
@@ -24,6 +25,7 @@ interface ITokenERC1155 is IERC1155Upgradeable {
      *  @param uid A unique identifier for the request.
      */
     struct MintRequest {
+        address signer;
         address to;
         address royaltyRecipient;
         uint256 royaltyBps;

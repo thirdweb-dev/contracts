@@ -16,6 +16,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721Enumer
 // Signature utils
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
+import "../extension/ERC1271Support.sol";
 
 // Access Control + security
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
@@ -49,6 +50,7 @@ contract TokenERC721 is
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
     DefaultOperatorFiltererUpgradeable,
+    ERC1271Support,
     ERC721EnumerableUpgradeable,
     ITokenERC721
 {
@@ -60,7 +62,7 @@ contract TokenERC721 is
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address signer,address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
@@ -165,7 +167,9 @@ contract TokenERC721 is
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
     function verify(MintRequest calldata _req, bytes calldata _signature) public view returns (bool, address) {
-        address signer = recoverAddress(_req, _signature);
+        address signer = _req.signer;
+        bytes32 messageHash = keccak256(_encodeRequest(_req));
+        _validateSignature(messageHash, _signature, signer);
         return (!minted[_req.uid] && hasRole(MINTER_ROLE, signer), signer);
     }
 
@@ -316,9 +320,9 @@ contract TokenERC721 is
         emit TokensMinted(_to, tokenIdToMint, _uri);
     }
 
-    /// @dev Returns the address of the signer of the mint request.
-    function recoverAddress(MintRequest calldata _req, bytes calldata _signature) private view returns (address) {
-        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
+    /// @dev Recovers the signer from a message hash and signature.
+    function _recoverSigner(bytes32 _messageHash, bytes memory _signature) internal view override returns (address) {
+        return _hashTypedDataV4(_messageHash).recover(_signature);
     }
 
     /// @dev Resolves 'stack too deep' error in `recoverAddress`.
@@ -326,6 +330,7 @@ contract TokenERC721 is
         return
             abi.encode(
                 TYPEHASH,
+                _req.signer,
                 _req.to,
                 _req.royaltyRecipient,
                 _req.royaltyBps,

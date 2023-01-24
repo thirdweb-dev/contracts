@@ -11,6 +11,7 @@ interface ITokenERC721 is IERC721Upgradeable {
     /**
      *  @notice The body of a request to mint NFTs.
      *
+     *  @param signer The authorized signer signing off the mint request.
      *  @param to The receiver of the NFTs to mint.
      *  @param uri The URI of the NFT to mint.
      *  @param price Price to pay for minting with the signature.
@@ -20,6 +21,7 @@ interface ITokenERC721 is IERC721Upgradeable {
      *  @param uid A unique identifier for the request.
      */
     struct MintRequest {
+        address signer;
         address to;
         address royaltyRecipient;
         uint256 royaltyBps;
