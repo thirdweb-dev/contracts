@@ -95,21 +95,21 @@ abstract contract Router is Multicall, ERC165, IRouter {
 
     /// @dev Add functionality to the contract.
     function addPlugin(Plugin memory _plugin) external {
-        require(_canSetPlugin(), "Router: Not authorized");
+        require(_canSetPlugin(_plugin.functionSelector, _plugin.pluginAddress), "Router: Not authorized");
 
         _addPlugin(_plugin);
     }
 
     /// @dev Update or override existing functionality.
     function updatePlugin(Plugin memory _plugin) external {
-        require(_canSetPlugin(), "Map: Not authorized");
+        require(_canSetPlugin(_plugin.functionSelector, _plugin.pluginAddress), "Map: Not authorized");
 
         _updatePlugin(_plugin);
     }
 
     /// @dev Remove existing functionality from the contract.
     function removePlugin(bytes4 _selector) external {
-        require(_canSetPlugin(), "Map: Not authorized");
+        require(_canSetPlugin(_selector, _getPluginForFunction(_selector)), "Map: Not authorized");
 
         _removePlugin(_selector);
     }
@@ -258,5 +258,5 @@ abstract contract Router is Multicall, ERC165, IRouter {
         emit PluginRemoved(_selector, currentPlugin);
     }
 
-    function _canSetPlugin() internal view virtual returns (bool);
+    function _canSetPlugin(bytes4 functionSelector, address plugin) internal view virtual returns (bool);
 }

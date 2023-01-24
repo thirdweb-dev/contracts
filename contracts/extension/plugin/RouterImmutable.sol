@@ -15,7 +15,7 @@ contract RouterImmutable is Router {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether plug-in can be set in the given execution context.
-    function _canSetPlugin() internal pure override returns (bool) {
+    function _canSetPlugin(bytes4, address) internal pure override returns (bool) {
         return false;
     }
 }
