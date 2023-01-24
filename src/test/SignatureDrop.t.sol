@@ -38,7 +38,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         vm.deal(deployerSigner, 1_000 ether);
 
         typehashMintRequest = keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address signer,address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
         nameHash = keccak256(bytes("SignatureMintERC721"));
         versionHash = keccak256(bytes("1"));
@@ -62,6 +62,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         sigdrop.setClaimConditions(conditions[0], false);
         uint256 id = 0;
 
+        _mintrequest.signer = deployerSigner;
         _mintrequest.to = address(0x345);
         _mintrequest.royaltyRecipient = address(2);
         _mintrequest.royaltyBps = 0;
@@ -88,6 +89,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
     {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
+            _request.signer,
             _request.to,
             _request.royaltyRecipient,
             _request.royaltyBps,
@@ -152,7 +154,7 @@ contract SignatureDropTest is BaseTest {
         vm.deal(deployerSigner, 1_000 ether);
 
         typehashMintRequest = keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address signer,address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
         nameHash = keccak256(bytes("SignatureMintERC721"));
         versionHash = keccak256(bytes("1"));
@@ -737,6 +739,7 @@ contract SignatureDropTest is BaseTest {
     {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
+            mintrequest.signer,
             mintrequest.to,
             mintrequest.royaltyRecipient,
             mintrequest.royaltyBps,
@@ -767,6 +770,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
 
+        mintrequest.signer = deployerSigner;
         mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
@@ -822,6 +826,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
 
+        mintrequest.signer = deployerSigner;
         mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(0x567);
         mintrequest.royaltyBps = 100;
@@ -895,6 +900,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
 
         SignatureDrop.MintRequest memory mintrequest;
+        mintrequest.signer = deployerSigner;
         mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
@@ -913,7 +919,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.mintWithSignature(mintrequest, signature);
 
         signature = signMintRequest(mintrequest, 4321);
-        vm.expectRevert("Invalid req");
+        vm.expectRevert("Invalid signer.");
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -926,6 +932,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
 
         SignatureDrop.MintRequest memory mintrequest;
+        mintrequest.signer = deployerSigner;
         mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
@@ -955,6 +962,7 @@ contract SignatureDropTest is BaseTest {
         uint256 id = 0;
 
         SignatureDrop.MintRequest memory mintrequest;
+        mintrequest.signer = deployerSigner;
         mintrequest.to = address(0);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
@@ -981,7 +989,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
-
+        mintrequest.signer = deployerSigner;
         mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
@@ -1012,7 +1020,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
         uint256 id = 0;
         SignatureDrop.MintRequest memory mintrequest;
-
+        mintrequest.signer = deployerSigner;
         mintrequest.to = address(0x567);
         mintrequest.royaltyRecipient = address(2);
         mintrequest.royaltyBps = 0;
@@ -1085,6 +1093,7 @@ contract SignatureDropTest is BaseTest {
             uint256 id = 0;
             SignatureDrop.MintRequest memory mintrequest;
 
+            mintrequest.signer = deployerSigner;
             mintrequest.to = address(0x567);
             mintrequest.royaltyRecipient = address(2);
             mintrequest.royaltyBps = 0;
