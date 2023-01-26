@@ -79,6 +79,7 @@ contract ERC1155Drop is
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
+        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////

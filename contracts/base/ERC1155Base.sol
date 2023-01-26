@@ -69,6 +69,7 @@ contract ERC1155Base is
     ) ERC1155(_name, _symbol) {
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////

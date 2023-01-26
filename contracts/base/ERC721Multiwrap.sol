@@ -88,6 +88,7 @@ contract ERC721Multiwrap is
     ) ERC721A(_name, _symbol) TokenStore(_nativeTokenWrapper) {
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
