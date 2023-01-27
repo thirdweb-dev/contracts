@@ -9,7 +9,12 @@ import "lib/forge-std/src/console.sol";
 contract RouterImplementation is Router {
     constructor(address _functionMap) Router(_functionMap) {}
 
-    function _canSetPlugin(bytes4, address) internal pure override returns (bool) {
+    function _canSetPlugin() internal pure override returns (bool) {
+        return true;
+    }
+
+    /// @dev Returns whether a plugin is a safe, authorized plugin.
+    function _isAuthorizedPlugin(bytes4, address) internal view override returns (bool) {
         return true;
     }
 }

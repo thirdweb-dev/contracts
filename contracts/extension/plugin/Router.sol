@@ -95,21 +95,23 @@ abstract contract Router is Multicall, ERC165, IRouter {
 
     /// @dev Add functionality to the contract.
     function addPlugin(Plugin memory _plugin) external {
-        require(_canSetPlugin(_plugin.functionSelector, _plugin.pluginAddress), "Router: Not authorized");
+        require(_canSetPlugin(), "Router: caller not authorized");
+        require(_isAuthorizedPlugin(_plugin.functionSelector, _plugin.pluginAddress), "Router: plugin not authorized");
 
         _addPlugin(_plugin);
     }
 
     /// @dev Update or override existing functionality.
     function updatePlugin(Plugin memory _plugin) external {
-        require(_canSetPlugin(_plugin.functionSelector, _plugin.pluginAddress), "Map: Not authorized");
+        require(_canSetPlugin(), "Router: caller not authorized");
+        require(_isAuthorizedPlugin(_plugin.functionSelector, _plugin.pluginAddress), "Router: plugin not authorized");
 
         _updatePlugin(_plugin);
     }
 
     /// @dev Remove existing functionality from the contract.
     function removePlugin(bytes4 _selector) external {
-        require(_canSetPlugin(_selector, _getPluginForFunction(_selector)), "Map: Not authorized");
+        require(_canSetPlugin(), "Router: caller not authorized");
 
         _removePlugin(_selector);
     }
@@ -254,5 +256,9 @@ abstract contract Router is Multicall, ERC165, IRouter {
         emit PluginRemoved(_selector, currentPlugin);
     }
 
-    function _canSetPlugin(bytes4 functionSelector, address plugin) internal view virtual returns (bool);
+    /// @dev Returns whether a plugin is a safe, authorized plugin.
+    function _isAuthorizedPlugin(bytes4 functionSelector, address plugin) internal view virtual returns (bool);
+
+    /// @dev Returns whether plug-in can be set in the given execution context.
+    function _canSetPlugin() internal view virtual returns (bool);
 }

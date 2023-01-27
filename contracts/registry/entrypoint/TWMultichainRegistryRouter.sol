@@ -36,8 +36,13 @@ contract TWMultichainRegistryRouter is PermissionsEnumerableLogic, ERC2771Contex
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether plug-in can be set in the given execution context.
-    function _canSetPlugin(bytes4, address) internal view override returns (bool) {
+    function _canSetPlugin() internal view override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether a plugin is a safe, authorized plugin.
+    function _isAuthorizedPlugin(bytes4, address) internal pure override returns (bool) {
+        return true;
     }
 
     function _msgSender() internal view override(ERC2771ContextLogic, PermissionsLogic) returns (address sender) {

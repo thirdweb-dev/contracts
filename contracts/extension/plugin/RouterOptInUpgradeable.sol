@@ -19,8 +19,15 @@ contract RouterOptInUpgradeable is Router, PermissionsEnumerable {
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _pluginMap, address _pluginRegistry) Router(_pluginMap) {
+    constructor(
+        address _pluginAdmin,
+        address _pluginMap,
+        address _pluginRegistry
+    ) Router(_pluginMap) {
         pluginRegistry = _pluginRegistry;
+
+        _setupRole(PLUGIN_ADMIN_ROLE, _pluginAdmin);
+        _setRoleAdmin(PLUGIN_ADMIN_ROLE, PLUGIN_ADMIN_ROLE);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -28,9 +35,12 @@ contract RouterOptInUpgradeable is Router, PermissionsEnumerable {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether plug-in can be set in the given execution context.
-    function _canSetPlugin(bytes4 _functionSelector, address _plugin) internal view virtual override returns (bool) {
-        return
-            hasRole(PLUGIN_ADMIN_ROLE, msg.sender) &&
-            PluginRegistry(pluginRegistry).isApprovedPlugin(_functionSelector, _plugin);
+    function _canSetPlugin() internal view virtual override returns (bool) {
+        return hasRole(PLUGIN_ADMIN_ROLE, msg.sender);
+    }
+
+    /// @dev Returns whether a plugin is a safe, authorized plugin.
+    function _isAuthorizedPlugin(bytes4 _functionSelector, address _plugin) internal view override returns (bool) {
+        return PluginRegistry(pluginRegistry).isApprovedPlugin(_functionSelector, _plugin);
     }
 }
