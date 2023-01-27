@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { ERC721A } from "../eip/ERC721A.sol";
+import { ERC721A } from "../eip/ERC721AVirtualApprove.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/Multicall.sol";
 import "../extension/Ownable.sol";
 import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 
 import "../lib/TWStrings.sol";
 
@@ -28,7 +29,15 @@ import "../lib/TWStrings.sol";
  *      - EIP 2981 compliance for royalty support on NFT marketplaces.
  */
 
-contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata {
+contract ERC721Base is
+    ERC721A,
+    ContractMetadata,
+    Multicall,
+    Ownable,
+    Royalty,
+    BatchMintMetadata,
+    DefaultOperatorFilterer
+{
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -49,6 +58,7 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
     ) ERC721A(_name, _symbol) {
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -154,6 +164,52 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
     }
 
     /*//////////////////////////////////////////////////////////////
+                        ERC-721 overrides
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev See {ERC721-setApprovalForAll}.
+    function setApprovalForAll(address operator, bool approved)
+        public
+        override(ERC721A)
+        onlyAllowedOperatorApproval(operator)
+    {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    /// @dev See {ERC721-approve}.
+    function approve(address operator, uint256 tokenId) public override(ERC721A) onlyAllowedOperatorApproval(operator) {
+        super.approve(operator, tokenId);
+    }
+
+    /// @dev See {ERC721-_transferFrom}.
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721A) onlyAllowedOperator(from) {
+        super.transferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721A) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public override(ERC721A) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId, data);
+    }
+
+    /*//////////////////////////////////////////////////////////////
                         Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
 
@@ -179,6 +235,11 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether operator restriction can be set in the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 }

@@ -7,7 +7,7 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-import "../eip/ERC721AVirtualApprove.sol";
+import "../eip/ERC721AVirtualApproveUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
