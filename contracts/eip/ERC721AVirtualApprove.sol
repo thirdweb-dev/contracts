@@ -7,11 +7,11 @@ pragma solidity ^0.8.4;
 ////////// CHANGELOG: turn `approve` to virtual //////////
 
 import "./interface/IERC721A.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
-import "@openzeppelin/contracts/utils/Address.sol";
-import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
-import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import "./interface/IERC721Receiver.sol";
+import "../lib/TWAddress.sol";
+import "../openzeppelin-presets/utils/Context.sol";
+import "../lib/TWStrings.sol";
+import "./ERC165.sol";
 
 /**
  * @dev Implementation of https://eips.ethereum.org/EIPS/eip-721[ERC721] Non-Fungible Token Standard, including
@@ -24,8 +24,8 @@ import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
  * Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).
  */
 contract ERC721A is Context, ERC165, IERC721A {
-    using Address for address;
-    using Strings for uint256;
+    using TWAddress for address;
+    using TWStrings for uint256;
 
     // The tokenId of the next token to be minted.
     uint256 internal _currentIndex;
