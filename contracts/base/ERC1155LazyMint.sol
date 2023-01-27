@@ -10,6 +10,7 @@ import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
 import "../extension/LazyMint.sol";
 import "../extension/interface/IClaimableERC1155.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 
 import "../lib/TWStrings.sol";
 import "../openzeppelin-presets/security/ReentrancyGuard.sol";
@@ -55,6 +56,7 @@ contract ERC1155LazyMint is
     BatchMintMetadata,
     LazyMint,
     IClaimableERC1155,
+    DefaultOperatorFilterer,
     ReentrancyGuard
 {
     using TWStrings for uint256;
@@ -81,6 +83,7 @@ contract ERC1155LazyMint is
     ) ERC1155(_name, _symbol) {
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -208,6 +211,45 @@ contract ERC1155LazyMint is
     }
 
     /*//////////////////////////////////////////////////////////////
+                        ERC-1155 overrides
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev See {ERC1155-setApprovalForAll}
+    function setApprovalForAll(address operator, bool approved)
+        public
+        override(ERC1155)
+        onlyAllowedOperatorApproval(operator)
+    {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    /**
+     * @dev See {IERC1155-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override(ERC1155) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, id, amount, data);
+    }
+
+    /**
+     * @dev See {IERC1155-safeBatchTransferFrom}.
+     */
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public override(ERC1155) onlyAllowedOperator(from) {
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
+    }
+
+    /*//////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
@@ -244,6 +286,11 @@ contract ERC1155LazyMint is
 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether operator restriction can be set in the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 

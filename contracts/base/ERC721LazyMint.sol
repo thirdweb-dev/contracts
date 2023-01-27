@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { ERC721A } from "../eip/ERC721A.sol";
+import { ERC721A } from "../eip/ERC721AVirtualApprove.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/Multicall.sol";
@@ -10,6 +10,7 @@ import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
 import "../extension/LazyMint.sol";
 import "../extension/interface/IClaimableERC721.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 
 import "../lib/TWStrings.sol";
 import "../openzeppelin-presets/security/ReentrancyGuard.sol";
@@ -49,6 +50,7 @@ contract ERC721LazyMint is
     BatchMintMetadata,
     LazyMint,
     IClaimableERC721,
+    DefaultOperatorFilterer,
     ReentrancyGuard
 {
     using TWStrings for uint256;
@@ -65,6 +67,7 @@ contract ERC721LazyMint is
     ) ERC721A(_name, _symbol) {
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -154,6 +157,52 @@ contract ERC721LazyMint is
     }
 
     /*//////////////////////////////////////////////////////////////
+                        ERC-721 overrides
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev See {ERC721-setApprovalForAll}.
+    function setApprovalForAll(address operator, bool approved)
+        public
+        override(ERC721A)
+        onlyAllowedOperatorApproval(operator)
+    {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    /// @dev See {ERC721-approve}.
+    function approve(address operator, uint256 tokenId) public override(ERC721A) onlyAllowedOperatorApproval(operator) {
+        super.approve(operator, tokenId);
+    }
+
+    /// @dev See {ERC721-_transferFrom}.
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721A) onlyAllowedOperator(from) {
+        super.transferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721A) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public override(ERC721A) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId, data);
+    }
+
+    /*//////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
@@ -191,6 +240,11 @@ contract ERC721LazyMint is
 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether operator restriction can be set in the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 }

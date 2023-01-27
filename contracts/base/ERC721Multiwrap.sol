@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./ERC721Base.sol";
+import { ERC721A } from "../eip/ERC721AVirtualApprove.sol";
 
-import { TokenStore, ERC1155Receiver, IERC1155Receiver } from "../extension/TokenStore.sol";
-import { Multicall } from "../extension/Multicall.sol";
+import "../extension/ContractMetadata.sol";
+import "../extension/Ownable.sol";
+import "../extension/Royalty.sol";
 import "../extension/SoulboundERC721A.sol";
+import "../extension/TokenStore.sol";
+import "../extension/Multicall.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 
 /**
  *      BASE:      ERC721Base
@@ -21,7 +25,16 @@ import "../extension/SoulboundERC721A.sol";
  *
  */
 
-contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, ContractMetadata, Ownable, Royalty {
+contract ERC721Multiwrap is
+    Multicall,
+    TokenStore,
+    SoulboundERC721A,
+    ERC721A,
+    ContractMetadata,
+    Ownable,
+    Royalty,
+    DefaultOperatorFilterer
+{
     /*//////////////////////////////////////////////////////////////
                     Permission control roles
     //////////////////////////////////////////////////////////////*/
@@ -75,6 +88,7 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
     ) ERC721A(_name, _symbol) TokenStore(_nativeTokenWrapper) {
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _setupRole(MINTER_ROLE, msg.sender);
@@ -187,6 +201,52 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
             getApproved(_tokenId) == _operator);
     }
 
+    /*//////////////////////////////////////////////////////////////
+                        ERC-721 overrides
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev See {ERC721-setApprovalForAll}.
+    function setApprovalForAll(address operator, bool approved)
+        public
+        override(ERC721A)
+        onlyAllowedOperatorApproval(operator)
+    {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    /// @dev See {ERC721-approve}.
+    function approve(address operator, uint256 tokenId) public override(ERC721A) onlyAllowedOperatorApproval(operator) {
+        super.approve(operator, tokenId);
+    }
+
+    /// @dev See {ERC721-_transferFrom}.
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721A) onlyAllowedOperator(from) {
+        super.transferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public override(ERC721A) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId);
+    }
+
+    /// @dev See {ERC721-_safeTransferFrom}.
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes memory data
+    ) public override(ERC721A) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, tokenId, data);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -219,6 +279,11 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether operator restriction can be set in the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 }
