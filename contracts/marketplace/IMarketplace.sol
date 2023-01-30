@@ -359,6 +359,118 @@ interface IEnglishAuctions {
 }
 
 /**
+ *  The `DutchAuctions` extension smart contract lets you sell NFTs (ERC-721 or ERC-1155) in a dutch auction.
+ */
+
+interface IDutchAuctions {
+    enum TokenType {
+        ERC721,
+        ERC1155
+    }
+
+    /**
+     *  @notice The parameters a seller sets when creating an auction listing.
+     *
+     *  @param assetContract The address of the smart contract of the NFTs being auctioned.
+     *  @param tokenId The tokenId of the NFTs being auctioned.
+     *  @param quantity The quantity of NFTs being auctioned. This must be non-zero, and is expected to
+     *                  be `1` for ERC-721 NFTs.
+     *  @param currency The currency in which the bid must be made when bidding for the auctioned NFTs.
+     *  @param initialPrice Controls initial price.
+     *  @param decayConstant Controls price decay.
+     *  @param startTimestamp The timestamp at and after which bids can be made to the auction
+     */
+    struct AuctionParameters {
+        address assetContract;
+        uint256 tokenId;
+        uint256 quantity;
+        address currency;
+        uint256 initialPrice;
+        uint256 decayConstant;
+        uint256 startTimestamp;
+    }
+
+    /**
+     *  @notice The information stored for an auction.
+     *
+     *  @param auctionId The unique ID of the auction.
+     *  @param auctionCreator The creator of the auction.
+     *  @param assetContract The address of the smart contract of the NFTs being auctioned.
+     *  @param tokenId The tokenId of the NFTs being auctioned.
+     *  @param quantity The quantity of NFTs being auctioned. This must be non-zero, and is expected to
+     *                  be `1` for ERC-721 NFTs.
+     *  @param currency The currency in which the bid must be made when bidding for the auctioned NFTs.
+     *  @param initialPrice Controls initial price.
+     *  @param decayConstant Controls price decay.
+     *  @param tokenType The type of NFTs auctioned (ERC-721 or ERC-1155)
+     */
+    struct Auction {
+        uint256 auctionId;
+        address auctionCreator;
+        address assetContract;
+        uint256 tokenId;
+        uint256 quantity;
+        address currency;
+        uint256 initialPrice;
+        uint256 decayConstant;
+        uint256 startTimestamp;
+        TokenType tokenType;
+    }
+
+    struct AuctionPayoutStatus {
+        bool paidOutAuctionTokens;
+        bool paidOutBidAmount;
+    }
+
+    /// @dev Emitted when a new auction is created.
+    event NewAuction(address indexed auctionCreator, uint256 indexed auctionId, Auction auction);
+
+    /// @dev Emitted when an auction is closed.
+    event AuctionClosed(
+        uint256 indexed auctionId,
+        address indexed closer,
+        bool indexed cancelled,
+        address auctionCreator,
+        address winner
+    );
+
+    /**
+     *  @notice Put up NFTs (ERC721 or ERC1155) for an english auction.
+     *
+     *  @param _params The parameters of an auction a seller sets when creating an auction.
+     *
+     *  @return auctionId The unique integer ID of the auction.
+     */
+    function createAuction(AuctionParameters memory _params) external returns (uint256 auctionId);
+
+    /**
+     *  @notice Cancel an auction.
+     *
+     *  @param _auctionId The ID of the auction to cancel.
+     */
+    function cancelAuction(uint256 _auctionId) external;
+
+    /**
+     *  @notice Purchase tokens.
+     *
+     *  @param _auctionId The ID of the auction to purchase from.
+     */
+    function purchaseTokens(uint256 _auctionId) external payable;
+
+    /// @notice Returns the auction of the provided auction ID.
+    function getAuction(uint256 _auctionId) external view returns (Auction memory auction);
+
+    /// @notice Returns all non-cancelled auctions.
+    function getAllAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory auctions);
+
+    /// @notice Returns all active auctions.
+    function getAllValidAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory auctions);
+
+    /// @notice View current price.
+    function purchasePrice(uint256 _auctionId) external view returns (uint256);
+}
+
+/**
  *  The `Offers` extension smart contract lets you make and accept offers made for NFTs (ERC-721 or ERC-1155).
  */
 
