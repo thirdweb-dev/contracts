@@ -1,21 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../PermissionsEnumerable.sol";
+import "../../lib/TWStringSet.sol";
 import "../interface/plugin/IPluginRegistry.sol";
-import "../../openzeppelin-presets/utils/EnumerableSet.sol";
+import "../PermissionsEnumerable.sol";
 
 contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
-    using EnumerableSet for EnumerableSet.Bytes32Set;
-
-    /*///////////////////////////////////////////////////////////////
-                            State variables
-    //////////////////////////////////////////////////////////////*/
-
-    EnumerableSet.Bytes32Set private allSelectors;
-
-    mapping(address => EnumerableSet.Bytes32Set) private selectorsForPlugin;
-    mapping(bytes4 => Plugin) private pluginForSelector;
+    using TWStringSet for TWStringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
@@ -26,118 +17,146 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
     }
 
     /*///////////////////////////////////////////////////////////////
+                            State variables
+    //////////////////////////////////////////////////////////////*/
+
+    TWStringSet.Set private pluginNames;
+
+    mapping(string => Plugin) private plugins;
+
+    // mapping(string => PluginFunction[]) private pluginFunctions;
+    mapping(bytes4 => PluginMetadata) private pluginData;
+
+    /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Add functionality to the contract.
-    function addPlugin(Plugin memory _plugin) external {
-        require(_canSetPlugin(), "PluginRegistry: Not authorized");
+    function addPlugin(Plugin memory _plugin) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        string memory name = _plugin.metadata.name;
 
-        _addPlugin(_plugin);
+        require(pluginNames.add(name), "PluginRegistry: plugin already exists.");
+        plugins[name].metadata = _plugin.metadata;
+
+        uint256 len = _plugin.functions.length;
+        bool selSigMatch = false;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            selSigMatch =
+                _plugin.functions[i].functionSelector ==
+                bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature)));
+            if (!selSigMatch) {
+                break;
+            }
+
+            pluginData[_plugin.functions[i].functionSelector] = _plugin.metadata;
+            plugins[name].functions.push(_plugin.functions[i]);
+
+            emit PluginAdded(
+                _plugin.metadata.implementation,
+                _plugin.functions[i].functionSelector,
+                _plugin.functions[i].functionSignature
+            );
+        }
+        require(selSigMatch, "PluginRegistry: fn selector and signature mismatch.");
     }
 
-    /// @dev Update or override existing functionality.
-    function updatePlugin(Plugin memory _plugin) external {
-        require(_canSetPlugin(), "PluginRegistry: Not authorized");
+    function updatePlugin(Plugin memory _plugin) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        string memory name = _plugin.metadata.name;
+        require(pluginNames.contains(name), "PluginRegistry: plugin does not exist.");
 
-        _updatePlugin(_plugin);
+        address oldImplementation = plugins[name].metadata.implementation;
+        require(_plugin.metadata.implementation != oldImplementation, "PluginRegistry: re-adding same plugin.");
+
+        plugins[name].metadata = _plugin.metadata;
+        delete plugins[name].functions;
+
+        bool selSigMatch = false;
+        uint256 len = _plugin.functions.length;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            selSigMatch =
+                _plugin.functions[i].functionSelector ==
+                bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature)));
+            if (!selSigMatch) {
+                break;
+            }
+
+            pluginData[_plugin.functions[i].functionSelector] = _plugin.metadata;
+            plugins[name].functions.push(_plugin.functions[i]);
+
+            emit PluginUpdated(
+                oldImplementation,
+                _plugin.metadata.implementation,
+                _plugin.functions[i].functionSelector,
+                _plugin.functions[i].functionSignature
+            );
+        }
     }
 
-    /// @dev Remove existing functionality from the contract.
-    function removePlugin(bytes4 _selector) external {
-        require(_canSetPlugin(), "PluginRegistry: Not authorized");
+    function removePlugin(string memory _pluginName) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(pluginNames.remove(_pluginName), "PluginRegistry: plugin does not exists.");
 
-        _removePlugin(_selector);
+        address implementation = plugins[_pluginName].metadata.implementation;
+        PluginFunction[] memory pluginFunctions = plugins[_pluginName].functions;
+        delete plugins[_pluginName];
+
+        uint256 len = pluginFunctions.length;
+        for (uint256 i = 0; i < len; i += 1) {
+            emit PluginRemoved(
+                implementation,
+                pluginFunctions[i].functionSelector,
+                pluginFunctions[i].functionSignature
+            );
+            delete pluginData[pluginFunctions[i].functionSelector];
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns whether a plugin exists in the Plugin registry.
-    function isApprovedPlugin(bytes4 functionSelector, address _plugin) external view returns (bool) {
-        address pluginAddress = pluginForSelector[functionSelector].pluginAddress;
+    function isApprovedPlugin(bytes4 _functionSelector, address _plugin) external view returns (bool) {
+        address pluginAddress = pluginData[_functionSelector].implementation;
         return pluginAddress != address(0) && pluginAddress == _plugin;
     }
 
-    /// @dev View address of the plugged-in functionality contract for a given function signature.
-    function getPluginForFunction(bytes4 _selector) public view returns (address) {
-        address _pluginAddress = pluginForSelector[_selector].pluginAddress;
-        require(_pluginAddress != address(0), "PluginRegistry: No plugin available for selector");
+    function getAllPluginMetadata() external view returns (PluginMetadata[] memory allMetadata) {
+        string[] memory names = pluginNames.values();
+        uint256 len = names.length;
 
-        return _pluginAddress;
-    }
-
-    /// @dev View all funtionality as list of function signatures.
-    function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] memory registered) {
-        uint256 len = selectorsForPlugin[_pluginAddress].length();
-        registered = new bytes4[](len);
-
+        allMetadata = new PluginMetadata[](len);
         for (uint256 i = 0; i < len; i += 1) {
-            registered[i] = bytes4(selectorsForPlugin[_pluginAddress].at(i));
+            allMetadata[i] = plugins[names[i]].metadata;
         }
     }
 
-    /// @dev View all funtionality existing on the contract.
-    function getAllPlugins() external view returns (Plugin[] memory _plugins) {
-        uint256 len = allSelectors.length();
-        _plugins = new Plugin[](len);
+    function getAllPlugins() external view returns (Plugin[] memory allPlugins) {
+        string[] memory names = pluginNames.values();
+        uint256 len = names.length;
+
+        allPlugins = new Plugin[](len);
 
         for (uint256 i = 0; i < len; i += 1) {
-            bytes4 selector = bytes4(allSelectors.at(i));
-            _plugins[i] = pluginForSelector[selector];
+            allPlugins[i] = plugins[names[i]];
         }
     }
 
-    /*///////////////////////////////////////////////////////////////
-                        Internal functions
-    //////////////////////////////////////////////////////////////*/
+    function getAllFunctionsOfPlugin(string memory _pluginName)
+        external
+        view
+        returns (PluginFunction[] memory functions, address pluginAddress)
+    {
+        Plugin memory plugin = plugins[_pluginName];
 
-    /// @dev Add functionality to the contract.
-    function _addPlugin(Plugin memory _plugin) internal {
-        require(allSelectors.add(bytes32(_plugin.functionSelector)), "PluginRegistry: plugin exists for function.");
-
-        require(
-            _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
-            "PluginRegistry: fn selector and signature mismatch."
-        );
-
-        pluginForSelector[_plugin.functionSelector] = _plugin;
-        selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.functionSelector));
-
-        emit PluginAdded(_plugin.functionSelector, _plugin.pluginAddress);
+        functions = plugin.functions;
+        pluginAddress = plugin.metadata.implementation;
     }
 
-    /// @dev Update or override existing functionality.
-    function _updatePlugin(Plugin memory _plugin) internal {
-        address currentPlugin = getPluginForFunction(_plugin.functionSelector);
-
-        require(currentPlugin != _plugin.pluginAddress, "PluginRegistry: Re-adding existing plugin.");
-        require(
-            _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
-            "PluginRegistry: fn selector and signature mismatch."
-        );
-
-        pluginForSelector[_plugin.functionSelector] = _plugin;
-        selectorsForPlugin[currentPlugin].remove(bytes32(_plugin.functionSelector));
-        selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.functionSelector));
-
-        emit PluginUpdated(_plugin.functionSelector, currentPlugin, _plugin.pluginAddress);
+    function getPluginForFunction(bytes4 _functionSelector) external view returns (address) {
+        return pluginData[_functionSelector].implementation;
     }
 
-    /// @dev Remove existing functionality from the contract.
-    function _removePlugin(bytes4 _selector) internal {
-        address currentPlugin = pluginForSelector[_selector].pluginAddress;
-        require(currentPlugin != address(0), "PluginRegistry: No plugin available for selector");
-
-        pluginForSelector[_selector];
-        allSelectors.remove(_selector);
-        selectorsForPlugin[currentPlugin].remove(bytes32(_selector));
-
-        emit PluginRemoved(_selector, currentPlugin);
-    }
-
-    function _canSetPlugin() internal view virtual returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    function getPluginMetadataForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
+        return pluginData[_functionSelector];
     }
 }
