@@ -10,24 +10,9 @@ import "../Multicall.sol";
 import { PluginMap } from "./PluginMap.sol";
 import { IPluginRegistry } from "../interface/plugin/IPluginRegistry.sol";
 
-library RouterStorage {
-    bytes32 public constant ROUTER_STORAGE_POSITION = keccak256("router.storage");
+import "./PluginData.sol";
 
-    struct Data {
-        TWStringSet.Set pluginNames;
-        mapping(string => IPlugin.Plugin) plugins;
-        mapping(bytes4 => IPlugin.PluginMetadata) pluginMetadata;
-    }
-
-    function routerStorage() internal pure returns (Data storage routerData) {
-        bytes32 position = ROUTER_STORAGE_POSITION;
-        assembly {
-            routerData.slot := position
-        }
-    }
-}
-
-abstract contract Router is Multicall, ERC165, IRouter {
+abstract contract Router is PluginData, Multicall, ERC165, IRouter {
     using TWStringSet for TWStringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
@@ -142,7 +127,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
         Plugin[] memory mapPlugins = IPluginMap(pluginMap).getAllPlugins();
         uint256 mapPluginsLen = mapPlugins.length;
 
-        RouterStorage.Data storage data = RouterStorage.routerStorage();
+        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
         string[] memory names = data.pluginNames.values();
         uint256 namesLen = names.length;
 
@@ -173,7 +158,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
     }
 
     function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
-        RouterStorage.Data storage data = RouterStorage.routerStorage();
+        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
         bool isOverride = data.pluginNames.contains(_pluginName);
         return
             isOverride
@@ -182,7 +167,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
     }
 
     function getPluginForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
-        RouterStorage.Data storage data = RouterStorage.routerStorage();
+        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
         PluginMetadata memory metadata = data.pluginMetadata[_functionSelector];
 
         bool isOverride = metadata.implementation != address(0);
@@ -191,7 +176,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
     }
 
     function getPluginImplementation(string memory _pluginName) external view returns (address) {
-        RouterStorage.Data storage data = RouterStorage.routerStorage();
+        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
         bool isOverride = data.pluginNames.contains(_pluginName);
 
         return
@@ -201,7 +186,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
     }
 
     function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
-        RouterStorage.Data storage data = RouterStorage.routerStorage();
+        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
         bool isOverride = data.pluginNames.contains(_pluginName);
 
         return isOverride ? data.plugins[_pluginName] : IPluginMap(pluginMap).getPlugin(_pluginName);
@@ -213,98 +198,8 @@ abstract contract Router is Multicall, ERC165, IRouter {
 
     /// @dev View address of the plugged-in functionality contract for a given function signature.
     function _getPluginForFunction(bytes4 _functionSelector) public view returns (address) {
-        RouterStorage.Data storage data = RouterStorage.routerStorage();
+        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
         return data.pluginMetadata[_functionSelector].implementation;
-    }
-
-    /// @dev Add functionality to the contract.
-    function _addPlugin(Plugin memory _plugin) internal {
-        RouterStorage.Data storage data = RouterStorage.routerStorage();
-
-        string memory name = _plugin.metadata.name;
-
-        require(data.pluginNames.add(name), "Router: plugin already exists.");
-        data.plugins[name].metadata = _plugin.metadata;
-
-        uint256 len = _plugin.functions.length;
-        bool selSigMatch = false;
-
-        for (uint256 i = 0; i < len; i += 1) {
-            selSigMatch =
-                _plugin.functions[i].functionSelector ==
-                bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature)));
-            if (!selSigMatch) {
-                break;
-            }
-
-            data.pluginMetadata[_plugin.functions[i].functionSelector] = _plugin.metadata;
-            data.plugins[name].functions.push(_plugin.functions[i]);
-
-            emit PluginAdded(
-                _plugin.metadata.implementation,
-                _plugin.functions[i].functionSelector,
-                _plugin.functions[i].functionSignature
-            );
-        }
-        require(selSigMatch, "Router: fn selector and signature mismatch.");
-    }
-
-    /// @dev Update or override existing functionality.
-    function _updatePlugin(Plugin memory _plugin) internal {
-        RouterStorage.Data storage data = RouterStorage.routerStorage();
-
-        string memory name = _plugin.metadata.name;
-        require(data.pluginNames.contains(name), "Router: plugin does not exist.");
-
-        address oldImplementation = data.plugins[name].metadata.implementation;
-        require(_plugin.metadata.implementation != oldImplementation, "Router: re-adding same plugin.");
-
-        data.plugins[name].metadata = _plugin.metadata;
-        delete data.plugins[name].functions;
-
-        uint256 len = _plugin.functions.length;
-        bool selSigMatch = false;
-
-        for (uint256 i = 0; i < len; i += 1) {
-            selSigMatch =
-                _plugin.functions[i].functionSelector ==
-                bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature)));
-            if (!selSigMatch) {
-                break;
-            }
-
-            data.pluginMetadata[_plugin.functions[i].functionSelector] = _plugin.metadata;
-            data.plugins[name].functions.push(_plugin.functions[i]);
-
-            emit PluginUpdated(
-                oldImplementation,
-                _plugin.metadata.implementation,
-                _plugin.functions[i].functionSelector,
-                _plugin.functions[i].functionSignature
-            );
-        }
-        require(selSigMatch, "Router: fn selector and signature mismatch.");
-    }
-
-    /// @dev Remove existing functionality from the contract.
-    function _removePlugin(string memory _pluginName) internal {
-        RouterStorage.Data storage data = RouterStorage.routerStorage();
-
-        require(data.pluginNames.remove(_pluginName), "Router: plugin does not exists.");
-
-        address implementation = data.plugins[_pluginName].metadata.implementation;
-        PluginFunction[] memory pluginFunctions = data.plugins[_pluginName].functions;
-        delete data.plugins[_pluginName];
-
-        uint256 len = pluginFunctions.length;
-        for (uint256 i = 0; i < len; i += 1) {
-            emit PluginRemoved(
-                implementation,
-                pluginFunctions[i].functionSelector,
-                pluginFunctions[i].functionSignature
-            );
-            delete data.pluginMetadata[pluginFunctions[i].functionSelector];
-        }
     }
 
     /// @dev Returns whether plug-in can be set in the given execution context.

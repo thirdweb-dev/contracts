@@ -40,4 +40,22 @@ interface IPlugin {
         PluginMetadata metadata;
         PluginFunction[] functions;
     }
+
+    /*///////////////////////////////////////////////////////////////
+                                Events
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Emitted when a function selector is mapped to a particular plug-in smart contract, during construction of Map.
+    event PluginAdded(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature);
+
+    /// @dev Emitted when a functionality is updated or overridden.
+    event PluginUpdated(
+        address indexed oldPluginAddress,
+        address indexed newPluginAddress,
+        bytes4 indexed functionSelector,
+        string functionSignature
+    );
+
+    /// @dev Emitted when a functionality is removed.
+    event PluginRemoved(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature);
 }

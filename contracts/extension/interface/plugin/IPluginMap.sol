@@ -5,13 +5,6 @@ import "./IPlugin.sol";
 
 interface IPluginMap is IPlugin {
     /*///////////////////////////////////////////////////////////////
-                                Events
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Emitted when a function selector is mapped to a particular plug-in smart contract, during construction of Map.
-    event PluginAdded(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature);
-
-    /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
 
