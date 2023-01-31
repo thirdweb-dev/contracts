@@ -50,18 +50,23 @@ contract PluginMap is IPluginMap {
     }
 
     function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
+        require(pluginNames.contains(_pluginName), "PluginMap: plugin does not exist.");
         return plugins[_pluginName].functions;
     }
 
     function getPluginForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
-        return pluginMetadata[_functionSelector];
+        PluginMetadata memory metadata = pluginMetadata[_functionSelector];
+        require(metadata.implementation != address(0), "PluginMap: no plugin for function.");
+        return metadata;
     }
 
     function getPluginImplementation(string memory _pluginName) external view returns (address) {
+        require(pluginNames.contains(_pluginName), "PluginMap: plugin does not exist.");
         return plugins[_pluginName].metadata.implementation;
     }
 
     function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
+        require(pluginNames.contains(_pluginName), "PluginMap: plugin does not exist.");
         return plugins[_pluginName];
     }
 
@@ -96,6 +101,6 @@ contract PluginMap is IPluginMap {
                 _plugin.functions[i].functionSignature
             );
         }
-        require(selSigMatch, "PluginRegistry: fn selector and signature mismatch.");
+        require(selSigMatch, "PluginMap: fn selector and signature mismatch.");
     }
 }

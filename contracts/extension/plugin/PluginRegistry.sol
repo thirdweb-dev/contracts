@@ -31,6 +31,11 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
     function addPlugin(Plugin memory _plugin) external onlyRole(DEFAULT_ADMIN_ROLE) {
         string memory name = _plugin.metadata.name;
 
+        require(
+            bytes(name).length > 0 && _plugin.metadata.implementation != address(0),
+            "PluginRegistry: invalid metadata."
+        );
+
         require(pluginNames.add(name), "PluginRegistry: plugin already exists.");
         plugins[name].metadata = _plugin.metadata;
 
@@ -59,6 +64,10 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
 
     function updatePlugin(Plugin memory _plugin) external onlyRole(DEFAULT_ADMIN_ROLE) {
         string memory name = _plugin.metadata.name;
+        require(
+            bytes(name).length > 0 && _plugin.metadata.implementation != address(0),
+            "PluginRegistry: invalid metadata."
+        );
         require(pluginNames.contains(name), "PluginRegistry: plugin does not exist.");
 
         address oldImplementation = plugins[name].metadata.implementation;
@@ -125,18 +134,23 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
     }
 
     function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
+        require(pluginNames.contains(_pluginName), "PluginRegistry: plugin does not exist.");
         return plugins[_pluginName].functions;
     }
 
     function getPluginForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
-        return pluginMetadata[_functionSelector];
+        PluginMetadata memory metadata = pluginMetadata[_functionSelector];
+        require(metadata.implementation != address(0), "PluginRegistry: no plugin for function.");
+        return metadata;
     }
 
     function getPluginImplementation(string memory _pluginName) external view returns (address) {
+        require(pluginNames.contains(_pluginName), "PluginRegistry: plugin does not exist.");
         return plugins[_pluginName].metadata.implementation;
     }
 
     function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
+        require(pluginNames.contains(_pluginName), "PluginRegistry: plugin does not exist.");
         return plugins[_pluginName];
     }
 }

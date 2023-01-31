@@ -2,20 +2,21 @@
 pragma solidity ^0.8.0;
 
 import "../interface/plugin/IRouter.sol";
-import "../../extension/Multicall.sol";
-import "../../eip/ERC165.sol";
-import "../../openzeppelin-presets/utils/EnumerableSet.sol";
 
-import "./PluginMap.sol";
-import "./PluginRegistry.sol";
+import "../../lib/TWStringSet.sol";
+import "../../eip/ERC165.sol";
+import "../Multicall.sol";
+
+import { PluginMap } from "./PluginMap.sol";
+import { IPluginRegistry } from "../interface/plugin/IPluginRegistry.sol";
 
 library RouterStorage {
     bytes32 public constant ROUTER_STORAGE_POSITION = keccak256("router.storage");
 
     struct Data {
-        EnumerableSet.Bytes32Set allSelectors;
-        mapping(address => EnumerableSet.Bytes32Set) selectorsForPlugin;
-        mapping(bytes4 => IPluginMap.Plugin) pluginForSelector;
+        TWStringSet.Set pluginNames;
+        mapping(string => IPlugin.Plugin) plugins;
+        mapping(bytes4 => IPlugin.PluginMetadata) pluginMetadata;
     }
 
     function routerStorage() internal pure returns (Data storage routerData) {
@@ -27,27 +28,30 @@ library RouterStorage {
 }
 
 abstract contract Router is Multicall, ERC165, IRouter {
-    using EnumerableSet for EnumerableSet.Bytes32Set;
+    using TWStringSet for TWStringSet.Set;
+
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
 
     address public immutable pluginMap;
+    address public immutable pluginRegistry;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
     constructor(address _pluginRegistry, string[] memory _pluginNames) {
+        pluginRegistry = _pluginRegistry;
+
         PluginMap map = new PluginMap();
         pluginMap = address(map);
 
         uint256 len = _pluginNames.length;
 
         for (uint256 i = 0; i < len; i += 1) {
-            (IPluginRegistry.PluginFunction[] memory functions, address plugin) = PluginRegistry(_pluginRegistry)
-                .getAllFunctionsOfPlugin(_pluginNames[i]);
-            map.setPlugins(functions, plugin);
+            Plugin memory plugin = IPluginRegistry(_pluginRegistry).getPlugin(_pluginNames[i]);
+            map.setPlugin(plugin);
         }
     }
 
@@ -69,7 +73,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
     fallback() external payable virtual {
         address _pluginAddress = _getPluginForFunction(msg.sig);
         if (_pluginAddress == address(0)) {
-            _pluginAddress = IPluginMap(pluginMap).getPluginForFunction(msg.sig);
+            _pluginAddress = IPluginMap(pluginMap).getPluginForFunction(msg.sig).implementation;
         }
         _delegate(_pluginAddress);
     }
@@ -106,106 +110,101 @@ abstract contract Router is Multicall, ERC165, IRouter {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Add functionality to the contract.
-    function addPlugin(Plugin memory _plugin) external {
+    function addPlugin(string memory _pluginName) external {
         require(_canSetPlugin(), "Router: caller not authorized");
-        require(_isAuthorizedPlugin(_plugin.functionSelector, _plugin.pluginAddress), "Router: plugin not authorized");
 
-        _addPlugin(_plugin);
+        Plugin memory plugin = IPluginRegistry(pluginRegistry).getPlugin(_pluginName);
+
+        _addPlugin(plugin);
     }
 
     /// @dev Update or override existing functionality.
-    function updatePlugin(Plugin memory _plugin) external {
+    function updatePlugin(string memory _pluginName) external {
         require(_canSetPlugin(), "Router: caller not authorized");
-        require(_isAuthorizedPlugin(_plugin.functionSelector, _plugin.pluginAddress), "Router: plugin not authorized");
 
-        _updatePlugin(_plugin);
+        Plugin memory plugin = IPluginRegistry(pluginRegistry).getPlugin(_pluginName);
+
+        _updatePlugin(plugin);
     }
 
     /// @dev Remove existing functionality from the contract.
-    function removePlugin(bytes4 _selector) external {
+    function removePlugin(string memory _pluginName) external {
         require(_canSetPlugin(), "Router: caller not authorized");
 
-        _removePlugin(_selector);
+        _removePlugin(_pluginName);
     }
 
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev View address of the plugged-in functionality contract for a given function signature.
-    function getPluginForFunction(bytes4 _selector) public view returns (address) {
-        address pluginAddress = _getPluginForFunction(_selector);
+    function getAllPlugins() external view returns (Plugin[] memory allPlugins) {
+        Plugin[] memory mapPlugins = IPluginMap(pluginMap).getAllPlugins();
+        uint256 mapPluginsLen = mapPlugins.length;
 
-        return pluginAddress != address(0) ? pluginAddress : IPluginMap(pluginMap).getPluginForFunction(_selector);
-    }
-
-    /// @dev View all funtionality as list of function signatures.
-    function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] memory registered) {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
+        string[] memory names = data.pluginNames.values();
+        uint256 namesLen = names.length;
 
-        EnumerableSet.Bytes32Set storage selectorsForPlugin = data.selectorsForPlugin[_pluginAddress];
-        bytes4[] memory defaultSelectors = IPluginMap(pluginMap).getAllFunctionsOfPlugin(_pluginAddress);
-
-        uint256 len = defaultSelectors.length;
-        uint256 count = selectorsForPlugin.length() + defaultSelectors.length;
-
-        for (uint256 i = 0; i < len; i += 1) {
-            if (selectorsForPlugin.contains(defaultSelectors[i])) {
-                count -= 1;
-                defaultSelectors[i] = bytes4(0);
+        uint256 overrides = 0;
+        for (uint256 i = 0; i < mapPluginsLen; i += 1) {
+            if (data.pluginNames.contains(mapPlugins[i].metadata.name)) {
+                overrides += 1;
             }
         }
 
-        registered = new bytes4[](count);
-        uint256 index;
+        uint256 total = (namesLen + mapPluginsLen) - overrides;
 
-        for (uint256 i = 0; i < len; i += 1) {
-            if (defaultSelectors[i] != bytes4(0)) {
-                registered[index++] = defaultSelectors[i];
+        allPlugins = new Plugin[](total);
+        uint256 idx = 0;
+
+        for (uint256 i = 0; i < mapPluginsLen; i += 1) {
+            string memory name = mapPlugins[i].metadata.name;
+            if (!data.pluginNames.contains(name)) {
+                allPlugins[idx] = mapPlugins[i];
+                idx += 1;
             }
         }
 
-        len = selectorsForPlugin.length();
-        for (uint256 i = 0; i < len; i += 1) {
-            registered[index++] = bytes4(data.selectorsForPlugin[_pluginAddress].at(i));
+        for (uint256 i = 0; i < namesLen; i += 1) {
+            allPlugins[idx] = data.plugins[names[i]];
+            idx += 1;
         }
     }
 
-    /// @dev View all funtionality existing on the contract.
-    function getAllPlugins() external view returns (Plugin[] memory registered) {
+    function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
+        bool isOverride = data.pluginNames.contains(_pluginName);
+        return
+            isOverride
+                ? data.plugins[_pluginName].functions
+                : IPluginMap(pluginMap).getAllFunctionsOfPlugin(_pluginName);
+    }
 
-        EnumerableSet.Bytes32Set storage overrideSelectors = data.allSelectors;
-        Plugin[] memory defaultPlugins = IPluginMap(pluginMap).getAllPlugins();
+    function getPluginForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
+        RouterStorage.Data storage data = RouterStorage.routerStorage();
+        PluginMetadata memory metadata = data.pluginMetadata[_functionSelector];
 
-        uint256 overrideSelectorsLen = overrideSelectors.length();
-        uint256 defaultPluginsLen = defaultPlugins.length;
+        bool isOverride = metadata.implementation != address(0);
 
-        uint256 totalCount = overrideSelectorsLen + defaultPluginsLen;
+        return isOverride ? metadata : IPluginMap(pluginMap).getPluginForFunction(_functionSelector);
+    }
 
-        for (uint256 i = 0; i < overrideSelectorsLen; i += 1) {
-            for (uint256 j = 0; j < defaultPluginsLen; j += 1) {
-                if (bytes4(overrideSelectors.at(i)) == defaultPlugins[j].functionSelector) {
-                    totalCount -= 1;
-                    defaultPlugins[j].functionSelector = bytes4(0);
-                }
-            }
-        }
+    function getPluginImplementation(string memory _pluginName) external view returns (address) {
+        RouterStorage.Data storage data = RouterStorage.routerStorage();
+        bool isOverride = data.pluginNames.contains(_pluginName);
 
-        registered = new Plugin[](totalCount);
-        uint256 index;
+        return
+            isOverride
+                ? data.plugins[_pluginName].metadata.implementation
+                : IPluginMap(pluginMap).getPluginImplementation(_pluginName);
+    }
 
-        for (uint256 i = 0; i < defaultPluginsLen; i += 1) {
-            if (defaultPlugins[i].functionSelector != bytes4(0)) {
-                registered[index] = defaultPlugins[i];
-                index += 1;
-            }
-        }
+    function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
+        RouterStorage.Data storage data = RouterStorage.routerStorage();
+        bool isOverride = data.pluginNames.contains(_pluginName);
 
-        for (uint256 i = 0; i < overrideSelectorsLen; i += 1) {
-            registered[index] = data.pluginForSelector[bytes4(overrideSelectors.at(i))];
-            index += 1;
-        }
+        return isOverride ? data.plugins[_pluginName] : IPluginMap(pluginMap).getPlugin(_pluginName);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -213,66 +212,100 @@ abstract contract Router is Multicall, ERC165, IRouter {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev View address of the plugged-in functionality contract for a given function signature.
-    function _getPluginForFunction(bytes4 _selector) public view returns (address) {
+    function _getPluginForFunction(bytes4 _functionSelector) public view returns (address) {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
-        address _pluginAddress = data.pluginForSelector[_selector].pluginAddress;
-
-        return _pluginAddress;
+        return data.pluginMetadata[_functionSelector].implementation;
     }
 
     /// @dev Add functionality to the contract.
     function _addPlugin(Plugin memory _plugin) internal {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
 
-        // Revert: plugin exists for function; use updatePlugin instead.
-        require(data.allSelectors.add(bytes32(_plugin.functionSelector)), "Router: plugin exists for function.");
+        string memory name = _plugin.metadata.name;
 
-        require(
-            _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
-            "Router: fn selector and signature mismatch."
-        );
+        require(data.pluginNames.add(name), "Router: plugin already exists.");
+        data.plugins[name].metadata = _plugin.metadata;
 
-        data.pluginForSelector[_plugin.functionSelector] = _plugin;
-        data.selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.functionSelector));
+        uint256 len = _plugin.functions.length;
+        bool selSigMatch = false;
 
-        emit PluginAdded(_plugin.functionSelector, _plugin.pluginAddress);
+        for (uint256 i = 0; i < len; i += 1) {
+            selSigMatch =
+                _plugin.functions[i].functionSelector ==
+                bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature)));
+            if (!selSigMatch) {
+                break;
+            }
+
+            data.pluginMetadata[_plugin.functions[i].functionSelector] = _plugin.metadata;
+            data.plugins[name].functions.push(_plugin.functions[i]);
+
+            emit PluginAdded(
+                _plugin.metadata.implementation,
+                _plugin.functions[i].functionSelector,
+                _plugin.functions[i].functionSignature
+            );
+        }
+        require(selSigMatch, "Router: fn selector and signature mismatch.");
     }
 
     /// @dev Update or override existing functionality.
     function _updatePlugin(Plugin memory _plugin) internal {
-        address currentPlugin = getPluginForFunction(_plugin.functionSelector);
-
-        require(currentPlugin != _plugin.pluginAddress, "Router: re-adding plugin.");
-        require(
-            _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
-            "Router: fn selector and signature mismatch."
-        );
-
         RouterStorage.Data storage data = RouterStorage.routerStorage();
 
-        data.pluginForSelector[_plugin.functionSelector] = _plugin;
+        string memory name = _plugin.metadata.name;
+        require(data.pluginNames.contains(name), "Router: plugin does not exist.");
 
-        data.selectorsForPlugin[currentPlugin].remove(bytes32(_plugin.functionSelector));
-        data.selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.functionSelector));
+        address oldImplementation = data.plugins[name].metadata.implementation;
+        require(_plugin.metadata.implementation != oldImplementation, "Router: re-adding same plugin.");
 
-        emit PluginUpdated(_plugin.functionSelector, currentPlugin, _plugin.pluginAddress);
+        data.plugins[name].metadata = _plugin.metadata;
+        delete data.plugins[name].functions;
+
+        uint256 len = _plugin.functions.length;
+        bool selSigMatch = false;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            selSigMatch =
+                _plugin.functions[i].functionSelector ==
+                bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature)));
+            if (!selSigMatch) {
+                break;
+            }
+
+            data.pluginMetadata[_plugin.functions[i].functionSelector] = _plugin.metadata;
+            data.plugins[name].functions.push(_plugin.functions[i]);
+
+            emit PluginUpdated(
+                oldImplementation,
+                _plugin.metadata.implementation,
+                _plugin.functions[i].functionSelector,
+                _plugin.functions[i].functionSignature
+            );
+        }
+        require(selSigMatch, "Router: fn selector and signature mismatch.");
     }
 
     /// @dev Remove existing functionality from the contract.
-    function _removePlugin(bytes4 _selector) internal {
+    function _removePlugin(string memory _pluginName) internal {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
-        address currentPlugin = _getPluginForFunction(_selector);
-        require(currentPlugin != address(0), "Router: No plugin available for selector");
 
-        delete data.pluginForSelector[_selector];
-        data.allSelectors.remove(_selector);
-        data.selectorsForPlugin[currentPlugin].remove(bytes32(_selector));
+        require(data.pluginNames.remove(_pluginName), "Router: plugin does not exists.");
 
-        emit PluginRemoved(_selector, currentPlugin);
+        address implementation = data.plugins[_pluginName].metadata.implementation;
+        PluginFunction[] memory pluginFunctions = data.plugins[_pluginName].functions;
+        delete data.plugins[_pluginName];
+
+        uint256 len = pluginFunctions.length;
+        for (uint256 i = 0; i < len; i += 1) {
+            emit PluginRemoved(
+                implementation,
+                pluginFunctions[i].functionSelector,
+                pluginFunctions[i].functionSignature
+            );
+            delete data.pluginMetadata[pluginFunctions[i].functionSelector];
+        }
     }
-
-    /// @dev Returns whether a plugin is a safe, authorized plugin.
-    function _isAuthorizedPlugin(bytes4 functionSelector, address plugin) internal view virtual returns (bool);
 
     /// @dev Returns whether plug-in can be set in the given execution context.
     function _canSetPlugin() internal view virtual returns (bool);
