@@ -10,6 +10,13 @@ interface IDirectListings {
         ERC1155
     }
 
+    enum Status {
+        DNE,
+        CREATED,
+        COMPLETED,
+        CANCELLED
+    }
+
     /**
      *  @notice The parameters a seller sets when creating or updating a listing.
      *
@@ -62,6 +69,7 @@ interface IDirectListings {
         uint128 endTimestamp;
         bool reserved;
         TokenType tokenType;
+        Status status;
     }
 
     /// @notice Emitted when a new listing is created.
@@ -190,6 +198,13 @@ interface IEnglishAuctions {
         ERC1155
     }
 
+    enum Status {
+        DNE,
+        CREATED,
+        COMPLETED,
+        CANCELLED
+    }
+
     /**
      *  @notice The parameters a seller sets when creating an auction listing.
      *
@@ -254,6 +269,7 @@ interface IEnglishAuctions {
         uint64 startTimestamp;
         uint64 endTimestamp;
         TokenType tokenType;
+        Status status;
     }
 
     /**
@@ -369,6 +385,13 @@ interface IOffers {
         ERC20
     }
 
+    enum Status {
+        DNE,
+        CREATED,
+        COMPLETED,
+        CANCELLED
+    }
+
     /**
      *  @notice The parameters an offeror sets when making an offer for NFTs.
      *
@@ -411,6 +434,7 @@ interface IOffers {
         uint256 totalPrice;
         uint256 expirationTimestamp;
         TokenType tokenType;
+        Status status;
     }
 
     /// @dev Emitted when a new offer is created.

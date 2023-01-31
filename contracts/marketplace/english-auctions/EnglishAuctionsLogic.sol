@@ -62,7 +62,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
     /// @dev Checks whether an auction exists.
     modifier onlyExistingAuction(uint256 _auctionId) {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        require(data.auctions[_auctionId].assetContract != address(0), "Marketplace: auction does not exist.");
+        require(data.auctions[_auctionId].status == IEnglishAuctions.Status.CREATED, "Marketplace: invalid auction.");
         _;
     }
 
@@ -104,7 +104,8 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             bidBufferBps: _params.bidBufferBps,
             startTimestamp: _params.startTimestamp,
             endTimestamp: _params.endTimestamp,
-            tokenType: tokenType
+            tokenType: tokenType,
+            status: IEnglishAuctions.Status.CREATED
         });
 
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
@@ -152,6 +153,10 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         require(_winningBid.bidder != address(0), "Marketplace: no bids were made.");
 
         _closeAuctionForAuctionCreator(_targetAuction, _winningBid);
+
+        if (_targetAuction.status != IEnglishAuctions.Status.COMPLETED) {
+            data.auctions[_auctionId].status = IEnglishAuctions.Status.COMPLETED;
+        }
     }
 
     function collectAuctionTokens(uint256 _auctionId) external nonReentrant onlyExistingAuction(_auctionId) {
@@ -163,6 +168,10 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         require(_winningBid.bidder != address(0), "Marketplace: no bids were made.");
 
         _closeAuctionForBidder(_targetAuction, _winningBid);
+
+        if (_targetAuction.status != IEnglishAuctions.Status.COMPLETED) {
+            data.auctions[_auctionId].status = IEnglishAuctions.Status.COMPLETED;
+        }
     }
 
     /// @dev Cancels an auction.
@@ -173,7 +182,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
 
         require(_winningBid.bidder == address(0), "Marketplace: bids already made.");
 
-        delete data.auctions[_auctionId];
+        data.auctions[_auctionId].status = IEnglishAuctions.Status.CANCELLED;
 
         _transferAuctionTokens(address(this), _targetAuction.auctionCreator, _targetAuction);
 
@@ -222,24 +231,10 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
         require(_startId <= _endId && _endId < data.totalAuctions, "invalid range");
 
-        Auction[] memory _auctions = new Auction[](_endId - _startId + 1);
-        uint256 _auctionCount;
+        Auction[] memory _allAuctions = new Auction[](_endId - _startId + 1);
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            uint256 j = i - _startId;
-            _auctions[j] = data.auctions[i];
-            if (_auctions[j].assetContract != address(0)) {
-                _auctionCount += 1;
-            }
-        }
-
-        _allAuctions = new Auction[](_auctionCount);
-        uint256 index = 0;
-        uint256 count = _auctions.length;
-        for (uint256 i = 0; i < count; i += 1) {
-            if (_auctions[i].assetContract != address(0)) {
-                _allAuctions[index++] = _auctions[i];
-            }
+            _allAuctions[i - _startId] = data.auctions[i];
         }
     }
 
@@ -260,6 +255,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             if (
                 _auctions[j].startTimestamp <= block.timestamp &&
                 _auctions[j].endTimestamp > block.timestamp &&
+                _auctions[j].status == IEnglishAuctions.Status.CREATED &&
                 _auctions[j].assetContract != address(0)
             ) {
                 _auctionCount += 1;
@@ -273,6 +269,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             if (
                 _auctions[i].startTimestamp <= block.timestamp &&
                 _auctions[i].endTimestamp > block.timestamp &&
+                _auctions[i].status == IEnglishAuctions.Status.CREATED &&
                 _auctions[i].assetContract != address(0)
             ) {
                 _validAuctions[index++] = _auctions[i];

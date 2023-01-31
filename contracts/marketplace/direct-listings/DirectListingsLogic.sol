@@ -59,7 +59,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
     /// @dev Checks whether a listing exists.
     modifier onlyExistingListing(uint256 _listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
-        require(data.listings[_listingId].assetContract != address(0), "Marketplace: listing does not exist.");
+        require(data.listings[_listingId].status == IDirectListings.Status.CREATED, "Marketplace: invalid listing.");
         _;
     }
 
@@ -111,7 +111,8 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
             startTimestamp: startTime,
             endTimestamp: endTime,
             reserved: _params.reserved,
-            tokenType: tokenType
+            tokenType: tokenType,
+            status: IDirectListings.Status.CREATED
         });
 
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
@@ -124,6 +125,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
     /// @notice Update parameters of a listing of NFTs.
     function updateListing(uint256 _listingId, ListingParameters memory _params)
         external
+        onlyExistingListing(_listingId)
         onlyAssetRole(_params.assetContract)
         onlyListingCreator(_listingId)
     {
@@ -158,11 +160,13 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
                 : startTime + (_params.endTimestamp - _params.startTimestamp);
         }
 
-        uint256 _approvedCurrencyPrice = data.currencyPriceForListing[_listingId][_params.currency];
-        require(
-            _approvedCurrencyPrice == 0 || _params.pricePerToken == _approvedCurrencyPrice,
-            "Marketplace: price different from approved price"
-        );
+        {
+            uint256 _approvedCurrencyPrice = data.currencyPriceForListing[_listingId][_params.currency];
+            require(
+                _approvedCurrencyPrice == 0 || _params.pricePerToken == _approvedCurrencyPrice,
+                "Marketplace: price different from approved price"
+            );
+        }
 
         _validateNewListing(_params, tokenType);
 
@@ -177,7 +181,8 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
             startTimestamp: startTime,
             endTimestamp: endTime,
             reserved: _params.reserved,
-            tokenType: tokenType
+            tokenType: tokenType,
+            status: IDirectListings.Status.CREATED
         });
 
         data.listings[_listingId] = listing;
@@ -189,7 +194,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
     function cancelListing(uint256 _listingId) external onlyExistingListing(_listingId) onlyListingCreator(_listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
-        delete data.listings[_listingId];
+        data.listings[_listingId].status = IDirectListings.Status.CANCELLED;
         emit CancelledListing(_msgSender(), _listingId);
     }
 
@@ -198,7 +203,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
         uint256 _listingId,
         address _buyer,
         bool _toApprove
-    ) external onlyListingCreator(_listingId) {
+    ) external onlyExistingListing(_listingId) onlyListingCreator(_listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         require(data.listings[_listingId].reserved, "Marketplace: listing not reserved.");
@@ -213,7 +218,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
         uint256 _listingId,
         address _currency,
         uint256 _pricePerTokenInCurrency
-    ) external onlyListingCreator(_listingId) {
+    ) external onlyExistingListing(_listingId) onlyListingCreator(_listingId) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         Listing memory listing = data.listings[_listingId];
@@ -282,10 +287,9 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
         }
 
         if (listing.quantity == _quantity) {
-            delete data.listings[_listingId];
-        } else {
-            data.listings[_listingId].quantity -= _quantity;
+            data.listings[_listingId].status = IDirectListings.Status.COMPLETED;
         }
+        data.listings[_listingId].quantity -= _quantity;
 
         _payout(buyer, listing.listingCreator, targetCurrency, targetTotalPrice, listing);
         _transferListingTokens(listing.listingCreator, _buyFor, _quantity, listing);
@@ -342,23 +346,10 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
 
         require(_startId <= _endId && _endId < data.totalListings, "invalid range");
 
-        Listing[] memory _listings = new Listing[](_endId - _startId + 1);
-        uint256 _listingCount;
+        Listing[] memory _allListings = new Listing[](_endId - _startId + 1);
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            _listings[i - _startId] = data.listings[i];
-            if (_listings[i - _startId].listingCreator != address(0)) {
-                _listingCount += 1;
-            }
-        }
-
-        _allListings = new Listing[](_listingCount);
-        uint256 index = 0;
-        uint256 count = _listings.length;
-        for (uint256 i = 0; i < count; i += 1) {
-            if (_listings[i].listingCreator != address(0)) {
-                _allListings[index++] = _listings[i];
-            }
+            _allListings[i - _startId] = data.listings[i];
         }
     }
 
@@ -397,12 +388,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
     }
 
     /// @notice Returns a listing at a particular listing ID.
-    function getListing(uint256 _listingId)
-        external
-        view
-        onlyExistingListing(_listingId)
-        returns (Listing memory listing)
-    {
+    function getListing(uint256 _listingId) external view returns (Listing memory listing) {
         DirectListingsStorage.Data storage data = DirectListingsStorage.directListingsStorage();
 
         listing = data.listings[_listingId];
@@ -453,6 +439,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
         isValid =
             _targetListing.startTimestamp <= block.timestamp &&
             _targetListing.endTimestamp > block.timestamp &&
+            _targetListing.status == IDirectListings.Status.CREATED &&
             _validateOwnershipAndApproval(
                 _targetListing.listingCreator,
                 _targetListing.assetContract,

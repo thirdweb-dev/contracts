@@ -50,7 +50,7 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
     /// @dev Checks whether an auction exists.
     modifier onlyExistingOffer(uint256 _offerId) {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
-        require(data.offers[_offerId].assetContract != address(0), "DNE");
+        require(data.offers[_offerId].status = IOffers.Status.CREATED, "Marketplace: invalid offer.");
         _;
     }
 
@@ -84,7 +84,8 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
             quantity: _params.quantity,
             currency: _params.currency,
             totalPrice: _params.totalPrice,
-            expirationTimestamp: _params.expirationTimestamp
+            expirationTimestamp: _params.expirationTimestamp,
+            status: IOffers.Status.CREATED
         });
 
         OffersStorage.Data storage data = OffersStorage.offersStorage();
@@ -96,7 +97,8 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
 
     function cancelOffer(uint256 _offerId) external onlyExistingOffer(_offerId) onlyOfferor(_offerId) {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
-        delete data.offers[_offerId];
+
+        data.offers[_offerId].status = IOffers.Status.CANCELLED;
 
         emit CancelledOffer(_msgSender(), _offerId);
     }
@@ -120,7 +122,7 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
             _targetOffer.tokenType
         );
 
-        delete data.offers[_offerId];
+        data.offers[_offerId].status = IOffers.Status.COMPLETED;
 
         _payout(_targetOffer.offeror, _msgSender(), _targetOffer.currency, _targetOffer.totalPrice, _targetOffer);
         _transferOfferTokens(_msgSender(), _targetOffer.offeror, _targetOffer.quantity, _targetOffer);
@@ -156,24 +158,10 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
         require(_startId <= _endId && _endId < data.totalOffers, "invalid range");
 
-        Offer[] memory _offers = new Offer[](_endId - _startId + 1);
-        uint256 _offerCount;
+        Offer[] memory _allOffers = new Offer[](_endId - _startId + 1);
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            uint256 j = i - _startId;
-            _offers[j] = data.offers[i];
-            if (_offers[j].assetContract != address(0)) {
-                _offerCount += 1;
-            }
-        }
-
-        _allOffers = new Offer[](_offerCount);
-        uint256 index = 0;
-        uint256 count = _offers.length;
-        for (uint256 i = 0; i < count; i += 1) {
-            if (_offers[i].assetContract != address(0)) {
-                _allOffers[index++] = _offers[i];
-            }
+            _allOffers[i] = data.offers[i];
         }
     }
 
@@ -243,8 +231,8 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
 
     /// @dev Checks whether the offer exists, is active, and if the offeror has sufficient balance.
     function _validateExistingOffer(Offer memory _targetOffer) internal view returns (bool isValid) {
-        isValid =
-            _targetOffer.expirationTimestamp > block.timestamp &&
+        isValid = _targetOffer.expirationTimestamp > block.timestamp && _targetOffer.status =
+            IOffers.Status.CREATED &&
             _validateERC20BalAndAllowance(_targetOffer.offeror, _targetOffer.currency, _targetOffer.totalPrice);
     }
 
