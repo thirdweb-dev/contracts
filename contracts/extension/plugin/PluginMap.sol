@@ -4,8 +4,12 @@ pragma solidity ^0.8.0;
 import "../interface/plugin/IPluginMap.sol";
 import "../../openzeppelin-presets/utils/EnumerableSet.sol";
 
+import "./PluginRegistry.sol";
+
 contract PluginMap is IPluginMap {
     using EnumerableSet for EnumerableSet.Bytes32Set;
+
+    address private deployer;
 
     EnumerableSet.Bytes32Set private allSelectors;
 
@@ -16,10 +20,20 @@ contract PluginMap is IPluginMap {
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Plugin[] memory _pluginsToAdd) {
+    constructor() {
+        deployer = msg.sender;
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            External functions
+    //////////////////////////////////////////////////////////////*/
+
+    function setPlugins(IPluginRegistry.PluginFunction[] memory _pluginsToAdd, address _plugin) external {
+        require(msg.sender == deployer, "PluginMap: unauthorized caller.");
+
         uint256 len = _pluginsToAdd.length;
         for (uint256 i = 0; i < len; i += 1) {
-            _setPlugin(_pluginsToAdd[i]);
+            _setPlugin(Plugin(_pluginsToAdd[i].functionSelector, _pluginsToAdd[i].functionSignature, _plugin));
         }
     }
 

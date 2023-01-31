@@ -6,6 +6,9 @@ import "../../extension/Multicall.sol";
 import "../../eip/ERC165.sol";
 import "../../openzeppelin-presets/utils/EnumerableSet.sol";
 
+import "./PluginMap.sol";
+import "./PluginRegistry.sol";
+
 library RouterStorage {
     bytes32 public constant ROUTER_STORAGE_POSITION = keccak256("router.storage");
 
@@ -35,8 +38,17 @@ abstract contract Router is Multicall, ERC165, IRouter {
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _pluginMap) {
-        pluginMap = _pluginMap;
+    constructor(address _pluginRegistry, string[] memory _pluginNames) {
+        PluginMap map = new PluginMap();
+        pluginMap = address(map);
+
+        uint256 len = _pluginNames.length;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            (IPluginRegistry.PluginFunction[] memory functions, address plugin) = PluginRegistry(_pluginRegistry)
+                .getAllFunctionsOfPlugin(_pluginNames[i]);
+            map.setPlugins(functions, plugin);
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
