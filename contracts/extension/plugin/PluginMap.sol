@@ -2,22 +2,23 @@
 pragma solidity ^0.8.0;
 
 import "../interface/plugin/IPluginMap.sol";
-import "../../openzeppelin-presets/utils/EnumerableSet.sol";
-
-import "./PluginRegistry.sol";
+import "../../lib/TWStringSet.sol";
 
 contract PluginMap is IPluginMap {
-    using EnumerableSet for EnumerableSet.Bytes32Set;
+    using TWStringSet for TWStringSet.Set;
+
+    /*///////////////////////////////////////////////////////////////
+                            State variables
+    //////////////////////////////////////////////////////////////*/
 
     address private deployer;
 
-    EnumerableSet.Bytes32Set private allSelectors;
-
-    mapping(address => EnumerableSet.Bytes32Set) private selectorsForPlugin;
-    mapping(bytes4 => Plugin) private pluginForSelector;
+    TWStringSet.Set private pluginNames;
+    mapping(string => Plugin) private plugins;
+    mapping(bytes4 => PluginMetadata) private pluginMetadata;
 
     /*///////////////////////////////////////////////////////////////
-                    Constructor + initializer logic
+                            Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor() {
@@ -28,46 +29,40 @@ contract PluginMap is IPluginMap {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    function setPlugins(IPluginRegistry.PluginFunction[] memory _pluginsToAdd, address _plugin) external {
+    function setPlugins(Plugin memory _plugin) external {
         require(msg.sender == deployer, "PluginMap: unauthorized caller.");
-
-        uint256 len = _pluginsToAdd.length;
-        for (uint256 i = 0; i < len; i += 1) {
-            _setPlugin(Plugin(_pluginsToAdd[i].functionSelector, _pluginsToAdd[i].functionSignature, _plugin));
-        }
+        _setPlugin(_plugin);
     }
 
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev View address of the plugged-in functionality contract for a given function signature.
-    function getPluginForFunction(bytes4 _selector) public view returns (address) {
-        address _pluginAddress = pluginForSelector[_selector].pluginAddress;
-        require(_pluginAddress != address(0), "Map: No plugin available for selector");
+    function getAllPlugins() external view returns (Plugin[] memory allPlugins) {
+        string[] memory names = pluginNames.values();
+        uint256 len = names.length;
 
-        return _pluginAddress;
-    }
-
-    /// @dev View all funtionality as list of function signatures.
-    function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] memory registered) {
-        uint256 len = selectorsForPlugin[_pluginAddress].length();
-        registered = new bytes4[](len);
+        allPlugins = new Plugin[](len);
 
         for (uint256 i = 0; i < len; i += 1) {
-            registered[i] = bytes4(selectorsForPlugin[_pluginAddress].at(i));
+            allPlugins[i] = plugins[names[i]];
         }
     }
 
-    /// @dev View all funtionality existing on the contract.
-    function getAllPlugins() external view returns (Plugin[] memory _plugins) {
-        uint256 len = allSelectors.length();
-        _plugins = new Plugin[](len);
+    function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
+        return plugins[_pluginName].functions;
+    }
 
-        for (uint256 i = 0; i < len; i += 1) {
-            bytes4 selector = bytes4(allSelectors.at(i));
-            _plugins[i] = pluginForSelector[selector];
-        }
+    function getPluginForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
+        return pluginMetadata[_functionSelector];
+    }
+
+    function getPluginImplementation(string memory _pluginName) external view returns (address) {
+        return plugins[_pluginName].metadata.implementation;
+    }
+
+    function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
+        return plugins[_pluginName];
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -76,15 +71,31 @@ contract PluginMap is IPluginMap {
 
     /// @dev Add functionality to the contract.
     function _setPlugin(Plugin memory _plugin) internal {
-        require(allSelectors.add(bytes32(_plugin.functionSelector)), "Map: Selector exists");
-        require(
-            _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
-            "Map: Incorrect selector"
-        );
+        string memory name = _plugin.metadata.name;
 
-        pluginForSelector[_plugin.functionSelector] = _plugin;
-        selectorsForPlugin[_plugin.pluginAddress].add(bytes32(_plugin.functionSelector));
+        require(pluginNames.add(name), "PluginMap: plugin already exists.");
+        plugins[name].metadata = _plugin.metadata;
 
-        emit PluginSet(_plugin.functionSelector, _plugin.functionSignature, _plugin.pluginAddress);
+        uint256 len = _plugin.functions.length;
+        bool selSigMatch = false;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            selSigMatch =
+                _plugin.functions[i].functionSelector ==
+                bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature)));
+            if (!selSigMatch) {
+                break;
+            }
+
+            pluginMetadata[_plugin.functions[i].functionSelector] = _plugin.metadata;
+            plugins[name].functions.push(_plugin.functions[i]);
+
+            emit PluginAdded(
+                _plugin.metadata.implementation,
+                _plugin.functions[i].functionSelector,
+                _plugin.functions[i].functionSignature
+            );
+        }
+        require(selSigMatch, "PluginRegistry: fn selector and signature mismatch.");
     }
 }
