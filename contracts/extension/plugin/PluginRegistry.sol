@@ -21,11 +21,8 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
     //////////////////////////////////////////////////////////////*/
 
     TWStringSet.Set private pluginNames;
-
     mapping(string => Plugin) private plugins;
-
-    // mapping(string => PluginFunction[]) private pluginFunctions;
-    mapping(bytes4 => PluginMetadata) private pluginData;
+    mapping(bytes4 => PluginMetadata) private pluginMetadata;
 
     /*///////////////////////////////////////////////////////////////
                             External functions
@@ -48,7 +45,7 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
                 break;
             }
 
-            pluginData[_plugin.functions[i].functionSelector] = _plugin.metadata;
+            pluginMetadata[_plugin.functions[i].functionSelector] = _plugin.metadata;
             plugins[name].functions.push(_plugin.functions[i]);
 
             emit PluginAdded(
@@ -70,8 +67,8 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
         plugins[name].metadata = _plugin.metadata;
         delete plugins[name].functions;
 
-        bool selSigMatch = false;
         uint256 len = _plugin.functions.length;
+        bool selSigMatch = false;
 
         for (uint256 i = 0; i < len; i += 1) {
             selSigMatch =
@@ -81,7 +78,7 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
                 break;
             }
 
-            pluginData[_plugin.functions[i].functionSelector] = _plugin.metadata;
+            pluginMetadata[_plugin.functions[i].functionSelector] = _plugin.metadata;
             plugins[name].functions.push(_plugin.functions[i]);
 
             emit PluginUpdated(
@@ -91,6 +88,7 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
                 _plugin.functions[i].functionSignature
             );
         }
+        require(selSigMatch, "PluginRegistry: fn selector and signature mismatch.");
     }
 
     function removePlugin(string memory _pluginName) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -107,28 +105,13 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
                 pluginFunctions[i].functionSelector,
                 pluginFunctions[i].functionSignature
             );
-            delete pluginData[pluginFunctions[i].functionSelector];
+            delete pluginMetadata[pluginFunctions[i].functionSelector];
         }
     }
 
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
-
-    function isApprovedPlugin(bytes4 _functionSelector, address _plugin) external view returns (bool) {
-        address pluginAddress = pluginData[_functionSelector].implementation;
-        return pluginAddress != address(0) && pluginAddress == _plugin;
-    }
-
-    function getAllPluginMetadata() external view returns (PluginMetadata[] memory allMetadata) {
-        string[] memory names = pluginNames.values();
-        uint256 len = names.length;
-
-        allMetadata = new PluginMetadata[](len);
-        for (uint256 i = 0; i < len; i += 1) {
-            allMetadata[i] = plugins[names[i]].metadata;
-        }
-    }
 
     function getAllPlugins() external view returns (Plugin[] memory allPlugins) {
         string[] memory names = pluginNames.values();
@@ -141,22 +124,19 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable {
         }
     }
 
-    function getAllFunctionsOfPlugin(string memory _pluginName)
-        external
-        view
-        returns (PluginFunction[] memory functions, address pluginAddress)
-    {
-        Plugin memory plugin = plugins[_pluginName];
-
-        functions = plugin.functions;
-        pluginAddress = plugin.metadata.implementation;
+    function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
+        return plugins[_pluginName].functions;
     }
 
-    function getPluginForFunction(bytes4 _functionSelector) external view returns (address) {
-        return pluginData[_functionSelector].implementation;
+    function getPluginForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
+        return pluginMetadata[_functionSelector];
     }
 
-    function getPluginMetadataForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
-        return pluginData[_functionSelector];
+    function getPluginImplementation(string memory _pluginName) external view returns (address) {
+        return plugins[_pluginName].metadata.implementation;
+    }
+
+    function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
+        return plugins[_pluginName];
     }
 }
