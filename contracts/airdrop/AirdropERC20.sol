@@ -114,6 +114,33 @@ contract AirdropERC20 is
         }
     }
 
+    /**
+     *  @notice          Lets contract-owner send ERC20 tokens to a list of addresses.
+     *  @dev             The token-owner should approve target tokens to Airdrop contract,
+     *                   which acts as operator for the tokens.
+     *
+     *  @param _contents        List containing recipient, tokenId and amounts to airdrop.
+     */
+    function airdrop(AirdropContent[] calldata _contents) external payable nonReentrant onlyOwner {
+        uint256 len = _contents.length;
+        uint256 nativeTokenAmount;
+
+        for (uint256 i = 0; i < len; i++) {
+            CurrencyTransferLib.transferCurrency(
+                _contents[i].tokenAddress,
+                _contents[i].tokenOwner,
+                _contents[i].recipient,
+                _contents[i].amount
+            );
+
+            if (_contents[i].tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
+                nativeTokenAmount += _contents[i].amount;
+            }
+        }
+
+        require(nativeTokenAmount == msg.value, "Incorrect native token amount");
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Airdrop view logic
     //////////////////////////////////////////////////////////////*/

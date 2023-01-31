@@ -112,21 +112,21 @@ contract AirdropERC1155 is
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
-     *  @param _tokenAddress    Contract address of ERC1155 tokens to air-drop.
-     *  @param _tokenOwner      Address from which to transfer tokens.
      *  @param _contents        List containing recipient, tokenId and amounts to airdrop.
      */
-    function airdrop(
-        address _tokenAddress,
-        address _tokenOwner,
-        AirdropContent[] calldata _contents
-    ) external nonReentrant onlyOwner {
+    function airdrop(AirdropContent[] calldata _contents) external nonReentrant onlyOwner {
         uint256 len = _contents.length;
 
-        IERC1155 token = IERC1155(_tokenAddress);
-
         for (uint256 i = 0; i < len; i++) {
-            token.safeTransferFrom(_tokenOwner, _contents[i].recipient, _contents[i].tokenId, _contents[i].amount, "");
+            try
+                IERC1155(_contents[i].tokenAddress).safeTransferFrom(
+                    _contents[i].tokenOwner,
+                    _contents[i].recipient,
+                    _contents[i].tokenId,
+                    _contents[i].amount,
+                    ""
+                )
+            {} catch {}
         }
     }
 

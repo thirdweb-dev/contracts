@@ -32,6 +32,7 @@ contract AirdropERC721 is
 
     uint256 public payeeCount;
     uint256 public processedCount;
+    uint256 public failedCount;
 
     uint256[] private indicesOfFailed;
 
@@ -87,6 +88,7 @@ contract AirdropERC721 is
     function airdrop(uint256 paymentsToProcess) external nonReentrant {
         uint256 totalPayees = payeeCount;
         uint256 countOfProcessed = processedCount;
+        uint256 failed;
 
         require(countOfProcessed + paymentsToProcess <= totalPayees, "invalid no. of payments");
 
@@ -95,9 +97,38 @@ contract AirdropERC721 is
         for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); i += 1) {
             AirdropContent memory content = airdropContent[i];
 
-            IERC721(content.tokenAddress).safeTransferFrom(content.tokenOwner, content.recipient, content.tokenId);
+            try
+                IERC721(content.tokenAddress).safeTransferFrom(content.tokenOwner, content.recipient, content.tokenId)
+            {} catch {
+                indicesOfFailed[failed++] = i;
+            }
 
             emit AirdropPayment(content.recipient, content);
+        }
+
+        if (failed > 0) {
+            failedCount += failed;
+        }
+    }
+
+    /**
+     *  @notice          Lets contract-owner send ERC721 tokens to a list of addresses.
+     *  @dev             The token-owner should approve target tokens to Airdrop contract,
+     *                   which acts as operator for the tokens.
+     *
+     *  @param _contents        List containing recipient, tokenId to airdrop.
+     */
+    function airdrop(AirdropContent[] calldata _contents) external nonReentrant onlyOwner {
+        uint256 len = _contents.length;
+
+        for (uint256 i = 0; i < len; i++) {
+            try
+                IERC721(_contents[i].tokenAddress).safeTransferFrom(
+                    _contents[i].tokenOwner,
+                    _contents[i].recipient,
+                    _contents[i].tokenId
+                )
+            {} catch {}
         }
     }
 
