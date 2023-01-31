@@ -1,28 +1,34 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.11;
+pragma solidity ^0.8.0;
 
 import "./IPluginMap.sol";
 
-interface IRouter is IPluginMap {
-    /// @dev Emitted when a functionality is added, or plugged-in.
-    event PluginAdded(bytes4 indexed functionSelector, address indexed pluginAddress);
+interface IRouterPrev is IPluginMap {
+    /*///////////////////////////////////////////////////////////////
+                                Events
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Emitted when a functionality is updated or overridden.
     event PluginUpdated(
-        bytes4 indexed functionSelector,
         address indexed oldPluginAddress,
-        address indexed newPluginAddress
+        address indexed newPluginAddress,
+        bytes4 indexed functionSelector,
+        string functionSignature
     );
 
     /// @dev Emitted when a functionality is removed.
-    event PluginRemoved(bytes4 indexed functionSelector, address indexed pluginAddress);
+    event PluginRemoved(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature);
+
+    /*///////////////////////////////////////////////////////////////
+                        External functions
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Add a new plugin to the contract.
-    function addPlugin(Plugin memory plugin) external;
+    function addPlugin(string memory pluginName) external;
 
     /// @dev Update / override an existing plugin.
-    function updatePlugin(Plugin memory plugin) external;
+    function updatePlugin(string memory pluginName) external;
 
     /// @dev Remove an existing plugin from the contract.
-    function removePlugin(bytes4 functionSelector) external;
+    function removePlugin(string memory pluginName) external;
 }
