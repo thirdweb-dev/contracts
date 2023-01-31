@@ -29,7 +29,7 @@ contract PluginMap is IPluginMap {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    function setPlugins(Plugin memory _plugin) external {
+    function setPlugin(Plugin memory _plugin) external {
         require(msg.sender == deployer, "PluginMap: unauthorized caller.");
         _setPlugin(_plugin);
     }
