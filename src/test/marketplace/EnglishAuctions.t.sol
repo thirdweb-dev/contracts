@@ -793,9 +793,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         // Total auction count should include deleted auctions too
         assertEq(EnglishAuctionsLogic(marketplace).totalAuctions(), 1);
 
-        // Revert when fetching deleted auction.
-        vm.expectRevert("Marketplace: auction does not exist.");
-        EnglishAuctionsLogic(marketplace).getAuction(auctionId);
+        // status should be `CANCELLED`
+        IEnglishAuctions.Auction memory cancelledAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
+        assertTrue(cancelledAuction.status == IEnglishAuctions.Status.CANCELLED);
     }
 
     function test_revert_cancelAuction_bidsAlreadyMade() public {
@@ -1357,7 +1357,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         vm.stopPrank();
 
         // check winning bid for a non-existent auction
-        vm.expectRevert("Marketplace: auction does not exist.");
+        vm.expectRevert("Marketplace: invalid auction.");
         EnglishAuctionsLogic(marketplace).isNewWinningBid(auctionId + 1, 6 ether);
     }
 
@@ -1522,7 +1522,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     function test_revert_isAuctionExpired() public {
         uint256 auctionId = _setup_newAuction();
 
-        vm.expectRevert("Marketplace: auction does not exist.");
+        vm.expectRevert("Marketplace: invalid auction.");
         EnglishAuctionsLogic(marketplace).isAuctionExpired(auctionId + 1);
     }
 }

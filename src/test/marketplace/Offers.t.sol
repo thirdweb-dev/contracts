@@ -430,9 +430,9 @@ contract MarketplaceOffersTest is BaseTest {
         // Total offers count shouldn't change
         assertEq(OffersLogic(marketplace).totalOffers(), 1);
 
-        bytes memory err = "DNE";
-        vm.expectRevert(err);
-        offer = OffersLogic(marketplace).getOffer(offerId);
+        // status should be `CANCELLED`
+        IOffers.Offer memory cancelledOffer = OffersLogic(marketplace).getOffer(offerId);
+        assertTrue(cancelledOffer.status == IOffers.Status.CANCELLED);
     }
 
     function test_revert_cancelOffer_callerNotOfferor() public {
@@ -514,10 +514,9 @@ contract MarketplaceOffersTest is BaseTest {
         // Total offers count shouldn't change
         assertEq(OffersLogic(marketplace).totalOffers(), 1);
 
-        // offer deleted
-        bytes memory err = "DNE";
-        vm.expectRevert(err);
-        OffersLogic(marketplace).getOffer(offerId);
+        // status should be `COMPLETED`
+        IOffers.Offer memory completedOffer = OffersLogic(marketplace).getOffer(offerId);
+        assertTrue(completedOffer.status == IOffers.Status.COMPLETED);
 
         // check states after accepting offer
         assertEq(erc721.ownerOf(tokenId), buyer);

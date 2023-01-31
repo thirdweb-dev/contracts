@@ -50,7 +50,7 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
     /// @dev Checks whether an auction exists.
     modifier onlyExistingOffer(uint256 _offerId) {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
-        require(data.offers[_offerId].status = IOffers.Status.CREATED, "Marketplace: invalid offer.");
+        require(data.offers[_offerId].status == IOffers.Status.CREATED, "Marketplace: invalid offer.");
         _;
     }
 
@@ -148,7 +148,7 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
     }
 
     /// @dev Returns existing offer with the given uid.
-    function getOffer(uint256 _offerId) external view onlyExistingOffer(_offerId) returns (Offer memory _offer) {
+    function getOffer(uint256 _offerId) external view returns (Offer memory _offer) {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
         _offer = data.offers[_offerId];
     }
@@ -158,10 +158,10 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
         OffersStorage.Data storage data = OffersStorage.offersStorage();
         require(_startId <= _endId && _endId < data.totalOffers, "invalid range");
 
-        Offer[] memory _allOffers = new Offer[](_endId - _startId + 1);
+        _allOffers = new Offer[](_endId - _startId + 1);
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            _allOffers[i] = data.offers[i];
+            _allOffers[i - _startId] = data.offers[i];
         }
     }
 
@@ -231,8 +231,9 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
 
     /// @dev Checks whether the offer exists, is active, and if the offeror has sufficient balance.
     function _validateExistingOffer(Offer memory _targetOffer) internal view returns (bool isValid) {
-        isValid = _targetOffer.expirationTimestamp > block.timestamp && _targetOffer.status =
-            IOffers.Status.CREATED &&
+        isValid =
+            _targetOffer.expirationTimestamp > block.timestamp &&
+            _targetOffer.status == IOffers.Status.CREATED &&
             _validateERC20BalAndAllowance(_targetOffer.offeror, _targetOffer.currency, _targetOffer.totalPrice);
     }
 

@@ -346,7 +346,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
 
         require(_startId <= _endId && _endId < data.totalListings, "invalid range");
 
-        Listing[] memory _allListings = new Listing[](_endId - _startId + 1);
+        _allListings = new Listing[](_endId - _startId + 1);
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
             _allListings[i - _startId] = data.listings[i];

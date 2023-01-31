@@ -921,9 +921,9 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.prank(seller);
         DirectListingsLogic(marketplace).cancelListing(listingId);
 
-        // Verify listing at `listingId` doesn't exist
-        vm.expectRevert("Marketplace: listing does not exist.");
-        DirectListingsLogic(marketplace).getListing(listingId);
+        // status should be `CANCELLED`
+        IDirectListings.Listing memory cancelledListing = DirectListingsLogic(marketplace).getListing(listingId);
+        assertTrue(cancelledListing.status == IDirectListings.Status.CANCELLED);
     }
 
     function test_revert_cancelListing_notListingCreator() public {
@@ -945,7 +945,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         uint256 nextListingId = DirectListingsLogic(marketplace).totalListings();
 
         vm.prank(seller);
-        vm.expectRevert("Marketplace: listing does not exist.");
+        vm.expectRevert("Marketplace: invalid listing.");
         DirectListingsLogic(marketplace).cancelListing(nextListingId);
     }
 
@@ -1112,9 +1112,9 @@ contract MarketplaceDirectListingsTest is BaseTest {
         assertBalERC20Eq(address(erc20), seller, totalPrice);
 
         if (quantityToBuy == listing.quantity) {
-            // Verify listing data is deleted if listing tokens are all bought.
-            vm.expectRevert("Marketplace: listing does not exist.");
-            DirectListingsLogic(marketplace).getListing(listingId);
+            // Verify listing status is `COMPLETED` if listing tokens are all bought.
+            IDirectListings.Listing memory completedListing = DirectListingsLogic(marketplace).getListing(listingId);
+            assertTrue(completedListing.status == IDirectListings.Status.COMPLETED);
         }
     }
 
@@ -1166,9 +1166,9 @@ contract MarketplaceDirectListingsTest is BaseTest {
         assertEq(seller.balance, sellerBalBefore + totalPrice);
 
         if (quantityToBuy == listing.quantity) {
-            // Verify listing data is deleted if listing tokens are all bought.
-            vm.expectRevert("Marketplace: listing does not exist.");
-            DirectListingsLogic(marketplace).getListing(listingId);
+            // Verify listing status is `COMPLETED` if listing tokens are all bought.
+            IDirectListings.Listing memory completedListing = DirectListingsLogic(marketplace).getListing(listingId);
+            assertTrue(completedListing.status == IDirectListings.Status.COMPLETED);
         }
     }
 
