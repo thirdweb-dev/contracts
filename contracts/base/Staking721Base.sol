@@ -6,7 +6,9 @@ import "../extension/Multicall.sol";
 import "../extension/Ownable.sol";
 import "../extension/Staking721.sol";
 
+import "../eip/ERC165.sol";
 import "../eip/interface/IERC20.sol";
+import "../eip/interface/IERC721Receiver.sol";
 
 /**
  *
@@ -31,7 +33,7 @@ import "../eip/interface/IERC20.sol";
  *      - Multicall capability to perform multiple actions atomically.
  *
  */
-contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721 {
+contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC165, IERC721Receiver {
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
 
@@ -50,6 +52,24 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721 {
     /// @notice View total rewards available in the staking contract.
     function getRewardTokenBalance() external view virtual override returns (uint256 _rewardsAvailableInContract) {
         return IERC20(rewardToken).balanceOf(address(this));
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        ERC 165 / 721 logic
+    //////////////////////////////////////////////////////////////*/
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external view override returns (bytes4) {
+        require(isStaking == 2, "Direct transfer");
+        return this.onERC721Received.selector;
+    }
+
+    function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
+        return interfaceId == type(IERC721Receiver).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /*//////////////////////////////////////////////////////////////
