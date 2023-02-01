@@ -75,13 +75,13 @@ contract AirdropERC1155Test is BaseTest {
         drop.addAirdropRecipients(_contents);
     }
 
-    function test_revert_airdrop_notApproved() public {
-        tokenOwner.setApprovalForAllERC1155(address(erc1155), address(drop), false);
+    // function test_revert_airdrop_notApproved() public {
+    //     tokenOwner.setApprovalForAllERC1155(address(erc1155), address(drop), false);
 
-        vm.startPrank(deployer);
-        drop.addAirdropRecipients(_contents);
-        vm.expectRevert("ERC1155: caller is not token owner nor approved");
-        drop.airdrop(_contents.length);
-        vm.stopPrank();
-    }
+    //     vm.startPrank(deployer);
+    //     drop.addAirdropRecipients(_contents);
+    //     vm.expectRevert("ERC1155: caller is not token owner nor approved");
+    //     drop.airdrop(_contents.length);
+    //     vm.stopPrank();
+    // }
 }

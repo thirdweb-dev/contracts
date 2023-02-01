@@ -95,13 +95,17 @@ contract AirdropERC1155 is
         for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); i += 1) {
             AirdropContent memory content = airdropContent[i];
 
-            IERC1155(content.tokenAddress).safeTransferFrom(
-                content.tokenOwner,
-                content.recipient,
-                content.tokenId,
-                content.amount,
-                ""
-            );
+            try
+                IERC1155(content.tokenAddress).safeTransferFrom(
+                    content.tokenOwner,
+                    content.recipient,
+                    content.tokenId,
+                    content.amount,
+                    ""
+                )
+            {} catch {
+                indicesOfFailed.push(i);
+            }
 
             emit AirdropPayment(content.recipient, content);
         }

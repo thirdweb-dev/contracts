@@ -32,7 +32,6 @@ contract AirdropERC721 is
 
     uint256 public payeeCount;
     uint256 public processedCount;
-    uint256 public failedCount;
 
     uint256[] private indicesOfFailed;
 
@@ -88,7 +87,6 @@ contract AirdropERC721 is
     function airdrop(uint256 paymentsToProcess) external nonReentrant {
         uint256 totalPayees = payeeCount;
         uint256 countOfProcessed = processedCount;
-        uint256 failed;
 
         require(countOfProcessed + paymentsToProcess <= totalPayees, "invalid no. of payments");
 
@@ -100,14 +98,10 @@ contract AirdropERC721 is
             try
                 IERC721(content.tokenAddress).safeTransferFrom(content.tokenOwner, content.recipient, content.tokenId)
             {} catch {
-                indicesOfFailed[failed++] = i;
+                indicesOfFailed.push(i);
             }
 
             emit AirdropPayment(content.recipient, content);
-        }
-
-        if (failed > 0) {
-            failedCount += failed;
         }
     }
 
