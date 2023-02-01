@@ -32,6 +32,13 @@ import "../eip/interface/IERC20Metadata.sol";
  *      - Multicall capability to perform multiple actions atomically.
  *
  */
+
+/// note: This contract is provided as a base contract only.
+//        This is to support a variety of use-cases that can be build on top of this base.
+//
+//        Any additional functionality such as deposit functions, reward-minting, etc.
+//        must be implemented by the deployer of this contract, as needed for their use-case.
+
 contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
@@ -54,7 +61,12 @@ contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
         _setupOwner(msg.sender);
         _setStakingCondition(_timeUnit, _rewardRatioNumerator, _rewardRatioDenominator);
 
-        require(_rewardToken != _stakingToken, "Reward Token and Staking Token can't be same.");
+        /** note: Deployer must ensure that:
+         *              - `reward token` is different from `staking token`
+         *         OR
+         *              - if both are same, then balances and accounting must be correctly implemented for both.
+         *              THIS IS NOT PROVIDED BY DEFAULT IN THIS CONTRACT.
+         */
         rewardToken = _rewardToken;
     }
 

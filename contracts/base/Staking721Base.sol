@@ -33,6 +33,13 @@ import "../eip/interface/IERC721Receiver.sol";
  *      - Multicall capability to perform multiple actions atomically.
  *
  */
+
+/// note: This contract is provided as a base contract only.
+//        This is to support a variety of use-cases that can be build on top of this base.
+//
+//        Any additional functionality such as deposit functions, reward-minting, etc.
+//        must be implemented by the deployer of this contract, as needed for their use-case.
+
 contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC165, IERC721Receiver {
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
