@@ -33,9 +33,11 @@ contract AirdropERC20 is
     uint256 public payeeCount;
     uint256 public processedCount;
 
-    uint256[] private indicesOfFailed;
+    uint256[] public indicesOfFailed;
 
     mapping(uint256 => AirdropContent) private airdropContent;
+
+    mapping(uint256 => bool) private isCancelled;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -69,7 +71,7 @@ contract AirdropERC20 is
     //////////////////////////////////////////////////////////////*/
 
     ///@notice Lets contract-owner set up an airdrop of ERC20 or native tokens to a list of addresses.
-    function addAirdropRecipients(AirdropContent[] calldata _contents) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
+    function addRecipients(AirdropContent[] calldata _contents) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
         require(len > 0, "No payees provided.");
 
@@ -91,8 +93,21 @@ contract AirdropERC20 is
         emit RecipientsAdded(_contents);
     }
 
+    ///@notice Lets contract-owner cancel any pending payments.
+    function resetRecipients() external onlyRole(DEFAULT_ADMIN_ROLE) {
+        uint256 totalPayees = payeeCount;
+        uint256 countOfProcessed = processedCount;
+
+        // set processedCount to payeeCount -- ignore all pending payments.
+        processedCount = payeeCount;
+
+        for (uint256 i = countOfProcessed; i < totalPayees; i += 1) {
+            isCancelled[i] = true;
+        }
+    }
+
     /// @notice Lets contract-owner send ERC20 or native tokens to a list of addresses.
-    function airdrop(uint256 paymentsToProcess) external nonReentrant {
+    function processPayments(uint256 paymentsToProcess) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 totalPayees = payeeCount;
         uint256 countOfProcessed = processedCount;
 
@@ -121,7 +136,7 @@ contract AirdropERC20 is
      *
      *  @param _contents        List containing recipient, tokenId and amounts to airdrop.
      */
-    function airdrop(AirdropContent[] calldata _contents) external payable nonReentrant onlyOwner {
+    function airdrop(AirdropContent[] calldata _contents) external payable nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
         uint256 nativeTokenAmount;
 
@@ -136,6 +151,8 @@ contract AirdropERC20 is
             if (_contents[i].tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += _contents[i].amount;
             }
+
+            emit StatelessAirdrop(_contents[i].recipient, _contents[i]);
         }
 
         require(nativeTokenAmount == msg.value, "Incorrect native token amount");
@@ -146,35 +163,74 @@ contract AirdropERC20 is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns all airdrop payments set up -- pending, processed or failed.
-    function getAllAirdropPayments() external view returns (AirdropContent[] memory contents) {
-        uint256 count = payeeCount;
-        contents = new AirdropContent[](count);
+    function getAllAirdropPayments(uint256 startId, uint256 endId)
+        external
+        view
+        returns (AirdropContent[] memory contents)
+    {
+        require(startId <= endId && endId < payeeCount, "invalid range");
 
-        for (uint256 i = 0; i < count; i += 1) {
-            contents[i] = airdropContent[i];
+        contents = new AirdropContent[](endId - startId + 1);
+
+        for (uint256 i = startId; i <= endId; i += 1) {
+            contents[i - startId] = airdropContent[i];
         }
     }
 
     /// @notice Returns all pending airdrop payments.
-    function getAllAirdropPaymentsPending() external view returns (AirdropContent[] memory contents) {
-        uint256 endCount = payeeCount;
-        uint256 startCount = processedCount;
-        contents = new AirdropContent[](endCount - startCount);
+    function getAllAirdropPaymentsPending(uint256 startId, uint256 endId)
+        external
+        view
+        returns (AirdropContent[] memory contents)
+    {
+        require(startId <= endId && endId < payeeCount, "invalid range");
+
+        uint256 processed = processedCount;
+        if (startId < processed) {
+            startId = processed;
+        }
+        contents = new AirdropContent[](endId - startId);
 
         uint256 idx;
-        for (uint256 i = startCount; i < endCount; i += 1) {
+        for (uint256 i = startId; i <= endId; i += 1) {
             contents[idx] = airdropContent[i];
             idx += 1;
         }
     }
 
     /// @notice Returns all pending airdrop processed.
-    function getAllAirdropPaymentsProcessed() external view returns (AirdropContent[] memory contents) {
-        uint256 count = processedCount;
-        contents = new AirdropContent[](count);
+    function getAllAirdropPaymentsProcessed(uint256 startId, uint256 endId)
+        external
+        view
+        returns (AirdropContent[] memory contents)
+    {
+        require(startId <= endId && endId < payeeCount, "invalid range");
+        uint256 processed = processedCount;
+        if (startId >= processed) {
+            return contents;
+        }
 
-        for (uint256 i = 0; i < count; i += 1) {
-            contents[i] = airdropContent[i];
+        if (endId >= processed) {
+            endId = processed - 1;
+        }
+
+        uint256 count;
+
+        for (uint256 i = startId; i <= endId; i += 1) {
+            if (isCancelled[i]) {
+                continue;
+            }
+            count += 1;
+        }
+
+        contents = new AirdropContent[](count);
+        uint256 index;
+
+        for (uint256 i = startId; i <= endId; i += 1) {
+            if (isCancelled[i]) {
+                continue;
+            }
+            contents[index++] = airdropContent[i];
         }
     }
 
@@ -194,6 +250,6 @@ contract AirdropERC20 is
 
     /// @dev Returns whether owner can be set in the given execution context.
     function _canSetOwner() internal view virtual override returns (bool) {
-        return msg.sender == owner();
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }

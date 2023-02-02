@@ -12,12 +12,18 @@ pragma solidity ^0.8.11;
 interface IAirdropERC20 {
     /// @notice Emitted when airdrop recipients are uploaded to the contract.
     event RecipientsAdded(AirdropContent[] _contents);
+    /// @notice Emitted when pending payments are cancelled, and processed count is reset.
+    event PaymentsResetByAdmin();
     /// @notice Emitted when an airdrop payment is made to a recipient.
     event AirdropPayment(address indexed recipient, AirdropContent content);
+    /// @notice Emitted when an airdrop is made using the stateless airdrop function.
+    event StatelessAirdrop(address indexed recipient, AirdropContent content);
 
     /**
      *  @notice Details of amount and recipient for airdropped token.
      *
+     *  @param tokenAddress The contract address of the tokens to transfer.
+     *  @param tokenOwner The owner of the the tokens to transfer.
      *  @param recipient The recipient of the tokens.
      *  @param amount The quantity of tokens to airdrop.
      */
@@ -29,13 +35,22 @@ interface IAirdropERC20 {
     }
 
     /// @notice Returns all airdrop payments set up -- pending, processed or failed.
-    function getAllAirdropPayments() external view returns (AirdropContent[] memory contents);
+    function getAllAirdropPayments(uint256 startId, uint256 endId)
+        external
+        view
+        returns (AirdropContent[] memory contents);
 
     /// @notice Returns all pending airdrop payments.
-    function getAllAirdropPaymentsPending() external view returns (AirdropContent[] memory contents);
+    function getAllAirdropPaymentsPending(uint256 startId, uint256 endId)
+        external
+        view
+        returns (AirdropContent[] memory contents);
 
     /// @notice Returns all pending airdrop processed.
-    function getAllAirdropPaymentsProcessed() external view returns (AirdropContent[] memory contents);
+    function getAllAirdropPaymentsProcessed(uint256 startId, uint256 endId)
+        external
+        view
+        returns (AirdropContent[] memory contents);
 
     /// @notice Returns all pending airdrop failed.
     function getAllAirdropPaymentsFailed() external view returns (AirdropContent[] memory contents);
@@ -45,7 +60,12 @@ interface IAirdropERC20 {
      *
      *  @param _contents  List containing recipients, amounts to airdrop.
      */
-    function addAirdropRecipients(AirdropContent[] calldata _contents) external payable;
+    function addRecipients(AirdropContent[] calldata _contents) external payable;
+
+    /**
+     *  @notice          Lets contract-owner cancel any pending payments.
+     */
+    function resetRecipients() external;
 
     /**
      *  @notice          Lets contract-owner send ERC20 or native tokens to a list of addresses.
@@ -54,5 +74,14 @@ interface IAirdropERC20 {
      *
      *  @param paymentsToProcess    The number of airdrop payments to process.
      */
-    function airdrop(uint256 paymentsToProcess) external;
+    function processPayments(uint256 paymentsToProcess) external;
+
+    /**
+     *  @notice          Lets contract-owner send ERC20 tokens to a list of addresses.
+     *  @dev             The token-owner should approve target tokens to Airdrop contract,
+     *                   which acts as operator for the tokens.
+     *
+     *  @param _contents        List containing recipient, tokenId to airdrop.
+     */
+    function airdrop(AirdropContent[] calldata _contents) external payable;
 }
