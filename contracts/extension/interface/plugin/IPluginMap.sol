@@ -8,13 +8,13 @@ interface IPluginMap is IPlugin {
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns all plug-ins known by Map.
+    /// @dev Returns all plugins stored.
     function getAllPlugins() external view returns (Plugin[] memory);
 
-    /// @dev Returns all functions that are mapped to the given plug-in contract.
+    /// @dev Returns all functions that belong to the given plugin contract.
     function getAllFunctionsOfPlugin(string memory pluginName) external view returns (PluginFunction[] memory);
 
-    /// @dev Returns the plug-in metadata for a given function.
+    /// @dev Returns the plugin metadata for a given function.
     function getPluginForFunction(bytes4 functionSelector) external view returns (PluginMetadata memory);
 
     /// @dev Returns the plugin's implementation smart contract address.

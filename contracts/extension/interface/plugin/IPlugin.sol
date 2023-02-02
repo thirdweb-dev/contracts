@@ -22,7 +22,7 @@ interface IPlugin {
     /**
      *  @notice An interface to describe a plugin's function.
      *
-     *  @param functionSelector The 4 byte selector of the function.
+     *  @param functionSelector    The 4 byte selector of the function.
      *  @param functionSignature   Function representation as a string. E.g. "transfer(address,address,uint256)"
      */
     struct PluginFunction {
@@ -45,10 +45,10 @@ interface IPlugin {
                                 Events
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Emitted when a function selector is mapped to a particular plug-in smart contract, during construction of Map.
+    /// @dev Emitted when a plugin is added; emitted for each function of the plugin.
     event PluginAdded(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature);
 
-    /// @dev Emitted when a functionality is updated or overridden.
+    /// @dev Emitted when plugin is updated; emitted for each function of the plugin.
     event PluginUpdated(
         address indexed oldPluginAddress,
         address indexed newPluginAddress,
@@ -56,6 +56,6 @@ interface IPlugin {
         string functionSignature
     );
 
-    /// @dev Emitted when a functionality is removed.
+    /// @dev Emitted when a plugin is removed; emitted for each function of the plugin.
     event PluginRemoved(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature);
 }
