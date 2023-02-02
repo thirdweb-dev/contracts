@@ -15,7 +15,7 @@ interface IAirdropERC20 {
     /// @notice Emitted when pending payments are cancelled, and processed count is reset.
     event PaymentsResetByAdmin();
     /// @notice Emitted when an airdrop payment is made to a recipient.
-    event AirdropPayment(address indexed recipient, AirdropContent content);
+    event AirdropPayment(address indexed recipient, AirdropContent content, bool failed);
     /// @notice Emitted when an airdrop is made using the stateless airdrop function.
     event StatelessAirdrop(address indexed recipient, AirdropContent content);
 

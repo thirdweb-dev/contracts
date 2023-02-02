@@ -10,6 +10,7 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 import "../interfaces/airdrop/IAirdropERC20.sol";
 import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
+import "../openzeppelin-presets/token/ERC20/utils/SafeERC20.sol";
 
 //  ==========  Features    ==========
 import "../extension/Ownable.sol";
@@ -23,6 +24,7 @@ contract AirdropERC20 is
     MulticallUpgradeable,
     IAirdropERC20
 {
+    using SafeERC20 for IERC20;
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -118,14 +120,23 @@ contract AirdropERC20 is
         for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); i += 1) {
             AirdropContent memory content = airdropContent[i];
 
-            CurrencyTransferLib.transferCurrency(
-                content.tokenAddress,
-                content.tokenOwner,
-                content.recipient,
-                content.amount
-            );
+            bool success;
+            if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
+                // solhint-disable avoid-low-level-calls
+                // slither-disable-next-line low-level-calls
+                (success, ) = content.recipient.call{ value: content.amount }("");
+            } else {
+                try
+                    IERC20(content.tokenAddress).transferFrom(content.tokenOwner, content.recipient, content.amount)
+                returns (bool _success) {
+                    success = _success;
+                } catch {
+                    indicesOfFailed.push(i);
+                    success = false;
+                }
+            }
 
-            emit AirdropPayment(content.recipient, content);
+            emit AirdropPayment(content.recipient, content, !success);
         }
     }
 
