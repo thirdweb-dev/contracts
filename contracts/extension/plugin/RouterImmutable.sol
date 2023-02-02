@@ -8,7 +8,7 @@ contract RouterImmutable is Router {
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _pluginMap) Router(_pluginMap) {}
+    constructor(address _pluginRegistry, string[] memory _pluginNames) Router(_pluginRegistry, _pluginNames) {}
 
     /*///////////////////////////////////////////////////////////////
                         Internal functions
@@ -18,7 +18,4 @@ contract RouterImmutable is Router {
     function _canSetPlugin() internal pure override returns (bool) {
         return false;
     }
-
-    /// @dev Returns whether a plugin is a safe, authorized plugin.
-    function _isAuthorizedPlugin(bytes4, address) internal view override returns (bool) {}
 }
