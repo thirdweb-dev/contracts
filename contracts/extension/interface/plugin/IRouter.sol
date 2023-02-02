@@ -5,21 +5,6 @@ import "./IPluginMap.sol";
 
 interface IRouter is IPluginMap {
     /*///////////////////////////////////////////////////////////////
-                                Events
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Emitted when a functionality is updated or overridden.
-    event PluginUpdated(
-        address indexed oldPluginAddress,
-        address indexed newPluginAddress,
-        bytes4 indexed functionSelector,
-        string functionSignature
-    );
-
-    /// @dev Emitted when a functionality is removed.
-    event PluginRemoved(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature);
-
-    /*///////////////////////////////////////////////////////////////
                         External functions
     //////////////////////////////////////////////////////////////*/
 
