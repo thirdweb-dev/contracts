@@ -37,7 +37,7 @@ contract PluginState is IPlugin {
 
         string memory name = _plugin.metadata.name;
 
-        require(data.pluginNames.add(name), "PluginData: plugin already exists.");
+        require(data.pluginNames.add(name), "PluginState: plugin already exists.");
         data.plugins[name].metadata = _plugin.metadata;
 
         require(_plugin.metadata.implementation != address(0), "PluginState: adding plugin without implementation.");
@@ -47,7 +47,7 @@ contract PluginState is IPlugin {
             require(
                 _plugin.functions[i].functionSelector ==
                     bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature))),
-                "PluginData: fn selector and signature mismatch."
+                "PluginState: fn selector and signature mismatch."
             );
             require(
                 data.pluginMetadata[_plugin.functions[i].functionSelector].implementation == address(0),
@@ -70,10 +70,10 @@ contract PluginState is IPlugin {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
 
         string memory name = _plugin.metadata.name;
-        require(data.pluginNames.contains(name), "PluginData: plugin does not exist.");
+        require(data.pluginNames.contains(name), "PluginState: plugin does not exist.");
 
         address oldImplementation = data.plugins[name].metadata.implementation;
-        require(_plugin.metadata.implementation != oldImplementation, "PluginData: re-adding same plugin.");
+        require(_plugin.metadata.implementation != oldImplementation, "PluginState: re-adding same plugin.");
 
         data.plugins[name].metadata = _plugin.metadata;
 
@@ -91,7 +91,7 @@ contract PluginState is IPlugin {
             require(
                 _plugin.functions[i].functionSelector ==
                     bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature))),
-                "PluginData: fn selector and signature mismatch."
+                "PluginState: fn selector and signature mismatch."
             );
 
             data.pluginMetadata[_plugin.functions[i].functionSelector] = _plugin.metadata;
@@ -110,7 +110,7 @@ contract PluginState is IPlugin {
     function _removePlugin(string memory _pluginName) internal {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
 
-        require(data.pluginNames.remove(_pluginName), "PluginData: plugin does not exists.");
+        require(data.pluginNames.remove(_pluginName), "PluginState: plugin does not exists.");
 
         address implementation = data.plugins[_pluginName].metadata.implementation;
         PluginFunction[] memory pluginFunctions = data.plugins[_pluginName].functions;

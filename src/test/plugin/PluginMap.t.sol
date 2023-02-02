@@ -8,6 +8,34 @@ import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 
+contract ContractA {
+    uint256 private a_;
+
+    function a() external {
+        a_ += 1;
+    }
+}
+
+contract ContractB {
+    uint256 private b_;
+
+    function b() external {
+        b_ += 1;
+    }
+}
+
+contract ContractC {
+    uint256 private c_;
+
+    function c() external {
+        c_ += 1;
+    }
+
+    function getC() external view returns (uint256) {
+        return c_;
+    }
+}
+
 contract PluginMapTest is BaseTest, IPlugin {
     address private pluginMapDeployer;
 
@@ -26,31 +54,30 @@ contract PluginMapTest is BaseTest, IPlugin {
         // Add plugin 1.
 
         plugins[0].metadata = PluginMetadata({
-            name: "MockERC20",
-            metadataURI: "ipfs://MockERC20",
-            implementation: address(new MockERC20())
+            name: "ContractA",
+            metadataURI: "ipfs://ContractA",
+            implementation: address(new ContractA())
         });
 
-        plugins[0].functions.push(PluginFunction(MockERC20.mint.selector, "mint(address,uint256)"));
-        plugins[0].functions.push(PluginFunction(MockERC20.toggleTax.selector, "toggleTax()"));
+        plugins[0].functions.push(PluginFunction(ContractA.a.selector, "a()"));
 
         // Add plugin 2.
 
         plugins[1].metadata = PluginMetadata({
-            name: "MockERC721",
-            metadataURI: "ipfs://MockERC721",
-            implementation: address(new MockERC721())
+            name: "ContractB",
+            metadataURI: "ipfs://ContractB",
+            implementation: address(new ContractB())
         });
-        plugins[1].functions.push(PluginFunction(MockERC721.mint.selector, "mint(address,uint256)"));
+        plugins[1].functions.push(PluginFunction(ContractB.b.selector, "b()"));
 
         // Add plugin 3.
 
         plugins[2].metadata = PluginMetadata({
-            name: "MockERC1155",
-            metadataURI: "ipfs://MockERC1155",
-            implementation: address(new MockERC1155())
+            name: "ContractC",
+            metadataURI: "ipfs://ContractC",
+            implementation: address(new ContractC())
         });
-        plugins[2].functions.push(PluginFunction(MockERC1155.mint.selector, "mint(address,uint256,uint256)"));
+        plugins[2].functions.push(PluginFunction(ContractC.c.selector, "c()"));
     }
 
     function test_state_setPlugin() external {
@@ -112,5 +139,113 @@ contract PluginMapTest is BaseTest, IPlugin {
         vm.expectRevert("PluginMap: unauthorized caller.");
         vm.prank(address(0x999));
         pluginMap.setPlugin(plugins[0]);
+    }
+
+    function test_revert_addPluginsWithSameFunctionSelectors() external {
+        // Add plugin 1.
+
+        Plugin memory plugin1;
+
+        plugin1.metadata = PluginMetadata({
+            name: "MockERC20",
+            metadataURI: "ipfs://MockERC20",
+            implementation: address(new MockERC20())
+        });
+
+        plugin1.functions = new PluginFunction[](1);
+        plugin1.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+
+        // Add plugin 2.
+
+        Plugin memory plugin2;
+
+        plugin2.metadata = PluginMetadata({
+            name: "MockERC721",
+            metadataURI: "ipfs://MockERC721",
+            implementation: address(new MockERC721())
+        });
+
+        plugin2.functions = new PluginFunction[](1);
+        plugin2.functions[0] = PluginFunction(MockERC721.mint.selector, "mint(address,uint256)");
+
+        vm.startPrank(pluginMapDeployer);
+
+        pluginMap.setPlugin(plugin1);
+
+        vm.expectRevert("PluginState: plugin already exists for function.");
+        pluginMap.setPlugin(plugin2);
+
+        vm.stopPrank();
+    }
+
+    function test_revert_fnSelectorSignatureMismatch() external {
+        Plugin memory plugin1;
+
+        plugin1.metadata = PluginMetadata({
+            name: "MockERC20",
+            metadataURI: "ipfs://MockERC20",
+            implementation: address(new MockERC20())
+        });
+
+        plugin1.functions = new PluginFunction[](1);
+        plugin1.functions[0] = PluginFunction(MockERC20.mint.selector, "hello()");
+
+        vm.prank(pluginMapDeployer);
+        vm.expectRevert("PluginState: fn selector and signature mismatch.");
+        pluginMap.setPlugin(plugin1);
+    }
+
+    function test_revert_samePluginName() external {
+        // Add plugin 1.
+
+        Plugin memory plugin1;
+
+        plugin1.metadata = PluginMetadata({
+            name: "MockERC20",
+            metadataURI: "ipfs://MockERC20",
+            implementation: address(new MockERC20())
+        });
+
+        plugin1.functions = new PluginFunction[](1);
+        plugin1.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+
+        // Add plugin 2.
+
+        Plugin memory plugin2;
+
+        plugin2.metadata = PluginMetadata({
+            name: "MockERC20", // same plugin name
+            metadataURI: "ipfs://MockERC721",
+            implementation: address(new MockERC721())
+        });
+
+        plugin2.functions = new PluginFunction[](1);
+        plugin2.functions[0] = PluginFunction(MockERC721.mint.selector, "mint(address,uint256)");
+
+        vm.startPrank(pluginMapDeployer);
+
+        pluginMap.setPlugin(plugin1);
+
+        vm.expectRevert("PluginState: plugin already exists.");
+        pluginMap.setPlugin(plugin2);
+
+        vm.stopPrank();
+    }
+
+    function test_revert_emptyPluginImplementation() external {
+        Plugin memory plugin1;
+
+        plugin1.metadata = PluginMetadata({
+            name: "MockERC20",
+            metadataURI: "ipfs://MockERC20",
+            implementation: address(0)
+        });
+
+        plugin1.functions = new PluginFunction[](1);
+        plugin1.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+
+        vm.prank(pluginMapDeployer);
+        vm.expectRevert("PluginState: adding plugin without implementation.");
+        pluginMap.setPlugin(plugin1);
     }
 }
