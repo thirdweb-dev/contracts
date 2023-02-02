@@ -40,12 +40,18 @@ contract PluginState is IPlugin {
         require(data.pluginNames.add(name), "PluginData: plugin already exists.");
         data.plugins[name].metadata = _plugin.metadata;
 
+        require(_plugin.metadata.implementation != address(0), "PluginState: adding plugin without implementation.");
+
         uint256 len = _plugin.functions.length;
         for (uint256 i = 0; i < len; i += 1) {
             require(
                 _plugin.functions[i].functionSelector ==
                     bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature))),
                 "PluginData: fn selector and signature mismatch."
+            );
+            require(
+                data.pluginMetadata[_plugin.functions[i].functionSelector].implementation == address(0),
+                "PluginState: plugin already exists for function."
             );
 
             data.pluginMetadata[_plugin.functions[i].functionSelector] = _plugin.metadata;
