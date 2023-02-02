@@ -19,11 +19,14 @@ abstract contract Router is PluginState, Multicall, ERC165, IRouter {
                             State variables
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice The PluginMap that stores default plugins of the router.
     address public immutable pluginMap;
+
+    /// @notice The PluginRegistry that stores all latest, vetted plugins available to router.
     address public immutable pluginRegistry;
 
     /*///////////////////////////////////////////////////////////////
-                    Constructor + initializer logic
+                                Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(address _pluginRegistry, string[] memory _pluginNames) {
@@ -44,9 +47,7 @@ abstract contract Router is PluginState, Multicall, ERC165, IRouter {
                                 ERC 165
     //////////////////////////////////////////////////////////////*/
 
-    /**
-     * @dev See {IERC165-supportsInterface}.
-     */
+    /// @dev See {IERC165-supportsInterface}.
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IRouter).interfaceId || super.supportsInterface(interfaceId);
     }
@@ -94,7 +95,7 @@ abstract contract Router is PluginState, Multicall, ERC165, IRouter {
                         External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Add functionality to the contract.
+    /// @dev Adds a new plugin to the router.
     function addPlugin(string memory _pluginName) external {
         require(_canSetPlugin(), "Router: caller not authorized");
 
@@ -103,7 +104,7 @@ abstract contract Router is PluginState, Multicall, ERC165, IRouter {
         _addPlugin(plugin);
     }
 
-    /// @dev Update or override existing functionality.
+    /// @dev Updates an existing plugin in the router, or overrides a default plugin.
     function updatePlugin(string memory _pluginName) external {
         require(_canSetPlugin(), "Router: caller not authorized");
 
@@ -112,7 +113,7 @@ abstract contract Router is PluginState, Multicall, ERC165, IRouter {
         _updatePlugin(plugin);
     }
 
-    /// @dev Remove existing functionality from the contract.
+    /// @dev Removes an existing plugin from the router.
     function removePlugin(string memory _pluginName) external {
         require(_canSetPlugin(), "Router: caller not authorized");
 
@@ -123,6 +124,10 @@ abstract contract Router is PluginState, Multicall, ERC165, IRouter {
                             View functions
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     *  @notice Returns all plugins stored. Override default lugins stored in router are
+     *          given precedence over default plugins in PluginMap.
+     */
     function getAllPlugins() external view returns (Plugin[] memory allPlugins) {
         Plugin[] memory mapPlugins = IPluginMap(pluginMap).getAllPlugins();
         uint256 mapPluginsLen = mapPlugins.length;
@@ -157,6 +162,7 @@ abstract contract Router is PluginState, Multicall, ERC165, IRouter {
         }
     }
 
+    /// @dev Returns all functions that belong to the given plugin contract.
     function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         bool isOverride = data.pluginNames.contains(_pluginName);
@@ -166,6 +172,7 @@ abstract contract Router is PluginState, Multicall, ERC165, IRouter {
                 : IPluginMap(pluginMap).getAllFunctionsOfPlugin(_pluginName);
     }
 
+    /// @dev Returns the plugin metadata for a given function.
     function getPluginForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         PluginMetadata memory metadata = data.pluginMetadata[_functionSelector];
@@ -175,6 +182,7 @@ abstract contract Router is PluginState, Multicall, ERC165, IRouter {
         return isOverride ? metadata : IPluginMap(pluginMap).getPluginForFunction(_functionSelector);
     }
 
+    /// @dev Returns the plugin's implementation smart contract address.
     function getPluginImplementation(string memory _pluginName) external view returns (address) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         bool isOverride = data.pluginNames.contains(_pluginName);
@@ -185,6 +193,7 @@ abstract contract Router is PluginState, Multicall, ERC165, IRouter {
                 : IPluginMap(pluginMap).getPluginImplementation(_pluginName);
     }
 
+    /// @dev Returns the plugin metadata and functions for a given plugin.
     function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         bool isOverride = data.pluginNames.contains(_pluginName);
@@ -196,12 +205,12 @@ abstract contract Router is PluginState, Multicall, ERC165, IRouter {
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev View address of the plugged-in functionality contract for a given function signature.
-    function _getPluginForFunction(bytes4 _functionSelector) public view returns (address) {
+    /// @dev Returns the plugin implementation address stored in router, for the given function.
+    function _getPluginForFunction(bytes4 _functionSelector) internal view returns (address) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         return data.pluginMetadata[_functionSelector].implementation;
     }
 
-    /// @dev Returns whether plug-in can be set in the given execution context.
+    /// @dev Returns whether a plugin can be set in the given execution context.
     function _canSetPlugin() internal view virtual returns (bool);
 }

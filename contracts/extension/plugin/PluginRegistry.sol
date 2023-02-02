@@ -21,14 +21,17 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable, PluginState {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Adds a new plugin to the registry.
     function addPlugin(Plugin memory _plugin) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _addPlugin(_plugin);
     }
 
+    /// @notice Updates an existing plugin in the registry.
     function updatePlugin(Plugin memory _plugin) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _updatePlugin(_plugin);
     }
 
+    /// @notice Remove an existing plugin from the registry.
     function removePlugin(string memory _pluginName) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _removePlugin(_pluginName);
     }
@@ -37,6 +40,7 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable, PluginState {
                             View functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Returns all plugins stored.
     function getAllPlugins() external view returns (Plugin[] memory allPlugins) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
 
@@ -50,12 +54,14 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable, PluginState {
         }
     }
 
+    /// @notice Returns all functions that belong to the given plugin contract.
     function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         require(data.pluginNames.contains(_pluginName), "PluginRegistry: plugin does not exist.");
         return data.plugins[_pluginName].functions;
     }
 
+    /// @notice Returns the plugin metadata for a given function.
     function getPluginForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         PluginMetadata memory metadata = data.pluginMetadata[_functionSelector];
@@ -63,12 +69,14 @@ contract PluginRegistry is IPluginRegistry, PermissionsEnumerable, PluginState {
         return metadata;
     }
 
+    /// @notice Returns the plugin's implementation smart contract address.
     function getPluginImplementation(string memory _pluginName) external view returns (address) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         require(data.pluginNames.contains(_pluginName), "PluginRegistry: plugin does not exist.");
         return data.plugins[_pluginName].metadata.implementation;
     }
 
+    /// @notice Returns the plugin metadata and functions for a given plugin.
     function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         require(data.pluginNames.contains(_pluginName), "PluginRegistry: plugin does not exist.");

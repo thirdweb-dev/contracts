@@ -8,8 +8,11 @@ library PluginStateStorage {
     bytes32 public constant PLUGIN_STATE_STORAGE_POSITION = keccak256("plugin.state.storage");
 
     struct Data {
+        /// @dev Set of names of all plugins stored.
         TWStringSet.Set pluginNames;
+        /// @dev Mapping from plugin name => `Plugin` i.e. plugin metadata and functions.
         mapping(string => IPlugin.Plugin) plugins;
+        /// @dev Mapping from function selector => plugin metadata of the plugin the function belongs to.
         mapping(bytes4 => IPlugin.PluginMetadata) pluginMetadata;
     }
 
@@ -23,6 +26,10 @@ library PluginStateStorage {
 
 contract PluginState is IPlugin {
     using TWStringSet for TWStringSet.Set;
+
+    /*///////////////////////////////////////////////////////////////
+                        Internal functions
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Stores a new plugin in the contract.
     function _addPlugin(Plugin memory _plugin) internal {

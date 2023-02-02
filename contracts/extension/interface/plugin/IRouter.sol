@@ -8,7 +8,7 @@ interface IRouter is IPluginMap {
                         External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Add a new plugin to the router.
+    /// @dev Adds a new plugin to the router.
     function addPlugin(string memory pluginName) external;
 
     /// @dev Updates an existing plugin in the router, or overrides a default plugin.
