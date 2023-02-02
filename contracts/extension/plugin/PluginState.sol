@@ -4,8 +4,8 @@ pragma solidity ^0.8.0;
 import "../interface/plugin/IPlugin.sol";
 import "../../lib/TWStringSet.sol";
 
-library PluginDataStorage {
-    bytes32 public constant PLUGIN_DATA_STORAGE_POSITION = keccak256("plugin.datastore.storage");
+library PluginStateStorage {
+    bytes32 public constant PLUGIN_STATE_STORAGE_POSITION = keccak256("plugin.state.storage");
 
     struct Data {
         TWStringSet.Set pluginNames;
@@ -13,20 +13,20 @@ library PluginDataStorage {
         mapping(bytes4 => IPlugin.PluginMetadata) pluginMetadata;
     }
 
-    function pluginDataStorage() internal pure returns (Data storage pluginData) {
-        bytes32 position = PLUGIN_DATA_STORAGE_POSITION;
+    function pluginStateStorage() internal pure returns (Data storage pluginStateData) {
+        bytes32 position = PLUGIN_STATE_STORAGE_POSITION;
         assembly {
-            pluginData.slot := position
+            pluginStateData.slot := position
         }
     }
 }
 
-contract PluginData is IPlugin {
+contract PluginState is IPlugin {
     using TWStringSet for TWStringSet.Set;
 
-    /// @dev Add functionality to the contract.
+    /// @dev Stores a new plugin in the contract.
     function _addPlugin(Plugin memory _plugin) internal {
-        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
+        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
 
         string memory name = _plugin.metadata.name;
 
@@ -56,9 +56,9 @@ contract PluginData is IPlugin {
         require(selSigMatch, "PluginData: fn selector and signature mismatch.");
     }
 
-    /// @dev Update or override existing functionality.
+    /// @dev Updates / overrides an existing plugin in the contract.
     function _updatePlugin(Plugin memory _plugin) internal {
-        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
+        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
 
         string memory name = _plugin.metadata.name;
         require(data.pluginNames.contains(name), "PluginData: plugin does not exist.");
@@ -93,9 +93,9 @@ contract PluginData is IPlugin {
         require(selSigMatch, "PluginData: fn selector and signature mismatch.");
     }
 
-    /// @dev Remove existing functionality from the contract.
+    /// @dev Removes an existing plugin from the contract.
     function _removePlugin(string memory _pluginName) internal {
-        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
+        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
 
         require(data.pluginNames.remove(_pluginName), "PluginData: plugin does not exists.");
 

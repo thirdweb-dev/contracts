@@ -10,9 +10,9 @@ import "../Multicall.sol";
 import { PluginMap } from "./PluginMap.sol";
 import { IPluginRegistry } from "../interface/plugin/IPluginRegistry.sol";
 
-import "./PluginData.sol";
+import "./PluginState.sol";
 
-abstract contract Router is PluginData, Multicall, ERC165, IRouter {
+abstract contract Router is PluginState, Multicall, ERC165, IRouter {
     using TWStringSet for TWStringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
@@ -127,7 +127,7 @@ abstract contract Router is PluginData, Multicall, ERC165, IRouter {
         Plugin[] memory mapPlugins = IPluginMap(pluginMap).getAllPlugins();
         uint256 mapPluginsLen = mapPlugins.length;
 
-        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
+        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         string[] memory names = data.pluginNames.values();
         uint256 namesLen = names.length;
 
@@ -158,7 +158,7 @@ abstract contract Router is PluginData, Multicall, ERC165, IRouter {
     }
 
     function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
-        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
+        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         bool isOverride = data.pluginNames.contains(_pluginName);
         return
             isOverride
@@ -167,7 +167,7 @@ abstract contract Router is PluginData, Multicall, ERC165, IRouter {
     }
 
     function getPluginForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
-        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
+        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         PluginMetadata memory metadata = data.pluginMetadata[_functionSelector];
 
         bool isOverride = metadata.implementation != address(0);
@@ -176,7 +176,7 @@ abstract contract Router is PluginData, Multicall, ERC165, IRouter {
     }
 
     function getPluginImplementation(string memory _pluginName) external view returns (address) {
-        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
+        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         bool isOverride = data.pluginNames.contains(_pluginName);
 
         return
@@ -186,7 +186,7 @@ abstract contract Router is PluginData, Multicall, ERC165, IRouter {
     }
 
     function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
-        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
+        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         bool isOverride = data.pluginNames.contains(_pluginName);
 
         return isOverride ? data.plugins[_pluginName] : IPluginMap(pluginMap).getPlugin(_pluginName);
@@ -198,7 +198,7 @@ abstract contract Router is PluginData, Multicall, ERC165, IRouter {
 
     /// @dev View address of the plugged-in functionality contract for a given function signature.
     function _getPluginForFunction(bytes4 _functionSelector) public view returns (address) {
-        PluginDataStorage.Data storage data = PluginDataStorage.pluginDataStorage();
+        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         return data.pluginMetadata[_functionSelector].implementation;
     }
 
