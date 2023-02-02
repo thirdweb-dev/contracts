@@ -41,15 +41,12 @@ contract PluginState is IPlugin {
         data.plugins[name].metadata = _plugin.metadata;
 
         uint256 len = _plugin.functions.length;
-        bool selSigMatch = false;
-
         for (uint256 i = 0; i < len; i += 1) {
-            selSigMatch =
+            require(
                 _plugin.functions[i].functionSelector ==
-                bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature)));
-            if (!selSigMatch) {
-                break;
-            }
+                    bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature))),
+                "PluginData: fn selector and signature mismatch."
+            );
 
             data.pluginMetadata[_plugin.functions[i].functionSelector] = _plugin.metadata;
             data.plugins[name].functions.push(_plugin.functions[i]);
@@ -60,7 +57,6 @@ contract PluginState is IPlugin {
                 _plugin.functions[i].functionSignature
             );
         }
-        require(selSigMatch, "PluginData: fn selector and signature mismatch.");
     }
 
     /// @dev Updates / overrides an existing plugin in the contract.
@@ -85,15 +81,12 @@ contract PluginState is IPlugin {
         }
 
         uint256 len = _plugin.functions.length;
-        bool selSigMatch = false;
-
         for (uint256 i = 0; i < len; i += 1) {
-            selSigMatch =
+            require(
                 _plugin.functions[i].functionSelector ==
-                bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature)));
-            if (!selSigMatch) {
-                break;
-            }
+                    bytes4(keccak256(abi.encodePacked(_plugin.functions[i].functionSignature))),
+                "PluginData: fn selector and signature mismatch."
+            );
 
             data.pluginMetadata[_plugin.functions[i].functionSelector] = _plugin.metadata;
             data.plugins[name].functions.push(_plugin.functions[i]);
@@ -105,7 +98,6 @@ contract PluginState is IPlugin {
                 _plugin.functions[i].functionSignature
             );
         }
-        require(selSigMatch, "PluginData: fn selector and signature mismatch.");
     }
 
     /// @dev Removes an existing plugin from the contract.

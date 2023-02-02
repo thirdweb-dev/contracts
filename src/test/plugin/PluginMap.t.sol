@@ -13,8 +13,6 @@ contract PluginMapTest is BaseTest, IPlugin {
 
     PluginMap private pluginMap;
 
-    // Plugin[] private plugins;
-
     mapping(uint256 => Plugin) private plugins;
 
     function setUp() public override {
@@ -108,5 +106,11 @@ contract PluginMapTest is BaseTest, IPlugin {
             }
             assertEq(metadata.implementation, pluginMap.getPluginImplementation(metadata.name));
         }
+    }
+
+    function test_revert_setPlugin_nonDeployerCaller() external {
+        vm.expectRevert("PluginMap: unauthorized caller.");
+        vm.prank(address(0x999));
+        pluginMap.setPlugin(plugins[0]);
     }
 }
