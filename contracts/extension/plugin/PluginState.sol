@@ -74,7 +74,15 @@ contract PluginState is IPlugin {
         require(_plugin.metadata.implementation != oldImplementation, "PluginData: re-adding same plugin.");
 
         data.plugins[name].metadata = _plugin.metadata;
+
+        PluginFunction[] memory oldFunctions = data.plugins[name].functions;
+        uint256 oldFunctionsLen = oldFunctions.length;
+
         delete data.plugins[name].functions;
+
+        for (uint256 i = 0; i < oldFunctionsLen; i += 1) {
+            delete data.pluginMetadata[oldFunctions[i].functionSelector];
+        }
 
         uint256 len = _plugin.functions.length;
         bool selSigMatch = false;
