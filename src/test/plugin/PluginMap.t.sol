@@ -108,8 +108,8 @@ contract PluginMapTest is BaseTest, IPlugin {
             assertEq(plugin.metadata.metadataURI, plugins[i].metadata.metadataURI);
             assertEq(fnsLen, plugin.functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(plugins[i].functions[j].functionSelector, getAllPlugins[i].functions[j].functionSelector);
-                assertEq(plugins[i].functions[j].functionSignature, getAllPlugins[i].functions[j].functionSignature);
+                assertEq(plugins[i].functions[j].functionSelector, plugin.functions[j].functionSelector);
+                assertEq(plugins[i].functions[j].functionSignature, plugin.functions[j].functionSignature);
             }
         }
         for (uint256 i = 0; i < len; i += 1) {
