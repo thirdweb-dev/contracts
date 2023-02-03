@@ -6,7 +6,7 @@ import "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
 import { PluginMap, IPluginMap } from "contracts/extension/plugin/PluginMap.sol";
-import { MarketplaceRouter } from "contracts/marketplace/entrypoint/MarketplaceRouter.sol";
+import { MarketplaceV3 } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
 import { DirectListingsLogic } from "contracts/marketplace/direct-listings/DirectListingsLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
@@ -103,8 +103,8 @@ contract MarketplaceDirectListingsTest is BaseTest {
         PluginMap map = new PluginMap(plugins);
         assertEq(map.getAllFunctionsOfPlugin(directListings).length, 13);
 
-        // [4] Deploy `MarketplaceRouter`
-        MarketplaceRouter router = new MarketplaceRouter(address(map));
+        // [4] Deploy `MarketplaceV3`
+        MarketplaceV3 router = new MarketplaceV3(address(map));
 
         vm.stopPrank();
 
@@ -114,7 +114,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
             new TWProxy(
                 address(router),
                 abi.encodeCall(
-                    MarketplaceRouter.initialize,
+                    MarketplaceV3.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
@@ -130,7 +130,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceRouter_Impl");
+        vm.label(address(router), "MarketplaceV3_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(directListings, "DirectListings_Extension");
         vm.label(seller, "Seller");
@@ -1562,9 +1562,9 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
         PluginMap map = new PluginMap(plugins);
         assertEq(map.getAllFunctionsOfPlugin(directListings).length, 13);
 
-        // [4] Deploy `MarketplaceRouter`
+        // [4] Deploy `MarketplaceV3`
 
-        MarketplaceRouter router = new MarketplaceRouter(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map));
 
         vm.stopPrank();
 
@@ -1574,7 +1574,7 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
             new TWProxy(
                 address(router),
                 abi.encodeCall(
-                    MarketplaceRouter.initialize,
+                    MarketplaceV3.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
@@ -1588,7 +1588,7 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceRouter_Impl");
+        vm.label(address(router), "MarketplaceV3_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(directListings, "DirectListings_Extension");
         vm.label(seller, "Seller");

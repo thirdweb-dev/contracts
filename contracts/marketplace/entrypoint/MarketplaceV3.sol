@@ -31,7 +31,7 @@ import "../../extension/plugin/ERC2771ContextUpgradeableLogic.sol";
  *      - Offers
  */
 
-contract MarketplaceRouter is
+contract MarketplaceV3 is
     ContractMetadataLogic,
     PlatformFeeLogic,
     PermissionsEnumerableLogic,

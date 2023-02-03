@@ -7,7 +7,7 @@ import "../utils/BaseTest.sol";
 // Test contracts and interfaces
 
 import { PluginMap, IPluginMap } from "contracts/extension/plugin/PluginMap.sol";
-import { MarketplaceRouter } from "contracts/marketplace/entrypoint/MarketplaceRouter.sol";
+import { MarketplaceV3 } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
 import { OffersLogic } from "contracts/marketplace/offers/OffersLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
@@ -62,18 +62,18 @@ contract MarketplaceOffersTest is BaseTest {
         PluginMap map = new PluginMap(plugins);
         assertEq(map.getAllFunctionsOfPlugin(offers).length, 7);
 
-        // [4] Deploy `MarketplaceRouter`
-        MarketplaceRouter router = new MarketplaceRouter(address(map));
+        // [4] Deploy `MarketplaceV3`
+        MarketplaceV3 router = new MarketplaceV3(address(map));
 
         vm.stopPrank();
 
-        // [5] Deploy proxy pointing to `MarketplaceRouter`
+        // [5] Deploy proxy pointing to `MarketplaceV3`
         vm.prank(_marketplaceDeployer);
         marketplace = address(
             new TWProxy(
                 address(router),
                 abi.encodeCall(
-                    MarketplaceRouter.initialize,
+                    MarketplaceV3.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
@@ -87,7 +87,7 @@ contract MarketplaceOffersTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceRouter_Impl");
+        vm.label(address(router), "MarketplaceV3_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(offers, "Offers_Extension");
         vm.label(seller, "Seller");
