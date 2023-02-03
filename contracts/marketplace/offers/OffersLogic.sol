@@ -127,10 +127,11 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
         _payout(_targetOffer.offeror, _msgSender(), _targetOffer.currency, _targetOffer.totalPrice, _targetOffer);
         _transferOfferTokens(_msgSender(), _targetOffer.offeror, _targetOffer.quantity, _targetOffer);
 
-        emit NewSale(
+        emit AcceptedOffer(
             _targetOffer.offerId,
             _targetOffer.assetContract,
             _targetOffer.offeror,
+            _targetOffer.tokenId,
             _msgSender(),
             _targetOffer.quantity,
             _targetOffer.totalPrice

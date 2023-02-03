@@ -92,6 +92,7 @@ interface IDirectListings {
         uint256 indexed listingId,
         address indexed assetContract,
         address indexed listingCreator,
+        uint256 tokenId,
         address buyer,
         uint256 quantityBought,
         uint256 totalPricePaid
@@ -294,13 +295,17 @@ interface IEnglishAuctions {
     event NewAuction(address indexed auctionCreator, uint256 indexed auctionId, Auction auction);
 
     /// @dev Emitted when a new bid is made in an auction.
-    event NewBid(uint256 indexed auctionId, address indexed bidder, uint256 bidAmount);
+    event NewBid(uint256 indexed auctionId, address indexed bidder, uint256 bidAmount, Auction auction);
+
+    /// @notice Emitted when a auction is cancelled.
+    event CancelledAuction(address indexed auctionCreator, uint256 indexed auctionId);
 
     /// @dev Emitted when an auction is closed.
     event AuctionClosed(
         uint256 indexed auctionId,
+        address indexed assetContract,
         address indexed closer,
-        bool indexed cancelled,
+        uint256 tokenId,
         address auctionCreator,
         address winningBidder
     );
@@ -444,10 +449,11 @@ interface IOffers {
     event CancelledOffer(address indexed offeror, uint256 indexed offerId);
 
     /// @dev Emitted when an offer is accepted.
-    event NewSale(
+    event AcceptedOffer(
         uint256 indexed offerId,
         address indexed assetContract,
         address indexed offeror,
+        uint256 tokenId,
         address seller,
         uint256 quantityBought,
         uint256 totalPricePaid

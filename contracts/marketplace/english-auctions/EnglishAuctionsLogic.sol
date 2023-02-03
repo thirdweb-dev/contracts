@@ -183,7 +183,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
 
         _transferAuctionTokens(address(this), _targetAuction.auctionCreator, _targetAuction);
 
-        emit AuctionClosed(_targetAuction.auctionId, _msgSender(), true, _targetAuction.auctionCreator, address(0));
+        emit CancelledAuction(_targetAuction.auctionCreator, _auctionId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -339,6 +339,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         // Close auction and execute sale if there's a buyout price and incoming bid amount is buyout price.
         if (_targetAuction.buyoutBidAmount > 0 && incomingBidAmount >= _targetAuction.buyoutBidAmount) {
             incomingBidAmount = _targetAuction.buyoutBidAmount;
+
             _closeAuctionForBidder(_targetAuction, _incomingBid);
         } else {
             /**
@@ -384,7 +385,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             _nativeTokenWrapper
         );
 
-        emit NewBid(_targetAuction.auctionId, _incomingBid.bidder, _incomingBid.bidAmount);
+        emit NewBid(_targetAuction.auctionId, _incomingBid.bidder, _incomingBid.bidAmount, _targetAuction);
     }
 
     /// @dev Checks whether an incoming bid is the new current highest bid.
@@ -422,8 +423,9 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
 
         emit AuctionClosed(
             _targetAuction.auctionId,
+            _targetAuction.assetContract,
             _msgSender(),
-            false,
+            _targetAuction.tokenId,
             _targetAuction.auctionCreator,
             _winningBid.bidder
         );
@@ -437,7 +439,8 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         emit AuctionClosed(
             _targetAuction.auctionId,
             _msgSender(),
-            false,
+            _targetAuction.assetContract,
+            _targetAuction.tokenId,
             _targetAuction.auctionCreator,
             _winningBid.bidder
         );

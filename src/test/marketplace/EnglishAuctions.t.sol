@@ -772,6 +772,48 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
+    function _setup_newAuction_nativeToken() private returns (uint256 auctionId) {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = NATIVE_TOKEN;
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
+    }
+
     function test_state_cancelAuction() public {
         uint256 auctionId = _setup_newAuction();
         IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
@@ -1092,6 +1134,38 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         vm.expectRevert("Marketplace: not winning bid.");
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
+    }
+
+    function test_state_bidInAuction_nativeToken() public {
+        uint256 auctionId = _setup_newAuction_nativeToken();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place bid
+        vm.deal(buyer, 10 ether);
+        vm.startPrank(buyer);
+        EnglishAuctionsLogic(marketplace).bidInAuction{ value: 1 ether }(auctionId, 1 ether);
+        vm.stopPrank();
+
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
+
+        // Test consequent states.
+        // Seller is owner of token.
+        assertIsOwnerERC721(address(erc721), marketplace, tokenIds);
+        assertEq(weth.balanceOf(marketplace), 1 ether);
+        assertEq(buyer.balance, 9 ether);
+        assertEq(buyer, bidder);
+        assertEq(currency, NATIVE_TOKEN);
+        assertEq(bidAmount, 1 ether);
     }
 
     /*///////////////////////////////////////////////////////////////

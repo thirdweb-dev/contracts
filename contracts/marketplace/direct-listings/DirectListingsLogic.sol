@@ -267,23 +267,22 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
             "Marketplace: not owner or approved tokens."
         );
 
-        address targetCurrency = _currency;
         uint256 targetTotalPrice;
 
-        if (data.currencyPriceForListing[_listingId][targetCurrency] > 0) {
-            targetTotalPrice = _quantity * data.currencyPriceForListing[_listingId][targetCurrency];
+        if (data.currencyPriceForListing[_listingId][_currency] > 0) {
+            targetTotalPrice = _quantity * data.currencyPriceForListing[_listingId][_currency];
         } else {
-            require(targetCurrency == listing.currency, "Paying in invalid currency.");
+            require(_currency == listing.currency, "Paying in invalid currency.");
             targetTotalPrice = _quantity * listing.pricePerToken;
         }
 
         require(targetTotalPrice == _expectedTotalPrice, "Unexpected total price");
 
         // Check: buyer owns and has approved sufficient currency for sale.
-        if (targetCurrency == CurrencyTransferLib.NATIVE_TOKEN) {
+        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == targetTotalPrice, "Marketplace: msg.value must exactly be the total price.");
         } else {
-            _validateERC20BalAndAllowance(buyer, targetCurrency, targetTotalPrice);
+            _validateERC20BalAndAllowance(buyer, _currency, targetTotalPrice);
         }
 
         if (listing.quantity == _quantity) {
@@ -291,13 +290,14 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
         }
         data.listings[_listingId].quantity -= _quantity;
 
-        _payout(buyer, listing.listingCreator, targetCurrency, targetTotalPrice, listing);
+        _payout(buyer, listing.listingCreator, _currency, targetTotalPrice, listing);
         _transferListingTokens(listing.listingCreator, _buyFor, _quantity, listing);
 
         emit NewSale(
             listing.listingId,
             listing.assetContract,
             listing.listingCreator,
+            listing.tokenId,
             buyer,
             _quantity,
             targetTotalPrice
