@@ -36,8 +36,8 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721 {
     address public rewardToken;
 
     constructor(
-        uint128 _timeUnit,
-        uint128 _rewardsPerUnitTime,
+        uint256 _timeUnit,
+        uint256 _rewardsPerUnitTime,
         address _stakingToken,
         address _rewardToken
     ) Staking721(_stakingToken) {
