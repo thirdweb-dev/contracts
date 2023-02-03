@@ -128,31 +128,9 @@ contract AirdropERC20 is
             );
 
             if (!success) {
-                // Track failure
+                indicesOfFailed.push(i);
+                success = false;
             }
-
-            // if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
-            //     // solhint-disable avoid-low-level-calls
-            //     // slither-disable-next-line low-level-calls
-            //     (success, ) = content.recipient.call{ value: content.amount }("");
-            // } else {
-            //     try
-            //         IERC20(content.tokenAddress).transferFrom(content.tokenOwner, content.recipient, content.amount)
-            //     returns (bool _success) {
-            //         success = _success;
-            //     } catch {
-            //         // revert if failure is due to insufficient allowance
-            //         require(
-            //             IERC20(content.tokenAddress).balanceOf(content.tokenOwner) >= content.amount &&
-            //                 IERC20(content.tokenAddress).allowance(content.tokenOwner, address(this)) >= content.amount,
-            //             "Not balance or allowance"
-            //         );
-
-            //         // record and continue for all other failures, likely originating from recipient accounts
-            //         indicesOfFailed.push(i);
-            //         success = false;
-            //     }
-            // }
 
             emit AirdropPayment(content.recipient, content, !success);
         }
@@ -273,6 +251,40 @@ contract AirdropERC20 is
         }
     }
 
+    /// @notice Returns all airdrop payments cancelled.
+    function getAllAirdropPaymentsCancelled(uint256 startId, uint256 endId)
+        external
+        view
+        returns (AirdropContent[] memory contents)
+    {
+        require(startId <= endId && endId < payeeCount, "invalid range");
+        uint256 processed = processedCount;
+        if (startId >= processed) {
+            return contents;
+        }
+
+        if (endId >= processed) {
+            endId = processed - 1;
+        }
+
+        uint256 count;
+
+        for (uint256 i = startId; i <= endId; i += 1) {
+            if (isCancelled[i]) {
+                count += 1;
+            }
+        }
+
+        contents = new AirdropContent[](count);
+        uint256 index;
+
+        for (uint256 i = startId; i <= endId; i += 1) {
+            if (isCancelled[i]) {
+                contents[index++] = airdropContent[i];
+            }
+        }
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
@@ -290,6 +302,8 @@ contract AirdropERC20 is
         }
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
+            // solhint-disable avoid-low-level-calls
+            // slither-disable-next-line low-level-calls
             (success, ) = _to.call{ value: _amount }("");
         } else {
             try IERC20(_currency).transferFrom(_from, _to, _amount) returns (bool success_) {

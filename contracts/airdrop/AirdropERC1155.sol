@@ -250,6 +250,40 @@ contract AirdropERC1155 is
         }
     }
 
+    /// @notice Returns all airdrop payments cancelled.
+    function getAllAirdropPaymentsCancelled(uint256 startId, uint256 endId)
+        external
+        view
+        returns (AirdropContent[] memory contents)
+    {
+        require(startId <= endId && endId < payeeCount, "invalid range");
+        uint256 processed = processedCount;
+        if (startId >= processed) {
+            return contents;
+        }
+
+        if (endId >= processed) {
+            endId = processed - 1;
+        }
+
+        uint256 count;
+
+        for (uint256 i = startId; i <= endId; i += 1) {
+            if (isCancelled[i]) {
+                count += 1;
+            }
+        }
+
+        contents = new AirdropContent[](count);
+        uint256 index;
+
+        for (uint256 i = startId; i <= endId; i += 1) {
+            if (isCancelled[i]) {
+                contents[index++] = airdropContent[i];
+            }
+        }
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
