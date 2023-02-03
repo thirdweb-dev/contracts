@@ -241,7 +241,7 @@ Returns whether a given bid amount would make for a winning bid in an auction.
 ### AuctionClosed
 
 ```solidity
-event AuctionClosed(uint256 indexed auctionId, address indexed closer, bool indexed cancelled, address auctionCreator, address winningBidder)
+event AuctionClosed(uint256 indexed auctionId, address indexed assetContract, address indexed closer, uint256 tokenId, address auctionCreator, address winningBidder)
 ```
 
 
@@ -253,10 +253,28 @@ event AuctionClosed(uint256 indexed auctionId, address indexed closer, bool inde
 | Name | Type | Description |
 |---|---|---|
 | auctionId `indexed` | uint256 | undefined |
+| assetContract `indexed` | address | undefined |
 | closer `indexed` | address | undefined |
-| cancelled `indexed` | bool | undefined |
+| tokenId  | uint256 | undefined |
 | auctionCreator  | address | undefined |
 | winningBidder  | address | undefined |
+
+### CancelledAuction
+
+```solidity
+event CancelledAuction(address indexed auctionCreator, uint256 indexed auctionId)
+```
+
+Emitted when a auction is cancelled.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| auctionCreator `indexed` | address | undefined |
+| auctionId `indexed` | uint256 | undefined |
 
 ### NewAuction
 
@@ -279,7 +297,7 @@ event NewAuction(address indexed auctionCreator, uint256 indexed auctionId, IEng
 ### NewBid
 
 ```solidity
-event NewBid(uint256 indexed auctionId, address indexed bidder, uint256 bidAmount)
+event NewBid(uint256 indexed auctionId, address indexed bidder, uint256 bidAmount, IEnglishAuctions.Auction auction)
 ```
 
 
@@ -293,6 +311,7 @@ event NewBid(uint256 indexed auctionId, address indexed bidder, uint256 bidAmoun
 | auctionId `indexed` | uint256 | undefined |
 | bidder `indexed` | address | undefined |
 | bidAmount  | uint256 | undefined |
+| auction  | IEnglishAuctions.Auction | undefined |
 
 
 

@@ -284,7 +284,7 @@ Emitted when a new listing is created.
 ### NewSale
 
 ```solidity
-event NewSale(uint256 indexed listingId, address indexed assetContract, address indexed listingCreator, address buyer, uint256 quantityBought, uint256 totalPricePaid)
+event NewSale(uint256 indexed listingId, address indexed assetContract, address indexed listingCreator, uint256 tokenId, address buyer, uint256 quantityBought, uint256 totalPricePaid)
 ```
 
 Emitted when NFTs are bought from a listing.
@@ -298,6 +298,7 @@ Emitted when NFTs are bought from a listing.
 | listingId `indexed` | uint256 | undefined |
 | assetContract `indexed` | address | undefined |
 | listingCreator `indexed` | address | undefined |
+| tokenId  | uint256 | undefined |
 | buyer  | address | undefined |
 | quantityBought  | uint256 | undefined |
 | totalPricePaid  | uint256 | undefined |

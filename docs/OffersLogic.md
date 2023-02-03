@@ -204,6 +204,28 @@ function totalOffers() external view returns (uint256)
 
 ## Events
 
+### AcceptedOffer
+
+```solidity
+event AcceptedOffer(uint256 indexed offerId, address indexed assetContract, address indexed offeror, uint256 tokenId, address seller, uint256 quantityBought, uint256 totalPricePaid)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| offerId `indexed` | uint256 | undefined |
+| assetContract `indexed` | address | undefined |
+| offeror `indexed` | address | undefined |
+| tokenId  | uint256 | undefined |
+| seller  | address | undefined |
+| quantityBought  | uint256 | undefined |
+| totalPricePaid  | uint256 | undefined |
+
 ### CancelledOffer
 
 ```solidity
@@ -238,27 +260,6 @@ event NewOffer(address indexed offeror, uint256 indexed offerId, IOffers.Offer o
 | offeror `indexed` | address | undefined |
 | offerId `indexed` | uint256 | undefined |
 | offer  | IOffers.Offer | undefined |
-
-### NewSale
-
-```solidity
-event NewSale(uint256 indexed offerId, address indexed assetContract, address indexed offeror, address seller, uint256 quantityBought, uint256 totalPricePaid)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| offerId `indexed` | uint256 | undefined |
-| assetContract `indexed` | address | undefined |
-| offeror `indexed` | address | undefined |
-| seller  | address | undefined |
-| quantityBought  | uint256 | undefined |
-| totalPricePaid  | uint256 | undefined |
 
 
 
