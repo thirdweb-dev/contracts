@@ -114,6 +114,15 @@ contract AirdropERC721 is
             try
                 IERC721(content.tokenAddress).safeTransferFrom(content.tokenOwner, content.recipient, content.tokenId)
             {} catch {
+                // revert if failure is due to unapproved tokens
+                require(
+                    (IERC721(content.tokenAddress).ownerOf(content.tokenId) == content.tokenOwner &&
+                        address(this) == IERC721(content.tokenAddress).getApproved(content.tokenId)) ||
+                        IERC721(content.tokenAddress).isApprovedForAll(content.tokenOwner, address(this)),
+                    "Not owner or approved"
+                );
+
+                // record all other failures, likely originating from recipient accounts
                 indicesOfFailed.push(i);
                 failed = true;
             }

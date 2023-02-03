@@ -120,6 +120,14 @@ contract AirdropERC1155 is
                     ""
                 )
             {} catch {
+                // revert if failure is due to unapproved tokens
+                require(
+                    IERC1155(content.tokenAddress).balanceOf(content.tokenOwner, content.tokenId) >= content.amount &&
+                        IERC1155(content.tokenAddress).isApprovedForAll(content.tokenOwner, address(this)),
+                    "Not balance or approved"
+                );
+
+                // record and continue for all other failures, likely originating from recipient accounts
                 indicesOfFailed.push(i);
                 failed = true;
             }

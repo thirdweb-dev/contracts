@@ -64,13 +64,13 @@ contract AirdropERC721Test is BaseTest {
         drop.addRecipients(_contents);
     }
 
-    // function test_revert_airdrop_notApproved() public {
-    //     tokenOwner.setApprovalForAllERC721(address(erc721), address(drop), false);
+    function test_revert_airdrop_notApproved() public {
+        tokenOwner.setApprovalForAllERC721(address(erc721), address(drop), false);
 
-    //     vm.startPrank(deployer);
-    //     drop.addRecipients(_contents);
-    //     vm.expectRevert("ERC721: caller is not token owner nor approved");
-    //     drop.processPayments(_contents.length);
-    //     vm.stopPrank();
-    // }
+        vm.startPrank(deployer);
+        drop.addRecipients(_contents);
+        vm.expectRevert("Not owner or approved");
+        drop.processPayments(_contents.length);
+        vm.stopPrank();
+    }
 }

@@ -131,6 +131,14 @@ contract AirdropERC20 is
                 returns (bool _success) {
                     success = _success;
                 } catch {
+                    // revert if failure is due to insufficient allowance
+                    require(
+                        IERC20(content.tokenAddress).balanceOf(content.tokenOwner) >= content.amount &&
+                            IERC20(content.tokenAddress).allowance(content.tokenOwner, address(this)) >= content.amount,
+                        "Not balance or allowance"
+                    );
+
+                    // record and continue for all other failures, likely originating from recipient accounts
                     indicesOfFailed.push(i);
                     success = false;
                 }

@@ -99,13 +99,13 @@ contract AirdropERC20Test is BaseTest {
         drop.addRecipients(_contents);
     }
 
-    // function test_revert_airdrop_notApproved() public {
-    //     tokenOwner.setAllowanceERC20(address(erc20), address(drop), 0);
+    function test_revert_airdrop_notApproved() public {
+        tokenOwner.setAllowanceERC20(address(erc20), address(drop), 0);
 
-    //     vm.startPrank(deployer);
-    //     drop.addRecipients(_contents);
-    //     vm.expectRevert("ERC20: insufficient allowance");
-    //     drop.processPayments(_contents.length);
-    //     vm.stopPrank();
-    // }
+        vm.startPrank(deployer);
+        drop.addRecipients(_contents);
+        vm.expectRevert("Not balance or allowance");
+        drop.processPayments(_contents.length);
+        vm.stopPrank();
+    }
 }
