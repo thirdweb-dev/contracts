@@ -120,29 +120,39 @@ contract AirdropERC20 is
         for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); i += 1) {
             AirdropContent memory content = airdropContent[i];
 
-            bool success;
-            if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
-                // solhint-disable avoid-low-level-calls
-                // slither-disable-next-line low-level-calls
-                (success, ) = content.recipient.call{ value: content.amount }("");
-            } else {
-                try
-                    IERC20(content.tokenAddress).transferFrom(content.tokenOwner, content.recipient, content.amount)
-                returns (bool _success) {
-                    success = _success;
-                } catch {
-                    // revert if failure is due to insufficient allowance
-                    require(
-                        IERC20(content.tokenAddress).balanceOf(content.tokenOwner) >= content.amount &&
-                            IERC20(content.tokenAddress).allowance(content.tokenOwner, address(this)) >= content.amount,
-                        "Not balance or allowance"
-                    );
+            bool success = _transferCurrencyWithReturnVal(
+                content.tokenAddress,
+                content.tokenOwner,
+                content.recipient,
+                content.amount
+            );
 
-                    // record and continue for all other failures, likely originating from recipient accounts
-                    indicesOfFailed.push(i);
-                    success = false;
-                }
+            if (!success) {
+                // Track failure
             }
+
+            // if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
+            //     // solhint-disable avoid-low-level-calls
+            //     // slither-disable-next-line low-level-calls
+            //     (success, ) = content.recipient.call{ value: content.amount }("");
+            // } else {
+            //     try
+            //         IERC20(content.tokenAddress).transferFrom(content.tokenOwner, content.recipient, content.amount)
+            //     returns (bool _success) {
+            //         success = _success;
+            //     } catch {
+            //         // revert if failure is due to insufficient allowance
+            //         require(
+            //             IERC20(content.tokenAddress).balanceOf(content.tokenOwner) >= content.amount &&
+            //                 IERC20(content.tokenAddress).allowance(content.tokenOwner, address(this)) >= content.amount,
+            //             "Not balance or allowance"
+            //         );
+
+            //         // record and continue for all other failures, likely originating from recipient accounts
+            //         indicesOfFailed.push(i);
+            //         success = false;
+            //     }
+            // }
 
             emit AirdropPayment(content.recipient, content, !success);
         }
@@ -266,6 +276,35 @@ contract AirdropERC20 is
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev Transfers ERC20 tokens and returns a boolean i.e. the status of the transfer.
+    function _transferCurrencyWithReturnVal(
+        address _currency,
+        address _from,
+        address _to,
+        uint256 _amount
+    ) internal returns (bool success) {
+        if (_amount == 0) {
+            success = true;
+            return success;
+        }
+
+        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
+            (success, ) = _to.call{ value: _amount }("");
+        } else {
+            try IERC20(_currency).transferFrom(_from, _to, _amount) returns (bool success_) {
+                success = success_;
+            } catch {
+                require(
+                    IERC20(_currency).balanceOf(_from) >= _amount &&
+                        IERC20(_currency).allowance(_from, address(this)) >= _amount,
+                    "CurrencyTransferBal: insufficient balance or allowance."
+                );
+
+                success = false;
+            }
+        }
+    }
 
     /// @dev Returns whether owner can be set in the given execution context.
     function _canSetOwner() internal view virtual override returns (bool) {
