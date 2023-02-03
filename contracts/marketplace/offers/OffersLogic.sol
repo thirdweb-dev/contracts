@@ -92,7 +92,7 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
 
         data.offers[_offerId] = _offer;
 
-        emit NewOffer(_offeror, _offerId, _offer);
+        emit NewOffer(_offeror, _offerId, _params.assetContract, _offer);
     }
 
     function cancelOffer(uint256 _offerId) external onlyExistingOffer(_offerId) onlyOfferor(_offerId) {
@@ -128,9 +128,9 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
         _transferOfferTokens(_msgSender(), _targetOffer.offeror, _targetOffer.quantity, _targetOffer);
 
         emit AcceptedOffer(
+            _targetOffer.offeror,
             _targetOffer.offerId,
             _targetOffer.assetContract,
-            _targetOffer.offeror,
             _targetOffer.tokenId,
             _msgSender(),
             _targetOffer.quantity,

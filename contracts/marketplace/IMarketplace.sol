@@ -73,10 +73,20 @@ interface IDirectListings {
     }
 
     /// @notice Emitted when a new listing is created.
-    event NewListing(address indexed listingCreator, uint256 indexed listingId, Listing listing);
+    event NewListing(
+        address indexed listingCreator,
+        uint256 indexed listingId,
+        address indexed assetContract,
+        Listing listing
+    );
 
     /// @notice Emitted when a listing is updated.
-    event UpdatedListing(address indexed listingCreator, uint256 indexed listingId, Listing listing);
+    event UpdatedListing(
+        address indexed listingCreator,
+        uint256 indexed listingId,
+        address indexed assetContract,
+        Listing listing
+    );
 
     /// @notice Emitted when a listing is cancelled.
     event CancelledListing(address indexed listingCreator, uint256 indexed listingId);
@@ -89,9 +99,9 @@ interface IDirectListings {
 
     /// @notice Emitted when NFTs are bought from a listing.
     event NewSale(
+        address indexed listingCreator,
         uint256 indexed listingId,
         address indexed assetContract,
-        address indexed listingCreator,
         uint256 tokenId,
         address buyer,
         uint256 quantityBought,
@@ -292,10 +302,21 @@ interface IEnglishAuctions {
     }
 
     /// @dev Emitted when a new auction is created.
-    event NewAuction(address indexed auctionCreator, uint256 indexed auctionId, Auction auction);
+    event NewAuction(
+        address indexed auctionCreator,
+        uint256 indexed auctionId,
+        address indexed assetContract,
+        Auction auction
+    );
 
     /// @dev Emitted when a new bid is made in an auction.
-    event NewBid(uint256 indexed auctionId, address indexed bidder, uint256 bidAmount, Auction auction);
+    event NewBid(
+        uint256 indexed auctionId,
+        address indexed bidder,
+        address indexed assetContract,
+        uint256 bidAmount,
+        Auction auction
+    );
 
     /// @notice Emitted when a auction is cancelled.
     event CancelledAuction(address indexed auctionCreator, uint256 indexed auctionId);
@@ -443,16 +464,16 @@ interface IOffers {
     }
 
     /// @dev Emitted when a new offer is created.
-    event NewOffer(address indexed offeror, uint256 indexed offerId, Offer offer);
+    event NewOffer(address indexed offeror, uint256 indexed offerId, address indexed assetContract, Offer offer);
 
     /// @dev Emitted when an offer is cancelled.
     event CancelledOffer(address indexed offeror, uint256 indexed offerId);
 
     /// @dev Emitted when an offer is accepted.
     event AcceptedOffer(
+        address indexed offeror,
         uint256 indexed offerId,
         address indexed assetContract,
-        address indexed offeror,
         uint256 tokenId,
         address seller,
         uint256 quantityBought,

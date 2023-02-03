@@ -119,7 +119,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
 
         data.listings[listingId] = listing;
 
-        emit NewListing(listingCreator, listingId, listing);
+        emit NewListing(listingCreator, listingId, _params.assetContract, listing);
     }
 
     /// @notice Update parameters of a listing of NFTs.
@@ -187,7 +187,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
 
         data.listings[_listingId] = listing;
 
-        emit UpdatedListing(listingCreator, _listingId, listing);
+        emit UpdatedListing(listingCreator, _listingId, _params.assetContract, listing);
     }
 
     /// @notice Cancel a listing.
@@ -294,9 +294,9 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
         _transferListingTokens(listing.listingCreator, _buyFor, _quantity, listing);
 
         emit NewSale(
+            listing.listingCreator,
             listing.listingId,
             listing.assetContract,
-            listing.listingCreator,
             listing.tokenId,
             buyer,
             _quantity,

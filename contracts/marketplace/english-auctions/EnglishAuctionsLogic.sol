@@ -113,7 +113,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
 
         _transferAuctionTokens(auctionCreator, address(this), auction);
 
-        emit NewAuction(auctionCreator, auctionId, auction);
+        emit NewAuction(auctionCreator, auctionId, _params.assetContract, auction);
     }
 
     function bidInAuction(uint256 _auctionId, uint256 _bidAmount)
@@ -385,7 +385,13 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             _nativeTokenWrapper
         );
 
-        emit NewBid(_targetAuction.auctionId, _incomingBid.bidder, _incomingBid.bidAmount, _targetAuction);
+        emit NewBid(
+            _targetAuction.auctionId,
+            _incomingBid.bidder,
+            _targetAuction.assetContract,
+            _incomingBid.bidAmount,
+            _targetAuction
+        );
     }
 
     /// @dev Checks whether an incoming bid is the new current highest bid.
