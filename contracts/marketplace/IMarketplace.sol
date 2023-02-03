@@ -11,7 +11,7 @@ interface IDirectListings {
     }
 
     enum Status {
-        DNE,
+        UNSET,
         CREATED,
         COMPLETED,
         CANCELLED
@@ -200,7 +200,7 @@ interface IEnglishAuctions {
     }
 
     enum Status {
-        DNE,
+        UNSET,
         CREATED,
         COMPLETED,
         CANCELLED
@@ -391,7 +391,7 @@ interface IOffers {
     }
 
     enum Status {
-        DNE,
+        UNSET,
         CREATED,
         COMPLETED,
         CANCELLED
