@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./Router.sol";
+import "./TWRouter.sol";
 
-contract RouterImmutable is Router {
+contract RouterImmutable is TWRouter {
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _pluginRegistry, string[] memory _pluginNames) Router(_pluginRegistry, _pluginNames) {}
+    constructor(address _pluginRegistry, string[] memory _pluginNames) TWRouter(_pluginRegistry, _pluginNames) {}
 
     /*///////////////////////////////////////////////////////////////
                         Internal functions

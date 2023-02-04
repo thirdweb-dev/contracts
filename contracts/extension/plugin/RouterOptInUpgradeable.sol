@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./Router.sol";
+import "./TWRouter.sol";
 import "./PluginRegistry.sol";
 
 import "../PermissionsEnumerable.sol";
 
-contract RouterOptInUpgradeable is Router, PermissionsEnumerable {
+contract RouterOptInUpgradeable is TWRouter, PermissionsEnumerable {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -21,7 +21,7 @@ contract RouterOptInUpgradeable is Router, PermissionsEnumerable {
         address _pluginAdmin,
         address _pluginRegistry,
         string[] memory _pluginNames
-    ) Router(_pluginRegistry, _pluginNames) {
+    ) TWRouter(_pluginRegistry, _pluginNames) {
         _setupRole(PLUGIN_ADMIN_ROLE, _pluginAdmin);
         _setRoleAdmin(PLUGIN_ADMIN_ROLE, PLUGIN_ADMIN_ROLE);
     }
