@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../interface/plugin/IPlugin.sol";
-import "../../lib/TWStringSet.sol";
+// Interface
+import "./interface/IPlugin.sol";
+
+// Extensions
+import "../lib/TWStringSet.sol";
 
 library PluginStateStorage {
     bytes32 public constant PLUGIN_STATE_STORAGE_POSITION = keccak256("plugin.state.storage");
