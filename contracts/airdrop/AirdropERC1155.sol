@@ -157,6 +157,14 @@ contract AirdropERC1155 is
                     ""
                 )
             {} catch {
+                // revert if failure is due to unapproved tokens
+                require(
+                    IERC1155(_contents[i].tokenAddress).balanceOf(_contents[i].tokenOwner, _contents[i].tokenId) >=
+                        _contents[i].amount &&
+                        IERC1155(_contents[i].tokenAddress).isApprovedForAll(_contents[i].tokenOwner, address(this)),
+                    "Not balance or approved"
+                );
+
                 failed = true;
             }
 
@@ -192,10 +200,14 @@ contract AirdropERC1155 is
         require(startId <= endId && endId < payeeCount, "invalid range");
 
         uint256 processed = processedCount;
+        if (processed == payeeCount) {
+            return contents;
+        }
+
         if (startId < processed) {
             startId = processed;
         }
-        contents = new AirdropContent[](endId - startId);
+        contents = new AirdropContent[](endId - startId + 1);
 
         uint256 idx;
         for (uint256 i = startId; i <= endId; i += 1) {

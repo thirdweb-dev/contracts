@@ -17,7 +17,7 @@ interface IAirdropERC20 {
     /// @notice Emitted when an airdrop payment is made to a recipient.
     event AirdropPayment(address indexed recipient, AirdropContent content, bool failed);
     /// @notice Emitted when an airdrop is made using the stateless airdrop function.
-    event StatelessAirdrop(address indexed recipient, AirdropContent content);
+    event StatelessAirdrop(address indexed recipient, AirdropContent content, bool failed);
 
     /**
      *  @notice Details of amount and recipient for airdropped token.

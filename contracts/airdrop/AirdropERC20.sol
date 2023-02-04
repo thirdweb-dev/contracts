@@ -96,15 +96,27 @@ contract AirdropERC20 is
     }
 
     ///@notice Lets contract-owner cancel any pending payments.
-    function resetRecipients() external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function resetRecipients() external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 totalPayees = payeeCount;
         uint256 countOfProcessed = processedCount;
+        uint256 nativeTokenAmount;
 
         // set processedCount to payeeCount -- ignore all pending payments.
         processedCount = payeeCount;
 
         for (uint256 i = countOfProcessed; i < totalPayees; i += 1) {
+            AirdropContent memory content = airdropContent[i];
+
             isCancelled[i] = true;
+
+            if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
+                nativeTokenAmount += content.amount;
+            }
+        }
+
+        if (nativeTokenAmount > 0) {
+            // refund amount to contract admin address
+            CurrencyTransferLib.safeTransferNativeToken(msg.sender, nativeTokenAmount);
         }
     }
 
@@ -112,6 +124,7 @@ contract AirdropERC20 is
     function processPayments(uint256 paymentsToProcess) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 totalPayees = payeeCount;
         uint256 countOfProcessed = processedCount;
+        uint256 nativeTokenAmount;
 
         require(countOfProcessed + paymentsToProcess <= totalPayees, "invalid no. of payments");
 
@@ -129,10 +142,20 @@ contract AirdropERC20 is
 
             if (!success) {
                 indicesOfFailed.push(i);
+
+                if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
+                    nativeTokenAmount += content.amount;
+                }
+
                 success = false;
             }
 
             emit AirdropPayment(content.recipient, content, !success);
+        }
+
+        if (nativeTokenAmount > 0) {
+            // refund failed payments' amount to contract admin address
+            CurrencyTransferLib.safeTransferNativeToken(msg.sender, nativeTokenAmount);
         }
     }
 
@@ -146,9 +169,10 @@ contract AirdropERC20 is
     function airdrop(AirdropContent[] calldata _contents) external payable nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
         uint256 nativeTokenAmount;
+        uint256 refundAmount;
 
         for (uint256 i = 0; i < len; i++) {
-            CurrencyTransferLib.transferCurrency(
+            bool success = _transferCurrencyWithReturnVal(
                 _contents[i].tokenAddress,
                 _contents[i].tokenOwner,
                 _contents[i].recipient,
@@ -157,12 +181,21 @@ contract AirdropERC20 is
 
             if (_contents[i].tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += _contents[i].amount;
+
+                if (!success) {
+                    refundAmount += _contents[i].amount;
+                }
             }
 
-            emit StatelessAirdrop(_contents[i].recipient, _contents[i]);
+            emit StatelessAirdrop(_contents[i].recipient, _contents[i], !success);
         }
 
         require(nativeTokenAmount == msg.value, "Incorrect native token amount");
+
+        if (refundAmount > 0) {
+            // refund failed payments' amount to contract admin address
+            CurrencyTransferLib.safeTransferNativeToken(msg.sender, refundAmount);
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -193,10 +226,14 @@ contract AirdropERC20 is
         require(startId <= endId && endId < payeeCount, "invalid range");
 
         uint256 processed = processedCount;
+        if (processed == payeeCount) {
+            return contents;
+        }
+
         if (startId < processed) {
             startId = processed;
         }
-        contents = new AirdropContent[](endId - startId);
+        contents = new AirdropContent[](endId - startId + 1);
 
         uint256 idx;
         for (uint256 i = startId; i <= endId; i += 1) {
@@ -312,7 +349,7 @@ contract AirdropERC20 is
                 require(
                     IERC20(_currency).balanceOf(_from) >= _amount &&
                         IERC20(_currency).allowance(_from, address(this)) >= _amount,
-                    "CurrencyTransferBal: insufficient balance or allowance."
+                    "Not balance or allowance"
                 );
 
                 success = false;

@@ -150,6 +150,14 @@ contract AirdropERC721 is
                     _contents[i].tokenId
                 )
             {} catch {
+                // revert if failure is due to unapproved tokens
+                require(
+                    (IERC721(_contents[i].tokenAddress).ownerOf(_contents[i].tokenId) == _contents[i].tokenOwner &&
+                        address(this) == IERC721(_contents[i].tokenAddress).getApproved(_contents[i].tokenId)) ||
+                        IERC721(_contents[i].tokenAddress).isApprovedForAll(_contents[i].tokenOwner, address(this)),
+                    "Not owner or approved"
+                );
+
                 failed = true;
             }
 
@@ -185,15 +193,18 @@ contract AirdropERC721 is
         require(startId <= endId && endId < payeeCount, "invalid range");
 
         uint256 processed = processedCount;
+        if (processed == payeeCount) {
+            return contents;
+        }
+
         if (startId < processed) {
             startId = processed;
         }
-        contents = new AirdropContent[](endId - startId);
+        contents = new AirdropContent[](endId - startId + 1);
 
-        uint256 idx;
+        uint256 index;
         for (uint256 i = startId; i <= endId; i += 1) {
-            contents[idx] = airdropContent[i];
-            idx += 1;
+            contents[index++] = airdropContent[i];
         }
     }
 
