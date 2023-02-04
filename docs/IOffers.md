@@ -139,7 +139,7 @@ function makeOffer(IOffers.OfferParams _params) external nonpayable returns (uin
 ### AcceptedOffer
 
 ```solidity
-event AcceptedOffer(uint256 indexed offerId, address indexed assetContract, address indexed offeror, uint256 tokenId, address seller, uint256 quantityBought, uint256 totalPricePaid)
+event AcceptedOffer(address indexed offeror, uint256 indexed offerId, address indexed assetContract, uint256 tokenId, address seller, uint256 quantityBought, uint256 totalPricePaid)
 ```
 
 
@@ -150,9 +150,9 @@ event AcceptedOffer(uint256 indexed offerId, address indexed assetContract, addr
 
 | Name | Type | Description |
 |---|---|---|
+| offeror `indexed` | address | undefined |
 | offerId `indexed` | uint256 | undefined |
 | assetContract `indexed` | address | undefined |
-| offeror `indexed` | address | undefined |
 | tokenId  | uint256 | undefined |
 | seller  | address | undefined |
 | quantityBought  | uint256 | undefined |
@@ -178,7 +178,7 @@ event CancelledOffer(address indexed offeror, uint256 indexed offerId)
 ### NewOffer
 
 ```solidity
-event NewOffer(address indexed offeror, uint256 indexed offerId, IOffers.Offer offer)
+event NewOffer(address indexed offeror, uint256 indexed offerId, address indexed assetContract, IOffers.Offer offer)
 ```
 
 
@@ -191,6 +191,7 @@ event NewOffer(address indexed offeror, uint256 indexed offerId, IOffers.Offer o
 |---|---|---|
 | offeror `indexed` | address | undefined |
 | offerId `indexed` | uint256 | undefined |
+| assetContract `indexed` | address | undefined |
 | offer  | IOffers.Offer | undefined |
 
 

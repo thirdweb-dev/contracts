@@ -386,7 +386,7 @@ Emitted when a currency is approved as a form of payment for the listing.
 ### NewListing
 
 ```solidity
-event NewListing(address indexed listingCreator, uint256 indexed listingId, IDirectListings.Listing listing)
+event NewListing(address indexed listingCreator, uint256 indexed listingId, address indexed assetContract, IDirectListings.Listing listing)
 ```
 
 Emitted when a new listing is created.
@@ -399,12 +399,13 @@ Emitted when a new listing is created.
 |---|---|---|
 | listingCreator `indexed` | address | undefined |
 | listingId `indexed` | uint256 | undefined |
+| assetContract `indexed` | address | undefined |
 | listing  | IDirectListings.Listing | undefined |
 
 ### NewSale
 
 ```solidity
-event NewSale(uint256 indexed listingId, address indexed assetContract, address indexed listingCreator, uint256 tokenId, address buyer, uint256 quantityBought, uint256 totalPricePaid)
+event NewSale(address indexed listingCreator, uint256 indexed listingId, address indexed assetContract, uint256 tokenId, address buyer, uint256 quantityBought, uint256 totalPricePaid)
 ```
 
 Emitted when NFTs are bought from a listing.
@@ -415,9 +416,9 @@ Emitted when NFTs are bought from a listing.
 
 | Name | Type | Description |
 |---|---|---|
+| listingCreator `indexed` | address | undefined |
 | listingId `indexed` | uint256 | undefined |
 | assetContract `indexed` | address | undefined |
-| listingCreator `indexed` | address | undefined |
 | tokenId  | uint256 | undefined |
 | buyer  | address | undefined |
 | quantityBought  | uint256 | undefined |
@@ -426,7 +427,7 @@ Emitted when NFTs are bought from a listing.
 ### UpdatedListing
 
 ```solidity
-event UpdatedListing(address indexed listingCreator, uint256 indexed listingId, IDirectListings.Listing listing)
+event UpdatedListing(address indexed listingCreator, uint256 indexed listingId, address indexed assetContract, IDirectListings.Listing listing)
 ```
 
 Emitted when a listing is updated.
@@ -439,6 +440,7 @@ Emitted when a listing is updated.
 |---|---|---|
 | listingCreator `indexed` | address | undefined |
 | listingId `indexed` | uint256 | undefined |
+| assetContract `indexed` | address | undefined |
 | listing  | IDirectListings.Listing | undefined |
 
 
