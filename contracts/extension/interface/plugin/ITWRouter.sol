@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./IPluginMap.sol";
 
-interface IRouter is IPluginMap {
+interface ITWRouter is IPluginMap {
     /*///////////////////////////////////////////////////////////////
                         External functions
     //////////////////////////////////////////////////////////////*/
