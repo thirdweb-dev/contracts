@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 interface IRouter {
     fallback() external payable;
 
-    function getPluginForFunction(bytes4 _functionSelector) external view returns (address);
+    function getImplementationForFunction(bytes4 _functionSelector) external view returns (address);
 }
 
 abstract contract Router is IRouter {
@@ -19,7 +19,7 @@ abstract contract Router is IRouter {
     //////////////////////////////////////////////////////////////*/
 
     fallback() external payable virtual {
-        address pluginAddress = getPluginForFunction(msg.sig);
+        address pluginAddress = getImplementationForFunction(msg.sig);
         _delegate(pluginAddress);
     }
 
@@ -48,5 +48,5 @@ abstract contract Router is IRouter {
         }
     }
 
-    function getPluginForFunction(bytes4 _functionSelector) public view virtual returns (address);
+    function getImplementationForFunction(bytes4 _functionSelector) public view virtual returns (address);
 }
