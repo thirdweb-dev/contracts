@@ -2,17 +2,17 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import "../interface/plugin/ITWRouter.sol";
+import "./interface/ITWRouter.sol";
 
 // Extensions & libraries
-import "../../lib/TWStringSet.sol";
-import "../Multicall.sol";
+import "../lib/TWStringSet.sol";
+import "../extension/Multicall.sol";
 
 // Plugin pattern imports
 import "./Router.sol";
 import "./PluginMap.sol";
 import "./PluginState.sol";
-import "../interface/plugin/IPluginRegistry.sol";
+import "./interface/IPluginRegistry.sol";
 
 abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
     using TWStringSet for TWStringSet.Set;

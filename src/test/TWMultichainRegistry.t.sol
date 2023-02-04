@@ -6,7 +6,7 @@ import "./utils/BaseTest.sol";
 import "contracts/interfaces/ITWMultichainRegistry.sol";
 import "contracts/TWMultichainRegistry.sol";
 import "./mocks/MockThirdwebContract.sol";
-import "contracts/extension/interface/plugin/IPluginMap.sol";
+import "contracts/plugin/interface/IPluginMap.sol";
 
 interface ITWMultichainRegistryData {
     event Added(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid, string metadataUri);

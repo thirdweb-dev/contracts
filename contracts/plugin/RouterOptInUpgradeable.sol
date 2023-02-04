@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "./TWRouter.sol";
 import "./PluginRegistry.sol";
 
-import "../PermissionsEnumerable.sol";
+import "../extension/PermissionsEnumerable.sol";
 
 contract RouterOptInUpgradeable is TWRouter, PermissionsEnumerable {
     /*///////////////////////////////////////////////////////////////

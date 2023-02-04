@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/extension/interface/plugin/IPlugin.sol";
-import "contracts/extension/plugin/PluginRegistry.sol";
+import "contracts/plugin/interface/IPlugin.sol";
+import "contracts/plugin/PluginRegistry.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 
 import "../mocks/MockERC20.sol";
