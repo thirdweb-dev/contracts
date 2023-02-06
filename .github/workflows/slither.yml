@@ -14,8 +14,7 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        run: git config --system --add safe.directory *
-        uses: actions/checkout@v3
+        uses: actions/checkout@v2
         with:
           submodules: recursive
 
@@ -31,7 +30,7 @@ jobs:
           version: nightly
 
       - name: Run Slither
-        uses: crytic/slither-action@v0.2.0
+        uses: crytic/slither-action@v0.3.0
         continue-on-error: true
         id: slither
         with:
