@@ -17,7 +17,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      - run: sudo git config --global --add safe.directory "*"
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
@@ -29,6 +28,7 @@ jobs:
         uses: onbjerg/foundry-toolchain@v1
         with:
           version: nightly
+      - run: sudo git config --global --add safe.directory "*"
 
       - name: Run Slither
         uses: crytic/slither-action@v0.2.0
