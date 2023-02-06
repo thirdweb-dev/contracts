@@ -8,19 +8,32 @@ import "../lib/TWStrings.sol";
  *  @title   Permissions
  *  @dev     This contracts provides extending-contracts with role-based access control mechanisms
  */
+
+library PermissionsStorage {
+    bytes32 public constant PERMISSIONS_STORAGE_POSITION = keccak256("permissions.storage");
+
+    struct Data {
+        /// @dev Map from keccak256 hash of a role => a map from address => whether address has role.
+        mapping(bytes32 => mapping(address => bool)) _hasRole;
+        /// @dev Map from keccak256 hash of a role to role admin. See {getRoleAdmin}.
+        mapping(bytes32 => bytes32) _getRoleAdmin;
+    }
+
+    function permissionsStorage() internal pure returns (Data storage permissionsData) {
+        bytes32 position = PERMISSIONS_STORAGE_POSITION;
+        assembly {
+            permissionsData.slot := position
+        }
+    }
+}
+
 contract Permissions is IPermissions {
-    /// @dev Map from keccak256 hash of a role => a map from address => whether address has role.
-    mapping(bytes32 => mapping(address => bool)) private _hasRole;
-
-    /// @dev Map from keccak256 hash of a role to role admin. See {getRoleAdmin}.
-    mapping(bytes32 => bytes32) private _getRoleAdmin;
-
     /// @dev Default admin role for all roles. Only accounts with this role can grant/revoke other roles.
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 
     /// @dev Modifier that checks if an account has the specified role; reverts otherwise.
     modifier onlyRole(bytes32 role) {
-        _checkRole(role, msg.sender);
+        _checkRole(role, _msgSender());
         _;
     }
 
@@ -32,7 +45,8 @@ contract Permissions is IPermissions {
      *  @param account  Address of the account for which the role is being checked.
      */
     function hasRole(bytes32 role, address account) public view override returns (bool) {
-        return _hasRole[role][account];
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        return data._hasRole[role][account];
     }
 
     /**
@@ -50,8 +64,9 @@ contract Permissions is IPermissions {
      *  @param account  Address of the account for which the role is being checked.
      */
     function hasRoleWithSwitch(bytes32 role, address account) public view returns (bool) {
-        if (!_hasRole[role][address(0)]) {
-            return _hasRole[role][account];
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        if (!data._hasRole[role][address(0)]) {
+            return data._hasRole[role][account];
         }
 
         return true;
@@ -65,7 +80,8 @@ contract Permissions is IPermissions {
      *  @param role     keccak256 hash of the role. e.g. keccak256("TRANSFER_ROLE")
      */
     function getRoleAdmin(bytes32 role) external view override returns (bytes32) {
-        return _getRoleAdmin[role];
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        return data._getRoleAdmin[role];
     }
 
     /**
@@ -77,8 +93,9 @@ contract Permissions is IPermissions {
      *  @param account  Address of the account to which the role is being granted.
      */
     function grantRole(bytes32 role, address account) public virtual override {
-        _checkRole(_getRoleAdmin[role], msg.sender);
-        if (_hasRole[role][account]) {
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        _checkRole(data._getRoleAdmin[role], _msgSender());
+        if (data._hasRole[role][account]) {
             revert("Can only grant to non holders");
         }
         _setupRole(role, account);
@@ -93,7 +110,8 @@ contract Permissions is IPermissions {
      *  @param account  Address of the account from which the role is being revoked.
      */
     function revokeRole(bytes32 role, address account) public virtual override {
-        _checkRole(_getRoleAdmin[role], msg.sender);
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        _checkRole(data._getRoleAdmin[role], _msgSender());
         _revokeRole(role, account);
     }
 
@@ -106,7 +124,7 @@ contract Permissions is IPermissions {
      *  @param account  Address of the account from which the role is being revoked.
      */
     function renounceRole(bytes32 role, address account) public virtual override {
-        if (msg.sender != account) {
+        if (_msgSender() != account) {
             revert("Can only renounce for self");
         }
         _revokeRole(role, account);
@@ -114,27 +132,31 @@ contract Permissions is IPermissions {
 
     /// @dev Sets `adminRole` as `role`'s admin role.
     function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {
-        bytes32 previousAdminRole = _getRoleAdmin[role];
-        _getRoleAdmin[role] = adminRole;
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        bytes32 previousAdminRole = data._getRoleAdmin[role];
+        data._getRoleAdmin[role] = adminRole;
         emit RoleAdminChanged(role, previousAdminRole, adminRole);
     }
 
     /// @dev Sets up `role` for `account`
     function _setupRole(bytes32 role, address account) internal virtual {
-        _hasRole[role][account] = true;
-        emit RoleGranted(role, account, msg.sender);
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        data._hasRole[role][account] = true;
+        emit RoleGranted(role, account, _msgSender());
     }
 
     /// @dev Revokes `role` from `account`
     function _revokeRole(bytes32 role, address account) internal virtual {
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
         _checkRole(role, account);
-        delete _hasRole[role][account];
-        emit RoleRevoked(role, account, msg.sender);
+        delete data._hasRole[role][account];
+        emit RoleRevoked(role, account, _msgSender());
     }
 
     /// @dev Checks `role` for `account`. Reverts with a message including the required role.
     function _checkRole(bytes32 role, address account) internal view virtual {
-        if (!_hasRole[role][account]) {
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        if (!data._hasRole[role][account]) {
             revert(
                 string(
                     abi.encodePacked(
@@ -162,5 +184,13 @@ contract Permissions is IPermissions {
                 )
             );
         }
+    }
+
+    function _msgSender() internal view virtual returns (address sender) {
+        return msg.sender;
+    }
+
+    function _msgData() internal view virtual returns (bytes calldata) {
+        return msg.data;
     }
 }

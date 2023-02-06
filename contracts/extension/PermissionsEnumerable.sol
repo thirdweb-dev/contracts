@@ -9,7 +9,10 @@ import "./Permissions.sol";
  *  @dev     This contracts provides extending-contracts with role-based access control mechanisms.
  *           Also provides interfaces to view all members with a given role, and total count of members.
  */
-contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
+
+library PermissionsEnumerableStorage {
+    bytes32 public constant PERMISSIONS_ENUMERABLE_STORAGE_POSITION = keccak256("permissions.enumerable.storage");
+
     /**
      *  @notice A data structure to store data of members for a given role.
      *
@@ -23,9 +26,20 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
         mapping(address => uint256) indexOf;
     }
 
-    /// @dev map from keccak256 hash of a role to its members' data. See {RoleMembers}.
-    mapping(bytes32 => RoleMembers) private roleMembers;
+    struct Data {
+        /// @dev map from keccak256 hash of a role to its members' data. See {RoleMembers}.
+        mapping(bytes32 => RoleMembers) roleMembers;
+    }
 
+    function permissionsEnumerableStorage() internal pure returns (Data storage permissionsEnumerableData) {
+        bytes32 position = PERMISSIONS_ENUMERABLE_STORAGE_POSITION;
+        assembly {
+            permissionsEnumerableData.slot := position
+        }
+    }
+}
+
+contract PermissionsEnumerable is IPermissionsEnumerable, PermissionsLogic {
     /**
      *  @notice         Returns the role-member from a list of members for a role,
      *                  at a given index.
@@ -38,17 +52,18 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
      *  @return member  Address of account that has `role`
      */
     function getRoleMember(bytes32 role, uint256 index) external view override returns (address member) {
-        uint256 currentIndex = roleMembers[role].index;
+        PermissionsEnumerableStorage.Data storage data = PermissionsEnumerableStorage.permissionsEnumerableStorage();
+        uint256 currentIndex = data.roleMembers[role].index;
         uint256 check;
 
         for (uint256 i = 0; i < currentIndex; i += 1) {
-            if (roleMembers[role].members[i] != address(0)) {
+            if (data.roleMembers[role].members[i] != address(0)) {
                 if (check == index) {
-                    member = roleMembers[role].members[i];
+                    member = data.roleMembers[role].members[i];
                     return member;
                 }
                 check += 1;
-            } else if (hasRole(role, address(0)) && i == roleMembers[role].indexOf[address(0)]) {
+            } else if (hasRole(role, address(0)) && i == data.roleMembers[role].indexOf[address(0)]) {
                 check += 1;
             }
         }
@@ -64,10 +79,11 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
      *  @return count   Total number of accounts that have `role`
      */
     function getRoleMemberCount(bytes32 role) external view override returns (uint256 count) {
-        uint256 currentIndex = roleMembers[role].index;
+        PermissionsEnumerableStorage.Data storage data = PermissionsEnumerableStorage.permissionsEnumerableStorage();
+        uint256 currentIndex = data.roleMembers[role].index;
 
         for (uint256 i = 0; i < currentIndex; i += 1) {
-            if (roleMembers[role].members[i] != address(0)) {
+            if (data.roleMembers[role].members[i] != address(0)) {
                 count += 1;
             }
         }
@@ -92,18 +108,20 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
 
     /// @dev adds `account` to {roleMembers}, for `role`
     function _addMember(bytes32 role, address account) internal {
-        uint256 idx = roleMembers[role].index;
-        roleMembers[role].index += 1;
+        PermissionsEnumerableStorage.Data storage data = PermissionsEnumerableStorage.permissionsEnumerableStorage();
+        uint256 idx = data.roleMembers[role].index;
+        data.roleMembers[role].index += 1;
 
-        roleMembers[role].members[idx] = account;
-        roleMembers[role].indexOf[account] = idx;
+        data.roleMembers[role].members[idx] = account;
+        data.roleMembers[role].indexOf[account] = idx;
     }
 
     /// @dev removes `account` from {roleMembers}, for `role`
     function _removeMember(bytes32 role, address account) internal {
-        uint256 idx = roleMembers[role].indexOf[account];
+        PermissionsEnumerableStorage.Data storage data = PermissionsEnumerableStorage.permissionsEnumerableStorage();
+        uint256 idx = data.roleMembers[role].indexOf[account];
 
-        delete roleMembers[role].members[idx];
-        delete roleMembers[role].indexOf[account];
+        delete data.roleMembers[role].members[idx];
+        delete data.roleMembers[role].indexOf[account];
     }
 }
