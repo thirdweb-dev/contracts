@@ -14,10 +14,10 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        run: git config --system --add safe.directory *
         uses: actions/checkout@v2
         with:
           submodules: recursive
+        run: git config --system --add safe.directory *
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
