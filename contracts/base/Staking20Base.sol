@@ -9,6 +9,8 @@ import "../extension/Staking20.sol";
 import "../eip/interface/IERC20.sol";
 import "../eip/interface/IERC20Metadata.sol";
 
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
+
 /**
  *
  *  EXTENSION: Staking20
@@ -43,6 +45,9 @@ contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
 
+    /// @dev Total amount of reward tokens in the contract.
+    uint256 private rewardTokenBalance;
+
     constructor(
         uint256 _timeUnit,
         uint256 _rewardRatioNumerator,
@@ -65,9 +70,24 @@ contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
         rewardToken = _rewardToken;
     }
 
+    /// @dev Lets the contract receive ether to unwrap native tokens.
+    receive() external payable virtual {
+        require(msg.sender == nativeTokenWrapper, "caller not native token wrapper.");
+    }
+
+    /// @dev Admin deposits reward tokens.
+    function depositRewardTokens(uint256 _amount) external payable nonReentrant {
+        _depositRewardTokens(_amount); // override this for custom logic.
+    }
+
+    /// @dev Admin can withdraw excess reward tokens.
+    function withdrawRewardTokens(uint256 _amount) external nonReentrant {
+        _withdrawRewardTokens(_amount); // override this for custom logic.
+    }
+
     /// @notice View total rewards available in the staking contract.
-    function getRewardTokenBalance() external view virtual override returns (uint256 _rewardsAvailableInContract) {
-        return IERC20(rewardToken).balanceOf(address(this));
+    function getRewardTokenBalance() external view virtual override returns (uint256) {
+        return rewardTokenBalance;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -75,29 +95,69 @@ contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  @dev    Mint ERC20 rewards to the staker. Must override.
+     *  @dev    Mint ERC20 rewards to the staker. Override for custom logic.
      *
      *  @param _staker    Address for which to calculated rewards.
      *  @param _rewards   Amount of tokens to be given out as reward.
      *
      */
     function _mintRewards(address _staker, uint256 _rewards) internal virtual override {
-        // Mint or transfer reward-tokens here.
-        // e.g.
-        //
-        // IERC20(rewardToken).transfer(_staker, _rewards);
-        //
-        // OR
-        //
-        // Use a mintable ERC20, such as thirdweb's `TokenERC20.sol`
-        //
-        // TokenERC20(rewardToken).mintTo(_staker, _rewards);
-        // note: The staking contract should have minter role to mint tokens.
+        require(_rewards <= rewardTokenBalance, "Not enough reward tokens");
+        rewardTokenBalance -= _rewards;
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            rewardToken,
+            address(this),
+            _staker,
+            _rewards,
+            nativeTokenWrapper
+        );
     }
 
     /*//////////////////////////////////////////////////////////////
                         Other Internal functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev Admin deposits reward tokens -- override for custom logic.
+    function _depositRewardTokens(uint256 _amount) internal virtual {
+        require(msg.sender == owner(), "Not authorized");
+
+        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : rewardToken;
+
+        uint256 balanceBefore = IERC20(_rewardToken).balanceOf(address(this));
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            rewardToken,
+            msg.sender,
+            address(this),
+            _amount,
+            nativeTokenWrapper
+        );
+        uint256 actualAmount = IERC20(_rewardToken).balanceOf(address(this)) - balanceBefore;
+
+        rewardTokenBalance += actualAmount;
+    }
+
+    /// @dev Admin can withdraw excess reward tokens -- override for custom logic.
+    function _withdrawRewardTokens(uint256 _amount) internal virtual {
+        require(msg.sender == owner(), "Not authorized");
+
+        // to prevent locking of direct-transferred tokens
+        rewardTokenBalance = _amount > rewardTokenBalance ? 0 : rewardTokenBalance - _amount;
+
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            rewardToken,
+            address(this),
+            msg.sender,
+            _amount,
+            nativeTokenWrapper
+        );
+
+        // The withdrawal shouldn't reduce staking token balance. `>=` accounts for any accidental transfers.
+        address _stakingToken = stakingToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : stakingToken;
+        require(
+            IERC20(_stakingToken).balanceOf(address(this)) >= stakingTokenBalance,
+            "Staking token balance reduced."
+        );
+    }
 
     /// @dev Returns whether staking restrictions can be set in given execution context.
     function _canSetStakeConditions() internal view virtual override returns (bool) {
