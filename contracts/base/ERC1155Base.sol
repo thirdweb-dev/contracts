@@ -8,6 +8,7 @@ import "../extension/Multicall.sol";
 import "../extension/Ownable.sol";
 import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 
 import "../lib/TWStrings.sol";
 
@@ -28,7 +29,15 @@ import "../lib/TWStrings.sol";
  *      - EIP 2981 compliance for royalty support on NFT marketplaces.
  */
 
-contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, BatchMintMetadata {
+contract ERC1155Base is
+    ERC1155,
+    ContractMetadata,
+    Ownable,
+    Royalty,
+    Multicall,
+    BatchMintMetadata,
+    DefaultOperatorFilterer
+{
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -60,6 +69,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     ) ERC1155(_name, _symbol) {
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
+        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -228,6 +238,45 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     }
 
     /*//////////////////////////////////////////////////////////////
+                        ERC-1155 overrides
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev See {ERC1155-setApprovalForAll}
+    function setApprovalForAll(address operator, bool approved)
+        public
+        override(ERC1155)
+        onlyAllowedOperatorApproval(operator)
+    {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    /**
+     * @dev See {IERC1155-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override(ERC1155) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, id, amount, data);
+    }
+
+    /**
+     * @dev See {IERC1155-safeBatchTransferFrom}.
+     */
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public override(ERC1155) onlyAllowedOperator(from) {
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
+    }
+
+    /*//////////////////////////////////////////////////////////////
                     Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
 
@@ -248,6 +297,11 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether operator restriction can be set in the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 
