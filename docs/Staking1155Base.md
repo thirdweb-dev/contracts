@@ -4,7 +4,7 @@
 
 
 
-EXTENSION: Staking1155  The `Staking1155Base` smart contract implements NFT staking mechanism.  Allows users to stake their ERC-1155 NFTs and earn rewards in form of ERC-20 tokens.  Following features and implementation setup must be noted:      - ERC-1155 NFTs from only one collection can be staked.      - Contract admin can choose to give out rewards by either transferring or minting the rewardToken,        which is an ERC20 token. See {_mintRewards}.      - To implement custom logic for staking, reward calculation, etc. corresponding functions can be        overridden from the extension `Staking1155`.      - Ownership of the contract, with the ability to restrict certain functions to        only be called by the contract&#39;s owner.      - Multicall capability to perform multiple actions atomically.
+note: This contract is provided as a base contract.
 
 
 
@@ -43,6 +43,22 @@ Returns the contract metadata URI.
 |---|---|---|
 | _0 | string | undefined |
 
+### depositRewardTokens
+
+```solidity
+function depositRewardTokens(uint256 _amount) external payable
+```
+
+
+
+*Admin deposits reward tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount | uint256 | undefined |
+
 ### getDefaultRewardsPerUnitTime
 
 ```solidity
@@ -80,7 +96,7 @@ function getDefaultTimeUnit() external view returns (uint256 _timeUnit)
 ### getRewardTokenBalance
 
 ```solidity
-function getRewardTokenBalance() external view returns (uint256 _rewardsAvailableInContract)
+function getRewardTokenBalance() external view returns (uint256)
 ```
 
 View total rewards available in the staking contract.
@@ -92,7 +108,7 @@ View total rewards available in the staking contract.
 
 | Name | Type | Description |
 |---|---|---|
-| _rewardsAvailableInContract | uint256 | undefined |
+| _0 | uint256 | undefined |
 
 ### getRewardsPerUnitTime
 
@@ -251,6 +267,58 @@ Receives and executes a batch of function calls on this contract.
 | Name | Type | Description |
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
+
+### onERC1155BatchReceived
+
+```solidity
+function onERC1155BatchReceived(address operator, address from, uint256[] ids, uint256[] values, bytes data) external nonpayable returns (bytes4)
+```
+
+
+
+*Handles the receipt of a multiple ERC1155 token types. This function is called at the end of a `safeBatchTransferFrom` after the balances have been updated. NOTE: To accept the transfer(s), this must return `bytes4(keccak256(&quot;onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)&quot;))` (i.e. 0xbc197c81, or its own function selector).*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| operator | address | The address which initiated the batch transfer (i.e. msg.sender) |
+| from | address | The address which previously owned the token |
+| ids | uint256[] | An array containing ids of each token being transferred (order and length must match values array) |
+| values | uint256[] | An array containing amounts of each token being transferred (order and length must match ids array) |
+| data | bytes | Additional data with no specified format |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | `bytes4(keccak256(&quot;onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)&quot;))` if transfer is allowed |
+
+### onERC1155Received
+
+```solidity
+function onERC1155Received(address, address, uint256, uint256, bytes) external nonpayable returns (bytes4)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+| _1 | address | undefined |
+| _2 | uint256 | undefined |
+| _3 | uint256 | undefined |
+| _4 | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bytes4 | undefined |
 
 ### owner
 
@@ -467,6 +535,28 @@ function stakingToken() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### supportsInterface
+
+```solidity
+function supportsInterface(bytes4 interfaceId) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| interfaceId | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### withdraw
 
 ```solidity
@@ -483,6 +573,22 @@ Withdraw staked tokens.
 |---|---|---|
 | _tokenId | uint256 | ERC1155 token-id to withdraw. |
 | _amount | uint256 | Amount to withdraw. |
+
+### withdrawRewardTokens
+
+```solidity
+function withdrawRewardTokens(uint256 _amount) external nonpayable
+```
+
+
+
+*Admin can withdraw excess reward tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount | uint256 | undefined |
 
 
 
