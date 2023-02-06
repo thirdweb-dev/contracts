@@ -15,9 +15,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        run: git config --system --add safe.directory *
         with:
           submodules: recursive
-      - run: git config --system --add safe.directory "*"
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
