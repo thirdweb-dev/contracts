@@ -33,7 +33,7 @@ contract Permissions is IPermissions {
 
     /// @dev Modifier that checks if an account has the specified role; reverts otherwise.
     modifier onlyRole(bytes32 role) {
-        _checkRole(role, _msgSender());
+        _checkRole(role, msg.sender);
         _;
     }
 
@@ -94,7 +94,7 @@ contract Permissions is IPermissions {
      */
     function grantRole(bytes32 role, address account) public virtual override {
         PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
-        _checkRole(data._getRoleAdmin[role], _msgSender());
+        _checkRole(data._getRoleAdmin[role], msg.sender);
         if (data._hasRole[role][account]) {
             revert("Can only grant to non holders");
         }
@@ -111,7 +111,7 @@ contract Permissions is IPermissions {
      */
     function revokeRole(bytes32 role, address account) public virtual override {
         PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
-        _checkRole(data._getRoleAdmin[role], _msgSender());
+        _checkRole(data._getRoleAdmin[role], msg.sender);
         _revokeRole(role, account);
     }
 
@@ -124,7 +124,7 @@ contract Permissions is IPermissions {
      *  @param account  Address of the account from which the role is being revoked.
      */
     function renounceRole(bytes32 role, address account) public virtual override {
-        if (_msgSender() != account) {
+        if (msg.sender != account) {
             revert("Can only renounce for self");
         }
         _revokeRole(role, account);
@@ -142,7 +142,7 @@ contract Permissions is IPermissions {
     function _setupRole(bytes32 role, address account) internal virtual {
         PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
         data._hasRole[role][account] = true;
-        emit RoleGranted(role, account, _msgSender());
+        emit RoleGranted(role, account, msg.sender);
     }
 
     /// @dev Revokes `role` from `account`
@@ -150,7 +150,7 @@ contract Permissions is IPermissions {
         PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
         _checkRole(role, account);
         delete data._hasRole[role][account];
-        emit RoleRevoked(role, account, _msgSender());
+        emit RoleRevoked(role, account, msg.sender);
     }
 
     /// @dev Checks `role` for `account`. Reverts with a message including the required role.
@@ -184,13 +184,5 @@ contract Permissions is IPermissions {
                 )
             );
         }
-    }
-
-    function _msgSender() internal view virtual returns (address sender) {
-        return msg.sender;
-    }
-
-    function _msgData() internal view virtual returns (bytes calldata) {
-        return msg.data;
     }
 }

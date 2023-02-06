@@ -5,6 +5,7 @@ import "../plugin/TWRouter.sol";
 import "../extension/PermissionsEnumerable.sol";
 import "../extension/Initializable.sol";
 import "../openzeppelin-presets/utils/EnumerableSet.sol";
+import "../openzeppelin-presets/metatx/ERC2771Context.sol";
 import "../interfaces/ITWMultichainRegistry.sol";
 
 library TWMultichainRegistryStorage {
@@ -26,7 +27,7 @@ library TWMultichainRegistryStorage {
     }
 }
 
-contract TWMultichainRegistry is ITWMultichainRegistry, Initializable, TWRouter, PermissionsEnumerable {
+contract TWMultichainRegistry is ITWMultichainRegistry, Initializable, TWRouter, ERC2771Context, PermissionsEnumerable {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -47,8 +48,14 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Initializable, TWRouter,
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Initializer logic
+                    Constructor and Initializer logic
     //////////////////////////////////////////////////////////////*/
+
+    constructor(
+        address[] memory _trustedForwarder,
+        address _pluginRegistry,
+        string[] memory _pluginNames
+    ) ERC2771Context(_trustedForwarder) TWRouter(_pluginRegistry, _pluginNames) {}
 
     function initialize(address _defaultAdmin) external initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -150,7 +157,7 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Initializable, TWRouter,
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether a plugin can be set in the given execution context.
-    function _canSetPlugin() internal view virtual returns (bool) {
+    function _canSetPlugin() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }

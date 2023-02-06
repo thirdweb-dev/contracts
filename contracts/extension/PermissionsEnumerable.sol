@@ -39,7 +39,7 @@ library PermissionsEnumerableStorage {
     }
 }
 
-contract PermissionsEnumerable is IPermissionsEnumerable, PermissionsLogic {
+contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
     /**
      *  @notice         Returns the role-member from a list of members for a role,
      *                  at a given index.

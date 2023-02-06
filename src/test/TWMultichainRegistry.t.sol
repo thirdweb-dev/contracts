@@ -4,9 +4,10 @@ pragma solidity ^0.8.11;
 // Test imports
 import "./utils/BaseTest.sol";
 import "contracts/interfaces/ITWMultichainRegistry.sol";
-import "contracts/TWMultichainRegistry.sol";
+import { TWMultichainRegistry } from "contracts/registry/TWMultichainRegistry.sol";
 import "./mocks/MockThirdwebContract.sol";
 import "contracts/plugin/interface/IPluginMap.sol";
+import "contracts/TWProxy.sol";
 
 interface ITWMultichainRegistryData {
     event Added(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid, string metadataUri);
@@ -43,16 +44,27 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
             deploymentAddresses.push(depl);
         }
 
+        string[] memory pluginNames = new string[](0);
+
         vm.startPrank(factoryAdmin_);
-        _registry = new TWMultichainRegistry(address(0));
+        address payable registryImpl = payable(
+            address(new TWMultichainRegistry(forwarders(), address(0), pluginNames))
+        );
+
+        _registry = TWMultichainRegistry(
+            payable(
+                address(
+                    new TWProxy(
+                        registryImpl,
+                        abi.encodeWithSelector(TWMultichainRegistry.initialize.selector, factoryAdmin_)
+                    )
+                )
+            )
+        );
 
         _registry.grantRole(keccak256("OPERATOR_ROLE"), factory_);
 
         vm.stopPrank();
-    }
-
-    function test_interfaceId() public view {
-        console2.logBytes4(type(IPluginMap).interfaceId);
     }
 
     //  =====   Functionality tests   =====
