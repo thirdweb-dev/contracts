@@ -1,71 +1,28 @@
 // SPDX-License-Identifier: Apache 2.0
-// Cerdits: OpenZeppelin Contracts (last updated v4.7.0) (proxy/utils/Initializable.sol)
-
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.0;
 
 import "../lib/TWAddress.sol";
 
-/**
- * @dev This is a base contract to aid in writing upgradeable contracts, or any kind of contract that will be deployed
- * behind a proxy. Since proxied contracts do not make use of a constructor, it's common to move constructor logic to an
- * external initializer function, usually called `initialize`. It then becomes necessary to protect this initializer
- * function so it can only be called once. The {initializer} modifier provided by this contract will have this effect.
- *
- * The initialization functions use a version number. Once a version number is used, it is consumed and cannot be
- * reused. This mechanism prevents re-execution of each "step" but allows the creation of new initialization steps in
- * case an upgrade adds a module that needs to be initialized.
- *
- * For example:
- *
- * [.hljs-theme-light.nopadding]
- * ```
- * contract MyToken is ERC20Upgradeable {
- *     function initialize() initializer public {
- *         __ERC20_init("MyToken", "MTK");
- *     }
- * }
- * contract MyTokenV2 is MyToken, ERC20PermitUpgradeable {
- *     function initializeV2() reinitializer(2) public {
- *         __ERC20Permit_init("MyToken");
- *     }
- * }
- * ```
- *
- * TIP: To avoid leaving the proxy in an uninitialized state, the initializer function should be called as early as
- * possible by providing the encoded function call as the `_data` argument to {ERC1967Proxy-constructor}.
- *
- * CAUTION: When used with inheritance, manual care must be taken to not invoke a parent initializer twice, or to ensure
- * that all initializers are idempotent. This is not verified automatically as constructors are by Solidity.
- *
- * [CAUTION]
- * ====
- * Avoid leaving a contract uninitialized.
- *
- * An uninitialized contract can be taken over by an attacker. This applies to both a proxy and its implementation
- * contract, which may impact the proxy. To prevent the implementation contract from being used, you should invoke
- * the {_disableInitializers} function in the constructor to automatically lock it when it is deployed:
- *
- * [.hljs-theme-light.nopadding]
- * ```
- * /// @custom:oz-upgrades-unsafe-allow constructor
- * constructor() {
- *     _disableInitializers();
- * }
- * ```
- * ====
- */
+library InitStorage {
+    /// @dev The location of the storage of the entrypoint contract's data.
+    bytes32 constant INIT_STORAGE_POSITION = keccak256("init.storage");
+
+    /// @dev Layout of the entrypoint contract's storage.
+    struct Data {
+        uint8 initialized;
+        bool initializing;
+    }
+
+    /// @dev Returns the entrypoint contract's data at the relevant storage location.
+    function initStorage() internal pure returns (Data storage initData) {
+        bytes32 position = INIT_STORAGE_POSITION;
+        assembly {
+            initData.slot := position
+        }
+    }
+}
+
 abstract contract Initializable {
-    /**
-     * @dev Indicates that the contract has been initialized.
-     * @custom:oz-retyped-from bool
-     */
-    uint8 private _initialized;
-
-    /**
-     * @dev Indicates that the contract is in the process of being initialized.
-     */
-    bool private _initializing;
-
     /**
      * @dev Triggered when the contract has been initialized or reinitialized.
      */
@@ -76,6 +33,10 @@ abstract contract Initializable {
      * `onlyInitializing` functions can be used to initialize parent contracts. Equivalent to `reinitializer(1)`.
      */
     modifier initializer() {
+        InitStorage.Data storage data = InitStorage.initStorage();
+        uint8 _initialized = data.initialized;
+        bool _initializing = data.initializing;
+
         bool isTopLevelCall = !_initializing;
         require(
             (isTopLevelCall && _initialized < 1) || (!TWAddress.isContract(address(this)) && _initialized == 1),
@@ -105,6 +66,10 @@ abstract contract Initializable {
      * a contract, executing them in the right order is up to the developer or operator.
      */
     modifier reinitializer(uint8 version) {
+        InitStorage.Data storage data = InitStorage.initStorage();
+        uint8 _initialized = data.initialized;
+        bool _initializing = data.initializing;
+
         require(!_initializing && _initialized < version, "Initializable: contract is already initialized");
         _initialized = version;
         _initializing = true;
@@ -118,7 +83,8 @@ abstract contract Initializable {
      * {initializer} and {reinitializer} modifiers, directly or indirectly.
      */
     modifier onlyInitializing() {
-        require(_initializing, "Initializable: contract is not initializing");
+        InitStorage.Data storage data = InitStorage.initStorage();
+        require(data.initializing, "Initializable: contract is not initializing");
         _;
     }
 
@@ -129,6 +95,10 @@ abstract contract Initializable {
      * through proxies.
      */
     function _disableInitializers() internal virtual {
+        InitStorage.Data storage data = InitStorage.initStorage();
+        uint8 _initialized = data.initialized;
+        bool _initializing = data.initializing;
+
         require(!_initializing, "Initializable: contract is initializing");
         if (_initialized < type(uint8).max) {
             _initialized = type(uint8).max;
