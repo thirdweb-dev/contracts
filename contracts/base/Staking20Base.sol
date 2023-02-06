@@ -33,10 +33,10 @@ import "../eip/interface/IERC20Metadata.sol";
  *
  */
 
-/// note: This contract is provided as a base contract only.
+/// note: This contract is provided as a base contract.
 //        This is to support a variety of use-cases that can be build on top of this base.
 //
-//        Any additional functionality such as deposit functions, reward-minting, etc.
+//        Additional functionality such as deposit functions, reward-minting, etc.
 //        must be implemented by the deployer of this contract, as needed for their use-case.
 
 contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
@@ -61,12 +61,7 @@ contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
         _setupOwner(msg.sender);
         _setStakingCondition(_timeUnit, _rewardRatioNumerator, _rewardRatioDenominator);
 
-        /** note: Deployer must ensure that:
-         *              - `reward token` is different from `staking token`
-         *         OR
-         *              - if both are same, then balances and accounting must be correctly implemented for both.
-         *              THIS IS NOT PROVIDED BY DEFAULT IN THIS CONTRACT.
-         */
+        require(_rewardToken != _stakingToken, "Reward Token and Staking Token can't be same.");
         rewardToken = _rewardToken;
     }
 

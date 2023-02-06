@@ -34,10 +34,10 @@ import "../eip/interface/IERC721Receiver.sol";
  *
  */
 
-/// note: This contract is provided as a base contract only.
+/// note: This contract is provided as a base contract.
 //        This is to support a variety of use-cases that can be build on top of this base.
 //
-//        Any additional functionality such as deposit functions, reward-minting, etc.
+//        Additional functionality such as deposit functions, reward-minting, etc.
 //        must be implemented by the deployer of this contract, as needed for their use-case.
 
 contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC165, IERC721Receiver {
