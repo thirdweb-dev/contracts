@@ -17,21 +17,16 @@ import "../../extension/plugin/PermissionsEnumerableLogic.sol";
 import "../../extension/plugin/ReentrancyGuardLogic.sol";
 import "../../extension/plugin/ERC2771ContextUpgradeableLogic.sol";
 
-/**
- *
- *      "Inherited by entrypoint" extensions.
- *      - ContractMetadata
- *      - PlatformFee
- *      - PermissionsEnumerable
- *      - ReentrancyGuard
- *      - ERC2771Context
- *      - Multicall
- *
- *      "NOT inherited by entrypoint" extensions.
- *      - DirectListings
- *      - EnglishAuctions
- *      - Offers
- */
+/* 
+    $$\     $$\       $$\                 $$\                         $$\       
+    $$ |    $$ |      \__|                $$ |                        $$ |      
+  $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\  
+  \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\ 
+    $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
+    $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
+    \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
+     \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/ 
+*/
 
 contract MarketplaceV3 is
     ContractMetadataLogic,
