@@ -14,8 +14,8 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
         run: git config --system --add safe.directory *
+        uses: actions/checkout@v2
         with:
           submodules: recursive
 
