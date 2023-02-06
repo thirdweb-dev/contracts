@@ -3,6 +3,7 @@ pragma solidity ^0.8.11;
 
 /**
  *  The `DirectListings` extension smart contract lets you buy and sell NFTs (ERC-721 or ERC-1155) for a fixed price.
+ *
  */
 interface IDirectListings {
     enum TokenType {
