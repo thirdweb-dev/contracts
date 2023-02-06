@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+/// @author thirdweb
+
 pragma solidity ^0.8.11;
 
 library InitStorage {
