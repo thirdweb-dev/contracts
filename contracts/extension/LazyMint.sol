@@ -11,7 +11,7 @@ import "./BatchMintMetadata.sol";
  */
 
 abstract contract LazyMint is ILazyMint, BatchMintMetadata {
-    /// @notice The tokenId assigned to the next new NFT to be lazy minted.
+    /// @dev The tokenId assigned to the next new NFT to be lazy minted.
     uint256 internal nextTokenIdToLazyMint;
 
     /**
