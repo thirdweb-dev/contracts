@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-/// @author thirdweb
+// thirdweb Contract
 
 pragma solidity ^0.8.0;
 
@@ -17,17 +17,9 @@ import "../../extension/plugin/PermissionsEnumerableLogic.sol";
 import "../../extension/plugin/ReentrancyGuardLogic.sol";
 import "../../extension/plugin/ERC2771ContextUpgradeableLogic.sol";
 
-/* 
-    $$\     $$\       $$\                 $$\                         $$\       
-    $$ |    $$ |      \__|                $$ |                        $$ |      
-  $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\  
-  \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\ 
-    $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
-    $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
-    \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
-     \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/ 
-*/
-
+/**
+ * @author  thirdweb.com
+ */
 contract MarketplaceV3 is
     ContractMetadataLogic,
     PlatformFeeLogic,

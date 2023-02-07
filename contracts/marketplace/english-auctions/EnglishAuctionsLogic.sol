@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-/// @author thirdweb
+// thirdweb Contract
 
 pragma solidity ^0.8.11;
 
@@ -23,17 +23,9 @@ import "../../extension/plugin/ReentrancyGuardLogic.sol";
 import "../../extension/plugin/PermissionsEnumerableLogic.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
-/* 
-    $$\     $$\       $$\                 $$\                         $$\       
-    $$ |    $$ |      \__|                $$ |                        $$ |      
-  $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\  
-  \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\ 
-    $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
-    $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
-    \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
-     \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/ 
-*/
-
+/**
+ * @author  thirdweb.com
+ */
 contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771ContextConsumer {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables

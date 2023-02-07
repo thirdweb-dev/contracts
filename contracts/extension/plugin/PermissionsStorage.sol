@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
+// thirdweb Contract
+
 pragma solidity ^0.8.0;
 
+/**
+ *  @author  thirdweb.com
+ */
 library PermissionsStorage {
     bytes32 public constant PERMISSIONS_STORAGE_POSITION = keccak256("permissions.storage");
 

@@ -1,10 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
+// thirdweb Contract
+
 pragma solidity ^0.8.0;
 
 import "./PermissionsEnumerableStorage.sol";
 import "./PermissionsLogic.sol";
 
 /**
+ *  @author  thirdweb.com
+ *
  *  @title   PermissionsEnumerable
  *  @dev     This contracts provides extending-contracts with role-based access control mechanisms.
  *           Also provides interfaces to view all members with a given role, and total count of members.

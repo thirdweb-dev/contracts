@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
+// thirdweb Contract
+
 pragma solidity ^0.8.0;
 
 import "../interface/plugin/IPluginMap.sol";
 import "../../openzeppelin-presets/utils/EnumerableSet.sol";
 
+/**
+ *  @author  thirdweb.com
+ */
 contract PluginMap is IPluginMap {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 

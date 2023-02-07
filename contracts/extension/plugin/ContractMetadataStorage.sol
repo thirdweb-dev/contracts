@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
+// thirdweb Contract
+
 pragma solidity ^0.8.0;
 
+/**
+ *  @author  thirdweb.com
+ */
 library ContractMetadataStorage {
     bytes32 public constant CONTRACT_METADATA_STORAGE_POSITION = keccak256("contract.metadata.storage");
 
