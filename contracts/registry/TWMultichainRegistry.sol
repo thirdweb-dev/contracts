@@ -73,12 +73,15 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Initializable, TWRouter,
         uint256 _chainId,
         string memory metadataUri
     ) external {
-        require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
+        require(
+            hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
+            "Multichain Registry: not operator or deployer."
+        );
 
         TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
 
         bool added = data.deployments[_deployer][_chainId].add(_deployment);
-        require(added, "failed to add");
+        require(added, "Multichain Registry: contract already added.");
 
         data.chainIds.add(_chainId);
 
@@ -95,12 +98,15 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Initializable, TWRouter,
         address _deployment,
         uint256 _chainId
     ) external {
-        require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
+        require(
+            hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
+            "Multichain Registry: not operator or deployer."
+        );
 
         TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
 
         bool removed = data.deployments[_deployer][_chainId].remove(_deployment);
-        require(removed, "failed to remove");
+        require(removed, "Multichain Registry: contract already removed.");
 
         emit Deleted(_deployer, _deployment, _chainId);
     }

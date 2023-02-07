@@ -1,209 +1,230 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+// Interface
+import { ITWMultichainRegistry } from "contracts/interfaces/ITWMultichainRegistry.sol";
+import { TWMultichainRegistry } from "contracts/registry/TWMultichainRegistry.sol";
+
 // Test imports
 import "./utils/BaseTest.sol";
-import "contracts/interfaces/ITWMultichainRegistry.sol";
-import { TWMultichainRegistry } from "contracts/registry/TWMultichainRegistry.sol";
 import "./mocks/MockThirdwebContract.sol";
-import "contracts/plugin/interface/IPluginMap.sol";
 import "contracts/TWProxy.sol";
+import "contracts/lib/TWStrings.sol";
+
+// import "contracts/plugin/interface/IPluginMap.sol";
 
 interface ITWMultichainRegistryData {
-    event Added(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid, string metadataUri);
-    event Deleted(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid);
+    event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId, string metadataUri);
+    event Deleted(address indexed deployer, address indexed deployment, uint256 indexed chainId);
 }
 
 contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
     // Target contract
-    TWMultichainRegistry internal _registry;
+    TWMultichainRegistry internal multichainRegistry;
 
     // Test params
-    address internal factoryAdmin_;
-    address internal factory_;
+    address internal operator;
+
+    address internal contractDeployer;
 
     uint256[] internal chainIds;
     address[] internal deploymentAddresses;
-    address internal deployer_;
 
-    uint256 total = 1000;
+    mapping(uint256 => address[]) private deploymentsOnChain;
+    mapping(address => string) private metadataURI;
+
+    uint256 internal numberOfChains = 10;
+    uint256 internal deploymentsPerChain = 1000;
+
+    uint256 contractsToAdd = 1000;
 
     //  =====   Set up  =====
 
     function setUp() public override {
         super.setUp();
 
-        deployer_ = getActor(100);
-        factory_ = getActor(101);
-        factoryAdmin_ = getActor(102);
+        operator = getActor(100);
+        contractDeployer = getActor(101);
 
-        for (uint256 i = 0; i < total; i += 1) {
+        for (uint256 i = 0; i < numberOfChains; i += 1) {
             chainIds.push(i);
-            vm.prank(deployer_);
-            address depl = address(new MockThirdwebContract());
-            deploymentAddresses.push(depl);
+
+            vm.startPrank(contractDeployer);
+
+            for (uint256 j = 0; j < deploymentsPerChain; j += 1) {
+                address depl = address(new MockThirdwebContract());
+                metadataURI[depl] = TWStrings.toString(i * j);
+                deploymentsOnChain[i].push(depl);
+            }
+
+            vm.stopPrank();
         }
 
+        // PluginRegistry, Plugin names: null values.
+        address pluginRegistry = address(0);
         string[] memory pluginNames = new string[](0);
 
-        vm.startPrank(factoryAdmin_);
         address payable registryImpl = payable(
-            address(new TWMultichainRegistry(forwarders(), address(0), pluginNames))
+            address(new TWMultichainRegistry(forwarders(), pluginRegistry, pluginNames))
         );
 
-        _registry = TWMultichainRegistry(
+        multichainRegistry = TWMultichainRegistry(
             payable(
                 address(
                     new TWProxy(
                         registryImpl,
-                        abi.encodeWithSelector(TWMultichainRegistry.initialize.selector, factoryAdmin_)
+                        abi.encodeWithSelector(TWMultichainRegistry.initialize.selector, operator)
                     )
                 )
             )
         );
 
-        _registry.grantRole(keccak256("OPERATOR_ROLE"), factory_);
-
         vm.stopPrank();
     }
 
-    //  =====   Functionality tests   =====
+    /// ========== Test `add` ==========
 
-    /// @dev Test `add`
+    function test_state_add() external {
+        vm.startPrank(operator);
 
-    function test_addFromFactory() public {
-        vm.startPrank(factory_);
-        for (uint256 i = 0; i < total; i += 1) {
-            _registry.add(deployer_, deploymentAddresses[i], chainIds[i], "");
+        // Add all deployments.
+        for (uint256 i = 0; i < numberOfChains; i += 1) {
+            uint256 chainId = chainIds[i];
+
+            for (uint256 j = 0; j < deploymentsPerChain; j += 1) {
+                address deployment = deploymentsOnChain[chainId][j];
+
+                vm.expectEmit(true, true, true, false);
+                emit Added(contractDeployer, deployment, chainId, metadataURI[deployment]);
+
+                multichainRegistry.add(contractDeployer, deployment, chainId, metadataURI[deployment]);
+            }
         }
+
         vm.stopPrank();
 
-        ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
+        // Check contract count.
+        uint256 expectedCount = numberOfChains * deploymentsPerChain;
+        assertEq(multichainRegistry.count(contractDeployer), expectedCount);
 
-        assertEq(modules.length, total);
-        assertEq(_registry.count(deployer_), total);
+        // Check all deployments.
+        ITWMultichainRegistry.Deployment[] memory deployments = multichainRegistry.getAll(contractDeployer);
+        assertEq(deployments.length, expectedCount);
 
-        for (uint256 i = 0; i < total; i += 1) {
-            assertEq(modules[i].deploymentAddress, deploymentAddresses[i]);
-            assertEq(modules[i].chainId, chainIds[i]);
+        uint256 chainId = 0;
+        uint256 deploymentIndex = 0;
+
+        for (uint256 i = 0; i < expectedCount; i += 1) {
+            if (i > 0 && i % deploymentsPerChain == 0) {
+                chainId += 1;
+                deploymentIndex = 0;
+            }
+
+            assertEq(deployments[i].chainId, chainId);
+
+            address deployment = deploymentsOnChain[chainId][deploymentIndex];
+            assertEq(deployments[i].deploymentAddress, deployment);
+
+            assertEq(deployments[i].metadataURI, metadataURI[deployment]);
+            assertEq(multichainRegistry.getMetadataUri(chainId, deployment), metadataURI[deployment]);
+
+            deploymentIndex += 1;
         }
-
-        vm.prank(factory_);
-        _registry.add(deployer_, address(0x43), 111, "");
-
-        modules = _registry.getAll(deployer_);
-        assertEq(modules.length, total + 1);
-        assertEq(_registry.count(deployer_), total + 1);
     }
 
-    function test_addFromSelf() public {
-        vm.startPrank(deployer_);
-        for (uint256 i = 0; i < total; i += 1) {
-            _registry.add(deployer_, deploymentAddresses[i], chainIds[i], "");
-        }
-        vm.stopPrank();
+    function test_revert_add_notOperatorOrDeployer() external {
+        uint256 chainId = 0;
+        address deployment = deploymentsOnChain[chainId][0];
 
-        ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
-
-        assertEq(modules.length, total);
-        assertEq(_registry.count(deployer_), total);
-
-        for (uint256 i = 0; i < total; i += 1) {
-            assertEq(modules[i].deploymentAddress, deploymentAddresses[i]);
-            assertEq(modules[i].chainId, chainIds[i]);
-        }
-
-        vm.prank(factory_);
-        _registry.add(deployer_, address(0x43), 111, "");
-
-        modules = _registry.getAll(deployer_);
-        assertEq(modules.length, total + 1);
-        assertEq(_registry.count(deployer_), total + 1);
+        vm.expectRevert("Multichain Registry: not operator or deployer.");
+        multichainRegistry.add(contractDeployer, deployment, chainId, metadataURI[deployment]);
     }
 
-    function test_add_emit_Added() public {
-        vm.expectEmit(true, true, true, true);
-        emit Added(deployer_, deploymentAddresses[0], chainIds[0], "uri");
+    function test_revert_add_alreadyAdded() external {
+        uint256 chainId = 0;
+        address deployment = deploymentsOnChain[chainId][0];
 
-        vm.prank(factory_);
-        _registry.add(deployer_, deploymentAddresses[0], chainIds[0], "uri");
+        vm.prank(operator);
+        multichainRegistry.add(contractDeployer, deployment, chainId, metadataURI[deployment]);
 
-        string memory uri = _registry.getMetadataUri(chainIds[0], deploymentAddresses[0]);
-        assertEq(uri, "uri");
+        vm.expectRevert("Multichain Registry: contract already added.");
+        vm.prank(operator);
+        multichainRegistry.add(contractDeployer, deployment, chainId, metadataURI[deployment]);
     }
 
-    // Test `remove`
+    /// ========== Test `remove` ==========
 
     function setUp_remove() public {
-        vm.startPrank(factory_);
-        for (uint256 i = 0; i < total; i += 1) {
-            _registry.add(deployer_, deploymentAddresses[i], chainIds[i], "");
+        vm.startPrank(operator);
+
+        // Add all deployments.
+        for (uint256 i = 0; i < numberOfChains; i += 1) {
+            uint256 chainId = chainIds[i];
+
+            for (uint256 j = 0; j < deploymentsPerChain; j += 1) {
+                address deployment = deploymentsOnChain[chainId][j];
+
+                vm.expectEmit(true, true, true, false);
+                emit Added(contractDeployer, deployment, chainId, metadataURI[deployment]);
+
+                multichainRegistry.add(contractDeployer, deployment, chainId, metadataURI[deployment]);
+            }
         }
+
         vm.stopPrank();
     }
 
-    //  =====   Functionality tests   =====
-    function test_removeFromFactory() public {
+    function test_state_remove() external {
         setUp_remove();
-        vm.prank(factory_);
-        _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
 
-        ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
-        assertEq(modules.length, total - 1);
+        vm.startPrank(operator);
 
-        for (uint256 i = 0; i < total - 1; i += 1) {
-            assertEq(modules[i].deploymentAddress, deploymentAddresses[i + 1]);
-            assertEq(modules[i].chainId, chainIds[i + 1]);
+        // Add all deployments.
+        for (uint256 i = 0; i < numberOfChains; i += 1) {
+            uint256 chainId = chainIds[i];
+
+            for (uint256 j = 0; j < deploymentsPerChain; j += 1) {
+                address deployment = deploymentsOnChain[chainId][j];
+
+                vm.expectEmit(true, true, true, false);
+                emit Deleted(contractDeployer, deployment, chainId);
+
+                multichainRegistry.remove(contractDeployer, deployment, chainId);
+            }
         }
+
+        vm.stopPrank();
+
+        // Check contract count.
+        uint256 expectedCount = 0;
+        assertEq(multichainRegistry.count(contractDeployer), expectedCount);
+
+        // Check all deployments.
+        ITWMultichainRegistry.Deployment[] memory deployments = multichainRegistry.getAll(contractDeployer);
+        assertEq(deployments.length, expectedCount);
     }
 
-    function test_removeFromSelf() public {
+    function test_revert_remove_notOperatorOrDeployer() external {
         setUp_remove();
-        vm.prank(factory_);
-        _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
 
-        ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(deployer_);
-        assertEq(modules.length, total - 1);
+        uint256 chainId = 0;
+        address deployment = deploymentsOnChain[chainId][0];
+
+        vm.expectRevert("Multichain Registry: not operator or deployer.");
+        multichainRegistry.remove(contractDeployer, deployment, chainId);
     }
 
-    function test_remove_revert_invalidCaller() public {
-        setUp_remove();
-        address invalidCaller = address(0x123);
-        assertTrue(invalidCaller != factory_ || invalidCaller != deployer_);
-
-        vm.expectRevert("not operator or deployer.");
-
-        vm.prank(invalidCaller);
-        _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
-    }
-
-    function test_remove_revert_noModulesToRemove() public {
-        setUp_remove();
-        address actor = getActor(1);
-        ITWMultichainRegistry.Deployment[] memory modules = _registry.getAll(actor);
-        assertEq(modules.length, 0);
-
-        vm.expectRevert("failed to remove");
-
-        vm.prank(actor);
-        _registry.remove(actor, deploymentAddresses[0], chainIds[0]);
-    }
-
-    function test_remove_revert_incorrectChainId() public {
+    function test_revert_remove_nonExistentDeployment() external {
         setUp_remove();
 
-        vm.expectRevert("failed to remove");
+        uint256 chainId = 0;
+        address deployment = deploymentsOnChain[chainId][0];
 
-        vm.prank(deployer_);
-        _registry.remove(deployer_, deploymentAddresses[0], 12345);
-    }
+        vm.prank(operator);
+        multichainRegistry.remove(contractDeployer, deployment, chainId);
 
-    function test_remove_emit_Deleted() public {
-        setUp_remove();
-        vm.expectEmit(true, true, true, true);
-        emit Deleted(deployer_, deploymentAddresses[0], chainIds[0]);
-
-        vm.prank(deployer_);
-        _registry.remove(deployer_, deploymentAddresses[0], chainIds[0]);
+        vm.expectRevert("Multichain Registry: contract already removed.");
+        vm.prank(operator);
+        multichainRegistry.remove(contractDeployer, deployment, chainId);
     }
 }
