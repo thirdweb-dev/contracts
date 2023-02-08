@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
+// thirdweb Contract
+
 pragma solidity ^0.8.11;
 
 import { IDirectListings } from "../IMarketplace.sol";
 
+/**
+ * @author  thirdweb.com
+ */
 library DirectListingsStorage {
     bytes32 public constant DIRECT_LISTINGS_STORAGE_POSITION = keccak256("direct.listings.storage");
 

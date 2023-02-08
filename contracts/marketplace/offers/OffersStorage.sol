@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
+// thirdweb Contract
+
 pragma solidity ^0.8.11;
 
 import { IOffers } from "../IMarketplace.sol";
 
+/**
+ * @author  thirdweb.com
+ */
 library OffersStorage {
     bytes32 public constant OFFERS_STORAGE_POSITION = keccak256("offers.storage");
 

@@ -1,6 +1,6 @@
 # PermissionsEnumerableLogic
 
-
+*thirdweb.com*
 
 > PermissionsEnumerable
 

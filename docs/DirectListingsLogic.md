@@ -1,6 +1,6 @@
 # DirectListingsLogic
 
-
+*thirdweb.com*
 
 
 

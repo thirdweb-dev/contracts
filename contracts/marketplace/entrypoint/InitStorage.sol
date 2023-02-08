@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
+// thirdweb Contract
+
 pragma solidity ^0.8.11;
 
+/**
+ * @author  thirdweb.com
+ */
 library InitStorage {
     /// @dev The location of the storage of the entrypoint contract's data.
     bytes32 constant INIT_STORAGE_POSITION = keccak256("init.storage");

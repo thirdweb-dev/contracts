@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// thirdweb Contract
+
 pragma solidity ^0.8.11;
 
 import "./DirectListingsStorage.sol";
@@ -17,6 +19,9 @@ import "../../extension/plugin/ReentrancyGuardLogic.sol";
 import "../../extension/plugin/PermissionsEnumerableLogic.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
+/**
+ * @author  thirdweb.com
+ */
 contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771ContextConsumer {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables

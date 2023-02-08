@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// thirdweb Contract
+
 pragma solidity ^0.8.0;
 
 // ====== External imports ======
@@ -16,21 +18,8 @@ import "../../extension/plugin/ReentrancyGuardLogic.sol";
 import "../../extension/plugin/ERC2771ContextUpgradeableLogic.sol";
 
 /**
- *
- *      "Inherited by entrypoint" extensions.
- *      - ContractMetadata
- *      - PlatformFee
- *      - PermissionsEnumerable
- *      - ReentrancyGuard
- *      - ERC2771Context
- *      - Multicall
- *
- *      "NOT inherited by entrypoint" extensions.
- *      - DirectListings
- *      - EnglishAuctions
- *      - Offers
+ * @author  thirdweb.com
  */
-
 contract MarketplaceV3 is
     ContractMetadataLogic,
     PlatformFeeLogic,

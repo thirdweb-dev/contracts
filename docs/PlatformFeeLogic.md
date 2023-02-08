@@ -1,6 +1,6 @@
 # PlatformFeeLogic
 
-
+*thirdweb.com*
 
 > Platform Fee
 

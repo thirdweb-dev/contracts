@@ -1,6 +1,6 @@
 # OffersStorage
 
-
+*thirdweb.com*
 
 
 

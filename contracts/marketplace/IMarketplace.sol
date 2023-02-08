@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
+// thirdweb Contract
+
 pragma solidity ^0.8.11;
 
 /**
+ *  @author  thirdweb.com
+ *
  *  The `DirectListings` extension smart contract lets you buy and sell NFTs (ERC-721 or ERC-1155) for a fixed price.
  */
 interface IDirectListings {

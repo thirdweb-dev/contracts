@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
+// thirdweb Contract
+
 pragma solidity ^0.8.11;
 
 import { IEnglishAuctions } from "../IMarketplace.sol";
 
+/**
+ * @author  thirdweb.com
+ */
 library EnglishAuctionsStorage {
     bytes32 public constant ENGLISH_AUCTIONS_STORAGE_POSITION = keccak256("english.auctions.storage");
 
