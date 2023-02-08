@@ -113,7 +113,7 @@ contract PluginState is IPlugin {
     function _removePlugin(string memory _pluginName) internal {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
 
-        require(data.pluginNames.remove(_pluginName), "PluginState: plugin does not exists.");
+        require(data.pluginNames.remove(_pluginName), "PluginState: plugin does not exist.");
 
         address implementation = data.plugins[_pluginName].metadata.implementation;
         PluginFunction[] memory pluginFunctions = data.plugins[_pluginName].functions;
