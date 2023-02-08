@@ -134,6 +134,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             _targetAuction.endTimestamp > block.timestamp && _targetAuction.startTimestamp <= block.timestamp,
             "Marketplace: inactive auction."
         );
+        require(_bidAmount != 0, "Marketplace: Bidding with zero amount.");
 
         Bid memory newBid = Bid({ auctionId: _auctionId, bidder: _msgSender(), bidAmount: _bidAmount });
 
@@ -330,7 +331,10 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             _params.startTimestamp + 60 minutes >= block.timestamp && _params.startTimestamp < _params.endTimestamp,
             "Marketplace: invalid timestamps."
         );
-        require(_params.buyoutBidAmount >= _params.minimumBidAmount, "Marketplace: invalid bid amounts.");
+        require(
+            _params.buyoutBidAmount == 0 || _params.buyoutBidAmount >= _params.minimumBidAmount,
+            "Marketplace: invalid bid amounts."
+        );
     }
 
     /// @dev Processes an incoming bid in an auction.
