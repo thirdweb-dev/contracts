@@ -1,6 +1,6 @@
 # ContractMetadataLogic
 
-
+*thirdweb.com*
 
 > Contract Metadata
 

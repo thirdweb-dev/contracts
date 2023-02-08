@@ -1,10 +1,10 @@
 # IDirectListings
 
+*thirdweb.com  The `DirectListings` extension smart contract lets you buy and sell NFTs (ERC-721 or ERC-1155) for a fixed price.*
 
 
 
 
-The `DirectListings` extension smart contract lets you buy and sell NFTs (ERC-721 or ERC-1155) for a fixed price.
 
 
 

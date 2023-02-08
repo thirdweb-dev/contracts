@@ -1,6 +1,6 @@
 # OffersLogic
 
-
+*thirdweb.com*
 
 
 
