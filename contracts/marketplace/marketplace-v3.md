@@ -10,7 +10,7 @@ The document is written for technical and non-technical readers. To ask further 
 
 The [thirdweb](https://thirdweb.com/) `Marketplace V3` is a marketplace where where people can sell NFTs — [ERC 721](https://eips.ethereum.org/EIPS/eip-721) or [ERC 1155](https://eips.ethereum.org/EIPS/eip-1155) tokens — at a fixed price ( what we'll refer to as a "Direct listing"), or auction them (what we'll refer to as an "Auction listing"). It also allows users to make "Offers" on unlisted NFTs.
 
-`Marketplace V3` offers improvements over previous version in terms of design and features, which are discussed in this document. You can refer to previous (v2) `Marketplace` design document [here](https://github.com/thirdweb-dev/contracts/contracts/old-marketplace/marketplace.md).
+`Marketplace V3` offers improvements over previous version in terms of design and features, which are discussed in this document. You can refer to previous (v2) `Marketplace` design document [here](https://github.com/thirdweb-dev/contracts/blob/main/contracts/old-marketplace/marketplace.md).
 
 ## Context behind this update
 
@@ -37,7 +37,7 @@ For all these reasons and feature additions, the `Marketplace` contract is getti
 - the contract provides explicit functions for each important action (something that is missing from the contract, today).
 - the contract provides convenient view functions for all relevant state of the contract, without expecting users to rely on events to read critical information.
 
-Finally, to accomplish all these things without the constraint of the smart contract size limit, the `Marketplace V3` contract is written in the following new code pattern, which we call `Plugin Pattern`. It was influenced by [EIP-2535](https://eips.ethereum.org/EIPS/eip-2535). You can read more about Plugin Pattern [here]().
+Finally, to accomplish all these things without the constraint of the smart contract size limit, the `Marketplace V3` contract is written in the following new code pattern, which we call `Plugin Pattern`. It was influenced by [EIP-2535](https://eips.ethereum.org/EIPS/eip-2535). You can read more about Plugin Pattern [here](https://blog.thirdweb.com/).
 
 ## Extensions that make up `Marketplace V3`
 
@@ -123,7 +123,7 @@ The `DirectListings` extension smart contract lets you buy and sell NFTs (ERC-72
   | assetContract | The address of the smart contract of the NFTs being listed. |
   | tokenId | The tokenId of the NFTs being listed. |
   | quantity | The quantity of NFTs being listed. This must be non-zero, and is expected to be 1 for ERC-721 NFTs. |
-  | currency | The currency in which the price must be paid when buying the listed NFTs. |
+  | currency | The currency in which the price must be paid when buying the listed NFTs.
   The address considered for native tokens of the chain is 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE |
   | pricePerToken | The price to pay per unit of NFTs listed. |
   | startTimestamp | The UNIX timestamp at and after which NFTs can be bought from the listing. |
@@ -166,7 +166,7 @@ The `DirectListings` extension smart contract lets you buy and sell NFTs (ERC-72
   | assetContract | The address of the smart contract of the NFTs being listed. |
   | tokenId | The tokenId of the NFTs being listed. |
   | quantity | The quantity of NFTs being listed. This must be non-zero, and is expected to be 1 for ERC-721 NFTs. |
-  | currency | The currency in which the price must be paid when buying the listed NFTs. |
+  | currency | The currency in which the price must be paid when buying the listed NFTs.
   The address considered for native tokens of the chain is 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE |
   | pricePerToken | The price to pay per unit of NFTs listed. |
   | startTimestamp | The UNIX timestamp at and after which NFTs can be bought from the listing. |
@@ -420,7 +420,7 @@ The `EnglishAuctions` extension smart contract lets you sell NFTs (ERC-721 or ER
   | currency | The currency in which the bid must be made when bidding for the auctioned NFTs. |
   | minimumBidAmount | The minimum bid amount for the auction. |
   | buyoutBidAmount | The total bid amount for which the bidder can directly purchase the auctioned items and close the auction as a result. |
-  | timeBufferInSeconds | This is a buffer e.g. x seconds. |
+  | timeBufferInSeconds | This is a buffer e.g. x seconds.
   If a new winning bid is made less than x seconds before expirationTimestamp, the expirationTimestamp is increased by x seconds. |
   | bidBufferBps | This is a buffer in basis points e.g. x%.
   To be considered as a new winning bid, a bid must be at least x% greater than the current winning bid. |
