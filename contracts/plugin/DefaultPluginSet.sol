@@ -54,11 +54,21 @@ contract DefaultPluginSet is IDefaultPluginSet, PluginState {
         }
     }
 
-    /// @notice Returns all functions that belong to the given plugin contract.
-    function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
+    /// @notice Returns the plugin metadata and functions for a given plugin.
+    function getPlugin(string memory _pluginName) public view returns (Plugin memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         require(data.pluginNames.contains(_pluginName), "DefaultPluginSet: plugin does not exist.");
-        return data.plugins[_pluginName].functions;
+        return data.plugins[_pluginName];
+    }
+
+    /// @notice Returns the plugin's implementation smart contract address.
+    function getPluginImplementation(string memory _pluginName) external view returns (address) {
+        return getPlugin(_pluginName).metadata.implementation;
+    }
+
+    /// @notice Returns all functions that belong to the given plugin contract.
+    function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
+        return getPlugin(_pluginName).functions;
     }
 
     /// @notice Returns the plugin metadata for a given function.
@@ -67,19 +77,5 @@ contract DefaultPluginSet is IDefaultPluginSet, PluginState {
         PluginMetadata memory metadata = data.pluginMetadata[_functionSelector];
         require(metadata.implementation != address(0), "DefaultPluginSet: no plugin for function.");
         return metadata;
-    }
-
-    /// @notice Returns the plugin's implementation smart contract address.
-    function getPluginImplementation(string memory _pluginName) external view returns (address) {
-        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        require(data.pluginNames.contains(_pluginName), "DefaultPluginSet: plugin does not exist.");
-        return data.plugins[_pluginName].metadata.implementation;
-    }
-
-    /// @notice Returns the plugin metadata and functions for a given plugin.
-    function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
-        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        require(data.pluginNames.contains(_pluginName), "DefaultPluginSet: plugin does not exist.");
-        return data.plugins[_pluginName];
     }
 }

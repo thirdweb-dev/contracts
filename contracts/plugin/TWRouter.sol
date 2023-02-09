@@ -51,7 +51,7 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
 
     /// @dev Adds a new plugin to the router.
     function addPlugin(string memory _pluginName) external {
-        require(_canSetPlugin(), "Router: caller not authorized");
+        require(_canSetPlugin(), "TWRouter: caller not authorized");
 
         Plugin memory plugin = IPluginRegistry(pluginRegistry).getPlugin(_pluginName);
 
@@ -60,7 +60,7 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
 
     /// @dev Updates an existing plugin in the router, or overrides a default plugin.
     function updatePlugin(string memory _pluginName) external {
-        require(_canSetPlugin(), "Router: caller not authorized");
+        require(_canSetPlugin(), "TWRouter: caller not authorized");
 
         Plugin memory plugin = IPluginRegistry(pluginRegistry).getPlugin(_pluginName);
 
@@ -69,7 +69,7 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
 
     /// @dev Removes an existing plugin from the router.
     function removePlugin(string memory _pluginName) external {
-        require(_canSetPlugin(), "Router: caller not authorized");
+        require(_canSetPlugin(), "TWRouter: caller not authorized");
 
         _removePlugin(_pluginName);
     }
@@ -116,43 +116,32 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
         }
     }
 
-    /// @dev Returns all functions that belong to the given plugin contract.
-    function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
+    /// @dev Returns the plugin metadata and functions for a given plugin.
+    function getPlugin(string memory _pluginName) public view returns (Plugin memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         bool isOverride = data.pluginNames.contains(_pluginName);
-        return
-            isOverride
-                ? data.plugins[_pluginName].functions
-                : IDefaultPluginSet(defaultPluginSet).getAllFunctionsOfPlugin(_pluginName);
+
+        return isOverride ? data.plugins[_pluginName] : IDefaultPluginSet(defaultPluginSet).getPlugin(_pluginName);
+    }
+
+    /// @dev Returns the plugin's implementation smart contract address.
+    function getPluginImplementation(string memory _pluginName) external view returns (address) {
+        return getPlugin(_pluginName).metadata.implementation;
+    }
+
+    /// @dev Returns all functions that belong to the given plugin contract.
+    function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
+        return getPlugin(_pluginName).functions;
     }
 
     /// @dev Returns the plugin metadata for a given function.
-    function getPluginForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
+    function getPluginForFunction(bytes4 _functionSelector) public view returns (PluginMetadata memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         PluginMetadata memory metadata = data.pluginMetadata[_functionSelector];
 
         bool isOverride = metadata.implementation != address(0);
 
         return isOverride ? metadata : IDefaultPluginSet(defaultPluginSet).getPluginForFunction(_functionSelector);
-    }
-
-    /// @dev Returns the plugin's implementation smart contract address.
-    function getPluginImplementation(string memory _pluginName) external view returns (address) {
-        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        bool isOverride = data.pluginNames.contains(_pluginName);
-
-        return
-            isOverride
-                ? data.plugins[_pluginName].metadata.implementation
-                : IDefaultPluginSet(defaultPluginSet).getPluginImplementation(_pluginName);
-    }
-
-    /// @dev Returns the plugin metadata and functions for a given plugin.
-    function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
-        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        bool isOverride = data.pluginNames.contains(_pluginName);
-
-        return isOverride ? data.plugins[_pluginName] : IDefaultPluginSet(defaultPluginSet).getPlugin(_pluginName);
     }
 
     /// @dev Returns the plugin implementation address stored in router, for the given function.
@@ -162,11 +151,7 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
         override
         returns (address pluginAddress)
     {
-        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        pluginAddress = data.pluginMetadata[_functionSelector].implementation;
-        if (pluginAddress == address(0)) {
-            pluginAddress = IDefaultPluginSet(defaultPluginSet).getPluginForFunction(msg.sig).implementation;
-        }
+        return getPluginForFunction(_functionSelector).implementation;
     }
 
     /*///////////////////////////////////////////////////////////////
