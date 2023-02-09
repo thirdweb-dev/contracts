@@ -565,7 +565,7 @@ contract PluginRegistryTest is BaseTest, IPlugin {
         string memory name = "MockERC20";
 
         vm.prank(registryDeployer);
-        vm.expectRevert("PluginState: plugin does not exists.");
+        vm.expectRevert("PluginState: plugin does not exist.");
         pluginRegistry.removePlugin(name);
     }
 }
