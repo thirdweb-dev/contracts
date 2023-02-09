@@ -119,9 +119,9 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
     /// @dev Returns the plugin metadata and functions for a given plugin.
     function getPlugin(string memory _pluginName) public view returns (Plugin memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        bool isOverride = data.pluginNames.contains(_pluginName);
+        bool isLocalPlugin = data.pluginNames.contains(_pluginName);
 
-        return isOverride ? data.plugins[_pluginName] : IDefaultPluginSet(defaultPluginSet).getPlugin(_pluginName);
+        return isLocalPlugin ? data.plugins[_pluginName] : IDefaultPluginSet(defaultPluginSet).getPlugin(_pluginName);
     }
 
     /// @dev Returns the plugin's implementation smart contract address.
@@ -139,9 +139,9 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         PluginMetadata memory metadata = data.pluginMetadata[_functionSelector];
 
-        bool isOverride = metadata.implementation != address(0);
+        bool isLocalPlugin = metadata.implementation != address(0);
 
-        return isOverride ? metadata : IDefaultPluginSet(defaultPluginSet).getPluginForFunction(_functionSelector);
+        return isLocalPlugin ? metadata : IDefaultPluginSet(defaultPluginSet).getPluginForFunction(_functionSelector);
     }
 
     /// @dev Returns the plugin implementation address stored in router, for the given function.
