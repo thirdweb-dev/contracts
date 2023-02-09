@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "contracts/plugin/interface/IPlugin.sol";
-import "contracts/plugin/PluginMap.sol";
+import "contracts/plugin/DefaultPluginSet.sol";
 import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
@@ -36,20 +36,20 @@ contract ContractC {
     }
 }
 
-contract PluginMapTest is BaseTest, IPlugin {
-    address private pluginMapDeployer;
+contract DefaultPluginSetTest is BaseTest, IPlugin {
+    address private defaultPluginSetDeployer;
 
-    PluginMap private pluginMap;
+    DefaultPluginSet private defaultPluginSet;
 
     mapping(uint256 => Plugin) private plugins;
 
     function setUp() public override {
         super.setUp();
 
-        pluginMapDeployer = address(0x123);
+        defaultPluginSetDeployer = address(0x123);
 
-        vm.prank(pluginMapDeployer);
-        pluginMap = new PluginMap();
+        vm.prank(defaultPluginSetDeployer);
+        defaultPluginSet = new DefaultPluginSet();
 
         // Add plugin 1.
 
@@ -84,10 +84,10 @@ contract PluginMapTest is BaseTest, IPlugin {
         uint256 len = 3;
 
         for (uint256 i = 0; i < len; i += 1) {
-            vm.prank(pluginMapDeployer);
-            pluginMap.setPlugin(plugins[i]);
+            vm.prank(defaultPluginSetDeployer);
+            defaultPluginSet.setPlugin(plugins[i]);
         }
-        Plugin[] memory getAllPlugins = pluginMap.getAllPlugins();
+        Plugin[] memory getAllPlugins = defaultPluginSet.getAllPlugins();
 
         for (uint256 i = 0; i < len; i += 1) {
             // getAllPlugins
@@ -102,7 +102,7 @@ contract PluginMapTest is BaseTest, IPlugin {
             }
 
             // getPlugin
-            Plugin memory plugin = pluginMap.getPlugin(plugins[i].metadata.name);
+            Plugin memory plugin = defaultPluginSet.getPlugin(plugins[i].metadata.name);
             assertEq(plugin.metadata.implementation, plugins[i].metadata.implementation);
             assertEq(plugin.metadata.name, plugins[i].metadata.name);
             assertEq(plugin.metadata.metadataURI, plugins[i].metadata.metadataURI);
@@ -114,7 +114,7 @@ contract PluginMapTest is BaseTest, IPlugin {
         }
         for (uint256 i = 0; i < len; i += 1) {
             string memory name = plugins[i].metadata.name;
-            PluginFunction[] memory functions = pluginMap.getAllFunctionsOfPlugin(name);
+            PluginFunction[] memory functions = defaultPluginSet.getAllFunctionsOfPlugin(name);
             uint256 fnsLen = plugins[i].functions.length;
             assertEq(fnsLen, functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
@@ -126,19 +126,19 @@ contract PluginMapTest is BaseTest, IPlugin {
             PluginMetadata memory metadata = plugins[i].metadata;
             PluginFunction[] memory functions = plugins[i].functions;
             for (uint256 j = 0; j < functions.length; j += 1) {
-                PluginMetadata memory plugin = pluginMap.getPluginForFunction(functions[j].functionSelector);
+                PluginMetadata memory plugin = defaultPluginSet.getPluginForFunction(functions[j].functionSelector);
                 assertEq(plugin.implementation, metadata.implementation);
                 assertEq(plugin.name, metadata.name);
                 assertEq(plugin.metadataURI, metadata.metadataURI);
             }
-            assertEq(metadata.implementation, pluginMap.getPluginImplementation(metadata.name));
+            assertEq(metadata.implementation, defaultPluginSet.getPluginImplementation(metadata.name));
         }
     }
 
     function test_revert_setPlugin_nonDeployerCaller() external {
-        vm.expectRevert("PluginMap: unauthorized caller.");
+        vm.expectRevert("DefaultPluginSet: unauthorized caller.");
         vm.prank(address(0x999));
-        pluginMap.setPlugin(plugins[0]);
+        defaultPluginSet.setPlugin(plugins[0]);
     }
 
     function test_revert_addPluginsWithSameFunctionSelectors() external {
@@ -168,12 +168,12 @@ contract PluginMapTest is BaseTest, IPlugin {
         plugin2.functions = new PluginFunction[](1);
         plugin2.functions[0] = PluginFunction(MockERC721.mint.selector, "mint(address,uint256)");
 
-        vm.startPrank(pluginMapDeployer);
+        vm.startPrank(defaultPluginSetDeployer);
 
-        pluginMap.setPlugin(plugin1);
+        defaultPluginSet.setPlugin(plugin1);
 
         vm.expectRevert("PluginState: plugin already exists for function.");
-        pluginMap.setPlugin(plugin2);
+        defaultPluginSet.setPlugin(plugin2);
 
         vm.stopPrank();
     }
@@ -190,9 +190,9 @@ contract PluginMapTest is BaseTest, IPlugin {
         plugin1.functions = new PluginFunction[](1);
         plugin1.functions[0] = PluginFunction(MockERC20.mint.selector, "hello()");
 
-        vm.prank(pluginMapDeployer);
+        vm.prank(defaultPluginSetDeployer);
         vm.expectRevert("PluginState: fn selector and signature mismatch.");
-        pluginMap.setPlugin(plugin1);
+        defaultPluginSet.setPlugin(plugin1);
     }
 
     function test_revert_samePluginName() external {
@@ -222,12 +222,12 @@ contract PluginMapTest is BaseTest, IPlugin {
         plugin2.functions = new PluginFunction[](1);
         plugin2.functions[0] = PluginFunction(MockERC721.mint.selector, "mint(address,uint256)");
 
-        vm.startPrank(pluginMapDeployer);
+        vm.startPrank(defaultPluginSetDeployer);
 
-        pluginMap.setPlugin(plugin1);
+        defaultPluginSet.setPlugin(plugin1);
 
         vm.expectRevert("PluginState: plugin already exists.");
-        pluginMap.setPlugin(plugin2);
+        defaultPluginSet.setPlugin(plugin2);
 
         vm.stopPrank();
     }
@@ -244,8 +244,8 @@ contract PluginMapTest is BaseTest, IPlugin {
         plugin1.functions = new PluginFunction[](1);
         plugin1.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
 
-        vm.prank(pluginMapDeployer);
+        vm.prank(defaultPluginSetDeployer);
         vm.expectRevert("PluginState: adding plugin without implementation.");
-        pluginMap.setPlugin(plugin1);
+        defaultPluginSet.setPlugin(plugin1);
     }
 }

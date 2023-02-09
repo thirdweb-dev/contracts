@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./IPluginMap.sol";
+import "./IDefaultPluginSet.sol";
 
-interface ITWRouter is IPluginMap {
+interface ITWRouter is IDefaultPluginSet {
     /*///////////////////////////////////////////////////////////////
                         External functions
     //////////////////////////////////////////////////////////////*/

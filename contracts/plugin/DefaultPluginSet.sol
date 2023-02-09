@@ -2,20 +2,20 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import "./interface/IPluginMap.sol";
+import "./interface/IDefaultPluginSet.sol";
 
 // Extensions
 import "./PluginState.sol";
 import "../lib/TWStringSet.sol";
 
-contract PluginMap is IPluginMap, PluginState {
+contract DefaultPluginSet is IDefaultPluginSet, PluginState {
     using TWStringSet for TWStringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice The deployer of PluginMap.
+    /// @notice The deployer of DefaultPluginSet.
     address private deployer;
 
     /*///////////////////////////////////////////////////////////////
@@ -30,9 +30,9 @@ contract PluginMap is IPluginMap, PluginState {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Stores a plugin in the PluginMap.
+    /// @notice Stores a plugin in the DefaultPluginSet.
     function setPlugin(Plugin memory _plugin) external {
-        require(msg.sender == deployer, "PluginMap: unauthorized caller.");
+        require(msg.sender == deployer, "DefaultPluginSet: unauthorized caller.");
         _addPlugin(_plugin);
     }
 
@@ -57,7 +57,7 @@ contract PluginMap is IPluginMap, PluginState {
     /// @notice Returns all functions that belong to the given plugin contract.
     function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        require(data.pluginNames.contains(_pluginName), "PluginMap: plugin does not exist.");
+        require(data.pluginNames.contains(_pluginName), "DefaultPluginSet: plugin does not exist.");
         return data.plugins[_pluginName].functions;
     }
 
@@ -65,21 +65,21 @@ contract PluginMap is IPluginMap, PluginState {
     function getPluginForFunction(bytes4 _functionSelector) external view returns (PluginMetadata memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         PluginMetadata memory metadata = data.pluginMetadata[_functionSelector];
-        require(metadata.implementation != address(0), "PluginMap: no plugin for function.");
+        require(metadata.implementation != address(0), "DefaultPluginSet: no plugin for function.");
         return metadata;
     }
 
     /// @notice Returns the plugin's implementation smart contract address.
     function getPluginImplementation(string memory _pluginName) external view returns (address) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        require(data.pluginNames.contains(_pluginName), "PluginMap: plugin does not exist.");
+        require(data.pluginNames.contains(_pluginName), "DefaultPluginSet: plugin does not exist.");
         return data.plugins[_pluginName].metadata.implementation;
     }
 
     /// @notice Returns the plugin metadata and functions for a given plugin.
     function getPlugin(string memory _pluginName) external view returns (Plugin memory) {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        require(data.pluginNames.contains(_pluginName), "PluginMap: plugin does not exist.");
+        require(data.pluginNames.contains(_pluginName), "DefaultPluginSet: plugin does not exist.");
         return data.plugins[_pluginName];
     }
 }

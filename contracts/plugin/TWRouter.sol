@@ -10,7 +10,7 @@ import "../extension/Multicall.sol";
 
 // Plugin pattern imports
 import "./Router.sol";
-import "./PluginMap.sol";
+import "./DefaultPluginSet.sol";
 import "./PluginState.sol";
 import "./interface/IPluginRegistry.sol";
 
@@ -21,8 +21,8 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice The PluginMap that stores default plugins of the router.
-    address public immutable pluginMap;
+    /// @notice The DefaultPluginSet that stores default plugins of the router.
+    address public immutable defaultPluginSet;
 
     /// @notice The PluginRegistry that stores all latest, vetted plugins available to router.
     address public immutable pluginRegistry;
@@ -34,8 +34,8 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
     constructor(address _pluginRegistry, string[] memory _pluginNames) {
         pluginRegistry = _pluginRegistry;
 
-        PluginMap map = new PluginMap();
-        pluginMap = address(map);
+        DefaultPluginSet map = new DefaultPluginSet();
+        defaultPluginSet = address(map);
 
         uint256 len = _pluginNames.length;
 
@@ -80,10 +80,10 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
 
     /**
      *  @notice Returns all plugins stored. Override default lugins stored in router are
-     *          given precedence over default plugins in PluginMap.
+     *          given precedence over default plugins in DefaultPluginSet.
      */
     function getAllPlugins() external view returns (Plugin[] memory allPlugins) {
-        Plugin[] memory mapPlugins = IPluginMap(pluginMap).getAllPlugins();
+        Plugin[] memory mapPlugins = IDefaultPluginSet(defaultPluginSet).getAllPlugins();
         uint256 mapPluginsLen = mapPlugins.length;
 
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
@@ -123,7 +123,7 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
         return
             isOverride
                 ? data.plugins[_pluginName].functions
-                : IPluginMap(pluginMap).getAllFunctionsOfPlugin(_pluginName);
+                : IDefaultPluginSet(defaultPluginSet).getAllFunctionsOfPlugin(_pluginName);
     }
 
     /// @dev Returns the plugin metadata for a given function.
@@ -133,7 +133,7 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
 
         bool isOverride = metadata.implementation != address(0);
 
-        return isOverride ? metadata : IPluginMap(pluginMap).getPluginForFunction(_functionSelector);
+        return isOverride ? metadata : IDefaultPluginSet(defaultPluginSet).getPluginForFunction(_functionSelector);
     }
 
     /// @dev Returns the plugin's implementation smart contract address.
@@ -144,7 +144,7 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
         return
             isOverride
                 ? data.plugins[_pluginName].metadata.implementation
-                : IPluginMap(pluginMap).getPluginImplementation(_pluginName);
+                : IDefaultPluginSet(defaultPluginSet).getPluginImplementation(_pluginName);
     }
 
     /// @dev Returns the plugin metadata and functions for a given plugin.
@@ -152,7 +152,7 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         bool isOverride = data.pluginNames.contains(_pluginName);
 
-        return isOverride ? data.plugins[_pluginName] : IPluginMap(pluginMap).getPlugin(_pluginName);
+        return isOverride ? data.plugins[_pluginName] : IDefaultPluginSet(defaultPluginSet).getPlugin(_pluginName);
     }
 
     /// @dev Returns the plugin implementation address stored in router, for the given function.
@@ -165,7 +165,7 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
         PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
         pluginAddress = data.pluginMetadata[_functionSelector].implementation;
         if (pluginAddress == address(0)) {
-            pluginAddress = IPluginMap(pluginMap).getPluginForFunction(msg.sig).implementation;
+            pluginAddress = IDefaultPluginSet(defaultPluginSet).getPluginForFunction(msg.sig).implementation;
         }
     }
 

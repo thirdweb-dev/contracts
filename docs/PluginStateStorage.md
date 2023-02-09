@@ -1,4 +1,4 @@
-# RouterStorage
+# PluginStateStorage
 
 
 
@@ -10,10 +10,10 @@
 
 ## Methods
 
-### ROUTER_STORAGE_POSITION
+### PLUGIN_STATE_STORAGE_POSITION
 
 ```solidity
-function ROUTER_STORAGE_POSITION() external view returns (bytes32)
+function PLUGIN_STATE_STORAGE_POSITION() external view returns (bytes32)
 ```
 
 

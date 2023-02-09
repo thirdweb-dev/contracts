@@ -11,8 +11,6 @@ import "./mocks/MockThirdwebContract.sol";
 import "contracts/TWProxy.sol";
 import "contracts/lib/TWStrings.sol";
 
-// import "contracts/plugin/interface/IPluginMap.sol";
-
 interface ITWMultichainRegistryData {
     event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId, string metadataUri);
     event Deleted(address indexed deployer, address indexed deployment, uint256 indexed chainId);

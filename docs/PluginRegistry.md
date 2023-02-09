@@ -1,10 +1,10 @@
-# TWMultichainRegistryRouter
+# PluginRegistry
 
 
 
 
 
-&quot;Inherited by entrypoint&quot; extensions.      - PermissionsEnumerable      - ERC2771Context      - Multicall      &quot;NOT inherited by entrypoint&quot; extensions.      - TWMultichainRegistry
+
 
 
 
@@ -27,32 +27,10 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### _getPluginForFunction
-
-```solidity
-function _getPluginForFunction(bytes4 _selector) external view returns (address)
-```
-
-
-
-*View address of the plugged-in functionality contract for a given function signature.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _selector | bytes4 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### addPlugin
 
 ```solidity
-function addPlugin(IPluginMap.Plugin _plugin) external nonpayable
+function addPlugin(IPlugin.Plugin _plugin) external nonpayable
 ```
 
 
@@ -63,62 +41,106 @@ function addPlugin(IPluginMap.Plugin _plugin) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _plugin | IPluginMap.Plugin | undefined |
+| _plugin | IPlugin.Plugin | undefined |
 
 ### getAllFunctionsOfPlugin
 
 ```solidity
-function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] registered)
+function getAllFunctionsOfPlugin(string _pluginName) external view returns (struct IPlugin.PluginFunction[])
 ```
 
+Returns all functions that belong to the given plugin contract.
 
 
-*View all funtionality as list of function signatures.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _pluginAddress | address | undefined |
+| _pluginName | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| registered | bytes4[] | undefined |
+| _0 | IPlugin.PluginFunction[] | undefined |
 
 ### getAllPlugins
 
 ```solidity
-function getAllPlugins() external view returns (struct IPluginMap.Plugin[] registered)
+function getAllPlugins() external view returns (struct IPlugin.Plugin[] allPlugins)
 ```
 
+Returns all plugins stored.
 
 
-*View all funtionality existing on the contract.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| registered | IPluginMap.Plugin[] | undefined |
+| allPlugins | IPlugin.Plugin[] | undefined |
 
-### getPluginForFunction
+### getPlugin
 
 ```solidity
-function getPluginForFunction(bytes4 _selector) external view returns (address)
+function getPlugin(string _pluginName) external view returns (struct IPlugin.Plugin)
 ```
 
+Returns the plugin metadata and functions for a given plugin.
 
 
-*View address of the plugged-in functionality contract for a given function signature.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _selector | bytes4 | undefined |
+| _pluginName | string | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | IPlugin.Plugin | undefined |
+
+### getPluginForFunction
+
+```solidity
+function getPluginForFunction(bytes4 _functionSelector) external view returns (struct IPlugin.PluginMetadata)
+```
+
+Returns the plugin metadata for a given function.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _functionSelector | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | IPlugin.PluginMetadata | undefined |
+
+### getPluginImplementation
+
+```solidity
+function getPluginImplementation(string _pluginName) external view returns (address)
+```
+
+Returns the plugin&#39;s implementation smart contract address.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _pluginName | string | undefined |
 
 #### Returns
 
@@ -256,82 +278,21 @@ Checks whether an account has a particular role;                  role restricti
 |---|---|---|
 | _0 | bool | undefined |
 
-### isTrustedForwarder
-
-```solidity
-function isTrustedForwarder(address forwarder) external view returns (bool)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| forwarder | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
-### multicall
-
-```solidity
-function multicall(bytes[] data) external nonpayable returns (bytes[] results)
-```
-
-Receives and executes a batch of function calls on this contract.
-
-*Receives and executes a batch of function calls on this contract.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
-
-### pluginMap
-
-```solidity
-function pluginMap() external view returns (address)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### removePlugin
 
 ```solidity
-function removePlugin(bytes4 _selector) external nonpayable
+function removePlugin(string _pluginName) external nonpayable
 ```
 
+Remove an existing plugin from the registry.
 
 
-*Remove existing functionality from the contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _selector | bytes4 | undefined |
+| _pluginName | string | undefined |
 
 ### renounceRole
 
@@ -367,32 +328,10 @@ Revokes role from an account.
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
 
-### supportsInterface
-
-```solidity
-function supportsInterface(bytes4 interfaceId) external view returns (bool)
-```
-
-
-
-*See {IERC165-supportsInterface}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| interfaceId | bytes4 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
 ### updatePlugin
 
 ```solidity
-function updatePlugin(IPluginMap.Plugin _plugin) external nonpayable
+function updatePlugin(IPlugin.Plugin _plugin) external nonpayable
 ```
 
 
@@ -403,7 +342,7 @@ function updatePlugin(IPluginMap.Plugin _plugin) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _plugin | IPluginMap.Plugin | undefined |
+| _plugin | IPlugin.Plugin | undefined |
 
 
 
@@ -412,7 +351,7 @@ function updatePlugin(IPluginMap.Plugin _plugin) external nonpayable
 ### PluginAdded
 
 ```solidity
-event PluginAdded(bytes4 indexed functionSelector, address indexed pluginAddress)
+event PluginAdded(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
 
@@ -423,13 +362,14 @@ event PluginAdded(bytes4 indexed functionSelector, address indexed pluginAddress
 
 | Name | Type | Description |
 |---|---|---|
-| functionSelector `indexed` | bytes4 | undefined |
 | pluginAddress `indexed` | address | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
+| functionSignature  | string | undefined |
 
 ### PluginRemoved
 
 ```solidity
-event PluginRemoved(bytes4 indexed functionSelector, address indexed pluginAddress)
+event PluginRemoved(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
 
@@ -440,31 +380,14 @@ event PluginRemoved(bytes4 indexed functionSelector, address indexed pluginAddre
 
 | Name | Type | Description |
 |---|---|---|
-| functionSelector `indexed` | bytes4 | undefined |
 | pluginAddress `indexed` | address | undefined |
-
-### PluginSet
-
-```solidity
-event PluginSet(bytes4 indexed functionSelector, string indexed functionSignature, address indexed pluginAddress)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
 | functionSelector `indexed` | bytes4 | undefined |
-| functionSignature `indexed` | string | undefined |
-| pluginAddress `indexed` | address | undefined |
+| functionSignature  | string | undefined |
 
 ### PluginUpdated
 
 ```solidity
-event PluginUpdated(bytes4 indexed functionSelector, address indexed oldPluginAddress, address indexed newPluginAddress)
+event PluginUpdated(address indexed oldPluginAddress, address indexed newPluginAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
 
@@ -475,9 +398,10 @@ event PluginUpdated(bytes4 indexed functionSelector, address indexed oldPluginAd
 
 | Name | Type | Description |
 |---|---|---|
-| functionSelector `indexed` | bytes4 | undefined |
 | oldPluginAddress `indexed` | address | undefined |
 | newPluginAddress `indexed` | address | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
+| functionSignature  | string | undefined |
 
 ### RoleAdminChanged
 

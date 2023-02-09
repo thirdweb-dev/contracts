@@ -1,4 +1,4 @@
-# RouterImmutable
+# ITWRouter
 
 
 
@@ -13,7 +13,7 @@
 ### addPlugin
 
 ```solidity
-function addPlugin(string _pluginName) external nonpayable
+function addPlugin(string pluginName) external nonpayable
 ```
 
 
@@ -24,29 +24,12 @@ function addPlugin(string _pluginName) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _pluginName | string | undefined |
-
-### defaultPluginSet
-
-```solidity
-function defaultPluginSet() external view returns (address)
-```
-
-The DefaultPluginSet that stores default plugins of the router.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
+| pluginName | string | undefined |
 
 ### getAllFunctionsOfPlugin
 
 ```solidity
-function getAllFunctionsOfPlugin(string _pluginName) external view returns (struct IPlugin.PluginFunction[])
+function getAllFunctionsOfPlugin(string pluginName) external view returns (struct IPlugin.PluginFunction[])
 ```
 
 
@@ -57,7 +40,7 @@ function getAllFunctionsOfPlugin(string _pluginName) external view returns (stru
 
 | Name | Type | Description |
 |---|---|---|
-| _pluginName | string | undefined |
+| pluginName | string | undefined |
 
 #### Returns
 
@@ -68,46 +51,24 @@ function getAllFunctionsOfPlugin(string _pluginName) external view returns (stru
 ### getAllPlugins
 
 ```solidity
-function getAllPlugins() external view returns (struct IPlugin.Plugin[] allPlugins)
+function getAllPlugins() external view returns (struct IPlugin.Plugin[])
 ```
 
-Returns all plugins stored. Override default lugins stored in router are          given precedence over default plugins in DefaultPluginSet.
 
 
+*Returns all plugins stored.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| allPlugins | IPlugin.Plugin[] | undefined |
-
-### getImplementationForFunction
-
-```solidity
-function getImplementationForFunction(bytes4 _functionSelector) external view returns (address pluginAddress)
-```
-
-
-
-*Returns the plugin implementation address stored in router, for the given function.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _functionSelector | bytes4 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| pluginAddress | address | undefined |
+| _0 | IPlugin.Plugin[] | undefined |
 
 ### getPlugin
 
 ```solidity
-function getPlugin(string _pluginName) external view returns (struct IPlugin.Plugin)
+function getPlugin(string pluginName) external view returns (struct IPlugin.Plugin)
 ```
 
 
@@ -118,7 +79,7 @@ function getPlugin(string _pluginName) external view returns (struct IPlugin.Plu
 
 | Name | Type | Description |
 |---|---|---|
-| _pluginName | string | undefined |
+| pluginName | string | undefined |
 
 #### Returns
 
@@ -129,7 +90,7 @@ function getPlugin(string _pluginName) external view returns (struct IPlugin.Plu
 ### getPluginForFunction
 
 ```solidity
-function getPluginForFunction(bytes4 _functionSelector) external view returns (struct IPlugin.PluginMetadata)
+function getPluginForFunction(bytes4 functionSelector) external view returns (struct IPlugin.PluginMetadata)
 ```
 
 
@@ -140,7 +101,7 @@ function getPluginForFunction(bytes4 _functionSelector) external view returns (s
 
 | Name | Type | Description |
 |---|---|---|
-| _functionSelector | bytes4 | undefined |
+| functionSelector | bytes4 | undefined |
 
 #### Returns
 
@@ -151,7 +112,7 @@ function getPluginForFunction(bytes4 _functionSelector) external view returns (s
 ### getPluginImplementation
 
 ```solidity
-function getPluginImplementation(string _pluginName) external view returns (address)
+function getPluginImplementation(string pluginName) external view returns (address)
 ```
 
 
@@ -162,46 +123,7 @@ function getPluginImplementation(string _pluginName) external view returns (addr
 
 | Name | Type | Description |
 |---|---|---|
-| _pluginName | string | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### multicall
-
-```solidity
-function multicall(bytes[] data) external nonpayable returns (bytes[] results)
-```
-
-Receives and executes a batch of function calls on this contract.
-
-*Receives and executes a batch of function calls on this contract.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
-
-### pluginRegistry
-
-```solidity
-function pluginRegistry() external view returns (address)
-```
-
-The PluginRegistry that stores all latest, vetted plugins available to router.
-
-
-
+| pluginName | string | undefined |
 
 #### Returns
 
@@ -212,7 +134,7 @@ The PluginRegistry that stores all latest, vetted plugins available to router.
 ### removePlugin
 
 ```solidity
-function removePlugin(string _pluginName) external nonpayable
+function removePlugin(string pluginName) external nonpayable
 ```
 
 
@@ -223,12 +145,12 @@ function removePlugin(string _pluginName) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _pluginName | string | undefined |
+| pluginName | string | undefined |
 
 ### updatePlugin
 
 ```solidity
-function updatePlugin(string _pluginName) external nonpayable
+function updatePlugin(string pluginName) external nonpayable
 ```
 
 
@@ -239,7 +161,7 @@ function updatePlugin(string _pluginName) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _pluginName | string | undefined |
+| pluginName | string | undefined |
 
 
 

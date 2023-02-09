@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "./IPlugin.sol";
 
-interface IPluginMap is IPlugin {
+interface IDefaultPluginSet is IPlugin {
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/

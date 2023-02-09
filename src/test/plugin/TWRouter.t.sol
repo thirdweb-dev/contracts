@@ -323,7 +323,7 @@ contract TWRouterTest is BaseTest, IPlugin {
         TWRouter twRouter = TWRouter((payable(router)));
         twRouter.removePlugin(plugins[3].metadata.name);
 
-        vm.expectRevert("PluginMap: plugin does not exist.");
+        vm.expectRevert("DefaultPluginSet: plugin does not exist.");
         twRouter.getPlugin(plugins[3].metadata.name);
     }
 
