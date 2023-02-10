@@ -41,7 +41,7 @@ contract Marketplace is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("Marketplace");
-    uint256 private constant VERSION = 2;
+    uint256 private constant VERSION = 3;
 
     /// @dev Only lister role holders can create listings, when listings are restricted by lister address.
     bytes32 private constant LISTER_ROLE = keccak256("LISTER_ROLE");
@@ -253,7 +253,11 @@ contract Marketplace is
 
         // Tokens listed for sale in an auction are escrowed in Marketplace.
         if (newListing.listingType == ListingType.Auction) {
-            require(newListing.buyoutPricePerToken >= newListing.reservePricePerToken, "RESERVE");
+            require(
+                newListing.buyoutPricePerToken == 0 ||
+                    newListing.buyoutPricePerToken >= newListing.reservePricePerToken,
+                "RESERVE"
+            );
             transferListingTokens(tokenOwner, address(this), tokenAmountToList, newListing);
         }
 
@@ -461,6 +465,7 @@ contract Marketplace is
         if (targetListing.listingType == ListingType.Auction) {
             // A bid to an auction must be made in the auction's desired currency.
             require(newOffer.currency == targetListing.currency, "must use approved currency to bid");
+            require(newOffer.pricePerToken != 0, "bidding zero amount");
 
             // A bid must be made for all auction items.
             newOffer.quantityWanted = getSafeQuantity(targetListing.tokenType, targetListing.quantity);
