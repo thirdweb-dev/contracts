@@ -5,8 +5,14 @@ pragma solidity ^0.8.11;
 import { ITWMultichainRegistry } from "contracts/interfaces/ITWMultichainRegistry.sol";
 import { TWMultichainRegistry } from "contracts/registry/TWMultichainRegistry.sol";
 
+// Plugins
+import "contracts/plugin/PluginRegistry.sol";
+import { MultichainRegistryCore } from "contracts/registry/plugin/MultichainRegistryCore.sol";
+import "contracts/extension/Permissions.sol";
+import "contracts/openzeppelin-presets/metatx/ERC2771Context.sol";
+
 // Test imports
-import "./utils/BaseTest.sol";
+import { BaseTest } from "./utils/BaseTest.sol";
 import "./mocks/MockThirdwebContract.sol";
 import "contracts/TWProxy.sol";
 import "contracts/lib/TWStrings.sol";
@@ -16,13 +22,17 @@ interface ITWMultichainRegistryData {
     event Deleted(address indexed deployer, address indexed deployment, uint256 indexed chainId);
 }
 
-contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
+contract MetaTx is ERC2771Context {
+    constructor(address[] memory trustedForwarder) ERC2771Context(trustedForwarder) {}
+}
+
+contract TWMultichainRegistryTest is IPlugin, ITWMultichainRegistryData, BaseTest {
     // Target contract
-    TWMultichainRegistry internal multichainRegistry;
+    MultichainRegistryCore internal multichainRegistry;
 
     // Test params
     address internal operator;
-
+    address internal pluginAdmin;
     address internal contractDeployer;
 
     uint256[] internal chainIds;
@@ -42,8 +52,10 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
         super.setUp();
 
         operator = getActor(100);
-        contractDeployer = getActor(101);
+        pluginAdmin = getActor(101);
+        contractDeployer = getActor(102);
 
+        // Populate test data.
         for (uint256 i = 0; i < numberOfChains; i += 1) {
             chainIds.push(i);
 
@@ -58,15 +70,87 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
             vm.stopPrank();
         }
 
-        // PluginRegistry, Plugin names: null values.
-        address pluginRegistry = address(0);
-        string[] memory pluginNames = new string[](0);
+        // Deploy plugins
 
-        address payable registryImpl = payable(
-            address(new TWMultichainRegistry(forwarders(), pluginRegistry, pluginNames))
+        // Plugin: ERC2771Context
+        address erc2771Context = address(new MetaTx(forwarders()));
+
+        Plugin memory plugin_erc2771Context;
+        plugin_erc2771Context.metadata = PluginMetadata({
+            name: "ERC2771Context",
+            metadataURI: "ipfs://ERC2771Context",
+            implementation: erc2771Context
+        });
+
+        plugin_erc2771Context.functions = new PluginFunction[](1);
+        plugin_erc2771Context.functions[0] = PluginFunction(
+            ERC2771Context.isTrustedForwarder.selector,
+            "isTrustedForwarder(address)"
         );
 
-        multichainRegistry = TWMultichainRegistry(
+        // Plugin: Permissions
+        address permissions = address(new Permissions());
+
+        Plugin memory plugin_permissions;
+        plugin_permissions.metadata = PluginMetadata({
+            name: "Permissions",
+            metadataURI: "ipfs://Permissions",
+            implementation: permissions
+        });
+
+        plugin_permissions.functions = new PluginFunction[](1);
+        plugin_permissions.functions[0] = PluginFunction(Permissions.hasRole.selector, "hasRole(bytes32,address)");
+
+        // Plugin: MultichainRegistryCore
+        address multichainRegistryCore = address(new MultichainRegistryCore());
+
+        Plugin memory plugin_multichainRegistryCore;
+        plugin_multichainRegistryCore.metadata = PluginMetadata({
+            name: "MultichainRegistryCore",
+            metadataURI: "ipfs://MultichainRegistryCore",
+            implementation: multichainRegistryCore
+        });
+
+        plugin_multichainRegistryCore.functions = new PluginFunction[](5);
+        plugin_multichainRegistryCore.functions[0] = PluginFunction(
+            MultichainRegistryCore.add.selector,
+            "add(address,address,uint256,string)"
+        );
+        plugin_multichainRegistryCore.functions[1] = PluginFunction(
+            MultichainRegistryCore.remove.selector,
+            "remove(address,address,uint256)"
+        );
+        plugin_multichainRegistryCore.functions[2] = PluginFunction(
+            MultichainRegistryCore.getAll.selector,
+            "getAll(address)"
+        );
+        plugin_multichainRegistryCore.functions[3] = PluginFunction(
+            MultichainRegistryCore.count.selector,
+            "count(address)"
+        );
+        plugin_multichainRegistryCore.functions[4] = PluginFunction(
+            MultichainRegistryCore.getMetadataUri.selector,
+            "getMetadataUri(uint256,address)"
+        );
+
+        // Deploy plugin registry
+        vm.startPrank(pluginAdmin);
+        PluginRegistry pluginRegistry = new PluginRegistry(pluginAdmin);
+
+        pluginRegistry.addPlugin(plugin_erc2771Context);
+        pluginRegistry.addPlugin(plugin_permissions);
+        pluginRegistry.addPlugin(plugin_multichainRegistryCore);
+
+        vm.stopPrank();
+
+        string[] memory pluginNames = new string[](3);
+        pluginNames[0] = plugin_erc2771Context.metadata.name;
+        pluginNames[1] = plugin_permissions.metadata.name;
+        pluginNames[2] = plugin_multichainRegistryCore.metadata.name;
+
+        address payable registryImpl = payable(address(new TWMultichainRegistry(address(pluginRegistry), pluginNames)));
+
+        multichainRegistry = MultichainRegistryCore(
             payable(
                 address(
                     new TWProxy(
@@ -76,8 +160,6 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
                 )
             )
         );
-
-        vm.stopPrank();
     }
 
     /// ========== Test `add` ==========

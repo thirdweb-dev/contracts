@@ -2,10 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "../plugin/TWRouter.sol";
-import "../extension/PermissionsEnumerable.sol";
 import "../extension/Initializable.sol";
+import "../extension/PermissionsEnumerable.sol";
 import "../openzeppelin-presets/utils/EnumerableSet.sol";
-import "../openzeppelin-presets/metatx/ERC2771Context.sol";
 import "../interfaces/ITWMultichainRegistry.sol";
 
 library TWMultichainRegistryStorage {
@@ -27,12 +26,7 @@ library TWMultichainRegistryStorage {
     }
 }
 
-contract TWMultichainRegistry is ITWMultichainRegistry, Initializable, TWRouter, ERC2771Context, PermissionsEnumerable {
-    bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
-
-    using EnumerableSet for EnumerableSet.AddressSet;
-    using EnumerableSet for EnumerableSet.UintSet;
-
+contract TWMultichainRegistry is Initializable, TWRouter, PermissionsEnumerable {
     /*///////////////////////////////////////////////////////////////
                         Generic contract logic
     //////////////////////////////////////////////////////////////*/
@@ -51,111 +45,14 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Initializable, TWRouter,
                     Constructor and Initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(
-        address[] memory _trustedForwarder,
-        address _pluginRegistry,
-        string[] memory _pluginNames
-    ) ERC2771Context(_trustedForwarder) TWRouter(_pluginRegistry, _pluginNames) {}
+    constructor(address _pluginRegistry, string[] memory _pluginNames) TWRouter(_pluginRegistry, _pluginNames) {}
 
     function initialize(address _defaultAdmin) external initializer {
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(OPERATOR_ROLE, _defaultAdmin);
-    }
+        bytes32 operatorRole = keccak256("OPERATOR_ROLE");
+        bytes32 defaultAdminRole = 0x00;
 
-    /*///////////////////////////////////////////////////////////////
-                            Core Functions
-    //////////////////////////////////////////////////////////////*/
-
-    // slither-disable-next-line similar-names
-    function add(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId,
-        string memory metadataUri
-    ) external {
-        require(
-            hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
-            "Multichain Registry: not operator or deployer."
-        );
-
-        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
-
-        bool added = data.deployments[_deployer][_chainId].add(_deployment);
-        require(added, "Multichain Registry: contract already added.");
-
-        data.chainIds.add(_chainId);
-
-        if (bytes(metadataUri).length > 0) {
-            data.addressToMetadataUri[_chainId][_deployment] = metadataUri;
-        }
-
-        emit Added(_deployer, _deployment, _chainId, metadataUri);
-    }
-
-    // slither-disable-next-line similar-names
-    function remove(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId
-    ) external {
-        require(
-            hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
-            "Multichain Registry: not operator or deployer."
-        );
-
-        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
-
-        bool removed = data.deployments[_deployer][_chainId].remove(_deployment);
-        require(removed, "Multichain Registry: contract already removed.");
-
-        emit Deleted(_deployer, _deployment, _chainId);
-    }
-
-    function getAll(address _deployer) external view returns (Deployment[] memory allDeployments) {
-        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
-        uint256 totalDeployments;
-        uint256 chainIdsLen = data.chainIds.length();
-
-        for (uint256 i = 0; i < chainIdsLen; i += 1) {
-            uint256 chainId = data.chainIds.at(i);
-
-            totalDeployments += data.deployments[_deployer][chainId].length();
-        }
-
-        allDeployments = new Deployment[](totalDeployments);
-        uint256 idx;
-
-        for (uint256 j = 0; j < chainIdsLen; j += 1) {
-            uint256 chainId = data.chainIds.at(j);
-
-            uint256 len = data.deployments[_deployer][chainId].length();
-            address[] memory deploymentAddrs = data.deployments[_deployer][chainId].values();
-
-            for (uint256 k = 0; k < len; k += 1) {
-                allDeployments[idx] = Deployment({
-                    deploymentAddress: deploymentAddrs[k],
-                    chainId: chainId,
-                    metadataURI: data.addressToMetadataUri[chainId][deploymentAddrs[k]]
-                });
-                idx += 1;
-            }
-        }
-    }
-
-    function count(address _deployer) external view returns (uint256 deploymentCount) {
-        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
-        uint256 chainIdsLen = data.chainIds.length();
-
-        for (uint256 i = 0; i < chainIdsLen; i += 1) {
-            uint256 chainId = data.chainIds.at(i);
-
-            deploymentCount += data.deployments[_deployer][chainId].length();
-        }
-    }
-
-    function getMetadataUri(uint256 _chainId, address _deployment) external view returns (string memory metadataUri) {
-        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
-        metadataUri = data.addressToMetadataUri[_chainId][_deployment];
+        _setupRole(defaultAdminRole, _defaultAdmin);
+        _setupRole(operatorRole, _defaultAdmin);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -164,6 +61,7 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Initializable, TWRouter,
 
     /// @dev Returns whether a plugin can be set in the given execution context.
     function _canSetPlugin() internal view virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        bytes32 defaultAdminRole = 0x00;
+        return IPermissions(address(this)).hasRole(defaultAdminRole, msg.sender);
     }
 }
