@@ -27,42 +27,6 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### OPERATOR_ROLE
-
-```solidity
-function OPERATOR_ROLE() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
-### add
-
-```solidity
-function add(address _deployer, address _deployment, uint256 _chainId, string metadataUri) external nonpayable
-```
-
-Add a deployment for a deployer.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _deployer | address | undefined |
-| _deployment | address | undefined |
-| _chainId | uint256 | undefined |
-| metadataUri | string | undefined |
-
 ### addPlugin
 
 ```solidity
@@ -113,28 +77,6 @@ function contractVersion() external pure returns (uint8)
 |---|---|---|
 | _0 | uint8 | undefined |
 
-### count
-
-```solidity
-function count(address _deployer) external view returns (uint256 deploymentCount)
-```
-
-Get the total number of deployments for a deployer.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _deployer | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| deploymentCount | uint256 | undefined |
-
 ### defaultPluginSet
 
 ```solidity
@@ -151,28 +93,6 @@ The DefaultPluginSet that stores default plugins of the router.
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### getAll
-
-```solidity
-function getAll(address _deployer) external view returns (struct ITWMultichainRegistry.Deployment[] allDeployments)
-```
-
-Get all deployments for a deployer.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _deployer | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| allDeployments | ITWMultichainRegistry.Deployment[] | undefined |
 
 ### getAllFunctionsOfPlugin
 
@@ -234,29 +154,6 @@ function getImplementationForFunction(bytes4 _functionSelector) external view re
 | Name | Type | Description |
 |---|---|---|
 | pluginAddress | address | undefined |
-
-### getMetadataUri
-
-```solidity
-function getMetadataUri(uint256 _chainId, address _deployment) external view returns (string metadataUri)
-```
-
-Returns the metadata IPFS URI for a deployment on a given chain if previously registered via add().
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _chainId | uint256 | undefined |
-| _deployment | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| metadataUri | string | undefined |
 
 ### getPlugin
 
@@ -470,28 +367,6 @@ function initialize(address _defaultAdmin) external nonpayable
 |---|---|---|
 | _defaultAdmin | address | undefined |
 
-### isTrustedForwarder
-
-```solidity
-function isTrustedForwarder(address forwarder) external view returns (bool)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| forwarder | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
 ### multicall
 
 ```solidity
@@ -530,24 +405,6 @@ The PluginRegistry that stores all latest, vetted plugins available to router.
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### remove
-
-```solidity
-function remove(address _deployer, address _deployment, uint256 _chainId) external nonpayable
-```
-
-Remove a deployment for a deployer.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _deployer | address | undefined |
-| _deployment | address | undefined |
-| _chainId | uint256 | undefined |
 
 ### removePlugin
 
@@ -618,43 +475,6 @@ function updatePlugin(string _pluginName) external nonpayable
 
 
 ## Events
-
-### Added
-
-```solidity
-event Added(address indexed deployer, address indexed deployment, uint256 indexed chainId, string metadataUri)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| deployer `indexed` | address | undefined |
-| deployment `indexed` | address | undefined |
-| chainId `indexed` | uint256 | undefined |
-| metadataUri  | string | undefined |
-
-### Deleted
-
-```solidity
-event Deleted(address indexed deployer, address indexed deployment, uint256 indexed chainId)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| deployer `indexed` | address | undefined |
-| deployment `indexed` | address | undefined |
-| chainId `indexed` | uint256 | undefined |
 
 ### Initialized
 
