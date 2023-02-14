@@ -4,6 +4,26 @@ pragma solidity ^0.8.0;
 import "./interface/IContractMetadata.sol";
 
 /**
+ *  @author  thirdweb.com
+ */
+library ContractMetadataStorage {
+    bytes32 public constant CONTRACT_METADATA_STORAGE_POSITION = keccak256("contract.metadata.storage");
+
+    struct Data {
+        string contractURI;
+    }
+
+    function contractMetadataStorage() internal pure returns (Data storage contractMetadataData) {
+        bytes32 position = CONTRACT_METADATA_STORAGE_POSITION;
+        assembly {
+            contractMetadataData.slot := position
+        }
+    }
+}
+
+/**
+ *  @author  thirdweb.com
+ *
  *  @title   Contract Metadata
  *  @notice  Thirdweb's `ContractMetadata` is a contract extension for any base contracts. It lets you set a metadata URI
  *           for you contract.
@@ -11,8 +31,11 @@ import "./interface/IContractMetadata.sol";
  */
 
 abstract contract ContractMetadata is IContractMetadata {
-    /// @notice Returns the contract metadata URI.
-    string public override contractURI;
+    /// @dev Returns the metadata URI of the contract.
+    function contractURI() public view returns (string memory) {
+        ContractMetadataStorage.Data storage data = ContractMetadataStorage.contractMetadataStorage();
+        return data.contractURI;
+    }
 
     /**
      *  @notice         Lets a contract admin set the URI for contract-level metadata.
@@ -32,8 +55,9 @@ abstract contract ContractMetadata is IContractMetadata {
 
     /// @dev Lets a contract admin set the URI for contract-level metadata.
     function _setupContractURI(string memory _uri) internal {
-        string memory prevURI = contractURI;
-        contractURI = _uri;
+        ContractMetadataStorage.Data storage data = ContractMetadataStorage.contractMetadataStorage();
+        string memory prevURI = data.contractURI;
+        data.contractURI = _uri;
 
         emit ContractURIUpdated(prevURI, _uri);
     }

@@ -4,6 +4,29 @@ pragma solidity ^0.8.0;
 import "./interface/IPlatformFee.sol";
 
 /**
+ *  @author  thirdweb.com
+ */
+library PlatformFeeStorage {
+    bytes32 public constant PLATFORM_FEE_STORAGE_POSITION = keccak256("platform.fee.storage");
+
+    struct Data {
+        /// @dev The address that receives all platform fees from all sales.
+        address platformFeeRecipient;
+        /// @dev The % of primary sales collected as platform fees.
+        uint16 platformFeeBps;
+    }
+
+    function platformFeeStorage() internal pure returns (Data storage platformFeeData) {
+        bytes32 position = PLATFORM_FEE_STORAGE_POSITION;
+        assembly {
+            platformFeeData.slot := position
+        }
+    }
+}
+
+/**
+ *  @author  thirdweb.com
+ *
  *  @title   Platform Fee
  *  @notice  Thirdweb's `PlatformFee` is a contract extension to be used with any base contract. It exposes functions for setting and reading
  *           the recipient of platform fee and the platform fee basis points, and lets the inheriting contract perform conditional logic
@@ -11,15 +34,10 @@ import "./interface/IPlatformFee.sol";
  */
 
 abstract contract PlatformFee is IPlatformFee {
-    /// @dev The address that receives all platform fees from all sales.
-    address private platformFeeRecipient;
-
-    /// @dev The % of primary sales collected as platform fees.
-    uint16 private platformFeeBps;
-
     /// @dev Returns the platform fee recipient and bps.
     function getPlatformFeeInfo() public view override returns (address, uint16) {
-        return (platformFeeRecipient, uint16(platformFeeBps));
+        PlatformFeeStorage.Data storage data = PlatformFeeStorage.platformFeeStorage();
+        return (data.platformFeeRecipient, uint16(data.platformFeeBps));
     }
 
     /**
@@ -40,12 +58,13 @@ abstract contract PlatformFee is IPlatformFee {
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
     function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
+        PlatformFeeStorage.Data storage data = PlatformFeeStorage.platformFeeStorage();
         if (_platformFeeBps > 10_000) {
             revert("Exceeds max bps");
         }
 
-        platformFeeBps = uint16(_platformFeeBps);
-        platformFeeRecipient = _platformFeeRecipient;
+        data.platformFeeBps = uint16(_platformFeeBps);
+        data.platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
     }

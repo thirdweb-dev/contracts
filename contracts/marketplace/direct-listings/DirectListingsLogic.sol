@@ -14,15 +14,15 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // ====== Internal imports ======
 
 import "../../extension/plugin/PlatformFeeLogic.sol";
-import "../../extension/plugin/ERC2771ContextConsumer.sol";
-import "../../extension/plugin/ReentrancyGuardLogic.sol";
+import "../../plugin/utils/ERC2771ContextConsumer.sol";
+import "../../plugin/utils/ReentrancyGuardUpgradeable.sol";
 import "../../extension/plugin/PermissionsEnumerableLogic.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 /**
  * @author  thirdweb.com
  */
-contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771ContextConsumer {
+contract DirectListingsLogic is IDirectListings, ReentrancyGuardUpgradeable, ERC2771ContextConsumer {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
