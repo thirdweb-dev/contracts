@@ -11,11 +11,11 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 import "../../extension/Initializable.sol";
 import "../../extension/ContractMetadata.sol";
 import "../../extension/PlatformFee.sol";
-import "../../extension/PermissionsEnumerable.sol";
+import "../extension/PermissionsEnumerable.sol";
 import "../../plugin/TWRouter.sol";
 
-import { ReentrancyGuardUpgradeable } from "../../plugin/utils/ReentrancyGuardUpgradeable.sol";
-import { ERC2771ContextUpgradeable } from "../../plugin/utils/ERC2771ContextUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "../extension/ReentrancyGuardUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "../extension/ERC2771ContextUpgradeable.sol";
 import { ERC165 } from "../../eip/ERC165.sol";
 
 /**

@@ -16,9 +16,9 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // ====== Internal imports ======
 
 import "../../extension/interface/IPlatformFee.sol";
-import "../../plugin/utils/ERC2771ContextConsumer.sol";
-import "../../plugin/utils/ReentrancyGuardUpgradeable.sol";
-import "../../extension/plugin/PermissionsEnumerableLogic.sol";
+import "../extension/ERC2771ContextConsumer.sol";
+import "../extension/ReentrancyGuardUpgradeable.sol";
+import "../extension/Permissions.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 /**
@@ -39,7 +39,7 @@ contract OffersLogic is IOffers, ReentrancyGuardUpgradeable, ERC2771ContextConsu
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyAssetRole(address _asset) {
-        require(PermissionsLogic(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 

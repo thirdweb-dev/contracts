@@ -13,10 +13,10 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../../extension/plugin/PlatformFeeLogic.sol";
-import "../../plugin/utils/ERC2771ContextConsumer.sol";
-import "../../plugin/utils/ReentrancyGuardUpgradeable.sol";
-import "../../extension/plugin/PermissionsEnumerableLogic.sol";
+import "../../extension/interface/IPlatformFee.sol";
+import "../extension/ERC2771ContextConsumer.sol";
+import "../extension/ReentrancyGuardUpgradeable.sol";
+import "../extension/Permissions.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 /**
@@ -44,13 +44,13 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardUpgradeable, ERC
 
     /// @dev Checks whether the caller has LISTER_ROLE.
     modifier onlyListerRole() {
-        require(PermissionsEnumerableLogic(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
         _;
     }
 
     /// @dev Checks whether the caller has ASSET_ROLE.
     modifier onlyAssetRole(address _asset) {
-        require(PermissionsEnumerableLogic(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 
@@ -511,7 +511,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardUpgradeable, ERC
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-        (address platformFeeRecipient, uint16 platformFeeBps) = PlatformFeeLogic(address(this)).getPlatformFeeInfo();
+        (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
         uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
         uint256 royaltyCut;
