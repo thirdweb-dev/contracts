@@ -1,6 +1,6 @@
 # InitStorage
 
-
+*thirdweb.com*
 
 
 

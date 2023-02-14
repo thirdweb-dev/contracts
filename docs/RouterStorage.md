@@ -1,4 +1,4 @@
-# PluginStateStorage
+# RouterStorage
 
 *thirdweb.com*
 
@@ -10,10 +10,10 @@
 
 ## Methods
 
-### PLUGIN_STATE_STORAGE_POSITION
+### ROUTER_STORAGE_POSITION
 
 ```solidity
-function PLUGIN_STATE_STORAGE_POSITION() external view returns (bytes32)
+function ROUTER_STORAGE_POSITION() external view returns (bytes32)
 ```
 
 

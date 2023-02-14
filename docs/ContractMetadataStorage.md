@@ -1,4 +1,4 @@
-# PluginStateStorage
+# ContractMetadataStorage
 
 *thirdweb.com*
 
@@ -10,10 +10,10 @@
 
 ## Methods
 
-### PLUGIN_STATE_STORAGE_POSITION
+### CONTRACT_METADATA_STORAGE_POSITION
 
 ```solidity
-function PLUGIN_STATE_STORAGE_POSITION() external view returns (bytes32)
+function CONTRACT_METADATA_STORAGE_POSITION() external view returns (bytes32)
 ```
 
 
