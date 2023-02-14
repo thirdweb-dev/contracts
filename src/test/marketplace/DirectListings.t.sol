@@ -1479,250 +1479,257 @@ contract MarketplaceDirectListingsTest is BaseTest {
     }
 }
 
-// contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
-//     // Target contract
-//     address public marketplace;
+contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
+    address private registryDeployer;
 
-//     // Participants
-//     address public adminDeployer;
-//     address public marketplaceDeployer;
-//     address public seller;
-//     address public buyer;
+    PluginRegistry private pluginRegistry;
 
-//     function setUp() public override {
-//         super.setUp();
+    mapping(uint256 => IPlugin.Plugin) private plugins;
 
-//         adminDeployer = getActor(0);
-//         marketplaceDeployer = getActor(1);
-//         seller = getActor(2);
-//         buyer = getActor(3);
+    // Target contract
+    address public marketplace;
 
-//         setupMarketplace(adminDeployer, marketplaceDeployer);
-//     }
+    // Participants
+    address public adminDeployer;
+    address public marketplaceDeployer;
+    address public seller;
+    address public buyer;
 
-//     function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
-//         vm.startPrank(_adminDeployer);
+    function setUp() public override {
+        super.setUp();
 
-//         // [1] Deploy `DirectListings`
-//         address directListings = address(new DirectListingsLogic(address(weth)));
+        adminDeployer = getActor(0);
+        marketplaceDeployer = getActor(1);
+        seller = getActor(2);
+        buyer = getActor(3);
+        registryDeployer = getActor(4);
 
-//         // [2] Index `DirectListings` functions in `Map`
-//         IPluginMap.Plugin[] memory plugins = new IPluginMap.Plugin[](13);
-//         plugins[0] = IPluginMap.Plugin(DirectListingsLogic.totalListings.selector, "totalListings()", directListings);
-//         plugins[1] = IPluginMap.Plugin(
-//             DirectListingsLogic.isBuyerApprovedForListing.selector,
-//             "isBuyerApprovedForListing(uint256,address)",
-//             directListings
-//         );
-//         plugins[2] = IPluginMap.Plugin(
-//             DirectListingsLogic.isCurrencyApprovedForListing.selector,
-//             "isCurrencyApprovedForListing(uint256,address)",
-//             directListings
-//         );
-//         plugins[3] = IPluginMap.Plugin(
-//             DirectListingsLogic.currencyPriceForListing.selector,
-//             "currencyPriceForListing(uint256,address)",
-//             directListings
-//         );
-//         plugins[4] = IPluginMap.Plugin(
-//             DirectListingsLogic.createListing.selector,
-//             "createListing((address,uint256,uint256,address,uint256,uint128,uint128,bool))",
-//             directListings
-//         );
-//         plugins[5] = IPluginMap.Plugin(
-//             DirectListingsLogic.updateListing.selector,
-//             "updateListing(uint256,(address,uint256,uint256,address,uint256,uint128,uint128,bool))",
-//             directListings
-//         );
-//         plugins[6] = IPluginMap.Plugin(
-//             DirectListingsLogic.cancelListing.selector,
-//             "cancelListing(uint256)",
-//             directListings
-//         );
-//         plugins[7] = IPluginMap.Plugin(
-//             DirectListingsLogic.approveBuyerForListing.selector,
-//             "approveBuyerForListing(uint256,address,bool)",
-//             directListings
-//         );
-//         plugins[8] = IPluginMap.Plugin(
-//             DirectListingsLogic.approveCurrencyForListing.selector,
-//             "approveCurrencyForListing(uint256,address,uint256)",
-//             directListings
-//         );
-//         plugins[9] = IPluginMap.Plugin(
-//             DirectListingsLogic.buyFromListing.selector,
-//             "buyFromListing(uint256,address,uint256,address,uint256)",
-//             directListings
-//         );
-//         plugins[10] = IPluginMap.Plugin(
-//             DirectListingsLogic.getAllListings.selector,
-//             "getAllListings(uint256,uint256)",
-//             directListings
-//         );
-//         plugins[11] = IPluginMap.Plugin(
-//             DirectListingsLogic.getAllValidListings.selector,
-//             "getAllValidListings(uint256,uint256)",
-//             directListings
-//         );
-//         plugins[12] = IPluginMap.Plugin(DirectListingsLogic.getListing.selector, "getListing(uint256)", directListings);
+        vm.prank(registryDeployer);
+        pluginRegistry = new PluginRegistry(registryDeployer);
 
-//         // [3] Deploy `PluginMap`.
-//         PluginMap map = new PluginMap(plugins);
-//         assertEq(map.getAllFunctionsOfPlugin(directListings).length, 13);
+        setupMarketplace(adminDeployer, marketplaceDeployer);
+    }
 
-//         // [4] Deploy `MarketplaceV3`
+    function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
+        string[] memory pluginNames = new string[](1);
 
-//         MarketplaceV3 router = new MarketplaceV3(address(map));
+        plugins[0].metadata = IPlugin.PluginMetadata({
+            name: "DirectListingsLogic",
+            metadataURI: "ipfs://direct",
+            implementation: address(new DirectListingsLogic(address(weth)))
+        });
 
-//         vm.stopPrank();
+        // [1] Index `DirectListings` functions in `Plugin`
+        IPlugin.PluginFunction[] memory pluginFunctions = new IPlugin.PluginFunction[](13);
+        pluginFunctions[0] = IPlugin.PluginFunction(DirectListingsLogic.totalListings.selector, "totalListings()");
+        pluginFunctions[1] = IPlugin.PluginFunction(
+            DirectListingsLogic.isBuyerApprovedForListing.selector,
+            "isBuyerApprovedForListing(uint256,address)"
+        );
+        pluginFunctions[2] = IPlugin.PluginFunction(
+            DirectListingsLogic.isCurrencyApprovedForListing.selector,
+            "isCurrencyApprovedForListing(uint256,address)"
+        );
+        pluginFunctions[3] = IPlugin.PluginFunction(
+            DirectListingsLogic.currencyPriceForListing.selector,
+            "currencyPriceForListing(uint256,address)"
+        );
+        pluginFunctions[4] = IPlugin.PluginFunction(
+            DirectListingsLogic.createListing.selector,
+            "createListing((address,uint256,uint256,address,uint256,uint128,uint128,bool))"
+        );
+        pluginFunctions[5] = IPlugin.PluginFunction(
+            DirectListingsLogic.updateListing.selector,
+            "updateListing(uint256,(address,uint256,uint256,address,uint256,uint128,uint128,bool))"
+        );
+        pluginFunctions[6] = IPlugin.PluginFunction(
+            DirectListingsLogic.cancelListing.selector,
+            "cancelListing(uint256)"
+        );
+        pluginFunctions[7] = IPlugin.PluginFunction(
+            DirectListingsLogic.approveBuyerForListing.selector,
+            "approveBuyerForListing(uint256,address,bool)"
+        );
+        pluginFunctions[8] = IPlugin.PluginFunction(
+            DirectListingsLogic.approveCurrencyForListing.selector,
+            "approveCurrencyForListing(uint256,address,uint256)"
+        );
+        pluginFunctions[9] = IPlugin.PluginFunction(
+            DirectListingsLogic.buyFromListing.selector,
+            "buyFromListing(uint256,address,uint256,address,uint256)"
+        );
+        pluginFunctions[10] = IPlugin.PluginFunction(
+            DirectListingsLogic.getAllListings.selector,
+            "getAllListings(uint256,uint256)"
+        );
+        pluginFunctions[11] = IPlugin.PluginFunction(
+            DirectListingsLogic.getAllValidListings.selector,
+            "getAllValidListings(uint256,uint256)"
+        );
+        pluginFunctions[12] = IPlugin.PluginFunction(DirectListingsLogic.getListing.selector, "getListing(uint256)");
 
-//         // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
-//         vm.prank(_marketplaceDeployer);
-//         marketplace = address(
-//             new TWProxy(
-//                 address(router),
-//                 abi.encodeCall(
-//                     MarketplaceV3.initialize,
-//                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
-//                 )
-//             )
-//         );
+        for (uint256 i = 0; i < pluginFunctions.length; i++) {
+            plugins[0].functions.push(pluginFunctions[i]);
+        }
+        pluginNames[0] = plugins[0].metadata.name;
 
-//         // [6] Setup roles for seller and assets
-//         vm.startPrank(marketplaceDeployer);
-//         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
-//         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
-//         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));
+        // [2] Add plugin to registry
+        vm.prank(registryDeployer);
+        pluginRegistry.addPlugin(plugins[0]);
 
-//         vm.stopPrank();
+        // [3] Deploy `MarketplaceV3` implementation
+        vm.startPrank(_adminDeployer);
+        MarketplaceV3 router = new MarketplaceV3(address(pluginRegistry), pluginNames);
+        vm.stopPrank();
 
-//         vm.label(address(router), "MarketplaceV3_Impl");
-//         vm.label(marketplace, "Marketplace");
-//         vm.label(directListings, "DirectListings_Extension");
-//         vm.label(seller, "Seller");
-//         vm.label(buyer, "Buyer");
-//         vm.label(address(erc721), "ERC721_Token");
-//         vm.label(address(erc1155), "ERC1155_Token");
-//     }
+        // [4] Deploy proxy pointing to `MarkeptlaceV3` implementation
+        vm.prank(_marketplaceDeployer);
+        marketplace = address(
+            new TWProxy(
+                address(router),
+                abi.encodeCall(
+                    MarketplaceV3.initialize,
+                    (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
+                )
+            )
+        );
 
-//     function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
-//         erc721.mint(_seller, _numOfTokens);
-//     }
+        // [5] Setup roles for seller and assets
+        vm.startPrank(_marketplaceDeployer);
+        Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(0));
+        Permissions(marketplace).revokeRole(keccak256("LISTER_ROLE"), address(0));
+        Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));
 
-//     function _setup_updateListing()
-//         private
-//         returns (uint256 listingId, IDirectListings.ListingParameters memory listingParams)
-//     {
-//         // Sample listing parameters.
-//         address assetContract = address(erc721);
-//         uint256 tokenId = 0;
-//         uint256 quantity = 1;
-//         address currency = address(erc20);
-//         uint256 pricePerToken = 1 ether;
-//         uint128 startTimestamp = 100;
-//         uint128 endTimestamp = 200;
-//         bool reserved = true;
+        vm.stopPrank();
 
-//         // Mint the ERC721 tokens to seller. These tokens will be listed.
-//         _setupERC721BalanceForSeller(seller, 1);
+        vm.label(address(router), "MarketplaceV3_Impl");
+        vm.label(marketplace, "Marketplace");
+        vm.label(seller, "Seller");
+        vm.label(buyer, "Buyer");
+        vm.label(address(erc721), "ERC721_Token");
+        vm.label(address(erc1155), "ERC1155_Token");
+    }
 
-//         uint256[] memory tokenIds = new uint256[](1);
-//         tokenIds[0] = tokenId;
-//         assertIsOwnerERC721(address(erc721), seller, tokenIds);
+    function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
+        erc721.mint(_seller, _numOfTokens);
+    }
 
-//         // Approve Marketplace to transfer token.
-//         vm.prank(seller);
-//         erc721.setApprovalForAll(marketplace, true);
+    function _setup_updateListing()
+        private
+        returns (uint256 listingId, IDirectListings.ListingParameters memory listingParams)
+    {
+        // Sample listing parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 pricePerToken = 1 ether;
+        uint128 startTimestamp = 100;
+        uint128 endTimestamp = 200;
+        bool reserved = true;
 
-//         // List tokens.
-//         listingParams = IDirectListings.ListingParameters(
-//             assetContract,
-//             tokenId,
-//             quantity,
-//             currency,
-//             pricePerToken,
-//             startTimestamp,
-//             endTimestamp,
-//             reserved
-//         );
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
 
-//         vm.prank(seller);
-//         listingId = DirectListingsLogic(marketplace).createListing(listingParams);
-//     }
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
 
-//     function _setup_buyFromListing() private returns (uint256 listingId, IDirectListings.Listing memory listing) {
-//         (listingId, ) = _setup_updateListing();
-//         listing = DirectListingsLogic(marketplace).getListing(listingId);
-//     }
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
 
-//     function test_state_buyFromListing_after_update() public {
-//         (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
+        // List tokens.
+        listingParams = IDirectListings.ListingParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
+        );
 
-//         address buyFor = buyer;
-//         uint256 quantityToBuy = listing.quantity;
-//         address currency = listing.currency;
-//         uint256 pricePerToken = listing.pricePerToken;
-//         uint256 totalPrice = pricePerToken * quantityToBuy;
+        vm.prank(seller);
+        listingId = DirectListingsLogic(marketplace).createListing(listingParams);
+    }
 
-//         // Seller approves buyer for listing
-//         vm.prank(seller);
-//         DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
+    function _setup_buyFromListing() private returns (uint256 listingId, IDirectListings.Listing memory listing) {
+        (listingId, ) = _setup_updateListing();
+        listing = DirectListingsLogic(marketplace).getListing(listingId);
+    }
 
-//         // Verify that seller is owner of listed tokens, pre-sale.
-//         // This token (Id = 0) was created in the above _setup_buyFromListing
-//         uint256[] memory expectedTokenIds = new uint256[](1);
-//         expectedTokenIds[0] = 0;
-//         assertIsOwnerERC721(address(erc721), seller, expectedTokenIds);
-//         assertIsNotOwnerERC721(address(erc721), buyer, expectedTokenIds);
+    function test_state_buyFromListing_after_update() public {
+        (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
 
-//         // Mint a new token. This is token we will "swap out" via updateListing
-//         // It should be tokenId of 1
-//         _setupERC721BalanceForSeller(seller, 1);
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
 
-//         // Verify that seller is owner of new token, pre-sale.
-//         uint256[] memory swappedTokenIds = new uint256[](1);
-//         swappedTokenIds[0] = 1;
-//         assertIsOwnerERC721(address(erc721), seller, swappedTokenIds);
-//         assertIsNotOwnerERC721(address(erc721), buyer, swappedTokenIds);
+        // Seller approves buyer for listing
+        vm.prank(seller);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
-//         // Mint requisite total price to buyer.
-//         erc20.mint(buyer, totalPrice);
-//         assertBalERC20Eq(address(erc20), buyer, totalPrice);
-//         assertBalERC20Eq(address(erc20), seller, 0);
+        // Verify that seller is owner of listed tokens, pre-sale.
+        // This token (Id = 0) was created in the above _setup_buyFromListing
+        uint256[] memory expectedTokenIds = new uint256[](1);
+        expectedTokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, expectedTokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, expectedTokenIds);
 
-//         // Approve marketplace to transfer currency
-//         vm.prank(buyer);
-//         erc20.increaseAllowance(marketplace, totalPrice);
+        // Mint a new token. This is token we will "swap out" via updateListing
+        // It should be tokenId of 1
+        _setupERC721BalanceForSeller(seller, 1);
 
-//         vm.prank(seller);
-//         erc721.setApprovalForAll(marketplace, true);
+        // Verify that seller is owner of new token, pre-sale.
+        uint256[] memory swappedTokenIds = new uint256[](1);
+        swappedTokenIds[0] = 1;
+        assertIsOwnerERC721(address(erc721), seller, swappedTokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, swappedTokenIds);
 
-//         // Create ListingParameters with new tokenId (1) and update
-//         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-//             address(erc721),
-//             1,
-//             1,
-//             address(erc20),
-//             1 ether,
-//             100,
-//             200,
-//             true
-//         );
-//         vm.prank(seller);
-//         vm.expectRevert("Marketplace: cannot update what token is listed.");
-//         DirectListingsLogic(marketplace).updateListing(listingId, listingParams);
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), seller, 0);
 
-//         // Buy listing
-//         // vm.warp(listing.startTimestamp);
-//         // vm.prank(buyer);
-//         // DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, totalPrice);
 
-//         // // Buyer is owner of the swapped out token (tokenId = 1) and not the expected (tokenId = 0)
-//         // assertIsOwnerERC721(address(erc721), buyer, swappedTokenIds);
-//         // assertIsNotOwnerERC721(address(erc721), buyer, expectedTokenIds);
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
 
-//         // // Verify seller is paid total price.
-//         // assertBalERC20Eq(address(erc20), buyer, 0);
-//         // assertBalERC20Eq(address(erc20), seller, totalPrice);
-//     }
-// }
+        // Create ListingParameters with new tokenId (1) and update
+        IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
+            address(erc721),
+            1,
+            1,
+            address(erc20),
+            1 ether,
+            100,
+            200,
+            true
+        );
+        vm.prank(seller);
+        vm.expectRevert("Marketplace: cannot update what token is listed.");
+        DirectListingsLogic(marketplace).updateListing(listingId, listingParams);
+
+        // Buy listing
+        // vm.warp(listing.startTimestamp);
+        // vm.prank(buyer);
+        // DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+
+        // // Buyer is owner of the swapped out token (tokenId = 1) and not the expected (tokenId = 0)
+        // assertIsOwnerERC721(address(erc721), buyer, swappedTokenIds);
+        // assertIsNotOwnerERC721(address(erc721), buyer, expectedTokenIds);
+
+        // // Verify seller is paid total price.
+        // assertBalERC20Eq(address(erc20), buyer, 0);
+        // assertBalERC20Eq(address(erc20), seller, totalPrice);
+    }
+}
