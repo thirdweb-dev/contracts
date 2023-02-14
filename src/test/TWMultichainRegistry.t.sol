@@ -162,6 +162,11 @@ contract TWMultichainRegistryTest is IPlugin, ITWMultichainRegistryData, BaseTes
         );
     }
 
+    function test_revert_reInitializingContract() external {
+        vm.expectRevert("Initializable: contract is already initialized");
+        TWMultichainRegistry(payable(address(multichainRegistry))).initialize(address(0x123));
+    }
+
     /// ========== Test `add` ==========
 
     function test_state_add() external {

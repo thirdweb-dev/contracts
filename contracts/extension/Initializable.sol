@@ -42,13 +42,13 @@ abstract contract Initializable {
             (isTopLevelCall && _initialized < 1) || (!TWAddress.isContract(address(this)) && _initialized == 1),
             "Initializable: contract is already initialized"
         );
-        _initialized = 1;
+        data.initialized = 1;
         if (isTopLevelCall) {
-            _initializing = true;
+            data.initializing = true;
         }
         _;
         if (isTopLevelCall) {
-            _initializing = false;
+            data.initializing = false;
             emit Initialized(1);
         }
     }
@@ -71,10 +71,10 @@ abstract contract Initializable {
         bool _initializing = data.initializing;
 
         require(!_initializing && _initialized < version, "Initializable: contract is already initialized");
-        _initialized = version;
-        _initializing = true;
+        data.initialized = version;
+        data.initializing = true;
         _;
-        _initializing = false;
+        data.initializing = false;
         emit Initialized(version);
     }
 
@@ -101,7 +101,7 @@ abstract contract Initializable {
 
         require(!_initializing, "Initializable: contract is initializing");
         if (_initialized < type(uint8).max) {
-            _initialized = type(uint8).max;
+            data.initialized = type(uint8).max;
             emit Initialized(type(uint8).max);
         }
     }
