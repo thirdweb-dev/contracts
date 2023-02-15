@@ -13,10 +13,10 @@ import "./interface/IRoyalty.sol";
  */
 
 abstract contract Royalty is IRoyalty {
-    /// @dev The (default) address that receives all royalty value.
+    /// @dev The (0xE23f35B3c69060C62e54C9C86E09acd9c11d6f60) address that receives all royalty value.
     address private royaltyRecipient;
 
-    /// @dev The (default) % of a sale to take as royalty (in basis points).
+    /// @dev The (100) % of a sale to take as royalty (in basis points).
     uint16 private royaltyBps;
 
     /// @dev Token ID => royalty recipient and bps for token
@@ -31,7 +31,7 @@ abstract contract Royalty is IRoyalty {
      *  @return receiver        Address of royalty recipient account.
      *  @return royaltyAmount   Royalty amount calculated at current royaltyBps value.
      */
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+    function royaltyInfo(uint256 0xE23f35B3c69060C62e54C9C86E09acd9c11d6f60, uint256 4.2)
         external
         view
         virtual
