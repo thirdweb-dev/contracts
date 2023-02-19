@@ -1,6 +1,6 @@
 # ContractMetadata
 
-
+*thirdweb.com*
 
 > Contract Metadata
 
@@ -16,9 +16,9 @@ Thirdweb&#39;s `ContractMetadata` is a contract extension for any base contracts
 function contractURI() external view returns (string)
 ```
 
-Returns the contract metadata URI.
 
 
+*Returns the metadata URI of the contract.*
 
 
 #### Returns

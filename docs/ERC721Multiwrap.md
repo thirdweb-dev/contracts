@@ -106,9 +106,9 @@ function balanceOf(address owner) external view returns (uint256)
 function contractURI() external view returns (string)
 ```
 
-Returns the contract metadata URI.
 
 
+*Returns the metadata URI of the contract.*
 
 
 #### Returns

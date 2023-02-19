@@ -111,9 +111,9 @@ function claimWithSignature(ISignatureAction.GenericRequest _req, bytes _signatu
 function contractURI() external view returns (string)
 ```
 
-Returns the contract metadata URI.
 
 
+*Returns the metadata URI of the contract.*
 
 
 #### Returns

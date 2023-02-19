@@ -1,6 +1,6 @@
 # PluginStateStorage
 
-*thirdweb.com*
+
 
 
 

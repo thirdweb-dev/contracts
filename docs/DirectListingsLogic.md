@@ -383,6 +383,22 @@ Emitted when a currency is approved as a form of payment for the listing.
 | currency `indexed` | address | undefined |
 | pricePerToken  | uint256 | undefined |
 
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
+
 ### NewListing
 
 ```solidity

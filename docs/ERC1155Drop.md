@@ -166,9 +166,9 @@ function claimCondition(uint256) external view returns (uint256 startTimestamp, 
 function contractURI() external view returns (string)
 ```
 
-Returns the contract metadata URI.
 
 
+*Returns the metadata URI of the contract.*
 
 
 #### Returns

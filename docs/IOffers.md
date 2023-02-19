@@ -1,65 +1,14 @@
-# OffersLogic
-
-*thirdweb.com*
+# IOffers
 
 
 
 
+
+The `Offers` extension smart contract lets you make and accept offers made for NFTs (ERC-721 or ERC-1155).
 
 
 
 ## Methods
-
-### MAX_BPS
-
-```solidity
-function MAX_BPS() external view returns (uint64)
-```
-
-
-
-*The max bps of the contract. So, 10_000 == 100 %*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint64 | undefined |
-
-### _msgData
-
-```solidity
-function _msgData() external view returns (bytes)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined |
-
-### _msgSender
-
-```solidity
-function _msgSender() external view returns (address sender)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| sender | address | undefined |
 
 ### acceptOffer
 
@@ -96,12 +45,12 @@ Cancel an offer.
 ### getAllOffers
 
 ```solidity
-function getAllOffers(uint256 _startId, uint256 _endId) external view returns (struct IOffers.Offer[] _allOffers)
+function getAllOffers(uint256 _startId, uint256 _endId) external view returns (struct IOffers.Offer[] offers)
 ```
 
+Returns all active (i.e. non-expired or cancelled) offers.
 
 
-*Returns all existing offers within the specified range.*
 
 #### Parameters
 
@@ -114,17 +63,17 @@ function getAllOffers(uint256 _startId, uint256 _endId) external view returns (s
 
 | Name | Type | Description |
 |---|---|---|
-| _allOffers | IOffers.Offer[] | undefined |
+| offers | IOffers.Offer[] | undefined |
 
 ### getAllValidOffers
 
 ```solidity
-function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (struct IOffers.Offer[] _validOffers)
+function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (struct IOffers.Offer[] offers)
 ```
 
+Returns all valid offers. An offer is valid if the offeror owns and has approved Marketplace to transfer the offer amount of currency.
 
 
-*Returns offers within the specified range, where offeror has sufficient balance.*
 
 #### Parameters
 
@@ -137,17 +86,17 @@ function getAllValidOffers(uint256 _startId, uint256 _endId) external view retur
 
 | Name | Type | Description |
 |---|---|---|
-| _validOffers | IOffers.Offer[] | undefined |
+| offers | IOffers.Offer[] | undefined |
 
 ### getOffer
 
 ```solidity
-function getOffer(uint256 _offerId) external view returns (struct IOffers.Offer _offer)
+function getOffer(uint256 _offerId) external view returns (struct IOffers.Offer offer)
 ```
 
+Returns an offer for the given offer ID.
 
 
-*Returns existing offer with the given uid.*
 
 #### Parameters
 
@@ -159,12 +108,12 @@ function getOffer(uint256 _offerId) external view returns (struct IOffers.Offer 
 
 | Name | Type | Description |
 |---|---|---|
-| _offer | IOffers.Offer | undefined |
+| offer | IOffers.Offer | undefined |
 
 ### makeOffer
 
 ```solidity
-function makeOffer(IOffers.OfferParams _params) external nonpayable returns (uint256 _offerId)
+function makeOffer(IOffers.OfferParams _params) external nonpayable returns (uint256 offerId)
 ```
 
 
@@ -181,24 +130,7 @@ function makeOffer(IOffers.OfferParams _params) external nonpayable returns (uin
 
 | Name | Type | Description |
 |---|---|---|
-| _offerId | uint256 | undefined |
-
-### totalOffers
-
-```solidity
-function totalOffers() external view returns (uint256)
-```
-
-
-
-*Returns total number of offers*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
+| offerId | uint256 | undefined |
 
 
 
@@ -212,7 +144,7 @@ event AcceptedOffer(address indexed offeror, uint256 indexed offerId, address in
 
 
 
-
+*Emitted when an offer is accepted.*
 
 #### Parameters
 
@@ -234,7 +166,7 @@ event CancelledOffer(address indexed offeror, uint256 indexed offerId)
 
 
 
-
+*Emitted when an offer is cancelled.*
 
 #### Parameters
 
@@ -242,22 +174,6 @@ event CancelledOffer(address indexed offeror, uint256 indexed offerId)
 |---|---|---|
 | offeror `indexed` | address | undefined |
 | offerId `indexed` | uint256 | undefined |
-
-### Initialized
-
-```solidity
-event Initialized(uint8 version)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| version  | uint8 | undefined |
 
 ### NewOffer
 
@@ -267,7 +183,7 @@ event NewOffer(address indexed offeror, uint256 indexed offerId, address indexed
 
 
 
-
+*Emitted when a new offer is created.*
 
 #### Parameters
 

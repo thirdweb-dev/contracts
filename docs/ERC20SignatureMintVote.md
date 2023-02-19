@@ -140,9 +140,9 @@ function checkpoints(address account, uint32 pos) external view returns (struct 
 function contractURI() external view returns (string)
 ```
 
-Returns the contract metadata URI.
 
 
+*Returns the metadata URI of the contract.*
 
 
 #### Returns
