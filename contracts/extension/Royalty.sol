@@ -3,6 +3,26 @@ pragma solidity ^0.8.0;
 
 import "./interface/IRoyalty.sol";
 
+library RoyaltyStorage {
+    bytes32 public constant ROYALTY_STORAGE_POSITION = keccak256("royalty.storage");
+
+    struct Data {
+        /// @dev The (default) address that receives all royalty value.
+        address royaltyRecipient;
+        /// @dev The (default) % of a sale to take as royalty (in basis points).
+        uint16 royaltyBps;
+        /// @dev Token ID => royalty recipient and bps for token
+        mapping(uint256 => IRoyalty.RoyaltyInfo) royaltyInfoForToken;
+    }
+
+    function royaltyStorage() internal pure returns (Data storage royaltyData) {
+        bytes32 position = ROYALTY_STORAGE_POSITION;
+        assembly {
+            royaltyData.slot := position
+        }
+    }
+}
+
 /**
  *  @title   Royalty
  *  @notice  Thirdweb's `Royalty` is a contract extension to be used with any base contract. It exposes functions for setting and reading
@@ -13,15 +33,6 @@ import "./interface/IRoyalty.sol";
  */
 
 abstract contract Royalty is IRoyalty {
-    /// @dev The (default) address that receives all royalty value.
-    address private royaltyRecipient;
-
-    /// @dev The (default) % of a sale to take as royalty (in basis points).
-    uint16 private royaltyBps;
-
-    /// @dev Token ID => royalty recipient and bps for token
-    mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
-
     /**
      *  @notice   View royalty info for a given token and sale price.
      *  @dev      Returns royalty amount and recipient for `tokenId` and `salePrice`.
@@ -49,11 +60,13 @@ abstract contract Royalty is IRoyalty {
      *  @param _tokenId  The tokenID of the NFT for which to query royalty info.
      */
     function getRoyaltyInfoForToken(uint256 _tokenId) public view override returns (address, uint16) {
-        RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
+        RoyaltyStorage.Data storage data = RoyaltyStorage.royaltyStorage();
+
+        RoyaltyInfo memory royaltyForToken = data.royaltyInfoForToken[_tokenId];
 
         return
             royaltyForToken.recipient == address(0)
-                ? (royaltyRecipient, uint16(royaltyBps))
+                ? (data.royaltyRecipient, uint16(data.royaltyBps))
                 : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
@@ -61,7 +74,8 @@ abstract contract Royalty is IRoyalty {
      *  @notice Returns the defualt royalty recipient and BPS for this contract's NFTs.
      */
     function getDefaultRoyaltyInfo() external view override returns (address, uint16) {
-        return (royaltyRecipient, uint16(royaltyBps));
+        RoyaltyStorage.Data storage data = RoyaltyStorage.royaltyStorage();
+        return (data.royaltyRecipient, uint16(data.royaltyBps));
     }
 
     /**
@@ -87,8 +101,10 @@ abstract contract Royalty is IRoyalty {
             revert("Exceeds max bps");
         }
 
-        royaltyRecipient = _royaltyRecipient;
-        royaltyBps = uint16(_royaltyBps);
+        RoyaltyStorage.Data storage data = RoyaltyStorage.royaltyStorage();
+
+        data.royaltyRecipient = _royaltyRecipient;
+        data.royaltyBps = uint16(_royaltyBps);
 
         emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
@@ -124,7 +140,9 @@ abstract contract Royalty is IRoyalty {
             revert("Exceeds max bps");
         }
 
-        royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
+        RoyaltyStorage.Data storage data = RoyaltyStorage.royaltyStorage();
+
+        data.royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
 
         emit RoyaltyForToken(_tokenId, _recipient, _bps);
     }

@@ -10,13 +10,27 @@ import "./interface/IOwnable.sol";
  *           information about who the contract's owner is.
  */
 
-abstract contract Ownable is IOwnable {
-    /// @dev Owner of the contract (purpose: OpenSea compatibility)
-    address private _owner;
+library OwnableStorage {
+    bytes32 public constant OWNABLE_STORAGE_POSITION = keccak256("ownable.storage");
 
+    struct Data {
+        /// @dev Owner of the contract (purpose: OpenSea compatibility)
+        address _owner;
+    }
+
+    function ownableStorage() internal pure returns (Data storage ownableData) {
+        bytes32 position = OWNABLE_STORAGE_POSITION;
+        assembly {
+            ownableData.slot := position
+        }
+    }
+}
+
+abstract contract Ownable is IOwnable {
     /// @dev Reverts if caller is not the owner.
     modifier onlyOwner() {
-        if (msg.sender != _owner) {
+        OwnableStorage.Data storage data = OwnableStorage.ownableStorage();
+        if (msg.sender != data._owner) {
             revert("Not authorized");
         }
         _;
@@ -26,7 +40,8 @@ abstract contract Ownable is IOwnable {
      *  @notice Returns the owner of the contract.
      */
     function owner() public view override returns (address) {
-        return _owner;
+        OwnableStorage.Data storage data = OwnableStorage.ownableStorage();
+        return data._owner;
     }
 
     /**
@@ -42,8 +57,10 @@ abstract contract Ownable is IOwnable {
 
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
     function _setupOwner(address _newOwner) internal {
-        address _prevOwner = _owner;
-        _owner = _newOwner;
+        OwnableStorage.Data storage data = OwnableStorage.ownableStorage();
+
+        address _prevOwner = data._owner;
+        data._owner = _newOwner;
 
         emit OwnerUpdated(_prevOwner, _newOwner);
     }

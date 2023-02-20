@@ -3,6 +3,21 @@ pragma solidity ^0.8.0;
 
 import "./interface/IPrimarySale.sol";
 
+library PrimarySaleStorage {
+    bytes32 public constant PRIMARY_SALE_STORAGE_POSITION = keccak256("primary.sale.storage");
+
+    struct Data {
+        address recipient;
+    }
+
+    function primarySaleStorage() internal pure returns (Data storage primarySaleData) {
+        bytes32 position = PRIMARY_SALE_STORAGE_POSITION;
+        assembly {
+            primarySaleData.slot := position
+        }
+    }
+}
+
 /**
  *  @title   Primary Sale
  *  @notice  Thirdweb's `PrimarySale` is a contract extension to be used with any base contract. It exposes functions for setting and reading
@@ -11,12 +26,10 @@ import "./interface/IPrimarySale.sol";
  */
 
 abstract contract PrimarySale is IPrimarySale {
-    /// @dev The address that receives all primary sales value.
-    address private recipient;
-
     /// @dev Returns primary sale recipient address.
     function primarySaleRecipient() public view override returns (address) {
-        return recipient;
+        PrimarySaleStorage.Data storage data = PrimarySaleStorage.primarySaleStorage();
+        return data.recipient;
     }
 
     /**
@@ -36,7 +49,8 @@ abstract contract PrimarySale is IPrimarySale {
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
     function _setupPrimarySaleRecipient(address _saleRecipient) internal {
-        recipient = _saleRecipient;
+        PrimarySaleStorage.Data storage data = PrimarySaleStorage.primarySaleStorage();
+        data.recipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
     }
 

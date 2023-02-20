@@ -52,8 +52,10 @@ abstract contract OperatorFilterer is OperatorFilterToggle {
     }
 
     function _checkFilterOperator(address operator) internal view virtual {
+        OperatorFilterToggleStorage.Data storage data = OperatorFilterToggleStorage.operatorFilterToggleStorage();
+
         // Check registry code length to facilitate testing in environments without a deployed registry.
-        if (operatorRestriction) {
+        if (data.operatorRestriction) {
             if (address(OPERATOR_FILTER_REGISTRY).code.length > 0) {
                 if (!OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), operator)) {
                     revert OperatorNotAllowed(operator);

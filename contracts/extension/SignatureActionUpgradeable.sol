@@ -2,16 +2,29 @@
 pragma solidity ^0.8.0;
 
 import "./interface/ISignatureAction.sol";
-import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
+import "../openzeppelin-presets/utils/cryptography/EIP712Upgradeable.sol";
+
+library SignatureActionStorage {
+    bytes32 public constant SIGNATURE_ACTION_STORAGE_POSITION = keccak256("signature.action.storage");
+
+    struct Data {
+        /// @dev Mapping from a signed request UID => whether the request is processed.
+        mapping(bytes32 => bool) executed;
+    }
+
+    function signatureActionStorage() internal pure returns (Data storage signatureActionData) {
+        bytes32 position = SIGNATURE_ACTION_STORAGE_POSITION;
+        assembly {
+            signatureActionData.slot := position
+        }
+    }
+}
 
 abstract contract SignatureActionUpgradeable is EIP712Upgradeable, ISignatureAction {
-    using ECDSAUpgradeable for bytes32;
+    using ECDSA for bytes32;
 
     bytes32 private constant TYPEHASH =
         keccak256("GenericRequest(uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid,bytes data)");
-
-    /// @dev Mapping from a signed request UID => whether the request is processed.
-    mapping(bytes32 => bool) private executed;
 
     function __SignatureAction_init() internal onlyInitializing {
         __EIP712_init("SignatureAction", "1");
@@ -26,8 +39,10 @@ abstract contract SignatureActionUpgradeable is EIP712Upgradeable, ISignatureAct
         override
         returns (bool success, address signer)
     {
+        SignatureActionStorage.Data storage data = SignatureActionStorage.signatureActionStorage();
+
         signer = _recoverAddress(_req, _signature);
-        success = !executed[_req.uid] && _isAuthorizedSigner(signer);
+        success = !data.executed[_req.uid] && _isAuthorizedSigner(signer);
     }
 
     /// @dev Returns whether a given address is authorized to sign requests.
@@ -49,7 +64,8 @@ abstract contract SignatureActionUpgradeable is EIP712Upgradeable, ISignatureAct
             revert("Req expired");
         }
 
-        executed[_req.uid] = true;
+        SignatureActionStorage.Data storage data = SignatureActionStorage.signatureActionStorage();
+        data.executed[_req.uid] = true;
     }
 
     /// @dev Returns the address of the signer of the request.
