@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../plugin/TWRouter.sol";
 import "../extension/Initializable.sol";
-import "../extension/PermissionsEnumerable.sol";
+import "../plugin/utils/PermissionsEnumerable.sol";
 import "../openzeppelin-presets/utils/EnumerableSet.sol";
 import "../interfaces/ITWMultichainRegistry.sol";
 
