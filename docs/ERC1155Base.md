@@ -134,9 +134,9 @@ Lets an owner or approved operator burn NFTs of the given tokenIds.
 function contractURI() external view returns (string)
 ```
 
+Returns the contract metadata URI.
 
 
-*Returns the metadata URI of the contract.*
 
 
 #### Returns
