@@ -111,6 +111,36 @@ contract MarketplaceTest is BaseTest {
         assertEq(uint8(IMarketplace.ListingType.Auction), uint8(listing.listingType));
     }
 
+    function test_createListing_auctionListing_ZeroBuyoutAmount() public {
+        address to = getActor(0);
+        uint256 tokenId = erc721.nextTokenIdToMint();
+        erc721.mint(to, 1);
+        vm.prank(to);
+        erc721.setApprovalForAll(address(marketplace), true);
+
+        vm.warp(0);
+        Marketplace.ListingParameters memory listing;
+
+        listing.assetContract = address(erc721);
+        listing.tokenId = tokenId;
+        listing.startTime = 0;
+        listing.secondsUntilEndTime = 1 * 24 * 60 * 60; // 1 day
+        listing.quantityToList = 1;
+        listing.currencyToAccept = NATIVE_TOKEN;
+        listing.reservePricePerToken = 0;
+        listing.buyoutPricePerToken = 0;
+        listing.listingType = IMarketplace.ListingType.Auction;
+
+        vm.prank(to);
+        marketplace.createListing(listing);
+        uint256 listingId = marketplace.totalListings() - 1;
+
+        vm.prank(getActor(0));
+        vm.warp(1);
+        vm.expectRevert("bidding zero amount");
+        marketplace.offer(listingId, 1, NATIVE_TOKEN, 0, type(uint256).max);
+    }
+
     function test_offer_bidAuctionNativeToken() public {
         vm.deal(getActor(0), 100 ether);
 
@@ -146,6 +176,21 @@ contract MarketplaceTest is BaseTest {
         assertEq(winningBid.quantityWanted, 1);
         assertEq(winningBid.currency, NATIVE_TOKEN);
         assertEq(winningBid.pricePerToken, 2 ether);
+    }
+
+    function test_revert_offer_bidZeroAmount() public {
+        vm.warp(0);
+        (uint256 listingId, ) = createERC721Listing(
+            getActor(0),
+            NATIVE_TOKEN,
+            123456 ether,
+            IMarketplace.ListingType.Auction
+        );
+
+        vm.prank(getActor(0));
+        vm.warp(1);
+        vm.expectRevert("bidding zero amount");
+        marketplace.offer(listingId, 1, NATIVE_TOKEN, 0, type(uint256).max);
     }
 
     // function test_closeAuctionForCreator_afterBuyout() public {
