@@ -1,10 +1,10 @@
-# TieredDrop
+# BaseRouter
 
 
 
 
 
-Defualt extensions to add:      - TieredDropLogic      - PermissionsEnumerable
+
 
 
 
@@ -170,51 +170,6 @@ function getPluginImplementation(string _pluginName) external view returns (addr
 |---|---|---|
 | _0 | address | undefined |
 
-### initialize
-
-```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _saleRecipient, address _royaltyRecipient, uint16 _royaltyBps) external nonpayable
-```
-
-
-
-*Initiliazes the contract, like a constructor.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _defaultAdmin | address | undefined |
-| _name | string | undefined |
-| _symbol | string | undefined |
-| _contractURI | string | undefined |
-| _trustedForwarders | address[] | undefined |
-| _saleRecipient | address | undefined |
-| _royaltyRecipient | address | undefined |
-| _royaltyBps | uint16 | undefined |
-
-### multicall
-
-```solidity
-function multicall(bytes[] data) external nonpayable returns (bytes[] results)
-```
-
-Receives and executes a batch of function calls on this contract.
-
-*Receives and executes a batch of function calls on this contract.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
-
 ### removePlugin
 
 ```solidity
@@ -250,73 +205,6 @@ function updatePlugin(IPlugin.Plugin _plugin) external nonpayable
 
 
 ## Events
-
-### ContractURIUpdated
-
-```solidity
-event ContractURIUpdated(string prevURI, string newURI)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| prevURI  | string | undefined |
-| newURI  | string | undefined |
-
-### DefaultRoyalty
-
-```solidity
-event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| newRoyaltyRecipient `indexed` | address | undefined |
-| newRoyaltyBps  | uint256 | undefined |
-
-### Initialized
-
-```solidity
-event Initialized(uint8 version)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| version  | uint8 | undefined |
-
-### OwnerUpdated
-
-```solidity
-event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| prevOwner `indexed` | address | undefined |
-| newOwner `indexed` | address | undefined |
 
 ### PluginAdded
 
@@ -372,40 +260,6 @@ event PluginUpdated(address indexed oldPluginAddress, address indexed newPluginA
 | newPluginAddress `indexed` | address | undefined |
 | functionSelector `indexed` | bytes4 | undefined |
 | functionSignature  | string | undefined |
-
-### PrimarySaleRecipientUpdated
-
-```solidity
-event PrimarySaleRecipientUpdated(address indexed recipient)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| recipient `indexed` | address | undefined |
-
-### RoleGranted
-
-```solidity
-event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| account `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
 
 
 
