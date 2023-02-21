@@ -6,9 +6,9 @@ name: Prettier Formatting
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -24,6 +24,8 @@ jobs:
           submodules: recursive
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
+        with:
+          node-version: 16
       # Runs a single command using the runners shell
       - name: Run npm install
         run: yarn
