@@ -16,8 +16,10 @@ import { ERC2771ContextUpgradeable } from "../../extension/ERC2771ContextUpgrade
 import { DelayedReveal } from "../../extension/DelayedReveal.sol";
 import { PrimarySale } from "../../extension/PrimarySale.sol";
 import { Royalty, IERC165 } from "../../extension/Royalty.sol";
-import { PermissionsEnumerable } from "../../extension/PermissionsEnumerable.sol";
+import { Permissions } from "../../extension/Permissions.sol";
 import { LazyMintWithTier } from "../../extension/LazyMintWithTier.sol";
+import { ContractMetadata } from "../../extension/ContractMetadata.sol";
+import { Ownable } from "../../extension/Ownable.sol";
 import { SignatureActionUpgradeable } from "../../extension/SignatureActionUpgradeable.sol";
 import { DefaultOperatorFiltererUpgradeable } from "../../extension/DefaultOperatorFiltererUpgradeable.sol";
 
@@ -26,7 +28,8 @@ contract TieredDropLogic is
     PrimarySale,
     DelayedReveal,
     LazyMintWithTier,
-    PermissionsEnumerable,
+    ContractMetadata,
+    Ownable,
     SignatureActionUpgradeable,
     DefaultOperatorFiltererUpgradeable,
     ERC2771ContextUpgradeable,
@@ -35,15 +38,17 @@ contract TieredDropLogic is
     using TWStrings for uint256;
 
     /*///////////////////////////////////////////////////////////////
-                            State variables
+                            Constants
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Default admin role for all roles. Only accounts with this role can grant/revoke other roles.
+    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private transferRole = keccak256("TRANSFER_ROLE");
+    bytes32 private constant transferRole = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
-    bytes32 private minterRole = keccak256("MINTER_ROLE");
+    bytes32 private constant minterRole = keccak256("MINTER_ROLE");
     /// @dev Only transfers initiated by operator role hodlers are valid, when operator-initated transfers are restricted.
-    bytes32 private operatorRole = keccak256("OPERATOR_ROLE");
+    bytes32 private constant operatorRole = keccak256("OPERATOR_ROLE");
 
     /*///////////////////////////////////////////////////////////////
                                 Events
@@ -124,11 +129,9 @@ contract TieredDropLogic is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
-        external
-        onlyRole(minterRole)
-        returns (string memory revealedURI)
-    {
+    function reveal(uint256 _index, bytes calldata _key) external returns (string memory revealedURI) {
+        require(Permissions(address(this)).hasRole(minterRole, _msgSender()), "not minter.");
+
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
@@ -445,27 +448,37 @@ contract TieredDropLogic is
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
     function _isAuthorizedSigner(address _signer) internal view override returns (bool) {
-        return hasRole(minterRole, _signer);
+        return Permissions(address(this)).hasRole(minterRole, _signer);
     }
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
-        return hasRole(minterRole, _msgSender());
+        return Permissions(address(this)).hasRole(minterRole, _msgSender());
     }
 
     /// @dev Returns whether the operator restriction can be set within the given execution context.
     function _canSetOperatorRestriction() internal virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
     function _canSetPrimarySaleRecipient() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Checks whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view override returns (bool) {
+        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Checks whether owner can be set in the given execution context.
+    function _canSetOwner() internal view override returns (bool) {
+        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -509,8 +522,11 @@ contract TieredDropLogic is
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
-            if (!hasRole(transferRole, from) && !hasRole(transferRole, to)) {
+        if (!Permissions(address(this)).hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
+            if (
+                !Permissions(address(this)).hasRole(transferRole, from) &&
+                !Permissions(address(this)).hasRole(transferRole, to)
+            ) {
                 revert("!TRANSFER");
             }
         }
@@ -519,7 +535,7 @@ contract TieredDropLogic is
     /// @dev See {ERC721-isApprovedForAll}.
     function getApproved(uint256 tokenId) public view override returns (address) {
         address operator = super.getApproved(tokenId);
-        bool operatorRoleApproval = hasRoleWithSwitch(operatorRole, operator);
+        bool operatorRoleApproval = Permissions(address(this)).hasRoleWithSwitch(operatorRole, operator);
 
         return operatorRoleApproval ? operator : address(0);
     }
@@ -528,7 +544,7 @@ contract TieredDropLogic is
     function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {
         bool operatorRoleApproval = true;
         if (account != operator) {
-            operatorRoleApproval = hasRoleWithSwitch(operatorRole, operator);
+            operatorRoleApproval = Permissions(address(this)).hasRoleWithSwitch(operatorRole, operator);
         }
         return operatorRoleApproval && super.isApprovedForAll(account, operator);
     }

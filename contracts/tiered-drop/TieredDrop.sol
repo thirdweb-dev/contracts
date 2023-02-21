@@ -18,8 +18,7 @@ import "../extension/init/SignatureActionInit.sol";
 /**
  *  Defualt extensions to add:
  *      - TieredDropLogic
- *      - ContractMetadata
- *      - Ownable
+ *      - PermissionsEnumerable
  */
 
 contract TieredDrop is
