@@ -197,10 +197,6 @@ contract SignatureDrop is
             revert("!Tokens");
         }
 
-        if (_req.currency != CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == 0, "!VALUE");
-        }
-
         // Verify and process payload.
         signer = _processRequest(_req, _signature);
 
