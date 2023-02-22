@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 interface IClaimableERC1155 {
     /// @dev Emitted when tokens are claimed
     event TokensClaimed(

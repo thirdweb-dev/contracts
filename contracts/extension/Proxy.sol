@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: Apache 2.0
-// Credits: OpenZeppelin Contracts (last updated v4.6.0) (proxy/Proxy.sol)
-
 pragma solidity ^0.8.0;
 
 /**

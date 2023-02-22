@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 /**
  *  Group together arbitrary ERC20, ERC721 and ERC1155 tokens into a single bundle.
  *
