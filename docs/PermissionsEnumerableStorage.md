@@ -1,6 +1,6 @@
 # PermissionsEnumerableStorage
 
-
+*thirdweb.com*
 
 
 

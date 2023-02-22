@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+/// @author thirdweb
+
 import "../openzeppelin-presets/security/ReentrancyGuard.sol";
 import "../openzeppelin-presets/utils/math/SafeMath.sol";
 import "../eip/interface/IERC721.sol";

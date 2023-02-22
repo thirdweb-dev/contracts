@@ -27,6 +27,23 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
+### OPERATOR_FILTER_REGISTRY
+
+```solidity
+function OPERATOR_FILTER_REGISTRY() external view returns (contract IOperatorFilterRegistry)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | contract IOperatorFilterRegistry | undefined |
+
 ### TRANSFER_ROLE
 
 ```solidity
@@ -47,18 +64,18 @@ function TRANSFER_ROLE() external view returns (bytes32)
 ### approve
 
 ```solidity
-function approve(address to, uint256 tokenId) external nonpayable
+function approve(address operator, uint256 tokenId) external nonpayable
 ```
 
 
 
-*See {IERC721-approve}.*
+*See {ERC721-approve}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| to | address | undefined |
+| operator | address | undefined |
 | tokenId | uint256 | undefined |
 
 ### balanceOf
@@ -539,6 +556,23 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 |---|---|---|
 | _0 | bytes4 | undefined |
 
+### operatorRestriction
+
+```solidity
+function operatorRestriction() external view returns (bool)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### owner
 
 ```solidity
@@ -660,7 +694,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId) external no
 
 
 
-*See {IERC721-safeTransferFrom}.*
+*See {ERC721-_safeTransferFrom}.*
 
 #### Parameters
 
@@ -673,12 +707,12 @@ function safeTransferFrom(address from, address to, uint256 tokenId) external no
 ### safeTransferFrom
 
 ```solidity
-function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data) external nonpayable
+function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) external nonpayable
 ```
 
 
 
-*See {IERC721-safeTransferFrom}.*
+*See {ERC721-_safeTransferFrom}.*
 
 #### Parameters
 
@@ -687,7 +721,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId, bytes _data
 | from | address | undefined |
 | to | address | undefined |
 | tokenId | uint256 | undefined |
-| _data | bytes | undefined |
+| data | bytes | undefined |
 
 ### setApprovalForAll
 
@@ -697,7 +731,7 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 
 
-*See {IERC721-setApprovalForAll}.*
+*See {ERC721-setApprovalForAll}.*
 
 #### Parameters
 
@@ -738,6 +772,22 @@ Updates default royalty recipient and bps.
 |---|---|---|
 | _royaltyRecipient | address | Address to be set as default royalty recipient. |
 | _royaltyBps | uint256 | Updated royalty bps. |
+
+### setOperatorRestriction
+
+```solidity
+function setOperatorRestriction(bool _restriction) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _restriction | bool | undefined |
 
 ### setOwner
 
@@ -859,7 +909,7 @@ function transferFrom(address from, address to, uint256 tokenId) external nonpay
 
 
 
-*See {IERC721-transferFrom}.*
+*See {ERC721-_transferFrom}.*
 
 #### Parameters
 
@@ -983,6 +1033,22 @@ event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 |---|---|---|
 | newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
+
+### OperatorRestriction
+
+```solidity
+event OperatorRestriction(bool restriction)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| restriction  | bool | undefined |
 
 ### OwnerUpdated
 
@@ -1224,6 +1290,22 @@ The quantity of tokens minted must be more than zero.
 
 
 
+
+### OperatorNotAllowed
+
+```solidity
+error OperatorNotAllowed(address operator)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| operator | address | undefined |
 
 ### OwnerQueryForNonexistentToken
 

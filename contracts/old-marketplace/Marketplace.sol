@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+/// @author thirdweb
+
+//   $$\     $$\       $$\                 $$\                         $$\
+//   $$ |    $$ |      \__|                $$ |                        $$ |
+// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
+// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
+//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
+//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
+//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
+//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
+
 //  ==========  External imports    ==========
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
@@ -253,7 +264,11 @@ contract Marketplace is
 
         // Tokens listed for sale in an auction are escrowed in Marketplace.
         if (newListing.listingType == ListingType.Auction) {
-            require(newListing.buyoutPricePerToken >= newListing.reservePricePerToken, "RESERVE");
+            require(
+                newListing.buyoutPricePerToken == 0 ||
+                    newListing.buyoutPricePerToken >= newListing.reservePricePerToken,
+                "RESERVE"
+            );
             transferListingTokens(tokenOwner, address(this), tokenAmountToList, newListing);
         }
 
@@ -279,7 +294,7 @@ contract Marketplace is
         // Can only edit auction listing before it starts.
         if (isAuction) {
             require(block.timestamp < targetListing.startTime, "STARTED");
-            require(_buyoutPricePerToken >= _reservePricePerToken, "RESERVE");
+            require(_buyoutPricePerToken == 0 || _buyoutPricePerToken >= _reservePricePerToken, "RESERVE");
         }
 
         if (_startTime < block.timestamp) {
@@ -304,7 +319,7 @@ contract Marketplace is
             listingType: targetListing.listingType
         });
 
-        // Must validate ownership and approval of the new quantity of tokens for diret listing.
+        // Must validate ownership and approval of the new quantity of tokens for direct listing.
         if (targetListing.quantity != safeNewQuantity) {
             // Transfer all escrowed tokens back to the lister, to be reflected in the lister's
             // balance for the upcoming ownership and approval check.
@@ -461,6 +476,7 @@ contract Marketplace is
         if (targetListing.listingType == ListingType.Auction) {
             // A bid to an auction must be made in the auction's desired currency.
             require(newOffer.currency == targetListing.currency, "must use approved currency to bid");
+            require(newOffer.pricePerToken != 0, "bidding zero amount");
 
             // A bid must be made for all auction items.
             newOffer.quantityWanted = getSafeQuantity(targetListing.tokenType, targetListing.quantity);
@@ -518,7 +534,7 @@ contract Marketplace is
             _closeAuctionForBidder(_targetListing, _incomingBid);
         } else {
             /**
-             *      If there's an exisitng winning bid, incoming bid amount must be bid buffer % greater.
+             *      If there's an existng winning bid, incoming bid amount must be bid buffer % greater.
              *      Else, bid amount must be at least as great as reserve price
              */
             require(
