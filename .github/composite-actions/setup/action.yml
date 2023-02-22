@@ -1,4 +1,4 @@
-name: "Setup & Install"
+name: "Install"
 description: "Sets up Node.js and runs install"
 
 runs:
@@ -12,4 +12,5 @@ runs:
         cache: "yarn"
 
     - name: Install dependencies
+      shell: bash
       run: yarn
