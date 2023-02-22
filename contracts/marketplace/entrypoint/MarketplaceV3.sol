@@ -9,13 +9,13 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 //  ==========  Internal imports    ==========
 import "../../extension/Initializable.sol";
-import "../../extension/ContractMetadata.sol";
-import "../../extension/PlatformFee.sol";
-import "../extension/PermissionsEnumerable.sol";
+import "../../plugin/utils/ContractMetadata.sol";
+import "../../plugin/utils/PlatformFee.sol";
+import "../../plugin/utils/PermissionsEnumerable.sol";
 import "../../plugin/TWRouter.sol";
 
-import { ReentrancyGuardUpgradeable } from "../extension/ReentrancyGuardUpgradeable.sol";
-import { ERC2771ContextUpgradeable } from "../extension/ERC2771ContextUpgradeable.sol";
+import { ReentrancyGuardUpgradeable } from "../../plugin/utils/ReentrancyGuardUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "../../plugin/utils/ERC2771ContextUpgradeable.sol";
 import { ERC165 } from "../../eip/ERC165.sol";
 
 /**

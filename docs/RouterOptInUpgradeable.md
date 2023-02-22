@@ -1,7 +1,6 @@
 # RouterOptInUpgradeable
 
 
-*thirdweb.com*
 
 
 

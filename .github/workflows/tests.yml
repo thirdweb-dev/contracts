@@ -24,6 +24,8 @@ jobs:
           submodules: recursive
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
+        with:
+          node-version: 16
       # Runs a single command using the runners shell
       - name: Run npm install
         run: yarn

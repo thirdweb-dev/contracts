@@ -14,9 +14,9 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // ====== Internal imports ======
 
 import "../../extension/interface/IPlatformFee.sol";
-import "../extension/ERC2771ContextConsumer.sol";
-import "../extension/ReentrancyGuardUpgradeable.sol";
-import "../extension/Permissions.sol";
+import "../../plugin/utils/ERC2771ContextConsumer.sol";
+import "../../plugin/utils/ReentrancyGuardUpgradeable.sol";
+import "../../plugin/utils/Permissions.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 /**

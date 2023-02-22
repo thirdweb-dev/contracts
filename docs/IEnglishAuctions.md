@@ -1,65 +1,14 @@
-# EnglishAuctionsLogic
-
-*thirdweb.com*
+# IEnglishAuctions
 
 
 
 
+
+The `EnglishAuctions` extension smart contract lets you sell NFTs (ERC-721 or ERC-1155) in an english auction.
 
 
 
 ## Methods
-
-### MAX_BPS
-
-```solidity
-function MAX_BPS() external view returns (uint64)
-```
-
-
-
-*The max bps of the contract. So, 10_000 == 100 %*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint64 | undefined |
-
-### _msgData
-
-```solidity
-function _msgData() external view returns (bytes)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined |
-
-### _msgSender
-
-```solidity
-function _msgSender() external view returns (address sender)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| sender | address | undefined |
 
 ### bidInAuction
 
@@ -84,15 +33,15 @@ Bid in an active auction.
 function cancelAuction(uint256 _auctionId) external nonpayable
 ```
 
+Cancel an auction.
 
 
-*Cancels an auction.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _auctionId | uint256 | undefined |
+| _auctionId | uint256 | The ID of the auction to cancel. |
 
 ### collectAuctionPayout
 
@@ -151,7 +100,7 @@ function createAuction(IEnglishAuctions.AuctionParameters _params) external nonp
 ### getAllAuctions
 
 ```solidity
-function getAllAuctions(uint256 _startId, uint256 _endId) external view returns (struct IEnglishAuctions.Auction[] _allAuctions)
+function getAllAuctions(uint256 _startId, uint256 _endId) external view returns (struct IEnglishAuctions.Auction[] auctions)
 ```
 
 Returns all non-cancelled auctions.
@@ -169,12 +118,12 @@ Returns all non-cancelled auctions.
 
 | Name | Type | Description |
 |---|---|---|
-| _allAuctions | IEnglishAuctions.Auction[] | undefined |
+| auctions | IEnglishAuctions.Auction[] | undefined |
 
 ### getAllValidAuctions
 
 ```solidity
-function getAllValidAuctions(uint256 _startId, uint256 _endId) external view returns (struct IEnglishAuctions.Auction[] _validAuctions)
+function getAllValidAuctions(uint256 _startId, uint256 _endId) external view returns (struct IEnglishAuctions.Auction[] auctions)
 ```
 
 Returns all active auctions.
@@ -192,12 +141,12 @@ Returns all active auctions.
 
 | Name | Type | Description |
 |---|---|---|
-| _validAuctions | IEnglishAuctions.Auction[] | undefined |
+| auctions | IEnglishAuctions.Auction[] | undefined |
 
 ### getAuction
 
 ```solidity
-function getAuction(uint256 _auctionId) external view returns (struct IEnglishAuctions.Auction _auction)
+function getAuction(uint256 _auctionId) external view returns (struct IEnglishAuctions.Auction auction)
 ```
 
 Returns the auction of the provided auction ID.
@@ -214,12 +163,12 @@ Returns the auction of the provided auction ID.
 
 | Name | Type | Description |
 |---|---|---|
-| _auction | IEnglishAuctions.Auction | undefined |
+| auction | IEnglishAuctions.Auction | undefined |
 
 ### getWinningBid
 
 ```solidity
-function getWinningBid(uint256 _auctionId) external view returns (address _bidder, address _currency, uint256 _bidAmount)
+function getWinningBid(uint256 _auctionId) external view returns (address bidder, address currency, uint256 bidAmount)
 ```
 
 Returns the winning bid of an active auction.
@@ -236,9 +185,9 @@ Returns the winning bid of an active auction.
 
 | Name | Type | Description |
 |---|---|---|
-| _bidder | address | undefined |
-| _currency | address | undefined |
-| _bidAmount | uint256 | undefined |
+| bidder | address | undefined |
+| currency | address | undefined |
+| bidAmount | uint256 | undefined |
 
 ### isAuctionExpired
 
@@ -285,23 +234,6 @@ Returns whether a given bid amount would make for a winning bid in an auction.
 |---|---|---|
 | _0 | bool | undefined |
 
-### totalAuctions
-
-```solidity
-function totalAuctions() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 
 
 ## Events
@@ -314,7 +246,7 @@ event AuctionClosed(uint256 indexed auctionId, address indexed assetContract, ad
 
 
 
-
+*Emitted when an auction is closed.*
 
 #### Parameters
 
@@ -344,22 +276,6 @@ Emitted when a auction is cancelled.
 | auctionCreator `indexed` | address | undefined |
 | auctionId `indexed` | uint256 | undefined |
 
-### Initialized
-
-```solidity
-event Initialized(uint8 version)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| version  | uint8 | undefined |
-
 ### NewAuction
 
 ```solidity
@@ -368,7 +284,7 @@ event NewAuction(address indexed auctionCreator, uint256 indexed auctionId, addr
 
 
 
-
+*Emitted when a new auction is created.*
 
 #### Parameters
 
@@ -387,7 +303,7 @@ event NewBid(uint256 indexed auctionId, address indexed bidder, address indexed 
 
 
 
-
+*Emitted when a new bid is made in an auction.*
 
 #### Parameters
 
