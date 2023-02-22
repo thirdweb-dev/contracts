@@ -13,16 +13,8 @@ jobs:
       contents: read
       security-events: write
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2.4.1
-
-      - name: Run npm install
-        run: yarn
+      - name: Setup Project
+        uses: ./.github/composite-actions/setup
 
       - name: Install Foundry
         uses: onbjerg/foundry-toolchain@v1

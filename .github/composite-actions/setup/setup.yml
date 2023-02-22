@@ -1,0 +1,19 @@
+name: "Setup & Install"
+description: "Sets up Node.js and runs install"
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        submodules: recursive
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 16
+        registry-url: "https://registry.npmjs.org"
+        cache: "yarn"
+
+    - name: Install dependencies
+      run: yarn
