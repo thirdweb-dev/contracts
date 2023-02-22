@@ -10,10 +10,15 @@ on:
   pull_request:
     branches: [main]
 
+# cancel previous runs if new commits are pushed to the branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  test:
     # The type of runner that the job will run on
     # 16 core paid runner
     runs-on: ubuntu-latest-16

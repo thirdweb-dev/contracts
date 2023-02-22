@@ -10,6 +10,11 @@ on:
   pull_request:
     branches: [main]
 
+# cancel previous runs if new commits are pushed to the branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # This workflow contains a single job called "build"
   lint:
