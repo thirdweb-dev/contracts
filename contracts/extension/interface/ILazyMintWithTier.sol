@@ -17,6 +17,17 @@ interface ILazyMintWithTier {
         bytes encryptedBaseURI
     );
 
+    struct TokenRange {
+        uint256 startIdInclusive;
+        uint256 endIdNonInclusive;
+    }
+
+    struct TierMetadata {
+        string tier;
+        TokenRange[] ranges;
+        string[] baseURIs;
+    }
+
     /**
      *  @notice Lazy mints a given amount of NFTs.
      *

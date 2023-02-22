@@ -111,16 +111,17 @@ contract TieredDropLogic is
     ) public override returns (uint256 batchId) {
         TieredDropStorage.Data storage data = TieredDropStorage.tieredDropStorage();
 
+        uint256 nextId = nextTokenIdToLazyMint();
         if (_data.length > 0) {
             (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
             if (encryptedURI.length != 0 && provenanceHash != "") {
-                _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
+                _setEncryptedData(nextId + _amount, _data);
             }
         }
 
         data.totalRemainingInTier[_tier] += _amount;
 
-        uint256 startId = nextTokenIdToLazyMint;
+        uint256 startId = nextId;
         if (isTierEmpty(_tier) || data.nextMetadataIdToMapFromTier[_tier] == type(uint256).max) {
             data.nextMetadataIdToMapFromTier[_tier] = startId;
         }
@@ -171,7 +172,7 @@ contract TieredDropLogic is
         }
 
         uint256 tokenIdToMint = data._currentIndex;
-        if (tokenIdToMint + quantity > nextTokenIdToLazyMint) {
+        if (tokenIdToMint + quantity > nextTokenIdToLazyMint()) {
             revert("!Tokens");
         }
 
@@ -269,7 +270,7 @@ contract TieredDropLogic is
         uint256 nextIdFromTier = data.nextMetadataIdToMapFromTier[_tier];
         uint256 startTokenId = _startIdToMap;
 
-        TokenRange[] memory tokensInTier = tokensInTier[_tier];
+        TokenRange[] memory tokensInTier = tokensInTier(_tier);
         uint256 len = tokensInTier.length;
 
         uint256 qtyRemaining = _quantity;
@@ -503,7 +504,7 @@ contract TieredDropLogic is
 
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     function nextTokenIdToMint() external view returns (uint256) {
-        return nextTokenIdToLazyMint;
+        return nextTokenIdToLazyMint();
     }
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
