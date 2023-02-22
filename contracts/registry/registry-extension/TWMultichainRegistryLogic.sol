@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+/// @author thirdweb
+
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 import "../../extension/plugin/ERC2771ContextConsumer.sol";

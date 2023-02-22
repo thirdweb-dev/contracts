@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
-// OpenZeppelin Contracts (last updated v4.7.0) (utils/structs/EnumerableSet.sol)
-
 pragma solidity ^0.8.0;
+
+/// @author thirdweb
 
 library TWStringSet {
     struct Set {

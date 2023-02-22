@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import "../openzeppelin-presets/token/ERC20/extensions/ERC20Votes.sol";
 
 import "./ERC20Base.sol";

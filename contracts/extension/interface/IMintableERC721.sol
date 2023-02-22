@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 interface IMintableERC721 {
     /// @dev Emitted when tokens are minted via `mintTo`
     event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri);

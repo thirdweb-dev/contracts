@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 interface IContractFactory {
     /**
      *  @notice Deploys a proxy that points to that points to the given implementation.

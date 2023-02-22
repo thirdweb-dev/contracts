@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import { OperatorFiltererUpgradeable } from "./OperatorFiltererUpgradeable.sol";
 
 abstract contract DefaultOperatorFiltererUpgradeable is OperatorFiltererUpgradeable {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
-// Credits: OpenZeppelin Contracts
-
 pragma solidity ^0.8.0;
+
+/// @author thirdweb
 
 import "../openzeppelin-presets/proxy/IERC1822Proxiable.sol";
 import "../openzeppelin-presets/proxy/ERC1967/ERC1967Upgrade.sol";
