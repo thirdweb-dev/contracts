@@ -2,9 +2,14 @@ name: Slither Analysis
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
+
+# cancel previous runs if new commits are pushed to the branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   analyze:
@@ -13,31 +18,29 @@ jobs:
       contents: read
       security-events: write
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-      with:
-        submodules: recursive
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 25
 
-    - name: Setup Node.js environment
-      uses: actions/setup-node@v2.4.1
+      - name: Setup Project
+        uses: ./.github/composite-actions/setup
 
-    - name: Run npm install
-      run: yarn
+      - name: Install Foundry
+        uses: onbjerg/foundry-toolchain@v1
+        with:
+          version: nightly
 
-    - name: Install Foundry
-      uses: onbjerg/foundry-toolchain@v1
-      with:
-        version: nightly
+      - name: Run Slither
+        uses: crytic/slither-action@v0.2.0
+        continue-on-error: true
+        id: slither
+        with:
+          node-version: 16
+          sarif: results.sarif
 
-    - name: Run Slither
-      uses: crytic/slither-action@v0.1.0
-      continue-on-error: true
-      id: slither
-      with:
-        node-version: 16
-        sarif: results.sarif
-
-    - name: Upload SARIF file
-      uses: github/codeql-action/upload-sarif@v1
-      with:
-        sarif_file: ${{ steps.slither.outputs.sarif }}
+      - name: Upload SARIF file
+        uses: github/codeql-action/upload-sarif@v2
+        with:
+          sarif_file: ${{ steps.slither.outputs.sarif }}

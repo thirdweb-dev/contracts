@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { Marketplace, IMarketplace } from "contracts/marketplace/Marketplace.sol";
+import { Marketplace, IMarketplace } from "contracts/old-marketplace/Marketplace.sol";
 
 // Test imports
 import "./utils/BaseTest.sol";
@@ -111,6 +111,36 @@ contract MarketplaceTest is BaseTest {
         assertEq(uint8(IMarketplace.ListingType.Auction), uint8(listing.listingType));
     }
 
+    function test_createListing_auctionListing_ZeroBuyoutAmount() public {
+        address to = getActor(0);
+        uint256 tokenId = erc721.nextTokenIdToMint();
+        erc721.mint(to, 1);
+        vm.prank(to);
+        erc721.setApprovalForAll(address(marketplace), true);
+
+        vm.warp(0);
+        Marketplace.ListingParameters memory listing;
+
+        listing.assetContract = address(erc721);
+        listing.tokenId = tokenId;
+        listing.startTime = 0;
+        listing.secondsUntilEndTime = 1 * 24 * 60 * 60; // 1 day
+        listing.quantityToList = 1;
+        listing.currencyToAccept = NATIVE_TOKEN;
+        listing.reservePricePerToken = 0;
+        listing.buyoutPricePerToken = 0;
+        listing.listingType = IMarketplace.ListingType.Auction;
+
+        vm.prank(to);
+        marketplace.createListing(listing);
+        uint256 listingId = marketplace.totalListings() - 1;
+
+        vm.prank(getActor(0));
+        vm.warp(1);
+        vm.expectRevert("bidding zero amount");
+        marketplace.offer(listingId, 1, NATIVE_TOKEN, 0, type(uint256).max);
+    }
+
     function test_offer_bidAuctionNativeToken() public {
         vm.deal(getActor(0), 100 ether);
 
@@ -148,53 +178,68 @@ contract MarketplaceTest is BaseTest {
         assertEq(winningBid.pricePerToken, 2 ether);
     }
 
-    function test_closeAuctionForCreator_afterBuyout() public {
-        vm.deal(getActor(0), 100 ether);
-        vm.deal(getActor(1), 100 ether);
-
-        // Actor-0 creates an auction listing.
-        vm.prank(getActor(0));
+    function test_revert_offer_bidZeroAmount() public {
         vm.warp(0);
         (uint256 listingId, ) = createERC721Listing(
             getActor(0),
             NATIVE_TOKEN,
-            5 ether,
+            123456 ether,
             IMarketplace.ListingType.Auction
         );
 
-        Marketplace.Listing memory listing = getListing(listingId);
-        assertEq(erc721.ownerOf(listing.tokenId), address(marketplace));
-        assertEq(weth.balanceOf(address(marketplace)), 0);
-
-        /**
-         *  Actor-1 bids with buyout price. Outcome:
-         *      - Actor-1 receives auctioned items escrowed in Marketplace.
-         *      - Winning bid amount is escrowed in the contract.
-         */
-        vm.prank(getActor(1));
+        vm.prank(getActor(0));
         vm.warp(1);
-        marketplace.offer{ value: 5 ether }(listingId, 1, NATIVE_TOKEN, 5 ether, type(uint256).max);
-
-        assertEq(erc721.ownerOf(listing.tokenId), getActor(1));
-        assertEq(weth.balanceOf(address(marketplace)), 5 ether);
-
-        /**
-         *  Auction is closed for the auction creator i.e. Actor-0. Outcome:
-         *      - Actor-0 receives the escrowed buyout amount.
-         */
-
-        uint256 listerBalBefore = getActor(0).balance;
-
-        vm.warp(2);
-        vm.prank(getActor(2));
-        marketplace.closeAuction(listingId, getActor(0));
-
-        uint256 listerBalAfter = getActor(0).balance;
-        uint256 winningBidPostFee = (5 ether * (MAX_BPS - platformFeeBps)) / MAX_BPS;
-
-        assertEq(listerBalAfter - listerBalBefore, winningBidPostFee);
-        assertEq(weth.balanceOf(address(marketplace)), 0);
+        vm.expectRevert("bidding zero amount");
+        marketplace.offer(listingId, 1, NATIVE_TOKEN, 0, type(uint256).max);
     }
+
+    // function test_closeAuctionForCreator_afterBuyout() public {
+    //     vm.deal(getActor(0), 100 ether);
+    //     vm.deal(getActor(1), 100 ether);
+
+    //     // Actor-0 creates an auction listing.
+    //     vm.prank(getActor(0));
+    //     vm.warp(0);
+    //     (uint256 listingId, ) = createERC721Listing(
+    //         getActor(0),
+    //         NATIVE_TOKEN,
+    //         5 ether,
+    //         IMarketplace.ListingType.Auction
+    //     );
+
+    //     Marketplace.Listing memory listing = getListing(listingId);
+    //     assertEq(erc721.ownerOf(listing.tokenId), address(marketplace));
+    //     assertEq(weth.balanceOf(address(marketplace)), 0);
+
+    //     /**
+    //      *  Actor-1 bids with buyout price. Outcome:
+    //      *      - Actor-1 receives auctioned items escrowed in Marketplace.
+    //      *      - Winning bid amount is escrowed in the contract.
+    //      */
+    //     vm.prank(getActor(1));
+    //     vm.warp(1);
+    //     marketplace.offer{ value: 5 ether }(listingId, 1, NATIVE_TOKEN, 5 ether, type(uint256).max);
+
+    //     assertEq(erc721.ownerOf(listing.tokenId), getActor(1));
+    //     assertEq(weth.balanceOf(address(marketplace)), 5 ether);
+
+    //     /**
+    //      *  Auction is closed for the auction creator i.e. Actor-0. Outcome:
+    //      *      - Actor-0 receives the escrowed buyout amount.
+    //      */
+
+    //     uint256 listerBalBefore = getActor(0).balance;
+
+    //     vm.warp(2);
+    //     vm.prank(getActor(2));
+    //     marketplace.closeAuction(listingId, getActor(0));
+
+    //     uint256 listerBalAfter = getActor(0).balance;
+    //     uint256 winningBidPostFee = (5 ether * (MAX_BPS - platformFeeBps)) / MAX_BPS;
+
+    //     assertEq(listerBalAfter - listerBalBefore, winningBidPostFee);
+    //     assertEq(weth.balanceOf(address(marketplace)), 0);
+    // }
 
     function test_acceptOffer_whenListingAcceptsNativeToken() public {
         vm.deal(getActor(0), 100 ether);

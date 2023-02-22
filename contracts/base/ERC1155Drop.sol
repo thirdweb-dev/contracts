@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import { ERC1155 } from "../eip/ERC1155.sol";
 
 import "../extension/ContractMetadata.sol";
@@ -12,6 +14,7 @@ import "../extension/PrimarySale.sol";
 import "../extension/DropSinglePhase1155.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
+import "../extension/DefaultOperatorFilterer.sol";
 
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/TWStrings.sol";
@@ -49,7 +52,8 @@ contract ERC1155Drop is
     PrimarySale,
     LazyMint,
     DelayedReveal,
-    DropSinglePhase1155
+    DropSinglePhase1155,
+    DefaultOperatorFilterer
 {
     using TWStrings for uint256;
 
@@ -77,6 +81,7 @@ contract ERC1155Drop is
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
+        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -90,6 +95,54 @@ contract ERC1155Drop is
             interfaceId == 0xd9b67a26 || // ERC165 Interface ID for ERC1155
             interfaceId == 0x0e89341c || // ERC165 Interface ID for ERC1155MetadataURI
             interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        Minting/burning logic
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     *  @notice         Lets an owner or approved operator burn NFTs of the given tokenId.
+     *
+     *  @param _owner   The owner of the NFT to burn.
+     *  @param _tokenId The tokenId of the NFT to burn.
+     *  @param _amount  The amount of the NFT to burn.
+     */
+    function burn(
+        address _owner,
+        uint256 _tokenId,
+        uint256 _amount
+    ) external virtual {
+        address caller = msg.sender;
+
+        require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
+        require(balanceOf[_owner][_tokenId] >= _amount, "Not enough tokens owned");
+
+        _burn(_owner, _tokenId, _amount);
+    }
+
+    /**
+     *  @notice         Lets an owner or approved operator burn NFTs of the given tokenIds.
+     *
+     *  @param _owner    The owner of the NFTs to burn.
+     *  @param _tokenIds The tokenIds of the NFTs to burn.
+     *  @param _amounts  The amounts of the NFTs to burn.
+     */
+    function burnBatch(
+        address _owner,
+        uint256[] memory _tokenIds,
+        uint256[] memory _amounts
+    ) external virtual {
+        address caller = msg.sender;
+
+        require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
+        require(_tokenIds.length == _amounts.length, "Length mismatch");
+
+        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
+            require(balanceOf[_owner][_tokenIds[i]] >= _amounts[i], "Not enough tokens owned");
+        }
+
+        _burnBatch(_owner, _tokenIds, _amounts);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -166,6 +219,45 @@ contract ERC1155Drop is
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
     function nextTokenIdToMint() public view virtual returns (uint256) {
         return nextTokenIdToLazyMint;
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                        ERC-1155 overrides
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev See {ERC1155-setApprovalForAll}
+    function setApprovalForAll(address operator, bool approved)
+        public
+        override(ERC1155)
+        onlyAllowedOperatorApproval(operator)
+    {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    /**
+     * @dev See {IERC1155-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override(ERC1155) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, id, amount, data);
+    }
+
+    /**
+     * @dev See {IERC1155-safeBatchTransferFrom}.
+     */
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public override(ERC1155) onlyAllowedOperator(from) {
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -270,6 +362,11 @@ contract ERC1155Drop is
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether operator restriction can be set in the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 

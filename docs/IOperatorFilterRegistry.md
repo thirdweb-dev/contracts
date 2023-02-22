@@ -188,7 +188,7 @@ function isCodeHashOfFiltered(address registrant, address operatorWithCode) exte
 ### isOperatorAllowed
 
 ```solidity
-function isOperatorAllowed(address registrant, address operator) external nonpayable returns (bool)
+function isOperatorAllowed(address registrant, address operator) external view returns (bool)
 ```
 
 
@@ -386,6 +386,22 @@ function subscriptionOf(address addr) external nonpayable returns (address regis
 | Name | Type | Description |
 |---|---|---|
 | registrant | address | undefined |
+
+### unregister
+
+```solidity
+function unregister(address addr) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| addr | address | undefined |
 
 ### unsubscribe
 

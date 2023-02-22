@@ -488,6 +488,23 @@ function nextTokenIdToMint() external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### operatorRestriction
+
+```solidity
+function operatorRestriction() external view returns (bool)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### owner
 
 ```solidity
@@ -667,7 +684,7 @@ function setApprovalForAll(address operator, bool approved) external nonpayable
 
 
 
-*See {IERC1155-setApprovalForAll}.*
+*See {ERC1155-setApprovalForAll}*
 
 #### Parameters
 
@@ -708,6 +725,22 @@ function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) e
 |---|---|---|
 | _royaltyRecipient | address | undefined |
 | _royaltyBps | uint256 | undefined |
+
+### setOperatorRestriction
+
+```solidity
+function setOperatorRestriction(bool _restriction) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _restriction | bool | undefined |
 
 ### setOwner
 
@@ -938,6 +971,22 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
+### OperatorRestriction
+
+```solidity
+event OperatorRestriction(bool restriction)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| restriction  | bool | undefined |
+
 ### OwnerUpdated
 
 ```solidity
@@ -1155,5 +1204,24 @@ event URI(string value, uint256 indexed id)
 | value  | string | undefined |
 | id `indexed` | uint256 | undefined |
 
+
+
+## Errors
+
+### OperatorNotAllowed
+
+```solidity
+error OperatorNotAllowed(address operator)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| operator | address | undefined |
 
 

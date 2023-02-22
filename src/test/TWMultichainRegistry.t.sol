@@ -6,6 +6,7 @@ import "./utils/BaseTest.sol";
 import "contracts/interfaces/ITWMultichainRegistry.sol";
 import "contracts/TWMultichainRegistry.sol";
 import "./mocks/MockThirdwebContract.sol";
+import "contracts/extension/interface/plugin/IPluginMap.sol";
 
 interface ITWMultichainRegistryData {
     event Added(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid, string metadataUri);
@@ -48,6 +49,10 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
         _registry.grantRole(keccak256("OPERATOR_ROLE"), factory_);
 
         vm.stopPrank();
+    }
+
+    function test_interfaceId() public view {
+        console2.logBytes4(type(IPluginMap).interfaceId);
     }
 
     //  =====   Functionality tests   =====

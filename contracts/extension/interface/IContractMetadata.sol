@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 /**
  *  Thirdweb's `ContractMetadata` is a contract extension for any base contracts. It lets you set a metadata URI
  *  for you contract.

@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: Apache 2.0
-// Credits: OpenSea
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 interface IOperatorFilterRegistry {
-    function isOperatorAllowed(address registrant, address operator) external returns (bool);
+    function isOperatorAllowed(address registrant, address operator) external view returns (bool);
 
     function register(address registrant) external;
 
     function registerAndSubscribe(address registrant, address subscription) external;
 
     function registerAndCopyEntries(address registrant, address registrantToCopy) external;
+
+    function unregister(address addr) external;
 
     function updateOperator(
         address registrant,

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import "./IClaimCondition_V1.sol";
 
 interface IDropSinglePhase1155_V1 is IClaimCondition_V1 {

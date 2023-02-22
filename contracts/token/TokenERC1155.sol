@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+/// @author thirdweb
+
+//   $$\     $$\       $$\                 $$\                         $$\
+//   $$ |    $$ |      \__|                $$ |                        $$ |
+// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
+// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
+//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
+//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
+//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
+//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
+
 // Interface
 import { ITokenERC1155 } from "../interfaces/token/ITokenERC1155.sol";
 
@@ -31,6 +42,9 @@ import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 // Helper interfaces
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
+// OpenSea operator filter
+import "../extension/DefaultOperatorFiltererUpgradeable.sol";
+
 contract TokenERC1155 is
     Initializable,
     IThirdwebContract,
@@ -43,6 +57,7 @@ contract TokenERC1155 is
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     AccessControlEnumerableUpgradeable,
+    DefaultOperatorFiltererUpgradeable,
     ERC1155Upgradeable,
     ITokenERC1155
 {
@@ -131,6 +146,7 @@ contract TokenERC1155 is
         __ERC1155_init("");
 
         // Initialize this contract's state.
+        _setOperatorRestriction(true);
         name = _name;
         symbol = _symbol;
         royaltyRecipient = _royaltyRecipient;
@@ -469,6 +485,41 @@ contract TokenERC1155 is
         }
     }
 
+    /// @dev See {ERC1155-setApprovalForAll}
+    function setApprovalForAll(address operator, bool approved)
+        public
+        override(ERC1155Upgradeable, IERC1155Upgradeable)
+        onlyAllowedOperatorApproval(operator)
+    {
+        super.setApprovalForAll(operator, approved);
+    }
+
+    /**
+     * @dev See {IERC1155-safeTransferFrom}.
+     */
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 amount,
+        bytes memory data
+    ) public override(ERC1155Upgradeable, IERC1155Upgradeable) onlyAllowedOperator(from) {
+        super.safeTransferFrom(from, to, id, amount, data);
+    }
+
+    /**
+     * @dev See {IERC1155-safeBatchTransferFrom}.
+     */
+    function safeBatchTransferFrom(
+        address from,
+        address to,
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
+    ) public override(ERC1155Upgradeable, IERC1155Upgradeable) onlyAllowedOperator(from) {
+        super.safeBatchTransferFrom(from, to, ids, amounts, data);
+    }
+
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -480,6 +531,11 @@ contract TokenERC1155 is
             super.supportsInterface(interfaceId) ||
             interfaceId == type(IERC1155Upgradeable).interfaceId ||
             interfaceId == type(IERC2981Upgradeable).interfaceId;
+    }
+
+    /// @dev Returns whether operator restriction can be set in the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     function _msgSender()
