@@ -52,7 +52,7 @@ Returns the ID for the batch of tokens the given tokenId belongs to.
 ### getMetadataForAllTiers
 
 ```solidity
-function getMetadataForAllTiers() external view returns (struct LazyMintWithTier.TierMetadata[] metadataForAllTiers)
+function getMetadataForAllTiers() external view returns (struct ILazyMintWithTier.TierMetadata[] metadataForAllTiers)
 ```
 
 Returns all metadata for all tiers created on the contract.
@@ -64,7 +64,7 @@ Returns all metadata for all tiers created on the contract.
 
 | Name | Type | Description |
 |---|---|---|
-| metadataForAllTiers | LazyMintWithTier.TierMetadata[] | undefined |
+| metadataForAllTiers | ILazyMintWithTier.TierMetadata[] | undefined |
 
 ### lazyMint
 

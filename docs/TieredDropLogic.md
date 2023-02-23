@@ -148,18 +148,18 @@ Encrypt/decrypt data on chain.
 ### encryptedData
 
 ```solidity
-function encryptedData(uint256) external view returns (bytes)
+function encryptedData(uint256 _tokenId) external view returns (bytes)
 ```
 
 
 
-
+*Mapping from tokenId of a batch of tokens =&gt; to delayed reveal data.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| _tokenId | uint256 | undefined |
 
 #### Returns
 
@@ -249,7 +249,7 @@ Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 ### getMetadataForAllTiers
 
 ```solidity
-function getMetadataForAllTiers() external view returns (struct LazyMintWithTier.TierMetadata[] metadataForAllTiers)
+function getMetadataForAllTiers() external view returns (struct ILazyMintWithTier.TierMetadata[] metadataForAllTiers)
 ```
 
 Returns all metadata for all tiers created on the contract.
@@ -261,7 +261,7 @@ Returns all metadata for all tiers created on the contract.
 
 | Name | Type | Description |
 |---|---|---|
-| metadataForAllTiers | LazyMintWithTier.TierMetadata[] | undefined |
+| metadataForAllTiers | ILazyMintWithTier.TierMetadata[] | undefined |
 
 ### getRevealURI
 
@@ -334,7 +334,7 @@ function getTierForToken(uint256 _tokenId) external view returns (string)
 ### getTokensInTier
 
 ```solidity
-function getTokensInTier(string _tier, uint256 _startIdx, uint256 _endIdx) external view returns (struct LazyMintWithTier.TokenRange[] ranges)
+function getTokensInTier(string _tier, uint256 _startIdx, uint256 _endIdx) external view returns (struct ILazyMintWithTier.TokenRange[] ranges)
 ```
 
 
@@ -353,7 +353,7 @@ function getTokensInTier(string _tier, uint256 _startIdx, uint256 _endIdx) exter
 
 | Name | Type | Description |
 |---|---|---|
-| ranges | LazyMintWithTier.TokenRange[] | undefined |
+| ranges | ILazyMintWithTier.TokenRange[] | undefined |
 
 ### getTokensInTierLen
 
