@@ -1,0 +1,240 @@
+[
+  {
+    "metadata": {
+      "name": "TieredDropLogic",
+      "metadataURI": "",
+      "implementation": "0xe2A8acC6D641b7D2b5922cB90969D0B6B76d689E"
+    },
+    "functions": [
+      {
+        "functionSelector": "0x095ea7b3",
+        "functionSignature": "approve(address,uint256)"
+      },
+      {
+        "functionSelector": "0x70a08231",
+        "functionSignature": "balanceOf(address)"
+      },
+      {
+        "functionSelector": "0x42966c68",
+        "functionSignature": "burn(uint256)"
+      },
+      {
+        "functionSelector": "0x7a70a895",
+        "functionSignature": "claimWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+      },
+      {
+        "functionSelector": "0xe8a3d485",
+        "functionSignature": "contractURI()"
+      },
+      {
+        "functionSelector": "0xe7150322",
+        "functionSignature": "encryptDecrypt(bytes,bytes)"
+      },
+      {
+        "functionSelector": "0xa05112fc",
+        "functionSignature": "encryptedData(uint256)"
+      },
+      {
+        "functionSelector": "0x081812fc",
+        "functionSignature": "getApproved(uint256)"
+      },
+      {
+        "functionSelector": "0x63b45e2d",
+        "functionSignature": "getBaseURICount()"
+      },
+      {
+        "functionSelector": "0x2419f51b",
+        "functionSignature": "getBatchIdAtIndex(uint256)"
+      },
+      {
+        "functionSelector": "0xb24f2d39",
+        "functionSignature": "getDefaultRoyaltyInfo()"
+      },
+      {
+        "functionSelector": "0x502eff71",
+        "functionSignature": "getMetadataForAllTiers()"
+      },
+      {
+        "functionSelector": "0x9fc4d68f",
+        "functionSignature": "getRevealURI(uint256,bytes)"
+      },
+      {
+        "functionSelector": "0x4cc157df",
+        "functionSignature": "getRoyaltyInfoForToken(uint256)"
+      },
+      {
+        "functionSelector": "0x5e73ff93",
+        "functionSignature": "getTierForToken(uint256)"
+      },
+      {
+        "functionSelector": "0x51c6a065",
+        "functionSignature": "getTokensInTier(string,uint256,uint256)"
+      },
+      {
+        "functionSelector": "0x9d63e4a3",
+        "functionSignature": "getTokensInTierLen()"
+      },
+      {
+        "functionSelector": "0xe985e9c5",
+        "functionSignature": "isApprovedForAll(address,address)"
+      },
+      {
+        "functionSelector": "0x492e224b",
+        "functionSignature": "isEncryptedBatch(uint256)"
+      },
+      {
+        "functionSelector": "0x572b6c05",
+        "functionSignature": "isTrustedForwarder(address)"
+      },
+      {
+        "functionSelector": "0xe28411ea",
+        "functionSignature": "lazyMint(uint256,string,string,bytes)"
+      },
+      {
+        "functionSelector": "0x06fdde03",
+        "functionSignature": "name()"
+      },
+      {
+        "functionSelector": "0x3b1475a7",
+        "functionSignature": "nextTokenIdToMint()"
+      },
+      {
+        "functionSelector": "0x504c6e01",
+        "functionSignature": "operatorRestriction()"
+      },
+      {
+        "functionSelector": "0x8da5cb5b",
+        "functionSignature": "owner()"
+      },
+      {
+        "functionSelector": "0x6352211e",
+        "functionSignature": "ownerOf(uint256)"
+      },
+      {
+        "functionSelector": "0x079fe40e",
+        "functionSignature": "primarySaleRecipient()"
+      },
+      {
+        "functionSelector": "0xce805642",
+        "functionSignature": "reveal(uint256,bytes)"
+      },
+      {
+        "functionSelector": "0x2a55205a",
+        "functionSignature": "royaltyInfo(uint256,uint256)"
+      },
+      {
+        "functionSelector": "0x42842e0e",
+        "functionSignature": "safeTransferFrom(address,address,uint256)"
+      },
+      {
+        "functionSelector": "0xb88d4fde",
+        "functionSignature": "safeTransferFrom(address,address,uint256,bytes)"
+      },
+      {
+        "functionSelector": "0xa22cb465",
+        "functionSignature": "setApprovalForAll(address,bool)"
+      },
+      {
+        "functionSelector": "0x938e3d7b",
+        "functionSignature": "setContractURI(string)"
+      },
+      {
+        "functionSelector": "0x600dd5ea",
+        "functionSignature": "setDefaultRoyaltyInfo(address,uint256)"
+      },
+      {
+        "functionSelector": "0x32f0cd64",
+        "functionSignature": "setOperatorRestriction(bool)"
+      },
+      {
+        "functionSelector": "0x13af4035",
+        "functionSignature": "setOwner(address)"
+      },
+      {
+        "functionSelector": "0x6f4f2837",
+        "functionSignature": "setPrimarySaleRecipient(address)"
+      },
+      {
+        "functionSelector": "0x9bcf7a15",
+        "functionSignature": "setRoyaltyInfoForToken(uint256,address,uint256)"
+      },
+      {
+        "functionSelector": "0x01ffc9a7",
+        "functionSignature": "supportsInterface(bytes4)"
+      },
+      {
+        "functionSelector": "0x95d89b41",
+        "functionSignature": "symbol()"
+      },
+      {
+        "functionSelector": "0xc87b56dd",
+        "functionSignature": "tokenURI(uint256)"
+      },
+      {
+        "functionSelector": "0xa2309ff8",
+        "functionSignature": "totalMinted()"
+      },
+      {
+        "functionSelector": "0xb6d14230",
+        "functionSignature": "totalMintedInTier(string)"
+      },
+      {
+        "functionSelector": "0x18160ddd",
+        "functionSignature": "totalSupply()"
+      },
+      {
+        "functionSelector": "0x23b872dd",
+        "functionSignature": "transferFrom(address,address,uint256)"
+      },
+      {
+        "functionSelector": "0xc4376dd7",
+        "functionSignature": "verify((uint128,uint128,bytes32,bytes),bytes)"
+      }
+    ]
+  },
+  {
+    "metadata": {
+      "name": "PermissionsEnumerable",
+      "metadataURI": "",
+      "implementation": "0xEe63992e7AaE8578E7239991960F7494F8dFF005"
+    },
+    "functions": [
+      {
+        "functionSelector": "0xa217fddf",
+        "functionSignature": "DEFAULT_ADMIN_ROLE()"
+      },
+      {
+        "functionSelector": "0x248a9ca3",
+        "functionSignature": "getRoleAdmin(bytes32)"
+      },
+      {
+        "functionSelector": "0x9010d07c",
+        "functionSignature": "getRoleMember(bytes32,uint256)"
+      },
+      {
+        "functionSelector": "0xca15c873",
+        "functionSignature": "getRoleMemberCount(bytes32)"
+      },
+      {
+        "functionSelector": "0x2f2ff15d",
+        "functionSignature": "grantRole(bytes32,address)"
+      },
+      {
+        "functionSelector": "0x91d14854",
+        "functionSignature": "hasRole(bytes32,address)"
+      },
+      {
+        "functionSelector": "0xa32fa5b3",
+        "functionSignature": "hasRoleWithSwitch(bytes32,address)"
+      },
+      {
+        "functionSelector": "0x36568abe",
+        "functionSignature": "renounceRole(bytes32,address)"
+      },
+      {
+        "functionSelector": "0xd547741f",
+        "functionSignature": "revokeRole(bytes32,address)"
+      }
+    ]
+  }
+]
