@@ -21,7 +21,7 @@ import { LazyMintWithTier } from "../../extension/LazyMintWithTier.sol";
 import { ContractMetadata } from "../../extension/ContractMetadata.sol";
 import { Ownable } from "../../extension/Ownable.sol";
 import { SignatureActionUpgradeable } from "../../extension/SignatureActionUpgradeable.sol";
-import { DefaultOperatorFiltererUpgradeable } from "../../extension/DefaultOperatorFiltererUpgradeable.sol";
+import { OperatorFiltererUpgradeable } from "../../extension/OperatorFiltererUpgradeable.sol";
 
 contract TieredDropLogic is
     Royalty,
@@ -31,7 +31,7 @@ contract TieredDropLogic is
     ContractMetadata,
     Ownable,
     SignatureActionUpgradeable,
-    DefaultOperatorFiltererUpgradeable,
+    OperatorFiltererUpgradeable,
     ERC2771ContextUpgradeable,
     ERC721AUpgradeable
 {
