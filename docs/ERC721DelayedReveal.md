@@ -142,18 +142,18 @@ Encrypt/decrypt data on chain.
 ### encryptedData
 
 ```solidity
-function encryptedData(uint256) external view returns (bytes)
+function encryptedData(uint256 _tokenId) external view returns (bytes)
 ```
 
 
 
-
+*Mapping from tokenId of a batch of tokens =&gt; to delayed reveal data.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| _tokenId | uint256 | undefined |
 
 #### Returns
 
