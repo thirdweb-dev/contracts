@@ -1,15 +1,17 @@
-// SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts v4.4.0 (metatx/ERC2771Context.sol)
+// SPDX-License-Identifier: Apache 2.0
+pragma solidity ^0.8.0;
 
-pragma solidity ^0.8.11;
+import "../../extension/interface/IERC2771Context.sol";
 
-import "../../extension/Initializable.sol";
+/**
+ * @dev Context variant with ERC2771 support.
+ */
 
 library ERC2771ContextStorage {
     bytes32 public constant ERC2771_CONTEXT_STORAGE_POSITION = keccak256("erc2771.context.storage");
 
     struct Data {
-        mapping(address => bool) _trustedForwarder;
+        mapping(address => bool) trustedForwarder;
     }
 
     function erc2771ContextStorage() internal pure returns (Data storage erc2771ContextData) {
@@ -20,26 +22,18 @@ library ERC2771ContextStorage {
     }
 }
 
-/**
- * @dev Context variant with ERC2771 support.
- */
-abstract contract ERC2771ContextUpgradeable is Initializable {
-    function __ERC2771Context_init(address[] memory trustedForwarder) internal onlyInitializing {
-        __ERC2771Context_init_unchained(trustedForwarder);
-    }
-
-    function __ERC2771Context_init_unchained(address[] memory trustedForwarder) internal onlyInitializing {
+contract ERC2771Context is IERC2771Context {
+    constructor(address[] memory trustedForwarder) {
         ERC2771ContextStorage.Data storage data = ERC2771ContextStorage.erc2771ContextStorage();
 
         for (uint256 i = 0; i < trustedForwarder.length; i++) {
-            data._trustedForwarder[trustedForwarder[i]] = true;
+            data.trustedForwarder[trustedForwarder[i]] = true;
         }
     }
 
     function isTrustedForwarder(address forwarder) public view virtual returns (bool) {
         ERC2771ContextStorage.Data storage data = ERC2771ContextStorage.erc2771ContextStorage();
-
-        return data._trustedForwarder[forwarder];
+        return data.trustedForwarder[forwarder];
     }
 
     function _msgSender() internal view virtual returns (address sender) {

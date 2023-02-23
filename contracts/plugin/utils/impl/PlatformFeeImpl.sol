@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-interface IERC2771Context {
-    function isTrustedForwarder(address forwarder) external view returns (bool);
-}
+import "../PlatformFee.sol";
+import "../../../extension/interface/IPermissions.sol";
+import "../../../extension/interface/IERC2771Context.sol";
 
-/**
- * @dev Context variant with ERC2771 support.
- */
-abstract contract ERC2771ContextConsumer {
-    function _msgSender() public view virtual returns (address sender) {
+contract PlatformFeeImpl is PlatformFee {
+    bytes32 private constant DEFAULT_ADMIN_ROLE = 0x00;
+
+    function _canSetPlatformFeeInfo() internal view override returns (bool) {
+        return IPermissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    function _msgSender() internal view returns (address sender) {
         if (IERC2771Context(address(this)).isTrustedForwarder(msg.sender)) {
             // The assembly code is more direct than the Solidity version using `abi.decode`.
             assembly {
@@ -20,7 +23,7 @@ abstract contract ERC2771ContextConsumer {
         }
     }
 
-    function _msgData() public view virtual returns (bytes calldata) {
+    function _msgData() internal view returns (bytes calldata) {
         if (IERC2771Context(address(this)).isTrustedForwarder(msg.sender)) {
             return msg.data[:msg.data.length - 20];
         } else {

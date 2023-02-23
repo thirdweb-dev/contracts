@@ -16,15 +16,15 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 // ====== Internal imports ======
 
 import "../../extension/interface/IPlatformFee.sol";
-import "../../plugin/utils/ERC2771ContextConsumer.sol";
-import "../../plugin/utils/ReentrancyGuardUpgradeable.sol";
-import "../../plugin/utils/Permissions.sol";
+import "../../extension/interface/IERC2771Context.sol";
+import "../../extension/Permissions.sol";
+import "../../plugin/utils/ReentrancyGuard.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 /**
  * @author  thirdweb.com
  */
-contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardUpgradeable, ERC2771ContextConsumer {
+contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -73,7 +73,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardUpgradeable, E
                             Constructor logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper) {
+    constructor(address _nativeTokenWrapper) ReentrancyGuard() {
         nativeTokenWrapper = _nativeTokenWrapper;
     }
 
@@ -522,5 +522,24 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardUpgradeable, E
             _totalPayoutAmount - (platformFeeCut + royaltyCut),
             _nativeTokenWrapper
         );
+    }
+
+    function _msgSender() internal view returns (address sender) {
+        if (IERC2771Context(address(this)).isTrustedForwarder(msg.sender)) {
+            // The assembly code is more direct than the Solidity version using `abi.decode`.
+            assembly {
+                sender := shr(96, calldataload(sub(calldatasize(), 20)))
+            }
+        } else {
+            return msg.sender;
+        }
+    }
+
+    function _msgData() internal view returns (bytes calldata) {
+        if (IERC2771Context(address(this)).isTrustedForwarder(msg.sender)) {
+            return msg.data[:msg.data.length - 20];
+        } else {
+            return msg.data;
+        }
     }
 }

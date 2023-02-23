@@ -2,16 +2,21 @@
 pragma solidity ^0.8.0;
 
 // Test helper imports
-import "../utils/BaseTest.sol";
+import { BaseTest, IERC721Receiver } from "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
-
 import "contracts/plugin/interface/IPlugin.sol";
-import "contracts/plugin/PluginRegistry.sol";
+import { PluginRegistry } from "contracts/plugin/PluginRegistry.sol";
 import { TWRouter } from "contracts/plugin/TWRouter.sol";
 import { MarketplaceV3 } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
 import { OffersLogic } from "contracts/marketplace/offers/OffersLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
+
+import { PermissionsEnumerable, Permissions } from "contracts/plugin/utils/PermissionsEnumerable.sol";
+import { MetaTx } from "contracts/plugin/utils/impl/MetaTx.sol";
+import "contracts/openzeppelin-presets/metatx/ERC2771Context.sol";
+import "contracts/plugin/utils/impl/ContractMetadataImpl.sol";
+import "contracts/plugin/utils/impl/PlatformFeeImpl.sol";
 
 import { IOffers } from "contracts/marketplace/IMarketplace.sol";
 
@@ -47,15 +52,93 @@ contract MarketplaceOffersTest is BaseTest {
     }
 
     function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
-        string[] memory pluginNames = new string[](1);
+        string[] memory pluginNames = new string[](5);
+
+        // Deploy plugins
+
+        // Plugin: ERC2771Context
+        address erc2771Context = address(new MetaTx(forwarders()));
 
         plugins[0].metadata = IPlugin.PluginMetadata({
+            name: "ERC2771Context",
+            metadataURI: "ipfs://ERC2771Context",
+            implementation: erc2771Context
+        });
+
+        plugins[0].functions.push(
+            IPlugin.PluginFunction(ERC2771Context.isTrustedForwarder.selector, "isTrustedForwarder(address)")
+        );
+        pluginNames[0] = plugins[0].metadata.name;
+
+        // Plugin: PermissionsEnumerable
+        address permissions = address(new PermissionsEnumerable());
+
+        plugins[1].metadata = IPlugin.PluginMetadata({
+            name: "PermissionsEnumerable",
+            metadataURI: "ipfs://PermissionsEnumerable",
+            implementation: permissions
+        });
+
+        plugins[1].functions.push(IPlugin.PluginFunction(Permissions.hasRole.selector, "hasRole(bytes32,address)"));
+        plugins[1].functions.push(
+            IPlugin.PluginFunction(Permissions.hasRoleWithSwitch.selector, "hasRoleWithSwitch(bytes32,address)")
+        );
+        plugins[1].functions.push(IPlugin.PluginFunction(Permissions.getRoleAdmin.selector, "getRoleAdmin(bytes32)"));
+        plugins[1].functions.push(IPlugin.PluginFunction(Permissions.grantRole.selector, "grantRole(bytes32,address)"));
+        plugins[1].functions.push(
+            IPlugin.PluginFunction(Permissions.revokeRole.selector, "revokeRole(bytes32,address)")
+        );
+        plugins[1].functions.push(
+            IPlugin.PluginFunction(Permissions.renounceRole.selector, "renounceRole(bytes32,address)")
+        );
+        plugins[1].functions.push(
+            IPlugin.PluginFunction(PermissionsEnumerable.getRoleMember.selector, "getRoleMember(bytes32,uint256)")
+        );
+        plugins[1].functions.push(
+            IPlugin.PluginFunction(PermissionsEnumerable.getRoleMemberCount.selector, "getRoleMemberCount(bytes32)")
+        );
+        pluginNames[1] = plugins[1].metadata.name;
+
+        // Plugin: ContractMetadata
+        address contractMetadata = address(new ContractMetadataImpl());
+
+        plugins[2].metadata = IPlugin.PluginMetadata({
+            name: "ContractMetadata",
+            metadataURI: "ipfs://ContractMetadata",
+            implementation: contractMetadata
+        });
+
+        plugins[2].functions.push(IPlugin.PluginFunction(ContractMetadata.contractURI.selector, "contractURI()"));
+        plugins[2].functions.push(
+            IPlugin.PluginFunction(ContractMetadata.setContractURI.selector, "setContractURI(string)")
+        );
+        pluginNames[2] = plugins[2].metadata.name;
+
+        // Plugin: PlatformFee
+        address platformFee = address(new PlatformFeeImpl());
+
+        plugins[3].metadata = IPlugin.PluginMetadata({
+            name: "PlatformFee",
+            metadataURI: "ipfs://PlatformFee",
+            implementation: platformFee
+        });
+
+        plugins[3].functions.push(
+            IPlugin.PluginFunction(PlatformFee.getPlatformFeeInfo.selector, "getPlatformFeeInfo()")
+        );
+        plugins[3].functions.push(
+            IPlugin.PluginFunction(PlatformFee.setPlatformFeeInfo.selector, "setPlatformFeeInfo(address,uint256)")
+        );
+        pluginNames[3] = plugins[3].metadata.name;
+
+        // [1] Index `Offers` functions in `Plugin`
+        plugins[4].metadata = IPlugin.PluginMetadata({
             name: "OffersLogic",
             metadataURI: "ipfs://direct",
             implementation: address(new OffersLogic())
         });
+        pluginNames[4] = plugins[4].metadata.name;
 
-        // [1] Index `Offers` functions in `Plugin`
         IPlugin.PluginFunction[] memory pluginFunctions = new IPlugin.PluginFunction[](7);
         pluginFunctions[0] = IPlugin.PluginFunction(OffersLogic.totalOffers.selector, "totalOffers()");
         pluginFunctions[1] = IPlugin.PluginFunction(
@@ -72,13 +155,17 @@ contract MarketplaceOffersTest is BaseTest {
         pluginFunctions[6] = IPlugin.PluginFunction(OffersLogic.getOffer.selector, "getOffer(uint256)");
 
         for (uint256 i = 0; i < pluginFunctions.length; i++) {
-            plugins[0].functions.push(pluginFunctions[i]);
+            plugins[4].functions.push(pluginFunctions[i]);
         }
-        pluginNames[0] = plugins[0].metadata.name;
 
         // [2] Add plugin to registry
-        vm.prank(registryDeployer);
+        vm.startPrank(registryDeployer);
         pluginRegistry.addPlugin(plugins[0]);
+        pluginRegistry.addPlugin(plugins[1]);
+        pluginRegistry.addPlugin(plugins[2]);
+        pluginRegistry.addPlugin(plugins[3]);
+        pluginRegistry.addPlugin(plugins[4]);
+        vm.stopPrank();
 
         // [3] Deploy `MarketplaceV3` implementation
         vm.startPrank(_adminDeployer);
