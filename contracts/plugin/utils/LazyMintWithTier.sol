@@ -4,6 +4,26 @@ pragma solidity ^0.8.0;
 import "../../extension/interface/ILazyMintWithTier.sol";
 import "./BatchMintMetadata.sol";
 
+library LazyMintWithTierStorage {
+    bytes32 public constant LAZY_MINT_WITH_TIER_STORAGE_POSITION = keccak256("lazy.mint.with.tier.storage");
+
+    struct Data {
+        /// @notice The tokenId assigned to the next new NFT to be lazy minted.
+        uint256 nextTokenIdToLazyMint;
+        /// @notice Mapping from a tier -> the token IDs grouped under that tier.
+        mapping(string => ILazyMintWithTier.TokenRange[]) tokensInTier;
+        /// @notice A list of tiers used in this contract.
+        string[] tiers;
+    }
+
+    function lazyMintWithTierStorage() internal pure returns (Data storage lazyMintWithTierData) {
+        bytes32 position = LAZY_MINT_WITH_TIER_STORAGE_POSITION;
+        assembly {
+            lazyMintWithTierData.slot := position
+        }
+    }
+}
+
 /**
  *  The `LazyMint` is a contract extension for any base NFT contract. It lets you 'lazy mint' any number of NFTs
  *  at once. Here, 'lazy mint' means defining the metadata for particular tokenIds of your NFT contract, without actually
@@ -11,25 +31,15 @@ import "./BatchMintMetadata.sol";
  */
 
 abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
-    struct TokenRange {
-        uint256 startIdInclusive;
-        uint256 endIdNonInclusive;
+    function nextTokenIdToLazyMint() internal view returns (uint256) {
+        LazyMintWithTierStorage.Data storage data = LazyMintWithTierStorage.lazyMintWithTierStorage();
+        return data.nextTokenIdToLazyMint;
     }
 
-    struct TierMetadata {
-        string tier;
-        TokenRange[] ranges;
-        string[] baseURIs;
+    function tokensInTier(string memory _tier) internal view returns (TokenRange[] memory) {
+        LazyMintWithTierStorage.Data storage data = LazyMintWithTierStorage.lazyMintWithTierStorage();
+        return data.tokensInTier[_tier];
     }
-
-    /// @notice The tokenId assigned to the next new NFT to be lazy minted.
-    uint256 internal nextTokenIdToLazyMint;
-
-    /// @notice Mapping from a tier -> the token IDs grouped under that tier.
-    mapping(string => TokenRange[]) internal tokensInTier;
-
-    /// @notice A list of tiers used in this contract.
-    string[] private tiers;
 
     /**
      *  @notice                  Lets an authorized address lazy mint a given amount of NFTs.
@@ -54,15 +64,17 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
             revert("0 amt");
         }
 
-        uint256 startId = nextTokenIdToLazyMint;
+        uint256 startId = nextTokenIdToLazyMint();
 
-        (nextTokenIdToLazyMint, batchId) = _batchMintMetadata(startId, _amount, _baseURIForTokens);
+        LazyMintWithTierStorage.Data storage data = LazyMintWithTierStorage.lazyMintWithTierStorage();
+
+        (data.nextTokenIdToLazyMint, batchId) = _batchMintMetadata(startId, _amount, _baseURIForTokens);
 
         // Handle tier info.
-        if (!(tokensInTier[_tier].length > 0)) {
-            tiers.push(_tier);
+        if (!(data.tokensInTier[_tier].length > 0)) {
+            data.tiers.push(_tier);
         }
-        tokensInTier[_tier].push(TokenRange(startId, batchId));
+        data.tokensInTier[_tier].push(TokenRange(startId, batchId));
 
         emit TokensLazyMinted(_tier, startId, startId + _amount - 1, _baseURIForTokens, _data);
 
@@ -75,7 +87,9 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
         view
         returns (TokenRange[] memory tokens, string[] memory baseURIs)
     {
-        tokens = tokensInTier[_tier];
+        LazyMintWithTierStorage.Data storage data = LazyMintWithTierStorage.lazyMintWithTierStorage();
+
+        tokens = data.tokensInTier[_tier];
 
         uint256 len = tokens.length;
         baseURIs = new string[](len);
@@ -87,7 +101,9 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
 
     /// @notice Returns all metadata for all tiers created on the contract.
     function getMetadataForAllTiers() external view returns (TierMetadata[] memory metadataForAllTiers) {
-        string[] memory allTiers = tiers;
+        LazyMintWithTierStorage.Data storage data = LazyMintWithTierStorage.lazyMintWithTierStorage();
+
+        string[] memory allTiers = data.tiers;
         uint256 len = allTiers.length;
 
         metadataForAllTiers = new TierMetadata[](len);
@@ -104,7 +120,8 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
      *  @param _tier We check whether this given tier is empty.
      */
     function isTierEmpty(string memory _tier) internal view returns (bool) {
-        return tokensInTier[_tier].length == 0;
+        LazyMintWithTierStorage.Data storage data = LazyMintWithTierStorage.lazyMintWithTierStorage();
+        return data.tokensInTier[_tier].length == 0;
     }
 
     /// @dev Returns whether lazy minting can be performed in the given execution context.

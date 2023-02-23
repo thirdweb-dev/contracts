@@ -11,17 +11,6 @@ import "../extension/BatchMintMetadata.sol";
  */
 
 abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
-    struct TokenRange {
-        uint256 startIdInclusive;
-        uint256 endIdNonInclusive;
-    }
-
-    struct TierMetadata {
-        string tier;
-        TokenRange[] ranges;
-        string[] baseURIs;
-    }
-
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
     uint256 internal nextTokenIdToLazyMint;
 
