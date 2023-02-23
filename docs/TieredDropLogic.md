@@ -111,9 +111,9 @@ function claimWithSignature(ISignatureAction.GenericRequest _req, bytes _signatu
 function contractURI() external view returns (string)
 ```
 
-Returns the contract metadata URI.
 
 
+*Returns the metadata URI of the contract.*
 
 
 #### Returns
@@ -249,7 +249,7 @@ Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 ### getMetadataForAllTiers
 
 ```solidity
-function getMetadataForAllTiers() external view returns (struct LazyMintWithTier.TierMetadata[] metadataForAllTiers)
+function getMetadataForAllTiers() external view returns (struct ILazyMintWithTier.TierMetadata[] metadataForAllTiers)
 ```
 
 Returns all metadata for all tiers created on the contract.
@@ -261,7 +261,7 @@ Returns all metadata for all tiers created on the contract.
 
 | Name | Type | Description |
 |---|---|---|
-| metadataForAllTiers | LazyMintWithTier.TierMetadata[] | undefined |
+| metadataForAllTiers | ILazyMintWithTier.TierMetadata[] | undefined |
 
 ### getRevealURI
 
@@ -334,7 +334,7 @@ function getTierForToken(uint256 _tokenId) external view returns (string)
 ### getTokensInTier
 
 ```solidity
-function getTokensInTier(string _tier, uint256 _startIdx, uint256 _endIdx) external view returns (struct LazyMintWithTier.TokenRange[] ranges)
+function getTokensInTier(string _tier, uint256 _startIdx, uint256 _endIdx) external view returns (struct ILazyMintWithTier.TokenRange[] ranges)
 ```
 
 
@@ -353,7 +353,7 @@ function getTokensInTier(string _tier, uint256 _startIdx, uint256 _endIdx) exter
 
 | Name | Type | Description |
 |---|---|---|
-| ranges | LazyMintWithTier.TokenRange[] | undefined |
+| ranges | ILazyMintWithTier.TokenRange[] | undefined |
 
 ### getTokensInTierLen
 
