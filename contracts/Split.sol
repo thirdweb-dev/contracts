@@ -2,25 +2,25 @@
 pragma solidity ^0.8.11;
 
 // Base
-import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
+import { PaymentSplitterUpgradeable, IERC20Upgradeable, SafeERC20Upgradeable } from "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
 import "./interfaces/IThirdwebContract.sol";
 
 // Meta-tx
-import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Access
-import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
+import { AccessControlEnumerable, Context } from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 
 // Utils
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import { Multicall } from "@openzeppelin/contracts/utils/Multicall.sol";
 import "./lib/FeeType.sol";
+import "./lib/TWAddress.sol";
 
 contract Split is
     IThirdwebContract,
-    Initializable,
-    MulticallUpgradeable,
+    Multicall,
     ERC2771ContextUpgradeable,
-    AccessControlEnumerableUpgradeable,
+    AccessControlEnumerable,
     PaymentSplitterUpgradeable
 {
     bytes32 private constant MODULE_TYPE = bytes32("Split");
@@ -94,7 +94,7 @@ contract Split is
         _released[account] += payment;
         _totalReleased += payment;
 
-        AddressUpgradeable.sendValue(account, payment);
+        TWAddress.sendValue(account, payment);
         emit PaymentReleased(account, payment);
 
         return payment;
@@ -141,24 +141,12 @@ contract Split is
     }
 
     /// @dev See ERC2771
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override(ERC2771ContextUpgradeable, Context) returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
     /// @dev See ERC2771
-    function _msgData()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override(ERC2771ContextUpgradeable, Context) returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 

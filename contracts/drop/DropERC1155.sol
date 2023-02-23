@@ -11,7 +11,7 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========

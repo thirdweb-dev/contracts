@@ -26,7 +26,7 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/FeeType.sol";
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";

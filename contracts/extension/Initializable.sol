@@ -87,22 +87,4 @@ abstract contract Initializable {
         require(data.initializing, "Initializable: contract is not initializing");
         _;
     }
-
-    /**
-     * @dev Locks the contract, preventing any future reinitialization. This cannot be part of an initializer call.
-     * Calling this in the constructor of a contract will prevent that contract from being initialized or reinitialized
-     * to any version. It is recommended to use this to lock implementation contracts that are designed to be called
-     * through proxies.
-     */
-    function _disableInitializers() internal virtual {
-        InitStorage.Data storage data = InitStorage.initStorage();
-        uint8 _initialized = data.initialized;
-        bool _initializing = data.initializing;
-
-        require(!_initializing, "Initializable: contract is initializing");
-        if (_initialized < type(uint8).max) {
-            data.initialized = type(uint8).max;
-            emit Initialized(type(uint8).max);
-        }
-    }
 }

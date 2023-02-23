@@ -27,7 +27,7 @@ import "../../extension/interface/IOwnable.sol";
 
 import { IDropERC1155_V2 } from "../interfaces/drop/IDropERC1155_V2.sol";
 
-import "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 import "../../lib/CurrencyTransferLib.sol";
 import "../../lib/FeeType.sol";

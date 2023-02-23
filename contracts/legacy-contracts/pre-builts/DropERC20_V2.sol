@@ -23,7 +23,7 @@ import "../../extension/interface/IPrimarySale.sol";
 
 import { IDropERC20_V2 } from "../interfaces/drop/IDropERC20_V2.sol";
 
-import "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 import "../../lib/MerkleProof.sol";
 import "../../lib/CurrencyTransferLib.sol";

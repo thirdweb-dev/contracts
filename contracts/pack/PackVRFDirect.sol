@@ -17,7 +17,7 @@ import "@chainlink/contracts/src/v0.8/VRFV2WrapperConsumerBase.sol";
 //  ==========  Internal imports    ==========
 
 import "../interfaces/IPackVRFDirect.sol";
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
 

@@ -4,9 +4,11 @@
 pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC20/utils/SafeERC20Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/AddressUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol";
+import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { Context } from "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+
+// import "../../extension/Initializable.sol";
 
 /**
  *  Changelog:
@@ -34,7 +36,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  * tokens that apply fees during transfers, are likely to not be supported as expected. If in doubt, we encourage you
  * to run tests before sending real value to this contract.
  */
-contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
+contract PaymentSplitterUpgradeable is Initializable, Context {
     event PayeeAdded(address account, uint256 shares);
     event PaymentReleased(address to, uint256 amount);
     event ERC20PaymentReleased(IERC20Upgradeable indexed token, address to, uint256 amount);
@@ -58,7 +60,6 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
      * duplicates in `payees`.
      */
     function __PaymentSplitter_init(address[] memory payees, uint256[] memory shares_) internal onlyInitializing {
-        __Context_init_unchained();
         __PaymentSplitter_init_unchained(payees, shares_);
     }
 
@@ -176,7 +177,7 @@ contract PaymentSplitterUpgradeable is Initializable, ContextUpgradeable {
         _released[account] += payment;
         _totalReleased += payment;
 
-        AddressUpgradeable.sendValue(account, payment);
+        Address.sendValue(account, payment);
         emit PaymentReleased(account, payment);
     }
 

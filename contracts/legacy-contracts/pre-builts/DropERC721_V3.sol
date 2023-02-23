@@ -25,7 +25,7 @@ import "../../extension/interface/IPrimarySale.sol";
 import "../../extension/interface/IRoyalty.sol";
 import "../../extension/interface/IOwnable.sol";
 
-import "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 import "../../lib/CurrencyTransferLib.sol";
 import "../../lib/FeeType.sol";

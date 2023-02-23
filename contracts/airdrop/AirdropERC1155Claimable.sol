@@ -14,7 +14,7 @@ import "../interfaces/airdrop/IAirdropERC1155Claimable.sol";
 //  ==========  Features    ==========
 import "../extension/Ownable.sol";
 
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "../lib/MerkleProof.sol";
 
 contract AirdropERC1155Claimable is
