@@ -12,16 +12,16 @@ import { Context, ERC721AUpgradeable } from "../../eip/ERC721AUpgradeable.sol";
 
 import { IERC2771Context } from "../../extension/interface/IERC2771Context.sol";
 
-import { ERC2771ContextUpgradeable } from "../../extension/ERC2771ContextUpgradeable.sol";
-import { DelayedReveal } from "../../extension/DelayedReveal.sol";
-import { PrimarySale } from "../../extension/PrimarySale.sol";
-import { Royalty, IERC165 } from "../../extension/Royalty.sol";
-import { Permissions } from "../../extension/Permissions.sol";
-import { LazyMintWithTier } from "../../extension/LazyMintWithTier.sol";
-import { ContractMetadata } from "../../extension/ContractMetadata.sol";
-import { Ownable } from "../../extension/Ownable.sol";
-import { SignatureActionUpgradeable } from "../../extension/SignatureActionUpgradeable.sol";
-import { DefaultOperatorFiltererUpgradeable } from "../../extension/DefaultOperatorFiltererUpgradeable.sol";
+import { ERC2771ContextUpgradeable } from "../../plugin/utils/ERC2771ContextUpgradeable.sol";
+import { DelayedReveal } from "../../plugin/utils/DelayedReveal.sol";
+import { PrimarySale } from "../../plugin/utils/PrimarySale.sol";
+import { Royalty, IERC165 } from "../../plugin/utils/Royalty.sol";
+import { Permissions } from "../../plugin/utils/Permissions.sol";
+import { LazyMintWithTier } from "../../plugin/utils/LazyMintWithTier.sol";
+import { ContractMetadata } from "../../plugin/utils/ContractMetadata.sol";
+import { Ownable } from "../../plugin/utils/Ownable.sol";
+import { SignatureActionUpgradeable } from "../../plugin/utils/SignatureActionUpgradeable.sol";
+import { DefaultOperatorFiltererUpgradeable } from "../../plugin/utils/DefaultOperatorFiltererUpgradeable.sol";
 
 contract TieredDropLogic is
     Royalty,
