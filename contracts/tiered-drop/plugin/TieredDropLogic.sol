@@ -42,7 +42,7 @@ contract TieredDropLogic is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Default admin role for all roles. Only accounts with this role can grant/revoke other roles.
-    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
+    bytes32 private constant DEFAULT_ADMIN_ROLE = 0x00;
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private constant transferRole = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
