@@ -100,6 +100,11 @@ contract ExtensionState is IExtension {
                 "ExtensionState: fn selector and signature mismatch."
             );
 
+            require(
+                data.extensionMetadata[_extension.functions[i].functionSelector].implementation == address(0),
+                "ExtensionState: extension already exists for function."
+            );
+
             data.extensionMetadata[_extension.functions[i].functionSelector] = _extension.metadata;
             data.extensions[name].functions.push(_extension.functions[i]);
 

@@ -58,6 +58,18 @@ contract ContractD {
     }
 }
 
+contract ContractE {
+    uint256 private e_;
+
+    function e() external {
+        e_ += 1;
+    }
+
+    function d() external {
+        e_ += 1;
+    }
+}
+
 contract TWRouterTest is BaseTest, IExtension {
     address private router;
     address private registryDeployer;
@@ -340,5 +352,56 @@ contract TWRouterTest is BaseTest, IExtension {
 
         vm.expectRevert("ExtensionState: extension does not exist.");
         twRouter.removeExtension("Random name");
+    }
+
+    function _setupAddExtensionE() private {
+        extensions[4].metadata = ExtensionMetadata({
+            name: "ContractE",
+            metadataURI: "ipfs://ContractE",
+            implementation: address(new ContractE())
+        });
+        extensions[4].functions.push(ExtensionFunction(bytes4(abi.encodeWithSignature("e()")), "e()"));
+        extensions[4].functions.push(ExtensionFunction(bytes4(abi.encodeWithSignature("getE()")), "getE()"));
+
+        vm.prank(registryDeployer);
+        extensionRegistry.addExtension(extensions[4]);
+    }
+
+    function test_override_function_updateExtension() external {
+        TWRouter twRouter = TWRouter((payable(router)));
+
+        // add extensionD (ContractD)
+        _setupAddExtension();
+        twRouter.addExtension(extensions[3].metadata.name);
+
+        // add extensionE (ContractE)
+        _setupAddExtensionE();
+        twRouter.addExtension(extensions[4].metadata.name);
+
+        // update extensionE
+        extensions[4].metadata.implementation = address(new ContractE());
+        // add function d() which already exists in extensionD
+        extensions[4].functions.push(ExtensionFunction(bytes4(abi.encodeWithSignature("d()")), "d()"));
+        vm.prank(registryDeployer);
+
+        vm.expectRevert("ExtensionState: extension already exists for function.");
+        extensionRegistry.updateExtension(extensions[4]);
+
+        // twRouter.updateExtension(extensions[4].metadata.name);
+
+        // // implementation of function "d()" is pointing to extensionE now
+        // ExtensionMetadata memory extension = twRouter.getExtensionForFunction(bytes4(keccak256(bytes("d()"))));
+        // assertEq(extension.implementation, extensions[4].metadata.implementation);
+
+        // // remove extensionD (also removes function selector for d() from mapping)
+        // twRouter.removeExtension(extensions[3].metadata.name);
+
+        // // fails as function selector for d() doesn't exist in mapping anymore
+        // vm.expectRevert("DefaultExtensionSet: no extension for function.");
+        // extension = twRouter.getExtensionForFunction(bytes4(keccak256(bytes("d()"))));
+
+        // // router fails to forward call call to function d() of contractE.
+        // (bool success, ) = address(twRouter).call(abi.encodeWithSignature("d()"));
+        // assertEq(success, false);
     }
 }
