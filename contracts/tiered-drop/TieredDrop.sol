@@ -10,7 +10,7 @@ import "../extension/init/ContractMetadataInit.sol";
 import "../extension/init/ERC721AInit.sol";
 import "../extension/init/ERC2771ContextInit.sol";
 import "../extension/init/OwnableInit.sol";
-import "../extension/init/PermissionsInit.sol";
+import "../extension/init/PermissionsEnumerableInit.sol";
 import "../extension/init/PrimarySaleInit.sol";
 import "../extension/init/RoyaltyInit.sol";
 import "../extension/init/SignatureActionInit.sol";
@@ -32,7 +32,7 @@ contract TieredDrop is
     ERC721AInit,
     ERC2771ContextInit,
     OwnableInit,
-    PermissionsInit,
+    PermissionsEnumerableInit,
     RoyaltyInit,
     SignatureActionInit
 {
