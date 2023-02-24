@@ -136,7 +136,10 @@ contract TokenERC1155 is
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
+    /// @dev Emitted when flat fee on primary sales is updated.
     event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee);
+
+    /// @dev Emitted when platform fee type is updated.
     event PlatformFeeTypeUpdated(PlatformFeeType feeType);
 
     constructor() initializer {}
@@ -361,17 +364,17 @@ contract TokenERC1155 is
         return (platformFeeRecipient, uint16(platformFeeBps));
     }
 
-    /// @dev Returns the platform fee bps and recipient.
+    /// @dev Returns the flat platform fee and recipient.
     function getFlatPlatformFeeInfo() external view returns (address, uint256) {
         return (platformFeeRecipient, flatPlatformFee);
     }
 
-    /// @dev Returns the platform fee bps and recipient.
+    /// @dev Returns the platform fee type.
     function getPlatformFeeType() external view returns (PlatformFeeType) {
         return platformFeeType;
     }
 
-    /// @dev Returns the platform fee bps and recipient.
+    /// @dev Returns default royalty info.
     function getDefaultRoyaltyInfo() external view returns (address, uint16) {
         return (royaltyRecipient, uint16(royaltyBps));
     }
