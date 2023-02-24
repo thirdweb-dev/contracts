@@ -16,12 +16,12 @@ import { ERC2771ContextUpgradeable } from "../../extension/ERC2771ContextUpgrade
 import { DelayedReveal } from "../../extension/DelayedReveal.sol";
 import { PrimarySale } from "../../extension/PrimarySale.sol";
 import { Royalty, IERC165 } from "../../extension/Royalty.sol";
-import { Permissions } from "../../extension/Permissions.sol";
 import { LazyMintWithTier } from "../../extension/LazyMintWithTier.sol";
 import { ContractMetadata } from "../../extension/ContractMetadata.sol";
 import { Ownable } from "../../extension/Ownable.sol";
 import { SignatureActionUpgradeable } from "../../extension/SignatureActionUpgradeable.sol";
 import { DefaultOperatorFiltererUpgradeable } from "../../extension/DefaultOperatorFiltererUpgradeable.sol";
+import { PermissionsStorage } from "../../extension/Permissions.sol";
 
 contract TieredDropLogic is
     Royalty,
@@ -131,7 +131,7 @@ contract TieredDropLogic is
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
     function reveal(uint256 _index, bytes calldata _key) external returns (string memory revealedURI) {
-        require(Permissions(address(this)).hasRole(minterRole, _msgSender()), "not minter.");
+        require(_hasRole(minterRole, _msgSender()), "not minter.");
 
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
@@ -449,37 +449,37 @@ contract TieredDropLogic is
 
     /// @dev Returns whether a given address is authorized to sign mint requests.
     function _isAuthorizedSigner(address _signer) internal view override returns (bool) {
-        return Permissions(address(this)).hasRole(minterRole, _signer);
+        return _hasRole(minterRole, _signer);
     }
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
-        return Permissions(address(this)).hasRole(minterRole, _msgSender());
+        return _hasRole(minterRole, _msgSender());
     }
 
     /// @dev Returns whether the operator restriction can be set within the given execution context.
     function _canSetOperatorRestriction() internal virtual override returns (bool) {
-        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view override returns (bool) {
-        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
     function _canSetPrimarySaleRecipient() internal view override returns (bool) {
-        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view override returns (bool) {
-        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether owner can be set in the given execution context.
     function _canSetOwner() internal view override returns (bool) {
-        return Permissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -523,11 +523,8 @@ contract TieredDropLogic is
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!Permissions(address(this)).hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
-            if (
-                !Permissions(address(this)).hasRole(transferRole, from) &&
-                !Permissions(address(this)).hasRole(transferRole, to)
-            ) {
+        if (!_hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
+            if (!_hasRole(transferRole, from) && !_hasRole(transferRole, to)) {
                 revert("!TRANSFER");
             }
         }
@@ -536,7 +533,7 @@ contract TieredDropLogic is
     /// @dev See {ERC721-isApprovedForAll}.
     function getApproved(uint256 tokenId) public view override returns (address) {
         address operator = super.getApproved(tokenId);
-        bool operatorRoleApproval = Permissions(address(this)).hasRoleWithSwitch(operatorRole, operator);
+        bool operatorRoleApproval = _hasRoleWithSwitch(operatorRole, operator);
 
         return operatorRoleApproval ? operator : address(0);
     }
@@ -545,7 +542,7 @@ contract TieredDropLogic is
     function isApprovedForAll(address account, address operator) public view virtual override returns (bool) {
         bool operatorRoleApproval = true;
         if (account != operator) {
-            operatorRoleApproval = Permissions(address(this)).hasRoleWithSwitch(operatorRole, operator);
+            operatorRoleApproval = _hasRoleWithSwitch(operatorRole, operator);
         }
         return operatorRoleApproval && super.isApprovedForAll(account, operator);
     }
@@ -586,6 +583,20 @@ contract TieredDropLogic is
         bytes memory data
     ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, tokenId, data);
+    }
+
+    function _hasRole(bytes32 role, address addr) internal view returns (bool) {
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        return data._hasRole[role][addr];
+    }
+
+    function _hasRoleWithSwitch(bytes32 role, address account) internal view returns (bool) {
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        if (!data._hasRole[role][address(0)]) {
+            return data._hasRole[role][account];
+        }
+
+        return true;
     }
 
     function _msgSender() internal view override(Context, ERC2771ContextUpgradeable) returns (address sender) {

@@ -90,6 +90,12 @@ contract TieredDrop is
     /// @dev Returns whether a plugin can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
         bytes32 defaultAdminRole = 0x00;
-        return IPermissions(address(this)).hasRole(defaultAdminRole, msg.sender);
+        return _hasRole(defaultAdminRole, msg.sender);
+    }
+
+    /// @dev Checks whether an account holds the given role.
+    function _hasRole(bytes32 role, address addr) internal view returns (bool) {
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        return data._hasRole[role][addr];
     }
 }
