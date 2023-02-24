@@ -18,13 +18,8 @@ function getImplementationForFunction(bytes4 _functionSelector) external view re
 
 
 
-<<<<<<< HEAD
-*Unimplemented. Returns the implementation contract address for a given function signature.*
-
-=======
 
 
->>>>>>> marketplacev3-latest-plugin
 #### Parameters
 
 | Name | Type | Description |

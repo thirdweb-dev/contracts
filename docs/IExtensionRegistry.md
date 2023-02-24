@@ -1,4 +1,4 @@
-# ITWRouter
+# IExtensionRegistry
 
 
 
@@ -13,18 +13,18 @@
 ### addExtension
 
 ```solidity
-function addExtension(string extensionName) external nonpayable
+function addExtension(IExtension.Extension extension) external nonpayable
 ```
 
 
 
-*Adds a new extension to the router.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| extensionName | string | undefined |
+| extension | IExtension.Extension | undefined |
 
 ### getAllExtensions
 
@@ -134,34 +134,34 @@ function getExtensionImplementation(string extensionName) external view returns 
 ### removeExtension
 
 ```solidity
-function removeExtension(string extensionName) external nonpayable
+function removeExtension(string extension) external nonpayable
 ```
 
 
 
-*Removes an existing extension from the router.*
+*Remove an existing extension from the registry.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| extensionName | string | undefined |
+| extension | string | undefined |
 
 ### updateExtension
 
 ```solidity
-function updateExtension(string extensionName) external nonpayable
+function updateExtension(IExtension.Extension extension) external nonpayable
 ```
 
 
 
-*Updates an existing extension in the router, or overrides a default extension.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| extensionName | string | undefined |
+| extension | IExtension.Extension | undefined |
 
 
 
