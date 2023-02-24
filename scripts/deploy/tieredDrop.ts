@@ -36,7 +36,7 @@ const PLUGIN_METADATA = {
     "TieredDropLogic": {
         name: "TieredDropLogic",
         metadataURI: "",
-        implementation: "0xe2A8acC6D641b7D2b5922cB90969D0B6B76d689E"
+        implementation: "0x38fb0D6E09Cfcf2B8a6c8b6B28994E208726deA3"
     },
     "PermissionsEnumerable": {
         name: "PermissionsEnumerable",
