@@ -5,7 +5,6 @@ import "./interface/IOperatorFilterRegistry.sol";
 import "./OperatorFilterToggle.sol";
 
 abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
-
     IOperatorFilterRegistry constant OPERATOR_FILTER_REGISTRY =
         IOperatorFilterRegistry(0x000000000000AAeB6D7670E522A718067333cd4E);
 
@@ -41,7 +40,7 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
                     _;
                     return;
                 }
-                OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), msg.sender)
+                OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), msg.sender);
             }
         }
         _;
@@ -53,7 +52,7 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
         // Check registry code length to facilitate testing in environments without a deployed registry.
         if (data.operatorRestriction) {
             if (address(OPERATOR_FILTER_REGISTRY).code.length > 0) {
-                OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), msg.sender)
+                OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), msg.sender);
             }
         }
         _;
