@@ -14,6 +14,7 @@ import "../extension/init/PermissionsInit.sol";
 import "../extension/init/PrimarySaleInit.sol";
 import "../extension/init/RoyaltyInit.sol";
 import "../extension/init/SignatureActionInit.sol";
+import "../extension/init/DefaultOperatorFiltererInit.sol";
 
 /**
  *  Defualt extensions to add:
@@ -25,6 +26,7 @@ contract TieredDrop is
     Initializable,
     Multicall,
     BaseRouter,
+    DefaultOperatorFiltererInit,
     PrimarySaleInit,
     ContractMetadataInit,
     ERC721AInit,
@@ -63,6 +65,8 @@ contract TieredDrop is
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
+
+        _setupOperatorFilterer();
     }
 
     function _setupRoles(address _defaultAdmin) internal onlyInitializing {
