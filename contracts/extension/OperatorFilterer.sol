@@ -14,7 +14,6 @@ import "./OperatorFilterToggle.sol";
  */
 
 abstract contract OperatorFilterer is OperatorFilterToggle {
-    error OperatorNotAllowed(address operator);
 
     IOperatorFilterRegistry public constant OPERATOR_FILTER_REGISTRY =
         IOperatorFilterRegistry(0x000000000000AAeB6D7670E522A718067333cd4E);
@@ -57,9 +56,7 @@ abstract contract OperatorFilterer is OperatorFilterToggle {
         // Check registry code length to facilitate testing in environments without a deployed registry.
         if (data.operatorRestriction) {
             if (address(OPERATOR_FILTER_REGISTRY).code.length > 0) {
-                if (!OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), operator)) {
-                    revert OperatorNotAllowed(operator);
-                }
+                OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), operator)
             }
         }
     }
