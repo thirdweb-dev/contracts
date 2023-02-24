@@ -8,13 +8,13 @@ import "../extension/Permissions.sol";
 
 import "../extension/init/ContractMetadataInit.sol";
 import "../extension/init/ERC721AInit.sol";
-import "../extension/init/ERC2771ContextInit.sol";
 import "../extension/init/OwnableInit.sol";
 import "../extension/init/PermissionsEnumerableInit.sol";
 import "../extension/init/PrimarySaleInit.sol";
 import "../extension/init/RoyaltyInit.sol";
 import "../extension/init/SignatureActionInit.sol";
 import "../extension/init/DefaultOperatorFiltererInit.sol";
+import "../extension/ERC2771ContextUpgradeable.sol";
 
 /**
  *  Defualt extensions to add:
@@ -25,12 +25,12 @@ import "../extension/init/DefaultOperatorFiltererInit.sol";
 contract TieredDrop is
     Initializable,
     Multicall,
+    ERC2771ContextUpgradeable,
     BaseRouter,
     DefaultOperatorFiltererInit,
     PrimarySaleInit,
     ContractMetadataInit,
     ERC721AInit,
-    ERC2771ContextInit,
     OwnableInit,
     PermissionsEnumerableInit,
     RoyaltyInit,
@@ -90,7 +90,7 @@ contract TieredDrop is
     /// @dev Returns whether a plugin can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
         bytes32 defaultAdminRole = 0x00;
-        return _hasRole(defaultAdminRole, msg.sender);
+        return _hasRole(defaultAdminRole, _msgSender());
     }
 
     /// @dev Checks whether an account holds the given role.
