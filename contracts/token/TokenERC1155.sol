@@ -65,7 +65,13 @@ contract TokenERC1155 is
     using StringsUpgradeable for uint256;
 
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC1155");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 2;
+
+    /// @dev Fee type variants: percentage fee and flat fee
+    enum PlatformFeeType {
+        Bps,
+        Flat
+    }
 
     // Token name
     string public name;
@@ -107,6 +113,12 @@ contract TokenERC1155 is
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 private platformFeeBps;
 
+    /// @dev The flat amount collected by the contract as fees on primary sales.
+    uint256 private flatPlatformFee;
+
+    /// @dev Fee type variants: percentage fee and flat fee
+    PlatformFeeType private platformFeeType;
+
     /// @dev Contract level metadata.
     string public contractURI;
 
@@ -123,6 +135,9 @@ contract TokenERC1155 is
 
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
+
+    event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee);
+    event PlatformFeeTypeUpdated(PlatformFeeType feeType);
 
     constructor() initializer {}
 
@@ -157,6 +172,9 @@ contract TokenERC1155 is
 
         require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
         platformFeeBps = _platformFeeBps;
+
+        // Fee type Bps by default
+        platformFeeType = PlatformFeeType.Bps;
 
         _owner = _defaultAdmin;
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -304,6 +322,24 @@ contract TokenERC1155 is
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
+    /// @dev Lets a module admin set a flat fee on primary sales.
+    function setFlatPlatformFeeInfo(address _platformFeeRecipient, uint256 _flatFee)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        flatPlatformFee = _flatFee;
+        platformFeeRecipient = _platformFeeRecipient;
+
+        emit FlatPlatformFeeUpdated(_platformFeeRecipient, _flatFee);
+    }
+
+    /// @dev Lets a module admin set a flat fee on primary sales.
+    function setPlatformFeeType(PlatformFeeType _feeType) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        platformFeeType = _feeType;
+
+        emit PlatformFeeTypeUpdated(_feeType);
+    }
+
     /// @dev Lets a module admin set a new owner for the contract. The new owner must be a module admin.
     function setOwner(address _newOwner) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(hasRole(DEFAULT_ADMIN_ROLE, _newOwner), "new owner not module admin.");
@@ -323,6 +359,16 @@ contract TokenERC1155 is
     /// @dev Returns the platform fee bps and recipient.
     function getPlatformFeeInfo() external view returns (address, uint16) {
         return (platformFeeRecipient, uint16(platformFeeBps));
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getFlatPlatformFeeInfo() external view returns (address, uint256) {
+        return (platformFeeRecipient, flatPlatformFee);
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeType() external view returns (PlatformFeeType) {
+        return platformFeeType;
     }
 
     /// @dev Returns the platform fee bps and recipient.
@@ -408,7 +454,10 @@ contract TokenERC1155 is
         }
 
         uint256 totalPrice = _req.pricePerToken * _req.quantity;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        uint256 platformFees = platformFeeType == PlatformFeeType.Flat
+            ? flatPlatformFee
+            : ((totalPrice * platformFeeBps) / MAX_BPS);
+        require(totalPrice >= platformFees, "price less than platform fee");
 
         if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
