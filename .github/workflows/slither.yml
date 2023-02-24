@@ -20,6 +20,8 @@ jobs:
 
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
+        with:
+          node-version: 16
 
       - name: Run npm install
         run: yarn

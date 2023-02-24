@@ -2,17 +2,31 @@
 pragma solidity ^0.8.0;
 
 // Test helper imports
-import "../utils/BaseTest.sol";
+import { BaseTest, IERC721Receiver } from "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
-import { PluginMap, IPluginMap } from "contracts/extension/plugin/PluginMap.sol";
+import "contracts/plugin/interface/IExtension.sol";
+import { ExtensionRegistry } from "contracts/plugin/ExtensionRegistry.sol";
+import { TWRouter } from "contracts/plugin/TWRouter.sol";
 import { MarketplaceV3 } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
 import { DirectListingsLogic } from "contracts/marketplace/direct-listings/DirectListingsLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
+import { PermissionsEnumerableImpl, PermissionsEnumerable, Permissions } from "contracts/plugin/utils/impl/PermissionsEnumerableImpl.sol";
+import { MetaTx } from "contracts/plugin/utils/impl/MetaTx.sol";
+import "contracts/openzeppelin-presets/metatx/ERC2771Context.sol";
+import "contracts/plugin/utils/impl/ContractMetadataImpl.sol";
+import "contracts/plugin/utils/impl/PlatformFeeImpl.sol";
+
 import { IDirectListings } from "contracts/marketplace/IMarketplace.sol";
 
 contract MarketplaceDirectListingsTest is BaseTest {
+    address private registryDeployer;
+
+    ExtensionRegistry private extensionRegistry;
+
+    mapping(uint256 => IExtension.Extension) private extensions;
+
     // Target contract
     address public marketplace;
 
@@ -29,86 +43,186 @@ contract MarketplaceDirectListingsTest is BaseTest {
         marketplaceDeployer = getActor(1);
         seller = getActor(2);
         buyer = getActor(3);
+        registryDeployer = getActor(4);
+
+        vm.prank(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer);
 
         setupMarketplace(adminDeployer, marketplaceDeployer);
     }
 
     function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
-        vm.startPrank(_adminDeployer);
+        string[] memory extensionNames = new string[](5);
 
-        // [1] Deploy `DirectListings`
-        address directListings = address(new DirectListingsLogic(address(weth)));
+        // Deploy extensions
 
-        // [2] Index `DirectListings` functions in `PluginMap`
-        IPluginMap.Plugin[] memory plugins = new IPluginMap.Plugin[](13);
-        plugins[0] = IPluginMap.Plugin(DirectListingsLogic.totalListings.selector, "totalListings()", directListings);
-        plugins[1] = IPluginMap.Plugin(
+        // Extension: ERC2771Context
+        address erc2771Context = address(new MetaTx(forwarders()));
+
+        extensions[0].metadata = IExtension.ExtensionMetadata({
+            name: "ERC2771Context",
+            metadataURI: "ipfs://ERC2771Context",
+            implementation: erc2771Context
+        });
+
+        extensions[0].functions.push(
+            IExtension.ExtensionFunction(ERC2771Context.isTrustedForwarder.selector, "isTrustedForwarder(address)")
+        );
+        extensionNames[0] = extensions[0].metadata.name;
+
+        // Extension: PermissionsEnumerable
+        address permissions = address(new PermissionsEnumerableImpl());
+
+        extensions[1].metadata = IExtension.ExtensionMetadata({
+            name: "PermissionsEnumerable",
+            metadataURI: "ipfs://PermissionsEnumerable",
+            implementation: permissions
+        });
+
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.hasRole.selector, "hasRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.hasRoleWithSwitch.selector, "hasRoleWithSwitch(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.getRoleAdmin.selector, "getRoleAdmin(bytes32)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.grantRole.selector, "grantRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.revokeRole.selector, "revokeRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.renounceRole.selector, "renounceRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(PermissionsEnumerable.getRoleMember.selector, "getRoleMember(bytes32,uint256)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(
+                PermissionsEnumerable.getRoleMemberCount.selector,
+                "getRoleMemberCount(bytes32)"
+            )
+        );
+        extensionNames[1] = extensions[1].metadata.name;
+
+        // Extension: ContractMetadata
+        address contractMetadata = address(new ContractMetadataImpl());
+
+        extensions[2].metadata = IExtension.ExtensionMetadata({
+            name: "ContractMetadata",
+            metadataURI: "ipfs://ContractMetadata",
+            implementation: contractMetadata
+        });
+
+        extensions[2].functions.push(
+            IExtension.ExtensionFunction(ContractMetadata.contractURI.selector, "contractURI()")
+        );
+        extensions[2].functions.push(
+            IExtension.ExtensionFunction(ContractMetadata.setContractURI.selector, "setContractURI(string)")
+        );
+        extensionNames[2] = extensions[2].metadata.name;
+
+        // Extension: PlatformFee
+        address platformFee = address(new PlatformFeeImpl());
+
+        extensions[3].metadata = IExtension.ExtensionMetadata({
+            name: "PlatformFee",
+            metadataURI: "ipfs://PlatformFee",
+            implementation: platformFee
+        });
+
+        extensions[3].functions.push(
+            IExtension.ExtensionFunction(PlatformFee.getPlatformFeeInfo.selector, "getPlatformFeeInfo()")
+        );
+        extensions[3].functions.push(
+            IExtension.ExtensionFunction(PlatformFee.setPlatformFeeInfo.selector, "setPlatformFeeInfo(address,uint256)")
+        );
+        extensionNames[3] = extensions[3].metadata.name;
+
+        // [1] Index `DirectListings` functions in `Extension`
+        extensions[4].metadata = IExtension.ExtensionMetadata({
+            name: "DirectListingsLogic",
+            metadataURI: "ipfs://direct",
+            implementation: address(new DirectListingsLogic(address(weth)))
+        });
+        extensionNames[4] = extensions[4].metadata.name;
+
+        IExtension.ExtensionFunction[] memory extensionFunctions = new IExtension.ExtensionFunction[](13);
+        extensionFunctions[0] = IExtension.ExtensionFunction(
+            DirectListingsLogic.totalListings.selector,
+            "totalListings()"
+        );
+        extensionFunctions[1] = IExtension.ExtensionFunction(
             DirectListingsLogic.isBuyerApprovedForListing.selector,
-            "isBuyerApprovedForListing(uint256,address)",
-            directListings
+            "isBuyerApprovedForListing(uint256,address)"
         );
-        plugins[2] = IPluginMap.Plugin(
+        extensionFunctions[2] = IExtension.ExtensionFunction(
             DirectListingsLogic.isCurrencyApprovedForListing.selector,
-            "isCurrencyApprovedForListing(uint256,address)",
-            directListings
+            "isCurrencyApprovedForListing(uint256,address)"
         );
-        plugins[3] = IPluginMap.Plugin(
+        extensionFunctions[3] = IExtension.ExtensionFunction(
             DirectListingsLogic.currencyPriceForListing.selector,
-            "currencyPriceForListing(uint256,address)",
-            directListings
+            "currencyPriceForListing(uint256,address)"
         );
-        plugins[4] = IPluginMap.Plugin(
+        extensionFunctions[4] = IExtension.ExtensionFunction(
             DirectListingsLogic.createListing.selector,
-            "createListing((address,uint256,uint256,address,uint256,uint128,uint128,bool))",
-            directListings
+            "createListing((address,uint256,uint256,address,uint256,uint128,uint128,bool))"
         );
-        plugins[5] = IPluginMap.Plugin(
+        extensionFunctions[5] = IExtension.ExtensionFunction(
             DirectListingsLogic.updateListing.selector,
-            "updateListing(uint256,(address,uint256,uint256,address,uint256,uint128,uint128,bool))",
-            directListings
+            "updateListing(uint256,(address,uint256,uint256,address,uint256,uint128,uint128,bool))"
         );
-        plugins[6] = IPluginMap.Plugin(
+        extensionFunctions[6] = IExtension.ExtensionFunction(
             DirectListingsLogic.cancelListing.selector,
-            "cancelListing(uint256)",
-            directListings
+            "cancelListing(uint256)"
         );
-        plugins[7] = IPluginMap.Plugin(
+        extensionFunctions[7] = IExtension.ExtensionFunction(
             DirectListingsLogic.approveBuyerForListing.selector,
-            "approveBuyerForListing(uint256,address,bool)",
-            directListings
+            "approveBuyerForListing(uint256,address,bool)"
         );
-        plugins[8] = IPluginMap.Plugin(
+        extensionFunctions[8] = IExtension.ExtensionFunction(
             DirectListingsLogic.approveCurrencyForListing.selector,
-            "approveCurrencyForListing(uint256,address,uint256)",
-            directListings
+            "approveCurrencyForListing(uint256,address,uint256)"
         );
-        plugins[9] = IPluginMap.Plugin(
+        extensionFunctions[9] = IExtension.ExtensionFunction(
             DirectListingsLogic.buyFromListing.selector,
-            "buyFromListing(uint256,address,uint256,address,uint256)",
-            directListings
+            "buyFromListing(uint256,address,uint256,address,uint256)"
         );
-        plugins[10] = IPluginMap.Plugin(
+        extensionFunctions[10] = IExtension.ExtensionFunction(
             DirectListingsLogic.getAllListings.selector,
-            "getAllListings(uint256,uint256)",
-            directListings
+            "getAllListings(uint256,uint256)"
         );
-        plugins[11] = IPluginMap.Plugin(
+        extensionFunctions[11] = IExtension.ExtensionFunction(
             DirectListingsLogic.getAllValidListings.selector,
-            "getAllValidListings(uint256,uint256)",
-            directListings
+            "getAllValidListings(uint256,uint256)"
         );
-        plugins[12] = IPluginMap.Plugin(DirectListingsLogic.getListing.selector, "getListing(uint256)", directListings);
+        extensionFunctions[12] = IExtension.ExtensionFunction(
+            DirectListingsLogic.getListing.selector,
+            "getListing(uint256)"
+        );
 
-        // [3] Deploy `PluginMap`.
-        PluginMap map = new PluginMap(plugins);
-        assertEq(map.getAllFunctionsOfPlugin(directListings).length, 13);
+        for (uint256 i = 0; i < extensionFunctions.length; i++) {
+            extensions[4].functions.push(extensionFunctions[i]);
+        }
 
-        // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
-
+        // [2] Add extension to registry
+        vm.startPrank(registryDeployer);
+        extensionRegistry.addExtension(extensions[0]);
+        extensionRegistry.addExtension(extensions[1]);
+        extensionRegistry.addExtension(extensions[2]);
+        extensionRegistry.addExtension(extensions[3]);
+        extensionRegistry.addExtension(extensions[4]);
         vm.stopPrank();
 
-        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        // [3] Deploy `MarketplaceV3` implementation
+        vm.startPrank(_adminDeployer);
+        MarketplaceV3 router = new MarketplaceV3(address(extensionRegistry), extensionNames);
+        vm.stopPrank();
+
+        // [4] Deploy proxy pointing to `MarkeptlaceV3` implementation
         vm.prank(_marketplaceDeployer);
         marketplace = address(
             new TWProxy(
@@ -120,8 +234,8 @@ contract MarketplaceDirectListingsTest is BaseTest {
             )
         );
 
-        // [6] Setup roles for seller and assets
-        vm.startPrank(marketplaceDeployer);
+        // [5] Setup roles for seller and assets
+        vm.startPrank(_marketplaceDeployer);
         Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(0));
         Permissions(marketplace).revokeRole(keccak256("LISTER_ROLE"), address(0));
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
@@ -132,7 +246,6 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         vm.label(address(router), "MarketplaceV3_Impl");
         vm.label(marketplace, "Marketplace");
-        vm.label(directListings, "DirectListings_Extension");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
         vm.label(address(erc721), "ERC721_Token");
@@ -1472,6 +1585,12 @@ contract MarketplaceDirectListingsTest is BaseTest {
 }
 
 contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
+    address private registryDeployer;
+
+    ExtensionRegistry private extensionRegistry;
+
+    mapping(uint256 => IExtension.Extension) private extensions;
+
     // Target contract
     address public marketplace;
 
@@ -1488,87 +1607,186 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
         marketplaceDeployer = getActor(1);
         seller = getActor(2);
         buyer = getActor(3);
+        registryDeployer = getActor(4);
+
+        vm.prank(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer);
 
         setupMarketplace(adminDeployer, marketplaceDeployer);
     }
 
     function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
-        vm.startPrank(_adminDeployer);
+        string[] memory extensionNames = new string[](5);
 
-        // [1] Deploy `DirectListings`
-        address directListings = address(new DirectListingsLogic(address(weth)));
+        // Deploy extensions
 
-        // [2] Index `DirectListings` functions in `Map`
-        IPluginMap.Plugin[] memory plugins = new IPluginMap.Plugin[](13);
-        plugins[0] = IPluginMap.Plugin(DirectListingsLogic.totalListings.selector, "totalListings()", directListings);
-        plugins[1] = IPluginMap.Plugin(
+        // Extension: ERC2771Context
+        address erc2771Context = address(new MetaTx(forwarders()));
+
+        extensions[0].metadata = IExtension.ExtensionMetadata({
+            name: "ERC2771Context",
+            metadataURI: "ipfs://ERC2771Context",
+            implementation: erc2771Context
+        });
+
+        extensions[0].functions.push(
+            IExtension.ExtensionFunction(ERC2771Context.isTrustedForwarder.selector, "isTrustedForwarder(address)")
+        );
+        extensionNames[0] = extensions[0].metadata.name;
+
+        // Extension: PermissionsEnumerable
+        address permissions = address(new PermissionsEnumerableImpl());
+
+        extensions[1].metadata = IExtension.ExtensionMetadata({
+            name: "PermissionsEnumerable",
+            metadataURI: "ipfs://PermissionsEnumerable",
+            implementation: permissions
+        });
+
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.hasRole.selector, "hasRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.hasRoleWithSwitch.selector, "hasRoleWithSwitch(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.getRoleAdmin.selector, "getRoleAdmin(bytes32)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.grantRole.selector, "grantRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.revokeRole.selector, "revokeRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.renounceRole.selector, "renounceRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(PermissionsEnumerable.getRoleMember.selector, "getRoleMember(bytes32,uint256)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(
+                PermissionsEnumerable.getRoleMemberCount.selector,
+                "getRoleMemberCount(bytes32)"
+            )
+        );
+        extensionNames[1] = extensions[1].metadata.name;
+
+        // Extension: ContractMetadata
+        address contractMetadata = address(new ContractMetadataImpl());
+
+        extensions[2].metadata = IExtension.ExtensionMetadata({
+            name: "ContractMetadata",
+            metadataURI: "ipfs://ContractMetadata",
+            implementation: contractMetadata
+        });
+
+        extensions[2].functions.push(
+            IExtension.ExtensionFunction(ContractMetadata.contractURI.selector, "contractURI()")
+        );
+        extensions[2].functions.push(
+            IExtension.ExtensionFunction(ContractMetadata.setContractURI.selector, "setContractURI(string)")
+        );
+        extensionNames[2] = extensions[2].metadata.name;
+
+        // Extension: PlatformFee
+        address platformFee = address(new PlatformFeeImpl());
+
+        extensions[3].metadata = IExtension.ExtensionMetadata({
+            name: "PlatformFee",
+            metadataURI: "ipfs://PlatformFee",
+            implementation: platformFee
+        });
+
+        extensions[3].functions.push(
+            IExtension.ExtensionFunction(PlatformFee.getPlatformFeeInfo.selector, "getPlatformFeeInfo()")
+        );
+        extensions[3].functions.push(
+            IExtension.ExtensionFunction(PlatformFee.setPlatformFeeInfo.selector, "setPlatformFeeInfo(address,uint256)")
+        );
+        extensionNames[3] = extensions[3].metadata.name;
+
+        // [1] Index `DirectListings` functions in `Extension`
+        extensions[4].metadata = IExtension.ExtensionMetadata({
+            name: "DirectListingsLogic",
+            metadataURI: "ipfs://direct",
+            implementation: address(new DirectListingsLogic(address(weth)))
+        });
+        extensionNames[4] = extensions[4].metadata.name;
+
+        IExtension.ExtensionFunction[] memory extensionFunctions = new IExtension.ExtensionFunction[](13);
+        extensionFunctions[0] = IExtension.ExtensionFunction(
+            DirectListingsLogic.totalListings.selector,
+            "totalListings()"
+        );
+        extensionFunctions[1] = IExtension.ExtensionFunction(
             DirectListingsLogic.isBuyerApprovedForListing.selector,
-            "isBuyerApprovedForListing(uint256,address)",
-            directListings
+            "isBuyerApprovedForListing(uint256,address)"
         );
-        plugins[2] = IPluginMap.Plugin(
+        extensionFunctions[2] = IExtension.ExtensionFunction(
             DirectListingsLogic.isCurrencyApprovedForListing.selector,
-            "isCurrencyApprovedForListing(uint256,address)",
-            directListings
+            "isCurrencyApprovedForListing(uint256,address)"
         );
-        plugins[3] = IPluginMap.Plugin(
+        extensionFunctions[3] = IExtension.ExtensionFunction(
             DirectListingsLogic.currencyPriceForListing.selector,
-            "currencyPriceForListing(uint256,address)",
-            directListings
+            "currencyPriceForListing(uint256,address)"
         );
-        plugins[4] = IPluginMap.Plugin(
+        extensionFunctions[4] = IExtension.ExtensionFunction(
             DirectListingsLogic.createListing.selector,
-            "createListing((address,uint256,uint256,address,uint256,uint128,uint128,bool))",
-            directListings
+            "createListing((address,uint256,uint256,address,uint256,uint128,uint128,bool))"
         );
-        plugins[5] = IPluginMap.Plugin(
+        extensionFunctions[5] = IExtension.ExtensionFunction(
             DirectListingsLogic.updateListing.selector,
-            "updateListing(uint256,(address,uint256,uint256,address,uint256,uint128,uint128,bool))",
-            directListings
+            "updateListing(uint256,(address,uint256,uint256,address,uint256,uint128,uint128,bool))"
         );
-        plugins[6] = IPluginMap.Plugin(
+        extensionFunctions[6] = IExtension.ExtensionFunction(
             DirectListingsLogic.cancelListing.selector,
-            "cancelListing(uint256)",
-            directListings
+            "cancelListing(uint256)"
         );
-        plugins[7] = IPluginMap.Plugin(
+        extensionFunctions[7] = IExtension.ExtensionFunction(
             DirectListingsLogic.approveBuyerForListing.selector,
-            "approveBuyerForListing(uint256,address,bool)",
-            directListings
+            "approveBuyerForListing(uint256,address,bool)"
         );
-        plugins[8] = IPluginMap.Plugin(
+        extensionFunctions[8] = IExtension.ExtensionFunction(
             DirectListingsLogic.approveCurrencyForListing.selector,
-            "approveCurrencyForListing(uint256,address,uint256)",
-            directListings
+            "approveCurrencyForListing(uint256,address,uint256)"
         );
-        plugins[9] = IPluginMap.Plugin(
+        extensionFunctions[9] = IExtension.ExtensionFunction(
             DirectListingsLogic.buyFromListing.selector,
-            "buyFromListing(uint256,address,uint256,address,uint256)",
-            directListings
+            "buyFromListing(uint256,address,uint256,address,uint256)"
         );
-        plugins[10] = IPluginMap.Plugin(
+        extensionFunctions[10] = IExtension.ExtensionFunction(
             DirectListingsLogic.getAllListings.selector,
-            "getAllListings(uint256,uint256)",
-            directListings
+            "getAllListings(uint256,uint256)"
         );
-        plugins[11] = IPluginMap.Plugin(
+        extensionFunctions[11] = IExtension.ExtensionFunction(
             DirectListingsLogic.getAllValidListings.selector,
-            "getAllValidListings(uint256,uint256)",
-            directListings
+            "getAllValidListings(uint256,uint256)"
         );
-        plugins[12] = IPluginMap.Plugin(DirectListingsLogic.getListing.selector, "getListing(uint256)", directListings);
+        extensionFunctions[12] = IExtension.ExtensionFunction(
+            DirectListingsLogic.getListing.selector,
+            "getListing(uint256)"
+        );
 
-        // [3] Deploy `PluginMap`.
-        PluginMap map = new PluginMap(plugins);
-        assertEq(map.getAllFunctionsOfPlugin(directListings).length, 13);
+        for (uint256 i = 0; i < extensionFunctions.length; i++) {
+            extensions[4].functions.push(extensionFunctions[i]);
+        }
 
-        // [4] Deploy `MarketplaceV3`
-
-        MarketplaceV3 router = new MarketplaceV3(address(map));
-
+        // [2] Add extension to registry
+        vm.startPrank(registryDeployer);
+        extensionRegistry.addExtension(extensions[0]);
+        extensionRegistry.addExtension(extensions[1]);
+        extensionRegistry.addExtension(extensions[2]);
+        extensionRegistry.addExtension(extensions[3]);
+        extensionRegistry.addExtension(extensions[4]);
         vm.stopPrank();
 
-        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
+        // [3] Deploy `MarketplaceV3` implementation
+        vm.startPrank(_adminDeployer);
+        MarketplaceV3 router = new MarketplaceV3(address(extensionRegistry), extensionNames);
+        vm.stopPrank();
+
+        // [4] Deploy proxy pointing to `MarkeptlaceV3` implementation
         vm.prank(_marketplaceDeployer);
         marketplace = address(
             new TWProxy(
@@ -1580,8 +1798,10 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
             )
         );
 
-        // [6] Setup roles for seller and assets
-        vm.startPrank(marketplaceDeployer);
+        // [5] Setup roles for seller and assets
+        vm.startPrank(_marketplaceDeployer);
+        Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(0));
+        Permissions(marketplace).revokeRole(keccak256("LISTER_ROLE"), address(0));
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));
@@ -1590,7 +1810,6 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
 
         vm.label(address(router), "MarketplaceV3_Impl");
         vm.label(marketplace, "Marketplace");
-        vm.label(directListings, "DirectListings_Extension");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
         vm.label(address(erc721), "ERC721_Token");

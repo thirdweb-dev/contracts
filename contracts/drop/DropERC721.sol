@@ -210,7 +210,7 @@ contract DropERC721 is
         bytes memory
     ) internal view override {
         require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "!Tokens");
-        require(maxTotalSupply == 0 || _currentIndex + _quantity <= maxTotalSupply, "exceed max total supply.");
+        require(maxTotalSupply == 0 || _currentIndex + _quantity <= maxTotalSupply, "!MaxTotalSupply");
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.

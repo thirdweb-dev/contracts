@@ -2,18 +2,31 @@
 pragma solidity ^0.8.0;
 
 // Test helper imports
-import "../utils/BaseTest.sol";
+import { BaseTest, IERC721Receiver } from "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
-
-import { PluginMap, IPluginMap } from "contracts/extension/plugin/PluginMap.sol";
+import "contracts/plugin/interface/IExtension.sol";
+import { ExtensionRegistry } from "contracts/plugin/ExtensionRegistry.sol";
+import { TWRouter } from "contracts/plugin/TWRouter.sol";
 import { MarketplaceV3 } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
 import { OffersLogic } from "contracts/marketplace/offers/OffersLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
+import { PermissionsEnumerableImpl, PermissionsEnumerable, Permissions } from "contracts/plugin/utils/impl/PermissionsEnumerableImpl.sol";
+import { MetaTx } from "contracts/plugin/utils/impl/MetaTx.sol";
+import "contracts/openzeppelin-presets/metatx/ERC2771Context.sol";
+import "contracts/plugin/utils/impl/ContractMetadataImpl.sol";
+import "contracts/plugin/utils/impl/PlatformFeeImpl.sol";
+
 import { IOffers } from "contracts/marketplace/IMarketplace.sol";
 
 contract MarketplaceOffersTest is BaseTest {
+    address private registryDeployer;
+
+    ExtensionRegistry private extensionRegistry;
+
+    mapping(uint256 => IExtension.Extension) private extensions;
+
     // Target contract
     address public marketplace;
 
@@ -30,44 +43,150 @@ contract MarketplaceOffersTest is BaseTest {
         marketplaceDeployer = getActor(1);
         seller = getActor(2);
         buyer = getActor(3);
+        registryDeployer = getActor(4);
+
+        vm.prank(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer);
 
         setupMarketplace(adminDeployer, marketplaceDeployer);
     }
 
     function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
-        vm.startPrank(_adminDeployer);
+        string[] memory extensionNames = new string[](5);
 
-        // [1] Deploy `Offers`
-        address offers = address(new OffersLogic());
+        // Deploy extensions
 
-        // [2] Index `Offers` functions in `Map`
-        IPluginMap.Plugin[] memory plugins = new IPluginMap.Plugin[](7);
-        plugins[0] = IPluginMap.Plugin(OffersLogic.totalOffers.selector, "totalOffers()", offers);
-        plugins[1] = IPluginMap.Plugin(
+        // Extension: ERC2771Context
+        address erc2771Context = address(new MetaTx(forwarders()));
+
+        extensions[0].metadata = IExtension.ExtensionMetadata({
+            name: "ERC2771Context",
+            metadataURI: "ipfs://ERC2771Context",
+            implementation: erc2771Context
+        });
+
+        extensions[0].functions.push(
+            IExtension.ExtensionFunction(ERC2771Context.isTrustedForwarder.selector, "isTrustedForwarder(address)")
+        );
+        extensionNames[0] = extensions[0].metadata.name;
+
+        // Extension: PermissionsEnumerable
+        address permissions = address(new PermissionsEnumerableImpl());
+
+        extensions[1].metadata = IExtension.ExtensionMetadata({
+            name: "PermissionsEnumerable",
+            metadataURI: "ipfs://PermissionsEnumerable",
+            implementation: permissions
+        });
+
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.hasRole.selector, "hasRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.hasRoleWithSwitch.selector, "hasRoleWithSwitch(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.getRoleAdmin.selector, "getRoleAdmin(bytes32)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.grantRole.selector, "grantRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.revokeRole.selector, "revokeRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.renounceRole.selector, "renounceRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(PermissionsEnumerable.getRoleMember.selector, "getRoleMember(bytes32,uint256)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(
+                PermissionsEnumerable.getRoleMemberCount.selector,
+                "getRoleMemberCount(bytes32)"
+            )
+        );
+        extensionNames[1] = extensions[1].metadata.name;
+
+        // Extension: ContractMetadata
+        address contractMetadata = address(new ContractMetadataImpl());
+
+        extensions[2].metadata = IExtension.ExtensionMetadata({
+            name: "ContractMetadata",
+            metadataURI: "ipfs://ContractMetadata",
+            implementation: contractMetadata
+        });
+
+        extensions[2].functions.push(
+            IExtension.ExtensionFunction(ContractMetadata.contractURI.selector, "contractURI()")
+        );
+        extensions[2].functions.push(
+            IExtension.ExtensionFunction(ContractMetadata.setContractURI.selector, "setContractURI(string)")
+        );
+        extensionNames[2] = extensions[2].metadata.name;
+
+        // Extension: PlatformFee
+        address platformFee = address(new PlatformFeeImpl());
+
+        extensions[3].metadata = IExtension.ExtensionMetadata({
+            name: "PlatformFee",
+            metadataURI: "ipfs://PlatformFee",
+            implementation: platformFee
+        });
+
+        extensions[3].functions.push(
+            IExtension.ExtensionFunction(PlatformFee.getPlatformFeeInfo.selector, "getPlatformFeeInfo()")
+        );
+        extensions[3].functions.push(
+            IExtension.ExtensionFunction(PlatformFee.setPlatformFeeInfo.selector, "setPlatformFeeInfo(address,uint256)")
+        );
+        extensionNames[3] = extensions[3].metadata.name;
+
+        // [1] Index `Offers` functions in `Extension`
+        extensions[4].metadata = IExtension.ExtensionMetadata({
+            name: "OffersLogic",
+            metadataURI: "ipfs://direct",
+            implementation: address(new OffersLogic())
+        });
+        extensionNames[4] = extensions[4].metadata.name;
+
+        IExtension.ExtensionFunction[] memory extensionFunctions = new IExtension.ExtensionFunction[](7);
+        extensionFunctions[0] = IExtension.ExtensionFunction(OffersLogic.totalOffers.selector, "totalOffers()");
+        extensionFunctions[1] = IExtension.ExtensionFunction(
             OffersLogic.makeOffer.selector,
-            "makeOffer((address,uint256,uint256,address,uint256,uint256))",
-            offers
+            "makeOffer((address,uint256,uint256,address,uint256,uint256))"
         );
-        plugins[2] = IPluginMap.Plugin(OffersLogic.cancelOffer.selector, "cancelOffer(uint256)", offers);
-        plugins[3] = IPluginMap.Plugin(OffersLogic.acceptOffer.selector, "acceptOffer(uint256)", offers);
-        plugins[4] = IPluginMap.Plugin(
+        extensionFunctions[2] = IExtension.ExtensionFunction(OffersLogic.cancelOffer.selector, "cancelOffer(uint256)");
+        extensionFunctions[3] = IExtension.ExtensionFunction(OffersLogic.acceptOffer.selector, "acceptOffer(uint256)");
+        extensionFunctions[4] = IExtension.ExtensionFunction(
             OffersLogic.getAllValidOffers.selector,
-            "getAllValidOffers(uint256,uint256)",
-            offers
+            "getAllValidOffers(uint256,uint256)"
         );
-        plugins[5] = IPluginMap.Plugin(OffersLogic.getAllOffers.selector, "getAllOffers(uint256,uint256)", offers);
-        plugins[6] = IPluginMap.Plugin(OffersLogic.getOffer.selector, "getOffer(uint256)", offers);
+        extensionFunctions[5] = IExtension.ExtensionFunction(
+            OffersLogic.getAllOffers.selector,
+            "getAllOffers(uint256,uint256)"
+        );
+        extensionFunctions[6] = IExtension.ExtensionFunction(OffersLogic.getOffer.selector, "getOffer(uint256)");
 
-        // [3] Deploy `PluginMap`.
-        PluginMap map = new PluginMap(plugins);
-        assertEq(map.getAllFunctionsOfPlugin(offers).length, 7);
+        for (uint256 i = 0; i < extensionFunctions.length; i++) {
+            extensions[4].functions.push(extensionFunctions[i]);
+        }
 
-        // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
-
+        // [2] Add extension to registry
+        vm.startPrank(registryDeployer);
+        extensionRegistry.addExtension(extensions[0]);
+        extensionRegistry.addExtension(extensions[1]);
+        extensionRegistry.addExtension(extensions[2]);
+        extensionRegistry.addExtension(extensions[3]);
+        extensionRegistry.addExtension(extensions[4]);
         vm.stopPrank();
 
-        // [5] Deploy proxy pointing to `MarketplaceV3`
+        // [3] Deploy `MarketplaceV3` implementation
+        vm.startPrank(_adminDeployer);
+        MarketplaceV3 router = new MarketplaceV3(address(extensionRegistry), extensionNames);
+        vm.stopPrank();
+
+        // [4] Deploy proxy pointing to `MarkeptlaceV3` implementation
         vm.prank(_marketplaceDeployer);
         marketplace = address(
             new TWProxy(
@@ -79,9 +198,11 @@ contract MarketplaceOffersTest is BaseTest {
             )
         );
 
-        // [6] Setup roles for seller and assets
-        vm.startPrank(marketplaceDeployer);
+        // [5] Setup roles for seller and assets
+        vm.startPrank(_marketplaceDeployer);
         Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(0));
+        Permissions(marketplace).revokeRole(keccak256("LISTER_ROLE"), address(0));
+        Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));
 
@@ -89,7 +210,6 @@ contract MarketplaceOffersTest is BaseTest {
 
         vm.label(address(router), "MarketplaceV3_Impl");
         vm.label(marketplace, "Marketplace");
-        vm.label(offers, "Offers_Extension");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
         vm.label(address(erc721), "ERC721_Token");

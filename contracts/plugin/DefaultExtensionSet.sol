@@ -1,6 +1,4 @@
-// SPDX-License-Identifier: MIT
-// @author: thirdweb (https://github.com/thirdweb-dev/dynamic-contracts)
-
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 // Interface
@@ -8,6 +6,7 @@ import "./interface/IDefaultExtensionSet.sol";
 
 // Extensions
 import "./ExtensionState.sol";
+import "../lib/TWStringSet.sol";
 
 contract DefaultExtensionSet is IDefaultExtensionSet, ExtensionState {
     using TWStringSet for TWStringSet.Set;

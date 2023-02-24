@@ -1,20 +1,28 @@
-// SPDX-License-Identifier: MIT
-// @author: thirdweb (https://github.com/thirdweb-dev/plugin-pattern)
-
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "./interface/IRouter.sol";
+interface IRouter {
+    fallback() external payable;
+
+    function getImplementationForFunction(bytes4 _functionSelector) external view returns (address);
+}
 
 abstract contract Router is IRouter {
+    /*///////////////////////////////////////////////////////////////
+                                Constructor
+    //////////////////////////////////////////////////////////////*/
+
+    constructor() {}
+
+    /*///////////////////////////////////////////////////////////////
+                        Generic contract logic
+    //////////////////////////////////////////////////////////////*/
+
     fallback() external payable virtual {
-        /// @dev delegate calls the appropriate implementation smart contract for a given function.
-        address pluginAddress = getImplementationForFunction(msg.sig);
-        _delegate(pluginAddress);
+        address implementation = getImplementationForFunction(msg.sig);
+        _delegate(implementation);
     }
 
-    receive() external payable virtual {}
-
-    /// @dev delegateCalls an `implementation` smart contract.
     function _delegate(address implementation) internal virtual {
         assembly {
             // Copy msg.data. We take full control of memory in this inline assembly
@@ -40,6 +48,5 @@ abstract contract Router is IRouter {
         }
     }
 
-    /// @dev Unimplemented. Returns the implementation contract address for a given function signature.
     function getImplementationForFunction(bytes4 _functionSelector) public view virtual returns (address);
 }

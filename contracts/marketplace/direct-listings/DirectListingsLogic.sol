@@ -13,16 +13,16 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../../extension/plugin/PlatformFeeLogic.sol";
-import "../../extension/plugin/ERC2771ContextConsumer.sol";
-import "../../extension/plugin/ReentrancyGuardLogic.sol";
-import "../../extension/plugin/PermissionsEnumerableLogic.sol";
+import "../../extension/interface/IPlatformFee.sol";
+import "../../extension/interface/IERC2771Context.sol";
+import "../../extension/Permissions.sol";
+import "../../plugin/utils/ReentrancyGuard.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 /**
  * @author  thirdweb.com
  */
-contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771ContextConsumer {
+contract DirectListingsLogic is IDirectListings, ReentrancyGuard {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -44,13 +44,13 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
 
     /// @dev Checks whether the caller has LISTER_ROLE.
     modifier onlyListerRole() {
-        require(PermissionsEnumerableLogic(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
         _;
     }
 
     /// @dev Checks whether the caller has ASSET_ROLE.
     modifier onlyAssetRole(address _asset) {
-        require(PermissionsEnumerableLogic(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 
@@ -72,7 +72,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
                             Constructor logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper) {
+    constructor(address _nativeTokenWrapper) ReentrancyGuard() {
         nativeTokenWrapper = _nativeTokenWrapper;
     }
 
@@ -511,7 +511,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-        (address platformFeeRecipient, uint16 platformFeeBps) = PlatformFeeLogic(address(this)).getPlatformFeeInfo();
+        (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
         uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
         uint256 royaltyCut;
@@ -553,5 +553,24 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
             _totalPayoutAmount - (platformFeeCut + royaltyCut),
             _nativeTokenWrapper
         );
+    }
+
+    function _msgSender() internal view returns (address sender) {
+        if (IERC2771Context(address(this)).isTrustedForwarder(msg.sender)) {
+            // The assembly code is more direct than the Solidity version using `abi.decode`.
+            assembly {
+                sender := shr(96, calldataload(sub(calldatasize(), 20)))
+            }
+        } else {
+            return msg.sender;
+        }
+    }
+
+    function _msgData() internal view returns (bytes calldata) {
+        if (IERC2771Context(address(this)).isTrustedForwarder(msg.sender)) {
+            return msg.data[:msg.data.length - 20];
+        } else {
+            return msg.data;
+        }
     }
 }

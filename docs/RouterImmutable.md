@@ -1,6 +1,6 @@
 # RouterImmutable
 
-*thirdweb.com*
+
 
 
 
@@ -10,21 +10,32 @@
 
 ## Methods
 
-### _getPluginForFunction
+### addPlugin
 
 ```solidity
-function _getPluginForFunction(bytes4 _selector) external view returns (address)
+function addPlugin(string _pluginName) external nonpayable
 ```
 
 
 
-*View address of the plugged-in functionality contract for a given function signature.*
+*Adds a new plugin to the router.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _selector | bytes4 | undefined |
+| _pluginName | string | undefined |
+
+### defaultPluginSet
+
+```solidity
+function defaultPluginSet() external view returns (address)
+```
+
+The DefaultPluginSet that stores default plugins of the router.
+
+
+
 
 #### Returns
 
@@ -32,76 +43,126 @@ function _getPluginForFunction(bytes4 _selector) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### addPlugin
-
-```solidity
-function addPlugin(IPluginMap.Plugin _plugin) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _plugin | IPluginMap.Plugin | undefined |
-
 ### getAllFunctionsOfPlugin
 
 ```solidity
-function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] registered)
+function getAllFunctionsOfPlugin(string _pluginName) external view returns (struct IPlugin.PluginFunction[])
 ```
 
 
 
-*View all funtionality as list of function signatures.*
+*Returns all functions that belong to the given plugin contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _pluginAddress | address | undefined |
+| _pluginName | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| registered | bytes4[] | undefined |
+| _0 | IPlugin.PluginFunction[] | undefined |
 
 ### getAllPlugins
 
 ```solidity
-function getAllPlugins() external view returns (struct IPluginMap.Plugin[] registered)
+function getAllPlugins() external view returns (struct IPlugin.Plugin[] allPlugins)
 ```
 
+Returns all plugins stored. Override default lugins stored in router are          given precedence over default plugins in DefaultPluginSet.
 
 
-*View all funtionality existing on the contract.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| registered | IPluginMap.Plugin[] | undefined |
+| allPlugins | IPlugin.Plugin[] | undefined |
 
-### getPluginForFunction
+### getImplementationForFunction
 
 ```solidity
-function getPluginForFunction(bytes4 _selector) external view returns (address)
+function getImplementationForFunction(bytes4 _functionSelector) external view returns (address pluginAddress)
 ```
 
 
 
-*View address of the plugged-in functionality contract for a given function signature.*
+*Returns the plugin implementation address stored in router, for the given function.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _selector | bytes4 | undefined |
+| _functionSelector | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| pluginAddress | address | undefined |
+
+### getPlugin
+
+```solidity
+function getPlugin(string _pluginName) external view returns (struct IPlugin.Plugin)
+```
+
+
+
+*Returns the plugin metadata and functions for a given plugin.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _pluginName | string | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | IPlugin.Plugin | undefined |
+
+### getPluginForFunction
+
+```solidity
+function getPluginForFunction(bytes4 _functionSelector) external view returns (struct IPlugin.PluginMetadata)
+```
+
+
+
+*Returns the plugin metadata for a given function.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _functionSelector | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | IPlugin.PluginMetadata | undefined |
+
+### getPluginImplementation
+
+```solidity
+function getPluginImplementation(string _pluginName) external view returns (address)
+```
+
+
+
+*Returns the plugin&#39;s implementation smart contract address.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _pluginName | string | undefined |
 
 #### Returns
 
@@ -131,13 +192,13 @@ Receives and executes a batch of function calls on this contract.
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
-### pluginMap
+### pluginRegistry
 
 ```solidity
-function pluginMap() external view returns (address)
+function pluginRegistry() external view returns (address)
 ```
 
-
+The PluginRegistry that stores all latest, vetted plugins available to router.
 
 
 
@@ -151,56 +212,34 @@ function pluginMap() external view returns (address)
 ### removePlugin
 
 ```solidity
-function removePlugin(bytes4 _selector) external nonpayable
+function removePlugin(string _pluginName) external nonpayable
 ```
 
 
 
-*Remove existing functionality from the contract.*
+*Removes an existing plugin from the router.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _selector | bytes4 | undefined |
-
-### supportsInterface
-
-```solidity
-function supportsInterface(bytes4 interfaceId) external view returns (bool)
-```
-
-
-
-*See {IERC165-supportsInterface}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| interfaceId | bytes4 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
+| _pluginName | string | undefined |
 
 ### updatePlugin
 
 ```solidity
-function updatePlugin(IPluginMap.Plugin _plugin) external nonpayable
+function updatePlugin(string _pluginName) external nonpayable
 ```
 
 
 
-
+*Updates an existing plugin in the router, or overrides a default plugin.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _plugin | IPluginMap.Plugin | undefined |
+| _pluginName | string | undefined |
 
 
 
@@ -209,7 +248,7 @@ function updatePlugin(IPluginMap.Plugin _plugin) external nonpayable
 ### PluginAdded
 
 ```solidity
-event PluginAdded(bytes4 indexed functionSelector, address indexed pluginAddress)
+event PluginAdded(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
 
@@ -220,13 +259,14 @@ event PluginAdded(bytes4 indexed functionSelector, address indexed pluginAddress
 
 | Name | Type | Description |
 |---|---|---|
-| functionSelector `indexed` | bytes4 | undefined |
 | pluginAddress `indexed` | address | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
+| functionSignature  | string | undefined |
 
 ### PluginRemoved
 
 ```solidity
-event PluginRemoved(bytes4 indexed functionSelector, address indexed pluginAddress)
+event PluginRemoved(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
 
@@ -237,31 +277,14 @@ event PluginRemoved(bytes4 indexed functionSelector, address indexed pluginAddre
 
 | Name | Type | Description |
 |---|---|---|
-| functionSelector `indexed` | bytes4 | undefined |
 | pluginAddress `indexed` | address | undefined |
-
-### PluginSet
-
-```solidity
-event PluginSet(bytes4 indexed functionSelector, string indexed functionSignature, address indexed pluginAddress)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
 | functionSelector `indexed` | bytes4 | undefined |
-| functionSignature `indexed` | string | undefined |
-| pluginAddress `indexed` | address | undefined |
+| functionSignature  | string | undefined |
 
 ### PluginUpdated
 
 ```solidity
-event PluginUpdated(bytes4 indexed functionSelector, address indexed oldPluginAddress, address indexed newPluginAddress)
+event PluginUpdated(address indexed oldPluginAddress, address indexed newPluginAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
 
@@ -272,9 +295,10 @@ event PluginUpdated(bytes4 indexed functionSelector, address indexed oldPluginAd
 
 | Name | Type | Description |
 |---|---|---|
-| functionSelector `indexed` | bytes4 | undefined |
 | oldPluginAddress `indexed` | address | undefined |
 | newPluginAddress `indexed` | address | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
+| functionSignature  | string | undefined |
 
 
 

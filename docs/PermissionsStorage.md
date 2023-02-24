@@ -1,12 +1,12 @@
 # PermissionsStorage
 
-*thirdweb.com*
+
+
+> Permissions
 
 
 
-
-
-
+*This contracts provides extending-contracts with role-based access control mechanisms*
 
 ## Methods
 

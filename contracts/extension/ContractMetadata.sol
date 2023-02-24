@@ -4,6 +4,8 @@ pragma solidity ^0.8.0;
 import "./interface/IContractMetadata.sol";
 
 /**
+ *  @author  thirdweb.com
+ *
  *  @title   Contract Metadata
  *  @notice  Thirdweb's `ContractMetadata` is a contract extension for any base contracts. It lets you set a metadata URI
  *           for you contract.

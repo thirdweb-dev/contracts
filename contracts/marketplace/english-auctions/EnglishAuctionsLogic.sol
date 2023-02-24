@@ -15,18 +15,16 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../../extension/plugin/ERC2771ContextConsumer.sol";
-
 import "../../extension/interface/IPlatformFee.sol";
-
-import "../../extension/plugin/ReentrancyGuardLogic.sol";
-import "../../extension/plugin/PermissionsEnumerableLogic.sol";
+import "../../extension/interface/IERC2771Context.sol";
+import "../../extension/Permissions.sol";
+import "../../plugin/utils/ReentrancyGuard.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 /**
  * @author  thirdweb.com
  */
-contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771ContextConsumer {
+contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -47,12 +45,12 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyListerRole() {
-        require(PermissionsLogic(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
         _;
     }
 
     modifier onlyAssetRole(address _asset) {
-        require(PermissionsLogic(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 
@@ -75,7 +73,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
                             Constructor logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper) {
+    constructor(address _nativeTokenWrapper) ReentrancyGuard() {
         nativeTokenWrapper = _nativeTokenWrapper;
     }
 
@@ -524,5 +522,24 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             _totalPayoutAmount - (platformFeeCut + royaltyCut),
             _nativeTokenWrapper
         );
+    }
+
+    function _msgSender() internal view returns (address sender) {
+        if (IERC2771Context(address(this)).isTrustedForwarder(msg.sender)) {
+            // The assembly code is more direct than the Solidity version using `abi.decode`.
+            assembly {
+                sender := shr(96, calldataload(sub(calldatasize(), 20)))
+            }
+        } else {
+            return msg.sender;
+        }
+    }
+
+    function _msgData() internal view returns (bytes calldata) {
+        if (IERC2771Context(address(this)).isTrustedForwarder(msg.sender)) {
+            return msg.data[:msg.data.length - 20];
+        } else {
+            return msg.data;
+        }
     }
 }
