@@ -27,40 +27,6 @@ function MAX_BPS() external view returns (uint64)
 |---|---|---|
 | _0 | uint64 | undefined |
 
-### _msgData
-
-```solidity
-function _msgData() external view returns (bytes)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined |
-
-### _msgSender
-
-```solidity
-function _msgSender() external view returns (address sender)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| sender | address | undefined |
-
 ### approveBuyerForListing
 
 ```solidity
@@ -382,22 +348,6 @@ Emitted when a currency is approved as a form of payment for the listing.
 | listingId `indexed` | uint256 | undefined |
 | currency `indexed` | address | undefined |
 | pricePerToken  | uint256 | undefined |
-
-### Initialized
-
-```solidity
-event Initialized(uint8 version)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| version  | uint8 | undefined |
 
 ### NewListing
 

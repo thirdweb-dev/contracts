@@ -8,40 +8,40 @@ import "./interface/ITWRouter.sol";
 import "../lib/TWStringSet.sol";
 import "../extension/Multicall.sol";
 
-// Plugin pattern imports
+// Extension pattern imports
 import "./Router.sol";
-import "./DefaultPluginSet.sol";
-import "./PluginState.sol";
-import "./interface/IPluginRegistry.sol";
+import "./DefaultExtensionSet.sol";
+import "./ExtensionState.sol";
+import "./interface/IExtensionRegistry.sol";
 
-abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
+abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
     using TWStringSet for TWStringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice The DefaultPluginSet that stores default plugins of the router.
-    address public immutable defaultPluginSet;
+    /// @notice The DefaultExtensionSet that stores default extensions of the router.
+    address public immutable defaultExtensionSet;
 
-    /// @notice The PluginRegistry that stores all latest, vetted plugins available to router.
-    address public immutable pluginRegistry;
+    /// @notice The ExtensionRegistry that stores all latest, vetted extensions available to router.
+    address public immutable extensionRegistry;
 
     /*///////////////////////////////////////////////////////////////
                                 Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _pluginRegistry, string[] memory _pluginNames) {
-        pluginRegistry = _pluginRegistry;
+    constructor(address _extensionRegistry, string[] memory _extensionNames) {
+        extensionRegistry = _extensionRegistry;
 
-        DefaultPluginSet map = new DefaultPluginSet();
-        defaultPluginSet = address(map);
+        DefaultExtensionSet map = new DefaultExtensionSet();
+        defaultExtensionSet = address(map);
 
-        uint256 len = _pluginNames.length;
+        uint256 len = _extensionNames.length;
 
         for (uint256 i = 0; i < len; i += 1) {
-            Plugin memory plugin = IPluginRegistry(_pluginRegistry).getPlugin(_pluginNames[i]);
-            map.setPlugin(plugin);
+            Extension memory extension = IExtensionRegistry(_extensionRegistry).getExtension(_extensionNames[i]);
+            map.setExtension(extension);
         }
     }
 
@@ -49,29 +49,29 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
                         External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Adds a new plugin to the router.
-    function addPlugin(string memory _pluginName) external {
-        require(_canSetPlugin(), "TWRouter: caller not authorized");
+    /// @dev Adds a new extension to the router.
+    function addExtension(string memory _extensionName) external {
+        require(_canSetExtension(), "TWRouter: caller not authorized");
 
-        Plugin memory plugin = IPluginRegistry(pluginRegistry).getPlugin(_pluginName);
+        Extension memory extension = IExtensionRegistry(extensionRegistry).getExtension(_extensionName);
 
-        _addPlugin(plugin);
+        _addExtension(extension);
     }
 
-    /// @dev Updates an existing plugin in the router, or overrides a default plugin.
-    function updatePlugin(string memory _pluginName) external {
-        require(_canSetPlugin(), "TWRouter: caller not authorized");
+    /// @dev Updates an existing extension in the router, or overrides a default extension.
+    function updateExtension(string memory _extensionName) external {
+        require(_canSetExtension(), "TWRouter: caller not authorized");
 
-        Plugin memory plugin = IPluginRegistry(pluginRegistry).getPlugin(_pluginName);
+        Extension memory extension = IExtensionRegistry(extensionRegistry).getExtension(_extensionName);
 
-        _updatePlugin(plugin);
+        _updateExtension(extension);
     }
 
-    /// @dev Removes an existing plugin from the router.
-    function removePlugin(string memory _pluginName) external {
-        require(_canSetPlugin(), "TWRouter: caller not authorized");
+    /// @dev Removes an existing extension from the router.
+    function removeExtension(string memory _extensionName) external {
+        require(_canSetExtension(), "TWRouter: caller not authorized");
 
-        _removePlugin(_pluginName);
+        _removeExtension(_extensionName);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -79,85 +79,95 @@ abstract contract TWRouter is ITWRouter, Multicall, PluginState, Router {
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  @notice Returns all plugins stored. Override default lugins stored in router are
-     *          given precedence over default plugins in DefaultPluginSet.
+     *  @notice Returns all extensions stored. Override default lugins stored in router are
+     *          given precedence over default extensions in DefaultExtensionSet.
      */
-    function getAllPlugins() external view returns (Plugin[] memory allPlugins) {
-        Plugin[] memory mapPlugins = IDefaultPluginSet(defaultPluginSet).getAllPlugins();
-        uint256 mapPluginsLen = mapPlugins.length;
+    function getAllExtensions() external view returns (Extension[] memory allExtensions) {
+        Extension[] memory mapExtensions = IDefaultExtensionSet(defaultExtensionSet).getAllExtensions();
+        uint256 mapExtensionsLen = mapExtensions.length;
 
-        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        string[] memory names = data.pluginNames.values();
+        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        string[] memory names = data.extensionNames.values();
         uint256 namesLen = names.length;
 
         uint256 overrides = 0;
-        for (uint256 i = 0; i < mapPluginsLen; i += 1) {
-            if (data.pluginNames.contains(mapPlugins[i].metadata.name)) {
+        for (uint256 i = 0; i < mapExtensionsLen; i += 1) {
+            if (data.extensionNames.contains(mapExtensions[i].metadata.name)) {
                 overrides += 1;
             }
         }
 
-        uint256 total = (namesLen + mapPluginsLen) - overrides;
+        uint256 total = (namesLen + mapExtensionsLen) - overrides;
 
-        allPlugins = new Plugin[](total);
+        allExtensions = new Extension[](total);
         uint256 idx = 0;
 
-        for (uint256 i = 0; i < mapPluginsLen; i += 1) {
-            string memory name = mapPlugins[i].metadata.name;
-            if (!data.pluginNames.contains(name)) {
-                allPlugins[idx] = mapPlugins[i];
+        for (uint256 i = 0; i < mapExtensionsLen; i += 1) {
+            string memory name = mapExtensions[i].metadata.name;
+            if (!data.extensionNames.contains(name)) {
+                allExtensions[idx] = mapExtensions[i];
                 idx += 1;
             }
         }
 
         for (uint256 i = 0; i < namesLen; i += 1) {
-            allPlugins[idx] = data.plugins[names[i]];
+            allExtensions[idx] = data.extensions[names[i]];
             idx += 1;
         }
     }
 
-    /// @dev Returns the plugin metadata and functions for a given plugin.
-    function getPlugin(string memory _pluginName) public view returns (Plugin memory) {
-        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        bool isLocalPlugin = data.pluginNames.contains(_pluginName);
+    /// @dev Returns the extension metadata and functions for a given extension.
+    function getExtension(string memory _extensionName) public view returns (Extension memory) {
+        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        bool isLocalExtension = data.extensionNames.contains(_extensionName);
 
-        return isLocalPlugin ? data.plugins[_pluginName] : IDefaultPluginSet(defaultPluginSet).getPlugin(_pluginName);
+        return
+            isLocalExtension
+                ? data.extensions[_extensionName]
+                : IDefaultExtensionSet(defaultExtensionSet).getExtension(_extensionName);
     }
 
-    /// @dev Returns the plugin's implementation smart contract address.
-    function getPluginImplementation(string memory _pluginName) external view returns (address) {
-        return getPlugin(_pluginName).metadata.implementation;
+    /// @dev Returns the extension's implementation smart contract address.
+    function getExtensionImplementation(string memory _extensionName) external view returns (address) {
+        return getExtension(_extensionName).metadata.implementation;
     }
 
-    /// @dev Returns all functions that belong to the given plugin contract.
-    function getAllFunctionsOfPlugin(string memory _pluginName) external view returns (PluginFunction[] memory) {
-        return getPlugin(_pluginName).functions;
+    /// @dev Returns all functions that belong to the given extension contract.
+    function getAllFunctionsOfExtension(string memory _extensionName)
+        external
+        view
+        returns (ExtensionFunction[] memory)
+    {
+        return getExtension(_extensionName).functions;
     }
 
-    /// @dev Returns the plugin metadata for a given function.
-    function getPluginForFunction(bytes4 _functionSelector) public view returns (PluginMetadata memory) {
-        PluginStateStorage.Data storage data = PluginStateStorage.pluginStateStorage();
-        PluginMetadata memory metadata = data.pluginMetadata[_functionSelector];
+    /// @dev Returns the Extension metadata for a given function.
+    function getExtensionForFunction(bytes4 _functionSelector) public view returns (ExtensionMetadata memory) {
+        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionMetadata memory metadata = data.extensionMetadata[_functionSelector];
 
-        bool isLocalPlugin = metadata.implementation != address(0);
+        bool isLocalExtension = metadata.implementation != address(0);
 
-        return isLocalPlugin ? metadata : IDefaultPluginSet(defaultPluginSet).getPluginForFunction(_functionSelector);
+        return
+            isLocalExtension
+                ? metadata
+                : IDefaultExtensionSet(defaultExtensionSet).getExtensionForFunction(_functionSelector);
     }
 
-    /// @dev Returns the plugin implementation address stored in router, for the given function.
+    /// @dev Returns the extension implementation address stored in router, for the given function.
     function getImplementationForFunction(bytes4 _functionSelector)
         public
         view
         override
-        returns (address pluginAddress)
+        returns (address extensionAddress)
     {
-        return getPluginForFunction(_functionSelector).implementation;
+        return getExtensionForFunction(_functionSelector).implementation;
     }
 
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns whether a plugin can be set in the given execution context.
-    function _canSetPlugin() internal view virtual returns (bool);
+    /// @dev Returns whether a extension can be set in the given execution context.
+    function _canSetExtension() internal view virtual returns (bool);
 }

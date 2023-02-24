@@ -6,7 +6,7 @@ import { ITWMultichainRegistry } from "contracts/interfaces/ITWMultichainRegistr
 import { TWMultichainRegistry } from "contracts/registry/TWMultichainRegistry.sol";
 
 // Plugins
-import "contracts/plugin/PluginRegistry.sol";
+import "contracts/plugin/ExtensionRegistry.sol";
 import { MultichainRegistryCore } from "contracts/registry/plugin/MultichainRegistryCore.sol";
 import "contracts/extension/Permissions.sol";
 import "contracts/openzeppelin-presets/metatx/ERC2771Context.sol";
@@ -26,13 +26,13 @@ contract MetaTx is ERC2771Context {
     constructor(address[] memory trustedForwarder) ERC2771Context(trustedForwarder) {}
 }
 
-contract TWMultichainRegistryTest is IPlugin, ITWMultichainRegistryData, BaseTest {
+contract TWMultichainRegistryTest is IExtension, ITWMultichainRegistryData, BaseTest {
     // Target contract
     MultichainRegistryCore internal multichainRegistry;
 
     // Test params
     address internal operator;
-    address internal pluginAdmin;
+    address internal extensionAdmin;
     address internal contractDeployer;
 
     uint256[] internal chainIds;
@@ -52,7 +52,7 @@ contract TWMultichainRegistryTest is IPlugin, ITWMultichainRegistryData, BaseTes
         super.setUp();
 
         operator = getActor(100);
-        pluginAdmin = getActor(101);
+        extensionAdmin = getActor(101);
         contractDeployer = getActor(102);
 
         // Populate test data.
@@ -70,85 +70,90 @@ contract TWMultichainRegistryTest is IPlugin, ITWMultichainRegistryData, BaseTes
             vm.stopPrank();
         }
 
-        // Deploy plugins
+        // Deploy Extensions
 
-        // Plugin: ERC2771Context
+        // Extension: ERC2771Context
         address erc2771Context = address(new MetaTx(forwarders()));
 
-        Plugin memory plugin_erc2771Context;
-        plugin_erc2771Context.metadata = PluginMetadata({
+        Extension memory extension_erc2771Context;
+        extension_erc2771Context.metadata = ExtensionMetadata({
             name: "ERC2771Context",
             metadataURI: "ipfs://ERC2771Context",
             implementation: erc2771Context
         });
 
-        plugin_erc2771Context.functions = new PluginFunction[](1);
-        plugin_erc2771Context.functions[0] = PluginFunction(
+        extension_erc2771Context.functions = new ExtensionFunction[](1);
+        extension_erc2771Context.functions[0] = ExtensionFunction(
             ERC2771Context.isTrustedForwarder.selector,
             "isTrustedForwarder(address)"
         );
 
-        // Plugin: Permissions
+        // Extension: Permissions
         address permissions = address(new Permissions());
 
-        Plugin memory plugin_permissions;
-        plugin_permissions.metadata = PluginMetadata({
+        Extension memory extension_permissions;
+        extension_permissions.metadata = ExtensionMetadata({
             name: "Permissions",
             metadataURI: "ipfs://Permissions",
             implementation: permissions
         });
 
-        plugin_permissions.functions = new PluginFunction[](1);
-        plugin_permissions.functions[0] = PluginFunction(Permissions.hasRole.selector, "hasRole(bytes32,address)");
+        extension_permissions.functions = new ExtensionFunction[](1);
+        extension_permissions.functions[0] = ExtensionFunction(
+            Permissions.hasRole.selector,
+            "hasRole(bytes32,address)"
+        );
 
-        // Plugin: MultichainRegistryCore
+        // Extension: MultichainRegistryCore
         address multichainRegistryCore = address(new MultichainRegistryCore());
 
-        Plugin memory plugin_multichainRegistryCore;
-        plugin_multichainRegistryCore.metadata = PluginMetadata({
+        Extension memory extension_multichainRegistryCore;
+        extension_multichainRegistryCore.metadata = ExtensionMetadata({
             name: "MultichainRegistryCore",
             metadataURI: "ipfs://MultichainRegistryCore",
             implementation: multichainRegistryCore
         });
 
-        plugin_multichainRegistryCore.functions = new PluginFunction[](5);
-        plugin_multichainRegistryCore.functions[0] = PluginFunction(
+        extension_multichainRegistryCore.functions = new ExtensionFunction[](5);
+        extension_multichainRegistryCore.functions[0] = ExtensionFunction(
             MultichainRegistryCore.add.selector,
             "add(address,address,uint256,string)"
         );
-        plugin_multichainRegistryCore.functions[1] = PluginFunction(
+        extension_multichainRegistryCore.functions[1] = ExtensionFunction(
             MultichainRegistryCore.remove.selector,
             "remove(address,address,uint256)"
         );
-        plugin_multichainRegistryCore.functions[2] = PluginFunction(
+        extension_multichainRegistryCore.functions[2] = ExtensionFunction(
             MultichainRegistryCore.getAll.selector,
             "getAll(address)"
         );
-        plugin_multichainRegistryCore.functions[3] = PluginFunction(
+        extension_multichainRegistryCore.functions[3] = ExtensionFunction(
             MultichainRegistryCore.count.selector,
             "count(address)"
         );
-        plugin_multichainRegistryCore.functions[4] = PluginFunction(
+        extension_multichainRegistryCore.functions[4] = ExtensionFunction(
             MultichainRegistryCore.getMetadataUri.selector,
             "getMetadataUri(uint256,address)"
         );
 
-        // Deploy plugin registry
-        vm.startPrank(pluginAdmin);
-        PluginRegistry pluginRegistry = new PluginRegistry(pluginAdmin);
+        // Deploy extension registry
+        vm.startPrank(extensionAdmin);
+        ExtensionRegistry extensionRegistry = new ExtensionRegistry(extensionAdmin);
 
-        pluginRegistry.addPlugin(plugin_erc2771Context);
-        pluginRegistry.addPlugin(plugin_permissions);
-        pluginRegistry.addPlugin(plugin_multichainRegistryCore);
+        extensionRegistry.addExtension(extension_erc2771Context);
+        extensionRegistry.addExtension(extension_permissions);
+        extensionRegistry.addExtension(extension_multichainRegistryCore);
 
         vm.stopPrank();
 
-        string[] memory pluginNames = new string[](3);
-        pluginNames[0] = plugin_erc2771Context.metadata.name;
-        pluginNames[1] = plugin_permissions.metadata.name;
-        pluginNames[2] = plugin_multichainRegistryCore.metadata.name;
+        string[] memory extensionNames = new string[](3);
+        extensionNames[0] = extension_erc2771Context.metadata.name;
+        extensionNames[1] = extension_permissions.metadata.name;
+        extensionNames[2] = extension_multichainRegistryCore.metadata.name;
 
-        address payable registryImpl = payable(address(new TWMultichainRegistry(address(pluginRegistry), pluginNames)));
+        address payable registryImpl = payable(
+            address(new TWMultichainRegistry(address(extensionRegistry), extensionNames))
+        );
 
         multichainRegistry = MultichainRegistryCore(
             payable(

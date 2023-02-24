@@ -9,13 +9,14 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 //  ==========  Internal imports    ==========
 import "../../extension/Initializable.sol";
-import "../../plugin/utils/ContractMetadata.sol";
-import "../../plugin/utils/PlatformFee.sol";
-import "../../plugin/utils/PermissionsEnumerable.sol";
+import "../../extension/interface/IPermissions.sol";
+import "../../plugin/utils/init/ContractMetadataInit.sol";
+import "../../plugin/utils/init/PlatformFeeInit.sol";
+import "../../plugin/utils/init/PermissionsEnumerableInit.sol";
 import "../../plugin/TWRouter.sol";
 
-import { ReentrancyGuardUpgradeable } from "../../plugin/utils/ReentrancyGuardUpgradeable.sol";
-import { ERC2771ContextUpgradeable } from "../../plugin/utils/ERC2771ContextUpgradeable.sol";
+import { ReentrancyGuardInit } from "../../plugin/utils/init/ReentrancyGuardInit.sol";
+import { ERC2771ContextInit } from "../../plugin/utils/init/ERC2771ContextInit.sol";
 import { ERC165 } from "../../eip/ERC165.sol";
 
 /**
@@ -23,11 +24,11 @@ import { ERC165 } from "../../eip/ERC165.sol";
  */
 contract MarketplaceV3 is
     Initializable,
-    ContractMetadata,
-    PlatformFee,
-    PermissionsEnumerable,
-    ReentrancyGuardUpgradeable,
-    ERC2771ContextUpgradeable,
+    ContractMetadataInit,
+    PlatformFeeInit,
+    PermissionsEnumerableInit,
+    ReentrancyGuardInit,
+    ERC2771ContextInit,
     TWRouter,
     ERC165,
     IERC721Receiver,
@@ -44,7 +45,9 @@ contract MarketplaceV3 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _pluginRegistry, string[] memory _pluginNames) TWRouter(_pluginRegistry, _pluginNames) {}
+    constructor(address _extensionRegistry, string[] memory _extensionNames)
+        TWRouter(_extensionRegistry, _extensionNames)
+    {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -126,43 +129,12 @@ contract MarketplaceV3 is
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Overridable Permissions
+                        Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal view override returns (bool) {
+    /// @dev Returns whether a extension can be set in the given execution context.
+    function _canSetExtension() internal view virtual override returns (bool) {
         bytes32 defaultAdminRole = 0x00;
-        return IPermissions(address(this)).hasRole(defaultAdminRole, _msgSender());
-    }
-
-    /// @dev Checks whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal view override returns (bool) {
-        bytes32 defaultAdminRole = 0x00;
-        return IPermissions(address(this)).hasRole(defaultAdminRole, _msgSender());
-    }
-
-    /// @dev Returns whether a plugin can be set in the given execution context.
-    function _canSetPlugin() internal view virtual override returns (bool) {
-        bytes32 defaultAdminRole = 0x00;
-        return IPermissions(address(this)).hasRole(defaultAdminRole, _msgSender());
-    }
-
-    function _msgSender() internal view override(ERC2771ContextUpgradeable, Permissions) returns (address sender) {
-        if (isTrustedForwarder(msg.sender)) {
-            // The assembly code is more direct than the Solidity version using `abi.decode`.
-            assembly {
-                sender := shr(96, calldataload(sub(calldatasize(), 20)))
-            }
-        } else {
-            return msg.sender;
-        }
-    }
-
-    function _msgData() internal view override(ERC2771ContextUpgradeable, Permissions) returns (bytes calldata) {
-        if (isTrustedForwarder(msg.sender)) {
-            return msg.data[:msg.data.length - 20];
-        } else {
-            return msg.data;
-        }
+        return IPermissions(address(this)).hasRole(defaultAdminRole, msg.sender);
     }
 }

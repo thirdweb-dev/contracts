@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/plugin/interface/IPlugin.sol";
-import "contracts/plugin/PluginRegistry.sol";
+import "contracts/plugin/interface/IExtension.sol";
+import "contracts/plugin/ExtensionRegistry.sol";
 import "contracts/plugin/TWRouter.sol";
 
 import { BaseTest } from "../utils/BaseTest.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
 contract TWRouterImplementation is TWRouter {
-    constructor(address _pluginRegistry, string[] memory _pluginNames) TWRouter(_pluginRegistry, _pluginNames) {}
+    constructor(address _extensionRegistry, string[] memory _extensionNames)
+        TWRouter(_extensionRegistry, _extensionNames)
+    {}
 
-    function _canSetPlugin() internal view virtual override returns (bool) {
+    function _canSetExtension() internal view virtual override returns (bool) {
         return true;
     }
 }
@@ -56,73 +58,73 @@ contract ContractD {
     }
 }
 
-contract TWRouterTest is BaseTest, IPlugin {
+contract TWRouterTest is BaseTest, IExtension {
     address private router;
     address private registryDeployer;
 
-    PluginRegistry private pluginRegistry;
+    ExtensionRegistry private extensionRegistry;
 
-    mapping(uint256 => Plugin) private plugins;
+    mapping(uint256 => Extension) private extensions;
 
-    function _setupPlugins() private returns (string[] memory pluginNames) {
-        pluginNames = new string[](3);
+    function _setupExtensions() private returns (string[] memory extensionNames) {
+        extensionNames = new string[](3);
 
-        // Add plugin 1.
+        // Add extension 1.
 
-        plugins[0].metadata = PluginMetadata({
+        extensions[0].metadata = ExtensionMetadata({
             name: "ContractA",
             metadataURI: "ipfs://ContractA",
             implementation: address(new ContractA())
         });
 
-        plugins[0].functions.push(PluginFunction(ContractA.a.selector, "a()"));
+        extensions[0].functions.push(ExtensionFunction(ContractA.a.selector, "a()"));
 
-        pluginNames[0] = plugins[0].metadata.name;
+        extensionNames[0] = extensions[0].metadata.name;
 
-        // Add plugin 2.
+        // Add extension 2.
 
-        plugins[1].metadata = PluginMetadata({
+        extensions[1].metadata = ExtensionMetadata({
             name: "ContractB",
             metadataURI: "ipfs://ContractB",
             implementation: address(new ContractB())
         });
-        plugins[1].functions.push(PluginFunction(ContractB.b.selector, "b()"));
+        extensions[1].functions.push(ExtensionFunction(ContractB.b.selector, "b()"));
 
-        pluginNames[1] = plugins[1].metadata.name;
+        extensionNames[1] = extensions[1].metadata.name;
 
-        // Add plugin 3.
+        // Add extension 3.
 
-        plugins[2].metadata = PluginMetadata({
+        extensions[2].metadata = ExtensionMetadata({
             name: "ContractC",
             metadataURI: "ipfs://ContractC",
             implementation: address(new ContractC())
         });
-        plugins[2].functions.push(PluginFunction(ContractC.c.selector, "c()"));
-        plugins[2].functions.push(PluginFunction(ContractC.getC.selector, "getC()"));
+        extensions[2].functions.push(ExtensionFunction(ContractC.c.selector, "c()"));
+        extensions[2].functions.push(ExtensionFunction(ContractC.getC.selector, "getC()"));
 
-        pluginNames[2] = plugins[2].metadata.name;
+        extensionNames[2] = extensions[2].metadata.name;
     }
 
     function setUp() public override {
         super.setUp();
 
-        // Set up plugin registry.
+        // Set up extension registry.
         registryDeployer = address(0x123);
 
         vm.prank(registryDeployer);
-        pluginRegistry = new PluginRegistry(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer);
 
-        // Set up plugins
-        string[] memory pluginNames = _setupPlugins();
-        uint256 len = pluginNames.length;
+        // Set up extensions
+        string[] memory extensionNames = _setupExtensions();
+        uint256 len = extensionNames.length;
 
         for (uint256 i = 0; i < len; i += 1) {
             vm.prank(registryDeployer);
-            pluginRegistry.addPlugin(plugins[i]);
+            extensionRegistry.addExtension(extensions[i]);
         }
 
         // Deploy TWRouter implementation
-        address routerImpl = address(new TWRouterImplementation(address(pluginRegistry), pluginNames));
+        address routerImpl = address(new TWRouterImplementation(address(extensionRegistry), extensionNames));
 
         // Deploy proxy to router.
         router = address(new TWProxy(routerImpl, ""));
@@ -133,52 +135,58 @@ contract TWRouterTest is BaseTest, IPlugin {
     function test_state_initialState() external {
         TWRouter twRouter = TWRouter(payable(router));
 
-        Plugin[] memory getAllPlugins = twRouter.getAllPlugins();
+        Extension[] memory getAllExtensions = twRouter.getAllExtensions();
         uint256 len = 3;
 
         for (uint256 i = 0; i < len; i += 1) {
-            // getAllPlugins
-            assertEq(getAllPlugins[i].metadata.implementation, plugins[i].metadata.implementation);
-            assertEq(getAllPlugins[i].metadata.name, plugins[i].metadata.name);
-            assertEq(getAllPlugins[i].metadata.metadataURI, plugins[i].metadata.metadataURI);
-            uint256 fnsLen = plugins[i].functions.length;
-            assertEq(fnsLen, getAllPlugins[i].functions.length);
+            // getAllExtensions
+            assertEq(getAllExtensions[i].metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(getAllExtensions[i].metadata.name, extensions[i].metadata.name);
+            assertEq(getAllExtensions[i].metadata.metadataURI, extensions[i].metadata.metadataURI);
+            uint256 fnsLen = extensions[i].functions.length;
+            assertEq(fnsLen, getAllExtensions[i].functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(plugins[i].functions[j].functionSelector, getAllPlugins[i].functions[j].functionSelector);
-                assertEq(plugins[i].functions[j].functionSignature, getAllPlugins[i].functions[j].functionSignature);
+                assertEq(
+                    extensions[i].functions[j].functionSelector,
+                    getAllExtensions[i].functions[j].functionSelector
+                );
+                assertEq(
+                    extensions[i].functions[j].functionSignature,
+                    getAllExtensions[i].functions[j].functionSignature
+                );
             }
 
-            // getPlugin
-            Plugin memory plugin = twRouter.getPlugin(plugins[i].metadata.name);
-            assertEq(plugin.metadata.implementation, plugins[i].metadata.implementation);
-            assertEq(plugin.metadata.name, plugins[i].metadata.name);
-            assertEq(plugin.metadata.metadataURI, plugins[i].metadata.metadataURI);
-            assertEq(fnsLen, plugin.functions.length);
+            // getExtension
+            Extension memory extension = twRouter.getExtension(extensions[i].metadata.name);
+            assertEq(extension.metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(extension.metadata.name, extensions[i].metadata.name);
+            assertEq(extension.metadata.metadataURI, extensions[i].metadata.metadataURI);
+            assertEq(fnsLen, extension.functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(plugins[i].functions[j].functionSelector, plugin.functions[j].functionSelector);
-                assertEq(plugins[i].functions[j].functionSignature, plugin.functions[j].functionSignature);
+                assertEq(extensions[i].functions[j].functionSelector, extension.functions[j].functionSelector);
+                assertEq(extensions[i].functions[j].functionSignature, extension.functions[j].functionSignature);
             }
         }
         for (uint256 i = 0; i < len; i += 1) {
-            string memory name = plugins[i].metadata.name;
-            PluginFunction[] memory functions = twRouter.getAllFunctionsOfPlugin(name);
-            uint256 fnsLen = plugins[i].functions.length;
+            string memory name = extensions[i].metadata.name;
+            ExtensionFunction[] memory functions = twRouter.getAllFunctionsOfExtension(name);
+            uint256 fnsLen = extensions[i].functions.length;
             assertEq(fnsLen, functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(plugins[i].functions[j].functionSelector, functions[j].functionSelector);
-                assertEq(plugins[i].functions[j].functionSignature, functions[j].functionSignature);
+                assertEq(extensions[i].functions[j].functionSelector, functions[j].functionSelector);
+                assertEq(extensions[i].functions[j].functionSignature, functions[j].functionSignature);
             }
         }
         for (uint256 i = 0; i < len; i += 1) {
-            PluginMetadata memory metadata = plugins[i].metadata;
-            PluginFunction[] memory functions = plugins[i].functions;
+            ExtensionMetadata memory metadata = extensions[i].metadata;
+            ExtensionFunction[] memory functions = extensions[i].functions;
             for (uint256 j = 0; j < functions.length; j += 1) {
-                PluginMetadata memory plugin = twRouter.getPluginForFunction(functions[j].functionSelector);
-                assertEq(plugin.implementation, metadata.implementation);
-                assertEq(plugin.name, metadata.name);
-                assertEq(plugin.metadataURI, metadata.metadataURI);
+                ExtensionMetadata memory extension = twRouter.getExtensionForFunction(functions[j].functionSelector);
+                assertEq(extension.implementation, metadata.implementation);
+                assertEq(extension.name, metadata.name);
+                assertEq(extension.metadataURI, metadata.metadataURI);
             }
-            assertEq(metadata.implementation, twRouter.getPluginImplementation(metadata.name));
+            assertEq(metadata.implementation, twRouter.getExtensionImplementation(metadata.name));
         }
 
         // Test contract call
@@ -188,149 +196,149 @@ contract TWRouterTest is BaseTest, IPlugin {
         assertEq(cBefore + 1, ContractC(router).getC());
     }
 
-    // ==================== Add plugins ====================
+    // ==================== Add extensions ====================
 
-    function _setupAddPlugin() private {
-        // Add new plugin to registry
+    function _setupAddExtension() private {
+        // Add new extension to registry
 
-        plugins[3].metadata = PluginMetadata({
+        extensions[3].metadata = ExtensionMetadata({
             name: "ContractD",
             metadataURI: "ipfs://ContractD",
             implementation: address(new ContractD())
         });
-        plugins[3].functions.push(PluginFunction(ContractD.d.selector, "d()"));
-        plugins[3].functions.push(PluginFunction(ContractD.getD.selector, "getD()"));
+        extensions[3].functions.push(ExtensionFunction(ContractD.d.selector, "d()"));
+        extensions[3].functions.push(ExtensionFunction(ContractD.getD.selector, "getD()"));
 
         vm.prank(registryDeployer);
-        pluginRegistry.addPlugin(plugins[3]);
+        extensionRegistry.addExtension(extensions[3]);
     }
 
-    function test_state_addPlugin() external {
-        _setupAddPlugin();
+    function test_state_addExtension() external {
+        _setupAddExtension();
 
         TWRouter twRouter = TWRouter((payable(router)));
-        twRouter.addPlugin(plugins[3].metadata.name);
+        twRouter.addExtension(extensions[3].metadata.name);
 
-        // getPlugin
-        Plugin memory plugin = twRouter.getPlugin(plugins[3].metadata.name);
-        assertEq(plugin.metadata.implementation, plugins[3].metadata.implementation);
-        assertEq(plugin.metadata.name, plugins[3].metadata.name);
-        assertEq(plugin.metadata.metadataURI, plugins[3].metadata.metadataURI);
-        uint256 fnsLen = plugins[3].functions.length;
-        assertEq(fnsLen, plugin.functions.length);
+        // getExtension
+        Extension memory extension = twRouter.getExtension(extensions[3].metadata.name);
+        assertEq(extension.metadata.implementation, extensions[3].metadata.implementation);
+        assertEq(extension.metadata.name, extensions[3].metadata.name);
+        assertEq(extension.metadata.metadataURI, extensions[3].metadata.metadataURI);
+        uint256 fnsLen = extensions[3].functions.length;
+        assertEq(fnsLen, extension.functions.length);
         for (uint256 j = 0; j < fnsLen; j += 1) {
-            assertEq(plugins[3].functions[j].functionSelector, plugin.functions[j].functionSelector);
-            assertEq(plugins[3].functions[j].functionSignature, plugin.functions[j].functionSignature);
+            assertEq(extensions[3].functions[j].functionSelector, extension.functions[j].functionSelector);
+            assertEq(extensions[3].functions[j].functionSignature, extension.functions[j].functionSignature);
         }
     }
 
-    function test_revert_addPlugin_pluginDNE() external {
-        _setupAddPlugin();
+    function test_revert_addExtension_extensionDNE() external {
+        _setupAddExtension();
 
         TWRouter twRouter = TWRouter((payable(router)));
 
-        vm.expectRevert("PluginRegistry: plugin does not exist.");
-        twRouter.addPlugin("Random name");
+        vm.expectRevert("ExtensionRegistry: extension does not exist.");
+        twRouter.addExtension("Random name");
     }
 
-    function test_revert_addPlugin_pluginAlreadyExists() external {
-        _setupAddPlugin();
+    function test_revert_addExtension_extensionAlreadyExists() external {
+        _setupAddExtension();
 
         TWRouter twRouter = TWRouter((payable(router)));
-        twRouter.addPlugin(plugins[3].metadata.name);
+        twRouter.addExtension(extensions[3].metadata.name);
 
-        vm.expectRevert("PluginState: plugin already exists.");
-        twRouter.addPlugin(plugins[3].metadata.name);
+        vm.expectRevert("ExtensionState: extension already exists.");
+        twRouter.addExtension(extensions[3].metadata.name);
     }
 
-    // ==================== Update plugins ====================
+    // ==================== Update extensions ====================
 
-    function _setupUpdatePlugin() private {
-        _setupAddPlugin();
+    function _setupUpdateExtension() private {
+        _setupAddExtension();
 
         TWRouter twRouter = TWRouter((payable(router)));
-        twRouter.addPlugin(plugins[3].metadata.name);
+        twRouter.addExtension(extensions[3].metadata.name);
 
-        // Update plugin to registry
-        plugins[3].metadata.implementation = address(new ContractD());
+        // Update extension to registry
+        extensions[3].metadata.implementation = address(new ContractD());
 
         vm.prank(registryDeployer);
-        pluginRegistry.updatePlugin(plugins[3]);
+        extensionRegistry.updateExtension(extensions[3]);
     }
 
-    function test_state_updatePlugin() external {
-        _setupUpdatePlugin();
+    function test_state_updateExtension() external {
+        _setupUpdateExtension();
 
         TWRouter twRouter = TWRouter((payable(router)));
-        twRouter.updatePlugin(plugins[3].metadata.name);
+        twRouter.updateExtension(extensions[3].metadata.name);
 
-        // getPlugin
-        Plugin memory plugin = twRouter.getPlugin(plugins[3].metadata.name);
-        assertEq(plugin.metadata.implementation, plugins[3].metadata.implementation);
-        assertEq(plugin.metadata.name, plugins[3].metadata.name);
-        assertEq(plugin.metadata.metadataURI, plugins[3].metadata.metadataURI);
-        uint256 fnsLen = plugins[3].functions.length;
-        assertEq(fnsLen, plugin.functions.length);
+        // getExtension
+        Extension memory extension = twRouter.getExtension(extensions[3].metadata.name);
+        assertEq(extension.metadata.implementation, extensions[3].metadata.implementation);
+        assertEq(extension.metadata.name, extensions[3].metadata.name);
+        assertEq(extension.metadata.metadataURI, extensions[3].metadata.metadataURI);
+        uint256 fnsLen = extensions[3].functions.length;
+        assertEq(fnsLen, extension.functions.length);
         for (uint256 j = 0; j < fnsLen; j += 1) {
-            assertEq(plugins[3].functions[j].functionSelector, plugin.functions[j].functionSelector);
-            assertEq(plugins[3].functions[j].functionSignature, plugin.functions[j].functionSignature);
+            assertEq(extensions[3].functions[j].functionSelector, extension.functions[j].functionSelector);
+            assertEq(extensions[3].functions[j].functionSignature, extension.functions[j].functionSignature);
         }
     }
 
-    function test_revert_updatePlugin_pluginDNE_inRegistry() external {
-        _setupUpdatePlugin();
+    function test_revert_updateExtension_extensionDNE_inRegistry() external {
+        _setupUpdateExtension();
 
         vm.prank(registryDeployer);
-        pluginRegistry.removePlugin(plugins[3].metadata.name);
+        extensionRegistry.removeExtension(extensions[3].metadata.name);
 
         TWRouter twRouter = TWRouter((payable(router)));
 
-        vm.expectRevert("PluginRegistry: plugin does not exist.");
-        twRouter.updatePlugin(plugins[3].metadata.name);
+        vm.expectRevert("ExtensionRegistry: extension does not exist.");
+        twRouter.updateExtension(extensions[3].metadata.name);
     }
 
-    function test_revert_updatePlugin_pluginDNE_inRouter() external {
-        _setupAddPlugin();
+    function test_revert_updateExtension_extensionDNE_inRouter() external {
+        _setupAddExtension();
 
         TWRouter twRouter = TWRouter((payable(router)));
 
-        vm.expectRevert("PluginState: plugin does not exist.");
-        twRouter.updatePlugin(plugins[3].metadata.name);
+        vm.expectRevert("ExtensionState: extension does not exist.");
+        twRouter.updateExtension(extensions[3].metadata.name);
     }
 
-    function test_revert_updatePlugin_reAddingPlugin() external {
-        _setupAddPlugin();
+    function test_revert_updateExtension_reAddingExtension() external {
+        _setupAddExtension();
 
         TWRouter twRouter = TWRouter((payable(router)));
-        twRouter.addPlugin(plugins[3].metadata.name);
+        twRouter.addExtension(extensions[3].metadata.name);
 
-        vm.expectRevert("PluginState: re-adding same plugin.");
-        twRouter.updatePlugin(plugins[3].metadata.name);
+        vm.expectRevert("ExtensionState: re-adding same extension.");
+        twRouter.updateExtension(extensions[3].metadata.name);
     }
 
-    // ==================== Remove plugins ====================
+    // ==================== Remove extensions ====================
 
-    function _setupRemovePlugin() private {
-        _setupAddPlugin();
+    function _setupRemoveExtension() private {
+        _setupAddExtension();
 
         TWRouter twRouter = TWRouter((payable(router)));
-        twRouter.addPlugin(plugins[3].metadata.name);
+        twRouter.addExtension(extensions[3].metadata.name);
     }
 
-    function test_state_removePlugin() external {
-        _setupRemovePlugin();
+    function test_state_removeExtension() external {
+        _setupRemoveExtension();
 
         TWRouter twRouter = TWRouter((payable(router)));
-        twRouter.removePlugin(plugins[3].metadata.name);
+        twRouter.removeExtension(extensions[3].metadata.name);
 
-        vm.expectRevert("DefaultPluginSet: plugin does not exist.");
-        twRouter.getPlugin(plugins[3].metadata.name);
+        vm.expectRevert("DefaultExtensionSet: extension does not exist.");
+        twRouter.getExtension(extensions[3].metadata.name);
     }
 
-    function test_revert_removePlugin_pluginDNE() external {
+    function test_revert_removeExtension_extensionDNE() external {
         TWRouter twRouter = TWRouter((payable(router)));
 
-        vm.expectRevert("PluginState: plugin does not exist.");
-        twRouter.removePlugin("Random name");
+        vm.expectRevert("ExtensionState: extension does not exist.");
+        twRouter.removeExtension("Random name");
     }
 }
