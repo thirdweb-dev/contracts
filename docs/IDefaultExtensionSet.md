@@ -1,4 +1,4 @@
-# IBaseRouter
+# IDefaultExtensionSet
 
 
 
@@ -9,22 +9,6 @@
 
 
 ## Methods
-
-### addExtension
-
-```solidity
-function addExtension(IExtension.Extension extension) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| extension | IExtension.Extension | undefined |
 
 ### getAllExtensions
 
@@ -130,38 +114,6 @@ function getExtensionImplementation(string extensionName) external view returns 
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### removeExtension
-
-```solidity
-function removeExtension(string extensionName) external nonpayable
-```
-
-
-
-*Removes an existing extension from the router.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| extensionName | string | undefined |
-
-### updateExtension
-
-```solidity
-function updateExtension(IExtension.Extension extension) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| extension | IExtension.Extension | undefined |
 
 
 

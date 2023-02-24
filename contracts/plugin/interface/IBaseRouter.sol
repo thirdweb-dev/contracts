@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: MIT
-// @author: thirdweb (https://github.com/thirdweb-dev/plugin-pattern)
+// @author: thirdweb (https://github.com/thirdweb-dev/dynamic-contracts)
 
 pragma solidity ^0.8.0;
 
-import "./IDefaultPluginSet.sol";
+import "./IDefaultExtensionSet.sol";
 
-interface IBaseRouter is IDefaultPluginSet {
+interface IBaseRouter is IDefaultExtensionSet {
     /*///////////////////////////////////////////////////////////////
                         External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Adds a new plugin to the router.
-    function addPlugin(Plugin memory plugin) external;
+    /// @dev Adds a new extension to the router.
+    function addExtension(Extension memory extension) external;
 
-    /// @dev Updates an existing plugin in the router, or overrides a default plugin.
-    function updatePlugin(Plugin memory plugin) external;
+    /// @dev Updates an existing extension in the router, or overrides a default extension.
+    function updateExtension(Extension memory extension) external;
 
-    /// @dev Removes an existing plugin from the router.
-    function removePlugin(string memory pluginName) external;
+    /// @dev Removes an existing extension from the router.
+    function removeExtension(string memory extensionName) external;
 }

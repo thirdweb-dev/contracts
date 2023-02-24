@@ -8,11 +8,11 @@ import { TieredDrop } from "contracts/tiered-drop/TieredDrop.sol";
 import { TieredDropLogic, ERC721AUpgradeable, DelayedReveal, LazyMintWithTier } from "contracts/tiered-drop/plugin/TieredDropLogic.sol";
 import { PermissionsEnumerable } from "contracts/extension/PermissionsEnumerable.sol";
 
-import "contracts/plugin/interface/IPlugin.sol";
+import "contracts/plugin/interface/IExtension.sol";
 
 import { TWProxy } from "contracts/TWProxy.sol";
 
-contract TieredDropTest is BaseTest, IPlugin {
+contract TieredDropTest is BaseTest, IExtension {
     using TWStrings for uint256;
 
     TieredDropLogic public tieredDrop;
@@ -54,8 +54,8 @@ contract TieredDropTest is BaseTest, IPlugin {
         claimer = getActor(2);
 
         // Deploy implementation.
-        Plugin[] memory plugins = _setupPlugins();
-        address tieredDropImpl = address(new TieredDrop(plugins));
+        Extension[] memory extensions = _setupExtensions();
+        address tieredDropImpl = address(new TieredDrop(extensions));
 
         // Deploy proxy pointing to implementaion.
         vm.prank(dropAdmin);
@@ -92,89 +92,107 @@ contract TieredDropTest is BaseTest, IPlugin {
         // ======
     }
 
-    function _setupPlugins() internal returns (Plugin[] memory plugins) {
-        plugins = new Plugin[](2);
+    function _setupExtensions() internal returns (Extension[] memory extensions) {
+        extensions = new Extension[](2);
 
-        // Plugin: Permissions
+        // Extension: Permissions
         address permissions = address(new PermissionsEnumerable());
 
-        Plugin memory plugin_permissions;
-        plugin_permissions.metadata = PluginMetadata({
+        Extension memory extension_permissions;
+        extension_permissions.metadata = ExtensionMetadata({
             name: "Permissions",
             metadataURI: "ipfs://Permissions",
             implementation: permissions
         });
 
-        plugin_permissions.functions = new PluginFunction[](3);
-        plugin_permissions.functions[0] = PluginFunction(Permissions.hasRole.selector, "hasRole(bytes32,address)");
-        plugin_permissions.functions[1] = PluginFunction(
+        extension_permissions.functions = new ExtensionFunction[](3);
+        extension_permissions.functions[0] = ExtensionFunction(
+            Permissions.hasRole.selector,
+            "hasRole(bytes32,address)"
+        );
+        extension_permissions.functions[1] = ExtensionFunction(
             Permissions.hasRoleWithSwitch.selector,
             "hasRoleWithSwitch(bytes32,address)"
         );
-        plugin_permissions.functions[2] = PluginFunction(Permissions.grantRole.selector, "grantRole(bytes32,address)");
+        extension_permissions.functions[2] = ExtensionFunction(
+            Permissions.grantRole.selector,
+            "grantRole(bytes32,address)"
+        );
 
-        plugins[0] = plugin_permissions;
+        extensions[0] = extension_permissions;
 
-        // Plugin: TieredDropLogic
+        // Extension: TieredDropLogic
 
         address tieredDropLogic = address(new TieredDropLogic());
 
-        Plugin memory plugin_td;
-        plugin_td.metadata = PluginMetadata({
+        Extension memory extension_td;
+        extension_td.metadata = ExtensionMetadata({
             name: "TieredDropLogic",
             metadataURI: "ipfs://TieredDropLogic",
             implementation: tieredDropLogic
         });
 
-        plugin_td.functions = new PluginFunction[](17);
-        plugin_td.functions[0] = PluginFunction(TieredDropLogic.tokenURI.selector, "tokenURI(uint256)");
-        plugin_td.functions[1] = PluginFunction(
+        extension_td.functions = new ExtensionFunction[](17);
+        extension_td.functions[0] = ExtensionFunction(TieredDropLogic.tokenURI.selector, "tokenURI(uint256)");
+        extension_td.functions[1] = ExtensionFunction(
             TieredDropLogic.lazyMint.selector,
             "lazyMint(uint256,string,string,bytes)"
         );
-        plugin_td.functions[2] = PluginFunction(TieredDropLogic.reveal.selector, "reveal(uint256,bytes)");
-        plugin_td.functions[3] = PluginFunction(
+        extension_td.functions[2] = ExtensionFunction(TieredDropLogic.reveal.selector, "reveal(uint256,bytes)");
+        extension_td.functions[3] = ExtensionFunction(
             TieredDropLogic.claimWithSignature.selector,
             "claimWithSignature((uint128,uint128,bytes32,bytes),bytes)"
         );
-        plugin_td.functions[4] = PluginFunction(TieredDropLogic.getTierForToken.selector, "getTierForToken(uint256)");
-        plugin_td.functions[5] = PluginFunction(TieredDropLogic.getTokensInTierLen.selector, "getTokensInTierLen()");
-        plugin_td.functions[6] = PluginFunction(
+        extension_td.functions[4] = ExtensionFunction(
+            TieredDropLogic.getTierForToken.selector,
+            "getTierForToken(uint256)"
+        );
+        extension_td.functions[5] = ExtensionFunction(
+            TieredDropLogic.getTokensInTierLen.selector,
+            "getTokensInTierLen()"
+        );
+        extension_td.functions[6] = ExtensionFunction(
             TieredDropLogic.getTokensInTier.selector,
             "getTokensInTier(string,uint256,uint256)"
         );
-        plugin_td.functions[7] = PluginFunction(TieredDropLogic.totalMinted.selector, "totalMinted()");
-        plugin_td.functions[8] = PluginFunction(
+        extension_td.functions[7] = ExtensionFunction(TieredDropLogic.totalMinted.selector, "totalMinted()");
+        extension_td.functions[8] = ExtensionFunction(
             TieredDropLogic.totalMintedInTier.selector,
             "totalMintedInTier(string)"
         );
-        plugin_td.functions[9] = PluginFunction(TieredDropLogic.nextTokenIdToMint.selector, "nextTokenIdToMint()");
-        plugin_td.functions[10] = PluginFunction(TieredDropLogic.getApproved.selector, "getApproved(uint256)");
-        plugin_td.functions[11] = PluginFunction(
+        extension_td.functions[9] = ExtensionFunction(
+            TieredDropLogic.nextTokenIdToMint.selector,
+            "nextTokenIdToMint()"
+        );
+        extension_td.functions[10] = ExtensionFunction(TieredDropLogic.getApproved.selector, "getApproved(uint256)");
+        extension_td.functions[11] = ExtensionFunction(
             TieredDropLogic.isApprovedForAll.selector,
             "isApprovedForAll(address,address)"
         );
-        plugin_td.functions[12] = PluginFunction(
+        extension_td.functions[12] = ExtensionFunction(
             TieredDropLogic.setApprovalForAll.selector,
             "setApprovalForAll(address,bool)"
         );
-        plugin_td.functions[13] = PluginFunction(TieredDropLogic.approve.selector, "approve(address,uint256)");
-        plugin_td.functions[14] = PluginFunction(
+        extension_td.functions[13] = ExtensionFunction(TieredDropLogic.approve.selector, "approve(address,uint256)");
+        extension_td.functions[14] = ExtensionFunction(
             TieredDropLogic.transferFrom.selector,
             "transferFrom(address,address,uint256)"
         );
-        plugin_td.functions[15] = PluginFunction(ERC721AUpgradeable.balanceOf.selector, "balanceOf(address)");
-        plugin_td.functions[16] = PluginFunction(DelayedReveal.encryptDecrypt.selector, "encryptDecrypt(bytes,bytes)");
-        // plugin_td.functions[17] = PluginFunction(
+        extension_td.functions[15] = ExtensionFunction(ERC721AUpgradeable.balanceOf.selector, "balanceOf(address)");
+        extension_td.functions[16] = ExtensionFunction(
+            DelayedReveal.encryptDecrypt.selector,
+            "encryptDecrypt(bytes,bytes)"
+        );
+        // extension_td.functions[17] = ExtensionFunction(
         //     LazyMintWithTier.getMetadataForAllTiers.selector,
         //     "getMetadataForAllTiers()"
         // );
-        // plugin_permissions.functions[0] = PluginFunction(
+        // extension_permissions.functions[0] = ExtensionFunction(
         //     TieredDropLogic.safeTransferFrom.selector,
         //     "approve(address,uint256)"
         // );
 
-        plugins[1] = plugin_td;
+        extensions[1] = extension_td;
     }
 
     TieredDropLogic.GenericRequest internal claimRequest;
@@ -1036,7 +1054,7 @@ contract TieredDropTest is BaseTest, IPlugin {
     }
 }
 
-// contract TieredDropBechmarkTest is BaseTest, IPlugin {
+// contract TieredDropBechmarkTest is BaseTest, IExtension {
 //     using TWStrings for uint256;
 
 //     TieredDropLogic public tieredDrop;
@@ -1078,8 +1096,8 @@ contract TieredDropTest is BaseTest, IPlugin {
 //         claimer = getActor(2);
 
 //         // Deploy implementation.
-//         Plugin[] memory plugins = _setupPlugins();
-//         address tieredDropImpl = address(new TieredDrop(plugins));
+//         Extension[] memory extensions = _setupExtensions();
+//         address tieredDropImpl = address(new TieredDrop(extensions));
 
 //         // Deploy proxy pointing to implementaion.
 //         vm.prank(dropAdmin);
@@ -1147,79 +1165,79 @@ contract TieredDropTest is BaseTest, IPlugin {
 //         }
 //     }
 
-//     function _setupPlugins() internal returns (Plugin[] memory plugins) {
-//         plugins = new Plugin[](2);
+//     function _setupExtensions() internal returns (Extension[] memory extensions) {
+//         extensions = new Extension[](2);
 
-//         // Plugin: Permissions
+//         // Extension: Permissions
 //         address permissions = address(new PermissionsEnumerable());
 
-//         Plugin memory plugin_permissions;
-//         plugin_permissions.metadata = PluginMetadata({
+//         Extension memory extension_permissions;
+//         extension_permissions.metadata = ExtensionMetadata({
 //             name: "Permissions",
 //             metadataURI: "ipfs://Permissions",
 //             implementation: permissions
 //         });
 
-//         plugin_permissions.functions = new PluginFunction[](2);
-//         plugin_permissions.functions[0] = PluginFunction(Permissions.hasRole.selector, "hasRole(bytes32,address)");
-//         plugin_permissions.functions[1] = PluginFunction(
+//         extension_permissions.functions = new ExtensionFunction[](2);
+//         extension_permissions.functions[0] = ExtensionFunction(Permissions.hasRole.selector, "hasRole(bytes32,address)");
+//         extension_permissions.functions[1] = ExtensionFunction(
 //             Permissions.hasRoleWithSwitch.selector,
 //             "hasRoleWithSwitch(bytes32,address)"
 //         );
 
-//         plugins[0] = plugin_permissions;
+//         extensions[0] = extension_permissions;
 
-//         // Plugin: TieredDropLogic
+//         // Extension: TieredDropLogic
 
 //         address tieredDropLogic = address(new TieredDropLogic());
 
-//         Plugin memory plugin_td;
-//         plugin_td.metadata = PluginMetadata({
+//         Extension memory extension_td;
+//         extension_td.metadata = ExtensionMetadata({
 //             name: "TieredDropLogic",
 //             metadataURI: "ipfs://TieredDropLogic",
 //             implementation: tieredDropLogic
 //         });
 
-//         plugin_td.functions = new PluginFunction[](10);
-//         plugin_td.functions[0] = PluginFunction(TieredDropLogic.tokenURI.selector, "tokenURI(uint256)");
-//         plugin_td.functions[0] = PluginFunction(
+//         extension_td.functions = new ExtensionFunction[](10);
+//         extension_td.functions[0] = ExtensionFunction(TieredDropLogic.tokenURI.selector, "tokenURI(uint256)");
+//         extension_td.functions[0] = ExtensionFunction(
 //             TieredDropLogic.lazyMint.selector,
 //             "lazyMint(uint256,string,string,bytes)"
 //         );
-//         plugin_td.functions[0] = PluginFunction(TieredDropLogic.reveal.selector, "reveal(uint256,bytes)");
-//         plugin_td.functions[0] = PluginFunction(
+//         extension_td.functions[0] = ExtensionFunction(TieredDropLogic.reveal.selector, "reveal(uint256,bytes)");
+//         extension_td.functions[0] = ExtensionFunction(
 //             TieredDropLogic.claimWithSignature.selector,
 //             "claimWithSignature((uint128,uint128,bytes32,bytes),bytes)"
 //         );
-//         plugin_td.functions[0] = PluginFunction(TieredDropLogic.getTierForToken.selector, "getTierForToken(uint256)");
-//         plugin_td.functions[0] = PluginFunction(TieredDropLogic.getTokensInTierLen.selector, "getTokensInTierLen()");
-//         plugin_td.functions[0] = PluginFunction(
+//         extension_td.functions[0] = ExtensionFunction(TieredDropLogic.getTierForToken.selector, "getTierForToken(uint256)");
+//         extension_td.functions[0] = ExtensionFunction(TieredDropLogic.getTokensInTierLen.selector, "getTokensInTierLen()");
+//         extension_td.functions[0] = ExtensionFunction(
 //             TieredDropLogic.getTokensInTier.selector,
 //             "getTokensInTier(string,uint256,uint256)"
 //         );
-//         plugin_td.functions[0] = PluginFunction(TieredDropLogic.totalMinted.selector, "totalMinted()");
-//         plugin_td.functions[0] = PluginFunction(
+//         extension_td.functions[0] = ExtensionFunction(TieredDropLogic.totalMinted.selector, "totalMinted()");
+//         extension_td.functions[0] = ExtensionFunction(
 //             TieredDropLogic.totalMintedInTier.selector,
 //             "totalMintedInTier(string)"
 //         );
-//         plugin_td.functions[0] = PluginFunction(TieredDropLogic.nextTokenIdToMint.selector, "nextTokenIdToMint()");
-//         plugin_td.functions[0] = PluginFunction(TieredDropLogic.getApproved.selector, "getApproved(uint256)");
-//         plugin_td.functions[0] = PluginFunction(
+//         extension_td.functions[0] = ExtensionFunction(TieredDropLogic.nextTokenIdToMint.selector, "nextTokenIdToMint()");
+//         extension_td.functions[0] = ExtensionFunction(TieredDropLogic.getApproved.selector, "getApproved(uint256)");
+//         extension_td.functions[0] = ExtensionFunction(
 //             TieredDropLogic.isApprovedForAll.selector,
 //             "isApprovedForAll(address,address)"
 //         );
-//         plugin_td.functions[0] = PluginFunction(
+//         extension_td.functions[0] = ExtensionFunction(
 //             TieredDropLogic.setApprovalForAll.selector,
 //             "setApprovalForAll(address,bool)"
 //         );
-//         plugin_td.functions[0] = PluginFunction(TieredDropLogic.approve.selector, "approve(address,uint256)");
-//         plugin_td.functions[0] = PluginFunction(
+//         extension_td.functions[0] = ExtensionFunction(TieredDropLogic.approve.selector, "approve(address,uint256)");
+//         extension_td.functions[0] = ExtensionFunction(
 //             TieredDropLogic.transferFrom.selector,
 //             "transferFrom(address,address,uint256)"
 //         );
-//         // plugin_permissions.functions[0] = PluginFunction(TieredDropLogic.safeTransferFrom.selector, "approve(address,uint256)");
+//         // extension_permissions.functions[0] = ExtensionFunction(TieredDropLogic.safeTransferFrom.selector, "approve(address,uint256)");
 
-//         plugins[1] = plugin_td;
+//         extensions[1] = extension_td;
 //     }
 
 //     TieredDropLogic.GenericRequest internal claimRequest;

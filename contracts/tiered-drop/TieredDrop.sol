@@ -38,7 +38,7 @@ contract TieredDrop is
                     Constructor and Initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Plugin[] memory _plugins) BaseRouter(_plugins) {}
+    constructor(Extension[] memory _extensions) BaseRouter(_extensions) {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -84,7 +84,7 @@ contract TieredDrop is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether a plugin can be set in the given execution context.
-    function _canSetPlugin() internal view virtual override returns (bool) {
+    function _canSetExtension() internal view virtual override returns (bool) {
         bytes32 defaultAdminRole = 0x00;
         return IPermissions(address(this)).hasRole(defaultAdminRole, msg.sender);
     }

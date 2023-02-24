@@ -1,4 +1,4 @@
-# IBaseRouter
+# DefaultExtensionSet
 
 
 
@@ -10,54 +10,38 @@
 
 ## Methods
 
-### addExtension
-
-```solidity
-function addExtension(IExtension.Extension extension) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| extension | IExtension.Extension | undefined |
-
 ### getAllExtensions
 
 ```solidity
-function getAllExtensions() external view returns (struct IExtension.Extension[])
+function getAllExtensions() external view returns (struct IExtension.Extension[] allExtensions)
 ```
 
+Returns all extensions stored.
 
 
-*Returns all extensions stored.*
 
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | IExtension.Extension[] | undefined |
+| allExtensions | IExtension.Extension[] | undefined |
 
 ### getAllFunctionsOfExtension
 
 ```solidity
-function getAllFunctionsOfExtension(string extensionName) external view returns (struct IExtension.ExtensionFunction[])
+function getAllFunctionsOfExtension(string _extensionName) external view returns (struct IExtension.ExtensionFunction[])
 ```
 
+Returns all functions that belong to the given extension contract.
 
 
-*Returns all functions that belong to the given extension contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| extensionName | string | undefined |
+| _extensionName | string | undefined |
 
 #### Returns
 
@@ -68,18 +52,18 @@ function getAllFunctionsOfExtension(string extensionName) external view returns 
 ### getExtension
 
 ```solidity
-function getExtension(string extensionName) external view returns (struct IExtension.Extension)
+function getExtension(string _extensionName) external view returns (struct IExtension.Extension)
 ```
 
+Returns the extension metadata and functions for a given extension.
 
 
-*Returns the extension metadata and functions for a given extension.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| extensionName | string | undefined |
+| _extensionName | string | undefined |
 
 #### Returns
 
@@ -90,18 +74,18 @@ function getExtension(string extensionName) external view returns (struct IExten
 ### getExtensionForFunction
 
 ```solidity
-function getExtensionForFunction(bytes4 functionSelector) external view returns (struct IExtension.ExtensionMetadata)
+function getExtensionForFunction(bytes4 _functionSelector) external view returns (struct IExtension.ExtensionMetadata)
 ```
 
+Returns the extension metadata for a given function.
 
 
-*Returns the extension metadata for a given function.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| functionSelector | bytes4 | undefined |
+| _functionSelector | bytes4 | undefined |
 
 #### Returns
 
@@ -112,18 +96,18 @@ function getExtensionForFunction(bytes4 functionSelector) external view returns 
 ### getExtensionImplementation
 
 ```solidity
-function getExtensionImplementation(string extensionName) external view returns (address)
+function getExtensionImplementation(string _extensionName) external view returns (address)
 ```
 
+Returns the extension&#39;s implementation smart contract address.
 
 
-*Returns the extension&#39;s implementation smart contract address.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| extensionName | string | undefined |
+| _extensionName | string | undefined |
 
 #### Returns
 
@@ -131,26 +115,10 @@ function getExtensionImplementation(string extensionName) external view returns 
 |---|---|---|
 | _0 | address | undefined |
 
-### removeExtension
+### setExtension
 
 ```solidity
-function removeExtension(string extensionName) external nonpayable
-```
-
-
-
-*Removes an existing extension from the router.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| extensionName | string | undefined |
-
-### updateExtension
-
-```solidity
-function updateExtension(IExtension.Extension extension) external nonpayable
+function setExtension(IExtension.Extension _extension) external nonpayable
 ```
 
 
@@ -161,7 +129,7 @@ function updateExtension(IExtension.Extension extension) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| extension | IExtension.Extension | undefined |
+| _extension | IExtension.Extension | undefined |
 
 
 

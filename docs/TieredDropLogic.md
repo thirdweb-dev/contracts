@@ -10,23 +10,6 @@
 
 ## Methods
 
-### DEFAULT_ADMIN_ROLE
-
-```solidity
-function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
-```
-
-
-
-*Default admin role for all roles. Only accounts with this role can grant/revoke other roles.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
 ### approve
 
 ```solidity

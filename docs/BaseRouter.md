@@ -10,10 +10,10 @@
 
 ## Methods
 
-### addPlugin
+### addExtension
 
 ```solidity
-function addPlugin(IPlugin.Plugin _plugin) external nonpayable
+function addExtension(IExtension.Extension _extension) external nonpayable
 ```
 
 
@@ -24,15 +24,15 @@ function addPlugin(IPlugin.Plugin _plugin) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _plugin | IPlugin.Plugin | undefined |
+| _extension | IExtension.Extension | undefined |
 
-### defaultPluginSet
+### defaultExtensionSet
 
 ```solidity
-function defaultPluginSet() external view returns (address)
+function defaultExtensionSet() external view returns (address)
 ```
 
-The DefaultPluginSet that stores default plugins of the router.
+The DefaultExtensionSet that stores default extensions of the router.
 
 
 
@@ -43,54 +43,120 @@ The DefaultPluginSet that stores default plugins of the router.
 |---|---|---|
 | _0 | address | undefined |
 
-### getAllFunctionsOfPlugin
+### getAllExtensions
 
 ```solidity
-function getAllFunctionsOfPlugin(string _pluginName) external view returns (struct IPlugin.PluginFunction[])
+function getAllExtensions() external view returns (struct IExtension.Extension[] allExtensions)
+```
+
+Returns all extensions stored. Override default lugins stored in router are          given precedence over default extensions in DefaultExtensionSet.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| allExtensions | IExtension.Extension[] | undefined |
+
+### getAllFunctionsOfExtension
+
+```solidity
+function getAllFunctionsOfExtension(string _extensionName) external view returns (struct IExtension.ExtensionFunction[])
 ```
 
 
 
-*Returns all functions that belong to the given plugin contract.*
+*Returns all functions that belong to the given extension contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _pluginName | string | undefined |
+| _extensionName | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | IPlugin.PluginFunction[] | undefined |
+| _0 | IExtension.ExtensionFunction[] | undefined |
 
-### getAllPlugins
+### getExtension
 
 ```solidity
-function getAllPlugins() external view returns (struct IPlugin.Plugin[] allPlugins)
+function getExtension(string _extensionName) external view returns (struct IExtension.Extension)
 ```
 
-Returns all plugins stored. Override default lugins stored in router are          given precedence over default plugins in DefaultPluginSet.
 
 
+*Returns the extension metadata and functions for a given extension.*
 
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _extensionName | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| allPlugins | IPlugin.Plugin[] | undefined |
+| _0 | IExtension.Extension | undefined |
+
+### getExtensionForFunction
+
+```solidity
+function getExtensionForFunction(bytes4 _functionSelector) external view returns (struct IExtension.ExtensionMetadata)
+```
+
+
+
+*Returns the extension metadata for a given function.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _functionSelector | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | IExtension.ExtensionMetadata | undefined |
+
+### getExtensionImplementation
+
+```solidity
+function getExtensionImplementation(string _extensionName) external view returns (address)
+```
+
+
+
+*Returns the extension&#39;s implementation smart contract address.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _extensionName | string | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
 
 ### getImplementationForFunction
 
 ```solidity
-function getImplementationForFunction(bytes4 _functionSelector) external view returns (address pluginAddress)
+function getImplementationForFunction(bytes4 _functionSelector) external view returns (address extensionAddress)
 ```
 
 
 
-*Returns the plugin implementation address stored in router, for the given function.*
+*Returns the extension implementation address stored in router, for the given function.*
 
 #### Parameters
 
@@ -102,94 +168,28 @@ function getImplementationForFunction(bytes4 _functionSelector) external view re
 
 | Name | Type | Description |
 |---|---|---|
-| pluginAddress | address | undefined |
+| extensionAddress | address | undefined |
 
-### getPlugin
+### removeExtension
 
 ```solidity
-function getPlugin(string _pluginName) external view returns (struct IPlugin.Plugin)
+function removeExtension(string _extensionName) external nonpayable
 ```
 
 
 
-*Returns the plugin metadata and functions for a given plugin.*
+*Removes an existing extension from the router.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _pluginName | string | undefined |
+| _extensionName | string | undefined |
 
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | IPlugin.Plugin | undefined |
-
-### getPluginForFunction
+### updateExtension
 
 ```solidity
-function getPluginForFunction(bytes4 _functionSelector) external view returns (struct IPlugin.PluginMetadata)
-```
-
-
-
-*Returns the plugin metadata for a given function.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _functionSelector | bytes4 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | IPlugin.PluginMetadata | undefined |
-
-### getPluginImplementation
-
-```solidity
-function getPluginImplementation(string _pluginName) external view returns (address)
-```
-
-
-
-*Returns the plugin&#39;s implementation smart contract address.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _pluginName | string | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### removePlugin
-
-```solidity
-function removePlugin(string _pluginName) external nonpayable
-```
-
-
-
-*Removes an existing plugin from the router.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _pluginName | string | undefined |
-
-### updatePlugin
-
-```solidity
-function updatePlugin(IPlugin.Plugin _plugin) external nonpayable
+function updateExtension(IExtension.Extension _extension) external nonpayable
 ```
 
 
@@ -200,16 +200,16 @@ function updatePlugin(IPlugin.Plugin _plugin) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _plugin | IPlugin.Plugin | undefined |
+| _extension | IExtension.Extension | undefined |
 
 
 
 ## Events
 
-### PluginAdded
+### ExtensionAdded
 
 ```solidity
-event PluginAdded(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature)
+event ExtensionAdded(address indexed extensionAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
 
@@ -220,14 +220,14 @@ event PluginAdded(address indexed pluginAddress, bytes4 indexed functionSelector
 
 | Name | Type | Description |
 |---|---|---|
-| pluginAddress `indexed` | address | undefined |
+| extensionAddress `indexed` | address | undefined |
 | functionSelector `indexed` | bytes4 | undefined |
 | functionSignature  | string | undefined |
 
-### PluginRemoved
+### ExtensionRemoved
 
 ```solidity
-event PluginRemoved(address indexed pluginAddress, bytes4 indexed functionSelector, string functionSignature)
+event ExtensionRemoved(address indexed extensionAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
 
@@ -238,14 +238,14 @@ event PluginRemoved(address indexed pluginAddress, bytes4 indexed functionSelect
 
 | Name | Type | Description |
 |---|---|---|
-| pluginAddress `indexed` | address | undefined |
+| extensionAddress `indexed` | address | undefined |
 | functionSelector `indexed` | bytes4 | undefined |
 | functionSignature  | string | undefined |
 
-### PluginUpdated
+### ExtensionUpdated
 
 ```solidity
-event PluginUpdated(address indexed oldPluginAddress, address indexed newPluginAddress, bytes4 indexed functionSelector, string functionSignature)
+event ExtensionUpdated(address indexed oldExtensionAddress, address indexed newExtensionAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
 
@@ -256,8 +256,8 @@ event PluginUpdated(address indexed oldPluginAddress, address indexed newPluginA
 
 | Name | Type | Description |
 |---|---|---|
-| oldPluginAddress `indexed` | address | undefined |
-| newPluginAddress `indexed` | address | undefined |
+| oldExtensionAddress `indexed` | address | undefined |
+| newExtensionAddress `indexed` | address | undefined |
 | functionSelector `indexed` | bytes4 | undefined |
 | functionSignature  | string | undefined |
 
