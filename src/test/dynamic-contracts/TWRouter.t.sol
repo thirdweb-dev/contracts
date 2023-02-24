@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "lib/dynamic-contracts/src/interface/IExtension.sol";
-import "contracts/tw-dynamic-contracts/ExtensionRegistry.sol";
-import "contracts/tw-dynamic-contracts/TWRouter.sol";
+import "contracts/dynamic-contracts/ExtensionRegistry.sol";
+import "contracts/dynamic-contracts/TWRouter.sol";
 
 import { BaseTest } from "../utils/BaseTest.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
