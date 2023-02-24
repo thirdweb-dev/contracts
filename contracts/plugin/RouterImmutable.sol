@@ -10,14 +10,16 @@ contract RouterImmutable is TWRouter {
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _pluginRegistry, string[] memory _pluginNames) TWRouter(_pluginRegistry, _pluginNames) {}
+    constructor(address _extensionRegistry, string[] memory _extensionNames)
+        TWRouter(_extensionRegistry, _extensionNames)
+    {}
 
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether plug-in can be set in the given execution context.
-    function _canSetPlugin() internal pure override returns (bool) {
+    function _canSetExtension() internal pure override returns (bool) {
         return false;
     }
 }

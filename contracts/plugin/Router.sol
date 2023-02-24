@@ -19,8 +19,8 @@ abstract contract Router is IRouter {
     //////////////////////////////////////////////////////////////*/
 
     fallback() external payable virtual {
-        address pluginAddress = getImplementationForFunction(msg.sig);
-        _delegate(pluginAddress);
+        address implementation = getImplementationForFunction(msg.sig);
+        _delegate(implementation);
     }
 
     function _delegate(address implementation) internal virtual {

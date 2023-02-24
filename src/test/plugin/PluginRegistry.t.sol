@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/plugin/interface/IPlugin.sol";
-import "contracts/plugin/PluginRegistry.sol";
+import "contracts/plugin/interface/IExtension.sol";
+import "contracts/plugin/ExtensionRegistry.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 
 import "../mocks/MockERC20.sol";
@@ -36,12 +36,12 @@ contract ContractC {
     }
 }
 
-contract PluginRegistryTest is BaseTest, IPlugin {
+contract ExtensionRegistryTest is BaseTest, IExtension {
     address private registryDeployer;
 
-    PluginRegistry private pluginRegistry;
+    ExtensionRegistry private extensionRegistry;
 
-    mapping(uint256 => Plugin) private plugins;
+    mapping(uint256 => Extension) private extensions;
 
     function setUp() public override {
         super.setUp();
@@ -49,523 +49,531 @@ contract PluginRegistryTest is BaseTest, IPlugin {
         registryDeployer = address(0x123);
 
         vm.prank(registryDeployer);
-        pluginRegistry = new PluginRegistry(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer);
 
-        // Add plugin 1.
+        // Add extension 1.
 
-        plugins[0].metadata = PluginMetadata({
+        extensions[0].metadata = ExtensionMetadata({
             name: "ContractA",
             metadataURI: "ipfs://ContractA",
             implementation: address(new ContractA())
         });
 
-        plugins[0].functions.push(PluginFunction(ContractA.a.selector, "a()"));
+        extensions[0].functions.push(ExtensionFunction(ContractA.a.selector, "a()"));
 
-        // Add plugin 2.
+        // Add extension 2.
 
-        plugins[1].metadata = PluginMetadata({
+        extensions[1].metadata = ExtensionMetadata({
             name: "ContractB",
             metadataURI: "ipfs://ContractB",
             implementation: address(new ContractB())
         });
-        plugins[1].functions.push(PluginFunction(ContractB.b.selector, "b()"));
+        extensions[1].functions.push(ExtensionFunction(ContractB.b.selector, "b()"));
 
-        // Add plugin 3.
+        // Add extension 3.
 
-        plugins[2].metadata = PluginMetadata({
+        extensions[2].metadata = ExtensionMetadata({
             name: "ContractC",
             metadataURI: "ipfs://ContractC",
             implementation: address(new ContractC())
         });
-        plugins[2].functions.push(PluginFunction(ContractC.c.selector, "c()"));
+        extensions[2].functions.push(ExtensionFunction(ContractC.c.selector, "c()"));
     }
 
     /*///////////////////////////////////////////////////////////////
-                            Adding plugins
+                            Adding extensions
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_addPlugin() external {
+    function test_state_addExtension() external {
         uint256 len = 3;
 
         for (uint256 i = 0; i < len; i += 1) {
             vm.prank(registryDeployer);
-            pluginRegistry.addPlugin(plugins[i]);
+            extensionRegistry.addExtension(extensions[i]);
         }
-        Plugin[] memory getAllPlugins = pluginRegistry.getAllPlugins();
+        Extension[] memory getAllExtensions = extensionRegistry.getAllExtensions();
 
         for (uint256 i = 0; i < len; i += 1) {
-            // getAllPlugins
-            assertEq(getAllPlugins[i].metadata.implementation, plugins[i].metadata.implementation);
-            assertEq(getAllPlugins[i].metadata.name, plugins[i].metadata.name);
-            assertEq(getAllPlugins[i].metadata.metadataURI, plugins[i].metadata.metadataURI);
-            uint256 fnsLen = plugins[i].functions.length;
-            assertEq(fnsLen, getAllPlugins[i].functions.length);
+            // getAllExtensions
+            assertEq(getAllExtensions[i].metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(getAllExtensions[i].metadata.name, extensions[i].metadata.name);
+            assertEq(getAllExtensions[i].metadata.metadataURI, extensions[i].metadata.metadataURI);
+            uint256 fnsLen = extensions[i].functions.length;
+            assertEq(fnsLen, getAllExtensions[i].functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(plugins[i].functions[j].functionSelector, getAllPlugins[i].functions[j].functionSelector);
-                assertEq(plugins[i].functions[j].functionSignature, getAllPlugins[i].functions[j].functionSignature);
+                assertEq(
+                    extensions[i].functions[j].functionSelector,
+                    getAllExtensions[i].functions[j].functionSelector
+                );
+                assertEq(
+                    extensions[i].functions[j].functionSignature,
+                    getAllExtensions[i].functions[j].functionSignature
+                );
             }
 
-            // getPlugin
-            Plugin memory plugin = pluginRegistry.getPlugin(plugins[i].metadata.name);
-            assertEq(plugin.metadata.implementation, plugins[i].metadata.implementation);
-            assertEq(plugin.metadata.name, plugins[i].metadata.name);
-            assertEq(plugin.metadata.metadataURI, plugins[i].metadata.metadataURI);
-            assertEq(fnsLen, plugin.functions.length);
+            // getExtension
+            Extension memory extension = extensionRegistry.getExtension(extensions[i].metadata.name);
+            assertEq(extension.metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(extension.metadata.name, extensions[i].metadata.name);
+            assertEq(extension.metadata.metadataURI, extensions[i].metadata.metadataURI);
+            assertEq(fnsLen, extension.functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(plugins[i].functions[j].functionSelector, plugin.functions[j].functionSelector);
-                assertEq(plugins[i].functions[j].functionSignature, plugin.functions[j].functionSignature);
+                assertEq(extensions[i].functions[j].functionSelector, extension.functions[j].functionSelector);
+                assertEq(extensions[i].functions[j].functionSignature, extension.functions[j].functionSignature);
             }
         }
         for (uint256 i = 0; i < len; i += 1) {
-            string memory name = plugins[i].metadata.name;
-            PluginFunction[] memory functions = pluginRegistry.getAllFunctionsOfPlugin(name);
-            uint256 fnsLen = plugins[i].functions.length;
+            string memory name = extensions[i].metadata.name;
+            ExtensionFunction[] memory functions = extensionRegistry.getAllFunctionsOfExtension(name);
+            uint256 fnsLen = extensions[i].functions.length;
             assertEq(fnsLen, functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(plugins[i].functions[j].functionSelector, functions[j].functionSelector);
-                assertEq(plugins[i].functions[j].functionSignature, functions[j].functionSignature);
+                assertEq(extensions[i].functions[j].functionSelector, functions[j].functionSelector);
+                assertEq(extensions[i].functions[j].functionSignature, functions[j].functionSignature);
             }
         }
         for (uint256 i = 0; i < len; i += 1) {
-            PluginMetadata memory metadata = plugins[i].metadata;
-            PluginFunction[] memory functions = plugins[i].functions;
+            ExtensionMetadata memory metadata = extensions[i].metadata;
+            ExtensionFunction[] memory functions = extensions[i].functions;
             for (uint256 j = 0; j < functions.length; j += 1) {
-                PluginMetadata memory plugin = pluginRegistry.getPluginForFunction(functions[j].functionSelector);
-                assertEq(plugin.implementation, metadata.implementation);
-                assertEq(plugin.name, metadata.name);
-                assertEq(plugin.metadataURI, metadata.metadataURI);
+                ExtensionMetadata memory extension = extensionRegistry.getExtensionForFunction(
+                    functions[j].functionSelector
+                );
+                assertEq(extension.implementation, metadata.implementation);
+                assertEq(extension.name, metadata.name);
+                assertEq(extension.metadataURI, metadata.metadataURI);
             }
-            assertEq(metadata.implementation, pluginRegistry.getPluginImplementation(metadata.name));
+            assertEq(metadata.implementation, extensionRegistry.getExtensionImplementation(metadata.name));
         }
     }
 
-    function test_revert_addPlugin_unauthorizedCaller() external {
+    function test_revert_addExtension_unauthorizedCaller() external {
         vm.expectRevert();
         vm.prank(address(0x999));
-        pluginRegistry.addPlugin(plugins[0]);
+        extensionRegistry.addExtension(extensions[0]);
     }
 
-    function test_revert_addPluginsWithSameFunctionSelectors() external {
-        // Add plugin 1.
+    function test_revert_addExtensionsWithSameFunctionSelectors() external {
+        // Add extension 1.
 
-        Plugin memory plugin1;
+        Extension memory extension1;
 
-        plugin1.metadata = PluginMetadata({
+        extension1.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(new MockERC20())
         });
 
-        plugin1.functions = new PluginFunction[](1);
-        plugin1.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension1.functions = new ExtensionFunction[](1);
+        extension1.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
 
-        // Add plugin 2.
+        // Add extension 2.
 
-        Plugin memory plugin2;
+        Extension memory extension2;
 
-        plugin2.metadata = PluginMetadata({
+        extension2.metadata = ExtensionMetadata({
             name: "MockERC721",
             metadataURI: "ipfs://MockERC721",
             implementation: address(new MockERC721())
         });
 
-        plugin2.functions = new PluginFunction[](1);
-        plugin2.functions[0] = PluginFunction(MockERC721.mint.selector, "mint(address,uint256)");
+        extension2.functions = new ExtensionFunction[](1);
+        extension2.functions[0] = ExtensionFunction(MockERC721.mint.selector, "mint(address,uint256)");
 
         vm.startPrank(registryDeployer);
 
-        pluginRegistry.addPlugin(plugin1);
+        extensionRegistry.addExtension(extension1);
 
-        vm.expectRevert("PluginState: plugin already exists for function.");
-        pluginRegistry.addPlugin(plugin2);
+        vm.expectRevert("ExtensionState: extension already exists for function.");
+        extensionRegistry.addExtension(extension2);
 
         vm.stopPrank();
     }
 
-    function test_revert_addPlugin_fnSelectorSignatureMismatch() external {
-        Plugin memory plugin1;
+    function test_revert_addExtension_fnSelectorSignatureMismatch() external {
+        Extension memory extension1;
 
-        plugin1.metadata = PluginMetadata({
+        extension1.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(new MockERC20())
         });
 
-        plugin1.functions = new PluginFunction[](1);
-        plugin1.functions[0] = PluginFunction(MockERC20.mint.selector, "hello()");
+        extension1.functions = new ExtensionFunction[](1);
+        extension1.functions[0] = ExtensionFunction(MockERC20.mint.selector, "hello()");
 
         vm.prank(registryDeployer);
-        vm.expectRevert("PluginState: fn selector and signature mismatch.");
-        pluginRegistry.addPlugin(plugin1);
+        vm.expectRevert("ExtensionState: fn selector and signature mismatch.");
+        extensionRegistry.addExtension(extension1);
     }
 
-    function test_revert_addPlugin_samePluginName() external {
-        // Add plugin 1.
+    function test_revert_addExtension_sameExtensionName() external {
+        // Add extension 1.
 
-        Plugin memory plugin1;
+        Extension memory extension1;
 
-        plugin1.metadata = PluginMetadata({
+        extension1.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(new MockERC20())
         });
 
-        plugin1.functions = new PluginFunction[](1);
-        plugin1.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension1.functions = new ExtensionFunction[](1);
+        extension1.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
 
-        // Add plugin 2.
+        // Add extension 2.
 
-        Plugin memory plugin2;
+        Extension memory extension2;
 
-        plugin2.metadata = PluginMetadata({
-            name: "MockERC20", // same plugin name
+        extension2.metadata = ExtensionMetadata({
+            name: "MockERC20", // same extension name
             metadataURI: "ipfs://MockERC721",
             implementation: address(new MockERC721())
         });
 
-        plugin2.functions = new PluginFunction[](1);
-        plugin2.functions[0] = PluginFunction(MockERC721.mint.selector, "mint(address,uint256)");
+        extension2.functions = new ExtensionFunction[](1);
+        extension2.functions[0] = ExtensionFunction(MockERC721.mint.selector, "mint(address,uint256)");
 
         vm.startPrank(registryDeployer);
 
-        pluginRegistry.addPlugin(plugin1);
+        extensionRegistry.addExtension(extension1);
 
-        vm.expectRevert("PluginState: plugin already exists.");
-        pluginRegistry.addPlugin(plugin2);
+        vm.expectRevert("ExtensionState: extension already exists.");
+        extensionRegistry.addExtension(extension2);
 
         vm.stopPrank();
     }
 
-    function test_revert_addPlugin_emptyPluginImplementation() external {
-        Plugin memory plugin1;
+    function test_revert_addExtension_emptyExtensionImplementation() external {
+        Extension memory extension1;
 
-        plugin1.metadata = PluginMetadata({
+        extension1.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(0)
         });
 
-        plugin1.functions = new PluginFunction[](1);
-        plugin1.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension1.functions = new ExtensionFunction[](1);
+        extension1.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
 
         vm.prank(registryDeployer);
-        vm.expectRevert("PluginState: adding plugin without implementation.");
-        pluginRegistry.addPlugin(plugin1);
+        vm.expectRevert("ExtensionState: adding extension without implementation.");
+        extensionRegistry.addExtension(extension1);
     }
 
     /*///////////////////////////////////////////////////////////////
-                            Updating plugins
+                            Updating extensions
     //////////////////////////////////////////////////////////////*/
 
-    function _setUp_updatePlugin() internal {
-        Plugin memory plugin;
+    function _setUp_updateExtension() internal {
+        Extension memory extension;
 
-        plugin.metadata = PluginMetadata({
+        extension.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(new MockERC20())
         });
 
-        plugin.functions = new PluginFunction[](1);
-        plugin.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension.functions = new ExtensionFunction[](1);
+        extension.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
 
         vm.prank(registryDeployer);
-        pluginRegistry.addPlugin(plugin);
+        extensionRegistry.addExtension(extension);
     }
 
-    function test_state_updatePlugin_someNewFunctions() external {
-        _setUp_updatePlugin();
+    function test_state_updateExtension_someNewFunctions() external {
+        _setUp_updateExtension();
 
-        Plugin memory plugin;
+        Extension memory extension;
 
-        plugin.metadata = PluginMetadata({
+        extension.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(new MockERC20())
         });
 
-        plugin.functions = new PluginFunction[](2);
-        plugin.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
-        plugin.functions[1] = PluginFunction(MockERC20.toggleTax.selector, "toggleTax()");
+        extension.functions = new ExtensionFunction[](2);
+        extension.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension.functions[1] = ExtensionFunction(MockERC20.toggleTax.selector, "toggleTax()");
 
         vm.prank(registryDeployer);
-        pluginRegistry.updatePlugin(plugin);
+        extensionRegistry.updateExtension(extension);
 
         {
-            Plugin[] memory getAllPlugins = pluginRegistry.getAllPlugins();
-            assertEq(getAllPlugins.length, 1);
+            Extension[] memory getAllExtensions = extensionRegistry.getAllExtensions();
+            assertEq(getAllExtensions.length, 1);
 
-            // getAllPlugins
-            assertEq(getAllPlugins[0].metadata.implementation, plugin.metadata.implementation);
-            assertEq(getAllPlugins[0].metadata.name, plugin.metadata.name);
-            assertEq(getAllPlugins[0].metadata.metadataURI, plugin.metadata.metadataURI);
-            uint256 fnsLen = plugin.functions.length;
+            // getAllExtensions
+            assertEq(getAllExtensions[0].metadata.implementation, extension.metadata.implementation);
+            assertEq(getAllExtensions[0].metadata.name, extension.metadata.name);
+            assertEq(getAllExtensions[0].metadata.metadataURI, extension.metadata.metadataURI);
+            uint256 fnsLen = extension.functions.length;
 
             assertEq(fnsLen, 2);
-            assertEq(fnsLen, getAllPlugins[0].functions.length);
+            assertEq(fnsLen, getAllExtensions[0].functions.length);
 
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(plugin.functions[j].functionSelector, getAllPlugins[0].functions[j].functionSelector);
-                assertEq(plugin.functions[j].functionSignature, getAllPlugins[0].functions[j].functionSignature);
+                assertEq(extension.functions[j].functionSelector, getAllExtensions[0].functions[j].functionSelector);
+                assertEq(extension.functions[j].functionSignature, getAllExtensions[0].functions[j].functionSignature);
             }
 
-            // getPlugin
-            Plugin memory getPlugin = pluginRegistry.getPlugin(plugin.metadata.name);
-            assertEq(plugin.metadata.implementation, getPlugin.metadata.implementation);
-            assertEq(plugin.metadata.name, getPlugin.metadata.name);
-            assertEq(plugin.metadata.metadataURI, getPlugin.metadata.metadataURI);
-            assertEq(fnsLen, getPlugin.functions.length);
+            // getExtension
+            Extension memory getExtension = extensionRegistry.getExtension(extension.metadata.name);
+            assertEq(extension.metadata.implementation, getExtension.metadata.implementation);
+            assertEq(extension.metadata.name, getExtension.metadata.name);
+            assertEq(extension.metadata.metadataURI, getExtension.metadata.metadataURI);
+            assertEq(fnsLen, getExtension.functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(getPlugin.functions[j].functionSelector, plugin.functions[j].functionSelector);
-                assertEq(getPlugin.functions[j].functionSignature, plugin.functions[j].functionSignature);
+                assertEq(getExtension.functions[j].functionSelector, extension.functions[j].functionSelector);
+                assertEq(getExtension.functions[j].functionSignature, extension.functions[j].functionSignature);
             }
         }
         {
-            string memory name = plugin.metadata.name;
-            PluginFunction[] memory functions = pluginRegistry.getAllFunctionsOfPlugin(name);
-            uint256 fnsLen = plugin.functions.length;
+            string memory name = extension.metadata.name;
+            ExtensionFunction[] memory functions = extensionRegistry.getAllFunctionsOfExtension(name);
+            uint256 fnsLen = extension.functions.length;
             assertEq(fnsLen, functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(plugin.functions[j].functionSelector, functions[j].functionSelector);
-                assertEq(plugin.functions[j].functionSignature, functions[j].functionSignature);
+                assertEq(extension.functions[j].functionSelector, functions[j].functionSelector);
+                assertEq(extension.functions[j].functionSignature, functions[j].functionSignature);
             }
         }
         {
-            PluginMetadata memory metadata = plugin.metadata;
-            PluginFunction[] memory functions = plugin.functions;
+            ExtensionMetadata memory metadata = extension.metadata;
+            ExtensionFunction[] memory functions = extension.functions;
             for (uint256 j = 0; j < functions.length; j += 1) {
-                PluginMetadata memory pluginForFunction = pluginRegistry.getPluginForFunction(
+                ExtensionMetadata memory extensionForFunction = extensionRegistry.getExtensionForFunction(
                     functions[j].functionSelector
                 );
-                assertEq(pluginForFunction.implementation, metadata.implementation);
-                assertEq(pluginForFunction.name, metadata.name);
-                assertEq(pluginForFunction.metadataURI, metadata.metadataURI);
+                assertEq(extensionForFunction.implementation, metadata.implementation);
+                assertEq(extensionForFunction.name, metadata.name);
+                assertEq(extensionForFunction.metadataURI, metadata.metadataURI);
             }
-            assertEq(metadata.implementation, pluginRegistry.getPluginImplementation(metadata.name));
+            assertEq(metadata.implementation, extensionRegistry.getExtensionImplementation(metadata.name));
         }
     }
 
-    function test_state_updatePlugin_allNewFunctions() external {
-        _setUp_updatePlugin();
+    function test_state_updateExtension_allNewFunctions() external {
+        _setUp_updateExtension();
 
-        Plugin memory plugin;
+        Extension memory extension;
 
-        plugin.metadata = PluginMetadata({
+        extension.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(new MockERC20())
         });
 
-        plugin.functions = new PluginFunction[](1);
-        plugin.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension.functions = new ExtensionFunction[](1);
+        extension.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
 
         vm.prank(registryDeployer);
-        pluginRegistry.updatePlugin(plugin);
+        extensionRegistry.updateExtension(extension);
 
         {
-            Plugin[] memory getAllPlugins = pluginRegistry.getAllPlugins();
-            assertEq(getAllPlugins.length, 1);
+            Extension[] memory getAllExtensions = extensionRegistry.getAllExtensions();
+            assertEq(getAllExtensions.length, 1);
 
-            // getAllPlugins
-            assertEq(getAllPlugins[0].metadata.implementation, plugin.metadata.implementation);
-            assertEq(getAllPlugins[0].metadata.name, plugin.metadata.name);
-            assertEq(getAllPlugins[0].metadata.metadataURI, plugin.metadata.metadataURI);
-            uint256 fnsLen = plugin.functions.length;
+            // getAllExtensions
+            assertEq(getAllExtensions[0].metadata.implementation, extension.metadata.implementation);
+            assertEq(getAllExtensions[0].metadata.name, extension.metadata.name);
+            assertEq(getAllExtensions[0].metadata.metadataURI, extension.metadata.metadataURI);
+            uint256 fnsLen = extension.functions.length;
 
             assertEq(fnsLen, 1);
-            assertEq(fnsLen, getAllPlugins[0].functions.length);
+            assertEq(fnsLen, getAllExtensions[0].functions.length);
 
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(plugin.functions[j].functionSelector, getAllPlugins[0].functions[j].functionSelector);
-                assertEq(plugin.functions[j].functionSignature, getAllPlugins[0].functions[j].functionSignature);
+                assertEq(extension.functions[j].functionSelector, getAllExtensions[0].functions[j].functionSelector);
+                assertEq(extension.functions[j].functionSignature, getAllExtensions[0].functions[j].functionSignature);
             }
 
-            // getPlugin
-            Plugin memory getPlugin = pluginRegistry.getPlugin(plugin.metadata.name);
-            assertEq(plugin.metadata.implementation, getPlugin.metadata.implementation);
-            assertEq(plugin.metadata.name, getPlugin.metadata.name);
-            assertEq(plugin.metadata.metadataURI, getPlugin.metadata.metadataURI);
-            assertEq(fnsLen, getPlugin.functions.length);
+            // getExtension
+            Extension memory getExtension = extensionRegistry.getExtension(extension.metadata.name);
+            assertEq(extension.metadata.implementation, getExtension.metadata.implementation);
+            assertEq(extension.metadata.name, getExtension.metadata.name);
+            assertEq(extension.metadata.metadataURI, getExtension.metadata.metadataURI);
+            assertEq(fnsLen, getExtension.functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(getPlugin.functions[j].functionSelector, plugin.functions[j].functionSelector);
-                assertEq(getPlugin.functions[j].functionSignature, plugin.functions[j].functionSignature);
+                assertEq(getExtension.functions[j].functionSelector, extension.functions[j].functionSelector);
+                assertEq(getExtension.functions[j].functionSignature, extension.functions[j].functionSignature);
             }
         }
         {
-            string memory name = plugin.metadata.name;
-            PluginFunction[] memory functions = pluginRegistry.getAllFunctionsOfPlugin(name);
-            uint256 fnsLen = plugin.functions.length;
+            string memory name = extension.metadata.name;
+            ExtensionFunction[] memory functions = extensionRegistry.getAllFunctionsOfExtension(name);
+            uint256 fnsLen = extension.functions.length;
             assertEq(fnsLen, functions.length);
             for (uint256 j = 0; j < fnsLen; j += 1) {
-                assertEq(plugin.functions[j].functionSelector, functions[j].functionSelector);
-                assertEq(plugin.functions[j].functionSignature, functions[j].functionSignature);
+                assertEq(extension.functions[j].functionSelector, functions[j].functionSelector);
+                assertEq(extension.functions[j].functionSignature, functions[j].functionSignature);
             }
         }
         {
-            PluginMetadata memory metadata = plugin.metadata;
-            PluginFunction[] memory functions = plugin.functions;
+            ExtensionMetadata memory metadata = extension.metadata;
+            ExtensionFunction[] memory functions = extension.functions;
             for (uint256 j = 0; j < functions.length; j += 1) {
-                PluginMetadata memory pluginForFunction = pluginRegistry.getPluginForFunction(
+                ExtensionMetadata memory extensionForFunction = extensionRegistry.getExtensionForFunction(
                     functions[j].functionSelector
                 );
-                assertEq(pluginForFunction.implementation, metadata.implementation);
-                assertEq(pluginForFunction.name, metadata.name);
-                assertEq(pluginForFunction.metadataURI, metadata.metadataURI);
+                assertEq(extensionForFunction.implementation, metadata.implementation);
+                assertEq(extensionForFunction.name, metadata.name);
+                assertEq(extensionForFunction.metadataURI, metadata.metadataURI);
             }
-            assertEq(metadata.implementation, pluginRegistry.getPluginImplementation(metadata.name));
+            assertEq(metadata.implementation, extensionRegistry.getExtensionImplementation(metadata.name));
         }
     }
 
-    function test_revert_updatePlugin_unauthorizedCaller() external {
-        _setUp_updatePlugin();
+    function test_revert_updateExtension_unauthorizedCaller() external {
+        _setUp_updateExtension();
 
-        Plugin memory plugin;
+        Extension memory extension;
 
-        plugin.metadata = PluginMetadata({
+        extension.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(new MockERC20())
         });
 
-        plugin.functions = new PluginFunction[](1);
-        plugin.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension.functions = new ExtensionFunction[](1);
+        extension.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
 
         vm.expectRevert();
-        pluginRegistry.updatePlugin(plugin);
+        extensionRegistry.updateExtension(extension);
     }
 
-    function test_revert_updatePlugin_pluginDoesNotExist() external {
-        Plugin memory plugin;
+    function test_revert_updateExtension_extensionDoesNotExist() external {
+        Extension memory extension;
 
-        plugin.metadata = PluginMetadata({
+        extension.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(new MockERC20())
         });
 
-        plugin.functions = new PluginFunction[](1);
-        plugin.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension.functions = new ExtensionFunction[](1);
+        extension.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
 
-        vm.expectRevert("PluginState: plugin does not exist.");
+        vm.expectRevert("ExtensionState: extension does not exist.");
         vm.prank(registryDeployer);
-        pluginRegistry.updatePlugin(plugin);
+        extensionRegistry.updateExtension(extension);
     }
 
-    function test_revert_updatePlugin_notUpdatingImplementation() external {
-        _setUp_updatePlugin();
+    function test_revert_updateExtension_notUpdatingImplementation() external {
+        _setUp_updateExtension();
 
-        Plugin memory plugin;
+        Extension memory extension;
 
-        plugin.metadata = PluginMetadata({
+        extension.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
-            implementation: pluginRegistry.getPluginImplementation("MockERC20")
+            implementation: extensionRegistry.getExtensionImplementation("MockERC20")
         });
 
-        plugin.functions = new PluginFunction[](1);
-        plugin.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension.functions = new ExtensionFunction[](1);
+        extension.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
 
-        vm.expectRevert("PluginState: re-adding same plugin.");
+        vm.expectRevert("ExtensionState: re-adding same extension.");
         vm.prank(registryDeployer);
-        pluginRegistry.updatePlugin(plugin);
+        extensionRegistry.updateExtension(extension);
     }
 
-    function test_revert_updatePlugin_fnSelectorSignatureMismatch() external {
-        _setUp_updatePlugin();
+    function test_revert_updateExtension_fnSelectorSignatureMismatch() external {
+        _setUp_updateExtension();
 
-        Plugin memory plugin;
+        Extension memory extension;
 
-        plugin.metadata = PluginMetadata({
+        extension.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(new MockERC20())
         });
 
-        plugin.functions = new PluginFunction[](1);
-        plugin.functions[0] = PluginFunction(MockERC20.mint.selector, "hello(address,uint256)");
+        extension.functions = new ExtensionFunction[](1);
+        extension.functions[0] = ExtensionFunction(MockERC20.mint.selector, "hello(address,uint256)");
 
-        vm.expectRevert("PluginState: fn selector and signature mismatch.");
+        vm.expectRevert("ExtensionState: fn selector and signature mismatch.");
         vm.prank(registryDeployer);
-        pluginRegistry.updatePlugin(plugin);
+        extensionRegistry.updateExtension(extension);
     }
 
     /*///////////////////////////////////////////////////////////////
-                            Removing plugins
+                            Removing extensions
     //////////////////////////////////////////////////////////////*/
 
-    function _setUp_removePlugin() internal {
-        Plugin memory plugin;
+    function _setUp_removeExtension() internal {
+        Extension memory extension;
 
-        plugin.metadata = PluginMetadata({
+        extension.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(new MockERC20())
         });
 
-        plugin.functions = new PluginFunction[](2);
-        plugin.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
-        plugin.functions[1] = PluginFunction(MockERC20.toggleTax.selector, "toggleTax()");
+        extension.functions = new ExtensionFunction[](2);
+        extension.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension.functions[1] = ExtensionFunction(MockERC20.toggleTax.selector, "toggleTax()");
 
         vm.prank(registryDeployer);
-        pluginRegistry.addPlugin(plugin);
+        extensionRegistry.addExtension(extension);
     }
 
-    function test_state_removePlugin() external {
-        _setUp_removePlugin();
+    function test_state_removeExtension() external {
+        _setUp_removeExtension();
 
         string memory name = "MockERC20";
 
-        assertEq(true, pluginRegistry.getPlugin(name).metadata.implementation != address(0));
+        assertEq(true, extensionRegistry.getExtension(name).metadata.implementation != address(0));
 
         vm.prank(registryDeployer);
-        pluginRegistry.removePlugin(name);
+        extensionRegistry.removeExtension(name);
 
-        vm.expectRevert("PluginRegistry: plugin does not exist.");
-        pluginRegistry.getPlugin(name);
+        vm.expectRevert("ExtensionRegistry: extension does not exist.");
+        extensionRegistry.getExtension(name);
 
-        vm.expectRevert("PluginRegistry: no plugin for function.");
-        pluginRegistry.getPluginForFunction(MockERC20.mint.selector);
+        vm.expectRevert("ExtensionRegistry: no extension for function.");
+        extensionRegistry.getExtensionForFunction(MockERC20.mint.selector);
 
-        vm.expectRevert("PluginRegistry: no plugin for function.");
-        pluginRegistry.getPluginForFunction(MockERC20.toggleTax.selector);
+        vm.expectRevert("ExtensionRegistry: no extension for function.");
+        extensionRegistry.getExtensionForFunction(MockERC20.toggleTax.selector);
 
-        // Re-add plugin with 1 less function (to check if the info for the other function got deleted.)
-        Plugin memory plugin;
+        // Re-add extension with 1 less function (to check if the info for the other function got deleted.)
+        Extension memory extension;
 
-        plugin.metadata = PluginMetadata({
+        extension.metadata = ExtensionMetadata({
             name: "MockERC20",
             metadataURI: "ipfs://MockERC20",
             implementation: address(new MockERC20())
         });
 
-        plugin.functions = new PluginFunction[](1);
-        plugin.functions[0] = PluginFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension.functions = new ExtensionFunction[](1);
+        extension.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
 
         vm.prank(registryDeployer);
-        pluginRegistry.addPlugin(plugin);
+        extensionRegistry.addExtension(extension);
 
-        vm.expectRevert("PluginRegistry: no plugin for function.");
-        pluginRegistry.getPluginForFunction(MockERC20.toggleTax.selector);
+        vm.expectRevert("ExtensionRegistry: no extension for function.");
+        extensionRegistry.getExtensionForFunction(MockERC20.toggleTax.selector);
 
-        PluginFunction[] memory functions = pluginRegistry.getAllFunctionsOfPlugin(name);
+        ExtensionFunction[] memory functions = extensionRegistry.getAllFunctionsOfExtension(name);
         assertEq(functions.length, 1);
         assertEq(functions[0].functionSelector, MockERC20.mint.selector);
     }
 
-    function test_revert_removePlugin_unauthorizedCaller() external {
-        _setUp_removePlugin();
+    function test_revert_removeExtension_unauthorizedCaller() external {
+        _setUp_removeExtension();
 
         string memory name = "MockERC20";
 
         vm.expectRevert();
-        pluginRegistry.removePlugin(name);
+        extensionRegistry.removeExtension(name);
     }
 
-    function test_revert_removePlugin_pluginDoesNotExist() external {
+    function test_revert_removeExtension_extensionDoesNotExist() external {
         string memory name = "MockERC20";
 
         vm.prank(registryDeployer);
-        vm.expectRevert("PluginState: plugin does not exist.");
-        pluginRegistry.removePlugin(name);
+        vm.expectRevert("ExtensionState: extension does not exist.");
+        extensionRegistry.removeExtension(name);
     }
 }

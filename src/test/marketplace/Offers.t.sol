@@ -5,14 +5,14 @@ pragma solidity ^0.8.0;
 import { BaseTest, IERC721Receiver } from "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
-import "contracts/plugin/interface/IPlugin.sol";
-import { PluginRegistry } from "contracts/plugin/PluginRegistry.sol";
+import "contracts/plugin/interface/IExtension.sol";
+import { ExtensionRegistry } from "contracts/plugin/ExtensionRegistry.sol";
 import { TWRouter } from "contracts/plugin/TWRouter.sol";
 import { MarketplaceV3 } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
 import { OffersLogic } from "contracts/marketplace/offers/OffersLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
-import { PermissionsEnumerable, Permissions } from "contracts/plugin/utils/PermissionsEnumerable.sol";
+import { PermissionsEnumerableImpl, PermissionsEnumerable, Permissions } from "contracts/plugin/utils/impl/PermissionsEnumerableImpl.sol";
 import { MetaTx } from "contracts/plugin/utils/impl/MetaTx.sol";
 import "contracts/openzeppelin-presets/metatx/ERC2771Context.sol";
 import "contracts/plugin/utils/impl/ContractMetadataImpl.sol";
@@ -23,9 +23,9 @@ import { IOffers } from "contracts/marketplace/IMarketplace.sol";
 contract MarketplaceOffersTest is BaseTest {
     address private registryDeployer;
 
-    PluginRegistry private pluginRegistry;
+    ExtensionRegistry private extensionRegistry;
 
-    mapping(uint256 => IPlugin.Plugin) private plugins;
+    mapping(uint256 => IExtension.Extension) private extensions;
 
     // Target contract
     address public marketplace;
@@ -46,130 +46,144 @@ contract MarketplaceOffersTest is BaseTest {
         registryDeployer = getActor(4);
 
         vm.prank(registryDeployer);
-        pluginRegistry = new PluginRegistry(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer);
 
         setupMarketplace(adminDeployer, marketplaceDeployer);
     }
 
     function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
-        string[] memory pluginNames = new string[](5);
+        string[] memory extensionNames = new string[](5);
 
-        // Deploy plugins
+        // Deploy extensions
 
-        // Plugin: ERC2771Context
+        // Extension: ERC2771Context
         address erc2771Context = address(new MetaTx(forwarders()));
 
-        plugins[0].metadata = IPlugin.PluginMetadata({
+        extensions[0].metadata = IExtension.ExtensionMetadata({
             name: "ERC2771Context",
             metadataURI: "ipfs://ERC2771Context",
             implementation: erc2771Context
         });
 
-        plugins[0].functions.push(
-            IPlugin.PluginFunction(ERC2771Context.isTrustedForwarder.selector, "isTrustedForwarder(address)")
+        extensions[0].functions.push(
+            IExtension.ExtensionFunction(ERC2771Context.isTrustedForwarder.selector, "isTrustedForwarder(address)")
         );
-        pluginNames[0] = plugins[0].metadata.name;
+        extensionNames[0] = extensions[0].metadata.name;
 
-        // Plugin: PermissionsEnumerable
-        address permissions = address(new PermissionsEnumerable());
+        // Extension: PermissionsEnumerable
+        address permissions = address(new PermissionsEnumerableImpl());
 
-        plugins[1].metadata = IPlugin.PluginMetadata({
+        extensions[1].metadata = IExtension.ExtensionMetadata({
             name: "PermissionsEnumerable",
             metadataURI: "ipfs://PermissionsEnumerable",
             implementation: permissions
         });
 
-        plugins[1].functions.push(IPlugin.PluginFunction(Permissions.hasRole.selector, "hasRole(bytes32,address)"));
-        plugins[1].functions.push(
-            IPlugin.PluginFunction(Permissions.hasRoleWithSwitch.selector, "hasRoleWithSwitch(bytes32,address)")
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.hasRole.selector, "hasRole(bytes32,address)")
         );
-        plugins[1].functions.push(IPlugin.PluginFunction(Permissions.getRoleAdmin.selector, "getRoleAdmin(bytes32)"));
-        plugins[1].functions.push(IPlugin.PluginFunction(Permissions.grantRole.selector, "grantRole(bytes32,address)"));
-        plugins[1].functions.push(
-            IPlugin.PluginFunction(Permissions.revokeRole.selector, "revokeRole(bytes32,address)")
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.hasRoleWithSwitch.selector, "hasRoleWithSwitch(bytes32,address)")
         );
-        plugins[1].functions.push(
-            IPlugin.PluginFunction(Permissions.renounceRole.selector, "renounceRole(bytes32,address)")
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.getRoleAdmin.selector, "getRoleAdmin(bytes32)")
         );
-        plugins[1].functions.push(
-            IPlugin.PluginFunction(PermissionsEnumerable.getRoleMember.selector, "getRoleMember(bytes32,uint256)")
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.grantRole.selector, "grantRole(bytes32,address)")
         );
-        plugins[1].functions.push(
-            IPlugin.PluginFunction(PermissionsEnumerable.getRoleMemberCount.selector, "getRoleMemberCount(bytes32)")
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.revokeRole.selector, "revokeRole(bytes32,address)")
         );
-        pluginNames[1] = plugins[1].metadata.name;
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(Permissions.renounceRole.selector, "renounceRole(bytes32,address)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(PermissionsEnumerable.getRoleMember.selector, "getRoleMember(bytes32,uint256)")
+        );
+        extensions[1].functions.push(
+            IExtension.ExtensionFunction(
+                PermissionsEnumerable.getRoleMemberCount.selector,
+                "getRoleMemberCount(bytes32)"
+            )
+        );
+        extensionNames[1] = extensions[1].metadata.name;
 
-        // Plugin: ContractMetadata
+        // Extension: ContractMetadata
         address contractMetadata = address(new ContractMetadataImpl());
 
-        plugins[2].metadata = IPlugin.PluginMetadata({
+        extensions[2].metadata = IExtension.ExtensionMetadata({
             name: "ContractMetadata",
             metadataURI: "ipfs://ContractMetadata",
             implementation: contractMetadata
         });
 
-        plugins[2].functions.push(IPlugin.PluginFunction(ContractMetadata.contractURI.selector, "contractURI()"));
-        plugins[2].functions.push(
-            IPlugin.PluginFunction(ContractMetadata.setContractURI.selector, "setContractURI(string)")
+        extensions[2].functions.push(
+            IExtension.ExtensionFunction(ContractMetadata.contractURI.selector, "contractURI()")
         );
-        pluginNames[2] = plugins[2].metadata.name;
+        extensions[2].functions.push(
+            IExtension.ExtensionFunction(ContractMetadata.setContractURI.selector, "setContractURI(string)")
+        );
+        extensionNames[2] = extensions[2].metadata.name;
 
-        // Plugin: PlatformFee
+        // Extension: PlatformFee
         address platformFee = address(new PlatformFeeImpl());
 
-        plugins[3].metadata = IPlugin.PluginMetadata({
+        extensions[3].metadata = IExtension.ExtensionMetadata({
             name: "PlatformFee",
             metadataURI: "ipfs://PlatformFee",
             implementation: platformFee
         });
 
-        plugins[3].functions.push(
-            IPlugin.PluginFunction(PlatformFee.getPlatformFeeInfo.selector, "getPlatformFeeInfo()")
+        extensions[3].functions.push(
+            IExtension.ExtensionFunction(PlatformFee.getPlatformFeeInfo.selector, "getPlatformFeeInfo()")
         );
-        plugins[3].functions.push(
-            IPlugin.PluginFunction(PlatformFee.setPlatformFeeInfo.selector, "setPlatformFeeInfo(address,uint256)")
+        extensions[3].functions.push(
+            IExtension.ExtensionFunction(PlatformFee.setPlatformFeeInfo.selector, "setPlatformFeeInfo(address,uint256)")
         );
-        pluginNames[3] = plugins[3].metadata.name;
+        extensionNames[3] = extensions[3].metadata.name;
 
-        // [1] Index `Offers` functions in `Plugin`
-        plugins[4].metadata = IPlugin.PluginMetadata({
+        // [1] Index `Offers` functions in `Extension`
+        extensions[4].metadata = IExtension.ExtensionMetadata({
             name: "OffersLogic",
             metadataURI: "ipfs://direct",
             implementation: address(new OffersLogic())
         });
-        pluginNames[4] = plugins[4].metadata.name;
+        extensionNames[4] = extensions[4].metadata.name;
 
-        IPlugin.PluginFunction[] memory pluginFunctions = new IPlugin.PluginFunction[](7);
-        pluginFunctions[0] = IPlugin.PluginFunction(OffersLogic.totalOffers.selector, "totalOffers()");
-        pluginFunctions[1] = IPlugin.PluginFunction(
+        IExtension.ExtensionFunction[] memory extensionFunctions = new IExtension.ExtensionFunction[](7);
+        extensionFunctions[0] = IExtension.ExtensionFunction(OffersLogic.totalOffers.selector, "totalOffers()");
+        extensionFunctions[1] = IExtension.ExtensionFunction(
             OffersLogic.makeOffer.selector,
             "makeOffer((address,uint256,uint256,address,uint256,uint256))"
         );
-        pluginFunctions[2] = IPlugin.PluginFunction(OffersLogic.cancelOffer.selector, "cancelOffer(uint256)");
-        pluginFunctions[3] = IPlugin.PluginFunction(OffersLogic.acceptOffer.selector, "acceptOffer(uint256)");
-        pluginFunctions[4] = IPlugin.PluginFunction(
+        extensionFunctions[2] = IExtension.ExtensionFunction(OffersLogic.cancelOffer.selector, "cancelOffer(uint256)");
+        extensionFunctions[3] = IExtension.ExtensionFunction(OffersLogic.acceptOffer.selector, "acceptOffer(uint256)");
+        extensionFunctions[4] = IExtension.ExtensionFunction(
             OffersLogic.getAllValidOffers.selector,
             "getAllValidOffers(uint256,uint256)"
         );
-        pluginFunctions[5] = IPlugin.PluginFunction(OffersLogic.getAllOffers.selector, "getAllOffers(uint256,uint256)");
-        pluginFunctions[6] = IPlugin.PluginFunction(OffersLogic.getOffer.selector, "getOffer(uint256)");
+        extensionFunctions[5] = IExtension.ExtensionFunction(
+            OffersLogic.getAllOffers.selector,
+            "getAllOffers(uint256,uint256)"
+        );
+        extensionFunctions[6] = IExtension.ExtensionFunction(OffersLogic.getOffer.selector, "getOffer(uint256)");
 
-        for (uint256 i = 0; i < pluginFunctions.length; i++) {
-            plugins[4].functions.push(pluginFunctions[i]);
+        for (uint256 i = 0; i < extensionFunctions.length; i++) {
+            extensions[4].functions.push(extensionFunctions[i]);
         }
 
-        // [2] Add plugin to registry
+        // [2] Add extension to registry
         vm.startPrank(registryDeployer);
-        pluginRegistry.addPlugin(plugins[0]);
-        pluginRegistry.addPlugin(plugins[1]);
-        pluginRegistry.addPlugin(plugins[2]);
-        pluginRegistry.addPlugin(plugins[3]);
-        pluginRegistry.addPlugin(plugins[4]);
+        extensionRegistry.addExtension(extensions[0]);
+        extensionRegistry.addExtension(extensions[1]);
+        extensionRegistry.addExtension(extensions[2]);
+        extensionRegistry.addExtension(extensions[3]);
+        extensionRegistry.addExtension(extensions[4]);
         vm.stopPrank();
 
         // [3] Deploy `MarketplaceV3` implementation
         vm.startPrank(_adminDeployer);
-        MarketplaceV3 router = new MarketplaceV3(address(pluginRegistry), pluginNames);
+        MarketplaceV3 router = new MarketplaceV3(address(extensionRegistry), extensionNames);
         vm.stopPrank();
 
         // [4] Deploy proxy pointing to `MarkeptlaceV3` implementation

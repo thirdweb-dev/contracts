@@ -45,7 +45,9 @@ contract TWMultichainRegistry is Initializable, TWRouter, PermissionsEnumerable 
                     Constructor and Initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _pluginRegistry, string[] memory _pluginNames) TWRouter(_pluginRegistry, _pluginNames) {}
+    constructor(address _extensionRegistry, string[] memory _extensionNames)
+        TWRouter(_extensionRegistry, _extensionNames)
+    {}
 
     function initialize(address _defaultAdmin) external initializer {
         bytes32 operatorRole = keccak256("OPERATOR_ROLE");
@@ -59,8 +61,8 @@ contract TWMultichainRegistry is Initializable, TWRouter, PermissionsEnumerable 
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns whether a plugin can be set in the given execution context.
-    function _canSetPlugin() internal view virtual override returns (bool) {
+    /// @dev Returns whether a extension can be set in the given execution context.
+    function _canSetExtension() internal view virtual override returns (bool) {
         bytes32 defaultAdminRole = 0x00;
         return IPermissions(address(this)).hasRole(defaultAdminRole, msg.sender);
     }
