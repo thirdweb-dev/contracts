@@ -8,7 +8,7 @@ import { BaseTest, IERC721Receiver } from "../utils/BaseTest.sol";
 import "contracts/plugin/interface/IExtension.sol";
 import { ExtensionRegistry } from "contracts/plugin/ExtensionRegistry.sol";
 import { TWRouter } from "contracts/plugin/TWRouter.sol";
-import { MarketplaceV3 } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
+import { MarketplaceRouter } from "contracts/marketplace/entrypoint/MarketplaceRouter.sol";
 import { EnglishAuctionsLogic } from "contracts/marketplace/english-auctions/EnglishAuctionsLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
@@ -213,9 +213,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         extensionRegistry.addExtension(extensions[4]);
         vm.stopPrank();
 
-        // [3] Deploy `MarketplaceV3` implementation
+        // [3] Deploy `MarketplaceRouter` implementation
         vm.startPrank(_adminDeployer);
-        MarketplaceV3 router = new MarketplaceV3(address(extensionRegistry), extensionNames);
+        MarketplaceRouter router = new MarketplaceRouter(address(extensionRegistry), extensionNames);
         vm.stopPrank();
 
         // [4] Deploy proxy pointing to `MarkeptlaceV3` implementation
@@ -224,7 +224,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
             new TWProxy(
                 address(router),
                 abi.encodeCall(
-                    MarketplaceV3.initialize,
+                    MarketplaceRouter.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
@@ -240,7 +240,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceV3_Impl");
+        vm.label(address(router), "MarketplaceRouter_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
@@ -1917,9 +1917,9 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
         extensionRegistry.addExtension(extensions[4]);
         vm.stopPrank();
 
-        // [3] Deploy `MarketplaceV3` implementation
+        // [3] Deploy `MarketplaceRouter` implementation
         vm.startPrank(_adminDeployer);
-        MarketplaceV3 router = new MarketplaceV3(address(extensionRegistry), extensionNames);
+        MarketplaceRouter router = new MarketplaceRouter(address(extensionRegistry), extensionNames);
         vm.stopPrank();
 
         // [4] Deploy proxy pointing to `MarkeptlaceV3` implementation
@@ -1928,7 +1928,7 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
             new TWProxy(
                 address(router),
                 abi.encodeCall(
-                    MarketplaceV3.initialize,
+                    MarketplaceRouter.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
@@ -1944,7 +1944,7 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceV3_Impl");
+        vm.label(address(router), "MarketplaceRouter_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
@@ -2220,9 +2220,9 @@ contract BreitwieserTheBidder is BaseTest {
         extensionRegistry.addExtension(extensions[4]);
         vm.stopPrank();
 
-        // [3] Deploy `MarketplaceV3` implementation
+        // [3] Deploy `MarketplaceRouter` implementation
         vm.startPrank(_adminDeployer);
-        MarketplaceV3 router = new MarketplaceV3(address(extensionRegistry), extensionNames);
+        MarketplaceRouter router = new MarketplaceRouter(address(extensionRegistry), extensionNames);
         vm.stopPrank();
 
         // [4] Deploy proxy pointing to `MarkeptlaceV3` implementation
@@ -2231,7 +2231,7 @@ contract BreitwieserTheBidder is BaseTest {
             new TWProxy(
                 address(router),
                 abi.encodeCall(
-                    MarketplaceV3.initialize,
+                    MarketplaceRouter.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
@@ -2247,7 +2247,7 @@ contract BreitwieserTheBidder is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceV3_Impl");
+        vm.label(address(router), "MarketplaceRouter_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
@@ -2553,9 +2553,9 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
         extensionRegistry.addExtension(extensions[4]);
         vm.stopPrank();
 
-        // [3] Deploy `MarketplaceV3` implementation
+        // [3] Deploy `MarketplaceRouter` implementation
         vm.startPrank(_adminDeployer);
-        MarketplaceV3 router = new MarketplaceV3(address(extensionRegistry), extensionNames);
+        MarketplaceRouter router = new MarketplaceRouter(address(extensionRegistry), extensionNames);
         vm.stopPrank();
 
         // [4] Deploy proxy pointing to `MarkeptlaceV3` implementation
@@ -2564,7 +2564,7 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
             new TWProxy(
                 address(router),
                 abi.encodeCall(
-                    MarketplaceV3.initialize,
+                    MarketplaceRouter.initialize,
                     (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
                 )
             )
@@ -2580,7 +2580,7 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceV3_Impl");
+        vm.label(address(router), "MarketplaceRouter_Impl");
         vm.label(marketplace, "Marketplace");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");

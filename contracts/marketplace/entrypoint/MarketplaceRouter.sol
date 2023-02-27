@@ -22,7 +22,7 @@ import { ERC165 } from "../../eip/ERC165.sol";
 /**
  * @author  thirdweb.com
  */
-contract MarketplaceV3 is
+contract MarketplaceRouter is
     Initializable,
     ContractMetadataInit,
     PlatformFeeInit,
@@ -38,7 +38,7 @@ contract MarketplaceV3 is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("MarketplaceV3");
+    bytes32 private constant MODULE_TYPE = bytes32("MarketplaceRouter");
     uint256 private constant VERSION = 1;
 
     /*///////////////////////////////////////////////////////////////
