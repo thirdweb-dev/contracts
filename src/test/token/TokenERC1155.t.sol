@@ -629,6 +629,115 @@ contract TokenERC1155Test is BaseTest {
                         Unit tests: platform fee
     //////////////////////////////////////////////////////////////*/
 
+    function test_state_PlatformFee_Flat_ERC20() public {
+        vm.warp(1000);
+        uint256 flatPlatformFee = 10;
+
+        vm.startPrank(deployerSigner);
+        tokenContract.setFlatPlatformFeeInfo(platformFeeRecipient, flatPlatformFee);
+        tokenContract.setPlatformFeeType(TokenERC1155.PlatformFeeType.Flat);
+        vm.stopPrank();
+
+        // update mintrequest data
+        _mintrequest.pricePerToken = 1;
+        _mintrequest.currency = address(erc20);
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        // approve erc20 tokens to tokenContract
+        vm.prank(recipient);
+        erc20.approve(address(tokenContract), _mintrequest.pricePerToken * _mintrequest.quantity);
+
+        // initial balances and state
+        uint256 nextTokenId = tokenContract.nextTokenIdToMint();
+        uint256 currentBalanceOfRecipient = tokenContract.balanceOf(recipient, nextTokenId);
+
+        uint256 erc20BalanceOfSeller = erc20.balanceOf(address(saleRecipient));
+        uint256 erc20BalanceOfRecipient = erc20.balanceOf(address(recipient));
+
+        // mint with signature
+        vm.prank(recipient);
+        tokenContract.mintWithSignature(_mintrequest, _signature);
+
+        // check state after minting
+        assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
+        assertEq(tokenContract.uri(nextTokenId), string(_mintrequest.uri));
+        assertEq(tokenContract.balanceOf(recipient, nextTokenId), currentBalanceOfRecipient + _mintrequest.quantity);
+
+        // check erc20 balances after minting
+        assertEq(
+            erc20.balanceOf(recipient),
+            erc20BalanceOfRecipient - (_mintrequest.pricePerToken * _mintrequest.quantity)
+        );
+        assertEq(
+            erc20.balanceOf(address(saleRecipient)),
+            erc20BalanceOfSeller + (_mintrequest.pricePerToken * _mintrequest.quantity) - flatPlatformFee
+        );
+    }
+
+    function test_state_PlatformFee_NativeToken() public {
+        vm.warp(1000);
+        uint256 flatPlatformFee = 10;
+
+        vm.startPrank(deployerSigner);
+        tokenContract.setFlatPlatformFeeInfo(platformFeeRecipient, flatPlatformFee);
+        tokenContract.setPlatformFeeType(TokenERC1155.PlatformFeeType.Flat);
+        vm.stopPrank();
+
+        // update mintrequest data
+        _mintrequest.pricePerToken = 1;
+        _mintrequest.currency = address(NATIVE_TOKEN);
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        // initial balances and state
+        uint256 nextTokenId = tokenContract.nextTokenIdToMint();
+        uint256 currentBalanceOfRecipient = tokenContract.balanceOf(recipient, nextTokenId);
+
+        uint256 etherBalanceOfSeller = address(saleRecipient).balance;
+        uint256 etherBalanceOfRecipient = address(recipient).balance;
+
+        // mint with signature
+        vm.prank(recipient);
+        tokenContract.mintWithSignature{ value: _mintrequest.pricePerToken * _mintrequest.quantity }(
+            _mintrequest,
+            _signature
+        );
+
+        // check state after minting
+        assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
+        assertEq(tokenContract.uri(nextTokenId), string(_mintrequest.uri));
+        assertEq(tokenContract.balanceOf(recipient, nextTokenId), currentBalanceOfRecipient + _mintrequest.quantity);
+
+        // check balances after minting
+        assertEq(
+            address(recipient).balance,
+            etherBalanceOfRecipient - (_mintrequest.pricePerToken * _mintrequest.quantity)
+        );
+        assertEq(
+            address(saleRecipient).balance,
+            etherBalanceOfSeller + (_mintrequest.pricePerToken * _mintrequest.quantity) - flatPlatformFee
+        );
+    }
+
+    function test_revert_PlatformFeeGreaterThanPrice() public {
+        vm.warp(1000);
+        uint256 flatPlatformFee = 1 ether;
+
+        vm.startPrank(deployerSigner);
+        tokenContract.setFlatPlatformFeeInfo(platformFeeRecipient, flatPlatformFee);
+        tokenContract.setPlatformFeeType(TokenERC1155.PlatformFeeType.Flat);
+        vm.stopPrank();
+
+        // update mintrequest data
+        _mintrequest.pricePerToken = 1;
+        _mintrequest.currency = address(erc20);
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        // mint with signature
+        vm.prank(recipient);
+        vm.expectRevert("price less than platform fee");
+        tokenContract.mintWithSignature(_mintrequest, _signature);
+    }
+
     function test_state_setPlatformFeeInfo() public {
         address _platformFeeRecipient = address(0x123);
         uint256 _platformFeeBps = 1000;
@@ -639,6 +748,33 @@ contract TokenERC1155Test is BaseTest {
         (address recipient_, uint16 bps) = tokenContract.getPlatformFeeInfo();
         assertEq(_platformFeeRecipient, recipient_);
         assertEq(_platformFeeBps, bps);
+    }
+
+    function test_state_setFlatPlatformFee() public {
+        address _platformFeeRecipient = address(0x123);
+        uint256 _flatFee = 1000;
+
+        vm.prank(deployerSigner);
+        tokenContract.setFlatPlatformFeeInfo(_platformFeeRecipient, _flatFee);
+
+        (address recipient_, uint256 fee) = tokenContract.getFlatPlatformFeeInfo();
+        assertEq(_platformFeeRecipient, recipient_);
+        assertEq(_flatFee, fee);
+    }
+
+    function test_state_setPlatformFeeType() public {
+        address _platformFeeRecipient = address(0x123);
+        uint256 _flatFee = 1000;
+        TokenERC1155.PlatformFeeType _feeType = TokenERC1155.PlatformFeeType.Flat;
+
+        vm.prank(deployerSigner);
+        tokenContract.setFlatPlatformFeeInfo(_platformFeeRecipient, _flatFee);
+
+        vm.prank(deployerSigner);
+        tokenContract.setPlatformFeeType(_feeType);
+
+        TokenERC1155.PlatformFeeType updatedFeeType = tokenContract.getPlatformFeeType();
+        assertTrue(updatedFeeType == _feeType);
     }
 
     function test_revert_setPlatformFeeInfo_ExceedsMaxBps() public {
@@ -663,6 +799,17 @@ contract TokenERC1155Test is BaseTest {
         );
         vm.prank(address(0x1));
         tokenContract.setPlatformFeeInfo(address(1), 1000);
+
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                TWStrings.toHexString(uint160(address(0x1)), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(role), 32)
+            )
+        );
+        vm.prank(address(0x1));
+        tokenContract.setFlatPlatformFeeInfo(address(1), 1000);
     }
 
     function test_event_platformFeeInfo() public {

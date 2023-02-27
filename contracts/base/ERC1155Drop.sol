@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import { ERC1155 } from "../eip/ERC1155.sol";
 
 import "../extension/ContractMetadata.sol";

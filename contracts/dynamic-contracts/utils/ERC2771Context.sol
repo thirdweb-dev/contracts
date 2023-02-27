@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
-import "../../extension/interface/IERC2771Context.sol";
+/// @author thirdweb
+
+import "./ERC2771ContextStorage.sol";
 
 /**
  * @dev Context variant with ERC2771 support.

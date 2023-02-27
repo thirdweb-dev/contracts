@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 /**
  *  @title   Batch-mint Metadata
  *  @notice  The `BatchMintMetadata` is a contract extension for any base NFT contract. It lets the smart contract

@@ -2,38 +2,41 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import "./interface/IDefaultExtensionSet.sol";
+import "./interface/IExtensionRegistry.sol";
 
 // Extensions
-import "./ExtensionState.sol";
-import "../lib/TWStringSet.sol";
+import "../extension/PermissionsEnumerable.sol";
+import "lib/dynamic-contracts/src/presets/utils/ExtensionState.sol";
+import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
 
-contract DefaultExtensionSet is IDefaultExtensionSet, ExtensionState {
-    using TWStringSet for TWStringSet.Set;
-
-    /*///////////////////////////////////////////////////////////////
-                            State variables
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice The deployer of DefaultExtensionSet.
-    address private deployer;
+contract ExtensionRegistry is IExtensionRegistry, ExtensionState, PermissionsEnumerable {
+    using StringSet for StringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor() {
-        deployer = msg.sender;
+    constructor(address _defaultAdmin) {
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
     /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Stores a extension in the DefaultExtensionSet.
-    function setExtension(Extension memory _extension) external {
-        require(msg.sender == deployer, "DefaultExtensionSet: unauthorized caller.");
+    /// @notice Adds a new extension to the registry.
+    function addExtension(Extension memory _extension) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _addExtension(_extension);
+    }
+
+    /// @notice Updates an existing extension in the registry.
+    function updateExtension(Extension memory _extension) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _updateExtension(_extension);
+    }
+
+    /// @notice Remove an existing extension from the registry.
+    function removeExtension(string memory _extensionName) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _removeExtension(_extensionName);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -57,7 +60,7 @@ contract DefaultExtensionSet is IDefaultExtensionSet, ExtensionState {
     /// @notice Returns the extension metadata and functions for a given extension.
     function getExtension(string memory _extensionName) public view returns (Extension memory) {
         ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
-        require(data.extensionNames.contains(_extensionName), "DefaultExtensionSet: extension does not exist.");
+        require(data.extensionNames.contains(_extensionName), "ExtensionRegistry: extension does not exist.");
         return data.extensions[_extensionName];
     }
 
@@ -79,7 +82,7 @@ contract DefaultExtensionSet is IDefaultExtensionSet, ExtensionState {
     function getExtensionForFunction(bytes4 _functionSelector) external view returns (ExtensionMetadata memory) {
         ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
         ExtensionMetadata memory metadata = data.extensionMetadata[_functionSelector];
-        require(metadata.implementation != address(0), "DefaultExtensionSet: no extension for function.");
+        require(metadata.implementation != address(0), "ExtensionRegistry: no extension for function.");
         return metadata;
     }
 }

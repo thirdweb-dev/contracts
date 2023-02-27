@@ -3,19 +3,19 @@ pragma solidity ^0.8.0;
 
 // Interface
 import "./interface/ITWRouter.sol";
+import "./interface/IExtensionRegistry.sol";
 
 // Extensions & libraries
-import "../lib/TWStringSet.sol";
 import "../extension/Multicall.sol";
 
 // Extension pattern imports
-import "./Router.sol";
-import "./DefaultExtensionSet.sol";
-import "./ExtensionState.sol";
-import "./interface/IExtensionRegistry.sol";
+import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
+import "lib/dynamic-contracts/src/core/Router.sol";
+import "lib/dynamic-contracts/src/presets/utils/DefaultExtensionSet.sol";
+import "lib/dynamic-contracts/src/presets/utils/ExtensionState.sol";
 
 abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
-    using TWStringSet for TWStringSet.Set;
+    using StringSet for StringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
