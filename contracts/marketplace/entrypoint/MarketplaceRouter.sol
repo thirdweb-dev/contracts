@@ -19,13 +19,13 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 //  ==========  Internal imports    ==========
 import "../../extension/Initializable.sol";
 import "../../extension/interface/IPermissions.sol";
-import "../../plugin/utils/init/ContractMetadataInit.sol";
-import "../../plugin/utils/init/PlatformFeeInit.sol";
-import "../../plugin/utils/init/PermissionsEnumerableInit.sol";
-import "../../plugin/TWRouter.sol";
+import "../../dynamic-contracts/utils/init/ContractMetadataInit.sol";
+import "../../dynamic-contracts/utils/init/PlatformFeeInit.sol";
+import "../../dynamic-contracts/utils/init/PermissionsEnumerableInit.sol";
+import "../../dynamic-contracts/TWRouter.sol";
 
-import { ReentrancyGuardInit } from "../../plugin/utils/init/ReentrancyGuardInit.sol";
-import { ERC2771ContextInit } from "../../plugin/utils/init/ERC2771ContextInit.sol";
+import { ReentrancyGuardInit } from "../../dynamic-contracts/utils/init/ReentrancyGuardInit.sol";
+import { ERC2771ContextInit } from "../../dynamic-contracts/utils/init/ERC2771ContextInit.sol";
 import { ERC165 } from "../../eip/ERC165.sol";
 
 /**
@@ -95,7 +95,7 @@ contract MarketplaceRouter is
         return uint8(VERSION);
     }
 
-    receive() external payable {}
+    receive() external payable override {}
 
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 1155 logic

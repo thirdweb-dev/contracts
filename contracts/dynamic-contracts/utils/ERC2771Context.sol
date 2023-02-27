@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "./ERC2771ContextStorage.sol";
+import "../../extension/interface/IERC2771Context.sol";
 
 /**
  * @dev Context variant with ERC2771 support.

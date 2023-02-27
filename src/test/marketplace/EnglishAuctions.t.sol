@@ -5,18 +5,18 @@ pragma solidity ^0.8.0;
 import { BaseTest, IERC721Receiver } from "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
-import "contracts/plugin/interface/IExtension.sol";
-import { ExtensionRegistry } from "contracts/plugin/ExtensionRegistry.sol";
-import { TWRouter } from "contracts/plugin/TWRouter.sol";
+import "lib/dynamic-contracts/src/interface/IExtension.sol";
+import { ExtensionRegistry } from "contracts/dynamic-contracts/ExtensionRegistry.sol";
+import { TWRouter } from "contracts/dynamic-contracts/TWRouter.sol";
 import { MarketplaceRouter } from "contracts/marketplace/entrypoint/MarketplaceRouter.sol";
 import { EnglishAuctionsLogic } from "contracts/marketplace/english-auctions/EnglishAuctionsLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
-import { PermissionsEnumerableImpl, PermissionsEnumerable, Permissions } from "contracts/plugin/utils/impl/PermissionsEnumerableImpl.sol";
-import { MetaTx } from "contracts/plugin/utils/impl/MetaTx.sol";
+import { PermissionsEnumerableImpl, PermissionsEnumerable, Permissions } from "contracts/dynamic-contracts/utils/impl/PermissionsEnumerableImpl.sol";
+import { MetaTx } from "contracts/dynamic-contracts/utils/impl/MetaTx.sol";
 import "contracts/openzeppelin-presets/metatx/ERC2771Context.sol";
-import "contracts/plugin/utils/impl/ContractMetadataImpl.sol";
-import "contracts/plugin/utils/impl/PlatformFeeImpl.sol";
+import "contracts/dynamic-contracts/utils/impl/ContractMetadataImpl.sol";
+import "contracts/dynamic-contracts/utils/impl/PlatformFeeImpl.sol";
 
 import { IEnglishAuctions } from "contracts/marketplace/IMarketplace.sol";
 

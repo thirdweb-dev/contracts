@@ -6,7 +6,7 @@ import { ITWMultichainRegistry } from "contracts/interfaces/ITWMultichainRegistr
 import { TWMultichainRegistry } from "contracts/registry/TWMultichainRegistry.sol";
 
 // Plugins
-import "contracts/plugin/ExtensionRegistry.sol";
+import "contracts/dynamic-contracts/ExtensionRegistry.sol";
 import { MultichainRegistryCore } from "contracts/registry/plugin/MultichainRegistryCore.sol";
 import "contracts/extension/Permissions.sol";
 import "contracts/openzeppelin-presets/metatx/ERC2771Context.sol";
