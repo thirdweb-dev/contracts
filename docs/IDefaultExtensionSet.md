@@ -1,4 +1,4 @@
-# ITWRouter
+# IDefaultExtensionSet
 
 
 
@@ -9,22 +9,6 @@
 
 
 ## Methods
-
-### addExtension
-
-```solidity
-function addExtension(string extensionName) external nonpayable
-```
-
-
-
-*Adds a new extension to the router.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| extensionName | string | undefined |
 
 ### getAllExtensions
 
@@ -130,38 +114,6 @@ function getExtensionImplementation(string extensionName) external view returns 
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### removeExtension
-
-```solidity
-function removeExtension(string extensionName) external nonpayable
-```
-
-
-
-*Removes an existing extension from the router.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| extensionName | string | undefined |
-
-### updateExtension
-
-```solidity
-function updateExtension(string extensionName) external nonpayable
-```
-
-
-
-*Updates an existing extension in the router, or overrides a default extension.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| extensionName | string | undefined |
 
 
 
