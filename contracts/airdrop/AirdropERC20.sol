@@ -38,7 +38,7 @@ contract AirdropERC20 is
 
     mapping(uint256 => AirdropContent) private airdropContent;
 
-    mapping(uint256 => bool) private isCancelled;
+    CancelledPayments[] public cancelledPaymentIndices;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -95,18 +95,24 @@ contract AirdropERC20 is
     }
 
     ///@notice Lets contract-owner cancel any pending payments.
-    function resetRecipients() external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 totalPayees = payeeCount;
+    function cancelPendingPayments(uint256 numberOfPaymentsToCancel) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 countOfProcessed = processedCount;
         uint256 nativeTokenAmount;
 
-        // set processedCount to payeeCount -- ignore all pending payments.
-        processedCount = payeeCount;
+        // increase processedCount by the specified count -- all pending payments in between will be treated as cancelled.
+        uint256 newProcessedCount = countOfProcessed + numberOfPaymentsToCancel;
+        require(newProcessedCount <= payeeCount, "Exceeds total payees.");
+        processedCount = newProcessedCount;
 
-        for (uint256 i = countOfProcessed; i < totalPayees; i += 1) {
+        CancelledPayments memory range = CancelledPayments({
+            startIndex: countOfProcessed,
+            endIndex: newProcessedCount - 1
+        });
+
+        cancelledPaymentIndices.push(range);
+
+        for (uint256 i = countOfProcessed; i < newProcessedCount; i += 1) {
             AirdropContent memory content = airdropContent[i];
-
-            isCancelled[i] = true;
 
             if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += content.amount;
@@ -241,42 +247,6 @@ contract AirdropERC20 is
         }
     }
 
-    /// @notice Returns all pending airdrop processed.
-    function getAllAirdropPaymentsProcessed(uint256 startId, uint256 endId)
-        external
-        view
-        returns (AirdropContent[] memory contents)
-    {
-        require(startId <= endId && endId < payeeCount, "invalid range");
-        uint256 processed = processedCount;
-        if (startId >= processed) {
-            return contents;
-        }
-
-        if (endId >= processed) {
-            endId = processed - 1;
-        }
-
-        uint256 count;
-
-        for (uint256 i = startId; i <= endId; i += 1) {
-            if (isCancelled[i]) {
-                continue;
-            }
-            count += 1;
-        }
-
-        contents = new AirdropContent[](count);
-        uint256 index;
-
-        for (uint256 i = startId; i <= endId; i += 1) {
-            if (isCancelled[i]) {
-                continue;
-            }
-            contents[index++] = airdropContent[i];
-        }
-    }
-
     /// @notice Returns all pending airdrop failed.
     function getAllAirdropPaymentsFailed() external view returns (AirdropContent[] memory contents) {
         uint256 count = indicesOfFailed.length;
@@ -287,38 +257,9 @@ contract AirdropERC20 is
         }
     }
 
-    /// @notice Returns all airdrop payments cancelled.
-    function getAllAirdropPaymentsCancelled(uint256 startId, uint256 endId)
-        external
-        view
-        returns (AirdropContent[] memory contents)
-    {
-        require(startId <= endId && endId < payeeCount, "invalid range");
-        uint256 processed = processedCount;
-        if (startId >= processed) {
-            return contents;
-        }
-
-        if (endId >= processed) {
-            endId = processed - 1;
-        }
-
-        uint256 count;
-
-        for (uint256 i = startId; i <= endId; i += 1) {
-            if (isCancelled[i]) {
-                count += 1;
-            }
-        }
-
-        contents = new AirdropContent[](count);
-        uint256 index;
-
-        for (uint256 i = startId; i <= endId; i += 1) {
-            if (isCancelled[i]) {
-                contents[index++] = airdropContent[i];
-            }
-        }
+    /// @notice Returns all blocks of cancelled payments as an array of index range.
+    function getCancelledPaymentIndices() external view returns (CancelledPayments[] memory) {
+        return cancelledPaymentIndices;
     }
 
     /*///////////////////////////////////////////////////////////////

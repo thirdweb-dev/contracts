@@ -34,6 +34,18 @@ interface IAirdropERC20 {
         uint256 amount;
     }
 
+    /**
+     *  @notice Range of indices of a set of cancelled payments. Each call to cancel payments
+     *          stores this range in an array.
+     *
+     *  @param startIndex First index of the set of cancelled payment indices.
+     *  @param endIndex Last index of the set of cancelled payment indices.
+     */
+    struct CancelledPayments {
+        uint256 startIndex;
+        uint256 endIndex;
+    }
+
     /// @notice Returns all airdrop payments set up -- pending, processed or failed.
     function getAllAirdropPayments(uint256 startId, uint256 endId)
         external
@@ -42,12 +54,6 @@ interface IAirdropERC20 {
 
     /// @notice Returns all pending airdrop payments.
     function getAllAirdropPaymentsPending(uint256 startId, uint256 endId)
-        external
-        view
-        returns (AirdropContent[] memory contents);
-
-    /// @notice Returns all pending airdrop processed.
-    function getAllAirdropPaymentsProcessed(uint256 startId, uint256 endId)
         external
         view
         returns (AirdropContent[] memory contents);
@@ -65,7 +71,7 @@ interface IAirdropERC20 {
     /**
      *  @notice          Lets contract-owner cancel any pending payments.
      */
-    function resetRecipients() external;
+    function cancelPendingPayments(uint256 numberOfPaymentsToCancel) external;
 
     /**
      *  @notice          Lets contract-owner send ERC20 or native tokens to a list of addresses.

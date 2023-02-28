@@ -64,7 +64,6 @@ contract AirdropERC721Test is BaseTest {
 
         // check state before airdrop
         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-        assertEq(drop.getAllAirdropPaymentsProcessed(0, countOne - 1).length, 0);
         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, countOne);
         assertEq(drop.payeeCount(), countOne);
         assertEq(drop.processedCount(), 0);
@@ -75,7 +74,6 @@ contract AirdropERC721Test is BaseTest {
 
         // check state after airdrop
         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-        assertEq(drop.getAllAirdropPaymentsProcessed(0, countOne - 1).length, countOne);
         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, 0);
         assertEq(drop.payeeCount(), countOne);
         assertEq(drop.processedCount(), countOne);
@@ -91,7 +89,6 @@ contract AirdropERC721Test is BaseTest {
 
         // check state before airdrop
         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-        assertEq(drop.getAllAirdropPaymentsProcessed(0, countOne - 1).length, 0);
         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, countOne);
         assertEq(drop.payeeCount(), countOne);
         assertEq(drop.processedCount(), 0);
@@ -102,7 +99,6 @@ contract AirdropERC721Test is BaseTest {
 
         // check state after airdrop
         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-        assertEq(drop.getAllAirdropPaymentsProcessed(0, countOne - 1).length, countOne - 300);
         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, 300);
         assertEq(drop.payeeCount(), countOne);
         assertEq(drop.processedCount(), countOne - 300);
@@ -153,16 +149,15 @@ contract AirdropERC721Test is BaseTest {
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Unit tests: `reset`
+                        Unit tests: `cancelPayments`
     //////////////////////////////////////////////////////////////*/
 
-    function test_state_resetRecipients() public {
+    function test_state_cancelPayments() public {
         vm.prank(deployer);
         drop.addRecipients(_contentsOne);
 
         // check state before airdrop
         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-        assertEq(drop.getAllAirdropPaymentsProcessed(0, countOne - 1).length, 0);
         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, countOne);
         assertEq(drop.payeeCount(), countOne);
         assertEq(drop.processedCount(), 0);
@@ -173,29 +168,31 @@ contract AirdropERC721Test is BaseTest {
 
         // check state after airdrop
         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-        assertEq(drop.getAllAirdropPaymentsProcessed(0, countOne - 1).length, countOne - 300);
         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, 300);
         assertEq(drop.payeeCount(), countOne);
         assertEq(drop.processedCount(), countOne - 300);
 
-        // do a reset
+        // cancel payments
         vm.prank(deployer);
-        drop.resetRecipients();
+        drop.cancelPendingPayments(300);
 
         // check state after reset
         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-        assertEq(drop.getAllAirdropPaymentsProcessed(0, countOne - 1).length, countOne - 300);
         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, 0); // 0 pending payments after reset
-        assertEq(drop.getAllAirdropPaymentsCancelled(0, countOne - 1).length, 300); // cancelled payments
         assertEq(drop.payeeCount(), countOne);
         assertEq(drop.processedCount(), countOne); // processed count set equal to total payee count
+
+        IAirdropERC721.CancelledPayments[] memory cancelledPayments = drop.getCancelledPaymentIndices();
+        assertEq(cancelledPayments.length, 1);
+        assertEq(cancelledPayments[0].startIndex, countOne - 300);
+        assertEq(cancelledPayments[0].endIndex, countOne - 1);
 
         for (uint256 i = 0; i < 700; i++) {
             assertEq(erc721.ownerOf(i), _contentsOne[i].recipient);
         }
     }
 
-    function test_state_resetRecipients_addMore() public {
+    function test_state_cancelPayments_addMore() public {
         vm.prank(deployer);
         drop.addRecipients(_contentsOne);
 
@@ -203,17 +200,20 @@ contract AirdropERC721Test is BaseTest {
         vm.prank(deployer);
         drop.processPayments(countOne - 300);
 
-        // do a reset
+        // cancel payments
         vm.prank(deployer);
-        drop.resetRecipients();
+        drop.cancelPendingPayments(300);
 
         // check state after reset
         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-        assertEq(drop.getAllAirdropPaymentsProcessed(0, countOne - 1).length, countOne - 300);
         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, 0); // 0 pending payments after reset
-        assertEq(drop.getAllAirdropPaymentsCancelled(0, countOne - 1).length, 300); // cancelled payments
         assertEq(drop.payeeCount(), countOne);
         assertEq(drop.processedCount(), countOne); // processed count set equal to total payee count
+
+        IAirdropERC721.CancelledPayments[] memory cancelledPayments = drop.getCancelledPaymentIndices();
+        assertEq(cancelledPayments.length, 1);
+        assertEq(cancelledPayments[0].startIndex, countOne - 300);
+        assertEq(cancelledPayments[0].endIndex, countOne - 1);
 
         // add more recipients
         vm.prank(deployer);
@@ -221,15 +221,24 @@ contract AirdropERC721Test is BaseTest {
 
         // check state
         assertEq(drop.getAllAirdropPayments(0, countOne + countTwo - 1).length, countOne + countTwo);
-        assertEq(drop.getAllAirdropPaymentsProcessed(0, countOne + countTwo - 1).length, countOne - 300);
         assertEq(drop.getAllAirdropPaymentsPending(0, countOne + countTwo - 1).length, countTwo); // pending payments equal to count of new recipients added
-        assertEq(drop.getAllAirdropPaymentsCancelled(0, countOne + countTwo - 1).length, 300); // cancelled payments
         assertEq(drop.payeeCount(), countOne + countTwo);
         assertEq(drop.processedCount(), countOne);
 
         for (uint256 i = 0; i < 700; i++) {
             assertEq(erc721.ownerOf(i), _contentsOne[i].recipient);
         }
+
+        // cancel more
+        vm.prank(deployer);
+        drop.cancelPendingPayments(100);
+
+        cancelledPayments = drop.getCancelledPaymentIndices();
+        assertEq(cancelledPayments.length, 2);
+        assertEq(cancelledPayments[0].startIndex, countOne - 300);
+        assertEq(cancelledPayments[0].endIndex, countOne - 1);
+        assertEq(cancelledPayments[1].startIndex, countOne);
+        assertEq(cancelledPayments[1].endIndex, countOne + 100 - 1);
     }
 
     /*///////////////////////////////////////////////////////////////
