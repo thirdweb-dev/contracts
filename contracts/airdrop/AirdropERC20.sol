@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 import "../interfaces/airdrop/IAirdropERC20.sol";
 import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
-import "../openzeppelin-presets/token/ERC20/utils/SafeERC20.sol";
+import "../eip/interface/IERC20.sol";
 
 //  ==========  Features    ==========
 import "../extension/Ownable.sol";
@@ -24,7 +24,6 @@ contract AirdropERC20 is
     MulticallUpgradeable,
     IAirdropERC20
 {
-    using SafeERC20 for IERC20;
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
