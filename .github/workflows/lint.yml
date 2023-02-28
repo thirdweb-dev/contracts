@@ -9,19 +9,29 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+<<<<<<< HEAD
+=======
+
+# cancel previous runs if new commits are pushed to the branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+>>>>>>> main
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  lint:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout repository
+        uses: actions/checkout@v3
         with:
           submodules: recursive
+<<<<<<< HEAD
       - name: Setup Node.js environment
         uses: actions/setup-node@v2.4.1
         with:
@@ -30,4 +40,12 @@ jobs:
       - name: Run npm install
         run: yarn
       - name: Run lint
+=======
+          fetch-depth: 25
+
+      - name: Setup Project
+        uses: ./.github/composite-actions/setup
+
+      - name: Run Lint
+>>>>>>> main
         run: yarn lint

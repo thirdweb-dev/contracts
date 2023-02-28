@@ -193,6 +193,28 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 | _royaltyRecipient | address | undefined |
 | _royaltyBps | uint16 | undefined |
 
+### isTrustedForwarder
+
+```solidity
+function isTrustedForwarder(address forwarder) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| forwarder | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### multicall
 
 ```solidity
@@ -355,6 +377,22 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+### OperatorRestriction
+
+```solidity
+event OperatorRestriction(bool restriction)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| restriction  | bool | undefined |
 
 ### OwnerUpdated
 

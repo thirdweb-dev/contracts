@@ -18,7 +18,7 @@ function getImplementationForFunction(bytes4 _functionSelector) external view re
 
 
 
-
+*Unimplemented. Returns the implementation contract address for a given function signature.*
 
 #### Parameters
 

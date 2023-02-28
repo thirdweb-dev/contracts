@@ -5,9 +5,9 @@ pragma solidity ^0.8.11;
 import { ITWMultichainRegistry } from "contracts/interfaces/ITWMultichainRegistry.sol";
 import { TWMultichainRegistry } from "contracts/registry/TWMultichainRegistry.sol";
 
-// Plugins
-import "contracts/plugin/ExtensionRegistry.sol";
-import { MultichainRegistryCore } from "contracts/registry/plugin/MultichainRegistryCore.sol";
+// dynamic-contracts
+import "contracts/dynamic-contracts/ExtensionRegistry.sol";
+import { MultichainRegistryCore } from "contracts/registry/extension/MultichainRegistryCore.sol";
 import "contracts/extension/Permissions.sol";
 import "contracts/openzeppelin-presets/metatx/ERC2771Context.sol";
 

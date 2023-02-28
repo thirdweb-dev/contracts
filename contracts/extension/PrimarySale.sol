@@ -1,22 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import "./interface/IPrimarySale.sol";
-
-library PrimarySaleStorage {
-    bytes32 public constant PRIMARY_SALE_STORAGE_POSITION = keccak256("primary.sale.storage");
-
-    struct Data {
-        address recipient;
-    }
-
-    function primarySaleStorage() internal pure returns (Data storage primarySaleData) {
-        bytes32 position = PRIMARY_SALE_STORAGE_POSITION;
-        assembly {
-            primarySaleData.slot := position
-        }
-    }
-}
 
 /**
  *  @title   Primary Sale
@@ -26,10 +13,12 @@ library PrimarySaleStorage {
  */
 
 abstract contract PrimarySale is IPrimarySale {
+    /// @dev The address that receives all primary sales value.
+    address private recipient;
+
     /// @dev Returns primary sale recipient address.
     function primarySaleRecipient() public view override returns (address) {
-        PrimarySaleStorage.Data storage data = PrimarySaleStorage.primarySaleStorage();
-        return data.recipient;
+        return recipient;
     }
 
     /**
@@ -49,8 +38,7 @@ abstract contract PrimarySale is IPrimarySale {
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
     function _setupPrimarySaleRecipient(address _saleRecipient) internal {
-        PrimarySaleStorage.Data storage data = PrimarySaleStorage.primarySaleStorage();
-        data.recipient = _saleRecipient;
+        recipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
     }
 

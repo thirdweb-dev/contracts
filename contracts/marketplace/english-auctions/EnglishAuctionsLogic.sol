@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-// thirdweb Contract
-
 pragma solidity ^0.8.11;
+
+/// @author thirdweb
 
 import "./EnglishAuctionsStorage.sol";
 
@@ -18,7 +18,7 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "../../extension/interface/IPlatformFee.sol";
 import "../../extension/interface/IERC2771Context.sol";
 import "../../extension/Permissions.sol";
-import "../../plugin/utils/ReentrancyGuard.sol";
+import "../../dynamic-contracts/extension/ReentrancyGuard.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 /**

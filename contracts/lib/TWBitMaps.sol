@@ -1,6 +1,7 @@
-// SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts v4.4.1 (utils/structs/BitMaps.sol)
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
+
+/// @author thirdweb
 
 /**
  * @dev Library for managing uint256 to bool mapping in a compact and efficient way, providing the keys are sequential.

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+/// @author thirdweb
+
 interface IStaking20 {
     /// @dev Emitted when tokens are staked.
     event TokensStaked(address indexed staker, uint256 amount);

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 /**
  *  Thirdweb's `LazyMintWithTier` is a contract extension for any base NFT contract. It lets you 'lazy mint' any number of NFTs
  *  at once, for a particular tier. Here, 'lazy mint' means defining the metadata for particular tokenIds of your NFT contract,

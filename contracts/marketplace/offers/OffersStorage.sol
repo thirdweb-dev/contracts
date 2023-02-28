@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-// thirdweb Contract
-
 pragma solidity ^0.8.11;
+
+/// @author thirdweb
 
 import { IOffers } from "../IMarketplace.sol";
 

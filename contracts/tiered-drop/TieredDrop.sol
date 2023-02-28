@@ -1,20 +1,22 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../plugin/BaseRouter.sol";
-import "../extension/Initializable.sol";
-import "../extension/Multicall.sol";
-import "../extension/Permissions.sol";
+import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 
-import "../extension/init/ContractMetadataInit.sol";
-import "../extension/init/ERC721AInit.sol";
-import "../extension/init/OwnableInit.sol";
-import "../extension/init/PermissionsEnumerableInit.sol";
-import "../extension/init/PrimarySaleInit.sol";
-import "../extension/init/RoyaltyInit.sol";
-import "../extension/init/SignatureActionInit.sol";
-import "../extension/init/DefaultOperatorFiltererInit.sol";
-import "../extension/ERC2771ContextUpgradeable.sol";
+import "../extension/Multicall.sol";
+
+import "../dynamic-contracts/extension/Initializable.sol";
+import "../dynamic-contracts/extension/Permissions.sol";
+import "../dynamic-contracts/extension/ERC2771ContextUpgradeable.sol";
+
+import "../dynamic-contracts/init/ContractMetadataInit.sol";
+import "../dynamic-contracts/init/ERC721AInit.sol";
+import "../dynamic-contracts/init/OwnableInit.sol";
+import "../dynamic-contracts/init/PermissionsEnumerableInit.sol";
+import "../dynamic-contracts/init/PrimarySaleInit.sol";
+import "../dynamic-contracts/init/RoyaltyInit.sol";
+import "../dynamic-contracts/init/SignatureActionInit.sol";
+import "../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
 
 /**
  *  Defualt extensions to add:

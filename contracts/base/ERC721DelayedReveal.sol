@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import "./ERC721LazyMint.sol";
 
 import "../extension/DelayedReveal.sol";
@@ -47,7 +49,7 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
      *
      *  @param _tokenId The tokenId of an NFT.
      */
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+    function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
         (uint256 batchId, ) = _getBatchId(_tokenId);
         string memory batchUri = _getBaseURI(_tokenId);
 
@@ -75,7 +77,7 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _data
-    ) public override returns (uint256 batchId) {
+    ) public virtual override returns (uint256 batchId) {
         if (_data.length > 0) {
             (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
             if (encryptedURI.length != 0 && provenanceHash != "") {

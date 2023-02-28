@@ -1,12 +1,12 @@
 # PermissionsEnumerableStorage
 
+*thirdweb.com*
 
 
-> PermissionsEnumerable
 
 
 
-*This contracts provides extending-contracts with role-based access control mechanisms.           Also provides interfaces to view all members with a given role, and total count of members.*
+
 
 ## Methods
 

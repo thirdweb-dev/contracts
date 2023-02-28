@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import "./interface/IDrop1155.sol";
 import "../lib/MerkleProof.sol";
 

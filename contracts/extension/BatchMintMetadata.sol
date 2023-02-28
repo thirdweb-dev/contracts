@@ -1,23 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-library BatchMintMetadataStorage {
-    bytes32 public constant BATCH_MINT_METADATA_STORAGE_POSITION = keccak256("batch.mint.metadata.storage");
-
-    struct Data {
-        /// @dev Largest tokenId of each batch of tokens with the same baseURI.
-        uint256[] batchIds;
-        /// @dev Mapping from id of a batch of tokens => to base URI for the respective batch of tokens.
-        mapping(uint256 => string) baseURI;
-    }
-
-    function batchMintMetadataStorage() internal pure returns (Data storage batchMintMetadataData) {
-        bytes32 position = BATCH_MINT_METADATA_STORAGE_POSITION;
-        assembly {
-            batchMintMetadataData.slot := position
-        }
-    }
-}
+/// @author thirdweb
 
 /**
  *  @title   Batch-mint Metadata
@@ -27,14 +11,19 @@ library BatchMintMetadataStorage {
  */
 
 contract BatchMintMetadata {
+    /// @dev Largest tokenId of each batch of tokens with the same baseURI.
+    uint256[] private batchIds;
+
+    /// @dev Mapping from id of a batch of tokens => to base URI for the respective batch of tokens.
+    mapping(uint256 => string) private baseURI;
+
     /**
      *  @notice         Returns the count of batches of NFTs.
      *  @dev            Each batch of tokens has an in ID and an associated `baseURI`.
      *                  See {batchIds}.
      */
     function getBaseURICount() public view returns (uint256) {
-        BatchMintMetadataStorage.Data storage data = BatchMintMetadataStorage.batchMintMetadataStorage();
-        return data.batchIds.length;
+        return batchIds.length;
     }
 
     /**
@@ -43,20 +32,16 @@ contract BatchMintMetadata {
      *  @param _index   ID of a token.
      */
     function getBatchIdAtIndex(uint256 _index) public view returns (uint256) {
-        BatchMintMetadataStorage.Data storage data = BatchMintMetadataStorage.batchMintMetadataStorage();
-
         if (_index >= getBaseURICount()) {
             revert("Invalid index");
         }
-        return data.batchIds[_index];
+        return batchIds[_index];
     }
 
     /// @dev Returns the id for the batch of tokens the given tokenId belongs to.
     function _getBatchId(uint256 _tokenId) internal view returns (uint256 batchId, uint256 index) {
-        BatchMintMetadataStorage.Data storage data = BatchMintMetadataStorage.batchMintMetadataStorage();
-
         uint256 numOfTokenBatches = getBaseURICount();
-        uint256[] memory indices = data.batchIds;
+        uint256[] memory indices = batchIds;
 
         for (uint256 i = 0; i < numOfTokenBatches; i += 1) {
             if (_tokenId < indices[i]) {
@@ -72,14 +57,12 @@ contract BatchMintMetadata {
 
     /// @dev Returns the baseURI for a token. The intended metadata URI for the token is baseURI + tokenId.
     function _getBaseURI(uint256 _tokenId) internal view returns (string memory) {
-        BatchMintMetadataStorage.Data storage data = BatchMintMetadataStorage.batchMintMetadataStorage();
-
         uint256 numOfTokenBatches = getBaseURICount();
-        uint256[] memory indices = data.batchIds;
+        uint256[] memory indices = batchIds;
 
         for (uint256 i = 0; i < numOfTokenBatches; i += 1) {
             if (_tokenId < indices[i]) {
-                return data.baseURI[indices[i]];
+                return baseURI[indices[i]];
             }
         }
         revert("Invalid tokenId");
@@ -87,8 +70,7 @@ contract BatchMintMetadata {
 
     /// @dev Sets the base URI for the batch of tokens with the given batchId.
     function _setBaseURI(uint256 _batchId, string memory _baseURI) internal {
-        BatchMintMetadataStorage.Data storage data = BatchMintMetadataStorage.batchMintMetadataStorage();
-        data.baseURI[_batchId] = _baseURI;
+        baseURI[_batchId] = _baseURI;
     }
 
     /// @dev Mints a batch of tokenIds and associates a common baseURI to all those Ids.
@@ -100,9 +82,8 @@ contract BatchMintMetadata {
         batchId = _startId + _amountToMint;
         nextTokenIdToMint = batchId;
 
-        BatchMintMetadataStorage.Data storage data = BatchMintMetadataStorage.batchMintMetadataStorage();
+        batchIds.push(batchId);
 
-        data.batchIds.push(batchId);
-        data.baseURI[batchId] = _baseURIForTokens;
+        baseURI[batchId] = _baseURIForTokens;
     }
 }

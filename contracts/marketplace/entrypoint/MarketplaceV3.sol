@@ -1,22 +1,32 @@
 // SPDX-License-Identifier: Apache-2.0
-// thirdweb Contract
-
 pragma solidity ^0.8.0;
+
+/// @author thirdweb
+
+//   $$\     $$\       $$\                 $$\                         $$\
+//   $$ |    $$ |      \__|                $$ |                        $$ |
+// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
+// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
+//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
+//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
+//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
+//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 // ====== External imports ======
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 //  ==========  Internal imports    ==========
-import "../../extension/Initializable.sol";
 import "../../extension/interface/IPermissions.sol";
-import "../../plugin/utils/init/ContractMetadataInit.sol";
-import "../../plugin/utils/init/PlatformFeeInit.sol";
-import "../../plugin/utils/init/PermissionsEnumerableInit.sol";
-import "../../plugin/TWRouter.sol";
 
-import { ReentrancyGuardInit } from "../../plugin/utils/init/ReentrancyGuardInit.sol";
-import { ERC2771ContextInit } from "../../plugin/utils/init/ERC2771ContextInit.sol";
+import "../../dynamic-contracts/extension/Initializable.sol";
+import "../../dynamic-contracts/init/ContractMetadataInit.sol";
+import "../../dynamic-contracts/init/PlatformFeeInit.sol";
+import "../../dynamic-contracts/init/PermissionsEnumerableInit.sol";
+import "../../dynamic-contracts/TWRouter.sol";
+
+import { ReentrancyGuardInit } from "../../dynamic-contracts/init/ReentrancyGuardInit.sol";
+import { ERC2771ContextInit } from "../../dynamic-contracts/init/ERC2771ContextInit.sol";
 import { ERC165 } from "../../eip/ERC165.sol";
 
 /**
@@ -85,8 +95,6 @@ contract MarketplaceV3 is
     function contractVersion() external pure returns (uint8) {
         return uint8(VERSION);
     }
-
-    receive() external payable {}
 
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 1155 logic

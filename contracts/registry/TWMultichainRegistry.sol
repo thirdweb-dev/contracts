@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../plugin/TWRouter.sol";
-import "../extension/Initializable.sol";
-import "../plugin/utils/PermissionsEnumerable.sol";
+import "../dynamic-contracts/TWRouter.sol";
+import "../dynamic-contracts/extension/Initializable.sol";
+import "../dynamic-contracts/extension/PermissionsEnumerable.sol";
+
 import "../openzeppelin-presets/utils/EnumerableSet.sol";
+
 import "../interfaces/ITWMultichainRegistry.sol";
 
 library TWMultichainRegistryStorage {

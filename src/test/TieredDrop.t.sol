@@ -5,10 +5,10 @@ import "./utils/BaseTest.sol";
 import "contracts/lib/TWStrings.sol";
 
 import { TieredDrop } from "contracts/tiered-drop/TieredDrop.sol";
-import { TieredDropLogic, ERC721AUpgradeable, DelayedReveal, LazyMintWithTier } from "contracts/tiered-drop/plugin/TieredDropLogic.sol";
+import { TieredDropLogic, ERC721AUpgradeable, DelayedReveal, LazyMintWithTier } from "contracts/tiered-drop/extension/TieredDropLogic.sol";
 import { PermissionsEnumerable } from "contracts/extension/PermissionsEnumerable.sol";
 
-import "contracts/plugin/interface/IExtension.sol";
+import "lib/dynamic-contracts/src/interface/IExtension.sol";
 
 import { TWProxy } from "contracts/TWProxy.sol";
 

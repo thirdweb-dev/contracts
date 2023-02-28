@@ -1,10 +1,14 @@
-// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.12;
+// SPDX-License-Identifier: Apache 2.0
+pragma solidity ^0.8.0;
+
+/// @author thirdweb
 
 import "./interface/IOperatorFilterRegistry.sol";
 import "./OperatorFilterToggle.sol";
 
 abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
+    error OperatorNotAllowed(address operator);
+
     IOperatorFilterRegistry constant OPERATOR_FILTER_REGISTRY =
         IOperatorFilterRegistry(0x000000000000AAeB6D7670E522A718067333cd4E);
 
@@ -28,10 +32,8 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
     }
 
     modifier onlyAllowedOperator(address from) virtual {
-        OperatorFilterToggleStorage.Data storage data = OperatorFilterToggleStorage.operatorFilterToggleStorage();
-
         // Check registry code length to facilitate testing in environments without a deployed registry.
-        if (data.operatorRestriction) {
+        if (operatorRestriction) {
             if (address(OPERATOR_FILTER_REGISTRY).code.length > 0) {
                 // Allow spending tokens from addresses with balance
                 // Note that this still allows listings and marketplaces with escrow to transfer tokens if transferred
@@ -40,19 +42,21 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
                     _;
                     return;
                 }
-                OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), msg.sender);
+                if (!OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), msg.sender)) {
+                    revert OperatorNotAllowed(msg.sender);
+                }
             }
         }
         _;
     }
 
     modifier onlyAllowedOperatorApproval(address operator) virtual {
-        OperatorFilterToggleStorage.Data storage data = OperatorFilterToggleStorage.operatorFilterToggleStorage();
-
         // Check registry code length to facilitate testing in environments without a deployed registry.
-        if (data.operatorRestriction) {
+        if (operatorRestriction) {
             if (address(OPERATOR_FILTER_REGISTRY).code.length > 0) {
-                OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), msg.sender);
+                if (!OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), operator)) {
+                    revert OperatorNotAllowed(operator);
+                }
             }
         }
         _;

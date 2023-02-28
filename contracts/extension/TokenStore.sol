@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 //  ==========  External imports    ==========
 
 import "../eip/interface/IERC1155.sol";

@@ -1,23 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import "./interface/IDelayedReveal.sol";
-
-library DelayedRevealStorage {
-    bytes32 public constant DELAYED_REVEAL_STORAGE_POSITION = keccak256("delayed.reveal.storage");
-
-    struct Data {
-        /// @dev Mapping from tokenId of a batch of tokens => to delayed reveal data.
-        mapping(uint256 => bytes) encryptedData;
-    }
-
-    function delayedRevealStorage() internal pure returns (Data storage delayedRevealData) {
-        bytes32 position = DELAYED_REVEAL_STORAGE_POSITION;
-        assembly {
-            delayedRevealData.slot := position
-        }
-    }
-}
 
 /**
  *  @title   Delayed Reveal
@@ -27,15 +13,11 @@ library DelayedRevealStorage {
 
 abstract contract DelayedReveal is IDelayedReveal {
     /// @dev Mapping from tokenId of a batch of tokens => to delayed reveal data.
-    function encryptedData(uint256 _tokenId) public view returns (bytes memory) {
-        DelayedRevealStorage.Data storage data = DelayedRevealStorage.delayedRevealStorage();
-        return data.encryptedData[_tokenId];
-    }
+    mapping(uint256 => bytes) public encryptedData;
 
     /// @dev Sets the delayed reveal data for a batchId.
     function _setEncryptedData(uint256 _batchId, bytes memory _encryptedData) internal {
-        DelayedRevealStorage.Data storage data = DelayedRevealStorage.delayedRevealStorage();
-        data.encryptedData[_batchId] = _encryptedData;
+        encryptedData[_batchId] = _encryptedData;
     }
 
     /**
@@ -50,14 +32,12 @@ abstract contract DelayedReveal is IDelayedReveal {
      *  @return revealedURI Decrypted base URI.
      */
     function getRevealURI(uint256 _batchId, bytes calldata _key) public view returns (string memory revealedURI) {
-        DelayedRevealStorage.Data storage data = DelayedRevealStorage.delayedRevealStorage();
-
-        bytes memory dataForBatch = data.encryptedData[_batchId];
-        if (dataForBatch.length == 0) {
+        bytes memory data = encryptedData[_batchId];
+        if (data.length == 0) {
             revert("Nothing to reveal");
         }
 
-        (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(dataForBatch, (bytes, bytes32));
+        (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(data, (bytes, bytes32));
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
 
@@ -115,7 +95,6 @@ abstract contract DelayedReveal is IDelayedReveal {
      *  @param _batchId ID of a batch of NFTs.
      */
     function isEncryptedBatch(uint256 _batchId) public view returns (bool) {
-        DelayedRevealStorage.Data storage data = DelayedRevealStorage.delayedRevealStorage();
-        return data.encryptedData[_batchId].length > 0;
+        return encryptedData[_batchId].length > 0;
     }
 }

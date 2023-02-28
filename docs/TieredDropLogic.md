@@ -1244,22 +1244,6 @@ The quantity of tokens minted must be more than zero.
 
 
 
-### OperatorNotAllowed
-
-```solidity
-error OperatorNotAllowed(address operator)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| operator | address | undefined |
-
 ### OwnerQueryForNonexistentToken
 
 ```solidity
