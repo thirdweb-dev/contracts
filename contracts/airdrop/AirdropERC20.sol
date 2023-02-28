@@ -343,16 +343,14 @@ contract AirdropERC20 is
             // slither-disable-next-line low-level-calls
             (success, ) = _to.call{ value: _amount }("");
         } else {
-            try IERC20(_currency).transferFrom(_from, _to, _amount) returns (bool success_) {
-                success = success_;
-            } catch {
+            (success, ) = _currency.call(abi.encodeWithSelector(IERC20.transferFrom.selector, _from, _to, _amount));
+
+            if (!success) {
                 require(
                     IERC20(_currency).balanceOf(_from) >= _amount &&
                         IERC20(_currency).allowance(_from, address(this)) >= _amount,
                     "Not balance or allowance"
                 );
-
-                success = false;
             }
         }
     }

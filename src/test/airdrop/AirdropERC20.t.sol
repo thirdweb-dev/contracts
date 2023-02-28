@@ -7,6 +7,8 @@ import { AirdropERC20, IAirdropERC20 } from "contracts/airdrop/AirdropERC20.sol"
 import { Wallet } from "../utils/Wallet.sol";
 import "../utils/BaseTest.sol";
 
+import "../mocks/MockERC20NonCompliant.sol";
+
 contract AirdropERC20Test is BaseTest {
     AirdropERC20 internal drop;
 
@@ -387,5 +389,76 @@ contract AirdropERC20Test is BaseTest {
         vm.expectRevert("Not balance or allowance");
         drop.airdrop(_contentsOne);
         vm.stopPrank();
+    }
+}
+
+contract AirdropERC20AuditTest is BaseTest {
+    AirdropERC20 internal drop;
+
+    Wallet internal tokenOwner;
+
+    IAirdropERC20.AirdropContent[] internal _contentsOne;
+    IAirdropERC20.AirdropContent[] internal _contentsTwo;
+
+    uint256 countOne;
+    uint256 countTwo;
+
+    MockERC20NonCompliant public erc20_nonCompliant;
+
+    function setUp() public override {
+        super.setUp();
+
+        erc20_nonCompliant = new MockERC20NonCompliant();
+        drop = AirdropERC20(getContract("AirdropERC20"));
+
+        tokenOwner = getWallet();
+
+        erc20_nonCompliant.mint(address(tokenOwner), 10_000 ether);
+        tokenOwner.setAllowanceERC20(address(erc20_nonCompliant), address(drop), type(uint256).max);
+
+        countOne = 1000;
+        countTwo = 200;
+
+        for (uint256 i = 0; i < countOne; i++) {
+            _contentsOne.push(
+                IAirdropERC20.AirdropContent({
+                    tokenAddress: address(erc20_nonCompliant),
+                    tokenOwner: address(tokenOwner),
+                    recipient: getActor(uint160(i)),
+                    amount: 10 ether
+                })
+            );
+        }
+
+        for (uint256 i = countOne; i < countOne + countTwo; i++) {
+            _contentsTwo.push(
+                IAirdropERC20.AirdropContent({
+                    tokenAddress: address(erc20_nonCompliant),
+                    tokenOwner: address(tokenOwner),
+                    recipient: getActor(uint160(i)),
+                    amount: 10 ether
+                })
+            );
+        }
+    }
+
+    function test_process_payments_with_non_compliant_token() public {
+        vm.prank(deployer);
+        drop.addRecipients(_contentsOne);
+
+        vm.prank(deployer);
+        drop.processPayments(countOne);
+
+        // check state after airdrop
+        assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
+        assertEq(drop.getAllAirdropPaymentsProcessed(0, countOne - 1).length, countOne);
+        assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, 0);
+        assertEq(drop.payeeCount(), countOne);
+        assertEq(drop.processedCount(), countOne);
+
+        for (uint256 i = 0; i < countOne; i++) {
+            assertEq(erc20_nonCompliant.balanceOf(_contentsOne[i].recipient), _contentsOne[i].amount);
+        }
+        assertEq(erc20_nonCompliant.balanceOf(address(tokenOwner)), 0);
     }
 }
