@@ -122,7 +122,7 @@ contract ERC1155LazyMint is
         address _receiver,
         uint256 _tokenId,
         uint256 _quantity
-    ) public payable nonReentrant {
+    ) public payable virtual nonReentrant {
         require(_tokenId < nextTokenIdToMint(), "invalid id");
         verifyClaim(msg.sender, _tokenId, _quantity); // Add your claim verification logic by overriding this function.
 
@@ -219,6 +219,7 @@ contract ERC1155LazyMint is
     /// @dev See {ERC1155-setApprovalForAll}
     function setApprovalForAll(address operator, bool approved)
         public
+        virtual
         override(ERC1155)
         onlyAllowedOperatorApproval(operator)
     {
@@ -234,7 +235,7 @@ contract ERC1155LazyMint is
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) public override(ERC1155) onlyAllowedOperator(from) {
+    ) public virtual override(ERC1155) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, id, amount, data);
     }
 
@@ -247,7 +248,7 @@ contract ERC1155LazyMint is
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) public override(ERC1155) onlyAllowedOperator(from) {
+    ) public virtual override(ERC1155) onlyAllowedOperator(from) {
         super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 

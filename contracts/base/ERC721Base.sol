@@ -172,6 +172,7 @@ contract ERC721Base is
     /// @dev See {ERC721-setApprovalForAll}.
     function setApprovalForAll(address operator, bool approved)
         public
+        virtual
         override(ERC721A)
         onlyAllowedOperatorApproval(operator)
     {
@@ -179,7 +180,12 @@ contract ERC721Base is
     }
 
     /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId) public override(ERC721A) onlyAllowedOperatorApproval(operator) {
+    function approve(address operator, uint256 tokenId)
+        public
+        virtual
+        override(ERC721A)
+        onlyAllowedOperatorApproval(operator)
+    {
         super.approve(operator, tokenId);
     }
 
@@ -188,7 +194,7 @@ contract ERC721Base is
         address from,
         address to,
         uint256 tokenId
-    ) public override(ERC721A) onlyAllowedOperator(from) {
+    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
         super.transferFrom(from, to, tokenId);
     }
 
@@ -197,7 +203,7 @@ contract ERC721Base is
         address from,
         address to,
         uint256 tokenId
-    ) public override(ERC721A) onlyAllowedOperator(from) {
+    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, tokenId);
     }
 
@@ -207,7 +213,7 @@ contract ERC721Base is
         address to,
         uint256 tokenId,
         bytes memory data
-    ) public override(ERC721A) onlyAllowedOperator(from) {
+    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, tokenId, data);
     }
 

@@ -246,6 +246,7 @@ contract ERC1155Base is
     /// @dev See {ERC1155-setApprovalForAll}
     function setApprovalForAll(address operator, bool approved)
         public
+        virtual
         override(ERC1155)
         onlyAllowedOperatorApproval(operator)
     {
@@ -261,7 +262,7 @@ contract ERC1155Base is
         uint256 id,
         uint256 amount,
         bytes memory data
-    ) public override(ERC1155) onlyAllowedOperator(from) {
+    ) public virtual override(ERC1155) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, id, amount, data);
     }
 
@@ -274,7 +275,7 @@ contract ERC1155Base is
         uint256[] memory ids,
         uint256[] memory amounts,
         bytes memory data
-    ) public override(ERC1155) onlyAllowedOperator(from) {
+    ) public virtual override(ERC1155) onlyAllowedOperator(from) {
         super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 

@@ -74,12 +74,12 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155, E
     }
 
     /// @dev Admin deposits reward tokens.
-    function depositRewardTokens(uint256 _amount) external payable nonReentrant {
+    function depositRewardTokens(uint256 _amount) external payable virtual nonReentrant {
         _depositRewardTokens(_amount); // override this for custom logic.
     }
 
     /// @dev Admin can withdraw excess reward tokens.
-    function withdrawRewardTokens(uint256 _amount) external nonReentrant {
+    function withdrawRewardTokens(uint256 _amount) external virtual nonReentrant {
         _withdrawRewardTokens(_amount); // override this for custom logic.
     }
 
@@ -98,7 +98,7 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155, E
         uint256,
         uint256,
         bytes calldata
-    ) external returns (bytes4) {
+    ) external view returns (bytes4) {
         require(isStaking == 2, "Direct transfer");
         return this.onERC1155Received.selector;
     }
@@ -109,7 +109,7 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155, E
         uint256[] calldata ids,
         uint256[] calldata values,
         bytes calldata data
-    ) external returns (bytes4) {}
+    ) external virtual returns (bytes4) {}
 
     function supportsInterface(bytes4 interfaceId) public view override(ERC165, IERC165) returns (bool) {
         return interfaceId == type(IERC1155Receiver).interfaceId || super.supportsInterface(interfaceId);
