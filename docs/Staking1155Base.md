@@ -297,7 +297,7 @@ function onERC1155BatchReceived(address operator, address from, uint256[] ids, u
 ### onERC1155Received
 
 ```solidity
-function onERC1155Received(address, address, uint256, uint256, bytes) external nonpayable returns (bytes4)
+function onERC1155Received(address, address, uint256, uint256, bytes) external view returns (bytes4)
 ```
 
 

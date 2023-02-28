@@ -74,12 +74,12 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC
     }
 
     /// @dev Admin deposits reward tokens.
-    function depositRewardTokens(uint256 _amount) external payable nonReentrant {
+    function depositRewardTokens(uint256 _amount) external payable virtual nonReentrant {
         _depositRewardTokens(_amount); // override this for custom logic.
     }
 
     /// @dev Admin can withdraw excess reward tokens.
-    function withdrawRewardTokens(uint256 _amount) external nonReentrant {
+    function withdrawRewardTokens(uint256 _amount) external virtual nonReentrant {
         _withdrawRewardTokens(_amount); // override this for custom logic.
     }
 
