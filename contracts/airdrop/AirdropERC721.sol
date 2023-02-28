@@ -100,6 +100,8 @@ contract AirdropERC721 is
         });
 
         cancelledPaymentIndices.push(range);
+
+        emit PaymentsCancelledByAdmin(countOfProcessed, newProcessedCount - 1);
     }
 
     /// @notice Lets contract-owner send ERC721 NFTs to a list of addresses.

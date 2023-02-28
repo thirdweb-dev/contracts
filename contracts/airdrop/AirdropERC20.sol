@@ -123,6 +123,8 @@ contract AirdropERC20 is
             // refund amount to contract admin address
             CurrencyTransferLib.safeTransferNativeToken(msg.sender, nativeTokenAmount);
         }
+
+        emit PaymentsCancelledByAdmin(countOfProcessed, newProcessedCount - 1);
     }
 
     /// @notice Lets contract-owner send ERC20 or native tokens to a list of addresses.
