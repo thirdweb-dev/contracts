@@ -48,7 +48,7 @@ contract ERC1155DelayedReveal is ERC1155LazyMint, DelayedReveal {
      *
      *  @param _tokenId The tokenId of an NFT.
      */
-    function uri(uint256 _tokenId) public view override returns (string memory) {
+    function uri(uint256 _tokenId) public view virtual override returns (string memory) {
         (uint256 batchId, ) = _getBatchId(_tokenId);
         string memory batchUri = _getBaseURI(_tokenId);
 
