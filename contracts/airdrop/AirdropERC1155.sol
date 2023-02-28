@@ -78,8 +78,8 @@ contract AirdropERC1155 is
         uint256 currentCount = payeeCount;
         payeeCount += len;
 
-        for (uint256 i = currentCount; i < len; i += 1) {
-            airdropContent[i] = _contents[i];
+        for (uint256 i = 0; i < len; i += 1) {
+            airdropContent[i + currentCount] = _contents[i];
         }
 
         emit RecipientsAdded(_contents);
