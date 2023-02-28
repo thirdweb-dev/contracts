@@ -65,7 +65,7 @@ contract TokenERC1155 is
     using StringsUpgradeable for uint256;
 
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC1155");
-    uint256 private constant VERSION = 2;
+    uint256 private constant VERSION = 1;
 
     /// @dev Fee type variants: percentage fee and flat fee
     enum PlatformFeeType {
