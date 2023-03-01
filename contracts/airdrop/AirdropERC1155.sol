@@ -118,7 +118,7 @@ contract AirdropERC1155 is
 
             bool failed;
             try
-                IERC1155(content.tokenAddress).safeTransferFrom(
+                IERC1155(content.tokenAddress).safeTransferFrom{ gas: 80_000 }(
                     content.tokenOwner,
                     content.recipient,
                     content.tokenId,

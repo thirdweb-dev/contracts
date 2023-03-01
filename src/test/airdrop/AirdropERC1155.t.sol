@@ -277,3 +277,59 @@ contract AirdropERC1155Test is BaseTest {
         vm.stopPrank();
     }
 }
+
+contract AirdropERC1155GasTest is BaseTest {
+    AirdropERC1155 internal drop;
+
+    Wallet internal tokenOwner;
+
+    function setUp() public override {
+        super.setUp();
+
+        drop = AirdropERC1155(getContract("AirdropERC1155"));
+
+        tokenOwner = getWallet();
+
+        erc1155.mint(address(tokenOwner), 0, 1000);
+
+        tokenOwner.setApprovalForAllERC1155(address(erc1155), address(drop), true);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: gas benchmarks, etc.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_safeTransferFrom_toEOA() public {
+        vm.prank(address(tokenOwner));
+        erc1155.safeTransferFrom(address(tokenOwner), address(0x123), 0, 10, "");
+    }
+
+    function test_safeTransferFrom_toContract() public {
+        vm.prank(address(tokenOwner));
+        erc1155.safeTransferFrom(address(tokenOwner), address(this), 0, 10, "");
+    }
+
+    function test_safeTransferFrom_toEOA_gasOverride() public {
+        vm.prank(address(tokenOwner));
+        console.log(gasleft());
+        erc1155.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(this), 0, 10, "");
+        console.log(gasleft());
+    }
+
+    function test_safeTransferFrom_toContract_gasOverride() public {
+        vm.prank(address(tokenOwner));
+        console.log(gasleft());
+        erc1155.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(this), 0, 10, "");
+        console.log(gasleft());
+    }
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+}

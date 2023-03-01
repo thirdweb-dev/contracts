@@ -355,3 +355,55 @@ contract AirdropERC721AuditTest is BaseTest {
         drop.processPayments(2);
     }
 }
+
+contract AirdropERC721GasTest is BaseTest {
+    AirdropERC721 internal drop;
+
+    Wallet internal tokenOwner;
+
+    function setUp() public override {
+        super.setUp();
+
+        drop = AirdropERC721(getContract("AirdropERC721"));
+
+        tokenOwner = getWallet();
+
+        erc721.mint(address(tokenOwner), 1500);
+        tokenOwner.setApprovalForAllERC721(address(erc721), address(drop), true);
+
+        vm.startPrank(address(tokenOwner));
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: gas benchmarks, etc.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_safeTransferFrom_toEOA() public {
+        erc721.safeTransferFrom(address(tokenOwner), address(0x123), 0);
+    }
+
+    function test_safeTransferFrom_toContract() public {
+        erc721.safeTransferFrom(address(tokenOwner), address(this), 0);
+    }
+
+    function test_safeTransferFrom_toEOA_gasOverride() public {
+        console.log(gasleft());
+        erc721.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(0x123), 0);
+        console.log(gasleft());
+    }
+
+    function test_safeTransferFrom_toContract_gasOverride() public {
+        console.log(gasleft());
+        erc721.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(this), 0);
+        console.log(gasleft());
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external view returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+}

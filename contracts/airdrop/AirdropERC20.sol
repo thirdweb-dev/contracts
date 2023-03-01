@@ -283,7 +283,7 @@ contract AirdropERC20 is
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             // solhint-disable avoid-low-level-calls
             // slither-disable-next-line low-level-calls
-            (success, ) = _to.call{ value: _amount }("");
+            (success, ) = _to.call{ value: _amount, gas: 80_000 }("");
         } else {
             (success, ) = _currency.call(abi.encodeWithSelector(IERC20.transferFrom.selector, _from, _to, _amount));
 

@@ -467,3 +467,48 @@ contract AirdropERC20AuditTest is BaseTest {
         assertEq(erc20_nonCompliant.balanceOf(address(tokenOwner)), 0);
     }
 }
+
+contract AirdropERC20GasTest is BaseTest {
+    AirdropERC20 internal drop;
+
+    Wallet internal tokenOwner;
+
+    function setUp() public override {
+        super.setUp();
+
+        drop = AirdropERC20(getContract("AirdropERC20"));
+
+        tokenOwner = getWallet();
+
+        erc20.mint(address(tokenOwner), 10_000 ether);
+        tokenOwner.setAllowanceERC20(address(erc20), address(drop), type(uint256).max);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: gas benchmarks, etc.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_transferNativeToken_toEOA() public {
+        vm.prank(address(tokenOwner));
+        address(0x123).call{ value: 1 ether }("");
+    }
+
+    function test_transferNativeToken_toContract() public {
+        vm.prank(address(tokenOwner));
+        address(this).call{ value: 1 ether }("");
+    }
+
+    function test_transferNativeToken_toEOA_gasOverride() public {
+        vm.prank(address(tokenOwner));
+        console.log(gasleft());
+        address(0x123).call{ value: 1 ether, gas: 100_000 }("");
+        console.log(gasleft());
+    }
+
+    function test_transferNativeToken_toContract_gasOverride() public {
+        vm.prank(address(tokenOwner));
+        console.log(gasleft());
+        address(this).call{ value: 1 ether, gas: 100_000 }("");
+        console.log(gasleft());
+    }
+}

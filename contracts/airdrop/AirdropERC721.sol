@@ -118,7 +118,11 @@ contract AirdropERC721 is
 
             bool failed;
             try
-                IERC721(content.tokenAddress).safeTransferFrom(content.tokenOwner, content.recipient, content.tokenId)
+                IERC721(content.tokenAddress).safeTransferFrom{ gas: 80_000 }(
+                    content.tokenOwner,
+                    content.recipient,
+                    content.tokenId
+                )
             {} catch {
                 // revert if failure is due to unapproved tokens
                 require(
