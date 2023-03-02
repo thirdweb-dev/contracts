@@ -29,21 +29,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           submodules: recursive
-<<<<<<< HEAD
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2.4.1
-        with:
-          node-version: 16
-      # Runs a single command using the runners shell
-      - name: Run npm install
-        run: yarn
-=======
           fetch-depth: 25
 
       - name: Setup Project
         uses: ./.github/composite-actions/setup
 
->>>>>>> main
       - name: Install Foundry
         uses: onbjerg/foundry-toolchain@v1
         with:

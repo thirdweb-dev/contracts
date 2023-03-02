@@ -24,18 +24,8 @@ jobs:
           submodules: recursive
           fetch-depth: 25
 
-<<<<<<< HEAD
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2.4.1
-        with:
-          node-version: 16
-
-      - name: Run npm install
-        run: yarn
-=======
       - name: Setup Project
         uses: ./.github/composite-actions/setup
->>>>>>> main
 
       - name: Install Foundry
         uses: onbjerg/foundry-toolchain@v1
