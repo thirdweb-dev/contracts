@@ -7,8 +7,8 @@ import { BaseTest, IERC721Receiver } from "../utils/BaseTest.sol";
 // Test contracts and interfaces
 import "lib/dynamic-contracts/src/interface/IExtension.sol";
 import { ExtensionRegistry } from "contracts/dynamic-contracts/ExtensionRegistry.sol";
-import { TWRouter } from "contracts/dynamic-contracts/TWRouter.sol";
-import { MarketplaceRouter } from "contracts/marketplace/entrypoint/MarketplaceRouter.sol";
+import { TWRouter, ITWRouter, IRouter } from "contracts/dynamic-contracts/TWRouter.sol";
+import { MarketplaceRouter, IERC1155Receiver } from "contracts/marketplace/entrypoint/MarketplaceRouter.sol";
 import { DirectListingsLogic } from "contracts/marketplace/direct-listings/DirectListingsLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
@@ -264,6 +264,13 @@ contract MarketplaceDirectListingsTest is BaseTest {
     /*///////////////////////////////////////////////////////////////
                             Miscellaneous
     //////////////////////////////////////////////////////////////*/
+
+    function test_supportsInterface() public {
+        assertEq(MarketplaceRouter(payable(marketplace)).supportsInterface(type(ITWRouter).interfaceId), true);
+        assertEq(MarketplaceRouter(payable(marketplace)).supportsInterface(type(IRouter).interfaceId), true);
+        assertEq(MarketplaceRouter(payable(marketplace)).supportsInterface(type(IERC721Receiver).interfaceId), true);
+        assertEq(MarketplaceRouter(payable(marketplace)).supportsInterface(type(IERC1155Receiver).interfaceId), true);
+    }
 
     function test_state_approvedCurrencies() public {
         (uint256 listingId, IDirectListings.ListingParameters memory listingParams) = _setup_updateListing();

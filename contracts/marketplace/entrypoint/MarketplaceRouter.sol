@@ -13,8 +13,8 @@ pragma solidity ^0.8.0;
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 // ====== External imports ======
-import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
+import { IERC1155Receiver, IERC165 as IERC165_Preset } from "../../eip/interface/IERC1155Receiver.sol";
+import { IERC721Receiver } from "../../eip/interface/IERC721Receiver.sol";
 
 //  ==========  Internal imports    ==========
 import "../../extension/Initializable.sol";
@@ -22,11 +22,10 @@ import "../../extension/interface/IPermissions.sol";
 import "../../dynamic-contracts/utils/init/ContractMetadataInit.sol";
 import "../../dynamic-contracts/utils/init/PlatformFeeInit.sol";
 import "../../dynamic-contracts/utils/init/PermissionsEnumerableInit.sol";
-import "../../dynamic-contracts/TWRouter.sol";
+import { TWRouter } from "../../dynamic-contracts/TWRouter.sol";
 
 import { ReentrancyGuardInit } from "../../dynamic-contracts/utils/init/ReentrancyGuardInit.sol";
 import { ERC2771ContextInit } from "../../dynamic-contracts/utils/init/ERC2771ContextInit.sol";
-import { ERC165 } from "../../eip/ERC165.sol";
 
 /**
  * @author  thirdweb.com
@@ -38,10 +37,9 @@ contract MarketplaceRouter is
     PermissionsEnumerableInit,
     ReentrancyGuardInit,
     ERC2771ContextInit,
-    TWRouter,
-    ERC165,
     IERC721Receiver,
-    IERC1155Receiver
+    IERC1155Receiver,
+    TWRouter
 {
     /*///////////////////////////////////////////////////////////////
                             State variables
@@ -130,7 +128,13 @@ contract MarketplaceRouter is
         return this.onERC721Received.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165, ERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(TWRouter, IERC165_Preset)
+        returns (bool)
+    {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||

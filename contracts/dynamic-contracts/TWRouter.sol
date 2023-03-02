@@ -46,6 +46,15 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
     }
 
     /*///////////////////////////////////////////////////////////////
+                            ERC 165 logic
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev See {IERC165-supportsInterface}.
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(ITWRouter).interfaceId || super.supportsInterface(interfaceId);
+    }
+
+    /*///////////////////////////////////////////////////////////////
                         External functions
     //////////////////////////////////////////////////////////////*/
 
