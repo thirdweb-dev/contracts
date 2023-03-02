@@ -168,7 +168,7 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 
 
 
-*Returns the platform fee bps and recipient.*
+*Returns default royalty info.*
 
 
 #### Returns
@@ -177,6 +177,24 @@ function getDefaultRoyaltyInfo() external view returns (address, uint16)
 |---|---|---|
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
+
+### getFlatPlatformFeeInfo
+
+```solidity
+function getFlatPlatformFeeInfo() external view returns (address, uint256)
+```
+
+
+
+*Returns the flat platform fee and recipient.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+| _1 | uint256 | undefined |
 
 ### getPlatformFeeInfo
 
@@ -195,6 +213,23 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 |---|---|---|
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
+
+### getPlatformFeeType
+
+```solidity
+function getPlatformFeeType() external view returns (enum TokenERC1155.PlatformFeeType)
+```
+
+
+
+*Returns the platform fee type.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | enum TokenERC1155.PlatformFeeType | undefined |
 
 ### getRoleAdmin
 
@@ -726,6 +761,23 @@ function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) e
 | _royaltyRecipient | address | undefined |
 | _royaltyBps | uint256 | undefined |
 
+### setFlatPlatformFeeInfo
+
+```solidity
+function setFlatPlatformFeeInfo(address _platformFeeRecipient, uint256 _flatFee) external nonpayable
+```
+
+
+
+*Lets a module admin set a flat fee on primary sales.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _platformFeeRecipient | address | undefined |
+| _flatFee | uint256 | undefined |
+
 ### setOperatorRestriction
 
 ```solidity
@@ -774,6 +826,22 @@ function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeB
 |---|---|---|
 | _platformFeeRecipient | address | undefined |
 | _platformFeeBps | uint256 | undefined |
+
+### setPlatformFeeType
+
+```solidity
+function setPlatformFeeType(enum TokenERC1155.PlatformFeeType _feeType) external nonpayable
+```
+
+
+
+*Lets a module admin set a flat fee on primary sales.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _feeType | enum TokenERC1155.PlatformFeeType | undefined |
 
 ### setPrimarySaleRecipient
 
@@ -955,6 +1023,23 @@ event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 | newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
+### FlatPlatformFeeUpdated
+
+```solidity
+event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee)
+```
+
+
+
+*Emitted when flat fee on primary sales is updated.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeRecipient  | address | undefined |
+| flatFee  | uint256 | undefined |
+
 ### Initialized
 
 ```solidity
@@ -1020,6 +1105,22 @@ event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platf
 |---|---|---|
 | platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
+
+### PlatformFeeTypeUpdated
+
+```solidity
+event PlatformFeeTypeUpdated(enum TokenERC1155.PlatformFeeType feeType)
+```
+
+
+
+*Emitted when platform fee type is updated.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| feeType  | enum TokenERC1155.PlatformFeeType | undefined |
 
 ### PrimarySaleRecipientUpdated
 
