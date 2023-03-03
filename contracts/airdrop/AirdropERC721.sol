@@ -78,8 +78,12 @@ contract AirdropERC721 is
         uint256 currentCount = payeeCount;
         payeeCount += len;
 
-        for (uint256 i = 0; i < len; i += 1) {
+        for (uint256 i = 0; i < len; ) {
             airdropContent[i + currentCount] = _contents[i];
+
+            unchecked {
+                i += 1;
+            }
         }
 
         emit RecipientsAdded(_contents);
@@ -113,7 +117,7 @@ contract AirdropERC721 is
 
         processedCount += paymentsToProcess;
 
-        for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); i += 1) {
+        for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); ) {
             AirdropContent memory content = airdropContent[i];
 
             bool failed;
@@ -138,6 +142,10 @@ contract AirdropERC721 is
             }
 
             emit AirdropPayment(content.recipient, content, failed);
+
+            unchecked {
+                i += 1;
+            }
         }
     }
 
@@ -151,7 +159,7 @@ contract AirdropERC721 is
     function airdrop(AirdropContent[] calldata _contents) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
 
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ) {
             bool failed;
             try
                 IERC721(_contents[i].tokenAddress).safeTransferFrom(
@@ -172,6 +180,10 @@ contract AirdropERC721 is
             }
 
             emit StatelessAirdrop(_contents[i].recipient, _contents[i], failed);
+
+            unchecked {
+                i += 1;
+            }
         }
     }
 

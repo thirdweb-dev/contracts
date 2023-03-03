@@ -81,11 +81,15 @@ contract AirdropERC20 is
 
         uint256 nativeTokenAmount;
 
-        for (uint256 i = 0; i < len; i += 1) {
+        for (uint256 i = 0; i < len; ) {
             airdropContent[i + currentCount] = _contents[i];
 
             if (_contents[i].tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += _contents[i].amount;
+            }
+
+            unchecked {
+                i += 1;
             }
         }
 
@@ -111,11 +115,15 @@ contract AirdropERC20 is
 
         cancelledPaymentIndices.push(range);
 
-        for (uint256 i = countOfProcessed; i < newProcessedCount; i += 1) {
+        for (uint256 i = countOfProcessed; i < newProcessedCount; ) {
             AirdropContent memory content = airdropContent[i];
 
             if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += content.amount;
+            }
+
+            unchecked {
+                i += 1;
             }
         }
 
@@ -137,7 +145,7 @@ contract AirdropERC20 is
 
         processedCount += paymentsToProcess;
 
-        for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); i += 1) {
+        for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); ) {
             AirdropContent memory content = airdropContent[i];
 
             bool success = _transferCurrencyWithReturnVal(
@@ -158,6 +166,10 @@ contract AirdropERC20 is
             }
 
             emit AirdropPayment(content.recipient, content, !success);
+
+            unchecked {
+                i += 1;
+            }
         }
 
         if (nativeTokenAmount > 0) {
@@ -178,7 +190,7 @@ contract AirdropERC20 is
         uint256 nativeTokenAmount;
         uint256 refundAmount;
 
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len; ) {
             bool success = _transferCurrencyWithReturnVal(
                 _contents[i].tokenAddress,
                 _contents[i].tokenOwner,
@@ -195,6 +207,10 @@ contract AirdropERC20 is
             }
 
             emit StatelessAirdrop(_contents[i].recipient, _contents[i], !success);
+
+            unchecked {
+                i += 1;
+            }
         }
 
         require(nativeTokenAmount == msg.value, "Incorrect native token amount");
