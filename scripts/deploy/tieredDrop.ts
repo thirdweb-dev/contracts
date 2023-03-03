@@ -35,13 +35,13 @@ const PRIVATE_KEY: string = process.env.TEST_PRIVATE_KEY as string;
 const PLUGIN_METADATA = {
     "TieredDropLogic": {
         name: "TieredDropLogic",
-        metadataURI: "",
-        implementation: "0x38fb0D6E09Cfcf2B8a6c8b6B28994E208726deA3"
+        metadataURI: "ipfs://QmX3cSXXgGQYu7CqMWLHFCyYNcRqBv164GPpiGoHuCvncg",
+        implementation: "0xb32f49b421683E1d6fCe5A62Ff828D21F36deDEc"
     },
     "PermissionsEnumerable": {
         name: "PermissionsEnumerable",
-        metadataURI: "",
-        implementation: "0xEe63992e7AaE8578E7239991960F7494F8dFF005"
+        metadataURI: "ipfs://Qmeev8xCtk5mYzpoqq7ZVSn1azC2rt6J8tZD2UvD2L1cMM",
+        implementation: "0x42942E87881d4353c1D427bb7ffa9b374ac7Fb4B"
     }
 }
 
