@@ -153,24 +153,10 @@ contract TWMultichainRegistryTest is IExtension, ITWMultichainRegistryData, Base
         extensionNames[2] = extension_multichainRegistryCore.metadata.name;
 
         address payable registryImpl = payable(
-            address(new TWMultichainRegistry(address(extensionRegistry), extensionNames))
+            address(new TWMultichainRegistry(address(extensionRegistry), extensionNames, operator, forwarders()))
         );
 
-        multichainRegistry = MultichainRegistryCore(
-            payable(
-                address(
-                    new TWProxy(
-                        registryImpl,
-                        abi.encodeWithSelector(TWMultichainRegistry.initialize.selector, operator, forwarders())
-                    )
-                )
-            )
-        );
-    }
-
-    function test_revert_reInitializingContract() external {
-        vm.expectRevert("Initializable: contract is already initialized");
-        TWMultichainRegistry(payable(address(multichainRegistry))).initialize(address(0x123), forwarders());
+        multichainRegistry = MultichainRegistryCore(registryImpl);
     }
 
     /// ========== Test `add` ==========
