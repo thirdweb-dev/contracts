@@ -3,9 +3,11 @@ pragma solidity ^0.8.0;
 
 import "../dynamic-contracts/TWRouter.sol";
 import "../extension/Initializable.sol";
-import "../dynamic-contracts/utils/PermissionsEnumerable.sol";
+import "../extension/interface/IPermissions.sol";
 import "../openzeppelin-presets/utils/EnumerableSet.sol";
 import "../interfaces/ITWMultichainRegistry.sol";
+import "../dynamic-contracts/utils/init/PermissionsEnumerableInit.sol";
+import { ERC2771ContextInit } from "../dynamic-contracts/utils/init/ERC2771ContextInit.sol";
 
 library TWMultichainRegistryStorage {
     bytes32 public constant MULTICHAIN_REGISTRY_STORAGE_POSITION = keccak256("multichain.registry.storage");
@@ -26,7 +28,7 @@ library TWMultichainRegistryStorage {
     }
 }
 
-contract TWMultichainRegistry is Initializable, TWRouter, PermissionsEnumerable {
+contract TWMultichainRegistry is Initializable, PermissionsEnumerableInit, ERC2771ContextInit, TWRouter {
     /*///////////////////////////////////////////////////////////////
                         Generic contract logic
     //////////////////////////////////////////////////////////////*/
@@ -49,10 +51,11 @@ contract TWMultichainRegistry is Initializable, TWRouter, PermissionsEnumerable 
         TWRouter(_extensionRegistry, _extensionNames)
     {}
 
-    function initialize(address _defaultAdmin) external initializer {
+    function initialize(address _defaultAdmin, address[] memory _trustedForwarders) external initializer {
         bytes32 operatorRole = keccak256("OPERATOR_ROLE");
         bytes32 defaultAdminRole = 0x00;
 
+        __ERC2771Context_init(_trustedForwarders);
         _setupRole(defaultAdminRole, _defaultAdmin);
         _setupRole(operatorRole, _defaultAdmin);
     }

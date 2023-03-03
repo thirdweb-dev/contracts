@@ -8,7 +8,7 @@ import { TWMultichainRegistry } from "contracts/registry/TWMultichainRegistry.so
 // Plugins
 import "contracts/dynamic-contracts/ExtensionRegistry.sol";
 import { MultichainRegistryCore } from "contracts/registry/plugin/MultichainRegistryCore.sol";
-import "contracts/extension/Permissions.sol";
+import { PermissionsEnumerableImpl } from "contracts/dynamic-contracts/utils/impl/PermissionsEnumerableImpl.sol";
 import "contracts/openzeppelin-presets/metatx/ERC2771Context.sol";
 
 // Test imports
@@ -89,7 +89,7 @@ contract TWMultichainRegistryTest is IExtension, ITWMultichainRegistryData, Base
         );
 
         // Extension: Permissions
-        address permissions = address(new Permissions());
+        address permissions = address(new PermissionsEnumerableImpl());
 
         Extension memory extension_permissions;
         extension_permissions.metadata = ExtensionMetadata({
@@ -161,7 +161,7 @@ contract TWMultichainRegistryTest is IExtension, ITWMultichainRegistryData, Base
                 address(
                     new TWProxy(
                         registryImpl,
-                        abi.encodeWithSelector(TWMultichainRegistry.initialize.selector, operator)
+                        abi.encodeWithSelector(TWMultichainRegistry.initialize.selector, operator, forwarders())
                     )
                 )
             )
@@ -170,7 +170,7 @@ contract TWMultichainRegistryTest is IExtension, ITWMultichainRegistryData, Base
 
     function test_revert_reInitializingContract() external {
         vm.expectRevert("Initializable: contract is already initialized");
-        TWMultichainRegistry(payable(address(multichainRegistry))).initialize(address(0x123));
+        TWMultichainRegistry(payable(address(multichainRegistry))).initialize(address(0x123), forwarders());
     }
 
     /// ========== Test `add` ==========
@@ -317,5 +317,15 @@ contract TWMultichainRegistryTest is IExtension, ITWMultichainRegistryData, Base
         vm.expectRevert("Multichain Registry: contract already removed.");
         vm.prank(operator);
         multichainRegistry.remove(contractDeployer, deployment, chainId);
+    }
+
+    /// ========== Test `isTrustedForwarder` ==========
+
+    function test_macro_forwarders() external {
+        (bool success, bytes memory data) = address(multichainRegistry).call(
+            abi.encodeWithSignature("isTrustedForwarder(address)", forwarder)
+        );
+        bool isTrusted = abi.decode(data, (bool));
+        assertEq(isTrusted, true);
     }
 }
