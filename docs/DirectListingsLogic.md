@@ -10,23 +10,6 @@
 
 ## Methods
 
-### MAX_BPS
-
-```solidity
-function MAX_BPS() external view returns (uint64)
-```
-
-
-
-*The max bps of the contract. So, 10_000 == 100 %*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint64 | undefined |
-
 ### approveBuyerForListing
 
 ```solidity
