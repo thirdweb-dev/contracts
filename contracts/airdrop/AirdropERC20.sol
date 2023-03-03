@@ -95,7 +95,7 @@ contract AirdropERC20 is
 
         require(nativeTokenAmount == msg.value, "Incorrect native token amount");
 
-        emit RecipientsAdded(_contents);
+        emit RecipientsAdded(currentCount, currentCount + len);
     }
 
     ///@notice Lets contract-owner cancel any pending payments.
@@ -165,7 +165,7 @@ contract AirdropERC20 is
                 success = false;
             }
 
-            emit AirdropPayment(content.recipient, content, !success);
+            emit AirdropPayment(content.recipient, i, !success);
 
             unchecked {
                 i += 1;

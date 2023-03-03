@@ -86,7 +86,7 @@ contract AirdropERC721 is
             }
         }
 
-        emit RecipientsAdded(_contents);
+        emit RecipientsAdded(currentCount, currentCount + len);
     }
 
     ///@notice Lets contract-owner cancel any pending payments.
@@ -141,7 +141,7 @@ contract AirdropERC721 is
                 failed = true;
             }
 
-            emit AirdropPayment(content.recipient, content, failed);
+            emit AirdropPayment(content.recipient, i, failed);
 
             unchecked {
                 i += 1;

@@ -11,11 +11,11 @@ pragma solidity ^0.8.11;
 
 interface IAirdropERC20 {
     /// @notice Emitted when airdrop recipients are uploaded to the contract.
-    event RecipientsAdded(AirdropContent[] _contents);
+    event RecipientsAdded(uint256 startIndex, uint256 endIndex);
     /// @notice Emitted when pending payments are cancelled, and processed count is reset.
     event PaymentsCancelledByAdmin(uint256 startIndex, uint256 endIndex);
     /// @notice Emitted when an airdrop payment is made to a recipient.
-    event AirdropPayment(address indexed recipient, AirdropContent content, bool failed);
+    event AirdropPayment(address indexed recipient, uint256 index, bool failed);
     /// @notice Emitted when an airdrop is made using the stateless airdrop function.
     event StatelessAirdrop(address indexed recipient, AirdropContent content, bool failed);
 
