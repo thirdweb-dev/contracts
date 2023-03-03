@@ -1,4 +1,4 @@
-# TWRouter
+# BaseRouter
 
 
 
@@ -13,18 +13,18 @@
 ### addExtension
 
 ```solidity
-function addExtension(string _extensionName) external nonpayable
+function addExtension(IExtension.Extension _extension) external nonpayable
 ```
 
 
 
-*Adds a new extension to the router.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _extensionName | string | undefined |
+| _extension | IExtension.Extension | undefined |
 
 ### defaultExtensionSet
 
@@ -33,23 +33,6 @@ function defaultExtensionSet() external view returns (address)
 ```
 
 The DefaultExtensionSet that stores default extensions of the router.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### extensionRegistry
-
-```solidity
-function extensionRegistry() external view returns (address)
-```
-
-The ExtensionRegistry that stores all latest, vetted extensions available to router.
 
 
 
@@ -129,7 +112,7 @@ function getExtensionForFunction(bytes4 _functionSelector) external view returns
 
 
 
-*Returns the Extension metadata for a given function.*
+*Returns the extension metadata for a given function.*
 
 #### Parameters
 
@@ -187,28 +170,6 @@ function getImplementationForFunction(bytes4 _functionSelector) external view re
 |---|---|---|
 | extensionAddress | address | undefined |
 
-### multicall
-
-```solidity
-function multicall(bytes[] data) external nonpayable returns (bytes[] results)
-```
-
-Receives and executes a batch of function calls on this contract.
-
-*Receives and executes a batch of function calls on this contract.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
-
 ### removeExtension
 
 ```solidity
@@ -250,18 +211,18 @@ function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ### updateExtension
 
 ```solidity
-function updateExtension(string _extensionName) external nonpayable
+function updateExtension(IExtension.Extension _extension) external nonpayable
 ```
 
 
 
-*Updates an existing extension in the router, or overrides a default extension.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _extensionName | string | undefined |
+| _extension | IExtension.Extension | undefined |
 
 
 

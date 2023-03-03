@@ -43,13 +43,30 @@ function addExtension(IExtension.Extension _extension) external nonpayable
 |---|---|---|
 | _extension | IExtension.Extension | undefined |
 
+### defaultExtensionSet
+
+```solidity
+function defaultExtensionSet() external view returns (address)
+```
+
+The DefaultExtensionSet that stores default extensions of the router.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### getAllExtensions
 
 ```solidity
 function getAllExtensions() external view returns (struct IExtension.Extension[] allExtensions)
 ```
 
-Returns all extensions stored.
+Returns all extensions stored. Override default lugins stored in router are          given precedence over default extensions in DefaultExtensionSet.
 
 
 
@@ -66,9 +83,9 @@ Returns all extensions stored.
 function getAllFunctionsOfExtension(string _extensionName) external view returns (struct IExtension.ExtensionFunction[])
 ```
 
-Returns all functions that belong to the given extension contract.
 
 
+*Returns all functions that belong to the given extension contract.*
 
 #### Parameters
 
@@ -88,9 +105,9 @@ Returns all functions that belong to the given extension contract.
 function getExtension(string _extensionName) external view returns (struct IExtension.Extension)
 ```
 
-Returns the extension metadata and functions for a given extension.
 
 
+*Returns the extension metadata and functions for a given extension.*
 
 #### Parameters
 
@@ -110,9 +127,9 @@ Returns the extension metadata and functions for a given extension.
 function getExtensionForFunction(bytes4 _functionSelector) external view returns (struct IExtension.ExtensionMetadata)
 ```
 
-Returns the extension metadata for a given function.
 
 
+*Returns the extension metadata for a given function.*
 
 #### Parameters
 
@@ -132,9 +149,9 @@ Returns the extension metadata for a given function.
 function getExtensionImplementation(string _extensionName) external view returns (address)
 ```
 
-Returns the extension&#39;s implementation smart contract address.
 
 
+*Returns the extension&#39;s implementation smart contract address.*
 
 #### Parameters
 
@@ -147,6 +164,28 @@ Returns the extension&#39;s implementation smart contract address.
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
+
+### getImplementationForFunction
+
+```solidity
+function getImplementationForFunction(bytes4 _functionSelector) external view returns (address extensionAddress)
+```
+
+
+
+*Returns the extension implementation address stored in router, for the given function.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _functionSelector | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| extensionAddress | address | undefined |
 
 ### getRoleAdmin
 
@@ -284,9 +323,9 @@ Checks whether an account has a particular role;                  role restricti
 function removeExtension(string _extensionName) external nonpayable
 ```
 
-Remove an existing extension from the registry.
 
 
+*Removes an existing extension from the router.*
 
 #### Parameters
 
@@ -327,6 +366,28 @@ Revokes role from an account.
 |---|---|---|
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
+
+### supportsInterface
+
+```solidity
+function supportsInterface(bytes4 interfaceId) external view returns (bool)
+```
+
+
+
+*See {IERC165-supportsInterface}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| interfaceId | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### updateExtension
 
