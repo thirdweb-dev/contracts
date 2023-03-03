@@ -45,8 +45,10 @@ contract MarketplaceOffersTest is BaseTest {
         buyer = getActor(3);
         registryDeployer = getActor(4);
 
+        IExtension.Extension[] memory emptyExtension = new IExtension.Extension[](0);
+
         vm.prank(registryDeployer);
-        extensionRegistry = new ExtensionRegistry(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer, emptyExtension);
 
         setupMarketplace(adminDeployer, marketplaceDeployer);
     }

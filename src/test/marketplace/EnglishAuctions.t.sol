@@ -45,8 +45,10 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         buyer = getActor(3);
         registryDeployer = getActor(4);
 
+        IExtension.Extension[] memory emptyExtension = new IExtension.Extension[](0);
+
         vm.prank(registryDeployer);
-        extensionRegistry = new ExtensionRegistry(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer, emptyExtension);
 
         setupMarketplace(adminDeployer, marketplaceDeployer);
     }
@@ -1745,8 +1747,10 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
         buyer = getActor(3);
         registryDeployer = getActor(4);
 
+        IExtension.Extension[] memory emptyExtension = new IExtension.Extension[](0);
+
         vm.prank(registryDeployer);
-        extensionRegistry = new ExtensionRegistry(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer, emptyExtension);
 
         setupMarketplaceEnglish(adminDeployer, marketplaceDeployer);
     }
@@ -2048,8 +2052,10 @@ contract BreitwieserTheBidder is BaseTest {
         buyer = getActor(3);
         registryDeployer = getActor(4);
 
+        IExtension.Extension[] memory emptyExtension = new IExtension.Extension[](0);
+
         vm.prank(registryDeployer);
-        extensionRegistry = new ExtensionRegistry(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer, emptyExtension);
 
         setupMarketplaceEnglish(adminDeployer, marketplaceDeployer);
     }
@@ -2385,8 +2391,10 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
         buyer = getActor(3);
         registryDeployer = getActor(4);
 
+        IExtension.Extension[] memory emptyExtension = new IExtension.Extension[](0);
+
         vm.prank(registryDeployer);
-        extensionRegistry = new ExtensionRegistry(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer, emptyExtension);
 
         setupMarketplace(adminDeployer, marketplaceDeployer);
     }

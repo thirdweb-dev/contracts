@@ -47,9 +47,10 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
         super.setUp();
 
         registryDeployer = address(0x123);
+        IExtension.Extension[] memory emptyExtension = new Extension[](0);
 
         vm.prank(registryDeployer);
-        extensionRegistry = new ExtensionRegistry(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer, emptyExtension);
 
         // Add extension 1.
 
@@ -528,13 +529,13 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
         vm.prank(registryDeployer);
         extensionRegistry.removeExtension(name);
 
-        vm.expectRevert("ExtensionRegistry: extension does not exist.");
+        vm.expectRevert("DefaultExtensionSet: extension does not exist.");
         extensionRegistry.getExtension(name);
 
-        vm.expectRevert("ExtensionRegistry: no extension for function.");
+        vm.expectRevert("DefaultExtensionSet: no extension for function.");
         extensionRegistry.getExtensionForFunction(MockERC20.mint.selector);
 
-        vm.expectRevert("ExtensionRegistry: no extension for function.");
+        vm.expectRevert("DefaultExtensionSet: no extension for function.");
         extensionRegistry.getExtensionForFunction(MockERC20.toggleTax.selector);
 
         // Re-add extension with 1 less function (to check if the info for the other function got deleted.)
@@ -552,7 +553,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
         vm.prank(registryDeployer);
         extensionRegistry.addExtension(extension);
 
-        vm.expectRevert("ExtensionRegistry: no extension for function.");
+        vm.expectRevert("DefaultExtensionSet: no extension for function.");
         extensionRegistry.getExtensionForFunction(MockERC20.toggleTax.selector);
 
         ExtensionFunction[] memory functions = extensionRegistry.getAllFunctionsOfExtension(name);

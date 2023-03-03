@@ -110,9 +110,10 @@ contract TWRouterTest is BaseTest, IExtension {
 
         // Set up extension registry.
         registryDeployer = address(0x123);
+        IExtension.Extension[] memory emptyExtension = new IExtension.Extension[](0);
 
         vm.prank(registryDeployer);
-        extensionRegistry = new ExtensionRegistry(registryDeployer);
+        extensionRegistry = new ExtensionRegistry(registryDeployer, emptyExtension);
 
         // Set up extensions
         string[] memory extensionNames = _setupExtensions();
@@ -237,7 +238,7 @@ contract TWRouterTest is BaseTest, IExtension {
 
         TWRouter twRouter = TWRouter((payable(router)));
 
-        vm.expectRevert("ExtensionRegistry: extension does not exist.");
+        vm.expectRevert("DefaultExtensionSet: extension does not exist.");
         twRouter.addExtension("Random name");
     }
 
@@ -293,7 +294,7 @@ contract TWRouterTest is BaseTest, IExtension {
 
         TWRouter twRouter = TWRouter((payable(router)));
 
-        vm.expectRevert("ExtensionRegistry: extension does not exist.");
+        vm.expectRevert("DefaultExtensionSet: extension does not exist.");
         twRouter.updateExtension(extensions[3].metadata.name);
     }
 

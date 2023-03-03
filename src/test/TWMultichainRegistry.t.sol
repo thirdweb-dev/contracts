@@ -136,9 +136,10 @@ contract TWMultichainRegistryTest is IExtension, ITWMultichainRegistryData, Base
             "getMetadataUri(uint256,address)"
         );
 
+        IExtension.Extension[] memory emptyExtension = new IExtension.Extension[](0);
         // Deploy extension registry
         vm.startPrank(extensionAdmin);
-        ExtensionRegistry extensionRegistry = new ExtensionRegistry(extensionAdmin);
+        ExtensionRegistry extensionRegistry = new ExtensionRegistry(extensionAdmin, emptyExtension);
 
         extensionRegistry.addExtension(extension_erc2771Context);
         extensionRegistry.addExtension(extension_permissions);
