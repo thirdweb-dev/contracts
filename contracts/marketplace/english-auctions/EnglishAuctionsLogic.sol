@@ -37,7 +37,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
     bytes32 private constant ASSET_ROLE = keccak256("ASSET_ROLE");
 
     /// @dev The max bps of the contract. So, 10_000 == 100 %
-    uint64 public constant MAX_BPS = 10_000;
+    uint64 private constant MAX_BPS = 10_000;
 
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
