@@ -6,10 +6,10 @@ import "./interface/IExtensionRegistry.sol";
 
 // Extensions
 import "../extension/PermissionsEnumerable.sol";
-import "lib/dynamic-contracts/src/presets/utils/ExtensionState.sol";
+import "./ExtensionRegistryState.sol";
 import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
 
-contract ExtensionRegistry is IExtensionRegistry, ExtensionState, PermissionsEnumerable {
+contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, PermissionsEnumerable {
     using StringSet for StringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
@@ -39,13 +39,36 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionState, PermissionsEnu
         _removeExtension(_extensionName);
     }
 
+    /// @notice Adds an extension to an extension set.
+    function createExtensionSet(string memory _extensionSetId, string[] memory _extensionNames)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
+        require(bytes(_extensionSetId).length > 0, "ExtensionRegistry: extension set ID cannot be empty.");
+        require(!_extensionSetExists(_extensionSetId), "ExtensionRegistry: extension set already exists.");
+
+        uint256 len = _extensionNames.length;
+        for (uint256 i = 0; i < len; i += 1) {
+            _addExtensionToSet(_extensionSetId, _extensionNames[i]);
+        }
+
+        emit ExtensionSetCreated(_extensionSetId, _extensionNames);
+    }
+
+    /// @notice Registers a router contract with a default set of extensions.
+    function registerRouter(string memory _extensionSetId) external {
+        address router = msg.sender;
+        _registerRouter(_extensionSetId, router);
+        emit RouterRegistered(router, _extensionSetId);
+    }
+
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns all extensions stored.
     function getAllExtensions() external view returns (Extension[] memory allExtensions) {
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
 
         string[] memory names = data.extensionNames.values();
         uint256 len = names.length;
@@ -59,7 +82,7 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionState, PermissionsEnu
 
     /// @notice Returns the extension metadata and functions for a given extension.
     function getExtension(string memory _extensionName) public view returns (Extension memory) {
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
         require(data.extensionNames.contains(_extensionName), "ExtensionRegistry: extension does not exist.");
         return data.extensions[_extensionName];
     }
@@ -78,11 +101,20 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionState, PermissionsEnu
         return getExtension(_extensionName).functions;
     }
 
-    /// @notice Returns the extension metadata for a given function.
-    function getExtensionForFunction(bytes4 _functionSelector) external view returns (ExtensionMetadata memory) {
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
-        ExtensionMetadata memory metadata = data.extensionMetadata[_functionSelector];
-        require(metadata.implementation != address(0), "ExtensionRegistry: no extension for function.");
-        return metadata;
+    /// @notice Returns all extension set IDs stored.
+    function getAllExtensionSetIds() external view returns (string[] memory) {
+        ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
+        return data.extensionSetIds.values();
+    }
+
+    /// @notice Returns the extension metadata and functions for a given function selector.
+    function getExtensionForFunction(bytes4 _functionSelector, address _router)
+        external
+        view
+        returns (ExtensionMetadata memory)
+    {
+        ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
+        string memory id = data.defaultExtensionSetId[_router];
+        return data.implementationForFunction[id][_functionSelector];
     }
 }

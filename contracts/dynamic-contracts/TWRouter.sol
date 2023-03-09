@@ -9,9 +9,8 @@ import "./interface/IExtensionRegistry.sol";
 import "../extension/Multicall.sol";
 
 // Extension pattern imports
-import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
 import "lib/dynamic-contracts/src/core/Router.sol";
-import "lib/dynamic-contracts/src/presets/utils/DefaultExtensionSet.sol";
+import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
 import "lib/dynamic-contracts/src/presets/utils/ExtensionState.sol";
 
 abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
@@ -21,8 +20,8 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice The DefaultExtensionSet that stores default extensions of the router.
-    address public immutable defaultExtensionSet;
+    /// @notice The implementation smart contract address.
+    address public immutable implementation;
 
     /// @notice The ExtensionRegistry that stores all latest, vetted extensions available to router.
     address public immutable extensionRegistry;
@@ -31,18 +30,11 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
                                 Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _extensionRegistry, string[] memory _extensionNames) {
+    constructor(address _extensionRegistry, string _extensionSetId) {
+        implementation = address(this);
         extensionRegistry = _extensionRegistry;
 
-        DefaultExtensionSet map = new DefaultExtensionSet();
-        defaultExtensionSet = address(map);
-
-        uint256 len = _extensionNames.length;
-
-        for (uint256 i = 0; i < len; i += 1) {
-            Extension memory extension = IExtensionRegistry(_extensionRegistry).getExtension(_extensionNames[i]);
-            map.setExtension(extension);
-        }
+        IExtensionRegistry(_extensionRegistry).registerRouter(_extensionSetId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -142,7 +134,7 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
     }
 
     /// @dev Returns the Extension metadata for a given function.
-    function getExtensionForFunction(bytes4 _functionSelector) public view returns (ExtensionMetadata memory) {
+    function getExtensionForFunction(bytes4 _functionSelector) public view returns (address) {
         ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
         ExtensionMetadata memory metadata = data.extensionMetadata[_functionSelector];
 
@@ -151,7 +143,7 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
         return
             isLocalExtension
                 ? metadata
-                : IDefaultExtensionSet(defaultExtensionSet).getExtensionForFunction(_functionSelector);
+                : IExtensionRegistry(extensionRegistry).getExtensionForFunction(_functionSelector, implementation);
     }
 
     /// @dev Returns the extension implementation address stored in router, for the given function.
