@@ -29,7 +29,7 @@ import "../../extension/plugin/ERC2771ContextUpgradeableLogic.sol";
 /**
  * @author  thirdweb.com
  */
-contract MarketplaceV3 is
+contract MarketplaceRouter is
     ContractMetadataLogic,
     PlatformFeeLogic,
     PermissionsEnumerableLogic,
