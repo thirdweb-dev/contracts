@@ -4,12 +4,14 @@ pragma solidity ^0.8.0;
 // Interface
 import "./interface/IExtensionRegistry.sol";
 
-// Extensions
-import "../extension/PermissionsEnumerable.sol";
-import "./ExtensionRegistryState.sol";
+// Lib
 import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
 
-contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, PermissionsEnumerable {
+// Extensions
+import "./ExtensionRegistryState.sol";
+import "../extension/plugin/PermissionsEnumerableLogic.sol";
+
+contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, PermissionsEnumerableLogic {
     using StringSet for StringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
@@ -34,32 +36,31 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, Permis
         _updateExtension(_extension);
     }
 
-    /// @notice Remove an existing extension from the registry.
-    function removeExtension(string memory _extensionName) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        _removeExtension(_extensionName);
-    }
-
-    /// @notice Adds an extension to an extension set.
-    function createExtensionSet(string memory _extensionSetId, string[] memory _extensionNames)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
-        require(bytes(_extensionSetId).length > 0, "ExtensionRegistry: extension set ID cannot be empty.");
-        require(!_extensionSetExists(_extensionSetId), "ExtensionRegistry: extension set already exists.");
+    /// @notice Adds an extension to an extension snapshot.
+    function buildExtensionSnapshot(
+        string memory _extensionSnapshotId,
+        string[] memory _extensionNames,
+        bool _freeze
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(bytes(_extensionSnapshotId).length > 0, "ExtensionRegistry: extension snapshot ID cannot be empty.");
 
         uint256 len = _extensionNames.length;
         for (uint256 i = 0; i < len; i += 1) {
-            _addExtensionToSet(_extensionSetId, _extensionNames[i]);
+            _addExtensionToSnapshot(_extensionSnapshotId, _extensionNames[i]);
         }
 
-        emit ExtensionSetCreated(_extensionSetId, _extensionNames);
+        if (_freeze) {
+            _freezeExtensionSnapshot(_extensionSnapshotId);
+        }
+
+        emit ExtensionSnapshotUpdated(_extensionSnapshotId, _extensionNames);
     }
 
-    /// @notice Registers a router contract with a default set of extensions.
-    function registerRouter(string memory _extensionSetId) external {
+    /// @dev Registers a router contract with an extension snapshot as its default set of extensions.
+    function registerWithSnapshot(string memory _extensionSnapshotId) external {
         address router = msg.sender;
-        _registerRouter(_extensionSetId, router);
-        emit RouterRegistered(router, _extensionSetId);
+        _registerRouterWithSnapshot(_extensionSnapshotId, router);
+        emit RouterRegistered(router, _extensionSnapshotId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -76,7 +77,8 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, Permis
         allExtensions = new Extension[](len);
 
         for (uint256 i = 0; i < len; i += 1) {
-            allExtensions[i] = data.extensions[names[i]];
+            uint256 latestId = data.nextIdForExtension[names[i]] - 1;
+            allExtensions[i] = data.extensions[names[i]][latestId];
         }
     }
 
@@ -84,37 +86,61 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, Permis
     function getExtension(string memory _extensionName) public view returns (Extension memory) {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
         require(data.extensionNames.contains(_extensionName), "ExtensionRegistry: extension does not exist.");
-        return data.extensions[_extensionName];
+        uint256 latestId = data.nextIdForExtension[_extensionName] - 1;
+        return data.extensions[_extensionName][latestId];
     }
 
-    /// @notice Returns the extension's implementation smart contract address.
-    function getExtensionImplementation(string memory _extensionName) external view returns (address) {
-        return getExtension(_extensionName).metadata.implementation;
+    /// @dev Returns all default extensions for a router.
+    function getAllExtensionsForRouter(address router) external view returns (Extension[] memory extensions) {
+        ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
+        string memory snapshotId = data.snapshotIdForRouter[router];
+        return getExtensionSnapshot(snapshotId);
     }
 
-    /// @notice Returns all functions that belong to the given extension contract.
-    function getAllFunctionsOfExtension(string memory _extensionName)
+    /// @dev Returns extension data for a default extension of a router.
+    function getExtensionForRouter(string memory _extensionName, address _router)
         external
         view
-        returns (ExtensionFunction[] memory)
+        returns (Extension memory)
     {
-        return getExtension(_extensionName).functions;
-    }
-
-    /// @notice Returns all extension set IDs stored.
-    function getAllExtensionSetIds() external view returns (string[] memory) {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
-        return data.extensionSetIds.values();
+        string memory snapshotId = data.snapshotIdForRouter[_router];
+        require(bytes(snapshotId).length > 0, "ExtensionRegistry: router is not registered.");
+
+        return data.extensionSnapshot[snapshotId].extension[keccak256(abi.encodePacked(_extensionName, snapshotId))];
     }
 
-    /// @notice Returns the extension metadata and functions for a given function selector.
-    function getExtensionForFunction(bytes4 _functionSelector, address _router)
+    /// @dev Returns extension metadata for the default extension associated with a function in router.
+    function getExtensionForRouterFunction(bytes4 _functionSelector, address _router)
         external
         view
         returns (ExtensionMetadata memory)
     {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
-        string memory id = data.defaultExtensionSetId[_router];
-        return data.implementationForFunction[id][_functionSelector];
+        string memory snapshotId = data.snapshotIdForRouter[_router];
+        require(bytes(snapshotId).length > 0, "ExtensionRegistry: router is not registered.");
+
+        return data.extensionSnapshot[snapshotId].extensionForFunction[_functionSelector];
+    }
+
+    /// @notice Returns all extension set IDs stored.
+    function getAllSnapshotIds() external view returns (string[] memory) {
+        ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
+        return data.snapshotIds.values();
+    }
+
+    /// @dev Returns all extensions stored in a snapshot.
+    function getExtensionSnapshot(string memory _snapshotId) public view returns (Extension[] memory extensions) {
+        ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
+        require(bytes(_snapshotId).length > 0, "ExtensionRegistry: extension snapshot does not exist.");
+
+        ExtensionID[] memory extensionsIds = data.extensionSnapshot[_snapshotId].allExtensions;
+        uint256 len = extensionsIds.length;
+
+        extensions = new Extension[](len);
+
+        for (uint256 i = 0; i < len; i += 1) {
+            extensions[i] = data.extensions[extensionsIds[i].name][extensionsIds[i].id];
+        }
     }
 }

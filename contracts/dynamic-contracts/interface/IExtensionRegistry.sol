@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "lib/dynamic-contracts/src/interface/IExtension.sol";
+import "./IExtensionRegistryState.sol";
 
-interface IExtensionRegistry is IExtension {
+interface IExtensionRegistry is IExtensionRegistryState {
     /*///////////////////////////////////////////////////////////////
                                 Events
     //////////////////////////////////////////////////////////////*/
@@ -14,14 +14,11 @@ interface IExtensionRegistry is IExtension {
     /// @dev Emitted when extension is updated; emitted for each function of the extension.
     event ExtensionUpdated(string indexed name, address indexed implementation, Extension extension);
 
-    /// @dev Emitted when a extension is removed; emitted for each function of the extension.
-    event ExtensionRemoved(string indexed name, address indexed implementation, Extension extension);
-
-    /// @dev Emitted when an extension is added to an extension set.
-    event ExtensionSetCreated(string indexed extensionSetId, string[] extensionNames);
+    /// @dev Emitted when an extension is added to an extension snapshot.
+    event ExtensionSnapshotUpdated(string indexed extensionSnapshotId, string[] extensionNames);
 
     /// @dev Emitted when a router is registered with a default extension set.
-    event RouterRegistered(address indexed router, string indexed extensionSetId);
+    event RouterRegistered(address indexed router, string indexed extensionSnapshotId);
 
     /*///////////////////////////////////////////////////////////////
                             View functions
@@ -30,23 +27,29 @@ interface IExtensionRegistry is IExtension {
     /// @dev Returns all extensions stored.
     function getAllExtensions() external view returns (Extension[] memory);
 
-    /// @dev Returns all functions that belong to the given extension contract.
-    function getAllFunctionsOfExtension(string memory extensionName) external view returns (ExtensionFunction[] memory);
-
-    /// @dev Returns the extension's implementation smart contract address.
-    function getExtensionImplementation(string memory extensionName) external view returns (address);
-
     /// @dev Returns the extension metadata and functions for a given extension.
     function getExtension(string memory extensionName) external view returns (Extension memory);
 
-    /// @dev Creates a fixed set of extensions.
-    function getExtensionForFunction(bytes4 _functionSelector, address _router)
+    /// @dev Returns all default extensions for a router.
+    function getAllExtensionsForRouter(address router) external view returns (Extension[] memory);
+
+    /// @dev Returns extension data for a default extension of a router.
+    function getExtensionForRouter(string memory extensionName, address router)
+        external
+        view
+        returns (Extension memory);
+
+    /// @dev Returns extension metadata for the default extension associated with a function in router.
+    function getExtensionForRouterFunction(bytes4 functionSelector, address router)
         external
         view
         returns (ExtensionMetadata memory);
 
-    /// @dev Returns all extension set IDs stored.
-    function getAllExtensionSetIds() external view returns (string[] memory);
+    /// @dev Returns unique IDs of each extension snapshot.
+    function getAllSnapshotIds() external view returns (string[] memory);
+
+    /// @dev Returns all extensions stored in a snapshot.
+    function getExtensionSnapshot(string memory snapshotId) external view returns (Extension[] memory);
 
     /*///////////////////////////////////////////////////////////////
                         External functions
@@ -58,9 +61,13 @@ interface IExtensionRegistry is IExtension {
     /// @dev Updates an existing extension in the registry.
     function updateExtension(Extension memory extension) external;
 
-    /// @dev Remove an existing extension from the registry.
-    function removeExtension(string memory extension) external;
+    /// @notice Adds an extension to an extension snapshot.
+    function buildExtensionSnapshot(
+        string memory extensionSnapshotId,
+        string[] memory extensionNames,
+        bool freeze
+    ) external;
 
-    /// @dev Registers a router contract with a default set of extensions.
-    function registerRouter(string memory _extensionSetId) external;
+    /// @dev Registers a router contract with an extension snapshot as its default set of extensions.
+    function registerWithSnapshot(string memory extensionSnapshotId) external;
 }

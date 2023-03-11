@@ -30,11 +30,11 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
                                 Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _extensionRegistry, string _extensionSetId) {
+    constructor(address _extensionRegistry, string memory _extensionSnapshotId) {
         implementation = address(this);
         extensionRegistry = _extensionRegistry;
 
-        IExtensionRegistry(_extensionRegistry).registerRouter(_extensionSetId);
+        IExtensionRegistry(_extensionRegistry).registerWithSnapshot(_extensionSnapshotId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -75,29 +75,31 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
      *          given precedence over default extensions in DefaultExtensionSet.
      */
     function getAllExtensions() external view returns (Extension[] memory allExtensions) {
-        Extension[] memory mapExtensions = IDefaultExtensionSet(defaultExtensionSet).getAllExtensions();
-        uint256 mapExtensionsLen = mapExtensions.length;
+        Extension[] memory defaultExtensions = IExtensionRegistry(extensionRegistry).getAllExtensionsForRouter(
+            implementation
+        );
+        uint256 defaultExtensionsLen = defaultExtensions.length;
 
         ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
         string[] memory names = data.extensionNames.values();
         uint256 namesLen = names.length;
 
         uint256 overrides = 0;
-        for (uint256 i = 0; i < mapExtensionsLen; i += 1) {
-            if (data.extensionNames.contains(mapExtensions[i].metadata.name)) {
+        for (uint256 i = 0; i < defaultExtensionsLen; i += 1) {
+            if (data.extensionNames.contains(defaultExtensions[i].metadata.name)) {
                 overrides += 1;
             }
         }
 
-        uint256 total = (namesLen + mapExtensionsLen) - overrides;
+        uint256 total = (namesLen + defaultExtensionsLen) - overrides;
 
         allExtensions = new Extension[](total);
         uint256 idx = 0;
 
-        for (uint256 i = 0; i < mapExtensionsLen; i += 1) {
-            string memory name = mapExtensions[i].metadata.name;
+        for (uint256 i = 0; i < defaultExtensionsLen; i += 1) {
+            string memory name = defaultExtensions[i].metadata.name;
             if (!data.extensionNames.contains(name)) {
-                allExtensions[idx] = mapExtensions[i];
+                allExtensions[idx] = defaultExtensions[i];
                 idx += 1;
             }
         }
@@ -116,25 +118,11 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
         return
             isLocalExtension
                 ? data.extensions[_extensionName]
-                : IDefaultExtensionSet(defaultExtensionSet).getExtension(_extensionName);
-    }
-
-    /// @dev Returns the extension's implementation smart contract address.
-    function getExtensionImplementation(string memory _extensionName) external view returns (address) {
-        return getExtension(_extensionName).metadata.implementation;
-    }
-
-    /// @dev Returns all functions that belong to the given extension contract.
-    function getAllFunctionsOfExtension(string memory _extensionName)
-        external
-        view
-        returns (ExtensionFunction[] memory)
-    {
-        return getExtension(_extensionName).functions;
+                : IExtensionRegistry(extensionRegistry).getExtensionForRouter(_extensionName, implementation);
     }
 
     /// @dev Returns the Extension metadata for a given function.
-    function getExtensionForFunction(bytes4 _functionSelector) public view returns (address) {
+    function getExtensionForFunction(bytes4 _functionSelector) public view returns (ExtensionMetadata memory) {
         ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
         ExtensionMetadata memory metadata = data.extensionMetadata[_functionSelector];
 
@@ -143,14 +131,21 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
         return
             isLocalExtension
                 ? metadata
-                : IExtensionRegistry(extensionRegistry).getExtensionForFunction(_functionSelector, implementation);
+                : IExtensionRegistry(extensionRegistry).getExtensionForRouterFunction(
+                    _functionSelector,
+                    implementation
+                );
     }
+
+    /*///////////////////////////////////////////////////////////////
+                            Router override
+    //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the extension implementation address stored in router, for the given function.
     function getImplementationForFunction(bytes4 _functionSelector)
         public
         view
-        override
+        override(IRouter, Router)
         returns (address extensionAddress)
     {
         return getExtensionForFunction(_functionSelector).implementation;
