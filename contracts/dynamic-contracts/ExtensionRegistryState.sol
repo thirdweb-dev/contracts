@@ -140,8 +140,8 @@ contract ExtensionRegistryState is IExtensionRegistryState {
 
         address oldImplementation = data.extensions[name][nextId - 1].metadata.implementation;
         require(
-            _extension.metadata.implementation != oldImplementation,
-            "ExtensionRegistryState: re-adding same extension."
+            _extension.metadata.implementation != address(0) && _extension.metadata.implementation != oldImplementation,
+            "ExtensionRegistryState: invalid implementation for update."
         );
 
         data.extensions[name][nextId].metadata = _extension.metadata;
@@ -169,10 +169,11 @@ contract ExtensionRegistryState is IExtensionRegistryState {
     function _removeExtension(string memory _extensionName) internal {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
 
-        uint256 latestId = data.nextIdForExtension[_extensionName] - 1;
-        Extension memory extension = data.extensions[_extensionName][latestId];
+        uint256 nextId = data.nextIdForExtension[_extensionName];
+        uint256 id = nextId > 0 ? nextId - 1 : 0;
+        Extension memory extension = data.extensions[_extensionName][id];
 
-        require(data.extensionNames.remove(_extensionName), "ExtensionState: extension does not exist.");
+        require(data.extensionNames.remove(_extensionName), "ExtensionRegistryState: extension does not exist.");
 
         emit ExtensionRemoved(_extensionName, extension);
     }
