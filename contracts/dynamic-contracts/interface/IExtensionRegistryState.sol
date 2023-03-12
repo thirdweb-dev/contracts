@@ -20,4 +20,10 @@ interface IExtensionRegistryState is IExtension {
         mapping(bytes32 => IExtension.Extension) extension;
         mapping(bytes4 => IExtension.ExtensionMetadata) extensionForFunction;
     }
+
+    /*///////////////////////////////////////////////////////////////
+                                Events
+    //////////////////////////////////////////////////////////////*/
+
+    event ExtensionRemoved(string indexed extensionName, Extension extension);
 }

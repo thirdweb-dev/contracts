@@ -47,7 +47,7 @@ contract ExtensionRegistryState is IExtensionRegistryState {
     function _addExtensionToSnapshot(string memory _snapshotId, string memory _extensionName) internal {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
 
-        require(data.extensionNames.contains(_extensionName), "ExtensionRegistryState extension does not exist.");
+        require(data.extensionNames.contains(_extensionName), "ExtensionRegistryState: extension does not exist.");
         require(!data.extensionSnapshot[_snapshotId].isFrozen, "ExtensionRegistryState: extension snapshot is frozen.");
 
         uint256 latestId = data.nextIdForExtension[_extensionName] - 1;
@@ -98,8 +98,8 @@ contract ExtensionRegistryState is IExtensionRegistryState {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
 
         string memory name = _extension.metadata.name;
-
-        require(data.extensionNames.add(name), "ExtensionRegistryState extension already exists.");
+        require(bytes(name).length > 0, "ExtensionRegistryState: adding extension without name.");
+        require(data.extensionNames.add(name), "ExtensionRegistryState: extension already exists.");
         uint256 nextId = data.nextIdForExtension[name];
         data.nextIdForExtension[name] += 1;
 
@@ -107,7 +107,7 @@ contract ExtensionRegistryState is IExtensionRegistryState {
 
         require(
             _extension.metadata.implementation != address(0),
-            "ExtensionRegistryState adding extension without implementation."
+            "ExtensionRegistryState: adding extension without implementation."
         );
 
         uint256 len = _extension.functions.length;
@@ -115,7 +115,7 @@ contract ExtensionRegistryState is IExtensionRegistryState {
             require(
                 _extension.functions[i].functionSelector ==
                     bytes4(keccak256(abi.encodePacked(_extension.functions[i].functionSignature))),
-                "ExtensionRegistryState fn selector and signature mismatch."
+                "ExtensionRegistryState: fn selector and signature mismatch."
             );
 
             data.extensions[name][nextId].functions.push(_extension.functions[i]);
@@ -133,7 +133,7 @@ contract ExtensionRegistryState is IExtensionRegistryState {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
 
         string memory name = _extension.metadata.name;
-        require(data.extensionNames.contains(name), "ExtensionRegistryState extension does not exist.");
+        require(data.extensionNames.contains(name), "ExtensionRegistryState: extension does not exist.");
 
         uint256 nextId = data.nextIdForExtension[name];
         data.nextIdForExtension[name] += 1;
@@ -141,7 +141,7 @@ contract ExtensionRegistryState is IExtensionRegistryState {
         address oldImplementation = data.extensions[name][nextId - 1].metadata.implementation;
         require(
             _extension.metadata.implementation != oldImplementation,
-            "ExtensionRegistryState re-adding same extension."
+            "ExtensionRegistryState: re-adding same extension."
         );
 
         data.extensions[name][nextId].metadata = _extension.metadata;
@@ -151,7 +151,7 @@ contract ExtensionRegistryState is IExtensionRegistryState {
             require(
                 _extension.functions[i].functionSelector ==
                     bytes4(keccak256(abi.encodePacked(_extension.functions[i].functionSignature))),
-                "ExtensionRegistryState fn selector and signature mismatch."
+                "ExtensionRegistryState: fn selector and signature mismatch."
             );
 
             data.extensions[name][nextId].functions.push(_extension.functions[i]);
@@ -163,5 +163,17 @@ contract ExtensionRegistryState is IExtensionRegistryState {
                 _extension.functions[i].functionSignature
             );
         }
+    }
+
+    /// @dev Removes an existing extension from the contract.
+    function _removeExtension(string memory _extensionName) internal {
+        ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
+
+        uint256 latestId = data.nextIdForExtension[_extensionName] - 1;
+        Extension memory extension = data.extensions[_extensionName][latestId];
+
+        require(data.extensionNames.remove(_extensionName), "ExtensionState: extension does not exist.");
+
+        emit ExtensionRemoved(_extensionName, extension);
     }
 }

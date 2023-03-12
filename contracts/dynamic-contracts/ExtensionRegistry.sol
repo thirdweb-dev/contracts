@@ -11,6 +11,8 @@ import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
 import "./ExtensionRegistryState.sol";
 import "../extension/plugin/PermissionsEnumerableLogic.sol";
 
+// TODO: add events emitting full `Extension` for `addExtension` and `updateExtension`.
+
 contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, PermissionsEnumerableLogic {
     using StringSet for StringSet.Set;
 
@@ -34,6 +36,11 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, Permis
     /// @notice Updates an existing extension in the registry.
     function updateExtension(Extension memory _extension) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _updateExtension(_extension);
+    }
+
+    /// @notice Removes an existing extension from the contract.
+    function removeExtension(string memory _extensionName) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _removeExtension(_extensionName);
     }
 
     /// @notice Adds an extension to an extension snapshot.

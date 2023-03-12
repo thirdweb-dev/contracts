@@ -61,6 +61,9 @@ interface IExtensionRegistry is IExtensionRegistryState {
     /// @dev Updates an existing extension in the registry.
     function updateExtension(Extension memory extension) external;
 
+    /// @notice Removes an existing extension from the contract.
+    function removeExtension(string memory _extensionName) external;
+
     /// @notice Adds an extension to an extension snapshot.
     function buildExtensionSnapshot(
         string memory extensionSnapshotId,
