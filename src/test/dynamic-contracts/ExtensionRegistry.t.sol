@@ -291,6 +291,8 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
                             Updating extensions
     //////////////////////////////////////////////////////////////*/
 
+    // ======================= Unit tests ==========================
+
     function _setUp_updateExtension() internal {
         Extension memory extension;
 
@@ -578,6 +580,8 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
                             Removing extensions
     //////////////////////////////////////////////////////////////*/
 
+    // ======================= Unit tests ==========================
+
     function _setUp_removeExtension() internal {
         Extension memory extension;
 
@@ -720,4 +724,242 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
             }
         }
     }
+
+    /*///////////////////////////////////////////////////////////////
+                        Building a snapshot
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_buildExtensionSnapshot() external {
+        uint256 len = 3;
+
+        string[] memory extensionNames = new string[](len);
+        string memory snapshotId = "snapshotId";
+
+        for (uint256 i = 0; i < len; i += 1) {
+            vm.prank(registryDeployer);
+            extensionRegistry.addExtension(extensions[i]);
+            extensionNames[i] = extensions[i].metadata.name;
+        }
+
+        // Add first set of extensions to snapshot.
+        vm.prank(registryDeployer);
+        extensionRegistry.buildExtensionSnapshot(snapshotId, extensionNames, false);
+
+        string[] memory allSnapshotIds = extensionRegistry.getAllSnapshotIds();
+        assertEq(allSnapshotIds.length, 1);
+        assertEq(allSnapshotIds[0], snapshotId);
+
+        Extension[] memory snapshotExtensions = extensionRegistry.getExtensionSnapshot(snapshotId);
+
+        for (uint256 i = 0; i < len; i += 1) {
+            // snapshotExtensions
+            assertEq(snapshotExtensions[i].metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(snapshotExtensions[i].metadata.name, extensions[i].metadata.name);
+            assertEq(snapshotExtensions[i].metadata.metadataURI, extensions[i].metadata.metadataURI);
+            uint256 fnsLen = extensions[i].functions.length;
+            assertEq(fnsLen, snapshotExtensions[i].functions.length);
+            for (uint256 j = 0; j < fnsLen; j += 1) {
+                assertEq(
+                    extensions[i].functions[j].functionSelector,
+                    snapshotExtensions[i].functions[j].functionSelector
+                );
+                assertEq(
+                    extensions[i].functions[j].functionSignature,
+                    snapshotExtensions[i].functions[j].functionSignature
+                );
+            }
+        }
+
+        // Add another extension to the same snapshot and freeze it.
+        Extension memory extension1;
+
+        extension1.metadata = ExtensionMetadata({
+            name: "MockERC20",
+            metadataURI: "ipfs://MockERC20",
+            implementation: address(new MockERC20())
+        });
+
+        extension1.functions = new ExtensionFunction[](1);
+        extension1.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
+
+        vm.prank(registryDeployer);
+        extensionRegistry.addExtension(extension1);
+
+        string[] memory newExtensionName = new string[](1);
+        newExtensionName[0] = extension1.metadata.name;
+
+        vm.prank(registryDeployer);
+        extensionRegistry.buildExtensionSnapshot(snapshotId, newExtensionName, true);
+
+        allSnapshotIds = extensionRegistry.getAllSnapshotIds();
+        assertEq(allSnapshotIds.length, 1);
+        assertEq(allSnapshotIds[0], snapshotId);
+
+        snapshotExtensions = extensionRegistry.getExtensionSnapshot(snapshotId);
+        assertEq(snapshotExtensions.length, 4);
+
+        assertEq(snapshotExtensions[3].metadata.implementation, extension1.metadata.implementation);
+        assertEq(snapshotExtensions[3].metadata.name, extension1.metadata.name);
+        assertEq(snapshotExtensions[3].metadata.metadataURI, extension1.metadata.metadataURI);
+        uint256 fnsLen = extension1.functions.length;
+        assertEq(fnsLen, snapshotExtensions[3].functions.length);
+        for (uint256 j = 0; j < fnsLen; j += 1) {
+            assertEq(extension1.functions[j].functionSelector, snapshotExtensions[3].functions[j].functionSelector);
+            assertEq(extension1.functions[j].functionSignature, snapshotExtensions[3].functions[j].functionSignature);
+        }
+    }
+
+    function test_revert_buildExtensionSnapshot_unauthorizedCaller() external {
+        Extension memory extension1;
+
+        extension1.metadata = ExtensionMetadata({
+            name: "MockERC20",
+            metadataURI: "ipfs://MockERC20",
+            implementation: address(new MockERC20())
+        });
+
+        extension1.functions = new ExtensionFunction[](1);
+        extension1.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
+
+        vm.prank(registryDeployer);
+        extensionRegistry.addExtension(extension1);
+
+        string memory snapshotId = "snapshotId";
+        string[] memory extensionNames = new string[](1);
+        extensionNames[0] = extension1.metadata.name;
+
+        vm.prank(address(0x9999));
+        vm.expectRevert();
+        extensionRegistry.buildExtensionSnapshot(snapshotId, extensionNames, true);
+    }
+
+    function test_revert_buildExtensionSnapshot_emptySnapshotId() external {
+        Extension memory extension1;
+
+        extension1.metadata = ExtensionMetadata({
+            name: "MockERC20",
+            metadataURI: "ipfs://MockERC20",
+            implementation: address(new MockERC20())
+        });
+
+        extension1.functions = new ExtensionFunction[](1);
+        extension1.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
+
+        vm.prank(registryDeployer);
+        extensionRegistry.addExtension(extension1);
+
+        string memory snapshotId = "";
+        string[] memory extensionNames = new string[](1);
+        extensionNames[0] = extension1.metadata.name;
+
+        vm.prank(registryDeployer);
+        vm.expectRevert("ExtensionRegistry: extension snapshot ID cannot be empty.");
+        extensionRegistry.buildExtensionSnapshot(snapshotId, extensionNames, true);
+    }
+
+    function test_revert_buildExtensionSnapshot_addingNonexistentExtension() external {
+        string memory snapshotId = "snapshotId";
+        string[] memory extensionNames = new string[](1);
+        extensionNames[0] = "MockERC20";
+
+        vm.prank(registryDeployer);
+        vm.expectRevert("ExtensionRegistryState: extension does not exist.");
+        extensionRegistry.buildExtensionSnapshot(snapshotId, extensionNames, true);
+    }
+
+    function test_revert_buildExtensionSnapshot_addingToFrozenSnapshot() external {
+        uint256 len = 3;
+
+        string[] memory extensionNames = new string[](len);
+        string memory snapshotId = "snapshotId";
+
+        for (uint256 i = 0; i < len; i += 1) {
+            vm.prank(registryDeployer);
+            extensionRegistry.addExtension(extensions[i]);
+            extensionNames[i] = extensions[i].metadata.name;
+        }
+
+        // Add first set of extensions to snapshot.
+        vm.prank(registryDeployer);
+        extensionRegistry.buildExtensionSnapshot(snapshotId, extensionNames, true); // freeze
+
+        // Add another extension to a frozen snapshot.
+        Extension memory extension1;
+
+        extension1.metadata = ExtensionMetadata({
+            name: "MockERC20",
+            metadataURI: "ipfs://MockERC20",
+            implementation: address(new MockERC20())
+        });
+
+        extension1.functions = new ExtensionFunction[](1);
+        extension1.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
+
+        vm.prank(registryDeployer);
+        extensionRegistry.addExtension(extension1);
+
+        string[] memory newExtensionName = new string[](1);
+        newExtensionName[0] = extension1.metadata.name;
+
+        vm.prank(registryDeployer);
+        vm.expectRevert("ExtensionRegistryState: extension snapshot is frozen.");
+        extensionRegistry.buildExtensionSnapshot(snapshotId, newExtensionName, true);
+    }
+
+    function test_revert_buildExtensionSnapshot_addingExtensionsWithCommonFns() external {
+        // Add extension 1.
+
+        Extension memory extension1;
+
+        extension1.metadata = ExtensionMetadata({
+            name: "MockERC20",
+            metadataURI: "ipfs://MockERC20",
+            implementation: address(new MockERC20())
+        });
+
+        extension1.functions = new ExtensionFunction[](1);
+        extension1.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
+
+        // Add extension 2.
+
+        Extension memory extension2;
+
+        extension2.metadata = ExtensionMetadata({
+            name: "MockERC20_2",
+            metadataURI: "ipfs://MockERC20_2",
+            implementation: address(new MockERC20())
+        });
+
+        extension2.functions = new ExtensionFunction[](1);
+        extension2.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
+
+        vm.startPrank(registryDeployer);
+
+        extensionRegistry.addExtension(extension1);
+        extensionRegistry.addExtension(extension2);
+
+        vm.stopPrank();
+
+        // Add extensions to snapshot.
+        string memory snapshotId = "snapshotId";
+        string[] memory extensionNames = new string[](2);
+        extensionNames[0] = extension1.metadata.name;
+        extensionNames[1] = extension2.metadata.name;
+
+        vm.prank(registryDeployer);
+        vm.expectRevert("ExtensionRegistryState: function already exists in snapshot.");
+        extensionRegistry.buildExtensionSnapshot(snapshotId, extensionNames, true);
+    }
+
+    // /*///////////////////////////////////////////////////////////////
+    //                     Registering with snapshot
+    // //////////////////////////////////////////////////////////////*/
+
+    // function test_state_registerWithSnapshot() external {}
+
+    // function test_revert_registerWithSnapshot_nonexistentSnapshotId() external {}
+
+    // function test_revert_registerWithSnapshot_routerAlreadyRegistered() external {}
+
+    // function test_revert_registerWithSnapshot_callerIsNotRouter() external {}
 }
