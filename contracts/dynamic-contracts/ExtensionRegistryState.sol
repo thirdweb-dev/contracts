@@ -50,6 +50,8 @@ contract ExtensionRegistryState is IExtensionRegistryState {
         require(data.extensionNames.contains(_extensionName), "ExtensionRegistryState: extension does not exist.");
         require(!data.extensionSnapshot[_snapshotId].isFrozen, "ExtensionRegistryState: extension snapshot is frozen.");
 
+        data.snapshotIds.add(_snapshotId);
+
         uint256 latestId = data.nextIdForExtension[_extensionName] - 1;
         Extension memory extension = data.extensions[_extensionName][latestId];
 
