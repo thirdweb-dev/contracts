@@ -79,9 +79,12 @@ contract ExtensionRegistryState is IExtensionRegistryState {
 
     function _registerRouterWithSnapshot(string memory _snapshotId, address _router) internal {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
-        require(data.snapshotIds.contains(_snapshotId), "ExtensionRegistry: extension set does not exist.");
+        require(data.snapshotIds.contains(_snapshotId), "ExtensionRegistryState: extension snapshot does not exist.");
 
-        require(bytes(data.snapshotIdForRouter[_router]).length == 0, "ExtensionRegistry: router already registered.");
+        require(
+            bytes(data.snapshotIdForRouter[_router]).length == 0,
+            "ExtensionRegistryState: router already registered."
+        );
 
         data.snapshotIdForRouter[_router] = _snapshotId;
     }
