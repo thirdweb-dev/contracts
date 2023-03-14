@@ -1,0 +1,162 @@
+[
+  {
+    "functionSelector": "0x48dd77df",
+    "functionSignature": "approveBuyerForListing(uint256,address,bool)",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0xea8f9a3c",
+    "functionSignature": "approveCurrencyForListing(uint256,address,uint256)",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0x704232dc",
+    "functionSignature": "buyFromListing(uint256,address,uint256,address,uint256)",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0x305a67a8",
+    "functionSignature": "cancelListing(uint256)",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0x746415b5",
+    "functionSignature": "createListing((address,uint256,uint256,address,uint256,uint128,uint128,bool))",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0xfb14079d",
+    "functionSignature": "currencyPriceForListing(uint256,address)",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0xc5275fb0",
+    "functionSignature": "getAllListings(uint256,uint256)",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0x31654b4d",
+    "functionSignature": "getAllValidListings(uint256,uint256)",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0x107a274a",
+    "functionSignature": "getListing(uint256)",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0x9cfbe2a6",
+    "functionSignature": "isBuyerApprovedForListing(uint256,address)",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0xa8519047",
+    "functionSignature": "isCurrencyApprovedForListing(uint256,address)",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0xc78b616c",
+    "functionSignature": "totalListings()",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0x07b67758",
+    "functionSignature": "updateListing(uint256,(address,uint256,uint256,address,uint256,uint128,uint128,bool))",
+    "pluginAddress": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3"
+  },
+  {
+    "functionSelector": "0x0858e5ad",
+    "functionSignature": "bidInAuction(uint256,uint256)",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0x96b5a755",
+    "functionSignature": "cancelAuction(uint256)",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0xebf05a62",
+    "functionSignature": "collectAuctionPayout(uint256)",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0x03a54fe0",
+    "functionSignature": "collectAuctionTokens(uint256)",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0x16654d40",
+    "functionSignature": "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0xc291537c",
+    "functionSignature": "getAllAuctions(uint256,uint256)",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0x7b063801",
+    "functionSignature": "getAllValidAuctions(uint256,uint256)",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0x78bd7935",
+    "functionSignature": "getAuction(uint256)",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0x6891939d",
+    "functionSignature": "getWinningBid(uint256)",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0x1389b117",
+    "functionSignature": "isAuctionExpired(uint256)",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0x2eb566bd",
+    "functionSignature": "isNewWinningBid(uint256,uint256)",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0x16002f4a",
+    "functionSignature": "totalAuctions()",
+    "pluginAddress": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977"
+  },
+  {
+    "functionSelector": "0xc815729d",
+    "functionSignature": "acceptOffer(uint256)",
+    "pluginAddress": "0x77553d5bD88194b576135a95D5D1358Cfb8370b8"
+  },
+  {
+    "functionSelector": "0xef706adf",
+    "functionSignature": "cancelOffer(uint256)",
+    "pluginAddress": "0x77553d5bD88194b576135a95D5D1358Cfb8370b8"
+  },
+  {
+    "functionSelector": "0xc1edcfbe",
+    "functionSignature": "getAllOffers(uint256,uint256)",
+    "pluginAddress": "0x77553d5bD88194b576135a95D5D1358Cfb8370b8"
+  },
+  {
+    "functionSelector": "0x91940b3e",
+    "functionSignature": "getAllValidOffers(uint256,uint256)",
+    "pluginAddress": "0x77553d5bD88194b576135a95D5D1358Cfb8370b8"
+  },
+  {
+    "functionSelector": "0x4579268a",
+    "functionSignature": "getOffer(uint256)",
+    "pluginAddress": "0x77553d5bD88194b576135a95D5D1358Cfb8370b8"
+  },
+  {
+    "functionSelector": "0x016767fa",
+    "functionSignature": "makeOffer((address,uint256,uint256,address,uint256,uint256))",
+    "pluginAddress": "0x77553d5bD88194b576135a95D5D1358Cfb8370b8"
+  },
+  {
+    "functionSelector": "0xa9fd8ed1",
+    "functionSignature": "totalOffers()",
+    "pluginAddress": "0x77553d5bD88194b576135a95D5D1358Cfb8370b8"
+  }
+]

@@ -1,0 +1,94 @@
+{
+  "1": {
+    "DirectListingsLogic": "0x97Fc993512092C7A9A5cbed2F24353deeCA413CD",
+    "EnglishAuctionsLogic": "0x4305Fa892D43EE4b80445A7975708Ff4dAb2ABB6",
+    "OffersLogic": "0x271474738C5b10f52Fd7Ac6Aa7e305CE7a62eB7A",
+    "PluginMap": "0xFeA560DB29aFE75F24e1da8bb9db35a585577Ca8",
+    "MarketplaceV3": "0x641c5651Cc18f8CBb2F4cD3BBDBd539C5084A9D0"
+  },
+  "5": {
+    "DirectListingsLogic": "0x846563Ea224a02f2b1F6563D32d3c1B0AE49De21",
+    "EnglishAuctionsLogic": "0x385BF0Ef91e85Fb439927b659F5Dc18e2b7455E8",
+    "OffersLogic": "0x9C92A3F4d28F7569CE767B477CeE4e211aD2E434",
+    "PluginMap": "0xD151cb123b2FfD007a86DfEe5EE3F75AfF2A9793",
+    "MarketplaceV3": "0x9245412Abc796392bC143875A32D0973225adadf"
+  },
+  "10": {
+    "DirectListingsLogic": "0x00808581f24F017F2A4225CF3BB6cfF968982D1F",
+    "EnglishAuctionsLogic": "0x9EAeC3DBFB930360Faf2E286BCE4223a80Ab6Da0",
+    "OffersLogic": "0xE4c774b279406d8166f93E59BFCbAf4f4D1Fa418",
+    "PluginMap": "0xFb967f8EBb9B9CeF32dCB4d33Fc1559cef16Bc15",
+    "MarketplaceV3": "0x347BA60B11deeA7521542Dca371650700248a5fF"
+  },
+  "56": {
+    "DirectListingsLogic": "0x6CBcF2D9f5f890F9d423F303f5B863f58A3C295A",
+    "EnglishAuctionsLogic": "0xef5e6eE37747470F094034178A2DC9a99590d18d",
+    "OffersLogic": "0xA7E164f4ef7feC2B386A538b29Bc27a9b7E89c67",
+    "PluginMap": "0x00808581f24F017F2A4225CF3BB6cfF968982D1F",
+    "MarketplaceV3": "0x9EAeC3DBFB930360Faf2E286BCE4223a80Ab6Da0"
+  },
+  "97": {
+    "DirectListingsLogic": "0xFeA560DB29aFE75F24e1da8bb9db35a585577Ca8",
+    "EnglishAuctionsLogic": "0x641c5651Cc18f8CBb2F4cD3BBDBd539C5084A9D0",
+    "OffersLogic": "0xa18fBa437f4cc266D61291160D041330EAc9e040",
+    "PluginMap": "0x2722fdD21C9A99Ccd8453CAcce28b95D032A0976",
+    "MarketplaceV3": "0xf52877A10DB3568267d9aE111AA3da4781B02405"
+  },
+  "137": {
+    "DirectListingsLogic": "0xBbC69d0Fbdf7b3Fa58D62dC554C1C169D9baBa4B",
+    "EnglishAuctionsLogic": "0xe1fDf867E65b3b080B3f774B8453826ACfDbC490",
+    "OffersLogic": "0xF7469C633bfA27978fCad60c94833aFb8BbCB290",
+    "PluginMap": "0xede5663b1682392927b45b3d9a660ff6193ec7ab",
+    "MarketplaceV3": "0x4a8AC7f22DeD2CF923A51e4A1c67490bd8868add"
+  },
+  "250": {
+    "DirectListingsLogic": "0x759a40c6e80e0757d6631D7EF9A7d63c6353eeF3",
+    "EnglishAuctionsLogic": "0xf58D5d56aEfdF755DBBF6e636B83F39aF2F31977",
+    "OffersLogic": "0x77553d5bD88194b576135a95D5D1358Cfb8370b8",
+    "PluginMap": "0x85CeB892B3A5e1E50571e15CbD06cCf0fBaE5ECb",
+    "MarketplaceV3": "0x6af3bc7De589AA95E9FE404B238230daB92f8D3A"
+  },
+  "420": {},
+  "4002": {
+    "DirectListingsLogic": "0x97Fc993512092C7A9A5cbed2F24353deeCA413CD",
+    "EnglishAuctionsLogic": "0x4305Fa892D43EE4b80445A7975708Ff4dAb2ABB6",
+    "OffersLogic": "0x271474738C5b10f52Fd7Ac6Aa7e305CE7a62eB7A",
+    "PluginMap": "0xFeA560DB29aFE75F24e1da8bb9db35a585577Ca8",
+    "MarketplaceV3": "0x641c5651Cc18f8CBb2F4cD3BBDBd539C5084A9D0"
+  },
+  "42161": {
+    "DirectListingsLogic": "0x7E2f2B26571680F771EC1075165a9b83C4AdFF4a",
+    "EnglishAuctionsLogic": "0x9Bc90f1eD1A21e8DdCa57c0fa0e3Cf23F302DB6E",
+    "OffersLogic": "0x7689577821457845FAc43c4181c647897d01B936",
+    "PluginMap": "0xAb1a1c03BE678B5d55Cec01322f7DAC5a2Bc7aFC",
+    "MarketplaceV3": "0xBbC69d0Fbdf7b3Fa58D62dC554C1C169D9baBa4B"
+  },
+  "43113": {
+    "DirectListingsLogic": "0x4305Fa892D43EE4b80445A7975708Ff4dAb2ABB6",
+    "EnglishAuctionsLogic": "0x271474738C5b10f52Fd7Ac6Aa7e305CE7a62eB7A",
+    "OffersLogic": "0xFeA560DB29aFE75F24e1da8bb9db35a585577Ca8",
+    "PluginMap": "0x641c5651Cc18f8CBb2F4cD3BBDBd539C5084A9D0",
+    "MarketplaceV3": "0xa18fBa437f4cc266D61291160D041330EAc9e040"
+  },
+  "43114": {
+    "DirectListingsLogic": "0x6af3bc7De589AA95E9FE404B238230daB92f8D3A",
+    "EnglishAuctionsLogic": "0x573dDcE0CfE041e83e596d734B46A3Ad97F37B63",
+    "OffersLogic": "0xC6b309fdc8f3e0Eb20c0F0691F2a81f2FC8C3e36",
+    "PluginMap": "0xb6986d9B0fb2A384870A2b2cFdFcd71EB12b3837",
+    "MarketplaceV3": "0x17134ECfdA7081439794CE7FB9E928E2283A5738"
+  },
+  "80001": {
+    "DirectListingsLogic": "0x24eb2802610B461C61Afa8e1f7819c836b12ED25",
+    "EnglishAuctionsLogic": "0xC3A1CAC0BdDbA337512009AFAC2590783AeD8A9A",
+    "OffersLogic": "0x677da524ec47f7ad72A77C9ea0dbD524fCEE0Ba9",
+    "PluginMap": "0x8f282d20A78E2e9Beee89Cf6641733DFaCae28F4",
+    "MarketplaceV3": "0x6dfc121707323eC87F8c7e5C5Ba5c6Ed6463567a"
+  },
+  "421613": {
+    "DirectListingsLogic": "0xAb1a1c03BE678B5d55Cec01322f7DAC5a2Bc7aFC",
+    "EnglishAuctionsLogic": "0xBbC69d0Fbdf7b3Fa58D62dC554C1C169D9baBa4B",
+    "OffersLogic": "0xe1fDf867E65b3b080B3f774B8453826ACfDbC490",
+    "PluginMap": "0xF7469C633bfA27978fCad60c94833aFb8BbCB290",
+    "MarketplaceV3": "0xeDe5663b1682392927b45b3d9a660Ff6193eC7aB"
+  }
+}
