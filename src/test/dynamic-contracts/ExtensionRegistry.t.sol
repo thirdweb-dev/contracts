@@ -2,11 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "lib/dynamic-contracts/src/interface/IExtension.sol";
+import "lib/dynamic-contracts/src/interface/IRouter.sol";
 import "contracts/dynamic-contracts/ExtensionRegistry.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 
-import "../mocks/MockERC20.sol";
-import "../mocks/MockERC721.sol";
+import { MockERC20 } from "../mocks/MockERC20.sol";
+import { MockERC721 } from "../mocks/MockERC721.sol";
 
 contract ContractA {
     uint256 private a_;
@@ -33,6 +34,12 @@ contract ContractC {
 
     function getC() external view returns (uint256) {
         return c_;
+    }
+}
+
+contract RouterImpl is ERC165 {
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return interfaceId == type(IRouter).interfaceId;
     }
 }
 
@@ -951,15 +958,109 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
         extensionRegistry.buildExtensionSnapshot(snapshotId, extensionNames, true);
     }
 
-    // /*///////////////////////////////////////////////////////////////
-    //                     Registering with snapshot
-    // //////////////////////////////////////////////////////////////*/
+    /*///////////////////////////////////////////////////////////////
+                        Registering with snapshot
+    //////////////////////////////////////////////////////////////*/
 
-    // function test_state_registerWithSnapshot() external {}
+    address private router;
+    string private snapshotId = "snapshotId";
 
-    // function test_revert_registerWithSnapshot_nonexistentSnapshotId() external {}
+    function _setUp_registerWithSnapshot() internal {
+        router = address(new RouterImpl());
 
-    // function test_revert_registerWithSnapshot_routerAlreadyRegistered() external {}
+        uint256 len = 3;
 
-    // function test_revert_registerWithSnapshot_callerIsNotRouter() external {}
+        string[] memory extensionNames = new string[](len);
+        snapshotId = "snapshotId";
+
+        for (uint256 i = 0; i < len; i += 1) {
+            vm.prank(registryDeployer);
+            extensionRegistry.addExtension(extensions[i]);
+            extensionNames[i] = extensions[i].metadata.name;
+        }
+
+        // Add first set of extensions to snapshot.
+        vm.prank(registryDeployer);
+        extensionRegistry.buildExtensionSnapshot(snapshotId, extensionNames, true);
+    }
+
+    function test_state_registerWithSnapshot() external {
+        _setUp_registerWithSnapshot();
+
+        // Register router with snapshot.
+        vm.prank(router);
+        extensionRegistry.registerWithSnapshot(snapshotId);
+
+        Extension[] memory getAllExtensions = extensionRegistry.getAllExtensionsForRouter(router);
+
+        uint256 len = 3;
+        for (uint256 i = 0; i < len; i += 1) {
+            // getAllExtensions
+            assertEq(getAllExtensions[i].metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(getAllExtensions[i].metadata.name, extensions[i].metadata.name);
+            assertEq(getAllExtensions[i].metadata.metadataURI, extensions[i].metadata.metadataURI);
+            uint256 fnsLen = extensions[i].functions.length;
+            assertEq(fnsLen, getAllExtensions[i].functions.length);
+            for (uint256 j = 0; j < fnsLen; j += 1) {
+                assertEq(
+                    extensions[i].functions[j].functionSelector,
+                    getAllExtensions[i].functions[j].functionSelector
+                );
+                assertEq(
+                    extensions[i].functions[j].functionSignature,
+                    getAllExtensions[i].functions[j].functionSignature
+                );
+
+                ExtensionMetadata memory metadata = extensionRegistry.getExtensionForRouterFunction(
+                    extensions[i].functions[j].functionSelector,
+                    router
+                );
+
+                assertEq(metadata.implementation, extensions[i].metadata.implementation);
+                assertEq(metadata.name, extensions[i].metadata.name);
+                assertEq(metadata.metadataURI, extensions[i].metadata.metadataURI);
+            }
+
+            // getExtension
+            Extension memory extension = extensionRegistry.getExtensionForRouter(extensions[i].metadata.name, router);
+            assertEq(extension.metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(extension.metadata.name, extensions[i].metadata.name);
+            assertEq(extension.metadata.metadataURI, extensions[i].metadata.metadataURI);
+            assertEq(fnsLen, extension.functions.length);
+            for (uint256 j = 0; j < fnsLen; j += 1) {
+                assertEq(extensions[i].functions[j].functionSelector, extension.functions[j].functionSelector);
+                assertEq(extensions[i].functions[j].functionSignature, extension.functions[j].functionSignature);
+            }
+        }
+    }
+
+    function test_revert_registerWithSnapshot_nonexistentSnapshotId() external {
+        router = address(new RouterImpl());
+
+        // Register router with snapshot when snapshot does not exist.
+        vm.prank(router);
+        vm.expectRevert("ExtensionRegistryState: extension snapshot does not exist.");
+        extensionRegistry.registerWithSnapshot(snapshotId);
+    }
+
+    function test_revert_registerWithSnapshot_routerAlreadyRegistered() external {
+        _setUp_registerWithSnapshot();
+
+        // Register router with snapshot.
+        vm.prank(router);
+        extensionRegistry.registerWithSnapshot(snapshotId);
+
+        vm.prank(router);
+        vm.expectRevert("ExtensionRegistryState: router already registered.");
+        extensionRegistry.registerWithSnapshot(snapshotId);
+    }
+
+    function test_revert_registerWithSnapshot_callerIsNotRouter() external {
+        _setUp_registerWithSnapshot();
+
+        // Register router with snapshot.
+        vm.prank(address(0x9999));
+        vm.expectRevert("ExtensionRegistry: caller is not a router.");
+        extensionRegistry.registerWithSnapshot(snapshotId);
+    }
 }
