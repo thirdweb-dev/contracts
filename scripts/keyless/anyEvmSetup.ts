@@ -13,6 +13,7 @@ async function main() {
   const commonFactory = "0x4e59b44847b379578588920cA78FbF26c0B4956C";
 
   let factoryCode = await hardhatEthers.provider.getCode(commonFactory);
+  // deploy community factory if not already deployed
   if (factoryCode == "0x") {
     console.log("zero code");
     // send balance
@@ -38,6 +39,7 @@ async function main() {
     console.log("deployed code: ", factoryCode);
   }
 
+  // ExtensionRegistry deployment here
   const bytecodeHash = hardhatEthers.utils.id(ExtensionRegistry.bytecode.object);
   const salt = `tw.${bytecodeHash}`;
   const saltHash = hardhatEthers.utils.id(salt);
@@ -61,6 +63,7 @@ async function main() {
   // console.log(bytecode);
   // console.log(bytecode == savedBytecode);
 
+  // create deployment tx
   let tx = {};
   const block = await hardhatEthers.provider.getBlock("latest");
   const baseBlockFee = block && block.baseFeePerGas ? block.baseFeePerGas : hardhatEthers.utils.parseUnits("1", "gwei");
