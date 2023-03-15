@@ -68,13 +68,6 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, Permis
     /// @dev Registers a router contract with an extension snapshot as its default set of extensions.
     function registerWithSnapshot(string memory _extensionSnapshotId) external {
         address router = msg.sender;
-
-        bool isRouter = false;
-        if (router.code.length > 0) {
-            isRouter = ERC165(router).supportsInterface(type(IRouter).interfaceId);
-        }
-        require(isRouter, "ExtensionRegistry: caller is not a router.");
-
         _registerRouterWithSnapshot(_extensionSnapshotId, router);
 
         emit RouterRegistered(router, _extensionSnapshotId);
