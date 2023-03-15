@@ -37,12 +37,6 @@ contract ContractC {
     }
 }
 
-contract RouterImpl is ERC165 {
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IRouter).interfaceId;
-    }
-}
-
 contract ExtensionRegistryTest is BaseTest, IExtension {
     address private registryDeployer;
 
@@ -966,7 +960,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
     string private snapshotId = "snapshotId";
 
     function _setUp_registerWithSnapshot() internal {
-        router = address(new RouterImpl());
+        router = address(0x1234);
 
         uint256 len = 3;
 
@@ -1035,7 +1029,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
     }
 
     function test_revert_registerWithSnapshot_nonexistentSnapshotId() external {
-        router = address(new RouterImpl());
+        router = address(0x1234);
 
         // Register router with snapshot when snapshot does not exist.
         vm.prank(router);
@@ -1052,15 +1046,6 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
 
         vm.prank(router);
         vm.expectRevert("ExtensionRegistryState: router already registered.");
-        extensionRegistry.registerWithSnapshot(snapshotId);
-    }
-
-    function test_revert_registerWithSnapshot_callerIsNotRouter() external {
-        _setUp_registerWithSnapshot();
-
-        // Register router with snapshot.
-        vm.prank(address(0x9999));
-        vm.expectRevert("ExtensionRegistry: caller is not a router.");
         extensionRegistry.registerWithSnapshot(snapshotId);
     }
 }
