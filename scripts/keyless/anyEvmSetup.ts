@@ -107,7 +107,8 @@ async function main() {
   const receipt = await signer.sendTransaction(tx);
   const deployTx = await receipt.wait();
 
-  console.log(deployTx.logs);
+  console.log(deployTx);
+  // console.log(deployTx.logs);
 
   console.log("predicted address: ", `0x${predictedAddress.slice(26)}`);
 }
