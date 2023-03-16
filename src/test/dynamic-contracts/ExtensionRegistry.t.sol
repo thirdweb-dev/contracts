@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import "lib/dynamic-contracts/src/interface/IExtension.sol";
 import "lib/dynamic-contracts/src/interface/IRouter.sol";
 import "contracts/dynamic-contracts/ExtensionRegistry.sol";
+import "contracts/dynamic-contracts/interface/IExtensionRegistrySig.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -1047,5 +1048,260 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
         vm.prank(router);
         vm.expectRevert("ExtensionRegistryState: router already registered.");
         extensionRegistry.registerWithSnapshot(snapshotId);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Signature actions
+    //////////////////////////////////////////////////////////////*/
+
+    address private authorizedSigner;
+    bytes private extensionUpdateRequestSig;
+    IExtensionRegistrySig.ExtensionUpdateRequest private request;
+
+    function _setUp_sig(address _caller, IExtensionRegistrySig.ExtensionUpdateType _updateType) internal {
+        uint256 privateKey = 123456;
+        authorizedSigner = vm.addr(privateKey);
+
+        vm.prank(registryDeployer);
+        extensionRegistry.grantRole(0x00, authorizedSigner);
+
+        request.caller = _caller;
+        request.updateType = _updateType;
+        request.uid = keccak256("uid");
+        request.validityStartTimestamp = uint128(0);
+        request.validityEndTimestamp = uint128(100);
+
+        bytes32 typehash = keccak256(
+            "ExtensionUpdateRequest(address caller,uint256 updateType,bytes32 uid,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+        );
+        bytes32 nameHash = keccak256(bytes("ExtensionRegistry"));
+        bytes32 versionHash = keccak256(bytes("1"));
+        bytes32 typehashEip712 = keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
+        bytes32 domainSeparator = keccak256(
+            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(extensionRegistry))
+        );
+
+        bytes memory encodedRequest = abi.encode(
+            typehash,
+            request.caller,
+            request.updateType,
+            request.uid,
+            request.validityStartTimestamp,
+            request.validityEndTimestamp
+        );
+
+        bytes32 structHash = keccak256(encodedRequest);
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+        extensionUpdateRequestSig = abi.encodePacked(r, s, v);
+    }
+
+    function test_state_addExtensionWithSig() external {
+        address caller = address(0x12345);
+
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add);
+
+        vm.prank(caller);
+        extensionRegistry.addExtensionWithSig(extensions[0], request, extensionUpdateRequestSig);
+
+        Extension[] memory getAllExtensions = extensionRegistry.getAllExtensions();
+        uint256 len = getAllExtensions.length;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            // getAllExtensions
+            assertEq(getAllExtensions[i].metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(getAllExtensions[i].metadata.name, extensions[i].metadata.name);
+            assertEq(getAllExtensions[i].metadata.metadataURI, extensions[i].metadata.metadataURI);
+            uint256 fnsLen = extensions[i].functions.length;
+            assertEq(fnsLen, getAllExtensions[i].functions.length);
+            for (uint256 j = 0; j < fnsLen; j += 1) {
+                assertEq(
+                    extensions[i].functions[j].functionSelector,
+                    getAllExtensions[i].functions[j].functionSelector
+                );
+                assertEq(
+                    extensions[i].functions[j].functionSignature,
+                    getAllExtensions[i].functions[j].functionSignature
+                );
+            }
+
+            // getExtension
+            Extension memory extension = extensionRegistry.getExtension(extensions[i].metadata.name);
+            assertEq(extension.metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(extension.metadata.name, extensions[i].metadata.name);
+            assertEq(extension.metadata.metadataURI, extensions[i].metadata.metadataURI);
+            assertEq(fnsLen, extension.functions.length);
+            for (uint256 j = 0; j < fnsLen; j += 1) {
+                assertEq(extensions[i].functions[j].functionSelector, extension.functions[j].functionSelector);
+                assertEq(extensions[i].functions[j].functionSignature, extension.functions[j].functionSignature);
+            }
+        }
+    }
+
+    function test_state_updateExtensionWithSig() external {
+        _setUp_updateExtension();
+
+        Extension memory extension;
+
+        extension.metadata = ExtensionMetadata({
+            name: "MockERC20",
+            metadataURI: "ipfs://MockERC20",
+            implementation: address(new MockERC20())
+        });
+
+        extension.functions = new ExtensionFunction[](2);
+        extension.functions[0] = ExtensionFunction(MockERC20.mint.selector, "mint(address,uint256)");
+        extension.functions[1] = ExtensionFunction(MockERC20.toggleTax.selector, "toggleTax()");
+
+        address caller = address(0x12345);
+
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Update);
+
+        vm.prank(caller);
+        extensionRegistry.updateExtensionWithSig(extension, request, extensionUpdateRequestSig);
+
+        {
+            Extension[] memory getAllExtensions = extensionRegistry.getAllExtensions();
+            assertEq(getAllExtensions.length, 1);
+
+            // getAllExtensions
+            assertEq(getAllExtensions[0].metadata.implementation, extension.metadata.implementation);
+            assertEq(getAllExtensions[0].metadata.name, extension.metadata.name);
+            assertEq(getAllExtensions[0].metadata.metadataURI, extension.metadata.metadataURI);
+            uint256 fnsLen = extension.functions.length;
+
+            assertEq(fnsLen, 2);
+            assertEq(fnsLen, getAllExtensions[0].functions.length);
+
+            for (uint256 j = 0; j < fnsLen; j += 1) {
+                assertEq(extension.functions[j].functionSelector, getAllExtensions[0].functions[j].functionSelector);
+                assertEq(extension.functions[j].functionSignature, getAllExtensions[0].functions[j].functionSignature);
+            }
+
+            // getExtension
+            Extension memory getExtension = extensionRegistry.getExtension(extension.metadata.name);
+            assertEq(extension.metadata.implementation, getExtension.metadata.implementation);
+            assertEq(extension.metadata.name, getExtension.metadata.name);
+            assertEq(extension.metadata.metadataURI, getExtension.metadata.metadataURI);
+            assertEq(fnsLen, getExtension.functions.length);
+            for (uint256 j = 0; j < fnsLen; j += 1) {
+                assertEq(getExtension.functions[j].functionSelector, extension.functions[j].functionSelector);
+                assertEq(getExtension.functions[j].functionSignature, extension.functions[j].functionSignature);
+            }
+        }
+    }
+
+    function test_state_removeExtensionWithSig() external {
+        _setUp_removeExtension();
+
+        string memory name = "MockERC20";
+
+        assertEq(true, extensionRegistry.getExtension(name).metadata.implementation != address(0));
+
+        address caller = address(0x12345);
+
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Remove);
+
+        vm.prank(caller);
+        extensionRegistry.removeExtensionWithSig(name, request, extensionUpdateRequestSig);
+
+        vm.expectRevert("ExtensionRegistry: extension does not exist.");
+        extensionRegistry.getExtension(name);
+    }
+
+    function test_state_buildExtensionSnapshotWithSig() external {
+        uint256 len = 3;
+
+        string[] memory extensionNames = new string[](len);
+        string memory snapshotId = "snapshotId";
+
+        for (uint256 i = 0; i < len; i += 1) {
+            vm.prank(registryDeployer);
+            extensionRegistry.addExtension(extensions[i]);
+            extensionNames[i] = extensions[i].metadata.name;
+        }
+
+        // Add first set of extensions to snapshot.
+        address caller = address(0x12345);
+
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Build);
+
+        vm.prank(caller);
+        extensionRegistry.buildExtensionSnapshotWithSig(
+            snapshotId,
+            extensionNames,
+            true,
+            request,
+            extensionUpdateRequestSig
+        );
+
+        string[] memory allSnapshotIds = extensionRegistry.getAllSnapshotIds();
+        assertEq(allSnapshotIds.length, 1);
+        assertEq(allSnapshotIds[0], snapshotId);
+
+        Extension[] memory snapshotExtensions = extensionRegistry.getExtensionSnapshot(snapshotId);
+
+        for (uint256 i = 0; i < len; i += 1) {
+            // snapshotExtensions
+            assertEq(snapshotExtensions[i].metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(snapshotExtensions[i].metadata.name, extensions[i].metadata.name);
+            assertEq(snapshotExtensions[i].metadata.metadataURI, extensions[i].metadata.metadataURI);
+            uint256 fnsLen = extensions[i].functions.length;
+            assertEq(fnsLen, snapshotExtensions[i].functions.length);
+            for (uint256 j = 0; j < fnsLen; j += 1) {
+                assertEq(
+                    extensions[i].functions[j].functionSelector,
+                    snapshotExtensions[i].functions[j].functionSelector
+                );
+                assertEq(
+                    extensions[i].functions[j].functionSignature,
+                    snapshotExtensions[i].functions[j].functionSignature
+                );
+            }
+        }
+    }
+
+    function test_revert_onlyValidRequest_unauthorizedSigner() external {
+        address caller = address(0x12345);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add);
+
+        vm.prank(registryDeployer);
+        extensionRegistry.revokeRole(0x00, authorizedSigner);
+
+        vm.prank(caller);
+        vm.expectRevert("ExtensionRegistrySig: invalid request.");
+        extensionRegistry.addExtensionWithSig(extensions[0], request, extensionUpdateRequestSig);
+    }
+
+    function test_revert_onlyValidRequest_unauthorizedCaller() external {
+        address caller = address(0x12345);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add);
+
+        vm.prank(address(0x456));
+        vm.expectRevert("ExtensionRegistry: unauthorized caller.");
+        extensionRegistry.addExtensionWithSig(extensions[0], request, extensionUpdateRequestSig);
+    }
+
+    function test_revert_onlyValidRequest_requestExpired() external {
+        address caller = address(0x12345);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add);
+
+        vm.warp(request.validityEndTimestamp + 1);
+
+        vm.prank(caller);
+        vm.expectRevert("ExtensionRegistrySig: request expired.");
+        extensionRegistry.addExtensionWithSig(extensions[0], request, extensionUpdateRequestSig);
+    }
+
+    function test_revert_onlyValidRequest_invalidUpdateType() external {
+        address caller = address(0x12345);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Remove);
+
+        vm.prank(caller);
+        vm.expectRevert("ExtensionRegistry: invalid update type.");
+        extensionRegistry.addExtensionWithSig(extensions[0], request, extensionUpdateRequestSig);
     }
 }
