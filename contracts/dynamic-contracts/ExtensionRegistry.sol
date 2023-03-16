@@ -11,11 +11,17 @@ import "../eip/ERC165.sol";
 
 // Extensions
 import "./ExtensionRegistryState.sol";
+import "./ExtensionRegistrySig.sol";
 import "../extension/plugin/PermissionsEnumerableLogic.sol";
 
 // TODO: add events emitting full `Extension` for `addExtension` and `updateExtension`.
 
-contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, PermissionsEnumerableLogic {
+contract ExtensionRegistry is
+    IExtensionRegistry,
+    ExtensionRegistrySig,
+    ExtensionRegistryState,
+    PermissionsEnumerableLogic
+{
     using StringSet for StringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
@@ -27,6 +33,22 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, Permis
     }
 
     /*///////////////////////////////////////////////////////////////
+                            Modifier
+    //////////////////////////////////////////////////////////////*/
+
+    modifier onlyValidRequest(
+        ExtensionUpdateRequest calldata _req,
+        bytes calldata _signature,
+        ExtensionUpdateType _targetUpdateType
+    ) {
+        _processRequest(_req, _signature);
+        require(_req.caller == msg.sender, "ExtensionRegistry: unauthorized caller.");
+        require(_req.updateType == _targetUpdateType, "ExtensionRegistry: invalid update type.");
+
+        _;
+    }
+
+    /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
 
@@ -35,13 +57,40 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, Permis
         _addExtension(_extension);
     }
 
+    /// @dev Adds a new extension to the registry.
+    function addExtensionWithSig(
+        Extension memory _extension,
+        ExtensionUpdateRequest calldata _req,
+        bytes calldata _signature
+    ) external onlyValidRequest(_req, _signature, ExtensionUpdateType.Add) {
+        _addExtension(_extension);
+    }
+
     /// @notice Updates an existing extension in the registry.
     function updateExtension(Extension memory _extension) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _updateExtension(_extension);
     }
 
+    /// @dev Updates an existing extension in the registry.
+    function updateExtensionWithSig(
+        Extension memory _extension,
+        ExtensionUpdateRequest calldata _req,
+        bytes calldata _signature
+    ) external onlyValidRequest(_req, _signature, ExtensionUpdateType.Update) {
+        _updateExtension(_extension);
+    }
+
     /// @notice Removes an existing extension from the contract.
     function removeExtension(string memory _extensionName) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        _removeExtension(_extensionName);
+    }
+
+    /// @notice Removes an existing extension from the contract.
+    function removeExtensionWithSig(
+        string memory _extensionName,
+        ExtensionUpdateRequest calldata _req,
+        bytes calldata _signature
+    ) external onlyValidRequest(_req, _signature, ExtensionUpdateType.Remove) {
         _removeExtension(_extensionName);
     }
 
@@ -51,6 +100,28 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, Permis
         string[] memory _extensionNames,
         bool _freeze
     ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        require(bytes(_extensionSnapshotId).length > 0, "ExtensionRegistry: extension snapshot ID cannot be empty.");
+
+        uint256 len = _extensionNames.length;
+        for (uint256 i = 0; i < len; i += 1) {
+            _addExtensionToSnapshot(_extensionSnapshotId, _extensionNames[i]);
+        }
+
+        if (_freeze) {
+            _freezeExtensionSnapshot(_extensionSnapshotId);
+        }
+
+        emit ExtensionSnapshotUpdated(_extensionSnapshotId, _extensionNames);
+    }
+
+    /// @notice Adds an extension to an extension snapshot.
+    function buildExtensionSnapshotWithSig(
+        string memory _extensionSnapshotId,
+        string[] memory _extensionNames,
+        bool _freeze,
+        ExtensionUpdateRequest calldata _req,
+        bytes calldata _signature
+    ) external onlyValidRequest(_req, _signature, ExtensionUpdateType.Build) {
         require(bytes(_extensionSnapshotId).length > 0, "ExtensionRegistry: extension snapshot ID cannot be empty.");
 
         uint256 len = _extensionNames.length;
@@ -152,5 +223,14 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionRegistryState, Permis
         for (uint256 i = 0; i < len; i += 1) {
             extensions[i] = data.extensions[extensionsIds[i].name][extensionsIds[i].id];
         }
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Overrides
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Returns whether a given address is authorized to sign requests.
+    function _isAuthorizedSigner(address _signer) internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _signer);
     }
 }
