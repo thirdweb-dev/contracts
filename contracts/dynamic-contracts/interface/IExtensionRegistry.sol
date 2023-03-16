@@ -2,8 +2,9 @@
 pragma solidity ^0.8.0;
 
 import "./IExtensionRegistryState.sol";
+import "./IExtensionRegistrySig.sol";
 
-interface IExtensionRegistry is IExtensionRegistryState {
+interface IExtensionRegistry is IExtensionRegistryState, IExtensionRegistrySig {
     /*///////////////////////////////////////////////////////////////
                                 Events
     //////////////////////////////////////////////////////////////*/
@@ -58,17 +59,47 @@ interface IExtensionRegistry is IExtensionRegistryState {
     /// @dev Adds a new extension to the registry.
     function addExtension(Extension memory extension) external;
 
+    /// @dev Adds a new extension to the registry.
+    function addExtensionWithSig(
+        Extension memory extension,
+        ExtensionUpdateRequest calldata req,
+        bytes calldata signature
+    ) external;
+
     /// @dev Updates an existing extension in the registry.
     function updateExtension(Extension memory extension) external;
 
+    /// @dev Updates an existing extension in the registry.
+    function updateExtensionWithSig(
+        Extension memory extension,
+        ExtensionUpdateRequest calldata req,
+        bytes calldata signature
+    ) external;
+
     /// @notice Removes an existing extension from the contract.
-    function removeExtension(string memory _extensionName) external;
+    function removeExtension(string memory extensionName) external;
+
+    /// @notice Removes an existing extension from the contract.
+    function removeExtensionWithSig(
+        string memory extensionName,
+        ExtensionUpdateRequest calldata req,
+        bytes calldata signature
+    ) external;
 
     /// @notice Adds an extension to an extension snapshot.
     function buildExtensionSnapshot(
         string memory extensionSnapshotId,
         string[] memory extensionNames,
         bool freeze
+    ) external;
+
+    /// @notice Adds an extension to an extension snapshot.
+    function buildExtensionSnapshotWithSig(
+        string memory extensionSnapshotId,
+        string[] memory extensionNames,
+        bool freeze,
+        ExtensionUpdateRequest calldata req,
+        bytes calldata signature
     ) external;
 
     /// @dev Registers a router contract with an extension snapshot as its default set of extensions.
