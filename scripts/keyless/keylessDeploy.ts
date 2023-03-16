@@ -129,23 +129,14 @@ async function deployInfraWithSigner() {
   await deployCommonFactory(signer);
 
   for (let txInfo of Object.values(infraContracts) as InfraTxInfo[]) {
-    const block = await hardhatEthers.provider.getBlock("latest");
-    const baseBlockFee =
-      block && block.baseFeePerGas ? block.baseFeePerGas : hardhatEthers.utils.parseUnits("1", "gwei");
-    const feeData = await hardhatEthers.provider.getFeeData();
-    const baseMaxFeePerGas = baseBlockFee.mul(2);
-    const maxPriorityFeePerGas = BigNumber.from(feeData.maxPriorityFeePerGas);
-
     // get init bytecode
-    const deployData = await hardhatEthers.provider.getCode(txInfo.deployData);
+    const deployData = txInfo.deployData;
 
     const tx = {
       from: signer.address,
       to: commonFactory,
       value: 0,
       nonce: await signer.getTransactionCount("latest"),
-      maxPriorityFeePerGas: maxPriorityFeePerGas,
-      maxFeePerGas: baseMaxFeePerGas.add(maxPriorityFeePerGas),
       data: deployData,
     };
 
@@ -154,7 +145,8 @@ async function deployInfraWithSigner() {
 }
 
 async function deployStaking() {
-  await deployInfraKeyless();
+  // await deployInfraKeyless();
+  await deployInfraWithSigner();
 
   const cloneFactory: TWStatelessFactory = await hardhatEthers.getContractAt(
     "TWStatelessFactory",
