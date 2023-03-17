@@ -60,9 +60,6 @@ function generatePluginParam(pluginName: string, contractAddress: string): Plugi
 }
 
 async function main() {
-  // const provider = ethers.getDefaultProvider(NETWORK);
-  // const signer = new ethers.Wallet(PRIVATE_KEY, provider);
-  // const tieredDropLogicFactory = new TieredDropLogic__factory(signer);
   const tieredDropLogicFactory = await hre.ethers.getContractFactory("TieredDropLogic");
   const tieredDropLogic = await tieredDropLogicFactory.deploy();
   await tieredDropLogic.deployed();
@@ -70,7 +67,6 @@ async function main() {
 
   const tieredDropLogicPlugin: Plugin = generatePluginParam("TieredDropLogic", tieredDropLogic.address);
   console.log(tieredDropLogicPlugin);
-  // const tieredDropRouter = TieredDrop__factory.connect(MOCAVERSE_ROUTER, signer);
   const tieredDropRouter = await hre.ethers.getContractAt("TieredDrop", MOCAVERSE_ROUTER);
   const updateExtensionTx = await tieredDropRouter.addExtension(tieredDropLogicPlugin);
 
