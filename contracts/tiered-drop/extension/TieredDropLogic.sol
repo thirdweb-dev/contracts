@@ -438,7 +438,7 @@ contract TieredDropLogic is
 
         uint256 batchSize = _batchId - prevBatchId;
         uint256 offset = randomness % batchSize;
-        fairMetadataId = prevBatchId + ((_metadataId + offset) % batchSize);
+        fairMetadataId = (_metadataId + offset) % batchSize;
     }
 
     /// @dev Scrambles tokenId offset for a given batchId.
