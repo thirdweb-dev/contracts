@@ -172,7 +172,7 @@ contract ExtensionRegistry is
     }
 
     /// @dev Returns all default extensions for a router.
-    function getAllExtensionsForRouter(address router) external view returns (Extension[] memory extensions) {
+    function getSnapshotForRouter(address router) external view returns (Extension[] memory extensions) {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
         string memory snapshotId = data.snapshotIdForRouter[router];
         return getExtensionSnapshot(snapshotId);

@@ -32,7 +32,7 @@ interface IExtensionRegistry is IExtensionRegistryState, IExtensionRegistrySig {
     function getExtension(string memory extensionName) external view returns (Extension memory);
 
     /// @dev Returns all default extensions for a router.
-    function getAllExtensionsForRouter(address router) external view returns (Extension[] memory);
+    function getSnapshotForRouter(address router) external view returns (Extension[] memory);
 
     /// @dev Returns extension data for a default extension of a router.
     function getExtensionForRouter(string memory extensionName, address router)

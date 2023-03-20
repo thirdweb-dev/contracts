@@ -986,7 +986,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
         vm.prank(router);
         extensionRegistry.registerWithSnapshot(snapshotId);
 
-        Extension[] memory getAllExtensions = extensionRegistry.getAllExtensionsForRouter(router);
+        Extension[] memory getAllExtensions = extensionRegistry.getSnapshotForRouter(router);
 
         uint256 len = 3;
         for (uint256 i = 0; i < len; i += 1) {

@@ -75,7 +75,7 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
      *          given precedence over default extensions in DefaultExtensionSet.
      */
     function getAllExtensions() external view returns (Extension[] memory allExtensions) {
-        Extension[] memory defaultExtensions = IExtensionRegistry(extensionRegistry).getAllExtensionsForRouter(
+        Extension[] memory defaultExtensions = IExtensionRegistry(extensionRegistry).getSnapshotForRouter(
             implementation
         );
         uint256 defaultExtensionsLen = defaultExtensions.length;
