@@ -62,7 +62,7 @@ export async function constructKeylessTx(bytecode: any, args: any) {
   const data = hardhatEthers.utils.solidityPack(["bytes32", "bytes", "bytes"], [saltHash, bytecode, args]);
 
   const testTx = {
-    gasPrice: 100 * 10 ** 9,
+    gasPrice: 10 * 10 ** 9,
     gasLimit: 5000000,
     to: commonFactory,
     value: 0,
@@ -108,16 +108,56 @@ async function deployInfraKeyless() {
   // create2 factory
   await deployCommonFactory(signer);
 
+  const feeData = await hardhatEthers.provider.getFeeData();
   for (let txInfo of Object.values(infraContracts) as InfraTxInfo[]) {
     const code = await hardhatEthers.provider.getCode(txInfo.predictedAddress);
     if (code === "0x") {
+      const requiredGas = await hardhatEthers.provider.estimateGas({
+        to: commonFactory,
+        data: txInfo.deployData,
+      });
+      // ===
+      const testTx = {
+        gasPrice: feeData.maxFeePerGas?.toNumber(),
+        gasLimit: requiredGas.toNumber(),
+        to: commonFactory,
+        value: 0,
+        nonce: 0,
+        data: txInfo.deployData,
+      };
+      const customSignature = ethers.utils.joinSignature(customSigInfo);
+      const serializedTestTx = ethers.utils.serializeTransaction(testTx);
+
+      const addr = ethers.utils.recoverAddress(
+        ethers.utils.arrayify(ethers.utils.keccak256(serializedTestTx)),
+        customSignature,
+      );
+
+      const signedSerializedTestTx = ethers.utils.serializeTransaction(testTx, customSigInfo);
+      // ===
+
       let fundAddr = {
-        to: txInfo.from,
-        value: hardhatEthers.utils.parseEther("1"),
+        to: addr,
+        value: requiredGas
+          .mul(feeData.maxFeePerGas || 1)
+          .mul(105)
+          .div(100),
       };
       await signer.sendTransaction(fundAddr);
 
-      await (await hardhatEthers.provider.sendTransaction(txInfo.tx)).wait();
+      console.log("deploying -- ");
+      console.log("required gas: ", ethers.utils.formatEther(requiredGas));
+      console.log("estimated cost: ", ethers.utils.formatEther(requiredGas.mul(feeData.maxFeePerGas || 1)));
+      console.log(
+        `${txInfo.from} balance before: `,
+        ethers.utils.formatEther(await hardhatEthers.provider.getBalance(addr)),
+      );
+      await (await hardhatEthers.provider.sendTransaction(signedSerializedTestTx)).wait();
+      console.log(
+        `${txInfo.from} balance after: `,
+        ethers.utils.formatEther(await hardhatEthers.provider.getBalance(addr)),
+      );
+      console.log("");
     }
   }
 }
@@ -145,8 +185,8 @@ async function deployInfraWithSigner() {
 }
 
 async function deployStaking() {
-  // await deployInfraKeyless();
-  await deployInfraWithSigner();
+  await deployInfraKeyless();
+  // await deployInfraWithSigner();
 
   const cloneFactory: TWStatelessFactory = await hardhatEthers.getContractAt(
     "TWStatelessFactory",
