@@ -8,7 +8,7 @@ interface IExtensionRegistrySig {
         Add,
         Update,
         Remove,
-        Build
+        SetupContractType
     }
 
     /**

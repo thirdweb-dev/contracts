@@ -19,14 +19,16 @@ library ExtensionRegistryStateStorage {
         mapping(string => uint256) nextIdForExtension;
         /// @dev Mapping from extension name => ID for extension => `Extension` i.e. extension metadata and functions.
         mapping(string => mapping(uint256 => IExtension.Extension)) extensions;
+        /// @dev Mapping from function selector => Extension ID hash i.e. keccak256(extension name, ID) => extension metadata.
+        mapping(bytes4 => mapping(bytes32 => IExtension.ExtensionMetadata)) extensionForFunction;
         // ====== Extension Sets ======
 
-        /// @dev Set of all extension snapshot IDs.
-        StringSet.Set snapshotIds;
-        /// @dev Mapping from router contract address => snapshot ID for router's default set of extensions.
-        mapping(address => string) snapshotIdForRouter;
-        /// @dev Mapping from snapshot ID => extension snapshot.
-        mapping(string => IExtensionRegistryState.ExtensionSnapshotData) extensionSnapshot;
+        /// @dev Set of all contract types stored.
+        StringSet.Set allContractTypes;
+        /// @dev Mapping from contract type => extension names of extensions for contract type.
+        mapping(string => StringSet.Set) extensionsForContractType;
+        /// @dev Mapping from contract address => fixed default extensions for contract.
+        mapping(address => IExtensionRegistryState.ExtensionID[]) defaultExtensionsForContract;
     }
 
     function extensionRegistryStateStorage() internal pure returns (Data storage extensionRegistryStateData) {
@@ -44,54 +46,38 @@ contract ExtensionRegistryState is IExtensionRegistryState {
                     Internal functions: extension sets
     //////////////////////////////////////////////////////////////*/
 
-    function _addExtensionToSnapshot(string memory _snapshotId, string memory _extensionName) internal {
+    function _setExtensionsForContractType(string memory _contractType, string[] memory _extensionNames) internal {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
 
-        require(data.extensionNames.contains(_extensionName), "ExtensionRegistryState: extension does not exist.");
-        require(!data.extensionSnapshot[_snapshotId].isFrozen, "ExtensionRegistryState: extension snapshot is frozen.");
+        delete data.extensionsForContractType[_contractType];
 
-        data.snapshotIds.add(_snapshotId);
-
-        uint256 latestId = data.nextIdForExtension[_extensionName] - 1;
-        Extension memory extension = data.extensions[_extensionName][latestId];
-
-        bytes32 nameHash = keccak256(abi.encodePacked(_extensionName, _snapshotId));
-        data.extensionSnapshot[_snapshotId].extension[nameHash].metadata = extension.metadata;
-        data.extensionSnapshot[_snapshotId].allExtensions.push(ExtensionID({ name: _extensionName, id: latestId }));
-
-        uint256 len = extension.functions.length;
+        uint256 len = _extensionNames.length;
         for (uint256 i = 0; i < len; i += 1) {
             require(
-                data
-                    .extensionSnapshot[_snapshotId]
-                    .extensionForFunction[extension.functions[i].functionSelector]
-                    .implementation == address(0),
-                "ExtensionRegistryState: function already exists in snapshot."
+                data.extensionNames.contains(_extensionNames[i]),
+                "ExtensionRegistryState: extension does not exist."
             );
-
-            data.extensionSnapshot[_snapshotId].extensionForFunction[
-                extension.functions[i].functionSelector
-            ] = extension.metadata;
-
-            data.extensionSnapshot[_snapshotId].extension[nameHash].functions.push(extension.functions[i]);
+            data.extensionsForContractType[_contractType].add(_extensionNames[i]);
         }
     }
 
-    function _registerRouterWithSnapshot(string memory _snapshotId, address _router) internal {
+    function _registerContract(string memory _contractType, address _contract) internal {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
-        require(data.snapshotIds.contains(_snapshotId), "ExtensionRegistryState: extension snapshot does not exist.");
 
+        require(data.allContractTypes.contains(_contractType), "ExtensionRegistryState: contract type does not exist.");
         require(
-            bytes(data.snapshotIdForRouter[_router]).length == 0,
-            "ExtensionRegistryState: router already registered."
+            data.defaultExtensionsForContract[_contract].length == 0,
+            "ExtensionRegistryState: contract already registered."
         );
 
-        data.snapshotIdForRouter[_router] = _snapshotId;
-    }
+        string[] memory extensionNames = data.extensionsForContractType[_contractType].values();
+        uint256 len = extensionNames.length;
 
-    function _freezeExtensionSnapshot(string memory _snapshotId) internal {
-        ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
-        data.extensionSnapshot[_snapshotId].isFrozen = true;
+        for (uint256 i = 0; i < len; i += 1) {
+            string memory extensionName = extensionNames[i];
+            uint256 extensionId = data.nextIdForExtension[extensionName] - 1;
+            data.defaultExtensionsForContract[_contract].push(ExtensionID(extensionName, extensionId));
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -107,6 +93,8 @@ contract ExtensionRegistryState is IExtensionRegistryState {
         require(data.extensionNames.add(name), "ExtensionRegistryState: extension already exists.");
         uint256 nextId = data.nextIdForExtension[name];
         data.nextIdForExtension[name] += 1;
+
+        bytes32 extensionIdHash = keccak256(abi.encodePacked(name, nextId));
 
         data.extensions[name][nextId].metadata = _extension.metadata;
 
@@ -124,12 +112,7 @@ contract ExtensionRegistryState is IExtensionRegistryState {
             );
 
             data.extensions[name][nextId].functions.push(_extension.functions[i]);
-
-            emit ExtensionAdded(
-                _extension.metadata.implementation,
-                _extension.functions[i].functionSelector,
-                _extension.functions[i].functionSignature
-            );
+            data.extensionForFunction[_extension.functions[i].functionSelector][extensionIdHash] = _extension.metadata;
         }
     }
 
@@ -142,6 +125,8 @@ contract ExtensionRegistryState is IExtensionRegistryState {
 
         uint256 nextId = data.nextIdForExtension[name];
         data.nextIdForExtension[name] += 1;
+
+        bytes32 extensionIdHash = keccak256(abi.encodePacked(name, nextId));
 
         address oldImplementation = data.extensions[name][nextId - 1].metadata.implementation;
         require(
@@ -160,26 +145,13 @@ contract ExtensionRegistryState is IExtensionRegistryState {
             );
 
             data.extensions[name][nextId].functions.push(_extension.functions[i]);
-
-            emit ExtensionUpdated(
-                oldImplementation,
-                _extension.metadata.implementation,
-                _extension.functions[i].functionSelector,
-                _extension.functions[i].functionSignature
-            );
+            data.extensionForFunction[_extension.functions[i].functionSelector][extensionIdHash] = _extension.metadata;
         }
     }
 
     /// @dev Removes an existing extension from the contract.
     function _removeExtension(string memory _extensionName) internal {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
-
-        uint256 nextId = data.nextIdForExtension[_extensionName];
-        uint256 id = nextId > 0 ? nextId - 1 : 0;
-        Extension memory extension = data.extensions[_extensionName][id];
-
         require(data.extensionNames.remove(_extensionName), "ExtensionRegistryState: extension does not exist.");
-
-        emit ExtensionRemoved(_extensionName, extension);
     }
 }

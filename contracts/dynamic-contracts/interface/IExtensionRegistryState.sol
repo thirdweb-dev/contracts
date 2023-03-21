@@ -13,17 +13,4 @@ interface IExtensionRegistryState is IExtension {
         string name;
         uint256 id;
     }
-
-    struct ExtensionSnapshotData {
-        bool isFrozen;
-        IExtensionRegistryState.ExtensionID[] allExtensions;
-        mapping(bytes32 => IExtension.Extension) extension;
-        mapping(bytes4 => IExtension.ExtensionMetadata) extensionForFunction;
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                                Events
-    //////////////////////////////////////////////////////////////*/
-
-    event ExtensionRemoved(string indexed extensionName, Extension extension);
 }

@@ -30,11 +30,11 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
                                 Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _extensionRegistry, string memory _extensionSnapshotId) {
+    constructor(address _extensionRegistry, string memory _contractType) {
         implementation = address(this);
         extensionRegistry = _extensionRegistry;
 
-        IExtensionRegistry(_extensionRegistry).registerWithSnapshot(_extensionSnapshotId);
+        IExtensionRegistry(_extensionRegistry).registerContract(_contractType);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -75,7 +75,7 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
      *          given precedence over default extensions in DefaultExtensionSet.
      */
     function getAllExtensions() external view returns (Extension[] memory allExtensions) {
-        Extension[] memory defaultExtensions = IExtensionRegistry(extensionRegistry).getSnapshotForRouter(
+        Extension[] memory defaultExtensions = IExtensionRegistry(extensionRegistry).getAllDefaultExtensionsForContract(
             implementation
         );
         uint256 defaultExtensionsLen = defaultExtensions.length;
@@ -118,7 +118,7 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
         return
             isLocalExtension
                 ? data.extensions[_extensionName]
-                : IExtensionRegistry(extensionRegistry).getExtensionForRouter(_extensionName, implementation);
+                : IExtensionRegistry(extensionRegistry).getDefaultExtensionForContract(_extensionName, implementation);
     }
 
     /// @dev Returns the Extension metadata for a given function.
@@ -131,7 +131,7 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
         return
             isLocalExtension
                 ? metadata
-                : IExtensionRegistry(extensionRegistry).getExtensionForRouterFunction(
+                : IExtensionRegistry(extensionRegistry).getExtensionForContractFunction(
                     _functionSelector,
                     implementation
                 );

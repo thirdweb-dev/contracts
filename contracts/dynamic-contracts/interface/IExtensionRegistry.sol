@@ -9,99 +9,97 @@ interface IExtensionRegistry is IExtensionRegistryState, IExtensionRegistrySig {
                                 Events
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Emitted when a extension is added; emitted for each function of the extension.
+    /// @notice Emitted when a extension is added.
     event ExtensionAdded(string indexed name, address indexed implementation, Extension extension);
 
-    /// @dev Emitted when extension is updated; emitted for each function of the extension.
+    /// @notice Emitted when extension is updated.
     event ExtensionUpdated(string indexed name, address indexed implementation, Extension extension);
 
-    /// @dev Emitted when an extension is added to an extension snapshot.
-    event ExtensionSnapshotUpdated(string indexed extensionSnapshotId, string[] extensionNames);
+    /// @notice Emitted when an extension is removed.
+    event ExtensionRemoved(string indexed extensionName);
 
-    /// @dev Emitted when a router is registered with a default extension set.
-    event RouterRegistered(address indexed router, string indexed extensionSnapshotId);
+    /// @notice Emitted when a default set of extensions is associated with a contract type.
+    event ExtensionSetForContractType(string indexed contractType, string[] extensionNames);
+
+    /// @notice Emitted when a contract is registered with a contract type.
+    event ContractRegistered(address indexed targetContract, string indexed contractType);
 
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns all extensions stored.
+    /// @notice Returns all extensions stored in the registry.
     function getAllExtensions() external view returns (Extension[] memory);
 
-    /// @dev Returns the extension metadata and functions for a given extension.
+    /// @notice Returns the extension metadata and functions for a given extension.
     function getExtension(string memory extensionName) external view returns (Extension memory);
 
-    /// @dev Returns all default extensions for a router.
-    function getSnapshotForRouter(address router) external view returns (Extension[] memory);
+    /// @notice Returns all default extensions for a contract.
+    function getAllDefaultExtensionsForContract(address router) external view returns (Extension[] memory);
 
-    /// @dev Returns extension data for a default extension of a router.
-    function getExtensionForRouter(string memory extensionName, address router)
+    /// @notice Returns extension data for a default extension of a contract.
+    function getDefaultExtensionForContract(string memory _extensionName, address _contract)
         external
         view
         returns (Extension memory);
 
-    /// @dev Returns extension metadata for the default extension associated with a function in router.
-    function getExtensionForRouterFunction(bytes4 functionSelector, address router)
+    /// @notice Returns extension metadata for the default extension associated with a function in a contract.
+    function getExtensionForContractFunction(bytes4 functionSelector, address router)
         external
         view
         returns (ExtensionMetadata memory);
 
-    /// @dev Returns unique IDs of each extension snapshot.
-    function getAllSnapshotIds() external view returns (string[] memory);
+    /// @notice Returns all contract types stored in the registry.
+    function getAllContractTypes() external view returns (string[] memory);
 
-    /// @dev Returns all extensions stored in a snapshot.
-    function getExtensionSnapshot(string memory snapshotId) external view returns (Extension[] memory);
+    /// @notice Returns the latest state of all extensions that belong to a contract type.
+    function getLatestExtensionsForContractType(string memory contractType) external view returns (Extension[] memory);
 
     /*///////////////////////////////////////////////////////////////
                         External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Adds a new extension to the registry.
+    /// @notice Adds a new extension to the registry.
     function addExtension(Extension memory extension) external;
 
-    /// @dev Adds a new extension to the registry.
+    /// @notice Adds a new extension to the registry via an authorized signature.
     function addExtensionWithSig(
         Extension memory extension,
         ExtensionUpdateRequest calldata req,
         bytes calldata signature
     ) external;
 
-    /// @dev Updates an existing extension in the registry.
+    /// @notice Updates an existing extension in the registry.
     function updateExtension(Extension memory extension) external;
 
-    /// @dev Updates an existing extension in the registry.
+    /// @notice Updates an existing extension in the registry via an authorized signature.
     function updateExtensionWithSig(
         Extension memory extension,
         ExtensionUpdateRequest calldata req,
         bytes calldata signature
     ) external;
 
-    /// @notice Removes an existing extension from the contract.
+    /// @notice Removes an existing extension from the registry.
     function removeExtension(string memory extensionName) external;
 
-    /// @notice Removes an existing extension from the contract.
+    /// @notice Removes an existing extension from the registry via an authorized signature.
     function removeExtensionWithSig(
         string memory extensionName,
         ExtensionUpdateRequest calldata req,
         bytes calldata signature
     ) external;
 
-    /// @notice Adds an extension to an extension snapshot.
-    function buildExtensionSnapshot(
-        string memory extensionSnapshotId,
-        string[] memory extensionNames,
-        bool freeze
-    ) external;
+    /// @notice Sets what extensions belong to the given contract type.
+    function setExtensionsForContractType(string memory contractType, string[] memory extensionNames) external;
 
-    /// @notice Adds an extension to an extension snapshot.
-    function buildExtensionSnapshotWithSig(
-        string memory extensionSnapshotId,
+    /// @notice Sets what extensions belong to the given contract type via an authorized signature.
+    function setExtensionsForContractTypeWithSig(
+        string memory contractType,
         string[] memory extensionNames,
-        bool freeze,
         ExtensionUpdateRequest calldata req,
         bytes calldata signature
     ) external;
 
-    /// @dev Registers a router contract with an extension snapshot as its default set of extensions.
-    function registerWithSnapshot(string memory extensionSnapshotId) external;
+    /// @notice Registers a contract with a contract type.
+    function registerContract(string memory contractType) external;
 }
