@@ -118,8 +118,8 @@ async function deployInfraKeyless() {
       });
       // ===
       const testTx = {
-        gasPrice: feeData.maxFeePerGas?.toNumber(),
-        gasLimit: requiredGas.toNumber(),
+        gasPrice: feeData.maxFeePerGas?.add(1000).toNumber(),
+        gasLimit: requiredGas.add(1).toNumber(),
         to: commonFactory,
         value: 0,
         nonce: 0,
