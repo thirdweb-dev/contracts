@@ -12,44 +12,44 @@ const coder = hardhatEthers.utils.defaultAbiCoder;
 
 export async function generateInfraData() {
   // native token wrapper
-  const nativeTokenTx = await constructKeylessTx(WETH.bytecode.object, []);
+  //   const nativeTokenTx = await constructKeylessTx(WETH.bytecode.object, []);
   const nativeTokenAddr = await computeDeploymentAddress(WETH.bytecode.object, []);
   contractsInfo.nativeTokenWrapper = {
     predictedAddress: nativeTokenAddr.predictedAddress,
-    tx: nativeTokenTx.signedSerializedTestTx,
-    from: nativeTokenTx.addr,
+    // tx: nativeTokenTx.signedSerializedTestTx,
+    // from: nativeTokenTx.addr,
     deployData: nativeTokenAddr.deployData,
   };
 
   // forwarder
-  const forwarderTx = await constructKeylessTx(Forwarder.bytecode.object, []);
+  //   const forwarderTx = await constructKeylessTx(Forwarder.bytecode.object, []);
   const forwarderAddr = await computeDeploymentAddress(Forwarder.bytecode.object, []);
   contractsInfo.forwarder = {
     predictedAddress: forwarderAddr.predictedAddress,
-    tx: forwarderTx.signedSerializedTestTx,
-    from: forwarderTx.addr,
+    // tx: forwarderTx.signedSerializedTestTx,
+    // from: forwarderTx.addr,
     deployData: forwarderAddr.deployData,
   };
 
   // factory
   const factoryArgs = coder.encode(["address"], [forwarderAddr.predictedAddress]);
-  const factoryTx = await constructKeylessTx(CloneFactory.bytecode.object, factoryArgs);
+  //   const factoryTx = await constructKeylessTx(CloneFactory.bytecode.object, factoryArgs);
   const factoryAddr = await computeDeploymentAddress(CloneFactory.bytecode.object, factoryArgs);
   contractsInfo.cloneFactory = {
     predictedAddress: factoryAddr.predictedAddress,
-    tx: factoryTx.signedSerializedTestTx,
-    from: factoryTx.addr,
+    // tx: factoryTx.signedSerializedTestTx,
+    // from: factoryTx.addr,
     deployData: factoryAddr.deployData,
   };
 
   // staking contract ERC721
   const stakeArgs = coder.encode(["address"], [nativeTokenAddr.predictedAddress]);
-  const stakeTx = await constructKeylessTx(Stake721.bytecode.object, stakeArgs);
+  //   const stakeTx = await constructKeylessTx(Stake721.bytecode.object, stakeArgs);
   const stakeAddr = await computeDeploymentAddress(Stake721.bytecode.object, stakeArgs);
   contractsInfo.stake721 = {
     predictedAddress: stakeAddr.predictedAddress,
-    tx: stakeTx.signedSerializedTestTx,
-    from: stakeTx.addr,
+    // tx: stakeTx.signedSerializedTestTx,
+    // from: stakeTx.addr,
     deployData: stakeAddr.deployData,
   };
 

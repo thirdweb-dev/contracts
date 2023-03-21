@@ -69,7 +69,7 @@ async function setupMarketplaceV3(
   if (!directListingsLogicAddress) {
     console.log("deploying direct listings");
     try {
-      directListingsLogicAddress = await sdk.deployer.deployContractFromUri(`${uri}/0`, [nativeTokenWrapperAddress]);
+      // directListingsLogicAddress = await sdk.deployer.deployContractFromUri(`${uri}/0`, [nativeTokenWrapperAddress]);
     } catch (e) {
       writeFileSync("scripts/plugin/plugin/pluginAddress.json", JSON.stringify(pluginAddresses), "utf-8");
       console.log("error: ", e);
@@ -81,14 +81,14 @@ async function setupMarketplaceV3(
     pluginAddresses[targetNetworkId]["DirectListingsLogic"] = directListingsLogicAddress;
   }
   console.log("Verifying direct listings.");
-  await verify(directListingsLogicAddress, [nativeTokenWrapperAddress]);
+  // await verify(directListingsLogicAddress, [nativeTokenWrapperAddress]);
 
   // English Auctions
   let englishAuctionsLogicAddress = pluginAddresses[targetNetworkId]["EnglishAuctionsLogic"];
   if (!englishAuctionsLogicAddress) {
     console.log("deploying english auctions");
     try {
-      englishAuctionsLogicAddress = await sdk.deployer.deployContractFromUri(`${uri}/1`, [nativeTokenWrapperAddress]);
+      // englishAuctionsLogicAddress = await sdk.deployer.deployContractFromUri(`${uri}/1`, [nativeTokenWrapperAddress]);
     } catch (e) {
       writeFileSync("scripts/plugin/plugin/pluginAddress.json", JSON.stringify(pluginAddresses), "utf-8");
       console.log("error: ", e);
@@ -107,7 +107,7 @@ async function setupMarketplaceV3(
   if (!offersLogicAddress) {
     console.log("deploying offers");
     try {
-      offersLogicAddress = await sdk.deployer.deployContractFromUri(`${uri}/3`, []);
+      // offersLogicAddress = await sdk.deployer.deployContractFromUri(`${uri}/3`, []);
     } catch (e) {
       writeFileSync("scripts/plugin/plugin/pluginAddress.json", JSON.stringify(pluginAddresses), "utf-8");
       console.log("error: ", e);
@@ -146,7 +146,7 @@ async function setupMarketplaceV3(
   if (!pluginMapAddress) {
     console.log("deploying plugin map");
     try {
-      pluginMapAddress = await sdk.deployer.deployContractFromUri(`${uri}/4`, [mapInput]);
+      // pluginMapAddress = await sdk.deployer.deployContractFromUri(`${uri}/4`, [mapInput]);
     } catch (e) {
       writeFileSync("scripts/plugin/plugin/pluginAddress.json", JSON.stringify(pluginAddresses), "utf-8");
       console.log("error: ", e);
@@ -165,7 +165,7 @@ async function setupMarketplaceV3(
   if (!marketplaceV3Address) {
     console.log("deploying marketplace router");
     try {
-      marketplaceV3Address = await sdk.deployer.deployContractFromUri(`${uri}/2`, [pluginMapAddress]);
+      // marketplaceV3Address = await sdk.deployer.deployContractFromUri(`${uri}/2`, [pluginMapAddress]);
     } catch (e) {
       writeFileSync("scripts/plugin/plugin/pluginAddress.json", JSON.stringify(pluginAddresses), "utf-8");
       console.log("error: ", e);

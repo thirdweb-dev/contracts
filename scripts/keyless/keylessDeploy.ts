@@ -221,30 +221,30 @@ async function deployStaking() {
 }
 
 async function main() {
-  const [signer] = await hardhatEthers.getSigners();
-  await deployCommonFactory(signer);
-  // ExtensionRegistry deployment here
-  const args = coder.encode(["address"], ["0xdd99b75f095d0c4d5112aCe938e4e6ed962fb024"]);
-  const { addr, signedSerializedTestTx } = await constructKeylessTx(ExtensionRegistry.bytecode.object, args);
+  // const [signer] = await hardhatEthers.getSigners();
+  // await deployCommonFactory(signer);
+  // // ExtensionRegistry deployment here
+  // const args = coder.encode(["address"], ["0xdd99b75f095d0c4d5112aCe938e4e6ed962fb024"]);
+  // const { addr, signedSerializedTestTx } = await constructKeylessTx(ExtensionRegistry.bytecode.object, args);
 
-  console.log("addr: ", addr);
-  console.log("addr balance: ", await hardhatEthers.provider.getBalance(addr));
+  // console.log("addr: ", addr);
+  // console.log("addr balance: ", await hardhatEthers.provider.getBalance(addr));
 
-  let fundAddr = {
-    to: addr,
-    value: hardhatEthers.utils.parseEther("1"),
-  };
-  await signer.sendTransaction(fundAddr);
-  console.log("addr balance new: ", await hardhatEthers.provider.getBalance(addr));
+  // let fundAddr = {
+  //   to: addr,
+  //   value: hardhatEthers.utils.parseEther("1"),
+  // };
+  // await signer.sendTransaction(fundAddr);
+  // console.log("addr balance new: ", await hardhatEthers.provider.getBalance(addr));
 
-  const predictedAddress = (await computeDeploymentAddress(ExtensionRegistry.bytecode.object, args)).predictedAddress;
-  console.log("predicted address: ", predictedAddress);
+  // const predictedAddress = (await computeDeploymentAddress(ExtensionRegistry.bytecode.object, args)).predictedAddress;
+  // console.log("predicted address: ", predictedAddress);
 
-  const receipt = await hardhatEthers.provider.sendTransaction(signedSerializedTestTx);
-  const deployTx = await receipt.wait();
-  console.log("logs: ", deployTx);
-  // console.log("code: ", await hardhatEthers.provider.getCode(predictedAddress));
-  console.log("encoded args: ", args);
+  // const receipt = await hardhatEthers.provider.sendTransaction(signedSerializedTestTx);
+  // const deployTx = await receipt.wait();
+  // console.log("logs: ", deployTx);
+  // // console.log("code: ", await hardhatEthers.provider.getCode(predictedAddress));
+  // console.log("encoded args: ", args);
 
   await deployStaking();
 }
