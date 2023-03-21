@@ -192,11 +192,43 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
         ext.claim(receiver, 0, 10, address(0), 0, alp, "");
         assertEq(ext.getSupplyClaimedByWallet(0, receiver), 10);
 
+        vm.roll(100);
         ext.setClaimConditions(0, conditions[0], true);
         assertEq(ext.getSupplyClaimedByWallet(0, receiver), 0);
 
         vm.prank(receiver, receiver);
         ext.claim(receiver, 0, 10, address(0), 0, alp, "");
         assertEq(ext.getSupplyClaimedByWallet(0, receiver), 10);
+    }
+
+    /**
+     *  note: Testing state; unique condition Id for every token.
+     */
+    function test_state_claimCondition_uniqueConditionId() public {
+        ext.setCondition(true);
+        vm.warp(1);
+
+        address receiver = address(0x123);
+        address claimer1 = address(0x345);
+        bytes32[] memory proofs = new bytes32[](0);
+        uint256 _tokenId = 0;
+
+        MyDropSinglePhase1155.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerWallet = 100;
+
+        ext.setClaimConditions(_tokenId, conditions[0], false);
+
+        vm.prank(claimer1, claimer1);
+        ext.claim(receiver, _tokenId, 100, address(0), 0, alp, "");
+
+        assertEq(ext.getSupplyClaimedByWallet(_tokenId, claimer1), 100);
+
+        // supply claimed for other tokenIds should be 0
+        assertEq(ext.getSupplyClaimedByWallet(1, claimer1), 0);
+        assertEq(ext.getSupplyClaimedByWallet(2, claimer1), 0);
     }
 }
