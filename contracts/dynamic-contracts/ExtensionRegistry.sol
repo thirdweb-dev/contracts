@@ -14,8 +14,6 @@ import "./ExtensionRegistryState.sol";
 import "./ExtensionRegistrySig.sol";
 import "../extension/plugin/PermissionsEnumerableLogic.sol";
 
-// TODO: add events emitting full `Extension` for `addExtension` and `updateExtension`.
-
 contract ExtensionRegistry is
     IExtensionRegistry,
     ExtensionRegistrySig,
@@ -57,7 +55,7 @@ contract ExtensionRegistry is
         _addExtension(_extension);
     }
 
-    /// @dev Adds a new extension to the registry.
+    /// @notice Adds a new extension to the registry via an authorized signature.
     function addExtensionWithSig(
         Extension memory _extension,
         ExtensionUpdateRequest calldata _req,
@@ -71,7 +69,7 @@ contract ExtensionRegistry is
         _updateExtension(_extension);
     }
 
-    /// @dev Updates an existing extension in the registry.
+    /// @notice Updates an existing extension in the registry via an authorized signature.
     function updateExtensionWithSig(
         Extension memory _extension,
         ExtensionUpdateRequest calldata _req,
@@ -80,12 +78,12 @@ contract ExtensionRegistry is
         _updateExtension(_extension);
     }
 
-    /// @notice Removes an existing extension from the contract.
+    /// @notice Removes an existing extension from the registry.
     function removeExtension(string memory _extensionName) external onlyRole(DEFAULT_ADMIN_ROLE) {
         _removeExtension(_extensionName);
     }
 
-    /// @notice Removes an existing extension from the contract.
+    /// @notice Removes an existing extension from the registry via an authorized signature.
     function removeExtensionWithSig(
         string memory _extensionName,
         ExtensionUpdateRequest calldata _req,
@@ -114,7 +112,7 @@ contract ExtensionRegistry is
         emit ExtensionSnapshotUpdated(_extensionSnapshotId, _extensionNames);
     }
 
-    /// @notice Adds an extension to an extension snapshot.
+    /// @notice Adds an extension to an extension snapshot via an authorized signature.
     function buildExtensionSnapshotWithSig(
         string memory _extensionSnapshotId,
         string[] memory _extensionNames,
@@ -136,7 +134,7 @@ contract ExtensionRegistry is
         emit ExtensionSnapshotUpdated(_extensionSnapshotId, _extensionNames);
     }
 
-    /// @dev Registers a router contract with an extension snapshot as its default set of extensions.
+    /// @notice Registers a router contract with an extension snapshot as its default set of extensions.
     function registerWithSnapshot(string memory _extensionSnapshotId) external {
         address router = msg.sender;
         _registerRouterWithSnapshot(_extensionSnapshotId, router);
@@ -148,7 +146,7 @@ contract ExtensionRegistry is
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Returns all extensions stored.
+    /// @notice Returns all extensions stored in the registry.
     function getAllExtensions() external view returns (Extension[] memory allExtensions) {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
 
@@ -171,14 +169,14 @@ contract ExtensionRegistry is
         return data.extensions[_extensionName][latestId];
     }
 
-    /// @dev Returns all default extensions for a router.
+    /// @notice Returns all default extensions for a router.
     function getSnapshotForRouter(address router) external view returns (Extension[] memory extensions) {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
         string memory snapshotId = data.snapshotIdForRouter[router];
         return getExtensionSnapshot(snapshotId);
     }
 
-    /// @dev Returns extension data for a default extension of a router.
+    /// @notice Returns extension data for a default extension of a router.
     function getExtensionForRouter(string memory _extensionName, address _router)
         external
         view
@@ -191,7 +189,7 @@ contract ExtensionRegistry is
         return data.extensionSnapshot[snapshotId].extension[keccak256(abi.encodePacked(_extensionName, snapshotId))];
     }
 
-    /// @dev Returns extension metadata for the default extension associated with a function in router.
+    /// @notice Returns extension metadata for the default extension associated with a function in router.
     function getExtensionForRouterFunction(bytes4 _functionSelector, address _router)
         external
         view
@@ -204,13 +202,13 @@ contract ExtensionRegistry is
         return data.extensionSnapshot[snapshotId].extensionForFunction[_functionSelector];
     }
 
-    /// @notice Returns all extension set IDs stored.
+    /// @notice Returns all snapshot IDs stored in the registry.
     function getAllSnapshotIds() external view returns (string[] memory) {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
         return data.snapshotIds.values();
     }
 
-    /// @dev Returns all extensions stored in a snapshot.
+    /// @notice Returns all extensions stored in a snapshot.
     function getExtensionSnapshot(string memory _snapshotId) public view returns (Extension[] memory extensions) {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
         require(bytes(_snapshotId).length > 0, "ExtensionRegistry: extension snapshot does not exist.");
