@@ -14,78 +14,67 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155PausableUpgradeable.sol";
-
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
+
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
-import { IERC1155Receiver } from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 
 import "@chainlink/contracts/src/v0.8/VRFV2WrapperConsumerBase.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../interfaces/IPackVRFDirect.sol";
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../interfaces/IPackVRFDirect.sol";
 
 //  ==========  Features    ==========
 
-import "../extension/ContractMetadata.sol";
-import "../extension/Royalty.sol";
-import "../extension/Ownable.sol";
-import "../extension/PermissionsEnumerable.sol";
-import { TokenStore, ERC1155Receiver } from "../extension/TokenStore.sol";
+import { TokenStore, ERC1155Receiver } from "../../dynamic-contracts/extension/TokenStore.sol";
+// Reentrancy guard
+
+//===============---------||||||||||||||||
+import { PackVRFStorage } from "./PackVRFStorage.sol";
+import { ERC1155Storage } from "../../dynamic-contracts/eip/ERC1155Upgradeable.sol";
+
+import "../../lib/TWStrings.sol";
+import "../../lib/CurrencyTransferLib.sol";
+
+import { IERC2981 } from "../../eip/interface/IERC2981.sol";
+import { Context, ERC1155Upgradeable } from "../../dynamic-contracts/eip/ERC1155Upgradeable.sol";
+
+import { IERC2771Context } from "../../extension/interface/IERC2771Context.sol";
+
+import { ERC2771ContextUpgradeable } from "../../dynamic-contracts/extension/ERC2771ContextUpgradeable.sol";
+import { Royalty, IERC165 } from "../../dynamic-contracts/extension/Royalty.sol";
+import { ContractMetadata } from "../../dynamic-contracts/extension/ContractMetadata.sol";
+import { Ownable } from "../../dynamic-contracts/extension/Ownable.sol";
+import { DefaultOperatorFiltererUpgradeable } from "../../dynamic-contracts/extension/DefaultOperatorFiltererUpgradeable.sol";
+import { PermissionsStorage } from "../../dynamic-contracts/extension/Permissions.sol";
 
 /**
     NOTE: This contract is a work in progress.
  */
 
-contract PackVRFDirect is
-    Initializable,
+contract PackVRFDirectLogic is
     VRFV2WrapperConsumerBase,
+    Royalty,
     ContractMetadata,
     Ownable,
-    Royalty,
-    Permissions,
     TokenStore,
-    ReentrancyGuardUpgradeable,
+    DefaultOperatorFiltererUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
     ERC1155Upgradeable,
     IPackVRFDirect
 {
     /*///////////////////////////////////////////////////////////////
-                            State variables
+                            Constants
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("PackVRFDirect");
-    uint256 private constant VERSION = 2;
-
-    address private immutable forwarder;
-
-    // Token name
-    string public name;
-
-    // Token symbol
-    string public symbol;
-
-    /// @dev Only MINTER_ROLE holders can create packs.
-    bytes32 private minterRole;
-
-    /// @dev The token Id of the next set of packs to be minted.
-    uint256 public nextTokenIdToMint;
-
-    /*///////////////////////////////////////////////////////////////
-                             Mappings
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Mapping from token ID => total circulating supply of token with that ID.
-    mapping(uint256 => uint256) public totalSupply;
-
-    /// @dev Mapping from pack ID => The state of that set of packs.
-    mapping(uint256 => PackInfo) private packInfo;
+    /// @dev Default admin role for all roles. Only accounts with this role can grant/revoke other roles.
+    bytes32 private constant DEFAULT_ADMIN_ROLE = 0x00;
+    /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
+    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
+    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    /// @dev Only transfers initiated by operator role hodlers are valid, when operator-initated transfers are restricted.
+    bytes32 private constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /*///////////////////////////////////////////////////////////////
                             VRF state
@@ -95,77 +84,18 @@ contract PackVRFDirect is
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private constant NUMWORDS = 1;
 
-    mapping(uint256 => RequestInfo) private requestInfo;
-    mapping(address => uint256) private openerToReqId;
-
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
     constructor(
         address _nativeTokenWrapper,
-        address _trustedForwarder,
         address _linkTokenAddress,
         address _vrfV2Wrapper
-    ) VRFV2WrapperConsumerBase(_linkTokenAddress, _vrfV2Wrapper) TokenStore(_nativeTokenWrapper) initializer {
-        forwarder = _trustedForwarder;
-    }
-
-    /// @dev Initiliazes the contract, like a constructor.
-    function initialize(
-        address _defaultAdmin,
-        string memory _name,
-        string memory _symbol,
-        string memory _contractURI,
-        address[] memory _trustedForwarders,
-        address _royaltyRecipient,
-        uint256 _royaltyBps
-    ) external initializer {
-        bytes32 _minterRole = keccak256("MINTER_ROLE");
-
-        /** note:  The immutable state-variable `forwarder` is an EOA-only forwarder,
-         *         which guards against automated attacks.
-         *
-         *         Use other forwarders only if there's a strong reason to bypass this check.
-         */
-        address[] memory forwarders = new address[](_trustedForwarders.length + 1);
-        uint256 i;
-        for (; i < _trustedForwarders.length; i++) {
-            forwarders[i] = _trustedForwarders[i];
-        }
-        forwarders[i] = forwarder;
-        __ERC2771Context_init(forwarders);
-        __ERC1155_init(_contractURI);
-
-        name = _name;
-        symbol = _symbol;
-
-        _setupContractURI(_contractURI);
-        _setupOwner(_defaultAdmin);
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(_minterRole, _defaultAdmin);
-
-        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-
-        minterRole = _minterRole;
-    }
+    ) VRFV2WrapperConsumerBase(_linkTokenAddress, _vrfV2Wrapper) TokenStore(_nativeTokenWrapper) {}
 
     receive() external payable {
         require(msg.sender == nativeTokenWrapper, "!nativeTokenWrapper.");
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Generic contract logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
-    }
-
-    /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -187,9 +117,8 @@ contract PackVRFDirect is
     {
         return
             super.supportsInterface(interfaceId) ||
-            type(IERC2981Upgradeable).interfaceId == interfaceId ||
-            type(IERC721Receiver).interfaceId == interfaceId ||
-            type(IERC1155Receiver).interfaceId == interfaceId;
+            type(IERC2981).interfaceId == interfaceId ||
+            type(IERC721Receiver).interfaceId == interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -204,11 +133,14 @@ contract PackVRFDirect is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    ) external payable onlyRole(minterRole) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
+    ) external payable returns (uint256 packId, uint256 packTotalSupply) {
+        require(_hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
 
-        packId = nextTokenIdToMint;
-        nextTokenIdToMint += 1;
+        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+
+        packId = packVrfData.nextTokenIdToMint;
+        packVrfData.nextTokenIdToMint += 1;
 
         packTotalSupply = escrowPackContents(
             _contents,
@@ -219,8 +151,8 @@ contract PackVRFDirect is
             false
         );
 
-        packInfo[packId].openStartTimestamp = _openStartTimestamp;
-        packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
+        packVrfData.packInfo[packId].openStartTimestamp = _openStartTimestamp;
+        packVrfData.packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
 
         // canUpdatePack[packId] = true;
 
@@ -253,13 +185,14 @@ contract PackVRFDirect is
         bool _openOnFulfill
     ) internal returns (uint256 requestId) {
         address opener = _msgSender();
+        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
 
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
 
-        require(openerToReqId[opener] == 0, "ReqInFlight");
+        require(packVrfData.openerToReqId[opener] == 0, "ReqInFlight");
 
         require(_amountToOpen > 0 && balanceOf(opener, _packId) >= _amountToOpen, "!Bal");
-        require(packInfo[_packId].openStartTimestamp <= block.timestamp, "!Open");
+        require(packVrfData.packInfo[_packId].openStartTimestamp <= block.timestamp, "!Open");
 
         // Transfer packs into the contract.
         _safeTransferFrom(opener, address(this), _packId, _amountToOpen, "");
@@ -269,33 +202,35 @@ contract PackVRFDirect is
         require(requestId > 0, "!VRF");
 
         // Mark request as active; store request parameters.
-        requestInfo[requestId].packId = _packId;
-        requestInfo[requestId].opener = opener;
-        requestInfo[requestId].amountToOpen = _amountToOpen;
-        requestInfo[requestId].openOnFulfillRandomness = _openOnFulfill;
-        openerToReqId[opener] = requestId;
+        packVrfData.requestInfo[requestId].packId = _packId;
+        packVrfData.requestInfo[requestId].opener = opener;
+        packVrfData.requestInfo[requestId].amountToOpen = _amountToOpen;
+        packVrfData.requestInfo[requestId].openOnFulfillRandomness = _openOnFulfill;
+        packVrfData.openerToReqId[opener] = requestId;
 
         emit PackOpenRequested(opener, _packId, _amountToOpen, requestId);
     }
 
     /// @notice Called by Chainlink VRF to fulfill a random number request.
     function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
-        RequestInfo memory info = requestInfo[_requestId];
+        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+        RequestInfo memory info = packVrfData.requestInfo[_requestId];
 
         require(info.randomWords.length == 0, "!Req");
-        requestInfo[_requestId].randomWords = _randomWords;
+        packVrfData.requestInfo[_requestId].randomWords = _randomWords;
 
         emit PackRandomnessFulfilled(info.packId, _requestId);
 
         if (info.openOnFulfillRandomness) {
-            try PackVRFDirect(payable(address(this))).sendRewardsIndirect(info.opener) {} catch {}
+            try PackVRFDirectLogic(payable(address(this))).sendRewardsIndirect(info.opener) {} catch {}
         }
     }
 
     /// @notice Returns whether a pack opener is ready to call `claimRewards`.
     function canClaimRewards(address _opener) public view returns (bool) {
-        uint256 requestId = openerToReqId[_opener];
-        return requestId > 0 && requestInfo[requestId].randomWords.length > 0;
+        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+        uint256 requestId = packVrfData.openerToReqId[_opener];
+        return requestId > 0 && packVrfData.requestInfo[requestId].randomWords.length > 0;
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
@@ -313,13 +248,15 @@ contract PackVRFDirect is
         require(isTrustedForwarder(msg.sender) || msg.sender == address(VRF_V2_WRAPPER) || opener == tx.origin, "!EOA");
 
         require(canClaimRewards(opener), "!ActiveReq");
-        uint256 reqId = openerToReqId[opener];
-        RequestInfo memory info = requestInfo[reqId];
+        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
 
-        delete openerToReqId[opener];
-        delete requestInfo[reqId];
+        uint256 reqId = packVrfData.openerToReqId[opener];
+        RequestInfo memory info = packVrfData.requestInfo[reqId];
 
-        PackInfo memory pack = packInfo[info.packId];
+        delete packVrfData.openerToReqId[opener];
+        delete packVrfData.requestInfo[reqId];
+
+        PackInfo memory pack = packVrfData.packInfo[info.packId];
 
         Token[] memory rewardUnits = getRewardUnits(
             info.randomWords[0],
@@ -349,6 +286,7 @@ contract PackVRFDirect is
         bool isUpdate
     ) internal returns (uint256 supplyToMint) {
         uint256 sumOfRewardUnits;
+        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
 
         for (uint256 i = 0; i < _contents.length; i += 1) {
             require(_contents[i].totalAmount != 0, "0 amt");
@@ -357,7 +295,7 @@ contract PackVRFDirect is
 
             sumOfRewardUnits += _numOfRewardUnits[i];
 
-            packInfo[packId].perUnitAmounts.push(_contents[i].totalAmount / _numOfRewardUnits[i]);
+            packVrfData.packInfo[packId].perUnitAmounts.push(_contents[i].totalAmount / _numOfRewardUnits[i]);
         }
 
         require(sumOfRewardUnits % amountPerOpen == 0, "!Amt");
@@ -381,9 +319,11 @@ contract PackVRFDirect is
         uint256 _rewardUnitsPerOpen,
         PackInfo memory pack
     ) internal returns (Token[] memory rewardUnits) {
+        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+
         uint256 numOfRewardUnitsToDistribute = _numOfPacksToOpen * _rewardUnitsPerOpen;
         rewardUnits = new Token[](numOfRewardUnitsToDistribute);
-        uint256 totalRewardUnits = totalSupply[_packId] * _rewardUnitsPerOpen;
+        uint256 totalRewardUnits = packVrfData.totalSupply[_packId] * _rewardUnitsPerOpen;
         uint256 totalRewardKinds = getTokenCountOfBundle(_packId);
 
         (Token[] memory _token, ) = getPackContents(_packId);
@@ -431,7 +371,9 @@ contract PackVRFDirect is
         view
         returns (Token[] memory contents, uint256[] memory perUnitAmounts)
     {
-        PackInfo memory pack = packInfo[_packId];
+        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+
+        PackInfo memory pack = packVrfData.packInfo[_packId];
         uint256 total = getTokenCountOfBundle(_packId);
         contents = new Token[](total);
         perUnitAmounts = new uint256[](total);
@@ -446,19 +388,24 @@ contract PackVRFDirect is
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Returns whether the operator restriction can be set within the given execution context.
+    function _canSetOperatorRestriction() internal virtual override returns (bool) {
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
     /// @dev Returns whether owner can be set in the given execution context.
     function _canSetOwner() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -477,39 +424,40 @@ contract PackVRFDirect is
         bytes memory data
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
+        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
 
         if (from == address(0)) {
             for (uint256 i = 0; i < ids.length; ++i) {
-                totalSupply[ids[i]] += amounts[i];
+                packVrfData.totalSupply[ids[i]] += amounts[i];
             }
         }
 
         if (to == address(0)) {
             for (uint256 i = 0; i < ids.length; ++i) {
-                totalSupply[ids[i]] -= amounts[i];
+                packVrfData.totalSupply[ids[i]] -= amounts[i];
             }
         }
     }
 
-    /// @dev See EIP-2771
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (address sender)
-    {
+    function _hasRole(bytes32 role, address addr) internal view returns (bool) {
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        return data._hasRole[role][addr];
+    }
+
+    function _hasRoleWithSwitch(bytes32 role, address account) internal view returns (bool) {
+        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        if (!data._hasRole[role][address(0)]) {
+            return data._hasRole[role][account];
+        }
+
+        return true;
+    }
+
+    function _msgSender() internal view override(Context, ERC2771ContextUpgradeable) returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    /// @dev See EIP-2771
-    function _msgData()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view override(Context, ERC2771ContextUpgradeable) returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

@@ -23,11 +23,9 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import { IERC1155Receiver } from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 
-import "@chainlink/contracts/src/v0.8/VRFV2WrapperConsumerBase.sol";
-
 //  ==========  Internal imports    ==========
 
-import "../interfaces/IPackVRFDirect.sol";
+import "../interfaces/IPack.sol";
 import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
@@ -38,29 +36,24 @@ import "../extension/Ownable.sol";
 import "../extension/PermissionsEnumerable.sol";
 import { TokenStore, ERC1155Receiver } from "../extension/TokenStore.sol";
 
-/**
-    NOTE: This contract is a work in progress.
- */
-
-contract PackVRFDirect is
+contract Pack is
     Initializable,
-    VRFV2WrapperConsumerBase,
     ContractMetadata,
     Ownable,
     Royalty,
-    Permissions,
+    PermissionsEnumerable,
     TokenStore,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     ERC1155Upgradeable,
-    IPackVRFDirect
+    IPack
 {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("PackVRFDirect");
+    bytes32 private constant MODULE_TYPE = bytes32("Pack");
     uint256 private constant VERSION = 2;
 
     address private immutable forwarder;
@@ -71,8 +64,14 @@ contract PackVRFDirect is
     // Token symbol
     string public symbol;
 
+    /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
+    bytes32 private transferRole;
+
     /// @dev Only MINTER_ROLE holders can create packs.
     bytes32 private minterRole;
+
+    /// @dev Only assets with ASSET_ROLE can be packed, when packing is restricted to particular assets.
+    bytes32 private assetRole;
 
     /// @dev The token Id of the next set of packs to be minted.
     uint256 public nextTokenIdToMint;
@@ -87,27 +86,14 @@ contract PackVRFDirect is
     /// @dev Mapping from pack ID => The state of that set of packs.
     mapping(uint256 => PackInfo) private packInfo;
 
-    /*///////////////////////////////////////////////////////////////
-                            VRF state
-    //////////////////////////////////////////////////////////////*/
-
-    uint32 private constant CALLBACKGASLIMIT = 100_000;
-    uint16 private constant REQUEST_CONFIRMATIONS = 3;
-    uint32 private constant NUMWORDS = 1;
-
-    mapping(uint256 => RequestInfo) private requestInfo;
-    mapping(address => uint256) private openerToReqId;
+    /// @dev Checks if pack-creator allowed to add more tokens to a packId; set to false after first transfer
+    mapping(uint256 => bool) public canUpdatePack;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(
-        address _nativeTokenWrapper,
-        address _trustedForwarder,
-        address _linkTokenAddress,
-        address _vrfV2Wrapper
-    ) VRFV2WrapperConsumerBase(_linkTokenAddress, _vrfV2Wrapper) TokenStore(_nativeTokenWrapper) initializer {
+    constructor(address _nativeTokenWrapper, address _trustedForwarder) TokenStore(_nativeTokenWrapper) initializer {
         forwarder = _trustedForwarder;
     }
 
@@ -121,7 +107,9 @@ contract PackVRFDirect is
         address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
+        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
+        bytes32 _assetRole = keccak256("ASSET_ROLE");
 
         /** note:  The immutable state-variable `forwarder` is an EOA-only forwarder,
          *         which guards against automated attacks.
@@ -143,15 +131,32 @@ contract PackVRFDirect is
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+
+        _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_minterRole, _defaultAdmin);
+        _setupRole(_transferRole, address(0));
+
+        // note: see `onlyRoleWithSwitch` for ASSET_ROLE behaviour.
+        _setupRole(_assetRole, address(0));
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
 
+        transferRole = _transferRole;
         minterRole = _minterRole;
+        assetRole = _assetRole;
     }
 
     receive() external payable {
         require(msg.sender == nativeTokenWrapper, "!nativeTokenWrapper.");
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Modifiers
+    //////////////////////////////////////////////////////////////*/
+
+    modifier onlyRoleWithSwitch(bytes32 role) {
+        _checkRoleWithSwitch(role, _msgSender());
+        _;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -204,8 +209,14 @@ contract PackVRFDirect is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    ) external payable onlyRole(minterRole) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
+    ) external payable onlyRoleWithSwitch(minterRole) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
         require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
+
+        if (!hasRole(assetRole, address(0))) {
+            for (uint256 i = 0; i < _contents.length; i += 1) {
+                _checkRole(assetRole, _contents[i].assetContract);
+            }
+        }
 
         packId = nextTokenIdToMint;
         nextTokenIdToMint += 1;
@@ -222,119 +233,63 @@ contract PackVRFDirect is
         packInfo[packId].openStartTimestamp = _openStartTimestamp;
         packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
 
-        // canUpdatePack[packId] = true;
+        canUpdatePack[packId] = true;
 
         _mint(_recipient, packId, packTotalSupply, "");
 
         emit PackCreated(packId, _recipient, packTotalSupply);
     }
 
-    /*///////////////////////////////////////////////////////////////
-                            VRF logic
-    //////////////////////////////////////////////////////////////*/
-
-    function openPackAndClaimRewards(
+    /// @dev Add contents to an existing packId.
+    function addPackContents(
         uint256 _packId,
-        uint256 _amountToOpen,
-        uint32 _callBackGasLimit
-    ) external returns (uint256) {
-        return _requestOpenPack(_packId, _amountToOpen, _callBackGasLimit, true);
+        Token[] calldata _contents,
+        uint256[] calldata _numOfRewardUnits,
+        address _recipient
+    )
+        external
+        payable
+        onlyRoleWithSwitch(minterRole)
+        nonReentrant
+        returns (uint256 packTotalSupply, uint256 newSupplyAdded)
+    {
+        require(canUpdatePack[_packId], "!Allowed");
+        require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
+        require(balanceOf(_recipient, _packId) != 0, "!Bal");
+
+        if (!hasRole(assetRole, address(0))) {
+            for (uint256 i = 0; i < _contents.length; i += 1) {
+                _checkRole(assetRole, _contents[i].assetContract);
+            }
+        }
+
+        uint256 amountPerOpen = packInfo[_packId].amountDistributedPerOpen;
+
+        newSupplyAdded = escrowPackContents(_contents, _numOfRewardUnits, "", _packId, amountPerOpen, true);
+        packTotalSupply = totalSupply[_packId] + newSupplyAdded;
+
+        _mint(_recipient, _packId, newSupplyAdded, "");
+
+        emit PackUpdated(_packId, _recipient, newSupplyAdded);
     }
 
     /// @notice Lets a pack owner open packs and receive the packs' reward units.
-    function openPack(uint256 _packId, uint256 _amountToOpen) external returns (uint256) {
-        return _requestOpenPack(_packId, _amountToOpen, CALLBACKGASLIMIT, false);
-    }
-
-    function _requestOpenPack(
-        uint256 _packId,
-        uint256 _amountToOpen,
-        uint32 _callBackGasLimit,
-        bool _openOnFulfill
-    ) internal returns (uint256 requestId) {
+    function openPack(uint256 _packId, uint256 _amountToOpen) external returns (Token[] memory) {
         address opener = _msgSender();
 
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
+        require(balanceOf(opener, _packId) >= _amountToOpen, "!Bal");
 
-        require(openerToReqId[opener] == 0, "ReqInFlight");
+        PackInfo memory pack = packInfo[_packId];
+        require(pack.openStartTimestamp <= block.timestamp, "cant open");
 
-        require(_amountToOpen > 0 && balanceOf(opener, _packId) >= _amountToOpen, "!Bal");
-        require(packInfo[_packId].openStartTimestamp <= block.timestamp, "!Open");
+        Token[] memory rewardUnits = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
 
-        // Transfer packs into the contract.
-        _safeTransferFrom(opener, address(this), _packId, _amountToOpen, "");
-
-        // Request VRF for randomness.
-        requestId = requestRandomness(_callBackGasLimit, REQUEST_CONFIRMATIONS, NUMWORDS);
-        require(requestId > 0, "!VRF");
-
-        // Mark request as active; store request parameters.
-        requestInfo[requestId].packId = _packId;
-        requestInfo[requestId].opener = opener;
-        requestInfo[requestId].amountToOpen = _amountToOpen;
-        requestInfo[requestId].openOnFulfillRandomness = _openOnFulfill;
-        openerToReqId[opener] = requestId;
-
-        emit PackOpenRequested(opener, _packId, _amountToOpen, requestId);
-    }
-
-    /// @notice Called by Chainlink VRF to fulfill a random number request.
-    function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
-        RequestInfo memory info = requestInfo[_requestId];
-
-        require(info.randomWords.length == 0, "!Req");
-        requestInfo[_requestId].randomWords = _randomWords;
-
-        emit PackRandomnessFulfilled(info.packId, _requestId);
-
-        if (info.openOnFulfillRandomness) {
-            try PackVRFDirect(payable(address(this))).sendRewardsIndirect(info.opener) {} catch {}
-        }
-    }
-
-    /// @notice Returns whether a pack opener is ready to call `claimRewards`.
-    function canClaimRewards(address _opener) public view returns (bool) {
-        uint256 requestId = openerToReqId[_opener];
-        return requestId > 0 && requestInfo[requestId].randomWords.length > 0;
-    }
-
-    /// @notice Lets a pack owner open packs and receive the packs' reward units.
-    function claimRewards() external returns (Token[] memory) {
-        return _claimRewards(_msgSender());
-    }
-
-    /// @notice Lets a pack owner open packs and receive the packs' reward units.
-    function sendRewardsIndirect(address _opener) external {
-        require(msg.sender == address(this));
-        _claimRewards(_opener);
-    }
-
-    function _claimRewards(address opener) internal returns (Token[] memory) {
-        require(isTrustedForwarder(msg.sender) || msg.sender == address(VRF_V2_WRAPPER) || opener == tx.origin, "!EOA");
-
-        require(canClaimRewards(opener), "!ActiveReq");
-        uint256 reqId = openerToReqId[opener];
-        RequestInfo memory info = requestInfo[reqId];
-
-        delete openerToReqId[opener];
-        delete requestInfo[reqId];
-
-        PackInfo memory pack = packInfo[info.packId];
-
-        Token[] memory rewardUnits = getRewardUnits(
-            info.randomWords[0],
-            info.packId,
-            info.amountToOpen,
-            pack.amountDistributedPerOpen,
-            pack
-        );
-
-        // Burn packs.
-        _burn(address(this), info.packId, info.amountToOpen);
+        _burn(opener, _packId, _amountToOpen);
 
         _transferTokenBatch(address(this), opener, rewardUnits);
 
-        emit PackOpened(info.packId, opener, info.amountToOpen, rewardUnits);
+        emit PackOpened(_packId, opener, _amountToOpen, rewardUnits);
 
         return rewardUnits;
     }
@@ -375,7 +330,6 @@ contract PackVRFDirect is
 
     /// @dev Returns the reward units to distribute.
     function getRewardUnits(
-        uint256 _random,
         uint256 _packId,
         uint256 _numOfPacksToOpen,
         uint256 _rewardUnitsPerOpen,
@@ -386,10 +340,12 @@ contract PackVRFDirect is
         uint256 totalRewardUnits = totalSupply[_packId] * _rewardUnitsPerOpen;
         uint256 totalRewardKinds = getTokenCountOfBundle(_packId);
 
+        uint256 random = generateRandomValue();
+
         (Token[] memory _token, ) = getPackContents(_packId);
         bool[] memory _isUpdated = new bool[](totalRewardKinds);
         for (uint256 i = 0; i < numOfRewardUnitsToDistribute; i += 1) {
-            uint256 randomVal = uint256(keccak256(abi.encode(_random, i)));
+            uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
             uint256 target = randomVal % totalRewardUnits;
             uint256 step;
 
@@ -465,6 +421,10 @@ contract PackVRFDirect is
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
+    function generateRandomValue() internal view returns (uint256 random) {
+        random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number - 1), block.difficulty)));
+    }
+
     /**
      * @dev See {ERC1155-_beforeTokenTransfer}.
      */
@@ -478,9 +438,21 @@ contract PackVRFDirect is
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
+        // if transfer is restricted on the contract, we still want to allow burning and minting
+        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
+            require(hasRole(transferRole, from) || hasRole(transferRole, to), "!TRANSFER_ROLE");
+        }
+
         if (from == address(0)) {
             for (uint256 i = 0; i < ids.length; ++i) {
                 totalSupply[ids[i]] += amounts[i];
+            }
+        } else {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                // pack can no longer be updated after first transfer to non-zero address
+                if (canUpdatePack[ids[i]] && amounts[i] != 0) {
+                    canUpdatePack[ids[i]] = false;
+                }
             }
         }
 

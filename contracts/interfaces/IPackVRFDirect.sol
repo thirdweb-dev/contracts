@@ -10,6 +10,15 @@ import "../extension/interface/ITokenBundle.sol";
  */
 
 interface IPackVRFDirect is ITokenBundle {
+    // VRF
+    struct RequestInfo {
+        uint256 packId;
+        address opener;
+        uint256 amountToOpen;
+        uint256[] randomWords;
+        bool openOnFulfillRandomness;
+    }
+
     /**
      *  @notice All info relevant to packs.
      *
