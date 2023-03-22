@@ -188,6 +188,74 @@ contract TWRouterTest is BaseTest, IExtension {
         assertEq(cBefore + 1, ContractC(router).getC());
     }
 
+    // Scenario: Extension registry admin updates extensions for contract type after router's deployment. The router's default extensions should not change.
+    function test_state_initialState_registryUpdateForContractType() external {
+        // Update extensions for contract type.
+        uint256 total = 2;
+        string[] memory newExtensionsForContractType = new string[](total);
+
+        for (uint256 i = 0; i < total; i += 1) {
+            newExtensionsForContractType[i] = extensions[i].metadata.name;
+        }
+
+        vm.prank(registryDeployer);
+        extensionRegistry.setExtensionsForContractType(contractType, newExtensionsForContractType);
+
+        // ====
+
+        TWRouter twRouter = TWRouter(payable(router));
+
+        Extension[] memory getAllExtensions = twRouter.getAllExtensions();
+        uint256 len = 3;
+        assertEq(len, getAllExtensions.length);
+
+        for (uint256 i = 0; i < len; i += 1) {
+            // getAllExtensions
+            assertEq(getAllExtensions[i].metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(getAllExtensions[i].metadata.name, extensions[i].metadata.name);
+            assertEq(getAllExtensions[i].metadata.metadataURI, extensions[i].metadata.metadataURI);
+            uint256 fnsLen = extensions[i].functions.length;
+            assertEq(fnsLen, getAllExtensions[i].functions.length);
+            for (uint256 j = 0; j < fnsLen; j += 1) {
+                assertEq(
+                    extensions[i].functions[j].functionSelector,
+                    getAllExtensions[i].functions[j].functionSelector
+                );
+                assertEq(
+                    extensions[i].functions[j].functionSignature,
+                    getAllExtensions[i].functions[j].functionSignature
+                );
+            }
+
+            // getExtension
+            Extension memory extension = twRouter.getExtension(extensions[i].metadata.name);
+            assertEq(extension.metadata.implementation, extensions[i].metadata.implementation);
+            assertEq(extension.metadata.name, extensions[i].metadata.name);
+            assertEq(extension.metadata.metadataURI, extensions[i].metadata.metadataURI);
+            assertEq(fnsLen, extension.functions.length);
+            for (uint256 j = 0; j < fnsLen; j += 1) {
+                assertEq(extensions[i].functions[j].functionSelector, extension.functions[j].functionSelector);
+                assertEq(extensions[i].functions[j].functionSignature, extension.functions[j].functionSignature);
+            }
+        }
+        for (uint256 i = 0; i < len; i += 1) {
+            ExtensionMetadata memory metadata = extensions[i].metadata;
+            ExtensionFunction[] memory functions = extensions[i].functions;
+            for (uint256 j = 0; j < functions.length; j += 1) {
+                ExtensionMetadata memory extension = twRouter.getExtensionForFunction(functions[j].functionSelector);
+                assertEq(extension.implementation, metadata.implementation);
+                assertEq(extension.name, metadata.name);
+                assertEq(extension.metadataURI, metadata.metadataURI);
+            }
+        }
+
+        // Test contract call
+        uint256 cBefore = ContractC(router).getC();
+        ContractC(router).c();
+
+        assertEq(cBefore + 1, ContractC(router).getC());
+    }
+
     // ==================== Add extensions ====================
 
     function _setupAddExtension() private {
