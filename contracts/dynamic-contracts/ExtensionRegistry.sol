@@ -104,6 +104,8 @@ contract ExtensionRegistry is
         external
         onlyRole(DEFAULT_ADMIN_ROLE)
     {
+        require(_extensionNames.length > 0, "ExtensionRegistry: no extensions provided.");
+        require(bytes(_contractType).length > 0, "ExtensionRegistry: empty contract type.");
         _setExtensionsForContractType(_contractType, _extensionNames);
         emit ExtensionSetForContractType(_contractType, _extensionNames);
     }

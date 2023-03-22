@@ -49,9 +49,16 @@ contract ExtensionRegistryState is IExtensionRegistryState {
     function _setExtensionsForContractType(string memory _contractType, string[] memory _extensionNames) internal {
         ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
 
-        delete data.extensionsForContractType[_contractType];
+        data.allContractTypes.add(_contractType);
 
-        uint256 len = _extensionNames.length;
+        // Instead of: `delete data.extensionsForContractType[_contractType];`
+        string[] memory currentExtensions = data.extensionsForContractType[_contractType].values();
+        uint256 len = currentExtensions.length;
+        for (uint256 i = 0; i < len; i += 1) {
+            data.extensionsForContractType[_contractType].remove(currentExtensions[i]);
+        }
+
+        len = _extensionNames.length;
         for (uint256 i = 0; i < len; i += 1) {
             require(
                 data.extensionNames.contains(_extensionNames[i]),
