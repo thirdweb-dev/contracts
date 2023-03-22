@@ -79,7 +79,19 @@ contract PackRouter is
         uint16 _royaltyBps
     ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
-        __ERC2771Context_init(_trustedForwarders);
+
+        /** note:  The immutable state-variable `forwarder` is an EOA-only forwarder,
+         *         which guards against automated attacks.
+         *
+         *         Use other forwarders only if there's a strong reason to bypass this check.
+         */
+        address[] memory forwarders = new address[](_trustedForwarders.length + 1);
+        uint256 i;
+        for (; i < _trustedForwarders.length; i++) {
+            forwarders[i] = _trustedForwarders[i];
+        }
+        forwarders[i] = forwarder;
+        __ERC2771Context_init(forwarders);
         __ERC1155_init(_contractURI);
 
         name = _name;
