@@ -57,7 +57,7 @@ contract ContractD {
 }
 
 contract TWRouterTest is BaseTest, IExtension {
-    address private router;
+    address internal router;
     address private registryDeployer;
 
     ExtensionRegistry private extensionRegistry;
@@ -105,7 +105,7 @@ contract TWRouterTest is BaseTest, IExtension {
         extensionNames[2] = extensions[2].metadata.name;
     }
 
-    function setUp() public override {
+    function setUp() public virtual override {
         super.setUp();
 
         // Set up extension registry.
@@ -399,5 +399,23 @@ contract TWRouterTest is BaseTest, IExtension {
 
         vm.expectRevert("ExtensionState: extension does not exist.");
         twRouter.removeExtension("Random name");
+    }
+}
+
+contract TWRouterBenchmarkTest is TWRouterTest {
+    function test_benchmark_readCall() external {
+        ContractC(router).getC();
+    }
+
+    function test_benchmark_writeCall_a() external {
+        ContractC(router).c();
+    }
+
+    function test_benchmark_writeCall_b() external {
+        ContractC(router).c();
+    }
+
+    function test_benchmark_writeCall_c() external {
+        ContractC(router).c();
     }
 }
