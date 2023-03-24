@@ -74,9 +74,9 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
 
         uint256 supplyClaimedAlready = condition.supplyClaimed;
 
-        if (_resetClaimEligibility) {
+        if (targetConditionId == bytes32(0) || _resetClaimEligibility) {
             supplyClaimedAlready = 0;
-            targetConditionId = keccak256(abi.encodePacked(_dropMsgSender(), block.number));
+            targetConditionId = keccak256(abi.encodePacked(_dropMsgSender(), block.number, _tokenId));
         }
 
         if (supplyClaimedAlready > _condition.maxClaimableSupply) {
