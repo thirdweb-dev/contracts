@@ -43,7 +43,7 @@ contract MarketplaceV3 is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("MarketplaceRouter");
+    bytes32 private constant MODULE_TYPE = bytes32("MarketplaceV3");
     uint256 private constant VERSION = 1;
 
     /*///////////////////////////////////////////////////////////////
