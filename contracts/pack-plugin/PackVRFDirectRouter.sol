@@ -39,7 +39,7 @@ import "../dynamic-contracts/init/ReentrancyGuardInit.sol";
  *      - PermissionsEnumerable
  */
 
-contract PackRouter is
+contract PackVRFDirectRouter is
     Initializable,
     Multicall,
     ERC2771ContextUpgradeable,

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../../interfaces/IPackVRFDirect.sol";
 
-library PackVRFStorage {
+library PackVRFDirectStorage {
     bytes32 public constant PACK_VRF_STORAGE_POSITION = keccak256("pack.vrf.storage");
 
     struct Data {

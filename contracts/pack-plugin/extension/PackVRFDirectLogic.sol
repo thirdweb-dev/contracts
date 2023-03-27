@@ -14,33 +14,23 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-
-import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
-
 import "@chainlink/contracts/src/v0.8/VRFV2WrapperConsumerBase.sol";
 
 //  ==========  Internal imports    ==========
 
 import "../../interfaces/IPackVRFDirect.sol";
+import "../../lib/TWStrings.sol";
+import "../../lib/CurrencyTransferLib.sol";
+import { IERC2981 } from "../../eip/interface/IERC2981.sol";
+import { IERC721Receiver } from "../../eip/interface/IERC721Receiver.sol";
+import { Context, ERC1155Upgradeable } from "../../dynamic-contracts/eip/ERC1155Upgradeable.sol";
+import { IERC2771Context } from "../../extension/interface/IERC2771Context.sol";
+import { ERC1155Storage } from "../../dynamic-contracts/eip/ERC1155Upgradeable.sol";
+import { PackVRFDirectStorage } from "./PackVRFDirectStorage.sol";
 
 //  ==========  Features    ==========
 
 import { TokenStore, ERC1155Receiver } from "../../dynamic-contracts/extension/TokenStore.sol";
-// Reentrancy guard
-
-//===============---------||||||||||||||||
-import { PackVRFStorage } from "./PackVRFStorage.sol";
-import { ERC1155Storage } from "../../dynamic-contracts/eip/ERC1155Upgradeable.sol";
-
-import "../../lib/TWStrings.sol";
-import "../../lib/CurrencyTransferLib.sol";
-
-import { IERC2981 } from "../../eip/interface/IERC2981.sol";
-import { Context, ERC1155Upgradeable } from "../../dynamic-contracts/eip/ERC1155Upgradeable.sol";
-
-import { IERC2771Context } from "../../extension/interface/IERC2771Context.sol";
-
 import { ERC2771ContextUpgradeable } from "../../dynamic-contracts/extension/ERC2771ContextUpgradeable.sol";
 import { Royalty, IERC165 } from "../../dynamic-contracts/extension/Royalty.sol";
 import { ContractMetadata } from "../../dynamic-contracts/extension/ContractMetadata.sol";
@@ -48,10 +38,6 @@ import { Ownable } from "../../dynamic-contracts/extension/Ownable.sol";
 import { ReentrancyGuard } from "../../dynamic-contracts/extension/ReentrancyGuard.sol";
 import { DefaultOperatorFiltererUpgradeable } from "../../dynamic-contracts/extension/DefaultOperatorFiltererUpgradeable.sol";
 import { PermissionsStorage } from "../../dynamic-contracts/extension/Permissions.sol";
-
-/**
-    NOTE: This contract is a work in progress.
- */
 
 contract PackVRFDirectLogic is
     VRFV2WrapperConsumerBase,
@@ -139,7 +125,7 @@ contract PackVRFDirectLogic is
         require(_hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
 
-        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
 
         packId = packVrfData.nextTokenIdToMint;
         packVrfData.nextTokenIdToMint += 1;
@@ -187,7 +173,7 @@ contract PackVRFDirectLogic is
         bool _openOnFulfill
     ) internal returns (uint256 requestId) {
         address opener = _msgSender();
-        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
 
         require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
 
@@ -215,7 +201,7 @@ contract PackVRFDirectLogic is
 
     /// @notice Called by Chainlink VRF to fulfill a random number request.
     function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
-        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
         RequestInfo memory info = packVrfData.requestInfo[_requestId];
 
         require(info.randomWords.length == 0, "!Req");
@@ -230,7 +216,7 @@ contract PackVRFDirectLogic is
 
     /// @notice Returns whether a pack opener is ready to call `claimRewards`.
     function canClaimRewards(address _opener) public view returns (bool) {
-        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
         uint256 requestId = packVrfData.openerToReqId[_opener];
         return requestId > 0 && packVrfData.requestInfo[requestId].randomWords.length > 0;
     }
@@ -250,7 +236,7 @@ contract PackVRFDirectLogic is
         require(isTrustedForwarder(msg.sender) || msg.sender == address(VRF_V2_WRAPPER) || opener == tx.origin, "!EOA");
 
         require(canClaimRewards(opener), "!ActiveReq");
-        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
 
         uint256 reqId = packVrfData.openerToReqId[opener];
         RequestInfo memory info = packVrfData.requestInfo[reqId];
@@ -288,7 +274,7 @@ contract PackVRFDirectLogic is
         bool isUpdate
     ) internal returns (uint256 supplyToMint) {
         uint256 sumOfRewardUnits;
-        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
 
         for (uint256 i = 0; i < _contents.length; i += 1) {
             require(_contents[i].totalAmount != 0, "0 amt");
@@ -321,7 +307,7 @@ contract PackVRFDirectLogic is
         uint256 _rewardUnitsPerOpen,
         PackInfo memory pack
     ) internal returns (Token[] memory rewardUnits) {
-        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
 
         uint256 numOfRewardUnitsToDistribute = _numOfPacksToOpen * _rewardUnitsPerOpen;
         rewardUnits = new Token[](numOfRewardUnitsToDistribute);
@@ -373,7 +359,7 @@ contract PackVRFDirectLogic is
         view
         returns (Token[] memory contents, uint256[] memory perUnitAmounts)
     {
-        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
 
         PackInfo memory pack = packVrfData.packInfo[_packId];
         uint256 total = getTokenCountOfBundle(_packId);
@@ -387,12 +373,12 @@ contract PackVRFDirectLogic is
     }
 
     function nextTokenIdToMint() external view returns (uint256) {
-        PackVRFStorage.Data storage data = PackVRFStorage.packVRFStorage();
+        PackVRFDirectStorage.Data storage data = PackVRFDirectStorage.packVRFStorage();
         return data.nextTokenIdToMint;
     }
 
     function totalSupply(uint256 _tokenId) external view returns (uint256) {
-        PackVRFStorage.Data storage data = PackVRFStorage.packVRFStorage();
+        PackVRFDirectStorage.Data storage data = PackVRFDirectStorage.packVRFStorage();
         return data.totalSupply[_tokenId];
     }
 
@@ -436,7 +422,7 @@ contract PackVRFDirectLogic is
         bytes memory data
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-        PackVRFStorage.Data storage packVrfData = PackVRFStorage.packVRFStorage();
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
 
         if (from == address(0)) {
             for (uint256 i = 0; i < ids.length; ++i) {
