@@ -72,6 +72,12 @@ contract PackVRFDirectLogic is
     uint16 private constant REQUEST_CONFIRMATIONS = 3;
     uint32 private constant NUMWORDS = 1;
 
+    /// @dev Emitted when admin deposits Link tokens.
+    event LinkTokensDepositedByAdmin(uint256 amount);
+
+    /// @dev Emitted when admin withdrwas deposited Link tokens.
+    event LinkTokensWithdrawnByAdmin(uint256 amount);
+
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
@@ -84,6 +90,45 @@ contract PackVRFDirectLogic is
 
     receive() external payable {
         require(msg.sender == nativeTokenWrapper, "!nativeTokenWrapper.");
+    }
+
+    /// @dev Admin deposits Link tokens.
+    /// Must use this function. Direct transfers will not be recoverable.
+    function depositLinkTokens(uint256 _amount) external payable nonReentrant {
+        require(_hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
+
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
+
+        LinkTokenInterface _linkToken = LINK;
+
+        uint256 balanceBefore = _linkToken.balanceOf(address(this));
+        CurrencyTransferLib.transferCurrency(address(_linkToken), _msgSender(), address(this), _amount);
+        uint256 actualAmount = _linkToken.balanceOf(address(this)) - balanceBefore;
+
+        packVrfData.linkBalance += actualAmount;
+
+        emit LinkTokensDepositedByAdmin(actualAmount);
+    }
+
+    /// @dev Admin can withdraw unused/excess Link tokens.
+    function withdrawLinkTokens(uint256 _amount) external {
+        require(_hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
+
+        LinkTokenInterface _linkToken = LINK;
+
+        require(packVrfData.linkBalance >= _amount, "Insufficient balance");
+        packVrfData.linkBalance -= _amount;
+
+        CurrencyTransferLib.transferCurrency(address(_linkToken), address(this), _msgSender(), _amount);
+
+        emit LinkTokensWithdrawnByAdmin(_amount);
+    }
+
+    /// @notice View total Link available in the contract.
+    function getLinkTokenBalance() external view returns (uint256) {
+        PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
+        return packVrfData.linkBalance;
     }
 
     /*///////////////////////////////////////////////////////////////

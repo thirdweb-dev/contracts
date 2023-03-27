@@ -9,6 +9,8 @@ library PackVRFDirectStorage {
     struct Data {
         /// @dev The token Id of the next set of packs to be minted.
         uint256 nextTokenIdToMint;
+        /// @dev Total amount of link tokens in the contract (not including links as part of created packs).
+        uint256 linkBalance;
         /// @dev Mapping from token ID => total circulating supply of token with that ID.
         mapping(uint256 => uint256) totalSupply;
         /// @dev Mapping from pack ID => The state of that set of packs.
