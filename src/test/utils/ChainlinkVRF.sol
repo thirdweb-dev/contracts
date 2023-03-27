@@ -13,6 +13,14 @@ contract MockLink is MockERC20 {
     }
 }
 
+contract Link {
+    function transferAndCall(
+        address to,
+        uint256 value,
+        bytes calldata
+    ) external returns (bool) {}
+}
+
 contract VRFV2Wrapper {
     uint256 private nextId = 5;
 
