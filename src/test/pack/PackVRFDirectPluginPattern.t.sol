@@ -681,7 +681,7 @@ contract PackVRFDirectLogicTest is BaseTest, IExtension {
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Unit tests: `openPackAndClaimRewards`
+                    Unit tests: `openPackAndClaimRewards`
     //////////////////////////////////////////////////////////////*/
 
     /**
@@ -1017,6 +1017,67 @@ contract PackVRFDirectLogicTest is BaseTest, IExtension {
         vm.startPrank(recipient, recipient);
         vm.expectRevert(err);
         pack.openPack(2, 1);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                    LINK deposit/withdraw/transfer
+    //////////////////////////////////////////////////////////////*/
+
+    function test_depositLink() public {
+        uint256 currentBalance = linkToken.balanceOf(address(pack));
+
+        // deposit link
+        vm.prank(packAdmin);
+        pack.depositLinkTokens(100 ether);
+
+        uint256 newBalance = linkToken.balanceOf(address(pack));
+
+        assertEq(newBalance, currentBalance + 100 ether);
+    }
+
+    function test_withdrawLink() public {
+        uint256 currentBalance = linkToken.balanceOf(address(pack));
+
+        // withdraw link
+        vm.prank(packAdmin);
+        pack.withdrawLinkTokens(100 ether);
+
+        uint256 newBalance = linkToken.balanceOf(address(pack));
+
+        assertEq(newBalance, currentBalance - 100 ether);
+    }
+
+    function test_revert_withdrawLink_withdrawingLinkFromPacks() public {
+        vm.prank(packAdmin);
+        linkToken.transfer(address(tokenOwner), 100 ether);
+
+        // add LINK tokens in packContents -- these should remain untouched when admin withdraws LINK
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(linkToken),
+                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenId: 0,
+                totalAmount: 50 ether
+            })
+        );
+        numOfRewardUnits.push(50);
+
+        uint256 packId = pack.nextTokenIdToMint();
+
+        vm.startPrank(address(tokenOwner));
+        linkToken.approve(address(pack), type(uint256).max);
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, address(0x123456));
+        vm.stopPrank();
+
+        // withdraw all deposited link (except those added in packs above)
+        vm.startPrank(packAdmin);
+        pack.withdrawLinkTokens(pack.getLinkBalance());
+        vm.stopPrank();
+
+        // open pack -- should revert (LINK balance from packs not used)
+        vm.prank(address(0x123456), address(0x123456));
+        vm.expectRevert("Insufficient LINK balance");
+        pack.openPack(packId, 1);
     }
 
     /*///////////////////////////////////////////////////////////////
