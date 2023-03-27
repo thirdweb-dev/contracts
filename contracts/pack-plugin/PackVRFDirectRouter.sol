@@ -168,8 +168,7 @@ contract PackVRFDirectRouter is
 
     /// @dev Returns whether a plugin can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
-        bytes32 defaultAdminRole = 0x00;
-        return _hasRole(defaultAdminRole, _msgSender());
+        false;
     }
 
     /// @dev Checks whether an account holds the given role.
