@@ -88,10 +88,6 @@ contract PackVRFDirectLogic is
         address _vrfV2Wrapper
     ) VRFV2WrapperConsumerBase(_linkTokenAddress, _vrfV2Wrapper) TokenStore(_nativeTokenWrapper) {}
 
-    receive() external payable {
-        require(msg.sender == nativeTokenWrapper, "!nativeTokenWrapper.");
-    }
-
     /*///////////////////////////////////////////////////////////////
                         Deposit / Withdraw LINK
     //////////////////////////////////////////////////////////////*/
@@ -186,8 +182,6 @@ contract PackVRFDirectLogic is
 
         packVrfData.packInfo[packId].openStartTimestamp = _openStartTimestamp;
         packVrfData.packInfo[packId].amountDistributedPerOpen = _amountDistributedPerOpen;
-
-        // canUpdatePack[packId] = true;
 
         _mint(_recipient, packId, packTotalSupply, "");
 
