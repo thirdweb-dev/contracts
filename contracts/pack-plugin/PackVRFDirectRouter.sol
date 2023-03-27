@@ -56,7 +56,7 @@ contract PackVRFDirectRouter is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("PackRouter");
+    bytes32 private constant MODULE_TYPE = bytes32("PackVRFDirectRouter");
     uint256 private constant VERSION = 2;
 
     address private immutable forwarder;
