@@ -13,6 +13,22 @@ import "./utils/BaseAccount.sol";
 import "./utils/TokenCallbackHandler.sol";
 
 /**
+ *  TWAccount capabilities:
+ *
+ *  Actions:
+ *  - execute transactions
+ *  - send and receive ether
+ *  - receive NFTs
+ *  - multicall
+ *  - set contract metadata
+ *
+ *  Concept:
+ *  - Permission control; an admin role with separate action-related roles (e.g. SIGNER_ROLE) that can be revoked without giving up admin role.
+ *  - Dynamic contract; particularly use BaseRouter for unrestricted upgradeability.
+ *  - Overrideable functions at each step, with the goal of creating a base smart-walelt class that can be extended.
+ */
+
+/**
  * minimal account.
  *  this is sample minimal account.
  *  has execute, eth handling methods
