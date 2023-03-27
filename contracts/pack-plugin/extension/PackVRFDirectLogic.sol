@@ -45,6 +45,7 @@ import { ERC2771ContextUpgradeable } from "../../dynamic-contracts/extension/ERC
 import { Royalty, IERC165 } from "../../dynamic-contracts/extension/Royalty.sol";
 import { ContractMetadata } from "../../dynamic-contracts/extension/ContractMetadata.sol";
 import { Ownable } from "../../dynamic-contracts/extension/Ownable.sol";
+import { ReentrancyGuard } from "../../dynamic-contracts/extension/ReentrancyGuard.sol";
 import { DefaultOperatorFiltererUpgradeable } from "../../dynamic-contracts/extension/DefaultOperatorFiltererUpgradeable.sol";
 import { PermissionsStorage } from "../../dynamic-contracts/extension/Permissions.sol";
 
@@ -61,7 +62,8 @@ contract PackVRFDirectLogic is
     DefaultOperatorFiltererUpgradeable,
     ERC2771ContextUpgradeable,
     ERC1155Upgradeable,
-    IPackVRFDirect
+    IPackVRFDirect,
+    ReentrancyGuard
 {
     /*///////////////////////////////////////////////////////////////
                             Constants
@@ -133,7 +135,7 @@ contract PackVRFDirectLogic is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    ) external payable returns (uint256 packId, uint256 packTotalSupply) {
+    ) external payable nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
         require(_hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
 
@@ -382,6 +384,16 @@ contract PackVRFDirectLogic is
             contents[i] = getTokenOfBundle(_packId, i);
         }
         perUnitAmounts = pack.perUnitAmounts;
+    }
+
+    function nextTokenIdToMint() external view returns (uint256) {
+        PackVRFStorage.Data storage data = PackVRFStorage.packVRFStorage();
+        return data.nextTokenIdToMint;
+    }
+
+    function totalSupply(uint256 _tokenId) external view returns (uint256) {
+        PackVRFStorage.Data storage data = PackVRFStorage.packVRFStorage();
+        return data.totalSupply[_tokenId];
     }
 
     /*///////////////////////////////////////////////////////////////

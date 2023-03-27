@@ -14,6 +14,11 @@ pragma solidity ^0.8.0;
 
 import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 
+import { IERC2981 } from "../eip/interface/IERC2981.sol";
+import { IERC1155Receiver } from "../eip/interface/IERC1155Receiver.sol";
+import { IERC1155 } from "../eip/interface/IERC1155.sol";
+import { IERC721Receiver } from "../eip/interface/IERC721Receiver.sol";
+
 import "../extension/Multicall.sol";
 
 import "../dynamic-contracts/extension/Initializable.sol";
@@ -26,6 +31,7 @@ import "../dynamic-contracts/init/OwnableInit.sol";
 import "../dynamic-contracts/init/PermissionsEnumerableInit.sol";
 import "../dynamic-contracts/init/RoyaltyInit.sol";
 import "../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
+import "../dynamic-contracts/init/ReentrancyGuardInit.sol";
 
 /**
  *  Defualt extensions to add:
@@ -43,7 +49,8 @@ contract PackRouter is
     ERC1155Init,
     OwnableInit,
     PermissionsEnumerableInit,
-    RoyaltyInit
+    RoyaltyInit,
+    ReentrancyGuardInit
 {
     /*///////////////////////////////////////////////////////////////
                             State variables
@@ -93,6 +100,7 @@ contract PackRouter is
         forwarders[i] = forwarder;
         __ERC2771Context_init(forwarders);
         __ERC1155_init(_contractURI);
+        __ReentrancyGuard_init();
 
         name = _name;
         symbol = _symbol;
@@ -138,6 +146,20 @@ contract PackRouter is
     /// @dev Returns the version of the contract.
     function contractVersion() external pure returns (uint8) {
         return uint8(VERSION);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                                ERC165
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev See ERC 165
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return
+            super.supportsInterface(interfaceId) ||
+            type(IERC2981).interfaceId == interfaceId ||
+            type(IERC721Receiver).interfaceId == interfaceId ||
+            type(IERC1155Receiver).interfaceId == interfaceId ||
+            type(IERC1155).interfaceId == interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////

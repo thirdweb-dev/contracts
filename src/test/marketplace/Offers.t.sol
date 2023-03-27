@@ -10,6 +10,7 @@ import { PluginMap, IPluginMap } from "contracts/extension/plugin/PluginMap.sol"
 import { MarketplaceV3 } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
 import { OffersLogic } from "contracts/marketplace/offers/OffersLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
+import { PermissionsEnumerable, Permissions } from "contracts/extension/PermissionsEnumerable.sol";
 
 import { IOffers } from "contracts/marketplace/IMarketplace.sol";
 

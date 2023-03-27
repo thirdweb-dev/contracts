@@ -341,9 +341,9 @@ contract MultiwrapTest is BaseTest {
         string memory errorMsg = string(
             abi.encodePacked(
                 "Permissions: account ",
-                Strings.toHexString(uint160(wrappedContent[0].assetContract), 20),
+                TWStrings.toHexString(uint160(wrappedContent[0].assetContract), 20),
                 " is missing role ",
-                Strings.toHexString(uint256(keccak256("ASSET_ROLE")), 32)
+                TWStrings.toHexString(uint256(keccak256("ASSET_ROLE")), 32)
             )
         );
 
@@ -364,9 +364,9 @@ contract MultiwrapTest is BaseTest {
         string memory errorMsg = string(
             abi.encodePacked(
                 "Permissions: account ",
-                Strings.toHexString(uint160(address(tokenOwner)), 20),
+                TWStrings.toHexString(uint160(address(tokenOwner)), 20),
                 " is missing role ",
-                Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
+                TWStrings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
             )
         );
 
@@ -750,9 +750,9 @@ contract MultiwrapTest is BaseTest {
         string memory errorMsg = string(
             abi.encodePacked(
                 "Permissions: account ",
-                Strings.toHexString(uint160(recipient), 20),
+                TWStrings.toHexString(uint160(recipient), 20),
                 " is missing role ",
-                Strings.toHexString(uint256(keccak256("UNWRAP_ROLE")), 32)
+                TWStrings.toHexString(uint256(keccak256("UNWRAP_ROLE")), 32)
             )
         );
 
