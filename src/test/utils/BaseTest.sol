@@ -59,8 +59,8 @@ abstract contract BaseTest is DSTest, Test {
     address public factory;
     address public fee;
     address public contractPublisher;
-    address public linkToken;
     address public vrfV2Wrapper;
+    MockLink public linkToken;
 
     address public factoryAdmin = address(0x10000);
     address public deployer = address(0x20000);
@@ -106,7 +106,7 @@ abstract contract BaseTest is DSTest, Test {
         registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
         contractPublisher = address(new ContractPublisher(forwarder, new MockContractPublisher()));
-        linkToken = address(new Link());
+        linkToken = new MockLink();
         vrfV2Wrapper = address(new VRFV2Wrapper());
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), contractPublisher);
@@ -139,7 +139,7 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC1155Claimable"), 1)));
         TWFactory(factory).addImplementation(address(new AirdropERC1155Claimable()));
         TWFactory(factory).addImplementation(
-            address(new PackVRFDirect(address(weth), eoaForwarder, linkToken, vrfV2Wrapper))
+            address(new PackVRFDirect(address(weth), eoaForwarder, address(linkToken), vrfV2Wrapper))
         );
         TWFactory(factory).addImplementation(address(new Pack(address(weth), eoaForwarder)));
         TWFactory(factory).addImplementation(address(new VoteERC20()));

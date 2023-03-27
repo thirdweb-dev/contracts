@@ -79,7 +79,7 @@ contract PackVRFDirectLogic is
     event LinkTokensWithdrawnByAdmin(uint256 amount);
 
     /*///////////////////////////////////////////////////////////////
-                    Constructor + initializer logic
+                            Constructor logic
     //////////////////////////////////////////////////////////////*/
 
     constructor(
@@ -92,6 +92,10 @@ contract PackVRFDirectLogic is
         require(msg.sender == nativeTokenWrapper, "!nativeTokenWrapper.");
     }
 
+    /*///////////////////////////////////////////////////////////////
+                        Deposit / Withdraw LINK
+    //////////////////////////////////////////////////////////////*/
+
     /// @dev Admin deposits Link tokens.
     /// Must use this function. Direct transfers will not be recoverable.
     function depositLinkTokens(uint256 _amount) external payable nonReentrant {
@@ -99,11 +103,9 @@ contract PackVRFDirectLogic is
 
         PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
 
-        LinkTokenInterface _linkToken = LINK;
-
-        uint256 balanceBefore = _linkToken.balanceOf(address(this));
-        CurrencyTransferLib.transferCurrency(address(_linkToken), _msgSender(), address(this), _amount);
-        uint256 actualAmount = _linkToken.balanceOf(address(this)) - balanceBefore;
+        uint256 balanceBefore = LINK.balanceOf(address(this));
+        CurrencyTransferLib.transferCurrency(address(LINK), _msgSender(), address(this), _amount);
+        uint256 actualAmount = LINK.balanceOf(address(this)) - balanceBefore;
 
         packVrfData.linkBalance += actualAmount;
 
@@ -111,22 +113,20 @@ contract PackVRFDirectLogic is
     }
 
     /// @dev Admin can withdraw unused/excess Link tokens.
-    function withdrawLinkTokens(uint256 _amount) external {
+    function withdrawLinkTokens(uint256 _amount) external nonReentrant {
         require(_hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
         PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
 
-        LinkTokenInterface _linkToken = LINK;
-
-        require(packVrfData.linkBalance >= _amount, "Insufficient balance");
+        require(packVrfData.linkBalance >= _amount, "Insufficient LINK balance");
         packVrfData.linkBalance -= _amount;
 
-        CurrencyTransferLib.transferCurrency(address(_linkToken), address(this), _msgSender(), _amount);
+        CurrencyTransferLib.transferCurrency(address(LINK), address(this), _msgSender(), _amount);
 
         emit LinkTokensWithdrawnByAdmin(_amount);
     }
 
     /// @notice View total Link available in the contract.
-    function getLinkTokenBalance() external view returns (uint256) {
+    function getLinkBalance() external view returns (uint256) {
         PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
         return packVrfData.linkBalance;
     }
@@ -229,6 +229,10 @@ contract PackVRFDirectLogic is
 
         // Transfer packs into the contract.
         _safeTransferFrom(opener, address(this), _packId, _amountToOpen, "");
+
+        // Ensure the contract has sufficient LINK available to request randomness
+        uint256 requestPrice = VRF_V2_WRAPPER.calculateRequestPrice(_callBackGasLimit);
+        require(packVrfData.linkBalance >= requestPrice, "Insufficient LINK balance");
 
         // Request VRF for randomness.
         requestId = requestRandomness(_callBackGasLimit, REQUEST_CONFIRMATIONS, NUMWORDS);

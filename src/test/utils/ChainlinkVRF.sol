@@ -1,12 +1,16 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
-contract Link {
+import "../mocks/MockERC20.sol";
+
+contract MockLink is MockERC20 {
     function transferAndCall(
-        address,
-        uint256,
+        address to,
+        uint256 value,
         bytes calldata
-    ) external returns (bool) {}
+    ) external returns (bool) {
+        super.transfer(to, value);
+    }
 }
 
 contract VRFV2Wrapper {

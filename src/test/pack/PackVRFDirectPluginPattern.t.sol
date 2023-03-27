@@ -169,6 +169,12 @@ contract PackVRFDirectLogicTest is BaseTest, IExtension {
         );
         numOfRewardUnits.push(50);
 
+        linkToken.mint(address(packAdmin), 1000 ether);
+        vm.startPrank(address(packAdmin));
+        linkToken.approve(address(pack), type(uint256).max);
+        pack.depositLinkTokens(500 ether);
+        vm.stopPrank();
+
         erc20.mint(address(tokenOwner), 2000 ether);
         erc721.mint(address(tokenOwner), 6);
         erc1155.mint(address(tokenOwner), 0, 100);
@@ -240,7 +246,7 @@ contract PackVRFDirectLogicTest is BaseTest, IExtension {
 
         extensions[0] = extension_permissions;
 
-        address packLogic = address(new PackVRFDirectLogic(address(weth), linkToken, vrfV2Wrapper));
+        address packLogic = address(new PackVRFDirectLogic(address(weth), address(linkToken), vrfV2Wrapper));
 
         Extension memory extension_pack;
         extension_pack.metadata = ExtensionMetadata({
@@ -249,7 +255,7 @@ contract PackVRFDirectLogicTest is BaseTest, IExtension {
             implementation: packLogic
         });
 
-        extension_pack.functions = new ExtensionFunction[](23);
+        extension_pack.functions = new ExtensionFunction[](26);
         extension_pack.functions[0] = ExtensionFunction(PackVRFDirectLogic.uri.selector, "uri(uint256)");
         extension_pack.functions[1] = ExtensionFunction(
             PackVRFDirectLogic.supportsInterface.selector,
@@ -289,41 +295,53 @@ contract PackVRFDirectLogicTest is BaseTest, IExtension {
             "totalSupply(uint256)"
         );
         extension_pack.functions[11] = ExtensionFunction(
+            PackVRFDirectLogic.depositLinkTokens.selector,
+            "depositLinkTokens(uint256)"
+        );
+        extension_pack.functions[12] = ExtensionFunction(
+            PackVRFDirectLogic.withdrawLinkTokens.selector,
+            "withdrawLinkTokens(uint256)"
+        );
+        extension_pack.functions[13] = ExtensionFunction(
+            PackVRFDirectLogic.getLinkBalance.selector,
+            "getLinkBalance()"
+        );
+        extension_pack.functions[14] = ExtensionFunction(
             VRFV2WrapperConsumerBase.rawFulfillRandomWords.selector,
             "rawFulfillRandomWords(uint256,uint256[])"
         );
-        extension_pack.functions[12] = ExtensionFunction(Royalty.royaltyInfo.selector, "royaltyInfo(uint256,uint256)");
-        extension_pack.functions[13] = ExtensionFunction(
+        extension_pack.functions[15] = ExtensionFunction(Royalty.royaltyInfo.selector, "royaltyInfo(uint256,uint256)");
+        extension_pack.functions[16] = ExtensionFunction(
             Royalty.getRoyaltyInfoForToken.selector,
             "getRoyaltyInfoForToken(uint256)"
         );
-        extension_pack.functions[14] = ExtensionFunction(
+        extension_pack.functions[17] = ExtensionFunction(
             Royalty.getDefaultRoyaltyInfo.selector,
             "getDefaultRoyaltyInfo()"
         );
-        extension_pack.functions[15] = ExtensionFunction(
+        extension_pack.functions[18] = ExtensionFunction(
             Royalty.setDefaultRoyaltyInfo.selector,
             "setDefaultRoyaltyInfo(address,uint256)"
         );
-        extension_pack.functions[16] = ExtensionFunction(
+        extension_pack.functions[19] = ExtensionFunction(
             Royalty.setRoyaltyInfoForToken.selector,
             "setRoyaltyInfoForToken(uint256,address,uint256)"
         );
-        extension_pack.functions[17] = ExtensionFunction(
+        extension_pack.functions[20] = ExtensionFunction(
             IERC1155Receiver.onERC1155Received.selector,
             "onERC1155Received(address,address,uint256,uint256,bytes)"
         );
-        extension_pack.functions[18] = ExtensionFunction(
+        extension_pack.functions[21] = ExtensionFunction(
             IERC1155Receiver.onERC1155BatchReceived.selector,
             "onERC1155BatchReceived(address,address,uint256[],uint256[],bytes)"
         );
-        extension_pack.functions[19] = ExtensionFunction(
+        extension_pack.functions[22] = ExtensionFunction(
             IERC721Receiver.onERC721Received.selector,
             "onERC721Received(address,address,uint256,bytes)"
         );
-        extension_pack.functions[20] = ExtensionFunction(IERC721.ownerOf.selector, "ownerOf(uint256)");
-        extension_pack.functions[21] = ExtensionFunction(IERC721.balanceOf.selector, "balanceOf(address)");
-        extension_pack.functions[22] = ExtensionFunction(IERC1155.balanceOf.selector, "balanceOf(address,uint256)");
+        extension_pack.functions[23] = ExtensionFunction(IERC721.ownerOf.selector, "ownerOf(uint256)");
+        extension_pack.functions[24] = ExtensionFunction(IERC721.balanceOf.selector, "balanceOf(address)");
+        extension_pack.functions[25] = ExtensionFunction(IERC1155.balanceOf.selector, "balanceOf(address,uint256)");
 
         // extension_pack.functions[16] = ExtensionFunction(PackVRFDirectLogic.receive.selector, "receive()");
 
@@ -1345,6 +1363,12 @@ contract PackVRFLogicBenchmarkTest is BaseTest, IExtension {
         );
         numOfRewardUnits.push(50);
 
+        linkToken.mint(address(packAdmin), 1000 ether);
+        vm.startPrank(address(packAdmin));
+        linkToken.approve(address(pack), type(uint256).max);
+        pack.depositLinkTokens(500 ether);
+        vm.stopPrank();
+
         erc20.mint(address(tokenOwner), 2000 ether);
         erc721.mint(address(tokenOwner), 6);
         erc1155.mint(address(tokenOwner), 0, 100);
@@ -1429,7 +1453,7 @@ contract PackVRFLogicBenchmarkTest is BaseTest, IExtension {
 
         extensions[0] = extension_permissions;
 
-        address packLogic = address(new PackVRFDirectLogic(address(weth), linkToken, vrfV2Wrapper));
+        address packLogic = address(new PackVRFDirectLogic(address(weth), address(linkToken), vrfV2Wrapper));
 
         Extension memory extension_pack;
         extension_pack.metadata = ExtensionMetadata({
