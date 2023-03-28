@@ -41,7 +41,7 @@ contract TWAccountRouter is Initializable, Multicall, BaseRouter, ContractMetada
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether a extension can be set in the given execution context.
-    function _canSetExtension() internal view virtual returns (bool) {
+    function _canSetExtension() internal view virtual override returns (bool) {
         return _hasRole(EXTENSION_ADMIN_ROLE, msg.sender);
     }
 
