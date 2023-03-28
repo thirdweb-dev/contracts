@@ -1,20 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.12;
 
-import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
-import "./TWAccount.sol";
+import "../extension/Multicall.sol";
+
+import "./interfaces/ITWAccountFactory.sol"
+
+import "./TWAccountRouter.sol";
 
 /**
  *  TWAccountFactory capabilities:
  *  - deploy a clone pointing to a TWAccount implementation.
  */
-contract TWAccountFactory is Multicall {
-    TWAccount public immutable accountImplementation;
+contract TWAccountFactory is ITWAccountFactory, Multicall {
+    TWAccountRouter public immutable accountImplementation;
 
-    constructor(IEntryPoint _entryPoint) {
-        accountImplementation = new TWAccount(_entryPoint);
+    constructor(TWAccountRouter router) {
+        accountImplementation = router;
     }
 
     /// @notice Deploys a new Account with the given salt and initialization data.
@@ -22,7 +25,7 @@ contract TWAccountFactory is Multicall {
         address impl = address(accountImplementation);
         account = Clones.cloneDeterministic(impl, _salt);
 
-        // TODO: Emit event
+        emit AccountCreated(account, _salt);
 
         if (_initData.length > 0) {
             // slither-disable-next-line unused-return
