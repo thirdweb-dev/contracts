@@ -6,17 +6,18 @@ pragma solidity ^0.8.11;
 /* solhint-disable reason-string */
 
 // Base
-import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
+import "./BaseRouter.sol";
 
 // Fixed extensions
 import "../extension/Multicall.sol";
 import "../dynamic-contracts/extension/Initializable.sol";
+import "./TWAccountLogic.sol";
 
 // Utils
 import "../dynamic-contracts/init/ContractMetadataInit.sol";
 import "../dynamic-contracts/init/PermissionsInit.sol";
 
-contract TWAccountRouter is Initializable, Multicall, BaseRouter, ContractMetadataInit, PermissionsInit {
+contract TWAccountRouter is Initializable, Multicall, BaseRouter, TWAccountLogic {
     /*///////////////////////////////////////////////////////////////
                                 Constants
     //////////////////////////////////////////////////////////////*/
@@ -27,13 +28,33 @@ contract TWAccountRouter is Initializable, Multicall, BaseRouter, ContractMetada
                         Constructor and Initializer
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Extension[] memory _defaultExtensions) BaseRouter(_defaultExtensions) {}
+    constructor(IEntryPoint _entrypoint) TWAccountLogic(_entrypoint) {}
 
     function initialize(address _defaultAdmin, string memory _contractURI) public virtual initializer {
         _setupRole(EXTENSION_ADMIN_ROLE, _defaultAdmin);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
 
         _setupContractURI(_contractURI);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Public Overrides
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev See {IERC165-supportsInterface}.
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(BaseRouter, ERC1155Receiver)
+        returns (bool)
+    {
+        return
+            interfaceId == type(IBaseRouter).interfaceId ||
+            interfaceId == type(IRouter).interfaceId ||
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            interfaceId == type(IERC721Receiver).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     /*///////////////////////////////////////////////////////////////

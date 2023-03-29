@@ -34,7 +34,8 @@ contract TWAccountFactory is ITWAccountFactory, Multicall {
 
         if (_initData.length > 0) {
             // slither-disable-next-line unused-return
-            TWAddress.functionCall(account, _initData);
+            (bool success, bytes memory returndata) = account.call(_initData);
+            TWAddress.verifyCallResult(success, returndata, "TWAccountFactory: failed to initialize account.");
         }
     }
 

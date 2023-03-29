@@ -90,10 +90,6 @@ contract TWAccountLogic is BaseAccount, ContractMetadata, PermissionsEnumerable,
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Lets the contract accept native tokens.
-    // solhint-disable-next-line no-empty-blocks
-    receive() external payable {}
-
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
     function execute(
         address _target,
