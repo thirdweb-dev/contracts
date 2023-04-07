@@ -8,7 +8,7 @@ pragma solidity ^0.8.11;
 import "./TWAccount.sol";
 import "./BaseRouter.sol";
 
-contract TWAccountDynamic is TWAccount, BaseRouter {
+contract TWDynamicAccount is TWAccount, BaseRouter {
     /*///////////////////////////////////////////////////////////////
                                 Constants
     //////////////////////////////////////////////////////////////*/
