@@ -5,19 +5,10 @@ pragma solidity ^0.8.11;
 /* solhint-disable no-inline-assembly */
 /* solhint-disable reason-string */
 
-// Base
+import "./TWAccount.sol";
 import "./BaseRouter.sol";
 
-// Fixed extensions
-import "../extension/Multicall.sol";
-import "../dynamic-contracts/extension/Initializable.sol";
-import "./TWAccountLogic.sol";
-
-// Utils
-import "../dynamic-contracts/init/ContractMetadataInit.sol";
-import "../dynamic-contracts/init/PermissionsInit.sol";
-
-contract TWAccountRouter is Initializable, Multicall, BaseRouter, TWAccountLogic {
+contract TWAccountDynamic is TWAccount, BaseRouter {
     /*///////////////////////////////////////////////////////////////
                                 Constants
     //////////////////////////////////////////////////////////////*/
@@ -28,13 +19,11 @@ contract TWAccountRouter is Initializable, Multicall, BaseRouter, TWAccountLogic
                         Constructor and Initializer
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint) TWAccountLogic(_entrypoint) {}
+    constructor(IEntryPoint _entrypoint) TWAccount(_entrypoint) {}
 
-    function initialize(address _defaultAdmin, string memory _contractURI) public virtual initializer {
+    function initialize(address _defaultAdmin) public override initializer {
         _setupRole(EXTENSION_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-
-        _setupContractURI(_contractURI);
+        super.initialize(_defaultAdmin);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -42,13 +31,7 @@ contract TWAccountRouter is Initializable, Multicall, BaseRouter, TWAccountLogic
     //////////////////////////////////////////////////////////////*/
 
     /// @dev See {IERC165-supportsInterface}.
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(BaseRouter, ERC1155Receiver)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(TWAccount, BaseRouter) returns (bool) {
         return
             interfaceId == type(IBaseRouter).interfaceId ||
             interfaceId == type(IRouter).interfaceId ||

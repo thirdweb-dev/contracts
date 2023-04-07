@@ -1,23 +1,21 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.12;
 
+// Utils
+import "../extension/Multicall.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
-import "../extension/Multicall.sol";
-
+// Interface
 import "./interfaces/ITWAccountFactory.sol";
 
-import "./TWAccountRouter.sol";
+// Smart wallet implementation
+import "./TWAccount.sol";
 
-/**
- *  TWAccountFactory capabilities:
- *  - deploy a clone pointing to a TWAccount implementation.
- */
 contract TWAccountFactory is ITWAccountFactory, Multicall {
-    TWAccountRouter private immutable _accountImplementation;
+    TWAccount private immutable _accountImplementation;
 
-    constructor(TWAccountRouter router) {
-        _accountImplementation = router;
+    constructor(IEntryPoint _entrypoint) {
+        _accountImplementation = new TWAccount(_entrypoint);
     }
 
     /// @notice Returns the implementation of the Account.
@@ -25,18 +23,14 @@ contract TWAccountFactory is ITWAccountFactory, Multicall {
         return address(_accountImplementation);
     }
 
-    /// @notice Deploys a new Account with the given salt and initialization data.
-    function createAccount(bytes32 _salt, bytes calldata _initData) external returns (address account) {
+    /// @notice Deploys a new Account with the given admin and salt.
+    function createAccount(address _admin, bytes32 _salt) external returns (address account) {
         address impl = address(_accountImplementation);
         account = Clones.cloneDeterministic(impl, _salt);
 
-        emit AccountCreated(account, _salt);
+        TWAccount(account).initialize(_admin);
 
-        if (_initData.length > 0) {
-            // slither-disable-next-line unused-return
-            (bool success, bytes memory returndata) = account.call(_initData);
-            TWAddress.verifyCallResult(success, returndata, "TWAccountFactory: failed to initialize account.");
-        }
+        emit AccountCreated(account, _admin);
     }
 
     /// @notice Returns the address of an Account that would be deployed with the given salt.

@@ -9,10 +9,12 @@ pragma solidity ^0.8.11;
 import "./utils/BaseAccount.sol";
 
 // Extensions
-import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import "../extension/Multicall.sol";
+import "../dynamic-contracts/extension/Initializable.sol";
 import "../dynamic-contracts/extension/PermissionsEnumerable.sol";
 import "../dynamic-contracts/extension/ContractMetadata.sol";
+import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
 // Utils
 import "../openzeppelin-presets/utils/cryptography/ECDSA.sol";
@@ -32,7 +34,15 @@ library TWAccountStorage {
     }
 }
 
-contract TWAccountLogic is BaseAccount, ContractMetadata, PermissionsEnumerable, ERC721Holder, ERC1155Holder {
+contract TWAccount is
+    Initializable,
+    Multicall,
+    BaseAccount,
+    ContractMetadata,
+    PermissionsEnumerable,
+    ERC721Holder,
+    ERC1155Holder
+{
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -45,11 +55,16 @@ contract TWAccountLogic is BaseAccount, ContractMetadata, PermissionsEnumerable,
     IEntryPoint private immutable entrypointContract;
 
     /*///////////////////////////////////////////////////////////////
-                        Constructor, Modifiers
+                    Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint) {
         entrypointContract = _entrypoint;
+    }
+
+    /// @notice Initializes the smart contract walelt.
+    function initialize(address _defaultAdmin) public virtual initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
@@ -64,6 +79,14 @@ contract TWAccountLogic is BaseAccount, ContractMetadata, PermissionsEnumerable,
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @notice See {IERC165-supportsInterface}.
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Receiver) returns (bool) {
+        return
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            interfaceId == type(IERC721Receiver).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
 
     /// @notice Returns the nonce of the account.
     function nonce() public view virtual override returns (uint256) {
