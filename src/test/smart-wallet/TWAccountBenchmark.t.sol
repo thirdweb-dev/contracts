@@ -10,6 +10,7 @@ import { UserOperation } from "contracts/smart-wallet/utils/UserOperation.sol";
 
 import { TWAccountFactory } from "contracts/smart-wallet/TWAccountFactory.sol";
 
+/// @dev This is a dummy contract to test the gas cost of performing transactions with TWAccount.
 contract Number {
     uint256 public num;
 
@@ -19,11 +20,10 @@ contract Number {
 }
 
 contract TWAccountBenchmarkTest is BaseTest {
-    event SignerAddr(address signer);
-
     // Contracts
     address payable private entrypoint;
     TWAccountFactory private twAccountFactory;
+    Number internal numberContract;
 
     // Test params
     uint256 private signerPrivateKey = 100;
@@ -33,27 +33,55 @@ contract TWAccountBenchmarkTest is BaseTest {
     bytes private userOpSignature;
 
     // Test UserOps
-    UserOperation[] private userOpCreateAccountOnly;
+    UserOperation[] private userOpCreateAccount;
+    UserOperation[] private userOpPerformTx;
 
-    event TestMsgHash(bytes32 msgHash);
-    event TestOpHash(bytes32 opHash);
+    function _setupUserOp_performTx() private {
+        // Get user op fields
+        bytes memory subCallData = abi.encodeWithSignature("setNum(uint256)", 10);
+        bytes memory callData = abi.encodeWithSignature(
+            "execute(address,uint256,bytes)",
+            numberContract,
+            0,
+            subCallData
+        );
 
-    function setUp() public override {
-        super.setUp();
+        UserOperation memory op = UserOperation({
+            sender: sender,
+            nonce: 1,
+            initCode: bytes(""),
+            callData: callData,
+            callGasLimit: 500_000,
+            verificationGasLimit: 500_000,
+            preVerificationGas: 500_000,
+            maxFeePerGas: 0,
+            maxPriorityFeePerGas: 0,
+            paymasterAndData: bytes(""),
+            signature: bytes("")
+        });
 
-        // Set wallet signer.
-        walletSigner = vm.addr(signerPrivateKey);
+        // Sign UserOp
+        bytes32 opHash = EntryPoint(entrypoint).getUserOpHash(op);
+        bytes32 msgHash = ECDSA.toEthSignedMessageHash(opHash);
 
-        // deploy Entrypoint
-        entrypoint = payable(address(new EntryPoint()));
-        // deploy account factory
-        twAccountFactory = new TWAccountFactory(IEntryPoint(entrypoint));
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, msgHash);
+        userOpSignature = abi.encodePacked(r, s, v);
 
+        address recoveredSigner = ECDSA.recover(msgHash, v, r, s);
+        assertEq(recoveredSigner, walletSigner);
+
+        op.signature = userOpSignature;
+
+        // Store UserOp
+        userOpPerformTx.push(op);
+    }
+
+    function _setupUserOp_createAccount() private {
         // Get user op fields
         bytes memory subCallData = abi.encodeWithSignature("setNum(uint256)", 5);
         bytes memory callData = abi.encodeWithSignature(
             "execute(address,uint256,bytes)",
-            address(new Number()),
+            numberContract,
             0,
             subCallData
         );
@@ -80,35 +108,57 @@ contract TWAccountBenchmarkTest is BaseTest {
         });
 
         // Sign UserOp
-
         bytes32 opHash = EntryPoint(entrypoint).getUserOpHash(op);
         bytes32 msgHash = ECDSA.toEthSignedMessageHash(opHash);
-
-        emit TestOpHash(opHash);
-        emit TestMsgHash(msgHash);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, msgHash);
         userOpSignature = abi.encodePacked(r, s, v);
 
         address recoveredSigner = ECDSA.recover(msgHash, v, r, s);
-        emit SignerAddr(recoveredSigner);
+        assertEq(recoveredSigner, walletSigner);
 
         op.signature = userOpSignature;
 
-        // Store user op
-        userOpCreateAccountOnly.push(op);
-
-        // userOpCreateAccountOnly = new UserOperation(
-        //     address(twAccountFactory),
-        //     abi.encodeWithSignature("createAccount(address,bytes32)", address(0x123), keccak256("salt"))
-        // );
+        // Store UserOp
+        userOpCreateAccount.push(op);
     }
 
-    function test_benchmark_createAccount() public {
+    function setUp() public override {
+        super.setUp();
+
+        // Set wallet signer.
+        walletSigner = vm.addr(signerPrivateKey);
+        vm.deal(walletSigner, 100 ether);
+
+        // deploy Entrypoint
+        entrypoint = payable(address(new EntryPoint()));
+        // deploy account factory
+        twAccountFactory = new TWAccountFactory(IEntryPoint(entrypoint));
+        // deploy dummy contract
+        numberContract = new Number();
+
+        _setupUserOp_createAccount();
+        _setupUserOp_performTx();
+    }
+
+    /// @dev Create an account by directly calling the factory.
+    function test_benchmark_createAccount_directWithFactory() public {
         twAccountFactory.createAccount(address(0x456), keccak256("salt"));
     }
 
-    function test_benchmark_createAccountWithUserOp() public {
-        EntryPoint(entrypoint).handleOps(userOpCreateAccountOnly, beneficiary);
+    /// @dev Create an account when performing the first transaction from the account (all via Entrypoint).
+    function test_benchmark_createAccount_withUserOp() public {
+        EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+    }
+
+    /// @dev Perform a state changing transaction via EOA.
+    function test_benchmark_dummyTx_withEOA() public {
+        numberContract.setNum(20);
+    }
+
+    /// @dev Perform a state changing transaction via EOA.
+    function test_benchmark_dummyTx_withAccount() public {
+        EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+        EntryPoint(entrypoint).handleOps(userOpPerformTx, beneficiary);
     }
 }
