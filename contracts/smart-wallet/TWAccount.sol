@@ -144,9 +144,6 @@ contract TWAccount is
         }
     }
 
-    event TWAccountOpHash(bytes32 opHash);
-    event TWAccountMsgHash(bytes32 opHash);
-
     /// @notice Validates the signature of a user operation.
     function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
         internal
@@ -154,9 +151,7 @@ contract TWAccount is
         override
         returns (uint256 validationData)
     {
-        emit TWAccountOpHash(userOpHash);
         bytes32 hash = userOpHash.toEthSignedMessageHash();
-        emit TWAccountMsgHash(hash);
         address signer = hash.recover(userOp.signature);
 
         if (!isValidSigner(signer)) return SIG_VALIDATION_FAILED;
