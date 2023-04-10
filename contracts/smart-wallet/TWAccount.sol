@@ -19,21 +19,6 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 // Utils
 import "../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 
-library TWAccountStorage {
-    bytes32 internal constant TWACCOUNT_STORAGE_POSITION = keccak256("twaccount.storage");
-
-    struct Data {
-        uint256 nonce;
-    }
-
-    function accountStorage() internal pure returns (Data storage twaccountData) {
-        bytes32 position = TWACCOUNT_STORAGE_POSITION;
-        assembly {
-            twaccountData.slot := position
-        }
-    }
-}
-
 contract TWAccount is
     Initializable,
     Multicall,
@@ -86,12 +71,6 @@ contract TWAccount is
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
             super.supportsInterface(interfaceId);
-    }
-
-    /// @notice Returns the nonce of the account.
-    function nonce() public view virtual override returns (uint256) {
-        TWAccountStorage.Data storage twaccountData = TWAccountStorage.accountStorage();
-        return twaccountData.nonce;
     }
 
     /// @notice Returns the EIP 4337 entrypoint contract.
@@ -163,14 +142,6 @@ contract TWAccount is
                 revert(add(result, 32), mload(result))
             }
         }
-    }
-
-    /// @dev Validates the nonce of a user operation and updates account nonce.
-    function _validateAndUpdateNonce(UserOperation calldata userOp) internal override {
-        TWAccountStorage.Data storage data = TWAccountStorage.accountStorage();
-        require(data.nonce == userOp.nonce, "TWAccount: invalid nonce");
-
-        data.nonce += 1;
     }
 
     event TWAccountOpHash(bytes32 opHash);
