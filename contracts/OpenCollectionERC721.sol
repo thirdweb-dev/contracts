@@ -14,7 +14,6 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
@@ -27,6 +26,7 @@ import "./lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
+import "./extension/Multicall.sol";
 import "./extension/ContractMetadata.sol";
 import "./extension/PlatformFee.sol";
 import "./extension/Royalty.sol";
@@ -51,7 +51,7 @@ contract OpenCollectionERC721 is
     PermissionsEnumerable,
     Drop,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     DefaultOperatorFiltererUpgradeable,
     ERC721AUpgradeable
 {
@@ -105,6 +105,7 @@ contract OpenCollectionERC721 is
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
 
+        _setupPlatformFeeType(PlatformFeeType.Bps);
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
@@ -143,18 +144,6 @@ contract OpenCollectionERC721 is
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Contract identifiers
-    //////////////////////////////////////////////////////////////*/
-
-    function contractType() external pure returns (bytes32) {
-        return bytes32("OpenCollectionERC721");
-    }
-
-    function contractVersion() external pure returns (uint8) {
-        return uint8(1);
-    }
-
-    /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
@@ -169,12 +158,8 @@ contract OpenCollectionERC721 is
             return;
         }
 
-        (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
-
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
-
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             if (msg.value != totalPrice) {
@@ -182,8 +167,22 @@ contract OpenCollectionERC721 is
             }
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
+        uint256 fees;
+        address feeRecipient;
+
+        PlatformFeeType feeType = getPlatformFeeType();
+        if (feeType == PlatformFeeType.Flat) {
+            (feeRecipient, fees) = getFlatPlatformFeeInfo();
+        } else {
+            uint16 platformFeeBps;
+            (feeRecipient, platformFeeBps) = getPlatformFeeInfo();
+            fees = (totalPrice * platformFeeBps) / MAX_BPS;
+        }
+
+        require(totalPrice >= fees, "Price < fees");
+
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), feeRecipient, fees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - fees);
     }
 
     /// @dev Transfers the NFTs being claimed.
