@@ -31,7 +31,7 @@ import { ContractPublisher } from "contracts/ContractPublisher.sol";
 import { IContractPublisher } from "contracts/interfaces/IContractPublisher.sol";
 import "contracts/airdrop/AirdropERC721.sol";
 import "contracts/airdrop/AirdropERC721Claimable.sol";
-import "contracts/airdrop/AirdropERC20.sol";
+import { AirdropERC20 } from "contracts/airdrop/AirdropERC20.sol";
 import "contracts/airdrop/AirdropERC20Claimable.sol";
 import "contracts/airdrop/AirdropERC1155.sol";
 import "contracts/airdrop/AirdropERC1155Claimable.sol";
