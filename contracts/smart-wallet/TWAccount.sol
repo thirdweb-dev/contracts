@@ -58,6 +58,9 @@ contract TWAccount is
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
+    // solhint-disable-next-line no-empty-blocks
+    receive() external payable virtual {}
+
     constructor(IEntryPoint _entrypoint) {
         entrypointContract = _entrypoint;
     }

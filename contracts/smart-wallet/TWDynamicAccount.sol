@@ -19,6 +19,8 @@ contract TWDynamicAccount is TWAccount, BaseRouter {
                         Constructor and Initializer
     //////////////////////////////////////////////////////////////*/
 
+    receive() external payable override(Router, TWAccount) {}
+
     constructor(IEntryPoint _entrypoint) TWAccount(_entrypoint) {}
 
     function initialize(address _defaultAdmin) public override initializer {
