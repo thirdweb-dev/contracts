@@ -1,6 +1,6 @@
 # PermissionsLogic
 
-
+*thirdweb.com*
 
 > Permissions
 

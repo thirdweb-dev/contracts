@@ -1,7 +1,7 @@
-// SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.5.0) (utils/Multicall.sol)
-
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
+
+/// @author thirdweb
 
 import "../lib/TWAddress.sol";
 import "./interface/IMulticall.sol";

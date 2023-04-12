@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import { ERC721A } from "../eip/ERC721AVirtualApprove.sol";
 
 import "../extension/ContractMetadata.sol";
@@ -123,7 +125,7 @@ contract ERC721Drop is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _data
-    ) public override returns (uint256 batchId) {
+    ) public virtual override returns (uint256 batchId) {
         if (_data.length > 0) {
             (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
             if (encryptedURI.length != 0 && provenanceHash != "") {
@@ -187,6 +189,7 @@ contract ERC721Drop is
     /// @dev See {ERC721-setApprovalForAll}.
     function setApprovalForAll(address operator, bool approved)
         public
+        virtual
         override(ERC721A)
         onlyAllowedOperatorApproval(operator)
     {
@@ -194,7 +197,12 @@ contract ERC721Drop is
     }
 
     /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId) public override(ERC721A) onlyAllowedOperatorApproval(operator) {
+    function approve(address operator, uint256 tokenId)
+        public
+        virtual
+        override(ERC721A)
+        onlyAllowedOperatorApproval(operator)
+    {
         super.approve(operator, tokenId);
     }
 
@@ -203,7 +211,7 @@ contract ERC721Drop is
         address from,
         address to,
         uint256 tokenId
-    ) public override(ERC721A) onlyAllowedOperator(from) {
+    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
         super.transferFrom(from, to, tokenId);
     }
 
@@ -212,7 +220,7 @@ contract ERC721Drop is
         address from,
         address to,
         uint256 tokenId
-    ) public override(ERC721A) onlyAllowedOperator(from) {
+    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, tokenId);
     }
 
@@ -222,7 +230,7 @@ contract ERC721Drop is
         address to,
         uint256 tokenId,
         bytes memory data
-    ) public override(ERC721A) onlyAllowedOperator(from) {
+    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, tokenId, data);
     }
 

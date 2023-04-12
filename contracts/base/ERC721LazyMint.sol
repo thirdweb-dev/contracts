@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import { ERC721A } from "../eip/ERC721AVirtualApprove.sol";
 
 import "../extension/ContractMetadata.sol";
@@ -117,7 +119,7 @@ contract ERC721LazyMint is
      *  @param _receiver  The recipient of the NFT to mint.
      *  @param _quantity  The number of NFTs to mint.
      */
-    function claim(address _receiver, uint256 _quantity) public payable nonReentrant {
+    function claim(address _receiver, uint256 _quantity) public payable virtual nonReentrant {
         require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
         verifyClaim(msg.sender, _quantity); // Add your claim verification logic by overriding this function.
 
@@ -163,6 +165,7 @@ contract ERC721LazyMint is
     /// @dev See {ERC721-setApprovalForAll}.
     function setApprovalForAll(address operator, bool approved)
         public
+        virtual
         override(ERC721A)
         onlyAllowedOperatorApproval(operator)
     {
@@ -170,7 +173,12 @@ contract ERC721LazyMint is
     }
 
     /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId) public override(ERC721A) onlyAllowedOperatorApproval(operator) {
+    function approve(address operator, uint256 tokenId)
+        public
+        virtual
+        override(ERC721A)
+        onlyAllowedOperatorApproval(operator)
+    {
         super.approve(operator, tokenId);
     }
 
@@ -179,7 +187,7 @@ contract ERC721LazyMint is
         address from,
         address to,
         uint256 tokenId
-    ) public override(ERC721A) onlyAllowedOperator(from) {
+    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
         super.transferFrom(from, to, tokenId);
     }
 
@@ -188,7 +196,7 @@ contract ERC721LazyMint is
         address from,
         address to,
         uint256 tokenId
-    ) public override(ERC721A) onlyAllowedOperator(from) {
+    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, tokenId);
     }
 
@@ -198,7 +206,7 @@ contract ERC721LazyMint is
         address to,
         uint256 tokenId,
         bytes memory data
-    ) public override(ERC721A) onlyAllowedOperator(from) {
+    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, tokenId, data);
     }
 

@@ -1,6 +1,6 @@
 # PermissionsStorage
 
-
+*thirdweb.com*
 
 
 

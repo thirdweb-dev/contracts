@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: [main]
 
+# cancel previous runs if new commits are pushed to the branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     runs-on: ubuntu-latest
@@ -14,15 +19,13 @@ jobs:
       security-events: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           submodules: recursive
+          fetch-depth: 25
 
-      - name: Setup Node.js environment
-        uses: actions/setup-node@v2.4.1
-
-      - name: Run npm install
-        run: yarn
+      - name: Setup Project
+        uses: ./.github/composite-actions/setup
 
       - name: Install Foundry
         uses: onbjerg/foundry-toolchain@v1

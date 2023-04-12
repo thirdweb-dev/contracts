@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import "./ERC1155LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
@@ -46,7 +48,7 @@ contract ERC1155DelayedReveal is ERC1155LazyMint, DelayedReveal {
      *
      *  @param _tokenId The tokenId of an NFT.
      */
-    function uri(uint256 _tokenId) public view override returns (string memory) {
+    function uri(uint256 _tokenId) public view virtual override returns (string memory) {
         (uint256 batchId, ) = _getBatchId(_tokenId);
         string memory batchUri = _getBaseURI(_tokenId);
 

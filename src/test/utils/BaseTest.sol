@@ -24,7 +24,7 @@ import { DropERC1155 } from "contracts/drop/DropERC1155.sol";
 import { TokenERC20 } from "contracts/token/TokenERC20.sol";
 import { TokenERC721 } from "contracts/token/TokenERC721.sol";
 import { TokenERC1155 } from "contracts/token/TokenERC1155.sol";
-import { Marketplace } from "contracts/marketplace/Marketplace.sol";
+import { Marketplace } from "contracts/old-marketplace/Marketplace.sol";
 import { VoteERC20 } from "contracts/vote/VoteERC20.sol";
 import { SignatureDrop } from "contracts/signature-drop/SignatureDrop.sol";
 import { ContractPublisher } from "contracts/ContractPublisher.sol";

@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+/// @author thirdweb
+
+//   $$\     $$\       $$\                 $$\                         $$\
+//   $$ |    $$ |      \__|                $$ |                        $$ |
+// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
+// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
+//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
+//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
+//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
+//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
+
 //  ==========  External imports    ==========
 
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
@@ -240,9 +251,9 @@ contract SignatureDrop is
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
-                revert("!Price");
-            }
+            require(msg.value == totalPrice, "!Price");
+        } else {
+            require(msg.value == 0, "!Value");
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);

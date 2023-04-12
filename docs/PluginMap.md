@@ -1,6 +1,6 @@
 # PluginMap
 
-
+*thirdweb.com*
 
 
 

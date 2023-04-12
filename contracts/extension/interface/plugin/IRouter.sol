@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+/// @author thirdweb
+
 import "./IPluginMap.sol";
 
 interface IRouter is IPluginMap {

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
-
 pragma solidity ^0.8.0;
+
+/// @author thirdweb
 
 /**
  * @dev Library for reading and writing primitive types to specific storage slots.

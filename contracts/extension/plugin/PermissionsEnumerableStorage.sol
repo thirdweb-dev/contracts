@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import "../../extension/interface/IPermissionsEnumerable.sol";
 
+/**
+ *  @author  thirdweb.com
+ */
 library PermissionsEnumerableStorage {
     bytes32 public constant PERMISSIONS_ENUMERABLE_STORAGE_POSITION = keccak256("permissions.enumerable.storage");
 

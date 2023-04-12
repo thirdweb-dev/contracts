@@ -1,8 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+/// @author thirdweb
+
 import "./Router.sol";
 
+/**
+ *  @author  thirdweb.com
+ */
 contract RouterImmutable is Router {
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
