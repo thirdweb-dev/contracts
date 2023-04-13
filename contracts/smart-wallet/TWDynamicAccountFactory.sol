@@ -24,7 +24,7 @@ contract TWDynamicAccountFactory is ITWAccountFactory, Multicall {
     }
 
     /// @notice Deploys a new Account with the given admin and salt.
-    function createAccount(address _admin, bytes32 _salt) external returns (address account) {
+    function createAccount(address _admin, bytes32 _salt) external returns (address) {
         address impl = address(_accountImplementation);
         address account = Clones.predictDeterministicAddress(impl, _salt);
 
@@ -34,7 +34,7 @@ contract TWDynamicAccountFactory is ITWAccountFactory, Multicall {
 
         account = Clones.cloneDeterministic(impl, _salt);
 
-        TWAccount(account).initialize(_admin);
+        TWAccount(payable(account)).initialize(_admin);
 
         emit AccountCreated(account, _admin);
 

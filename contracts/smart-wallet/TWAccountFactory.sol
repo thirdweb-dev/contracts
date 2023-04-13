@@ -34,7 +34,7 @@ contract TWAccountFactory is ITWAccountFactory, Multicall {
 
         account = Clones.cloneDeterministic(impl, _salt);
 
-        TWAccount(account).initialize(_admin);
+        TWAccount(payable(account)).initialize(_admin);
 
         emit AccountCreated(account, _admin);
 
