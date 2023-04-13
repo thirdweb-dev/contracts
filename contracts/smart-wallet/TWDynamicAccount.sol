@@ -24,8 +24,8 @@ contract TWDynamicAccount is TWAccount, BaseRouter {
     constructor(IEntryPoint _entrypoint) TWAccount(_entrypoint) {}
 
     function initialize(address _defaultAdmin) public override initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(EXTENSION_ADMIN_ROLE, _defaultAdmin);
-        super.initialize(_defaultAdmin);
     }
 
     /*///////////////////////////////////////////////////////////////
