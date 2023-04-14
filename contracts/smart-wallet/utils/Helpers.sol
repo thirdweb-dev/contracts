@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.12;
 
+/* solhint-disable func-visibility */
+
 /**
  * returned data from validateUserOp.
  * validateUserOp returns a uint256, with is created by `_packedValidationData` and parsed by `_parseValidationData`
