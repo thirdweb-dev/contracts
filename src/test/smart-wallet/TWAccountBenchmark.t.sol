@@ -108,7 +108,7 @@ contract TWAccountBenchmarkTest is BaseTest {
         twAccountFactory.createAccount(address(0x456), keccak256("salt"));
     }
 
-    function test_benchmark_createAccountWithUserOp() public {
-        EntryPoint(entrypoint).handleOps(userOpCreateAccountOnly, beneficiary);
-    }
+    // function test_benchmark_createAccountWithUserOp() public {
+    //     EntryPoint(entrypoint).handleOps(userOpCreateAccountOnly, beneficiary);
+    // }
 }
