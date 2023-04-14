@@ -6,7 +6,7 @@ pragma solidity ^0.8.12;
 /* solhint-disable reason-string */
 
 import "../interfaces/IAccount.sol";
-import "../interfaces/IEntryPoint.sol";
+import "../interfaces/IEntrypoint.sol";
 import "../utils/Helpers.sol";
 
 /**
