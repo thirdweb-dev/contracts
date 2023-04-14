@@ -5,7 +5,7 @@ import "../utils/BaseTest.sol";
 
 // Entrypoint
 import { IEntryPoint } from "contracts/smart-wallet/interfaces/IEntrypoint.sol";
-import { EntryPoint } from "contracts/smart-wallet/utils/EntryPoint.sol";
+import { EntryPoint } from "contracts/smart-wallet/utils/Entrypoint.sol";
 
 import { UserOperation } from "contracts/smart-wallet/utils/UserOperation.sol";
 
