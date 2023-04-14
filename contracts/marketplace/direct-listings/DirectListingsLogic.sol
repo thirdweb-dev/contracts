@@ -475,7 +475,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
             // failsafe for reverts in case of non-existent tokens
             try IERC721(_assetContract).ownerOf(_tokenId) returns (address _owner) {
                 owner = _owner;
-                
+
                 // Nesting the approval check inside this try block, to run only if owner check doesn't revert.
                 // If the previous check for owner fails, then the return value will always evaluate to false.
                 try IERC721(_assetContract).getApproved(_tokenId) returns (address _operator) {
