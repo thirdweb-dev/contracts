@@ -277,7 +277,7 @@ contract PackVRFDirectLogic is
     }
 
     function _claimRewards(address opener) internal returns (Token[] memory) {
-        require(isTrustedForwarder(msg.sender) || msg.sender == address(VRF_V2_WRAPPER) || opener == tx.origin, "!EOA");
+        require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
 
         require(canClaimRewards(opener), "!ActiveReq");
         PackVRFDirectStorage.Data storage packVrfData = PackVRFDirectStorage.packVRFStorage();
