@@ -1,0 +1,16 @@
+export const eoaForwarder: Record<number, string> = {
+  1: "0x76ce2CB1Ae48Fa067f4fb8c5f803111AE0B24BEA",
+  5: "0xe73c50cB9c5B378627ff625BB6e6725A4A5D65d2", // goerli
+  137: "0x4f247c69184ad61036EC2Bb3213b69F10FbEDe1F", // polygon
+  80001: "0xb1A2883fc4d287d9cB8Dbb96cFF60C76BEf2D250", // mumbai
+  43114: "0xb1A2883fc4d287d9cB8Dbb96cFF60C76BEf2D250", // avalanche
+  43113: "0xe73c50cB9c5B378627ff625BB6e6725A4A5D65d2", // avalanche fuji testnet
+  250: "0xb1A2883fc4d287d9cB8Dbb96cFF60C76BEf2D250", // fantom
+  4002: "0x42D3048b595B6e1c28a588d70366CcC2AA4dB47b", // fantom testnet
+  10: "0x7e80648EB2071E26937F9D42A513ccf4815fc702", // optimism
+  420: "0x119704314Ef304EaAAE4b3c7C9ABd59272A28310", // optimism goerli
+  42161: "0x4f247c69184ad61036EC2Bb3213b69F10FbEDe1F", // arbitrum
+  421613: "0x119704314Ef304EaAAE4b3c7C9ABd59272A28310", // arbitrum goerli
+  56: "0xE8dd2Ff0212F86d3197b4AfDC6dAC6ac47eb10aC", // binance mainnet
+  97: "0x7e80648EB2071E26937F9D42A513ccf4815fc702", // binance testnet
+};

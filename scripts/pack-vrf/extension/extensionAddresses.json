@@ -1,0 +1,8 @@
+{
+  "137": { "PackVRFDirectLogic": "", "PackVRFDirectRouter": "", "PermissionsEnumerableImpl": "" },
+  "80001": {
+    "PackVRFDirectLogic": "0xe56bb093be2a9fa554c8693aa32068becccfc97e",
+    "PackVRFDirectRouter": "0x56CA306708F7fdE60EF1C543189908c9e8a90C52",
+    "PermissionsEnumerableImpl": "0x0e9c8102fd19a88937febabe2001a63c09b062a7"
+  }
+}
