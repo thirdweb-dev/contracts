@@ -93,10 +93,16 @@ contract ExtensionRegistryState is IExtensionRegistryState {
 
     /// @dev Stores a new extension in the contract.
     function _addExtension(Extension memory _extension) internal {
-        ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
+        require(
+            _extension.metadata.implementation != address(0),
+            "ExtensionRegistryState: adding extension without implementation."
+        );
 
         string memory name = _extension.metadata.name;
         require(bytes(name).length > 0, "ExtensionRegistryState: adding extension without name.");
+
+        ExtensionRegistryStateStorage.Data storage data = ExtensionRegistryStateStorage.extensionRegistryStateStorage();
+
         require(data.extensionNames.add(name), "ExtensionRegistryState: extension already exists.");
         uint256 nextId = data.nextIdForExtension[name];
         data.nextIdForExtension[name] += 1;
@@ -104,11 +110,6 @@ contract ExtensionRegistryState is IExtensionRegistryState {
         bytes32 extensionIdHash = keccak256(abi.encodePacked(name, nextId));
 
         data.extensions[name][nextId].metadata = _extension.metadata;
-
-        require(
-            _extension.metadata.implementation != address(0),
-            "ExtensionRegistryState: adding extension without implementation."
-        );
 
         uint256 len = _extension.functions.length;
         for (uint256 i = 0; i < len; i += 1) {
