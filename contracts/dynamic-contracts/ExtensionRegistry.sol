@@ -61,6 +61,7 @@ contract ExtensionRegistry is
         ExtensionUpdateRequest calldata _req,
         bytes calldata _signature
     ) external onlyValidRequest(_req, _signature, ExtensionUpdateType.Add) {
+        require(_req.currentImplementation == address(0), "ExtensionRegistry: invalid current implementation.");
         _addExtension(_extension);
         emit ExtensionAdded(_extension.metadata.name, _extension.metadata.implementation, _extension);
     }
@@ -77,6 +78,10 @@ contract ExtensionRegistry is
         ExtensionUpdateRequest calldata _req,
         bytes calldata _signature
     ) external onlyValidRequest(_req, _signature, ExtensionUpdateType.Update) {
+        require(
+            _req.currentImplementation == getExtension(_extension.metadata.name).metadata.implementation,
+            "ExtensionRegistry: invalid current implementation."
+        );
         _updateExtension(_extension);
         emit ExtensionUpdated(_extension.metadata.name, _extension.metadata.implementation, _extension);
     }
@@ -93,6 +98,10 @@ contract ExtensionRegistry is
         ExtensionUpdateRequest calldata _req,
         bytes calldata _signature
     ) external onlyValidRequest(_req, _signature, ExtensionUpdateType.Remove) {
+        require(
+            _req.currentImplementation == getExtension(_extensionName).metadata.implementation,
+            "ExtensionRegistry: invalid current implementation."
+        );
         _removeExtension(_extensionName);
         emit ExtensionRemoved(_extensionName);
     }

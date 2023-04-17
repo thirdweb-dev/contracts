@@ -15,6 +15,7 @@ interface IExtensionRegistrySig {
      *  @notice The payload that must be signed by an authorized wallet.
      *
      *  @param caller The address of the caller.
+     *  @param currentImplementation The address of the current implementation to replace with the update.
      *  @param updateType The type of update to be performed.
      *  @param uid A unique non-repeatable ID for the payload.
      *  @param validityStartTimestamp The UNIX timestamp at and after which a signature is valid.
@@ -22,6 +23,7 @@ interface IExtensionRegistrySig {
      */
     struct ExtensionUpdateRequest {
         address caller;
+        address currentImplementation;
         ExtensionUpdateType updateType;
         bytes32 uid;
         uint128 validityStartTimestamp;

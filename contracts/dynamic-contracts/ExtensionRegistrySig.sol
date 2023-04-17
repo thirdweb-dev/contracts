@@ -26,7 +26,7 @@ abstract contract ExtensionRegistrySig is EIP712, IExtensionRegistrySig {
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "ExtensionUpdateRequest(address caller,uint256 updateType,bytes32 uid,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+            "ExtensionUpdateRequest(address caller,address currentImplementation,uint256 updateType,bytes32 uid,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
 
     /// @dev Verifies that a request is signed by an authorized account.
@@ -80,6 +80,7 @@ abstract contract ExtensionRegistrySig is EIP712, IExtensionRegistrySig {
             abi.encode(
                 TYPEHASH,
                 _req.caller,
+                _req.currentImplementation,
                 _req.updateType,
                 _req.uid,
                 _req.validityStartTimestamp,

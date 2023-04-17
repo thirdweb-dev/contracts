@@ -990,7 +990,11 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
     bytes private extensionUpdateRequestSig;
     IExtensionRegistrySig.ExtensionUpdateRequest private request;
 
-    function _setUp_sig(address _caller, IExtensionRegistrySig.ExtensionUpdateType _updateType) internal {
+    function _setUp_sig(
+        address _caller,
+        IExtensionRegistrySig.ExtensionUpdateType _updateType,
+        address _currentImplementation
+    ) internal {
         uint256 privateKey = 123456;
         authorizedSigner = vm.addr(privateKey);
 
@@ -998,13 +1002,14 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
         extensionRegistry.grantRole(0x00, authorizedSigner);
 
         request.caller = _caller;
+        request.currentImplementation = _currentImplementation;
         request.updateType = _updateType;
         request.uid = keccak256("uid");
         request.validityStartTimestamp = uint128(0);
         request.validityEndTimestamp = uint128(100);
 
         bytes32 typehash = keccak256(
-            "ExtensionUpdateRequest(address caller,uint256 updateType,bytes32 uid,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
+            "ExtensionUpdateRequest(address caller,address currentImplementation,uint256 updateType,bytes32 uid,uint128 validityStartTimestamp,uint128 validityEndTimestamp)"
         );
         bytes32 nameHash = keccak256(bytes("ExtensionRegistry"));
         bytes32 versionHash = keccak256(bytes("1"));
@@ -1018,6 +1023,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
         bytes memory encodedRequest = abi.encode(
             typehash,
             request.caller,
+            request.currentImplementation,
             request.updateType,
             request.uid,
             request.validityStartTimestamp,
@@ -1034,7 +1040,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
     function test_state_addExtensionWithSig() external {
         address caller = address(0x12345);
 
-        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add, address(0));
 
         vm.prank(caller);
         extensionRegistry.addExtensionWithSig(extensions[0], request, extensionUpdateRequestSig);
@@ -1090,7 +1096,11 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
 
         address caller = address(0x12345);
 
-        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Update);
+        _setUp_sig(
+            caller,
+            IExtensionRegistrySig.ExtensionUpdateType.Update,
+            extensionRegistry.getExtension("MockERC20").metadata.implementation
+        );
 
         vm.prank(caller);
         extensionRegistry.updateExtensionWithSig(extension, request, extensionUpdateRequestSig);
@@ -1135,7 +1145,11 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
 
         address caller = address(0x12345);
 
-        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Remove);
+        _setUp_sig(
+            caller,
+            IExtensionRegistrySig.ExtensionUpdateType.Remove,
+            extensionRegistry.getExtension(name).metadata.implementation
+        );
 
         vm.prank(caller);
         extensionRegistry.removeExtensionWithSig(name, request, extensionUpdateRequestSig);
@@ -1158,7 +1172,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
 
         address caller = address(0x12345);
 
-        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.SetupContractType);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.SetupContractType, address(0));
 
         vm.prank(caller);
         extensionRegistry.setExtensionsForContractTypeWithSig(
@@ -1208,7 +1222,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
 
         address caller = address(0x12345);
 
-        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.SetupContractType);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.SetupContractType, address(0));
 
         vm.prank(caller);
         vm.expectRevert("ExtensionRegistry: empty contract type.");
@@ -1226,7 +1240,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
 
         address caller = address(0x12345);
 
-        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.SetupContractType);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.SetupContractType, address(0));
 
         vm.prank(caller);
         vm.expectRevert("ExtensionRegistry: no extensions provided.");
@@ -1240,7 +1254,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
 
     function test_revert_onlyValidRequest_unauthorizedSigner() external {
         address caller = address(0x12345);
-        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add, address(0));
 
         vm.prank(registryDeployer);
         extensionRegistry.revokeRole(0x00, authorizedSigner);
@@ -1252,7 +1266,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
 
     function test_revert_onlyValidRequest_unauthorizedCaller() external {
         address caller = address(0x12345);
-        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add, address(0));
 
         vm.prank(address(0x456));
         vm.expectRevert("ExtensionRegistry: unauthorized caller.");
@@ -1261,7 +1275,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
 
     function test_revert_onlyValidRequest_requestExpired() external {
         address caller = address(0x12345);
-        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add, address(0));
 
         vm.warp(request.validityEndTimestamp + 1);
 
@@ -1272,7 +1286,7 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
 
     function test_revert_onlyValidRequest_invalidUpdateType() external {
         address caller = address(0x12345);
-        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Remove);
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Remove, address(0));
 
         vm.prank(caller);
         vm.expectRevert("ExtensionRegistry: invalid update type.");
