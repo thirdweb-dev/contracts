@@ -115,6 +115,8 @@ contract ExtensionRegistry is
         ExtensionUpdateRequest calldata _req,
         bytes calldata _signature
     ) external onlyValidRequest(_req, _signature, ExtensionUpdateType.SetupContractType) {
+        require(_extensionNames.length > 0, "ExtensionRegistry: no extensions provided.");
+        require(bytes(_contractType).length > 0, "ExtensionRegistry: empty contract type.");
         _setExtensionsForContractType(_contractType, _extensionNames);
         emit ExtensionSetForContractType(_contractType, _extensionNames);
     }

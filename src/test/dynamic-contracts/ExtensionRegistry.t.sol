@@ -1194,6 +1194,50 @@ contract ExtensionRegistryTest is BaseTest, IExtension {
         }
     }
 
+    function test_revert_setExtensionsForContractTypeWithSig_emptycontractType() external {
+        uint256 len = 3;
+
+        string[] memory extensionNames = new string[](len);
+        string memory contractType = "";
+
+        for (uint256 i = 0; i < len; i += 1) {
+            vm.prank(registryDeployer);
+            extensionRegistry.addExtension(extensions[i]);
+            extensionNames[i] = extensions[i].metadata.name;
+        }
+
+        address caller = address(0x12345);
+
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.SetupContractType);
+
+        vm.prank(caller);
+        vm.expectRevert("ExtensionRegistry: empty contract type.");
+        extensionRegistry.setExtensionsForContractTypeWithSig(
+            contractType,
+            extensionNames,
+            request,
+            extensionUpdateRequestSig
+        );
+    }
+
+    function test_revert_setExtensionsForContractTypeWithSig_emptyExtensions() external {
+        string memory contractType = "ExampleContract";
+        string[] memory extensionNames = new string[](0);
+
+        address caller = address(0x12345);
+
+        _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.SetupContractType);
+
+        vm.prank(caller);
+        vm.expectRevert("ExtensionRegistry: no extensions provided.");
+        extensionRegistry.setExtensionsForContractTypeWithSig(
+            contractType,
+            extensionNames,
+            request,
+            extensionUpdateRequestSig
+        );
+    }
+
     function test_revert_onlyValidRequest_unauthorizedSigner() external {
         address caller = address(0x12345);
         _setUp_sig(caller, IExtensionRegistrySig.ExtensionUpdateType.Add);
