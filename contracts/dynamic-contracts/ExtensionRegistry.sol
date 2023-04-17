@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 // Interface
 import "./interface/IExtensionRegistry.sol";
-import "lib/dynamic-contracts/src/interface/IRouter.sol";
 
 // Lib
 import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
