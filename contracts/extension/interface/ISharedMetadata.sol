@@ -3,9 +3,9 @@ pragma solidity ^0.8.10;
 
 /// @author thirdweb
 
-interface ILazyMintSharedMetadata {
+interface ISharedMetadata {
     /// @notice Emitted when shared metadata is lazy minted.
-    event SharedMetadataLazyMinted(string name, string description, string imageURI, string animationURI);
+    event SharedMetadataUpdated(string name, string description, string imageURI, string animationURI);
 
     /**
      *  @notice Structure for metadata shared across all tokens
@@ -15,7 +15,7 @@ interface ILazyMintSharedMetadata {
      *  @param imageURI Shared URI of image to render for NFTs
      *  @param animationURI Shared URI of animation to render for NFTs
      */
-    struct SharedMetadata {
+    struct SharedMetadataInfo {
         string name;
         string description;
         string imageURI;
@@ -23,8 +23,8 @@ interface ILazyMintSharedMetadata {
     }
 
     /**
-     *  @notice Lazy mint shared metadata
+     *  @notice Set shared metadata for NFTs
      *  @param _metadata common metadata for all tokens
      */
-    function lazyMintSharedMetadata(SharedMetadata calldata _metadata) external;
+    function setSharedMetadata(SharedMetadataInfo calldata _metadata) external;
 }

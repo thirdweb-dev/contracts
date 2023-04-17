@@ -33,7 +33,7 @@ import "./extension/Royalty.sol";
 import "./extension/PrimarySale.sol";
 import "./extension/Ownable.sol";
 import "./extension/DelayedReveal.sol";
-import "./extension/LazyMintSharedMetadata.sol";
+import "./extension/SharedMetadata.sol";
 import "./extension/PermissionsEnumerable.sol";
 import "./extension/Drop.sol";
 
@@ -47,7 +47,7 @@ contract OpenCollectionERC721 is
     Royalty,
     PrimarySale,
     Ownable,
-    LazyMintSharedMetadata,
+    SharedMetadata,
     PermissionsEnumerable,
     Drop,
     ERC2771ContextUpgradeable,
@@ -226,7 +226,7 @@ contract OpenCollectionERC721 is
     }
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
-    function _canLazyMint() internal view virtual override returns (bool) {
+    function _canSetSharedMetadata() internal view virtual override returns (bool) {
         return hasRole(minterRole, _msgSender());
     }
 

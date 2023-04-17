@@ -4,33 +4,33 @@ pragma solidity ^0.8.10;
 /// @author thirdweb
 
 import "../lib/NFTMetadataRendererLib.sol";
-import "./interface/ILazyMintSharedMetadata.sol";
+import "./interface/ISharedMetadata.sol";
 
-abstract contract LazyMintSharedMetadata is ILazyMintSharedMetadata {
+abstract contract SharedMetadata is ISharedMetadata {
     /// @notice Token metadata information
-    SharedMetadata public sharedMetadata;
+    SharedMetadataInfo public sharedMetadata;
 
-    /// @notice Lazy mint shared metadata
-    function lazyMintSharedMetadata(SharedMetadata calldata _metadata) external virtual {
-        if (!_canLazyMint()) {
+    /// @notice Set shared metadata for NFTs
+    function setSharedMetadata(SharedMetadataInfo calldata _metadata) external virtual {
+        if (!_canSetSharedMetadata()) {
             revert("Not authorized");
         }
         _setSharedMetadata(_metadata);
     }
 
     /**
-     *  @dev Default initializer for edition data from a specific contract
+     *  @dev Sets shared metadata for NFTs.
      *  @param _metadata common metadata for all tokens
      */
-    function _setSharedMetadata(SharedMetadata calldata _metadata) internal {
-        sharedMetadata = SharedMetadata({
+    function _setSharedMetadata(SharedMetadataInfo calldata _metadata) internal {
+        sharedMetadata = SharedMetadataInfo({
             name: _metadata.name,
             description: _metadata.description,
             imageURI: _metadata.imageURI,
             animationURI: _metadata.animationURI
         });
 
-        emit SharedMetadataLazyMinted({
+        emit SharedMetadataUpdated({
             name: _metadata.name,
             description: _metadata.description,
             imageURI: _metadata.imageURI,
@@ -43,7 +43,7 @@ abstract contract LazyMintSharedMetadata is ILazyMintSharedMetadata {
      *  @param tokenId Token ID to get URI for
      */
     function _getURIFromSharedMetadata(uint256 tokenId) internal view returns (string memory) {
-        SharedMetadata memory info = sharedMetadata;
+        SharedMetadataInfo memory info = sharedMetadata;
 
         return
             NFTMetadataRenderer.createMetadataEdition({
@@ -55,6 +55,6 @@ abstract contract LazyMintSharedMetadata is ILazyMintSharedMetadata {
             });
     }
 
-    /// @dev Returns whether lazy minting can be performed in the given execution context.
-    function _canLazyMint() internal view virtual returns (bool);
+    /// @dev Returns whether shared metadata can be set in the given execution context.
+    function _canSetSharedMetadata() internal view virtual returns (bool);
 }
