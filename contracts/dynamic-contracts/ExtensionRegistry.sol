@@ -6,7 +6,6 @@ import "./interface/IExtensionRegistry.sol";
 
 // Lib
 import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
-import "../eip/ERC165.sol";
 
 // Extensions
 import "./ExtensionRegistryState.sol";
