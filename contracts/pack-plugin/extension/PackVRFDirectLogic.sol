@@ -69,7 +69,7 @@ contract PackVRFDirectLogic is
     //////////////////////////////////////////////////////////////*/
 
     uint32 private constant CALLBACKGASLIMIT = 100_000;
-    uint16 private constant REQUEST_CONFIRMATIONS = 3;
+    uint16 private constant REQUEST_CONFIRMATIONS = 5;
     uint32 private constant NUMWORDS = 1;
 
     /// @dev Emitted when admin deposits Link tokens.
@@ -229,7 +229,8 @@ contract PackVRFDirectLogic is
         require(packVrfData.linkBalance >= requestPrice, "Insufficient LINK balance");
 
         // Request VRF for randomness.
-        requestId = requestRandomness(_callBackGasLimit, REQUEST_CONFIRMATIONS, NUMWORDS);
+        uint16 requestConfirmations = (block.chainid == 137 || block.chainid == 80001) ? 15 : REQUEST_CONFIRMATIONS;
+        requestId = requestRandomness(_callBackGasLimit, requestConfirmations, NUMWORDS);
         require(requestId > 0, "!VRF");
 
         // Mark request as active; store request parameters.
