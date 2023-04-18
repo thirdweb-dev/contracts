@@ -2,7 +2,7 @@
 pragma solidity ^0.8.12;
 
 interface ITWAccountFactory {
-    event AccountCreated(address indexed account, address indexed accountAdmin);
+    event AccountCreated(address indexed account, address indexed accountAdmin, bytes32 indexed salt);
 
     /// @notice Returns the address of the Account implementation.
     function accountImplementation() external view returns (address);
