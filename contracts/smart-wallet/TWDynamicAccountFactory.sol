@@ -36,7 +36,7 @@ contract TWDynamicAccountFactory is ITWAccountFactory, Multicall {
 
         TWAccount(payable(account)).initialize(_admin);
 
-        emit AccountCreated(account, _admin);
+        emit AccountCreated(account, _admin, _salt);
 
         return account;
     }
