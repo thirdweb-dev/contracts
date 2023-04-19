@@ -56,8 +56,6 @@ contract AirdropERC1155ClaimableTest is BaseTest {
 
         // deploy and initialize new airdrop contract
         newDrop = new BearAirdropERC1155Claimable(address(drop));
-        uint256[] memory emptyArray = new uint256[](0);
-        bytes32[] memory emptyBytes = new bytes32[](0);
         newDrop.initialize(
             deployer,
             forwarders(),
@@ -76,12 +74,10 @@ contract AirdropERC1155ClaimableTest is BaseTest {
         assertEq(newDrop.expirationTimestamp(), drop.expirationTimestamp());
 
         for (uint256 i = 0; i < _airdropTokenIdsERC1155.length; i++) {
-            assertEq(newDrop.availableAmount(i), drop.availableAmount(i));
             assertEq(newDrop.merkleRoot(i), drop.merkleRoot(i));
         }
 
         assertEq(newDrop.supplyClaimedByWallet(id, receiver), 0);
-        assertEq(newDrop.availableAmount(id), _availableAmount - quantity);
 
         // claim on the new contract
         vm.prank(receiver);

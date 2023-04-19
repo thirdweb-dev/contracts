@@ -78,7 +78,7 @@ contract BearAirdropERC1155Claimable is
         address _tokenOwner,
         address _airdropTokenAddress,
         uint256[] memory _tokenIds,
-        uint256[] memory,
+        uint256[] memory _availableAmounts,
         uint256,
         uint256[] memory,
         bytes32[] memory _merkleRoot
@@ -92,12 +92,15 @@ contract BearAirdropERC1155Claimable is
         tokenIds = _tokenIds;
         expirationTimestamp = AirdropERC1155Claimable(OldContract).expirationTimestamp();
 
-        require(_merkleRoot.length == _tokenIds.length, "length mismatch.");
+        require(
+            _merkleRoot.length == _tokenIds.length && _availableAmounts.length == _tokenIds.length,
+            "length mismatch."
+        );
 
         for (uint256 i = 0; i < _tokenIds.length; i++) {
             merkleRoot[_tokenIds[i]] = _merkleRoot[i];
             maxWalletClaimCount[_tokenIds[i]] = 0;
-            availableAmount[_tokenIds[i]] = AirdropERC1155Claimable(OldContract).availableAmount(i);
+            availableAmount[_tokenIds[i]] = _availableAmounts[i];
         }
     }
 
