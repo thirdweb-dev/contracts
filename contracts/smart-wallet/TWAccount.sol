@@ -19,6 +19,19 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 // Utils
 import "../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 
+//   $$\     $$\       $$\                 $$\                         $$\
+//   $$ |    $$ |      \__|                $$ |                        $$ |
+// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
+// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
+//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
+//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
+//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
+//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
+
+/*///////////////////////////////////////////////////////////////
+                            Storage layout
+//////////////////////////////////////////////////////////////*/
+
 library TWAccountStorage {
     bytes32 internal constant TWACCOUNT_STORAGE_POSITION = keccak256("twaccount.storage");
 
@@ -46,7 +59,7 @@ contract TWAccount is
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
-                        State (constant, immutable)
+                                State
     //////////////////////////////////////////////////////////////*/
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
