@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "contracts/airdrop/AirdropERC1155Claimable.sol";
-import { AirdropERC1155ClaimableUpdated } from "contracts/airdrop/AirdropERC1155ClaimableUpdated.sol";
+import { BearAirdropERC1155Claimable } from "contracts/airdrop/BearAirdropERC1155Claimable.sol";
 
 // Test imports
 import { Wallet } from "../utils/Wallet.sol";
@@ -10,7 +10,7 @@ import "../utils/BaseTest.sol";
 
 contract AirdropERC1155ClaimableTest is BaseTest {
     AirdropERC1155Claimable internal drop;
-    AirdropERC1155ClaimableUpdated internal newDrop;
+    BearAirdropERC1155Claimable internal newDrop;
 
     function setUp() public override {
         super.setUp();
@@ -30,17 +30,6 @@ contract AirdropERC1155ClaimableTest is BaseTest {
              Unit tests: test new airdrop state
     //////////////////////////////////////////////////////////////*/
 
-    // function test_state_newAirdrop() public {
-    //     assertEq(newDrop.tokenOwner, drop.tokenOwner);
-    //     assertEq(newDrop.airdropTokenAddress, drop.airdropTokenAddress);
-    //     assertEq(newDrop.tokenIds.length, drop.tokenIds.length);
-    //     assertEq(newDrop.expirationTimestamp, drop.expirationTimestamp);
-
-    //     for (uint256 i = 0; i < drop.tokenIds.length; i++) {
-    //         assertEq(newDrop.availableAmount(i), drop.availableAmount(i));
-    //     }
-    // }
-
     function test_state_newAirdrop_claims() public {
         string[] memory inputs = new string[](3);
         inputs[0] = "node";
@@ -53,7 +42,7 @@ contract AirdropERC1155ClaimableTest is BaseTest {
         vm.warp(1);
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
-        uint256 quantity = 2;
+        uint256 quantity = 5;
         uint256 id = 0;
 
         uint256 _availableAmount = drop.availableAmount(id);
@@ -66,25 +55,24 @@ contract AirdropERC1155ClaimableTest is BaseTest {
         assertEq(drop.availableAmount(id), _availableAmount - quantity);
 
         // deploy and initialize new airdrop contract
-        newDrop = new AirdropERC1155ClaimableUpdated(address(drop));
+        newDrop = new BearAirdropERC1155Claimable(address(drop));
         uint256[] memory emptyArray = new uint256[](0);
         bytes32[] memory emptyBytes = new bytes32[](0);
         newDrop.initialize(
             deployer,
             forwarders(),
-            address(0),
-            address(0),
+            address(airdropTokenOwner),
+            address(erc1155),
             _airdropTokenIdsERC1155,
-            emptyArray,
-            0,
-            emptyArray,
-            emptyBytes
+            _airdropAmountsERC1155,
+            1000,
+            _airdropWalletClaimCountERC1155,
+            _airdropMerkleRootERC1155
         );
         airdropTokenOwner.setApprovalForAllERC1155(address(erc1155), address(newDrop), true);
 
         assertEq(newDrop.tokenOwner(), drop.tokenOwner());
         assertEq(newDrop.airdropTokenAddress(), drop.airdropTokenAddress());
-        // assertEq(newDrop.tokenIds.length, drop.tokenIds.length);
         assertEq(newDrop.expirationTimestamp(), drop.expirationTimestamp());
 
         for (uint256 i = 0; i < _airdropTokenIdsERC1155.length; i++) {
@@ -98,7 +86,7 @@ contract AirdropERC1155ClaimableTest is BaseTest {
         // claim on the new contract
         vm.prank(receiver);
         vm.expectRevert("invalid quantity.");
-        newDrop.claim(receiver, 4, id, proofs, 5);
+        newDrop.claim(receiver, 1, id, proofs, 5);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -240,7 +228,7 @@ contract AirdropERC1155ClaimableTest is BaseTest {
 
     function test_state_claim_nonAllowlistedClaimer_nonZeroQuantity() public {
         address receiver = address(0x123);
-        uint256 quantity = 5;
+        uint256 quantity = 1;
         bytes32[] memory proofs;
         uint256 id = 0;
 
@@ -249,7 +237,7 @@ contract AirdropERC1155ClaimableTest is BaseTest {
         vm.prank(receiver);
         drop.claim(receiver, quantity, id, proofs, 1);
 
-        assertEq(erc1155.balanceOf(receiver, id), 0);
+        assertEq(erc1155.balanceOf(receiver, id), 1);
         assertEq(drop.supplyClaimedByWallet(id, receiver), quantity);
         assertEq(drop.availableAmount(id), _availableAmount - quantity);
 

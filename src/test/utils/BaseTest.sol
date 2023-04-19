@@ -79,9 +79,9 @@ abstract contract BaseTest is DSTest, Test {
     bytes32 internal _airdropMerkleRootERC721;
 
     uint256[] public _airdropTokenIdsERC1155;
-    uint256[] internal _airdropWalletClaimCountERC1155;
-    uint256[] internal _airdropAmountsERC1155;
-    bytes32[] internal _airdropMerkleRootERC1155;
+    uint256[] public _airdropWalletClaimCountERC1155;
+    uint256[] public _airdropAmountsERC1155;
+    bytes32[] public _airdropMerkleRootERC1155;
 
     bytes32 internal _airdropMerkleRootERC20;
 

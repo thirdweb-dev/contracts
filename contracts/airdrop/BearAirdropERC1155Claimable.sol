@@ -1,17 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-/// @author thirdweb
-
-//   $$\     $$\       $$\                 $$\                         $$\
-//   $$ |    $$ |      \__|                $$ |                        $$ |
-// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
-// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
-//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
-//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
-//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
-//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
-
 //  ==========  External imports    ==========
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
@@ -29,7 +18,7 @@ import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "../lib/MerkleProof.sol";
 import { AirdropERC1155Claimable } from "./AirdropERC1155Claimable.sol";
 
-contract AirdropERC1155ClaimableUpdated is
+contract BearAirdropERC1155Claimable is
     Initializable,
     Ownable,
     ReentrancyGuardUpgradeable,
@@ -41,7 +30,7 @@ contract AirdropERC1155ClaimableUpdated is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("AirdropERC1155Claimable");
+    bytes32 private constant MODULE_TYPE = bytes32("BearAirdropERC1155Claimable");
     uint256 private constant VERSION = 1;
 
     /// @dev address of token being airdropped.
@@ -72,13 +61,12 @@ contract AirdropERC1155ClaimableUpdated is
     /// @dev mapping of tokenId to merkle root of the allowlist of addresses eligible to claim.
     mapping(uint256 => bytes32) public merkleRoot;
 
-    address immutable OldContract;
+    address public immutable OldContract;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    // TODO: add initializer back
     constructor(address _oldContract) {
         OldContract = _oldContract;
     }
@@ -90,34 +78,24 @@ contract AirdropERC1155ClaimableUpdated is
         address _tokenOwner,
         address _airdropTokenAddress,
         uint256[] memory _tokenIds,
-        uint256[] memory _availableAmounts,
-        uint256 _expirationTimestamp,
-        uint256[] memory _maxWalletClaimCount,
+        uint256[] memory,
+        uint256,
+        uint256[] memory,
         bytes32[] memory _merkleRoot
     ) external initializer {
         _setupOwner(_defaultAdmin);
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
 
-        address airdropTokenAddress_ = AirdropERC1155Claimable(OldContract).airdropTokenAddress();
-        address tokenOwner_ = AirdropERC1155Claimable(OldContract).tokenOwner();
-        // uint256[] memory _tokenIds = _tokenIds;
-        uint256 expirationTimestamp_ = AirdropERC1155Claimable(OldContract).expirationTimestamp();
-
-        tokenOwner = tokenOwner_;
-        airdropTokenAddress = airdropTokenAddress_;
+        tokenOwner = _tokenOwner;
+        airdropTokenAddress = _airdropTokenAddress;
         tokenIds = _tokenIds;
-        expirationTimestamp = expirationTimestamp_;
+        expirationTimestamp = AirdropERC1155Claimable(OldContract).expirationTimestamp();
 
-        // require(
-        //     _maxWalletClaimCount.length == _tokenIds.length &&
-        //         _merkleRoot.length == _tokenIds.length &&
-        //         _availableAmounts.length == _tokenIds.length,
-        //     "length mismatch."
-        // );
+        require(_merkleRoot.length == _tokenIds.length, "length mismatch.");
 
         for (uint256 i = 0; i < _tokenIds.length; i++) {
-            merkleRoot[_tokenIds[i]] = AirdropERC1155Claimable(OldContract).merkleRoot(i);
+            merkleRoot[_tokenIds[i]] = _merkleRoot[i];
             maxWalletClaimCount[_tokenIds[i]] = 0;
             availableAmount[_tokenIds[i]] = AirdropERC1155Claimable(OldContract).availableAmount(i);
         }
