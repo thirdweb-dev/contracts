@@ -23,26 +23,26 @@ contract TWDynamicAccountFactory is ITWAccountFactory, Multicall {
         return address(_accountImplementation);
     }
 
-    /// @notice Deploys a new Account with the given admin and salt.
-    function createAccount(address _admin, bytes32 _salt) external returns (address) {
+    /// @notice Deploys a new Account with the given admin and accountId used as salt.
+    function createAccount(address _admin, bytes32 _accountId) external returns (address) {
         address impl = address(_accountImplementation);
-        address account = Clones.predictDeterministicAddress(impl, _salt);
+        address account = Clones.predictDeterministicAddress(impl, _accountId);
 
         if (account.code.length > 0) {
             return account;
         }
 
-        account = Clones.cloneDeterministic(impl, _salt);
+        account = Clones.cloneDeterministic(impl, _accountId);
 
         TWAccount(payable(account)).initialize(_admin);
 
-        emit AccountCreated(account, _admin, _salt);
+        emit AccountCreated(account, _admin, _accountId);
 
         return account;
     }
 
-    /// @notice Returns the address of an Account that would be deployed with the given salt.
-    function getAddress(bytes32 _salt) external view returns (address) {
-        return Clones.predictDeterministicAddress(address(_accountImplementation), _salt);
+    /// @notice Returns the address of an Account that would be deployed with the given accountId as salt.
+    function getAddress(bytes32 _accountId) external view returns (address) {
+        return Clones.predictDeterministicAddress(address(_accountImplementation), _accountId);
     }
 }
