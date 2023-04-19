@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.10;
 
-//* solhint-disable */
+/* solhint-disable quotes */
 
 /// @author thirdweb
 /// credits: Zora
