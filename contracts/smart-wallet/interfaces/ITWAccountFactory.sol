@@ -7,7 +7,7 @@ interface ITWAccountFactory {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Emitted when a new Account is created.
-    event AccountCreated(address indexed account, address indexed accountAdmin, string indexed accountId);
+    event AccountCreated(address indexed account, address indexed accountAdmin, string accountId);
 
     /*///////////////////////////////////////////////////////////////
                         Extension Functions
