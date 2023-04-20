@@ -2,15 +2,15 @@
 pragma solidity ^0.8.12;
 
 // Utils
-import "../extension/Multicall.sol";
+import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../lib/TWStringSet.sol";
+import "../../lib/TWStringSet.sol";
 
 // Interface
-import "./interfaces/ITWAccountFactory.sol";
+import "./../interfaces/ITWAccountFactory.sol";
 
 // Smart wallet implementation
-import "./TWAccount.sol";
+import "./TWDynamicAccount.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -21,21 +21,21 @@ import "./TWAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract TWAccountFactory is ITWAccountFactory, Multicall {
+contract TWDynamicAccountFactory is ITWAccountFactory, Multicall {
     using TWStringSet for TWStringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
 
-    TWAccount private immutable _accountImplementation;
+    TWDynamicAccount private immutable _accountImplementation;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint) {
-        _accountImplementation = new TWAccount(_entrypoint);
+        _accountImplementation = new TWDynamicAccount(_entrypoint);
     }
 
     /*///////////////////////////////////////////////////////////////

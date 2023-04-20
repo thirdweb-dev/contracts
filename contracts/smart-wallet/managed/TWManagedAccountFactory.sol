@@ -2,15 +2,17 @@
 pragma solidity ^0.8.12;
 
 // Utils
-import "../extension/Multicall.sol";
+
+import "../utils/BaseRouter.sol";
+import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../lib/TWStringSet.sol";
+import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 
 // Interface
-import "./interfaces/ITWAccountFactory.sol";
+import "../interfaces/ITWAccountFactory.sol";
 
 // Smart wallet implementation
-import "./TWDynamicAccount.sol";
+import "./TWManagedAccount.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -21,21 +23,20 @@ import "./TWDynamicAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract TWDynamicAccountFactory is ITWAccountFactory, Multicall {
-    using TWStringSet for TWStringSet.Set;
-
+contract TWManagedAccountFactory is ITWAccountFactory, Multicall, PermissionsEnumerable, BaseRouter {
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
 
-    TWDynamicAccount private immutable _accountImplementation;
+    TWManagedAccount private immutable _accountImplementation;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint) {
-        _accountImplementation = new TWDynamicAccount(_entrypoint);
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _accountImplementation = new TWManagedAccount(_entrypoint);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -54,7 +55,7 @@ contract TWDynamicAccountFactory is ITWAccountFactory, Multicall {
 
         account = Clones.cloneDeterministic(impl, salt);
 
-        TWAccount(payable(account)).initialize(_admin);
+        TWManagedAccount(payable(account)).initialize(_admin);
 
         emit AccountCreated(account, _admin, _accountId);
 
@@ -74,5 +75,13 @@ contract TWDynamicAccountFactory is ITWAccountFactory, Multicall {
     function getAddress(string memory _accountId) public view returns (address) {
         bytes32 salt = keccak256(abi.encode(_accountId));
         return Clones.predictDeterministicAddress(address(_accountImplementation), salt);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Internal functions
+    //////////////////////////////////////////////////////////////*/
+
+    function _canSetExtension() internal view virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }
