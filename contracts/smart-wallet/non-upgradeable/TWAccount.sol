@@ -6,18 +6,46 @@ pragma solidity ^0.8.11;
 /* solhint-disable reason-string */
 
 // Base
-import "./utils/BaseAccount.sol";
+import "./../utils/BaseAccount.sol";
 
 // Extensions
-import "../extension/Multicall.sol";
-import "../dynamic-contracts/extension/Initializable.sol";
-import "../dynamic-contracts/extension/PermissionsEnumerable.sol";
-import "../dynamic-contracts/extension/ContractMetadata.sol";
+import "../../extension/Multicall.sol";
+import "../../dynamic-contracts/extension/Initializable.sol";
+import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
+import "../../dynamic-contracts/extension/ContractMetadata.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
 import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
 // Utils
-import "../openzeppelin-presets/utils/cryptography/ECDSA.sol";
+import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
+
+//   $$\     $$\       $$\                 $$\                         $$\
+//   $$ |    $$ |      \__|                $$ |                        $$ |
+// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
+// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
+//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
+//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
+//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
+//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
+
+/*///////////////////////////////////////////////////////////////
+                            Storage layout
+//////////////////////////////////////////////////////////////*/
+
+library TWAccountStorage {
+    bytes32 internal constant TWACCOUNT_STORAGE_POSITION = keccak256("twaccount.storage");
+
+    struct Data {
+        uint256 nonce;
+    }
+
+    function accountStorage() internal pure returns (Data storage twaccountData) {
+        bytes32 position = TWACCOUNT_STORAGE_POSITION;
+        assembly {
+            twaccountData.slot := position
+        }
+    }
+}
 
 contract TWAccount is
     Initializable,
@@ -31,7 +59,7 @@ contract TWAccount is
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
-                        State (constant, immutable)
+                                State
     //////////////////////////////////////////////////////////////*/
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
@@ -50,7 +78,7 @@ contract TWAccount is
         entrypointContract = _entrypoint;
     }
 
-    /// @notice Initializes the smart contract walelt.
+    /// @notice Initializes the smart contract wallet.
     function initialize(address _defaultAdmin) public virtual initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }

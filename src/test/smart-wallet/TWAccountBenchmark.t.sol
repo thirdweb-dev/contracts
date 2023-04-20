@@ -8,7 +8,7 @@ import { EntryPoint } from "contracts/smart-wallet/utils/EntryPoint.sol";
 
 import { UserOperation } from "contracts/smart-wallet/utils/UserOperation.sol";
 
-import { TWAccountFactory } from "contracts/smart-wallet/TWAccountFactory.sol";
+import { TWAccountFactory } from "contracts/smart-wallet/non-upgradeable/TWAccountFactory.sol";
 
 /// @dev This is a dummy contract to test the gas cost of performing transactions with TWAccount.
 contract Number {
@@ -28,7 +28,7 @@ contract TWAccountBenchmarkTest is BaseTest {
     // Test params
     uint256 private signerPrivateKey = 100;
     address private walletSigner;
-    address private sender = 0xB587D47Db9d58f9a49f367D260690fdE38A3D087;
+    address private sender = 0x8617DC1aD4fF1f256D4d250cb842396c52C03CA3;
     address payable private beneficiary = payable(address(0x45654));
     bytes private userOpSignature;
 
@@ -88,9 +88,9 @@ contract TWAccountBenchmarkTest is BaseTest {
 
         // build UserOp
         bytes memory initCallData = abi.encodeWithSignature(
-            "createAccount(address,bytes32)",
+            "createAccount(address,string)",
             walletSigner,
-            keccak256("random-salt")
+            "random-salt"
         );
 
         UserOperation memory op = UserOperation({
@@ -143,7 +143,7 @@ contract TWAccountBenchmarkTest is BaseTest {
 
     /// @dev Create an account by directly calling the factory.
     function test_benchmark_createAccount_directWithFactory() public {
-        twAccountFactory.createAccount(address(0x456), keccak256("salt"));
+        twAccountFactory.createAccount(address(0x456), "salt");
     }
 
     /// @dev Create an account when performing the first transaction from the account (all via Entrypoint).
