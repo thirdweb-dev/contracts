@@ -14,13 +14,13 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "./TWAccountCore.sol";
+import "./AccountCore.sol";
 import "lib/dynamic-contracts/src/core/Router.sol";
 
-contract TWManagedAccount is TWAccountCore, Router {
+contract ManagedAccount is AccountCore, Router {
     address public factory;
 
-    constructor(IEntryPoint _entrypoint) TWAccountCore(_entrypoint) {}
+    constructor(IEntryPoint _entrypoint) AccountCore(_entrypoint) {}
 
     /// @notice Initializes the smart contract wallet.
     function initialize(address _defaultAdmin) public virtual override initializer {
@@ -29,7 +29,7 @@ contract TWManagedAccount is TWAccountCore, Router {
     }
 
     // solhint-disable-next-line no-empty-blocks
-    receive() external payable virtual override(Router, TWAccountCore) {}
+    receive() external payable virtual override(Router, AccountCore) {}
 
     /// @notice Returns the implementation contract address for a given function signature.
     function getImplementationForFunction(bytes4) public view virtual override returns (address) {

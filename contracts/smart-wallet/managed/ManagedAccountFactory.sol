@@ -9,10 +9,10 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 
 // Interface
-import "../interfaces/ITWAccountFactory.sol";
+import "../interfaces/IAccountFactory.sol";
 
 // Smart wallet implementation
-import "./TWManagedAccount.sol";
+import "./ManagedAccount.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -23,12 +23,12 @@ import "./TWManagedAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract TWManagedAccountFactory is ITWAccountFactory, Multicall, PermissionsEnumerable, BaseRouter {
+contract TWManagedAccountFactory is IAccountFactory, Multicall, PermissionsEnumerable, BaseRouter {
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
 
-    TWManagedAccount private immutable _accountImplementation;
+    ManagedAccount private immutable _accountImplementation;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
@@ -36,7 +36,7 @@ contract TWManagedAccountFactory is ITWAccountFactory, Multicall, PermissionsEnu
 
     constructor(IEntryPoint _entrypoint) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _accountImplementation = new TWManagedAccount(_entrypoint);
+        _accountImplementation = new ManagedAccount(_entrypoint);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ contract TWManagedAccountFactory is ITWAccountFactory, Multicall, PermissionsEnu
 
         account = Clones.cloneDeterministic(impl, salt);
 
-        TWManagedAccount(payable(account)).initialize(_admin);
+        ManagedAccount(payable(account)).initialize(_admin);
 
         emit AccountCreated(account, _admin, _accountId);
 

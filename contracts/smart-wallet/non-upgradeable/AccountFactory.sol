@@ -7,10 +7,10 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../../lib/TWStringSet.sol";
 
 // Interface
-import "./../interfaces/ITWAccountFactory.sol";
+import "./../interfaces/IAccountFactory.sol";
 
 // Smart wallet implementation
-import "./TWDynamicAccount.sol";
+import "./Account.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -21,21 +21,21 @@ import "./TWDynamicAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract TWDynamicAccountFactory is ITWAccountFactory, Multicall {
+contract AccountFactory is IAccountFactory, Multicall {
     using TWStringSet for TWStringSet.Set;
 
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
 
-    TWDynamicAccount private immutable _accountImplementation;
+    Account private immutable _accountImplementation;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint) {
-        _accountImplementation = new TWDynamicAccount(_entrypoint);
+        _accountImplementation = new Account(_entrypoint);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -54,7 +54,7 @@ contract TWDynamicAccountFactory is ITWAccountFactory, Multicall {
 
         account = Clones.cloneDeterministic(impl, salt);
 
-        TWAccount(payable(account)).initialize(_admin);
+        Account(payable(account)).initialize(_admin);
 
         emit AccountCreated(account, _admin, _accountId);
 
