@@ -29,22 +29,22 @@ import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
                             Storage layout
 //////////////////////////////////////////////////////////////*/
 
-library TWAccountStorage {
-    bytes32 internal constant TWACCOUNT_STORAGE_POSITION = keccak256("twaccount.storage");
+library AccountStorage {
+    bytes32 internal constant ACCOUNT_STORAGE_POSITION = keccak256("account.storage");
 
     struct Data {
         uint256 nonce;
     }
 
-    function accountStorage() internal pure returns (Data storage twaccountData) {
-        bytes32 position = TWACCOUNT_STORAGE_POSITION;
+    function accountStorage() internal pure returns (Data storage accountData) {
+        bytes32 position = ACCOUNT_STORAGE_POSITION;
         assembly {
-            twaccountData.slot := position
+            accountData.slot := position
         }
     }
 }
 
-contract TWAccountCore is Initializable, Multicall, BaseAccount {
+contract AccountCore is Initializable, Multicall, BaseAccount {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -79,8 +79,8 @@ contract TWAccountCore is Initializable, Multicall, BaseAccount {
 
     /// @notice Returns the nonce of the account.
     function nonce() public view virtual override returns (uint256) {
-        TWAccountStorage.Data storage twaccountData = TWAccountStorage.accountStorage();
-        return twaccountData.nonce;
+        AccountStorage.Data storage accountData = AccountStorage.accountStorage();
+        return accountData.nonce;
     }
 
     /// @notice Returns the EIP 4337 entrypoint contract.
@@ -109,7 +109,7 @@ contract TWAccountCore is Initializable, Multicall, BaseAccount {
 
     /// @notice Withdraw funds for this account from Entrypoint.
     function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public {
-        require(_hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "TWAccount: not admin");
+        require(_hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Account: not admin");
         entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
@@ -119,8 +119,8 @@ contract TWAccountCore is Initializable, Multicall, BaseAccount {
 
     /// @dev Validates the nonce of a user operation and updates account nonce.
     function _validateAndUpdateNonce(UserOperation calldata userOp) internal override {
-        TWAccountStorage.Data storage data = TWAccountStorage.accountStorage();
-        require(data.nonce == userOp.nonce, "TWAccount: invalid nonce");
+        AccountStorage.Data storage data = AccountStorage.accountStorage();
+        require(data.nonce == userOp.nonce, "Account: invalid nonce");
 
         data.nonce += 1;
     }
