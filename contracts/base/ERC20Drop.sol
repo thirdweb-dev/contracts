@@ -39,7 +39,11 @@ contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, Primary
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(string memory _name, string memory _symbol, address _primarySaleRecipient) ERC20Permit(_name, _symbol) {
+    constructor(
+        string memory _name,
+        string memory _symbol,
+        address _primarySaleRecipient
+    ) ERC20Permit(_name, _symbol) {
         _setupOwner(msg.sender);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
@@ -102,10 +106,12 @@ contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, Primary
     }
 
     /// @dev Transfers the tokens being claimed.
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal virtual override returns (uint256) {
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        virtual
+        override
+        returns (uint256)
+    {
         _mint(_to, _quantityBeingClaimed);
         return 0;
     }
