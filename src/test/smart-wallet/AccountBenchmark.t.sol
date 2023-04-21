@@ -8,9 +8,9 @@ import { EntryPoint } from "contracts/smart-wallet/utils/EntryPoint.sol";
 
 import { UserOperation } from "contracts/smart-wallet/utils/UserOperation.sol";
 
-import { TWAccountFactory } from "contracts/smart-wallet/non-upgradeable/TWAccountFactory.sol";
+import { AccountFactory } from "contracts/smart-wallet/non-upgradeable/AccountFactory.sol";
 
-/// @dev This is a dummy contract to test the gas cost of performing transactions with TWAccount.
+/// @dev This is a dummy contract to test the gas cost of performing transactions with Account.
 contract Number {
     uint256 public num;
 
@@ -19,10 +19,10 @@ contract Number {
     }
 }
 
-contract TWAccountBenchmarkTest is BaseTest {
+contract AccountBenchmarkTest is BaseTest {
     // Contracts
     address payable private entrypoint;
-    TWAccountFactory private twAccountFactory;
+    AccountFactory private accountFactory;
     Number internal numberContract;
 
     // Test params
@@ -96,7 +96,7 @@ contract TWAccountBenchmarkTest is BaseTest {
         UserOperation memory op = UserOperation({
             sender: sender,
             nonce: 0,
-            initCode: abi.encodePacked(abi.encodePacked(address(twAccountFactory)), initCallData),
+            initCode: abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData),
             callData: callData,
             callGasLimit: 500_000,
             verificationGasLimit: 500_000,
@@ -133,7 +133,7 @@ contract TWAccountBenchmarkTest is BaseTest {
         // deploy Entrypoint
         entrypoint = payable(address(new EntryPoint()));
         // deploy account factory
-        twAccountFactory = new TWAccountFactory(IEntryPoint(entrypoint));
+        accountFactory = new AccountFactory(IEntryPoint(entrypoint));
         // deploy dummy contract
         numberContract = new Number();
 
@@ -143,7 +143,7 @@ contract TWAccountBenchmarkTest is BaseTest {
 
     /// @dev Create an account by directly calling the factory.
     function test_benchmark_createAccount_directWithFactory() public {
-        twAccountFactory.createAccount(address(0x456), "salt");
+        accountFactory.createAccount(address(0x456), "salt");
     }
 
     /// @dev Create an account when performing the first transaction from the account (all via Entrypoint).
