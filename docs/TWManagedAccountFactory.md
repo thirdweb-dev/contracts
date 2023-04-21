@@ -1,4 +1,4 @@
-# AirdropERC1155
+# TWManagedAccountFactory
 
 
 
@@ -27,10 +27,27 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### addRecipients
+### accountImplementation
 
 ```solidity
-function addRecipients(IAirdropERC1155.AirdropContent[] _contents) external nonpayable
+function accountImplementation() external view returns (address)
+```
+
+Returns the implementation of the Account.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### addExtension
+
+```solidity
+function addExtension(IExtension.Extension _extension) external nonpayable
 ```
 
 
@@ -41,15 +58,15 @@ function addRecipients(IAirdropERC1155.AirdropContent[] _contents) external nonp
 
 | Name | Type | Description |
 |---|---|---|
-| _contents | IAirdropERC1155.AirdropContent[] | undefined |
+| _extension | IExtension.Extension | undefined |
 
-### airdrop
+### createAccount
 
 ```solidity
-function airdrop(IAirdropERC1155.AirdropContent[] _contents) external nonpayable
+function createAccount(address _admin, string _accountId) external nonpayable returns (address)
 ```
 
-
+Deploys a new Account with the given admin and accountId used as salt.
 
 
 
@@ -57,15 +74,22 @@ function airdrop(IAirdropERC1155.AirdropContent[] _contents) external nonpayable
 
 | Name | Type | Description |
 |---|---|---|
-| _contents | IAirdropERC1155.AirdropContent[] | undefined |
+| _admin | address | undefined |
+| _accountId | string | undefined |
 
-### cancelPendingPayments
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### getAddress
 
 ```solidity
-function cancelPendingPayments(uint256 numberOfPaymentsToCancel) external nonpayable
+function getAddress(string _accountId) external view returns (address)
 ```
 
-Lets contract-owner cancel any pending payments.
+Returns the address of an Account that would be deployed with the given accountId as salt.
 
 
 
@@ -73,144 +97,140 @@ Lets contract-owner cancel any pending payments.
 
 | Name | Type | Description |
 |---|---|---|
-| numberOfPaymentsToCancel | uint256 | undefined |
+| _accountId | string | undefined |
 
-### cancelledPaymentIndices
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### getAllExtensions
 
 ```solidity
-function cancelledPaymentIndices(uint256) external view returns (uint256 startIndex, uint256 endIndex)
+function getAllExtensions() external view returns (struct IExtension.Extension[] allExtensions)
+```
+
+Returns all extensions stored. Override default lugins stored in router are          given precedence over default extensions in DefaultExtensionSet.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| allExtensions | IExtension.Extension[] | undefined |
+
+### getAllFunctionsOfExtension
+
+```solidity
+function getAllFunctionsOfExtension(string _extensionName) external view returns (struct IExtension.ExtensionFunction[])
 ```
 
 
 
-
+*Returns all functions that belong to the given extension contract.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| _extensionName | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| startIndex | uint256 | undefined |
-| endIndex | uint256 | undefined |
+| _0 | IExtension.ExtensionFunction[] | undefined |
 
-### contractType
+### getExtension
 
 ```solidity
-function contractType() external pure returns (bytes32)
+function getExtension(string _extensionName) external view returns (struct IExtension.Extension)
 ```
 
 
 
-*Returns the type of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
-### contractVersion
-
-```solidity
-function contractVersion() external pure returns (uint8)
-```
-
-
-
-*Returns the version of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined |
-
-### getAllAirdropPayments
-
-```solidity
-function getAllAirdropPayments(uint256 startId, uint256 endId) external view returns (struct IAirdropERC1155.AirdropContent[] contents)
-```
-
-Returns all airdrop payments set up -- pending, processed or failed.
-
-
+*Returns the extension metadata and functions for a given extension.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| startId | uint256 | undefined |
-| endId | uint256 | undefined |
+| _extensionName | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| contents | IAirdropERC1155.AirdropContent[] | undefined |
+| _0 | IExtension.Extension | undefined |
 
-### getAllAirdropPaymentsFailed
-
-```solidity
-function getAllAirdropPaymentsFailed() external view returns (struct IAirdropERC1155.AirdropContent[] contents)
-```
-
-Returns all pending airdrop failed.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| contents | IAirdropERC1155.AirdropContent[] | undefined |
-
-### getAllAirdropPaymentsPending
+### getExtensionForFunction
 
 ```solidity
-function getAllAirdropPaymentsPending(uint256 startId, uint256 endId) external view returns (struct IAirdropERC1155.AirdropContent[] contents)
+function getExtensionForFunction(bytes4 _functionSelector) external view returns (struct IExtension.ExtensionMetadata)
 ```
 
-Returns all pending airdrop payments.
 
 
+*Returns the extension metadata for a given function.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| startId | uint256 | undefined |
-| endId | uint256 | undefined |
+| _functionSelector | bytes4 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| contents | IAirdropERC1155.AirdropContent[] | undefined |
+| _0 | IExtension.ExtensionMetadata | undefined |
 
-### getCancelledPaymentIndices
+### getExtensionImplementation
 
 ```solidity
-function getCancelledPaymentIndices() external view returns (struct IAirdropERC1155.CancelledPayments[])
+function getExtensionImplementation(string _extensionName) external view returns (address)
 ```
 
-Returns all blocks of cancelled payments as an array of index range.
 
 
+*Returns the extension&#39;s implementation smart contract address.*
 
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _extensionName | string | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | IAirdropERC1155.CancelledPayments[] | undefined |
+| _0 | address | undefined |
+
+### getImplementationForFunction
+
+```solidity
+function getImplementationForFunction(bytes4 _functionSelector) external view returns (address extensionAddress)
+```
+
+
+
+*Returns the extension implementation address stored in router, for the given function.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _functionSelector | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| extensionAddress | address | undefined |
 
 ### getRoleAdmin
 
@@ -342,51 +362,13 @@ Checks whether an account has a particular role;                  role restricti
 |---|---|---|
 | _0 | bool | undefined |
 
-### indicesOfFailed
-
-```solidity
-function indicesOfFailed(uint256) external view returns (uint256)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### initialize
-
-```solidity
-function initialize(address _defaultAdmin) external nonpayable
-```
-
-
-
-*Initiliazes the contract, like a constructor.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _defaultAdmin | address | undefined |
-
 ### multicall
 
 ```solidity
 function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 ```
 
-
+Receives and executes a batch of function calls on this contract.
 
 *Receives and executes a batch of function calls on this contract.*
 
@@ -394,80 +376,29 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined |
+| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined |
+| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
-### owner
-
-```solidity
-function owner() external view returns (address)
-```
-
-Returns the owner of the contract.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
-### payeeCount
+### removeExtension
 
 ```solidity
-function payeeCount() external view returns (uint256)
+function removeExtension(string _extensionName) external nonpayable
 ```
 
 
 
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### processPayments
-
-```solidity
-function processPayments(uint256 paymentsToProcess) external nonpayable
-```
-
-Lets contract-owner send ERC721 NFTs to a list of addresses.
-
-
+*Removes an existing extension from the router.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| paymentsToProcess | uint256 | undefined |
-
-### processedCount
-
-```solidity
-function processedCount() external view returns (uint256)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
+| _extensionName | string | undefined |
 
 ### renounceRole
 
@@ -503,13 +434,35 @@ Revokes role from an account.
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
 
-### setOwner
+### supportsInterface
 
 ```solidity
-function setOwner(address _newOwner) external nonpayable
+function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ```
 
-Lets an authorized wallet set a new owner for the contract.
+
+
+*See {IERC165-supportsInterface}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| interfaceId | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### updateExtension
+
+```solidity
+function updateExtension(IExtension.Extension _extension) external nonpayable
+```
+
+
 
 
 
@@ -517,19 +470,19 @@ Lets an authorized wallet set a new owner for the contract.
 
 | Name | Type | Description |
 |---|---|---|
-| _newOwner | address | The address to set as the new owner of the contract. |
+| _extension | IExtension.Extension | undefined |
 
 
 
 ## Events
 
-### AirdropPayment
+### AccountCreated
 
 ```solidity
-event AirdropPayment(address indexed recipient, uint256 index, bool failed)
+event AccountCreated(address indexed account, address indexed accountAdmin, string accountId)
 ```
 
-Emitted when an airdrop payment is made to a recipient.
+Emitted when a new Account is created.
 
 
 
@@ -537,30 +490,14 @@ Emitted when an airdrop payment is made to a recipient.
 
 | Name | Type | Description |
 |---|---|---|
-| recipient `indexed` | address | undefined |
-| index  | uint256 | undefined |
-| failed  | bool | undefined |
+| account `indexed` | address | undefined |
+| accountAdmin `indexed` | address | undefined |
+| accountId  | string | undefined |
 
-### Initialized
-
-```solidity
-event Initialized(uint8 version)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| version  | uint8 | undefined |
-
-### OwnerUpdated
+### ExtensionAdded
 
 ```solidity
-event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
+event ExtensionAdded(address indexed extensionAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
 
@@ -571,16 +508,17 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 
 | Name | Type | Description |
 |---|---|---|
-| prevOwner `indexed` | address | undefined |
-| newOwner `indexed` | address | undefined |
+| extensionAddress `indexed` | address | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
+| functionSignature  | string | undefined |
 
-### PaymentsCancelledByAdmin
+### ExtensionRemoved
 
 ```solidity
-event PaymentsCancelledByAdmin(uint256 startIndex, uint256 endIndex)
+event ExtensionRemoved(address indexed extensionAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
-Emitted when pending payments are cancelled, and processed count is reset.
+
 
 
 
@@ -588,16 +526,17 @@ Emitted when pending payments are cancelled, and processed count is reset.
 
 | Name | Type | Description |
 |---|---|---|
-| startIndex  | uint256 | undefined |
-| endIndex  | uint256 | undefined |
+| extensionAddress `indexed` | address | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
+| functionSignature  | string | undefined |
 
-### RecipientsAdded
+### ExtensionUpdated
 
 ```solidity
-event RecipientsAdded(uint256 startIndex, uint256 endIndex)
+event ExtensionUpdated(address indexed oldExtensionAddress, address indexed newExtensionAddress, bytes4 indexed functionSelector, string functionSignature)
 ```
 
-Emitted when airdrop recipients are uploaded to the contract.
+
 
 
 
@@ -605,8 +544,10 @@ Emitted when airdrop recipients are uploaded to the contract.
 
 | Name | Type | Description |
 |---|---|---|
-| startIndex  | uint256 | undefined |
-| endIndex  | uint256 | undefined |
+| oldExtensionAddress `indexed` | address | undefined |
+| newExtensionAddress `indexed` | address | undefined |
+| functionSelector `indexed` | bytes4 | undefined |
+| functionSignature  | string | undefined |
 
 ### RoleAdminChanged
 
@@ -661,24 +602,6 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 | role `indexed` | bytes32 | undefined |
 | account `indexed` | address | undefined |
 | sender `indexed` | address | undefined |
-
-### StatelessAirdrop
-
-```solidity
-event StatelessAirdrop(address indexed recipient, IAirdropERC1155.AirdropContent content, bool failed)
-```
-
-Emitted when an airdrop is made using the stateless airdrop function.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| recipient `indexed` | address | undefined |
-| content  | IAirdropERC1155.AirdropContent | undefined |
-| failed  | bool | undefined |
 
 
 

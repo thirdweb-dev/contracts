@@ -1,4 +1,4 @@
-# ITWAccountFactory
+# IAccountFactory
 
 
 
@@ -30,10 +30,10 @@ Returns the address of the Account implementation.
 ### createAccount
 
 ```solidity
-function createAccount(bytes32 _salt, bytes _initData) external nonpayable returns (address account)
+function createAccount(address admin, string accountId) external nonpayable returns (address account)
 ```
 
-Deploys a new Account with the given salt and initialization data.
+Deploys a new Account with the given admin and accountId used as salt.
 
 
 
@@ -41,8 +41,8 @@ Deploys a new Account with the given salt and initialization data.
 
 | Name | Type | Description |
 |---|---|---|
-| _salt | bytes32 | undefined |
-| _initData | bytes | undefined |
+| admin | address | undefined |
+| accountId | string | undefined |
 
 #### Returns
 
@@ -53,10 +53,10 @@ Deploys a new Account with the given salt and initialization data.
 ### getAddress
 
 ```solidity
-function getAddress(bytes32 _salt) external view returns (address)
+function getAddress(string accountId) external view returns (address)
 ```
 
-Returns the address of an Account that would be deployed with the given salt.
+Returns the address of an Account that would be deployed with the given accountId as salt.
 
 
 
@@ -64,7 +64,7 @@ Returns the address of an Account that would be deployed with the given salt.
 
 | Name | Type | Description |
 |---|---|---|
-| _salt | bytes32 | undefined |
+| accountId | string | undefined |
 
 #### Returns
 
@@ -79,10 +79,10 @@ Returns the address of an Account that would be deployed with the given salt.
 ### AccountCreated
 
 ```solidity
-event AccountCreated(address indexed account, bytes32 salt)
+event AccountCreated(address indexed account, address indexed accountAdmin, string accountId)
 ```
 
-
+Emitted when a new Account is created.
 
 
 
@@ -91,7 +91,8 @@ event AccountCreated(address indexed account, bytes32 salt)
 | Name | Type | Description |
 |---|---|---|
 | account `indexed` | address | undefined |
-| salt  | bytes32 | undefined |
+| accountAdmin `indexed` | address | undefined |
+| accountId  | string | undefined |
 
 
 
