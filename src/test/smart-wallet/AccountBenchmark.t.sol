@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../utils/BaseTest.sol";
 
-import { EntryPoint, IEntryPoint } from "contracts/smart-wallet/utils/EntryPoint.sol";
+import { EntryPoint, IEntryPoint } from "contracts/smart-wallet/utils/Entrypoint.sol";
 
 import { UserOperation } from "contracts/smart-wallet/utils/UserOperation.sol";
 
