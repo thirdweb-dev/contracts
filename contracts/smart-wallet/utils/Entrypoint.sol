@@ -10,7 +10,7 @@ pragma solidity ^0.8.12;
 
 import "../interfaces/IAccount.sol";
 import "../interfaces/IPaymaster.sol";
-import "../interfaces/IEntryPoint.sol";
+import "../interfaces/IEntrypoint.sol";
 
 import ".//Exec.sol";
 import "./StakeManager.sol";

@@ -5,7 +5,7 @@ pragma solidity ^0.8.12;
 /* solhint-disable no-empty-blocks */
 
 import "../interfaces/IAccount.sol";
-import "../interfaces/IEntryPoint.sol";
+import "../interfaces/IEntrypoint.sol";
 import "./Helpers.sol";
 
 /**
