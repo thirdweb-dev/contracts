@@ -2,6 +2,7 @@
 pragma solidity ^0.8.12;
 
 /* solhint-disable no-inline-assembly */
+/* solhint-disable func-visibility */
 
 /**
  * returned data from validateUserOp.
