@@ -25,25 +25,6 @@ import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-/*///////////////////////////////////////////////////////////////
-                            Storage layout
-//////////////////////////////////////////////////////////////*/
-
-library AccountStorage {
-    bytes32 internal constant ACCOUNT_STORAGE_POSITION = keccak256("account.storage");
-
-    struct Data {
-        uint256 nonce;
-    }
-
-    function accountStorage() internal pure returns (Data storage accountData) {
-        bytes32 position = ACCOUNT_STORAGE_POSITION;
-        assembly {
-            accountData.slot := position
-        }
-    }
-}
-
 contract AccountCore is Initializable, Multicall, BaseAccount {
     using ECDSA for bytes32;
 
@@ -76,12 +57,6 @@ contract AccountCore is Initializable, Multicall, BaseAccount {
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice Returns the nonce of the account.
-    function nonce() public view virtual override returns (uint256) {
-        AccountStorage.Data storage accountData = AccountStorage.accountStorage();
-        return accountData.nonce;
-    }
 
     /// @notice Returns the EIP 4337 entrypoint contract.
     function entryPoint() public view virtual override returns (IEntryPoint) {
@@ -116,14 +91,6 @@ contract AccountCore is Initializable, Multicall, BaseAccount {
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev Validates the nonce of a user operation and updates account nonce.
-    function _validateAndUpdateNonce(UserOperation calldata userOp) internal override {
-        AccountStorage.Data storage data = AccountStorage.accountStorage();
-        require(data.nonce == userOp.nonce, "Account: invalid nonce");
-
-        data.nonce += 1;
-    }
 
     /// @notice Validates the signature of a user operation.
     function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
