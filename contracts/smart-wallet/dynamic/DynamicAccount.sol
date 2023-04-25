@@ -53,7 +53,7 @@ contract DynamicAccount is AccountCore, BaseRouter {
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return
             interfaceId == type(IBaseRouter).interfaceId ||
-            interfaceId == type(IRouter).interfaceId ||
+            // interfaceId == type(IRouter).interfaceId ||
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId;
     }

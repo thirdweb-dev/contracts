@@ -104,13 +104,7 @@ abstract contract BaseRouter is IBaseRouter, Router, ExtensionState {
     }
 
     /// @dev Returns the extension implementation address stored in router, for the given function.
-    function getImplementationForFunction(bytes4 _functionSelector)
-        public
-        view
-        virtual
-        override
-        returns (address extensionAddress)
-    {
+    function getImplementationForFunction(bytes4 _functionSelector) public view virtual override returns (address) {
         return getExtensionForFunction(_functionSelector).implementation;
     }
 

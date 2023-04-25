@@ -12,7 +12,8 @@ import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 import "../interfaces/IAccountFactory.sol";
 
 // Smart wallet implementation
-import "./ManagedAccount.sol";
+import "../utils/AccountExtension.sol";
+import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -23,18 +24,20 @@ import "./ManagedAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract TWManagedAccountFactory is IAccountFactory, Multicall, PermissionsEnumerable, BaseRouter {
+contract ManagedAccountFactory is IAccountFactory, Multicall, PermissionsEnumerable, BaseRouter {
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
 
     ManagedAccount private immutable _accountImplementation;
+    address public immutable defaultExtension;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint) {
+        defaultExtension = address(new AccountExtension(address(_entrypoint)));
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _accountImplementation = new ManagedAccount(_entrypoint);
     }
@@ -75,6 +78,12 @@ contract TWManagedAccountFactory is IAccountFactory, Multicall, PermissionsEnume
     function getAddress(string memory _accountId) public view returns (address) {
         bytes32 salt = keccak256(abi.encode(_accountId));
         return Clones.predictDeterministicAddress(address(_accountImplementation), salt);
+    }
+
+    /// @dev Returns the extension implementation address stored in router, for the given function.
+    function getImplementationForFunction(bytes4 _functionSelector) public view override returns (address) {
+        address impl = getExtensionForFunction(_functionSelector).implementation;
+        return impl != address(0) ? impl : defaultExtension;
     }
 
     /*///////////////////////////////////////////////////////////////
