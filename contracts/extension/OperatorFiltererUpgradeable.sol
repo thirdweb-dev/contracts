@@ -16,7 +16,9 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
         // If an inheriting token contract is deployed to a network without the registry deployed, the modifier
         // will not revert, but the contract will need to be registered with the registry once it is deployed in
         // order for the modifier to filter addresses.
-        if (address(OPERATOR_FILTER_REGISTRY).code.length > 0) {
+        if (
+            address(OPERATOR_FILTER_REGISTRY).code.length > 0 && address(subscriptionOrRegistrantToCopy).code.length > 0
+        ) {
             if (!OPERATOR_FILTER_REGISTRY.isRegistered(address(this))) {
                 if (subscribe) {
                     OPERATOR_FILTER_REGISTRY.registerAndSubscribe(address(this), subscriptionOrRegistrantToCopy);
