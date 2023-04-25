@@ -14,7 +14,7 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "./AccountCore.sol";
+import "../utils/AccountCore.sol";
 import "lib/dynamic-contracts/src/core/Router.sol";
 
 contract ManagedAccount is AccountCore, Router {

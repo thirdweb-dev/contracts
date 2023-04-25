@@ -107,6 +107,7 @@ abstract contract BaseRouter is IBaseRouter, Router, ExtensionState {
     function getImplementationForFunction(bytes4 _functionSelector)
         public
         view
+        virtual
         override
         returns (address extensionAddress)
     {

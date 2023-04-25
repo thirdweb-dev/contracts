@@ -10,6 +10,7 @@ import "../../lib/TWStringSet.sol";
 import "./../interfaces/IAccountFactory.sol";
 
 // Smart wallet implementation
+import "../utils/AccountExtension.sol";
 import "./DynamicAccount.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
@@ -35,7 +36,8 @@ contract DynamicAccountFactory is IAccountFactory, Multicall {
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint) {
-        _accountImplementation = new DynamicAccount(_entrypoint);
+        address defaultExtension = address(new AccountExtension(address(_entrypoint)));
+        _accountImplementation = new DynamicAccount(_entrypoint, defaultExtension);
     }
 
     /*///////////////////////////////////////////////////////////////
