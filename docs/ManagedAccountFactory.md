@@ -1,4 +1,4 @@
-# TWManagedAccountFactory
+# ManagedAccountFactory
 
 
 
@@ -76,6 +76,23 @@ Deploys a new Account with the given admin and accountId used as salt.
 |---|---|---|
 | _admin | address | undefined |
 | _accountId | string | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### defaultExtension
+
+```solidity
+function defaultExtension() external view returns (address)
+```
+
+
+
+
+
 
 #### Returns
 
@@ -213,7 +230,7 @@ function getExtensionImplementation(string _extensionName) external view returns
 ### getImplementationForFunction
 
 ```solidity
-function getImplementationForFunction(bytes4 _functionSelector) external view returns (address extensionAddress)
+function getImplementationForFunction(bytes4 _functionSelector) external view returns (address)
 ```
 
 
@@ -230,7 +247,7 @@ function getImplementationForFunction(bytes4 _functionSelector) external view re
 
 | Name | Type | Description |
 |---|---|---|
-| extensionAddress | address | undefined |
+| _0 | address | undefined |
 
 ### getRoleAdmin
 

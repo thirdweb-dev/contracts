@@ -134,7 +134,7 @@ function getExtensionImplementation(string _extensionName) external view returns
 ### getImplementationForFunction
 
 ```solidity
-function getImplementationForFunction(bytes4 _functionSelector) external view returns (address extensionAddress)
+function getImplementationForFunction(bytes4 _functionSelector) external view returns (address)
 ```
 
 
@@ -151,7 +151,7 @@ function getImplementationForFunction(bytes4 _functionSelector) external view re
 
 | Name | Type | Description |
 |---|---|---|
-| extensionAddress | address | undefined |
+| _0 | address | undefined |
 
 ### removeExtension
 

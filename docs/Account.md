@@ -142,6 +142,23 @@ Returns the balance of the account in Entrypoint.
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### getNonce
+
+```solidity
+function getNonce() external view returns (uint256)
+```
+
+Return the account nonce. This method returns the next sequential nonce. For a nonce of a specific key, use `entrypoint.getNonce(account, key)`
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### getRoleAdmin
 
 ```solidity
@@ -331,23 +348,6 @@ Receives and executes a batch of function calls on this contract.
 | Name | Type | Description |
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
-
-### nonce
-
-```solidity
-function nonce() external view returns (uint256)
-```
-
-Returns the nonce of the account.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### onERC1155BatchReceived
 

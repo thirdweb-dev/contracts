@@ -44,29 +44,6 @@ function SIGNER_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### _hasRole
-
-```solidity
-function _hasRole(bytes32 _role, address _account) external view returns (bool)
-```
-
-See Permissions-hasRole
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _role | bytes32 | undefined |
-| _account | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
 ### addDeposit
 
 ```solidity
@@ -102,6 +79,23 @@ function getDeposit() external view returns (uint256)
 ```
 
 Returns the balance of the account in Entrypoint.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### getNonce
+
+```solidity
+function getNonce() external view returns (uint256)
+```
+
+Return the account nonce. This method returns the next sequential nonce. For a nonce of a specific key, use `entrypoint.getNonce(account, key)`
 
 
 
@@ -171,23 +165,6 @@ Receives and executes a batch of function calls on this contract.
 | Name | Type | Description |
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
-
-### nonce
-
-```solidity
-function nonce() external view returns (uint256)
-```
-
-Returns the nonce of the account.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### validateUserOp
 
