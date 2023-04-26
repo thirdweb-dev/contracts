@@ -11,4 +11,9 @@ abstract contract DefaultOperatorFiltererUpgradeable is OperatorFiltererUpgradea
     function __DefaultOperatorFilterer_init() internal {
         OperatorFiltererUpgradeable.__OperatorFilterer_init(DEFAULT_SUBSCRIPTION, true);
     }
+
+    function subscribeToRegistry(address _subscription) external {
+        require(_canSetOperatorRestriction(), "Not authorized to subscribe to registry.");
+        _register(_subscription, true);
+    }
 }

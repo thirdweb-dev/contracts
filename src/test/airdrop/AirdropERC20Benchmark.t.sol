@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/airdrop/AirdropERC20.sol";
+import { AirdropERC20, IAirdropERC20 } from "contracts/airdrop/AirdropERC20.sol";
 
 // Test imports
 import { Wallet } from "../utils/Wallet.sol";
@@ -38,18 +38,18 @@ contract AirdropERC20BenchmarkTest is BaseTest {
         vm.deal(deployer, 10_000 ether);
         vm.startPrank(deployer);
 
-        drop.addAirdropRecipients(_contents);
+        drop.addRecipients(_contents);
     }
 
     function test_benchmark_airdrop_one_ERC20() public {
-        drop.airdrop(1);
+        drop.processPayments(1);
     }
 
     function test_benchmark_airdrop_two_ERC20() public {
-        drop.airdrop(2);
+        drop.processPayments(2);
     }
 
     function test_benchmark_airdrop_five_ERC20() public {
-        drop.airdrop(5);
+        drop.processPayments(5);
     }
 }

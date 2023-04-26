@@ -150,6 +150,7 @@ contract TokenERC1155 is
         __EIP712_init("TokenERC1155", "1");
         __ERC2771Context_init(_trustedForwarders);
         __ERC1155_init("");
+        __DefaultOperatorFilterer_init();
 
         // Initialize this contract's state.
         _setOperatorRestriction(true);

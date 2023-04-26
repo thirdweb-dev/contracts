@@ -43,18 +43,18 @@ contract AirdropERC1155BenchmarkTest is BaseTest {
 
         vm.startPrank(deployer);
 
-        drop.addAirdropRecipients(_contents);
+        drop.addRecipients(_contents);
     }
 
     function test_benchmark_airdrop_one() public {
-        drop.airdrop(1);
+        drop.processPayments(1);
     }
 
     function test_benchmark_airdrop_two() public {
-        drop.airdrop(2);
+        drop.processPayments(2);
     }
 
     function test_benchmark_airdrop_five() public {
-        drop.airdrop(5);
+        drop.processPayments(5);
     }
 }
