@@ -5,7 +5,7 @@ pragma solidity ^0.8.11;
 /* solhint-disable no-inline-assembly */
 /* solhint-disable reason-string */
 
-import "../non-upgradeable/TWAccount.sol";
+import "../non-upgradeable/Account.sol";
 import "../utils/BaseRouter.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
@@ -17,7 +17,7 @@ import "../utils/BaseRouter.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract TWDynamicAccount is TWAccount, BaseRouter {
+contract DynamicAccount is Account, BaseRouter {
     /*///////////////////////////////////////////////////////////////
                                 Constants
     //////////////////////////////////////////////////////////////*/
@@ -28,9 +28,9 @@ contract TWDynamicAccount is TWAccount, BaseRouter {
                         Constructor and Initializer
     //////////////////////////////////////////////////////////////*/
 
-    receive() external payable override(Router, TWAccount) {}
+    receive() external payable override(Router, Account) {}
 
-    constructor(IEntryPoint _entrypoint) TWAccount(_entrypoint) {}
+    constructor(IEntryPoint _entrypoint) Account(_entrypoint) {}
 
     function initialize(address _defaultAdmin) public override initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -42,7 +42,7 @@ contract TWDynamicAccount is TWAccount, BaseRouter {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev See {IERC165-supportsInterface}.
-    function supportsInterface(bytes4 interfaceId) public view virtual override(TWAccount, BaseRouter) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(Account, BaseRouter) returns (bool) {
         return
             interfaceId == type(IBaseRouter).interfaceId ||
             interfaceId == type(IRouter).interfaceId ||

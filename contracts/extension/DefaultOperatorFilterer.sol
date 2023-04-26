@@ -13,4 +13,9 @@ abstract contract DefaultOperatorFilterer is OperatorFilterer {
     address constant DEFAULT_SUBSCRIPTION = address(0x3cc6CddA760b79bAfa08dF41ECFA224f810dCeB6);
 
     constructor() OperatorFilterer(DEFAULT_SUBSCRIPTION, true) {}
+
+    function subscribeToRegistry(address _subscription) external {
+        require(_canSetOperatorRestriction(), "Not authorized to subscribe to registry.");
+        _register(_subscription, true);
+    }
 }

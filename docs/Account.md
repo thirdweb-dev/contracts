@@ -1,4 +1,4 @@
-# TWAccountLogic
+# Account
 
 
 
@@ -272,6 +272,22 @@ Checks whether an account has a particular role;                  role restricti
 |---|---|---|
 | _0 | bool | undefined |
 
+### initialize
+
+```solidity
+function initialize(address _defaultAdmin) external nonpayable
+```
+
+Initializes the smart contract wallet.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _defaultAdmin | address | undefined |
+
 ### isValidSigner
 
 ```solidity
@@ -293,6 +309,28 @@ Returns whether a signer is authorized to perform transactions using the wallet.
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined |
+
+### multicall
+
+```solidity
+function multicall(bytes[] data) external nonpayable returns (bytes[] results)
+```
+
+Receives and executes a batch of function calls on this contract.
+
+*Receives and executes a batch of function calls on this contract.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
 ### nonce
 
@@ -444,9 +482,9 @@ Lets a contract admin set the URI for contract-level metadata.
 function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ```
 
+See {IERC165-supportsInterface}.
 
 
-*See {IERC165-supportsInterface}.*
 
 #### Parameters
 
@@ -521,6 +559,22 @@ event ContractURIUpdated(string prevURI, string newURI)
 |---|---|---|
 | prevURI  | string | undefined |
 | newURI  | string | undefined |
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
 
 ### RoleAdminChanged
 

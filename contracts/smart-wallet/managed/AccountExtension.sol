@@ -23,7 +23,7 @@ import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract TWAccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Holder, ERC1155Holder {
+contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Holder, ERC1155Holder {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -50,7 +50,7 @@ contract TWAccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Ho
     modifier onlyAdminOrEntrypoint() {
         require(
             msg.sender == entrypointContract || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "TWAccount: not admin or EntryPoint."
+            "Account: not admin or EntryPoint."
         );
         _;
     }
@@ -86,10 +86,7 @@ contract TWAccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Ho
         uint256[] calldata _value,
         bytes[] calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
-        require(
-            _target.length == _calldata.length && _target.length == _value.length,
-            "TWAccount: wrong array lengths."
-        );
+        require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
         for (uint256 i = 0; i < _target.length; i++) {
             _call(_target[i], _value[i], _calldata[i]);
         }

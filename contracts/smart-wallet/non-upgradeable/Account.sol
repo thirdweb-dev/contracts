@@ -28,26 +28,7 @@ import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-/*///////////////////////////////////////////////////////////////
-                            Storage layout
-//////////////////////////////////////////////////////////////*/
-
-library TWAccountStorage {
-    bytes32 internal constant TWACCOUNT_STORAGE_POSITION = keccak256("twaccount.storage");
-
-    struct Data {
-        uint256 nonce;
-    }
-
-    function accountStorage() internal pure returns (Data storage twaccountData) {
-        bytes32 position = TWACCOUNT_STORAGE_POSITION;
-        assembly {
-            twaccountData.slot := position
-        }
-    }
-}
-
-contract TWAccount is
+contract Account is
     Initializable,
     Multicall,
     BaseAccount,
@@ -87,7 +68,7 @@ contract TWAccount is
     modifier onlyAdminOrEntrypoint() {
         require(
             msg.sender == address(entryPoint()) || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "TWAccount: not admin or EntryPoint."
+            "Account: not admin or EntryPoint."
         );
         _;
     }
@@ -102,12 +83,6 @@ contract TWAccount is
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
             super.supportsInterface(interfaceId);
-    }
-
-    /// @notice Returns the nonce of the account.
-    function nonce() public view virtual override returns (uint256) {
-        TWAccountStorage.Data storage twaccountData = TWAccountStorage.accountStorage();
-        return twaccountData.nonce;
     }
 
     /// @notice Returns the EIP 4337 entrypoint contract.
@@ -144,10 +119,7 @@ contract TWAccount is
         uint256[] calldata _value,
         bytes[] calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
-        require(
-            _target.length == _calldata.length && _target.length == _value.length,
-            "TWAccount: wrong array lengths."
-        );
+        require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
         for (uint256 i = 0; i < _target.length; i++) {
             _call(_target[i], _value[i], _calldata[i]);
         }
@@ -179,14 +151,6 @@ contract TWAccount is
                 revert(add(result, 32), mload(result))
             }
         }
-    }
-
-    /// @dev Validates the nonce of a user operation and updates account nonce.
-    function _validateAndUpdateNonce(UserOperation calldata userOp) internal override {
-        TWAccountStorage.Data storage data = TWAccountStorage.accountStorage();
-        require(data.nonce == userOp.nonce, "TWAccount: invalid nonce");
-
-        data.nonce += 1;
     }
 
     /// @notice Validates the signature of a user operation.
