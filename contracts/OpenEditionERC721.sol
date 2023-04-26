@@ -105,7 +105,6 @@ contract OpenEditionERC721 is
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
 
-        _setupPlatformFeeType(PlatformFeeType.Bps);
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
