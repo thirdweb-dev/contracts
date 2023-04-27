@@ -60,10 +60,15 @@ contract DynamicAccountTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xbD9eAc3c0b72FB86256deA6F3dBC54Ad18143fA8;
+    address private sender = 0x13123A79C89069aF0f6763dE5e25E26703477e79;
     address payable private beneficiary = payable(address(0x45654));
 
-    event AccountCreated(address indexed account, address indexed accountAdmin, string accountId);
+    event AccountCreated(
+        address indexed account,
+        address indexed accountAdmin,
+        bytes32 indexed accountId,
+        string accountName
+    );
 
     function _setupUserOp(
         uint256 _signerPKey,
@@ -164,8 +169,8 @@ contract DynamicAccountTest is BaseTest {
     /// @dev Create an account by directly calling the factory.
     function test_state_createAccount_viaFactory() public {
         vm.expectEmit(true, true, false, true);
-        emit AccountCreated(sender, accountAdmin, "random-salt");
-        accountFactory.createAccount(accountAdmin, "random-salt");
+        emit AccountCreated(sender, accountAdmin, keccak256(abi.encode("displayName")), "displayName");
+        accountFactory.createAccount(accountAdmin, "displayName");
     }
 
     /// @dev Create an account via Entrypoint.
@@ -173,7 +178,7 @@ contract DynamicAccountTest is BaseTest {
         bytes memory initCallData = abi.encodeWithSignature(
             "createAccount(address,string)",
             accountAdmin,
-            "random-salt"
+            "displayName"
         );
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
@@ -186,7 +191,7 @@ contract DynamicAccountTest is BaseTest {
         );
 
         vm.expectEmit(true, true, false, true);
-        emit AccountCreated(sender, accountAdmin, "random-salt");
+        emit AccountCreated(sender, accountAdmin, keccak256(abi.encode("displayName")), "displayName");
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
     }
 
@@ -198,7 +203,7 @@ contract DynamicAccountTest is BaseTest {
         bytes memory initCallData = abi.encodeWithSignature(
             "createAccount(address,string)",
             accountAdmin,
-            "random-salt"
+            "displayName"
         );
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
@@ -217,7 +222,7 @@ contract DynamicAccountTest is BaseTest {
     function test_state_executeTransaction() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress("random-salt");
+        address account = accountFactory.getAddress(accountAdmin);
 
         assertEq(numberContract.num(), 0);
 
@@ -231,7 +236,7 @@ contract DynamicAccountTest is BaseTest {
     function test_state_executeBatchTransaction() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress("random-salt");
+        address account = accountFactory.getAddress(accountAdmin);
 
         assertEq(numberContract.num(), 0);
 
@@ -305,7 +310,7 @@ contract DynamicAccountTest is BaseTest {
     function test_state_executeTransaction_viaAccountSigner() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress("random-salt");
+        address account = accountFactory.getAddress(accountAdmin);
 
         vm.prank(accountAdmin);
         Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
@@ -347,7 +352,7 @@ contract DynamicAccountTest is BaseTest {
     function test_revert_executeTransaction_nonSigner_viaDirectCall() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress("random-salt");
+        address account = accountFactory.getAddress(accountAdmin);
 
         vm.prank(accountAdmin);
         Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
@@ -367,7 +372,7 @@ contract DynamicAccountTest is BaseTest {
     function test_state_accountReceivesNativeTokens() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress("random-salt");
+        address account = accountFactory.getAddress(accountAdmin);
 
         assertEq(address(account).balance, 0);
 
@@ -383,7 +388,7 @@ contract DynamicAccountTest is BaseTest {
 
         uint256 value = 1000;
 
-        address account = accountFactory.getAddress("random-salt");
+        address account = accountFactory.getAddress(accountAdmin);
         vm.prank(accountAdmin);
         payable(account).call{ value: value }("");
         assertEq(address(account).balance, value);
@@ -402,7 +407,7 @@ contract DynamicAccountTest is BaseTest {
     function test_state_addAndWithdrawDeposit() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress("random-salt");
+        address account = accountFactory.getAddress(accountAdmin);
 
         assertEq(Account(payable(account)).getDeposit(), 0);
 
@@ -422,7 +427,7 @@ contract DynamicAccountTest is BaseTest {
     /// @dev Send an ERC-721 NFT to an account.
     function test_state_receiveERC721NFT() public {
         _setup_executeTransaction();
-        address account = accountFactory.getAddress("random-salt");
+        address account = accountFactory.getAddress(accountAdmin);
 
         assertEq(erc721.balanceOf(account), 0);
 
@@ -434,7 +439,7 @@ contract DynamicAccountTest is BaseTest {
     /// @dev Send an ERC-1155 NFT to an account.
     function test_state_receiveERC1155NFT() public {
         _setup_executeTransaction();
-        address account = accountFactory.getAddress("random-salt");
+        address account = accountFactory.getAddress(accountAdmin);
 
         assertEq(erc1155.balanceOf(account, 0), 0);
 
@@ -450,7 +455,7 @@ contract DynamicAccountTest is BaseTest {
     /// @dev Make the account reject ERC-721 NFTs instead of accepting them.
     function test_scenario_changeExtensionForFunction() public {
         _setup_executeTransaction();
-        address account = accountFactory.getAddress("random-salt");
+        address account = accountFactory.getAddress(accountAdmin);
 
         // The account can initially receive NFTs.
         assertEq(erc721.balanceOf(account), 0);

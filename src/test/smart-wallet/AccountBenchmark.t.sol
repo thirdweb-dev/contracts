@@ -27,7 +27,7 @@ contract AccountBenchmarkTest is BaseTest {
     // Test params
     uint256 private signerPrivateKey = 100;
     address private walletSigner;
-    address private sender = 0x8617DC1aD4fF1f256D4d250cb842396c52C03CA3;
+    address private sender = 0xBB956D56140CA3f3060986586A2631922a4B347E;
     address payable private beneficiary = payable(address(0x45654));
     bytes private userOpSignature;
 
@@ -89,7 +89,7 @@ contract AccountBenchmarkTest is BaseTest {
         bytes memory initCallData = abi.encodeWithSignature(
             "createAccount(address,string)",
             walletSigner,
-            "random-salt"
+            "displayName"
         );
 
         UserOperation memory op = UserOperation({
