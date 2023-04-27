@@ -303,8 +303,7 @@ contract AirdropERC20 is
         uint256 _amount
     ) internal returns (bool success) {
         if (_amount == 0) {
-            success = true;
-            return success;
+            return 1;
         }
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -327,6 +326,7 @@ contract AirdropERC20 is
                 );
             }
         }
+        return 1;
     }
 
     /// @dev Returns whether owner can be set in the given execution context.
