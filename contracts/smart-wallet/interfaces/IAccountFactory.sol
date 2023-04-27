@@ -7,14 +7,19 @@ interface IAccountFactory {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Emitted when a new Account is created.
-    event AccountCreated(address indexed account, address indexed accountAdmin, string accountId);
+    event AccountCreated(
+        address indexed account,
+        address indexed accountAdmin,
+        bytes32 indexed accountId,
+        string accountName
+    );
 
     /*///////////////////////////////////////////////////////////////
                         Extension Functions
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Deploys a new Account with the given admin and accountId used as salt.
-    function createAccount(address admin, string memory accountId) external returns (address account);
+    function createAccount(address admin, string memory accountName) external returns (address account);
 
     /*///////////////////////////////////////////////////////////////
                             View Functions
@@ -23,6 +28,6 @@ interface IAccountFactory {
     /// @notice Returns the address of the Account implementation.
     function accountImplementation() external view returns (address);
 
-    /// @notice Returns the address of an Account that would be deployed with the given accountId as salt.
-    function getAddress(string memory accountId) external view returns (address);
+    /// @notice Returns the address of an Account that would be deployed with the given admin signer.
+    function getAddress(address _adminSigner) external view returns (address);
 }

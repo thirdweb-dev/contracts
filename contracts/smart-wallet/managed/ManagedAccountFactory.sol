@@ -47,9 +47,9 @@ contract ManagedAccountFactory is IAccountFactory, Multicall, PermissionsEnumera
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Deploys a new Account with the given admin and accountId used as salt.
-    function createAccount(address _admin, string memory _accountId) external returns (address) {
+    function createAccount(address _admin, string memory _accountName) external returns (address) {
         address impl = address(_accountImplementation);
-        bytes32 salt = keccak256(abi.encode(_accountId));
+        bytes32 salt = keccak256(abi.encode(_admin));
         address account = Clones.predictDeterministicAddress(impl, salt);
 
         if (account.code.length > 0) {
@@ -60,7 +60,7 @@ contract ManagedAccountFactory is IAccountFactory, Multicall, PermissionsEnumera
 
         ManagedAccount(payable(account)).initialize(_admin);
 
-        emit AccountCreated(account, _admin, _accountId);
+        emit AccountCreated(account, _admin, keccak256(abi.encode(_accountName)), _accountName);
 
         return account;
     }
@@ -74,9 +74,9 @@ contract ManagedAccountFactory is IAccountFactory, Multicall, PermissionsEnumera
         return address(_accountImplementation);
     }
 
-    /// @notice Returns the address of an Account that would be deployed with the given accountId as salt.
-    function getAddress(string memory _accountId) public view returns (address) {
-        bytes32 salt = keccak256(abi.encode(_accountId));
+    /// @notice Returns the address of an Account that would be deployed with the given admin signer.
+    function getAddress(address _adminSigner) public view returns (address) {
+        bytes32 salt = keccak256(abi.encode(_adminSigner));
         return Clones.predictDeterministicAddress(address(_accountImplementation), salt);
     }
 
