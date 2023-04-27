@@ -96,14 +96,14 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
 
     /// @dev Revokes `role` from `account`, and removes `account` from {roleMembers}
     ///      See {_removeMember}
-    function _revokeRole(bytes32 role, address account) internal override {
+    function _revokeRole(bytes32 role, address account) internal virtual override {
         super._revokeRole(role, account);
         _removeMember(role, account);
     }
 
     /// @dev Grants `role` to `account`, and adds `account` to {roleMembers}
     ///      See {_addMember}
-    function _setupRole(bytes32 role, address account) internal override {
+    function _setupRole(bytes32 role, address account) internal virtual override {
         super._setupRole(role, account);
         _addMember(role, account);
     }

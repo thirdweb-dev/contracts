@@ -4,7 +4,7 @@ pragma solidity ^0.8.12;
 // Utils
 import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../../lib/TWStringSet.sol";
+import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
 // Interface
 import "./../interfaces/IAccountFactory.sol";
@@ -23,13 +23,17 @@ import "./DynamicAccount.sol";
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract DynamicAccountFactory is IAccountFactory, Multicall {
-    using TWStringSet for TWStringSet.Set;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
 
     DynamicAccount private immutable _accountImplementation;
+
+    mapping(address => address) private accountAdmin;
+    mapping(address => EnumerableSet.AddressSet) private accountsOfSigner;
+    mapping(address => EnumerableSet.AddressSet) private signersOfAccount;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
@@ -58,9 +62,33 @@ contract DynamicAccountFactory is IAccountFactory, Multicall {
 
         Account(payable(account)).initialize(_admin);
 
+        accountAdmin[account] = _admin;
+
         emit AccountCreated(account, _admin, keccak256(abi.encode(_accountName)), _accountName);
 
         return account;
+    }
+
+    /// @notice Callback function for an Account to register its signers.
+    function addSigner(address _signer) external {
+        address account = msg.sender;
+        require(accountAdmin[account] != address(0), "AccountFactory: invalid caller.");
+
+        accountsOfSigner[_signer].add(account);
+        signersOfAccount[account].add(_signer);
+
+        emit SignerAdded(account, _signer);
+    }
+
+    /// @notice Callback function for an Account to un-register its signers.
+    function removeSigner(address _signer) external {
+        address account = msg.sender;
+        require(accountAdmin[account] != address(0), "AccountFactory: invalid caller.");
+
+        accountsOfSigner[_signer].remove(account);
+        signersOfAccount[account].remove(_signer);
+
+        emit SignerRemoved(account, _signer);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -76,5 +104,15 @@ contract DynamicAccountFactory is IAccountFactory, Multicall {
     function getAddress(address _adminSigner) public view returns (address) {
         bytes32 salt = keccak256(abi.encode(_adminSigner));
         return Clones.predictDeterministicAddress(address(_accountImplementation), salt);
+    }
+
+    /// @notice Returns the admin and all signers of an account.
+    function getSignersOfAccount(address account) external view returns (address admin, address[] memory signers) {
+        return (accountAdmin[account], signersOfAccount[account].values());
+    }
+
+    /// @notice Returns all accounts that the given address is a signer of.
+    function getAccountsOfSigner(address signer) external view returns (address[] memory accounts) {
+        return accountsOfSigner[signer].values();
     }
 }
