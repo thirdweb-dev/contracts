@@ -5,7 +5,7 @@ pragma solidity ^0.8.12;
 
 import "../utils/BaseRouter.sol";
 import "../../extension/Multicall.sol";
-import "@openzeppelin/contracts/proxy/Clones.sol";
+import "../../openzeppelin-presets/proxy/Clones.sol";
 import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 import "../../openzeppelin-presets/utils/structs/EnumerableSet.sol";
 
