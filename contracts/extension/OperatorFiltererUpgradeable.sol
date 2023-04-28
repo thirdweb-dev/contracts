@@ -16,19 +16,7 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
         // If an inheriting token contract is deployed to a network without the registry deployed, the modifier
         // will not revert, but the contract will need to be registered with the registry once it is deployed in
         // order for the modifier to filter addresses.
-        if (address(OPERATOR_FILTER_REGISTRY).code.length > 0) {
-            if (!OPERATOR_FILTER_REGISTRY.isRegistered(address(this))) {
-                if (subscribe) {
-                    OPERATOR_FILTER_REGISTRY.registerAndSubscribe(address(this), subscriptionOrRegistrantToCopy);
-                } else {
-                    if (subscriptionOrRegistrantToCopy != address(0)) {
-                        OPERATOR_FILTER_REGISTRY.registerAndCopyEntries(address(this), subscriptionOrRegistrantToCopy);
-                    } else {
-                        OPERATOR_FILTER_REGISTRY.register(address(this));
-                    }
-                }
-            }
-        }
+        _register(subscriptionOrRegistrantToCopy, subscribe);
     }
 
     modifier onlyAllowedOperator(address from) virtual {
@@ -60,5 +48,22 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
             }
         }
         _;
+    }
+
+    function _register(address subscriptionOrRegistrantToCopy, bool subscribe) internal {
+        // Is the registry deployed?
+        if (address(OPERATOR_FILTER_REGISTRY).code.length > 0) {
+            // Is the subscription contract deployed?
+            if (address(subscriptionOrRegistrantToCopy).code.length > 0) {
+                // Do we want to subscribe?
+                if (subscribe) {
+                    OPERATOR_FILTER_REGISTRY.registerAndSubscribe(address(this), subscriptionOrRegistrantToCopy);
+                } else {
+                    OPERATOR_FILTER_REGISTRY.registerAndCopyEntries(address(this), subscriptionOrRegistrantToCopy);
+                }
+            } else {
+                OPERATOR_FILTER_REGISTRY.register(address(this));
+            }
+        }
     }
 }
