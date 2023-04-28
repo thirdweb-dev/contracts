@@ -59,8 +59,8 @@ contract Account is
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
-    constructor(IEntryPoint _entrypoint) {
-        factory = msg.sender;
+    constructor(IEntryPoint _entrypoint, address _factory) {
+        factory = _factory;
         entrypointContract = _entrypoint;
     }
 

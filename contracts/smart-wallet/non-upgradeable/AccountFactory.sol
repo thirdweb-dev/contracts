@@ -40,7 +40,7 @@ contract AccountFactory is IAccountFactory, Multicall {
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint) {
-        _accountImplementation = new Account(_entrypoint);
+        _accountImplementation = new Account(_entrypoint, address(this));
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -45,7 +45,7 @@ contract ManagedAccountFactory is IAccountFactory, Multicall, PermissionsEnumera
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint) {
-        defaultExtension = address(new AccountExtension(address(_entrypoint)));
+        defaultExtension = address(new AccountExtension(address(_entrypoint), address(this)));
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _accountImplementation = new ManagedAccount(_entrypoint);
     }

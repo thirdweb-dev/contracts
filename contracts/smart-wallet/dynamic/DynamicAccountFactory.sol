@@ -40,7 +40,7 @@ contract DynamicAccountFactory is IAccountFactory, Multicall {
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint) {
-        address defaultExtension = address(new AccountExtension(address(_entrypoint)));
+        address defaultExtension = address(new AccountExtension(address(_entrypoint), address(this)));
         _accountImplementation = new DynamicAccount(_entrypoint, defaultExtension);
     }
 
