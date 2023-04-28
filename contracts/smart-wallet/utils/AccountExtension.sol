@@ -125,7 +125,7 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
     function _setupRole(bytes32 role, address account) internal virtual override {
         super._setupRole(role, account);
 
-        if (role == SIGNER_ROLE) {
+        if (role == SIGNER_ROLE && factory.code.length > 0) {
             IAccountFactory(factory).addSigner(account);
         }
     }
@@ -134,7 +134,7 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
     function _revokeRole(bytes32 role, address account) internal virtual override {
         super._revokeRole(role, account);
 
-        if (role == SIGNER_ROLE) {
+        if (role == SIGNER_ROLE && factory.code.length > 0) {
             IAccountFactory(factory).removeSigner(account);
         }
     }

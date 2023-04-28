@@ -176,7 +176,7 @@ contract Account is
     function _setupRole(bytes32 role, address account) internal virtual override {
         super._setupRole(role, account);
 
-        if (role == SIGNER_ROLE) {
+        if (role == SIGNER_ROLE && factory.code.length > 0) {
             AccountFactory(factory).addSigner(account);
         }
     }
@@ -185,7 +185,7 @@ contract Account is
     function _revokeRole(bytes32 role, address account) internal virtual override {
         super._revokeRole(role, account);
 
-        if (role == SIGNER_ROLE) {
+        if (role == SIGNER_ROLE && factory.code.length > 0) {
             AccountFactory(factory).removeSigner(account);
         }
     }
