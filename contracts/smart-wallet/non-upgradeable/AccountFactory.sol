@@ -4,7 +4,7 @@ pragma solidity ^0.8.12;
 // Utils
 import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "../../openzeppelin-presets/utils/structs/EnumerableSet.sol";
 
 // Interface
 import "../interfaces/IEntrypoint.sol";
