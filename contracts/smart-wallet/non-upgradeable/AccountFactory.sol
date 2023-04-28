@@ -3,14 +3,15 @@ pragma solidity ^0.8.12;
 
 // Utils
 import "../../extension/Multicall.sol";
-import "@openzeppelin/contracts/proxy/Clones.sol";
-import "../../lib/TWStringSet.sol";
+import "../../openzeppelin-presets/proxy/Clones.sol";
+import "../../openzeppelin-presets/utils/structs/EnumerableSet.sol";
 
 // Interface
-import "./../interfaces/IAccountFactory.sol";
+import "../interfaces/IEntrypoint.sol";
+import "../interfaces/IAccountFactory.sol";
 
 // Smart wallet implementation
-import "./Account.sol";
+import { Account } from "./Account.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -22,7 +23,7 @@ import "./Account.sol";
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract AccountFactory is IAccountFactory, Multicall {
-    using TWStringSet for TWStringSet.Set;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     /*///////////////////////////////////////////////////////////////
                                 State
@@ -30,22 +31,25 @@ contract AccountFactory is IAccountFactory, Multicall {
 
     Account private immutable _accountImplementation;
 
+    mapping(address => EnumerableSet.AddressSet) private accountsOfSigner;
+    mapping(address => EnumerableSet.AddressSet) private signersOfAccount;
+
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint) {
-        _accountImplementation = new Account(_entrypoint);
+        _accountImplementation = new Account(_entrypoint, address(this));
     }
 
     /*///////////////////////////////////////////////////////////////
                         External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Deploys a new Account with the given admin and accountId used as salt.
-    function createAccount(address _admin, string memory _accountId) external returns (address) {
+    /// @notice Deploys a new Account for admin.
+    function createAccount(address _admin) external returns (address) {
         address impl = address(_accountImplementation);
-        bytes32 salt = keccak256(abi.encode(_accountId));
+        bytes32 salt = keccak256(abi.encode(_admin));
         address account = Clones.predictDeterministicAddress(impl, salt);
 
         if (account.code.length > 0) {
@@ -56,9 +60,29 @@ contract AccountFactory is IAccountFactory, Multicall {
 
         Account(payable(account)).initialize(_admin);
 
-        emit AccountCreated(account, _admin, _accountId);
+        emit AccountCreated(account, _admin);
 
         return account;
+    }
+
+    /// @notice Callback function for an Account to register its signers.
+    function addSigner(address _signer) external {
+        address account = msg.sender;
+
+        accountsOfSigner[_signer].add(account);
+        signersOfAccount[account].add(_signer);
+
+        emit SignerAdded(account, _signer);
+    }
+
+    /// @notice Callback function for an Account to un-register its signers.
+    function removeSigner(address _signer) external {
+        address account = msg.sender;
+
+        accountsOfSigner[_signer].remove(account);
+        signersOfAccount[account].remove(_signer);
+
+        emit SignerRemoved(account, _signer);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -70,9 +94,19 @@ contract AccountFactory is IAccountFactory, Multicall {
         return address(_accountImplementation);
     }
 
-    /// @notice Returns the address of an Account that would be deployed with the given accountId as salt.
-    function getAddress(string memory _accountId) public view returns (address) {
-        bytes32 salt = keccak256(abi.encode(_accountId));
+    /// @notice Returns the address of an Account that would be deployed with the given admin signer.
+    function getAddress(address _adminSigner) public view returns (address) {
+        bytes32 salt = keccak256(abi.encode(_adminSigner));
         return Clones.predictDeterministicAddress(address(_accountImplementation), salt);
+    }
+
+    /// @notice Returns all signers of an account.
+    function getSignersOfAccount(address account) external view returns (address[] memory signers) {
+        return signersOfAccount[account].values();
+    }
+
+    /// @notice Returns all accounts that the given address is a signer of.
+    function getAccountsOfSigner(address signer) external view returns (address[] memory accounts) {
+        return accountsOfSigner[signer].values();
     }
 }

@@ -18,6 +18,7 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
+import "./AccountFactory.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -45,6 +46,9 @@ contract Account is
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
 
+    /// @notice EIP 4337 factory for this contract.
+    address public immutable factory;
+
     /// @notice EIP 4337 Entrypoint contract.
     IEntryPoint private immutable entrypointContract;
 
@@ -55,7 +59,8 @@ contract Account is
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
-    constructor(IEntryPoint _entrypoint) {
+    constructor(IEntryPoint _entrypoint, address _factory) {
+        factory = _factory;
         entrypointContract = _entrypoint;
     }
 
@@ -165,6 +170,24 @@ contract Account is
 
         if (!isValidSigner(signer)) return SIG_VALIDATION_FAILED;
         return 0;
+    }
+
+    /// @notice Registers a signer in the factory.
+    function _setupRole(bytes32 role, address account) internal virtual override {
+        super._setupRole(role, account);
+
+        if (role == SIGNER_ROLE && factory.code.length > 0) {
+            AccountFactory(factory).addSigner(account);
+        }
+    }
+
+    /// @notice Un-registers a signer in the factory.
+    function _revokeRole(bytes32 role, address account) internal virtual override {
+        super._revokeRole(role, account);
+
+        if (role == SIGNER_ROLE && factory.code.length > 0) {
+            AccountFactory(factory).removeSigner(account);
+        }
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.

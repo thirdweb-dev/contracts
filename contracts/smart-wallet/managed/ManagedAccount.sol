@@ -14,7 +14,7 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "./AccountCore.sol";
+import "../utils/AccountCore.sol";
 import "lib/dynamic-contracts/src/core/Router.sol";
 
 contract ManagedAccount is AccountCore, Router {
@@ -32,7 +32,7 @@ contract ManagedAccount is AccountCore, Router {
     receive() external payable virtual override(Router, AccountCore) {}
 
     /// @notice Returns the implementation contract address for a given function signature.
-    function getImplementationForFunction(bytes4) public view virtual override returns (address) {
-        return factory;
+    function getImplementationForFunction(bytes4 _functionSelector) public view virtual override returns (address) {
+        return Router(payable(factory)).getImplementationForFunction(_functionSelector);
     }
 }

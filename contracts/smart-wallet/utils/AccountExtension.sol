@@ -14,6 +14,8 @@ import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 
+import "../interfaces/IAccountFactory.sol";
+
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
 // $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
@@ -32,6 +34,9 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
 
+    /// @notice EIP 4337 factory for this contract.
+    address public immutable factory;
+
     /// @notice EIP 4337 Entrypoint contract.
     address private immutable entrypointContract;
 
@@ -42,7 +47,8 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
-    constructor(address _entrypoint) {
+    constructor(address _entrypoint, address _factory) {
+        factory = _factory;
         entrypointContract = _entrypoint;
     }
 
@@ -113,5 +119,23 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    /// @notice Registers a signer in the factory.
+    function _setupRole(bytes32 role, address account) internal virtual override {
+        super._setupRole(role, account);
+
+        if (role == SIGNER_ROLE && factory.code.length > 0) {
+            IAccountFactory(factory).addSigner(account);
+        }
+    }
+
+    /// @notice Un-registers a signer in the factory.
+    function _revokeRole(bytes32 role, address account) internal virtual override {
+        super._revokeRole(role, account);
+
+        if (role == SIGNER_ROLE && factory.code.length > 0) {
+            IAccountFactory(factory).removeSigner(account);
+        }
     }
 }
