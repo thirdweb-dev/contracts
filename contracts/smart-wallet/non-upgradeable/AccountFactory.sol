@@ -31,7 +31,6 @@ contract AccountFactory is IAccountFactory, Multicall {
 
     Account private immutable _accountImplementation;
 
-    mapping(address => address) private accountAdmin;
     mapping(address => EnumerableSet.AddressSet) private accountsOfSigner;
     mapping(address => EnumerableSet.AddressSet) private signersOfAccount;
 
@@ -61,8 +60,6 @@ contract AccountFactory is IAccountFactory, Multicall {
 
         Account(payable(account)).initialize(_admin);
 
-        accountAdmin[account] = _admin;
-
         emit AccountCreated(account, _admin);
 
         return account;
@@ -71,7 +68,6 @@ contract AccountFactory is IAccountFactory, Multicall {
     /// @notice Callback function for an Account to register its signers.
     function addSigner(address _signer) external {
         address account = msg.sender;
-        require(accountAdmin[account] != address(0), "AccountFactory: invalid caller.");
 
         accountsOfSigner[_signer].add(account);
         signersOfAccount[account].add(_signer);
@@ -82,7 +78,6 @@ contract AccountFactory is IAccountFactory, Multicall {
     /// @notice Callback function for an Account to un-register its signers.
     function removeSigner(address _signer) external {
         address account = msg.sender;
-        require(accountAdmin[account] != address(0), "AccountFactory: invalid caller.");
 
         accountsOfSigner[_signer].remove(account);
         signersOfAccount[account].remove(_signer);
@@ -105,9 +100,9 @@ contract AccountFactory is IAccountFactory, Multicall {
         return Clones.predictDeterministicAddress(address(_accountImplementation), salt);
     }
 
-    /// @notice Returns the admin and all signers of an account.
-    function getSignersOfAccount(address account) external view returns (address admin, address[] memory signers) {
-        return (accountAdmin[account], signersOfAccount[account].values());
+    /// @notice Returns all signers of an account.
+    function getSignersOfAccount(address account) external view returns (address[] memory signers) {
+        return signersOfAccount[account].values();
     }
 
     /// @notice Returns all accounts that the given address is a signer of.

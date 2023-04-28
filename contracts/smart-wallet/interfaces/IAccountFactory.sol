@@ -38,8 +38,8 @@ interface IAccountFactory {
     /// @notice Returns the address of an Account that would be deployed with the given admin signer.
     function getAddress(address adminSigner) external view returns (address);
 
-    /// @notice Returns the admin and all signers of an account.
-    function getSignersOfAccount(address account) external view returns (address admin, address[] memory signers);
+    /// @notice Returns all signers of an account.
+    function getSignersOfAccount(address account) external view returns (address[] memory signers);
 
     /// @notice Returns all accounts that the given address is a signer of.
     function getAccountsOfSigner(address signer) external view returns (address[] memory accounts);
