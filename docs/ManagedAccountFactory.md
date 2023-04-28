@@ -60,13 +60,29 @@ function addExtension(IExtension.Extension _extension) external nonpayable
 |---|---|---|
 | _extension | IExtension.Extension | undefined |
 
+### addSigner
+
+```solidity
+function addSigner(address _signer) external nonpayable
+```
+
+Callback function for an Account to register its signers.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+
 ### createAccount
 
 ```solidity
-function createAccount(address _admin, string _accountId) external nonpayable returns (address)
+function createAccount(address _admin) external nonpayable returns (address)
 ```
 
-Deploys a new Account with the given admin and accountId used as salt.
+Deploys a new Account for admin.
 
 
 
@@ -75,7 +91,6 @@ Deploys a new Account with the given admin and accountId used as salt.
 | Name | Type | Description |
 |---|---|---|
 | _admin | address | undefined |
-| _accountId | string | undefined |
 
 #### Returns
 
@@ -100,13 +115,13 @@ function defaultExtension() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### getAddress
+### getAccountsOfSigner
 
 ```solidity
-function getAddress(string _accountId) external view returns (address)
+function getAccountsOfSigner(address signer) external view returns (address[] accounts)
 ```
 
-Returns the address of an Account that would be deployed with the given accountId as salt.
+Returns all accounts that the given address is a signer of.
 
 
 
@@ -114,7 +129,29 @@ Returns the address of an Account that would be deployed with the given accountI
 
 | Name | Type | Description |
 |---|---|---|
-| _accountId | string | undefined |
+| signer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| accounts | address[] | undefined |
+
+### getAddress
+
+```solidity
+function getAddress(address _adminSigner) external view returns (address)
+```
+
+Returns the address of an Account that would be deployed with the given admin signer.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _adminSigner | address | undefined |
 
 #### Returns
 
@@ -316,6 +353,29 @@ Returns total number of accounts that have a role.
 |---|---|---|
 | count | uint256 |   Total number of accounts that have `role` |
 
+### getSignersOfAccount
+
+```solidity
+function getSignersOfAccount(address account) external view returns (address admin, address[] signers)
+```
+
+Returns the admin and all signers of an account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| admin | address | undefined |
+| signers | address[] | undefined |
+
 ### grantRole
 
 ```solidity
@@ -417,6 +477,22 @@ function removeExtension(string _extensionName) external nonpayable
 |---|---|---|
 | _extensionName | string | undefined |
 
+### removeSigner
+
+```solidity
+function removeSigner(address _signer) external nonpayable
+```
+
+Callback function for an Account to un-register its signers.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+
 ### renounceRole
 
 ```solidity
@@ -496,7 +572,7 @@ function updateExtension(IExtension.Extension _extension) external nonpayable
 ### AccountCreated
 
 ```solidity
-event AccountCreated(address indexed account, address indexed accountAdmin, string accountId)
+event AccountCreated(address indexed account, address indexed accountAdmin)
 ```
 
 Emitted when a new Account is created.
@@ -509,7 +585,6 @@ Emitted when a new Account is created.
 |---|---|---|
 | account `indexed` | address | undefined |
 | accountAdmin `indexed` | address | undefined |
-| accountId  | string | undefined |
 
 ### ExtensionAdded
 
@@ -619,6 +694,40 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 | role `indexed` | bytes32 | undefined |
 | account `indexed` | address | undefined |
 | sender `indexed` | address | undefined |
+
+### SignerAdded
+
+```solidity
+event SignerAdded(address indexed account, address indexed signer)
+```
+
+Emitted when a new signer is added to an Account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account `indexed` | address | undefined |
+| signer `indexed` | address | undefined |
+
+### SignerRemoved
+
+```solidity
+event SignerRemoved(address indexed account, address indexed signer)
+```
+
+Emitted when a new signer is added to an Account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account `indexed` | address | undefined |
+| signer `indexed` | address | undefined |
 
 
 

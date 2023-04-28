@@ -1012,6 +1012,22 @@ function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) exte
 | _tokenId | uint256 | undefined |
 | _saleRecipient | address | undefined |
 
+### subscribeToRegistry
+
+```solidity
+function subscribeToRegistry(address _subscription) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _subscription | address | undefined |
+
 ### supportsInterface
 
 ```solidity

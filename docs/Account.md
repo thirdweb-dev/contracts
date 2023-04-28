@@ -125,6 +125,23 @@ Executes a sequence transaction (called directly from an admin, or by entryPoint
 | _value | uint256[] | undefined |
 | _calldata | bytes[] | undefined |
 
+### factory
+
+```solidity
+function factory() external view returns (address)
+```
+
+EIP 4337 factory for this contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### getDeposit
 
 ```solidity

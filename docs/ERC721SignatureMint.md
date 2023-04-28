@@ -612,6 +612,22 @@ Updates default royalty recipient and bps for a particular token.
 | _recipient | address | Address to be set as royalty recipient for given token Id. |
 | _bps | uint256 | Updated royalty bps for the token Id. |
 
+### subscribeToRegistry
+
+```solidity
+function subscribeToRegistry(address _subscription) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _subscription | address | undefined |
+
 ### supportsInterface
 
 ```solidity
