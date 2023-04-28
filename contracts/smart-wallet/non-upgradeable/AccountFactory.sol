@@ -47,8 +47,8 @@ contract AccountFactory is IAccountFactory, Multicall {
                         External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Deploys a new Account with the given admin and accountId used as salt.
-    function createAccount(address _admin, string memory _accountName) external returns (address) {
+    /// @notice Deploys a new Account for admin.
+    function createAccount(address _admin) external returns (address) {
         address impl = address(_accountImplementation);
         bytes32 salt = keccak256(abi.encode(_admin));
         address account = Clones.predictDeterministicAddress(impl, salt);
@@ -63,7 +63,7 @@ contract AccountFactory is IAccountFactory, Multicall {
 
         accountAdmin[account] = _admin;
 
-        emit AccountCreated(account, _admin, keccak256(abi.encode(_accountName)), _accountName);
+        emit AccountCreated(account, _admin);
 
         return account;
     }

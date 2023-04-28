@@ -50,12 +50,7 @@ contract AccountTest is BaseTest {
     address private sender = 0xBB956D56140CA3f3060986586A2631922a4B347E;
     address payable private beneficiary = payable(address(0x45654));
 
-    event AccountCreated(
-        address indexed account,
-        address indexed accountAdmin,
-        bytes32 indexed accountId,
-        string accountName
-    );
+    event AccountCreated(address indexed account, address indexed accountAdmin);
 
     function _setupUserOp(
         uint256 _signerPKey,
@@ -156,17 +151,13 @@ contract AccountTest is BaseTest {
     /// @dev Create an account by directly calling the factory.
     function test_state_createAccount_viaFactory() public {
         vm.expectEmit(true, true, false, true);
-        emit AccountCreated(sender, accountAdmin, keccak256(abi.encode("displayName")), "displayName");
-        accountFactory.createAccount(accountAdmin, "displayName");
+        emit AccountCreated(sender, accountAdmin);
+        accountFactory.createAccount(accountAdmin);
     }
 
     /// @dev Create an account via Entrypoint.
     function test_state_createAccount_viaEntrypoint() public {
-        bytes memory initCallData = abi.encodeWithSignature(
-            "createAccount(address,string)",
-            accountAdmin,
-            "displayName"
-        );
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address)", accountAdmin);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
@@ -177,8 +168,8 @@ contract AccountTest is BaseTest {
             bytes("")
         );
 
-        vm.expectEmit(true, true, true, true);
-        emit AccountCreated(sender, accountAdmin, keccak256(abi.encode("displayName")), "displayName");
+        vm.expectEmit(true, true, false, true);
+        emit AccountCreated(sender, accountAdmin);
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
     }
 
@@ -187,11 +178,7 @@ contract AccountTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function _setup_executeTransaction() internal {
-        bytes memory initCallData = abi.encodeWithSignature(
-            "createAccount(address,string)",
-            accountAdmin,
-            "displayName"
-        );
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address)", accountAdmin);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(

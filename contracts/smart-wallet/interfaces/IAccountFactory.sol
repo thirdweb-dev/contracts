@@ -7,12 +7,7 @@ interface IAccountFactory {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Emitted when a new Account is created.
-    event AccountCreated(
-        address indexed account,
-        address indexed accountAdmin,
-        bytes32 indexed accountId,
-        string accountName
-    );
+    event AccountCreated(address indexed account, address indexed accountAdmin);
 
     /// @notice Emitted when a new signer is added to an Account.
     event SignerAdded(address indexed account, address indexed signer);
@@ -24,8 +19,8 @@ interface IAccountFactory {
                         Extension Functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Deploys a new Account with the given admin and accountId used as salt.
-    function createAccount(address admin, string memory accountName) external returns (address account);
+    /// @notice Deploys a new Account for admin.
+    function createAccount(address admin) external returns (address account);
 
     /// @notice Callback function for an Account to register its signers.
     function addSigner(address signer) external;
