@@ -20,7 +20,7 @@ interface IAccountFactory {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Deploys a new Account for admin.
-    function createAccount(address admin) external returns (address account);
+    function createAccount(address admin, bytes calldata _data) external returns (address account);
 
     /// @notice Callback function for an Account to register its signers.
     function addSigner(address signer) external;
