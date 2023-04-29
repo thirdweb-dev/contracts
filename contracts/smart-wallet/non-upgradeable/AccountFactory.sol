@@ -69,8 +69,12 @@ contract AccountFactory is IAccountFactory, Multicall {
     function addSigner(address _signer) external {
         address account = msg.sender;
 
-        accountsOfSigner[_signer].add(account);
-        signersOfAccount[account].add(_signer);
+        bool isAlreadyAccount = accountsOfSigner[_signer].add(account);
+        bool isAlreadySigner = signersOfAccount[account].add(_signer);
+
+        if (!isAlreadyAccount || !isAlreadySigner) {
+            revert("AccountFactory: signer already added");
+        }
 
         emit SignerAdded(account, _signer);
     }
@@ -79,8 +83,12 @@ contract AccountFactory is IAccountFactory, Multicall {
     function removeSigner(address _signer) external {
         address account = msg.sender;
 
-        accountsOfSigner[_signer].remove(account);
-        signersOfAccount[account].remove(_signer);
+        bool isAccount = accountsOfSigner[_signer].remove(account);
+        bool isSigner = signersOfAccount[account].remove(_signer);
+
+        if (!isAccount || !isSigner) {
+            revert("AccountFactory: signer not found");
+        }
 
         emit SignerRemoved(account, _signer);
     }
