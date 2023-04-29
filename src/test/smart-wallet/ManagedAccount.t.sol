@@ -31,7 +31,12 @@ contract Number {
 }
 
 contract NFTRejector {
-    function onERC721Received(address, address, uint256, bytes memory) public virtual returns (bytes4) {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) public virtual returns (bytes4) {
         revert("NFTs not accepted");
     }
 }
