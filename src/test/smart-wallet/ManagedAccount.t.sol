@@ -163,12 +163,12 @@ contract ManagedAccountTest is BaseTest {
     function test_state_createAccount_viaFactory() public {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
-        accountFactory.createAccount(accountAdmin, "");
+        accountFactory.createAccount(accountAdmin, bytes(""));
     }
 
     /// @dev Create an account via Entrypoint.
     function test_state_createAccount_viaEntrypoint() public {
-        bytes memory initCallData = abi.encodeWithSignature("createAccount(address, bytes)", accountAdmin, "");
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
@@ -189,7 +189,7 @@ contract ManagedAccountTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function _setup_executeTransaction() internal {
-        bytes memory initCallData = abi.encodeWithSignature("createAccount(address, bytes)", accountAdmin, "");
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(

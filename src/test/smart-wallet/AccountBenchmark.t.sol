@@ -86,7 +86,7 @@ contract AccountBenchmarkTest is BaseTest {
         );
 
         // build UserOp
-        bytes memory initCallData = abi.encodeWithSignature("createAccount(address)", walletSigner);
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", walletSigner, bytes(""));
 
         UserOperation memory op = UserOperation({
             sender: sender,
@@ -138,7 +138,7 @@ contract AccountBenchmarkTest is BaseTest {
 
     /// @dev Create an account by directly calling the factory.
     function test_benchmark_createAccount_directWithFactory() public {
-        accountFactory.createAccount(address(0x456));
+        accountFactory.createAccount(address(0x456), bytes(""));
     }
 
     /// @dev Create an account when performing the first transaction from the account (all via Entrypoint).
