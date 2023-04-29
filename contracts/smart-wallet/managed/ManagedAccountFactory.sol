@@ -32,7 +32,7 @@ contract ManagedAccountFactory is IAccountFactory, Multicall, PermissionsEnumera
                                 State
     //////////////////////////////////////////////////////////////*/
 
-    ManagedAccount private immutable _accountImplementation;
+    ManagedAccount internal immutable _accountImplementation;
 
     mapping(address => EnumerableSet.AddressSet) private accountsOfSigner;
     mapping(address => EnumerableSet.AddressSet) private signersOfAccount;

@@ -29,7 +29,7 @@ contract AccountFactory is IAccountFactory, Multicall {
                                 State
     //////////////////////////////////////////////////////////////*/
 
-    Account private immutable _accountImplementation;
+    Account internal immutable _accountImplementation;
 
     mapping(address => EnumerableSet.AddressSet) private accountsOfSigner;
     mapping(address => EnumerableSet.AddressSet) private signersOfAccount;

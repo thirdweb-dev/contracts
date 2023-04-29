@@ -29,7 +29,7 @@ contract DynamicAccountFactory is IAccountFactory, Multicall {
                                 State
     //////////////////////////////////////////////////////////////*/
 
-    DynamicAccount private immutable _accountImplementation;
+    DynamicAccount internal immutable _accountImplementation;
 
     mapping(address => EnumerableSet.AddressSet) private accountsOfSigner;
     mapping(address => EnumerableSet.AddressSet) private signersOfAccount;
