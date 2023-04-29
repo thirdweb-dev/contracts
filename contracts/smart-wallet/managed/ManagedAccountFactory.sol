@@ -54,7 +54,7 @@ contract ManagedAccountFactory is IAccountFactory, Multicall, PermissionsEnumera
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Deploys a new Account for admin.
-    function createAccount(address _admin) external returns (address) {
+    function createAccount(address _admin) external virtual returns (address) {
         address impl = address(_accountImplementation);
         bytes32 salt = keccak256(abi.encode(_admin));
         address account = Clones.predictDeterministicAddress(impl, salt);
