@@ -54,7 +54,7 @@ contract DynamicAccountTest is BaseTest {
     uint256 private nonSignerPKey = 300;
     address private nonSigner;
 
-    bytes internal data = "";
+    bytes internal data = bytes("");
 
     // UserOp terminology: `sender` is the smart wallet.
     address private sender = 0x13123A79C89069aF0f6763dE5e25E26703477e79;

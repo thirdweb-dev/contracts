@@ -25,7 +25,7 @@ contract ManagedAccount is AccountCore, Router {
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin) public virtual override initializer {
+    function initialize(address _defaultAdmin, bytes calldata _data) public virtual override initializer {
         factory = msg.sender;
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
