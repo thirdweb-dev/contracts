@@ -20,7 +20,9 @@ import "lib/dynamic-contracts/src/core/Router.sol";
 contract ManagedAccount is AccountCore, Router {
     address public factory;
 
-    constructor(IEntryPoint _entrypoint) AccountCore(_entrypoint) {}
+    constructor(IEntryPoint _entrypoint) AccountCore(_entrypoint) {
+        _disableInitializers();
+    }
 
     /// @notice Initializes the smart contract wallet.
     function initialize(address _defaultAdmin) public virtual override initializer {

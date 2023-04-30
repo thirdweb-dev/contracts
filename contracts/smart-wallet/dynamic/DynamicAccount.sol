@@ -34,10 +34,11 @@ contract DynamicAccount is AccountCore, BaseRouter {
     receive() external payable override(Router, AccountCore) {}
 
     constructor(IEntryPoint _entrypoint, address _defaultExtension) AccountCore(_entrypoint) {
+        _disableInitializers();
         defaultExtension = _defaultExtension;
     }
 
-    function initialize(address _defaultAdmin) public override initializer {
+    function initialize(address _defaultAdmin) public virtual override initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(EXTENSION_ADMIN_ROLE, _defaultAdmin);
     }

@@ -60,6 +60,7 @@ contract Account is
     receive() external payable virtual {}
 
     constructor(IEntryPoint _entrypoint, address _factory) {
+        _disableInitializers();
         factory = _factory;
         entrypointContract = _entrypoint;
     }
@@ -110,11 +111,7 @@ contract Account is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(
-        address _target,
-        uint256 _value,
-        bytes calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
+    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual onlyAdminOrEntrypoint {
         _call(_target, _value, _calldata);
     }
 
@@ -145,11 +142,7 @@ contract Account is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Calls a target contract and reverts if it fails.
-    function _call(
-        address _target,
-        uint256 value,
-        bytes memory _calldata
-    ) internal {
+    function _call(address _target, uint256 value, bytes memory _calldata) internal {
         (bool success, bytes memory result) = _target.call{ value: value }(_calldata);
         if (!success) {
             assembly {
@@ -159,12 +152,10 @@ contract Account is
     }
 
     /// @notice Validates the signature of a user operation.
-    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
-        internal
-        virtual
-        override
-        returns (uint256 validationData)
-    {
+    function _validateSignature(
+        UserOperation calldata userOp,
+        bytes32 userOpHash
+    ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         address signer = hash.recover(userOp.signature);
 

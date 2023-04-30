@@ -31,12 +31,7 @@ contract Number {
 }
 
 contract NFTRejector {
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes memory
-    ) public virtual returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes memory) public virtual returns (bytes4) {
         revert("NFTs not accepted");
     }
 }
@@ -51,6 +46,7 @@ contract ManagedAccountTest is BaseTest {
 
     // Test params
     address private factoryDeployer = address(0x9876);
+    bytes internal data = "";
 
     uint256 private accountAdminPKey = 100;
     address private accountAdmin;
@@ -168,12 +164,12 @@ contract ManagedAccountTest is BaseTest {
     function test_state_createAccount_viaFactory() public {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
-        accountFactory.createAccount(accountAdmin, bytes(""));
+        accountFactory.createAccount(accountAdmin, data);
     }
 
     /// @dev Create an account via Entrypoint.
     function test_state_createAccount_viaEntrypoint() public {
-        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
@@ -194,7 +190,7 @@ contract ManagedAccountTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function _setup_executeTransaction() internal {
-        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
