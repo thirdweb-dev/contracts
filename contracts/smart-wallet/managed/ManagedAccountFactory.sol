@@ -33,9 +33,9 @@ contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, Bas
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(
-        IEntryPoint _entrypoint
-    ) BaseAccountFactory(BaseAccount(payable(address(new ManagedAccount(_entrypoint))))) {
+    constructor(IEntryPoint _entrypoint)
+        BaseAccountFactory(BaseAccount(payable(address(new ManagedAccount(_entrypoint)))))
+    {
         defaultExtension = address(new AccountExtension(address(_entrypoint), address(this)));
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
@@ -45,7 +45,10 @@ contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, Bas
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Deploys a new Account for admin.
-    function createAccount(address _admin, bytes calldata /*_data*/) external virtual override returns (address) {
+    function createAccount(
+        address _admin,
+        bytes calldata /*_data*/
+    ) external virtual override returns (address) {
         address impl = address(_accountImplementation);
         bytes32 salt = keccak256(abi.encode(_admin));
         address account = Clones.predictDeterministicAddress(impl, salt);

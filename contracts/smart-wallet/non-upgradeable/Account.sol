@@ -66,7 +66,7 @@ contract Account is
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin) public virtual initializer {
+    function initialize(address _defaultAdmin, bytes calldata _data) public virtual initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
@@ -111,7 +111,11 @@ contract Account is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual onlyAdminOrEntrypoint {
+    function execute(
+        address _target,
+        uint256 _value,
+        bytes calldata _calldata
+    ) external virtual onlyAdminOrEntrypoint {
         _call(_target, _value, _calldata);
     }
 
@@ -142,7 +146,11 @@ contract Account is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Calls a target contract and reverts if it fails.
-    function _call(address _target, uint256 value, bytes memory _calldata) internal {
+    function _call(
+        address _target,
+        uint256 value,
+        bytes memory _calldata
+    ) internal {
         (bool success, bytes memory result) = _target.call{ value: value }(_calldata);
         if (!success) {
             assembly {
@@ -152,10 +160,12 @@ contract Account is
     }
 
     /// @notice Validates the signature of a user operation.
-    function _validateSignature(
-        UserOperation calldata userOp,
-        bytes32 userOpHash
-    ) internal virtual override returns (uint256 validationData) {
+    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
+        internal
+        virtual
+        override
+        returns (uint256 validationData)
+    {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         address signer = hash.recover(userOp.signature);
 

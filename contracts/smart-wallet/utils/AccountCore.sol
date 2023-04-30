@@ -93,10 +93,12 @@ contract AccountCore is Initializable, Multicall, BaseAccount {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Validates the signature of a user operation.
-    function _validateSignature(
-        UserOperation calldata userOp,
-        bytes32 userOpHash
-    ) internal virtual override returns (uint256 validationData) {
+    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
+        internal
+        virtual
+        override
+        returns (uint256 validationData)
+    {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         address signer = hash.recover(userOp.signature);
 
