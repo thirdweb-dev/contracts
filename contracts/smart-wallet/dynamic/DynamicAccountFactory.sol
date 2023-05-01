@@ -35,25 +35,15 @@ contract DynamicAccountFactory is BaseAccountFactory {
     {}
 
     /*///////////////////////////////////////////////////////////////
-                        External functions
+                        Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Deploys a new Account for admin.
-    function createAccount(address _admin, bytes calldata _data) external virtual override returns (address) {
-        address impl = accountImplementation;
-        bytes32 salt = keccak256(abi.encode(_admin));
-        address account = Clones.predictDeterministicAddress(impl, salt);
-
-        if (account.code.length > 0) {
-            return account;
-        }
-
-        account = Clones.cloneDeterministic(impl, salt);
-
-        DynamicAccount(payable(account)).initialize(_admin, _data);
-
-        emit AccountCreated(account, _admin);
-
-        return account;
+    /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
+    function _initializeAccount(
+        address _account,
+        address _admin,
+        bytes calldata _data
+    ) internal override {
+        DynamicAccount(payable(_account)).initialize(_admin, _data);
     }
 }

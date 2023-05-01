@@ -39,29 +39,6 @@ contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, Bas
     }
 
     /*///////////////////////////////////////////////////////////////
-                        External functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Deploys a new Account for admin.
-    function createAccount(address _admin, bytes calldata _data) external virtual override returns (address) {
-        address impl = accountImplementation;
-        bytes32 salt = keccak256(abi.encode(_admin));
-        address account = Clones.predictDeterministicAddress(impl, salt);
-
-        if (account.code.length > 0) {
-            return account;
-        }
-
-        account = Clones.cloneDeterministic(impl, salt);
-
-        ManagedAccount(payable(account)).initialize(_admin, _data);
-
-        emit AccountCreated(account, _admin);
-
-        return account;
-    }
-
-    /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
 
@@ -75,6 +52,16 @@ contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, Bas
                             Internal functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
+    function _initializeAccount(
+        address _account,
+        address _admin,
+        bytes calldata _data
+    ) internal override {
+        ManagedAccount(payable(_account)).initialize(_admin, _data);
+    }
+
+    /// @dev Returns whether an extension can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
