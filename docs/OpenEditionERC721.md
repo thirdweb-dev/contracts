@@ -1,4 +1,4 @@
-# DropERC721
+# OpenEditionERC721
 
 
 
@@ -121,23 +121,6 @@ function claimCondition() external view returns (uint256 currentStartId, uint256
 | currentStartId | uint256 | undefined |
 | count | uint256 | undefined |
 
-### contractType
-
-```solidity
-function contractType() external pure returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
 ### contractURI
 
 ```solidity
@@ -154,68 +137,6 @@ Returns the contract metadata URI.
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined |
-
-### contractVersion
-
-```solidity
-function contractVersion() external pure returns (uint8)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined |
-
-### encryptDecrypt
-
-```solidity
-function encryptDecrypt(bytes data, bytes key) external pure returns (bytes result)
-```
-
-Encrypt/decrypt data on chain.
-
-*Encrypt/decrypt given `data` with `key`. Uses inline assembly.                  See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes | Bytes of data to encrypt/decrypt. |
-| key | bytes | Secure key used by caller for encryption/decryption. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| result | bytes |  Output after encryption/decryption of given data. |
-
-### encryptedData
-
-```solidity
-function encryptedData(uint256) external view returns (bytes)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes | undefined |
 
 ### getActiveClaimConditionId
 
@@ -255,45 +176,6 @@ function getApproved(uint256 tokenId) external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### getBaseURICount
-
-```solidity
-function getBaseURICount() external view returns (uint256)
-```
-
-Returns the count of batches of NFTs.
-
-*Each batch of tokens has an in ID and an associated `baseURI`.                  See {batchIds}.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
-### getBatchIdAtIndex
-
-```solidity
-function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
-```
-
-Returns the ID for the batch of tokens the given tokenId belongs to.
-
-*See {getBaseURICount}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _index | uint256 | ID of a token. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### getClaimConditionById
 
@@ -387,29 +269,6 @@ function getPlatformFeeType() external view returns (enum IPlatformFee.PlatformF
 | Name | Type | Description |
 |---|---|---|
 | _0 | enum IPlatformFee.PlatformFeeType | undefined |
-
-### getRevealURI
-
-```solidity
-function getRevealURI(uint256 _batchId, bytes _key) external view returns (string revealedURI)
-```
-
-Returns revealed URI for a batch of NFTs.
-
-*Reveal encrypted base URI for `_batchId` with caller/admin&#39;s `_key` used for encryption.                      Reverts if there&#39;s no encrypted URI for `_batchId`.                      See {encryptDecrypt}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _batchId | uint256 | ID of the batch for which URI is being revealed. |
-| _key | bytes | Secure key used by caller/admin for encryption of baseURI. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| revealedURI | string | Decrypted base URI. |
 
 ### getRoleAdmin
 
@@ -635,28 +494,6 @@ function isApprovedForAll(address owner, address operator) external view returns
 |---|---|---|
 | _0 | bool | undefined |
 
-### isEncryptedBatch
-
-```solidity
-function isEncryptedBatch(uint256 _batchId) external view returns (bool)
-```
-
-Returns whether the relvant batch of NFTs is subject to a delayed reveal.
-
-*Returns `true` if `_batchId`&#39;s base URI is encrypted.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _batchId | uint256 | ID of a batch of NFTs. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
 ### isTrustedForwarder
 
 ```solidity
@@ -679,54 +516,13 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 |---|---|---|
 | _0 | bool | undefined |
 
-### lazyMint
-
-```solidity
-function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _data) external nonpayable returns (uint256 batchId)
-```
-
-
-
-*Lets an account with `MINTER_ROLE` lazy mint &#39;n&#39; NFTs.       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _amount | uint256 | undefined |
-| _baseURIForTokens | string | undefined |
-| _data | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| batchId | uint256 | undefined |
-
-### maxTotalSupply
-
-```solidity
-function maxTotalSupply() external view returns (uint256)
-```
-
-
-
-*Global max total supply of NFTs.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
-
 ### multicall
 
 ```solidity
 function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 ```
 
-
+Receives and executes a batch of function calls on this contract.
 
 *Receives and executes a batch of function calls on this contract.*
 
@@ -734,13 +530,13 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 
 | Name | Type | Description |
 |---|---|---|
-| data | bytes[] | undefined |
+| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| results | bytes[] | undefined |
+| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
 ### name
 
@@ -882,29 +678,6 @@ Revokes role from the account.
 |---|---|---|
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
-
-### reveal
-
-```solidity
-function reveal(uint256 _index, bytes _key) external nonpayable returns (string revealedURI)
-```
-
-
-
-*Lets an account with `MINTER_ROLE` reveal the URI for a batch of &#39;delayed-reveal&#39; NFTs.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _index | uint256 | undefined |
-| _key | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| revealedURI | string | undefined |
 
 ### revokeRole
 
@@ -1068,22 +841,6 @@ Lets a module admin set a flat fee on primary sales.
 | _platformFeeRecipient | address | undefined |
 | _flatFee | uint256 | undefined |
 
-### setMaxTotalSupply
-
-```solidity
-function setMaxTotalSupply(uint256 _maxTotalSupply) external nonpayable
-```
-
-
-
-*Lets a contract admin set the global maximum supply for collection&#39;s NFTs.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _maxTotalSupply | uint256 | undefined |
-
 ### setOperatorRestriction
 
 ```solidity
@@ -1182,6 +939,42 @@ Updates default royalty recipient and bps for a particular token.
 | _tokenId | uint256 | undefined |
 | _recipient | address | Address to be set as royalty recipient for given token Id. |
 | _bps | uint256 | Updated royalty bps for the token Id. |
+
+### setSharedMetadata
+
+```solidity
+function setSharedMetadata(ISharedMetadata.SharedMetadataInfo _metadata) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _metadata | ISharedMetadata.SharedMetadataInfo | undefined |
+
+### sharedMetadata
+
+```solidity
+function sharedMetadata() external view returns (string name, string description, string imageURI, string animationURI)
+```
+
+Token metadata information
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| name | string | undefined |
+| description | string | undefined |
+| imageURI | string | undefined |
+| animationURI | string | undefined |
 
 ### subscribeToRegistry
 
@@ -1463,22 +1256,6 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-### MaxTotalSupplyUpdated
-
-```solidity
-event MaxTotalSupplyUpdated(uint256 maxTotalSupply)
-```
-
-
-
-*Emitted when the global max supply of tokens is updated.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| maxTotalSupply  | uint256 | undefined |
-
 ### OperatorRestriction
 
 ```solidity
@@ -1633,13 +1410,13 @@ event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient,
 | royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
-### TokenURIRevealed
+### SharedMetadataUpdated
 
 ```solidity
-event TokenURIRevealed(uint256 indexed index, string revealedURI)
+event SharedMetadataUpdated(string name, string description, string imageURI, string animationURI)
 ```
 
-
+Emitted when shared metadata is lazy minted.
 
 
 
@@ -1647,8 +1424,10 @@ event TokenURIRevealed(uint256 indexed index, string revealedURI)
 
 | Name | Type | Description |
 |---|---|---|
-| index `indexed` | uint256 | undefined |
-| revealedURI  | string | undefined |
+| name  | string | undefined |
+| description  | string | undefined |
+| imageURI  | string | undefined |
+| animationURI  | string | undefined |
 
 ### TokensClaimed
 
@@ -1669,25 +1448,6 @@ Emitted when tokens are claimed via `claim`.
 | receiver `indexed` | address | undefined |
 | startTokenId  | uint256 | undefined |
 | quantityClaimed  | uint256 | undefined |
-
-### TokensLazyMinted
-
-```solidity
-event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| startTokenId `indexed` | uint256 | undefined |
-| endTokenId  | uint256 | undefined |
-| baseURI  | string | undefined |
-| encryptedBaseURI  | bytes | undefined |
 
 ### Transfer
 

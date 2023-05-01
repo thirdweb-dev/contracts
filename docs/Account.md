@@ -309,7 +309,7 @@ Checks whether an account has a particular role;                  role restricti
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin) external nonpayable
+function initialize(address _defaultAdmin, bytes) external nonpayable
 ```
 
 Initializes the smart contract wallet.
@@ -321,6 +321,7 @@ Initializes the smart contract wallet.
 | Name | Type | Description |
 |---|---|---|
 | _defaultAdmin | address | undefined |
+| _1 | bytes | undefined |
 
 ### isValidSigner
 

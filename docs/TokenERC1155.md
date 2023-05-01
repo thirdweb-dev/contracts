@@ -217,7 +217,7 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 ### getPlatformFeeType
 
 ```solidity
-function getPlatformFeeType() external view returns (enum TokenERC1155.PlatformFeeType)
+function getPlatformFeeType() external view returns (enum IPlatformFee.PlatformFeeType)
 ```
 
 
@@ -229,7 +229,7 @@ function getPlatformFeeType() external view returns (enum TokenERC1155.PlatformF
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | enum TokenERC1155.PlatformFeeType | undefined |
+| _0 | enum IPlatformFee.PlatformFeeType | undefined |
 
 ### getRoleAdmin
 
@@ -830,7 +830,7 @@ function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeB
 ### setPlatformFeeType
 
 ```solidity
-function setPlatformFeeType(enum TokenERC1155.PlatformFeeType _feeType) external nonpayable
+function setPlatformFeeType(enum IPlatformFee.PlatformFeeType _feeType) external nonpayable
 ```
 
 
@@ -841,7 +841,7 @@ function setPlatformFeeType(enum TokenERC1155.PlatformFeeType _feeType) external
 
 | Name | Type | Description |
 |---|---|---|
-| _feeType | enum TokenERC1155.PlatformFeeType | undefined |
+| _feeType | enum IPlatformFee.PlatformFeeType | undefined |
 
 ### setPrimarySaleRecipient
 
@@ -1047,7 +1047,7 @@ event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee)
 
 
 
-*Emitted when flat fee on primary sales is updated.*
+
 
 #### Parameters
 
@@ -1125,18 +1125,18 @@ event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platf
 ### PlatformFeeTypeUpdated
 
 ```solidity
-event PlatformFeeTypeUpdated(enum TokenERC1155.PlatformFeeType feeType)
+event PlatformFeeTypeUpdated(enum IPlatformFee.PlatformFeeType feeType)
 ```
 
 
 
-*Emitted when platform fee type is updated.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| feeType  | enum TokenERC1155.PlatformFeeType | undefined |
+| feeType  | enum IPlatformFee.PlatformFeeType | undefined |
 
 ### PrimarySaleRecipientUpdated
 
