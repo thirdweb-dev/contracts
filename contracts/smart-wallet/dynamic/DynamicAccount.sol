@@ -38,7 +38,7 @@ contract DynamicAccount is AccountCore, BaseRouter {
         defaultExtension = _defaultExtension;
     }
 
-    function initialize(address _defaultAdmin, bytes calldata _data) public virtual override initializer {
+    function initialize(address _defaultAdmin, bytes calldata) public virtual override initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(EXTENSION_ADMIN_ROLE, _defaultAdmin);
     }

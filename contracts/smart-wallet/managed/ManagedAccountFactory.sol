@@ -43,11 +43,8 @@ contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, Bas
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Deploys a new Account for admin.
-    function createAccount(
-        address _admin,
-        bytes calldata /*_data*/
-    ) external virtual override returns (address) {
-        address impl = address(accountImplementation);
+    function createAccount(address _admin, bytes calldata _data) external virtual override returns (address) {
+        address impl = accountImplementation;
         bytes32 salt = keccak256(abi.encode(_admin));
         address account = Clones.predictDeterministicAddress(impl, salt);
 
@@ -57,7 +54,7 @@ contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, Bas
 
         account = Clones.cloneDeterministic(impl, salt);
 
-        ManagedAccount(payable(account)).initialize(_admin, bytes(""));
+        ManagedAccount(payable(account)).initialize(_admin, _data);
 
         emit AccountCreated(account, _admin);
 

@@ -66,7 +66,7 @@ contract Account is
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin, bytes calldata _data) public virtual initializer {
+    function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
