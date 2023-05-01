@@ -37,7 +37,7 @@ contract AccountFactory is BaseAccountFactory {
         address _admin,
         bytes calldata /*_data*/
     ) external virtual override returns (address) {
-        address impl = address(_accountImplementation);
+        address impl = address(accountImplementation);
         bytes32 salt = keccak256(abi.encode(_admin));
         address account = Clones.predictDeterministicAddress(impl, salt);
 
