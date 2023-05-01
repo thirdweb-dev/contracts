@@ -46,7 +46,7 @@ Callback function for an Account to register its signers.
 ### createAccount
 
 ```solidity
-function createAccount(address admin) external nonpayable returns (address account)
+function createAccount(address admin, bytes _data) external nonpayable returns (address account)
 ```
 
 Deploys a new Account for admin.
@@ -58,6 +58,7 @@ Deploys a new Account for admin.
 | Name | Type | Description |
 |---|---|---|
 | admin | address | undefined |
+| _data | bytes | undefined |
 
 #### Returns
 
@@ -112,10 +113,10 @@ Returns the address of an Account that would be deployed with the given admin si
 ### getSignersOfAccount
 
 ```solidity
-function getSignersOfAccount(address account) external view returns (address admin, address[] signers)
+function getSignersOfAccount(address account) external view returns (address[] signers)
 ```
 
-Returns the admin and all signers of an account.
+Returns all signers of an account.
 
 
 
@@ -129,7 +130,6 @@ Returns the admin and all signers of an account.
 
 | Name | Type | Description |
 |---|---|---|
-| admin | address | undefined |
 | signers | address[] | undefined |
 
 ### removeSigner

@@ -1198,6 +1198,23 @@ event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 | newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
 
+### FlatPlatformFeeUpdated
+
+```solidity
+event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeRecipient  | address | undefined |
+| flatFee  | uint256 | undefined |
+
 ### Initialized
 
 ```solidity
@@ -1281,6 +1298,22 @@ event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platf
 |---|---|---|
 | platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
+
+### PlatformFeeTypeUpdated
+
+```solidity
+event PlatformFeeTypeUpdated(enum IPlatformFee.PlatformFeeType feeType)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| feeType  | enum IPlatformFee.PlatformFeeType | undefined |
 
 ### PrimarySaleRecipientUpdated
 

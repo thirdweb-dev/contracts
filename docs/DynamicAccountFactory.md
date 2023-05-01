@@ -16,7 +16,7 @@
 function accountImplementation() external view returns (address)
 ```
 
-Returns the implementation of the Account.
+Returns the address of the Account implementation.
 
 
 
@@ -46,7 +46,7 @@ Callback function for an Account to register its signers.
 ### createAccount
 
 ```solidity
-function createAccount(address _admin) external nonpayable returns (address)
+function createAccount(address _admin, bytes _data) external nonpayable returns (address)
 ```
 
 Deploys a new Account for admin.
@@ -58,6 +58,7 @@ Deploys a new Account for admin.
 | Name | Type | Description |
 |---|---|---|
 | _admin | address | undefined |
+| _data | bytes | undefined |
 
 #### Returns
 
@@ -93,7 +94,7 @@ Returns all accounts that the given address is a signer of.
 function getAddress(address _adminSigner) external view returns (address)
 ```
 
-Returns the address of an Account that would be deployed with the given accountId as salt.
+Returns the address of an Account that would be deployed with the given admin signer.
 
 
 
@@ -112,10 +113,10 @@ Returns the address of an Account that would be deployed with the given accountI
 ### getSignersOfAccount
 
 ```solidity
-function getSignersOfAccount(address account) external view returns (address admin, address[] signers)
+function getSignersOfAccount(address account) external view returns (address[] signers)
 ```
 
-Returns the admin and all signers of an account.
+Returns all signers of an account.
 
 
 
@@ -129,7 +130,6 @@ Returns the admin and all signers of an account.
 
 | Name | Type | Description |
 |---|---|---|
-| admin | address | undefined |
 | signers | address[] | undefined |
 
 ### multicall

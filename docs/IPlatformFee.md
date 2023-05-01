@@ -49,6 +49,23 @@ function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeB
 
 ## Events
 
+### FlatPlatformFeeUpdated
+
+```solidity
+event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee)
+```
+
+
+
+*Emitted when the flat platform fee is updated.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeRecipient  | address | undefined |
+| flatFee  | uint256 | undefined |
+
 ### PlatformFeeInfoUpdated
 
 ```solidity
@@ -65,6 +82,22 @@ event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platf
 |---|---|---|
 | platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
+
+### PlatformFeeTypeUpdated
+
+```solidity
+event PlatformFeeTypeUpdated(enum IPlatformFee.PlatformFeeType feeType)
+```
+
+
+
+*Emitted when the platform fee type is updated.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| feeType  | enum IPlatformFee.PlatformFeeType | undefined |
 
 
 

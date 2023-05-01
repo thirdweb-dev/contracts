@@ -33,7 +33,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 function accountImplementation() external view returns (address)
 ```
 
-Returns the implementation of the Account.
+Returns the address of the Account implementation.
 
 
 
@@ -79,7 +79,7 @@ Callback function for an Account to register its signers.
 ### createAccount
 
 ```solidity
-function createAccount(address _admin) external nonpayable returns (address)
+function createAccount(address _admin, bytes _data) external nonpayable returns (address)
 ```
 
 Deploys a new Account for admin.
@@ -91,6 +91,7 @@ Deploys a new Account for admin.
 | Name | Type | Description |
 |---|---|---|
 | _admin | address | undefined |
+| _data | bytes | undefined |
 
 #### Returns
 
@@ -356,10 +357,10 @@ Returns total number of accounts that have a role.
 ### getSignersOfAccount
 
 ```solidity
-function getSignersOfAccount(address account) external view returns (address admin, address[] signers)
+function getSignersOfAccount(address account) external view returns (address[] signers)
 ```
 
-Returns the admin and all signers of an account.
+Returns all signers of an account.
 
 
 
@@ -373,7 +374,6 @@ Returns the admin and all signers of an account.
 
 | Name | Type | Description |
 |---|---|---|
-| admin | address | undefined |
 | signers | address[] | undefined |
 
 ### grantRole
