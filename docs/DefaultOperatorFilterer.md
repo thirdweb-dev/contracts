@@ -60,6 +60,22 @@ function setOperatorRestriction(bool _restriction) external nonpayable
 |---|---|---|
 | _restriction | bool | undefined |
 
+### subscribeToRegistry
+
+```solidity
+function subscribeToRegistry(address _subscription) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _subscription | address | undefined |
+
 
 
 ## Events

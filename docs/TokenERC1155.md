@@ -877,6 +877,22 @@ function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _b
 | _recipient | address | undefined |
 | _bps | uint256 | undefined |
 
+### subscribeToRegistry
+
+```solidity
+function subscribeToRegistry(address _subscription) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _subscription | address | undefined |
+
 ### supportsInterface
 
 ```solidity

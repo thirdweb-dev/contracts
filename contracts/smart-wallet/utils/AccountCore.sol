@@ -50,7 +50,7 @@ contract AccountCore is Initializable, Multicall, BaseAccount {
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin) public virtual initializer {
+    function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
@@ -107,7 +107,7 @@ contract AccountCore is Initializable, Multicall, BaseAccount {
     }
 
     /// @notice See Permissions-hasRole
-    function _hasRole(bytes32 _role, address _account) public view returns (bool) {
+    function _hasRole(bytes32 _role, address _account) internal view returns (bool) {
         PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
         return data._hasRole[_role][_account];
     }

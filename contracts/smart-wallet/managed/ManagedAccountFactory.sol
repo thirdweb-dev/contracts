@@ -4,15 +4,14 @@ pragma solidity ^0.8.12;
 // Utils
 
 import "../utils/BaseRouter.sol";
-import "../../extension/Multicall.sol";
-import "@openzeppelin/contracts/proxy/Clones.sol";
 import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
-
-// Interface
-import "../interfaces/IAccountFactory.sol";
+import "../utils/BaseAccountFactory.sol";
+import "../utils/BaseAccount.sol";
+import "../../openzeppelin-presets/proxy/Clones.sol";
 
 // Smart wallet implementation
-import "./ManagedAccount.sol";
+import "../utils/AccountExtension.sol";
+import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -23,64 +22,46 @@ import "./ManagedAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract TWManagedAccountFactory is IAccountFactory, Multicall, PermissionsEnumerable, BaseRouter {
+contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, BaseRouter {
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
 
-    ManagedAccount private immutable _accountImplementation;
+    address public immutable defaultExtension;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint) {
+    constructor(IEntryPoint _entrypoint) BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint)))) {
+        defaultExtension = address(new AccountExtension(address(_entrypoint), address(this)));
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _accountImplementation = new ManagedAccount(_entrypoint);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        External functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Deploys a new Account with the given admin and accountId used as salt.
-    function createAccount(address _admin, string memory _accountId) external returns (address) {
-        address impl = address(_accountImplementation);
-        bytes32 salt = keccak256(abi.encode(_accountId));
-        address account = Clones.predictDeterministicAddress(impl, salt);
-
-        if (account.code.length > 0) {
-            return account;
-        }
-
-        account = Clones.cloneDeterministic(impl, salt);
-
-        ManagedAccount(payable(account)).initialize(_admin);
-
-        emit AccountCreated(account, _admin, _accountId);
-
-        return account;
     }
 
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Returns the implementation of the Account.
-    function accountImplementation() external view override returns (address) {
-        return address(_accountImplementation);
-    }
-
-    /// @notice Returns the address of an Account that would be deployed with the given accountId as salt.
-    function getAddress(string memory _accountId) public view returns (address) {
-        bytes32 salt = keccak256(abi.encode(_accountId));
-        return Clones.predictDeterministicAddress(address(_accountImplementation), salt);
+    /// @dev Returns the extension implementation address stored in router, for the given function.
+    function getImplementationForFunction(bytes4 _functionSelector) public view override returns (address) {
+        address impl = getExtensionForFunction(_functionSelector).implementation;
+        return impl != address(0) ? impl : defaultExtension;
     }
 
     /*///////////////////////////////////////////////////////////////
                             Internal functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
+    function _initializeAccount(
+        address _account,
+        address _admin,
+        bytes calldata _data
+    ) internal override {
+        ManagedAccount(payable(_account)).initialize(_admin, _data);
+    }
+
+    /// @dev Returns whether an extension can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
