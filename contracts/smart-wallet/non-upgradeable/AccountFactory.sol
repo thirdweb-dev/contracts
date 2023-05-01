@@ -26,9 +26,7 @@ contract AccountFactory is BaseAccountFactory {
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint)
-        BaseAccountFactory(BaseAccount(address(new Account(_entrypoint, address(this)))))
-    {}
+    constructor(IEntryPoint _entrypoint) BaseAccountFactory(address(new Account(_entrypoint, address(this)))) {}
 
     /*///////////////////////////////////////////////////////////////
                         External functions

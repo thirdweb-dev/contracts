@@ -33,9 +33,7 @@ contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, Bas
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint)
-        BaseAccountFactory(BaseAccount(payable(address(new ManagedAccount(_entrypoint)))))
-    {
+    constructor(IEntryPoint _entrypoint) BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint)))) {
         defaultExtension = address(new AccountExtension(address(_entrypoint), address(this)));
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }

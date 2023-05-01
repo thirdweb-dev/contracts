@@ -27,7 +27,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
                                 State
     //////////////////////////////////////////////////////////////*/
 
-    BaseAccount internal immutable _accountImplementation;
+    address internal immutable _accountImplementation;
 
     mapping(address => EnumerableSet.AddressSet) internal accountsOfSigner;
     mapping(address => EnumerableSet.AddressSet) internal signersOfAccount;
@@ -36,7 +36,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(BaseAccount accountImpl) {
+    constructor(address accountImpl) {
         _accountImplementation = accountImpl;
     }
 
@@ -81,13 +81,13 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     /// @notice Returns the implementation of the Account.
     function accountImplementation() external view override returns (address) {
-        return address(_accountImplementation);
+        return _accountImplementation;
     }
 
     /// @notice Returns the address of an Account that would be deployed with the given admin signer.
     function getAddress(address _adminSigner) public view returns (address) {
         bytes32 salt = keccak256(abi.encode(_adminSigner));
-        return Clones.predictDeterministicAddress(address(_accountImplementation), salt);
+        return Clones.predictDeterministicAddress(_accountImplementation, salt);
     }
 
     /// @notice Returns all signers of an account.

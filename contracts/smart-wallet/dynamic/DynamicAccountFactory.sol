@@ -26,14 +26,9 @@ contract DynamicAccountFactory is BaseAccountFactory {
 
     constructor(IEntryPoint _entrypoint)
         BaseAccountFactory(
-            BaseAccount(
-                payable(
-                    address(
-                        new DynamicAccount(
-                            _entrypoint,
-                            address(new AccountExtension(address(_entrypoint), address(this)))
-                        )
-                    )
+            payable(
+                address(
+                    new DynamicAccount(_entrypoint, address(new AccountExtension(address(_entrypoint), address(this))))
                 )
             )
         )
