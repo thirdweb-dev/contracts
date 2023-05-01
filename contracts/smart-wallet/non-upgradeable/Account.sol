@@ -60,12 +60,13 @@ contract Account is
     receive() external payable virtual {}
 
     constructor(IEntryPoint _entrypoint, address _factory) {
+        _disableInitializers();
         factory = _factory;
         entrypointContract = _entrypoint;
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin) public virtual initializer {
+    function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 

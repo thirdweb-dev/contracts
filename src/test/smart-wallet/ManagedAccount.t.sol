@@ -51,6 +51,7 @@ contract ManagedAccountTest is BaseTest {
 
     // Test params
     address private factoryDeployer = address(0x9876);
+    bytes internal data = bytes("");
 
     uint256 private accountAdminPKey = 100;
     address private accountAdmin;
@@ -62,7 +63,7 @@ contract ManagedAccountTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xbe4C54e9146695cE6b7C42255b0f54Ca5a3fc399;
+    address private sender = 0x56C860085A6A0AEd5137b17a185160865bf6a75A;
     address payable private beneficiary = payable(address(0x45654));
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
@@ -168,12 +169,12 @@ contract ManagedAccountTest is BaseTest {
     function test_state_createAccount_viaFactory() public {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
-        accountFactory.createAccount(accountAdmin);
+        accountFactory.createAccount(accountAdmin, data);
     }
 
     /// @dev Create an account via Entrypoint.
     function test_state_createAccount_viaEntrypoint() public {
-        bytes memory initCallData = abi.encodeWithSignature("createAccount(address)", accountAdmin);
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
@@ -194,7 +195,7 @@ contract ManagedAccountTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function _setup_executeTransaction() internal {
-        bytes memory initCallData = abi.encodeWithSignature("createAccount(address)", accountAdmin);
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(

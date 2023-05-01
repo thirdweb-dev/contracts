@@ -50,7 +50,7 @@ contract AccountCore is Initializable, Multicall, BaseAccount {
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin) public virtual initializer {
+    function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
