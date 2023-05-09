@@ -8,8 +8,6 @@ import "../openzeppelin-presets/token/ERC20/extensions/ERC20Permit.sol";
 import "../extension/ContractMetadata.sol";
 import "../extension/Multicall.sol";
 import "../extension/Ownable.sol";
-import "../extension/interface/IMintableERC20.sol";
-import "../extension/interface/IBurnableERC20.sol";
 
 /**
  *  The `ERC20Base` smart contract implements the ERC20 standard.
@@ -26,7 +24,7 @@ import "../extension/interface/IBurnableERC20.sol";
  *                             presenting a message signed by the account.
  */
 
-contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit, IMintableERC20, IBurnableERC20 {
+contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -64,22 +62,6 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit, IMintab
         _burn(msg.sender, _amount);
     }
 
-    /**
-     *  @notice          Lets an owner burn a given amount of an account's tokens.
-     *  @dev             `_account` should own the `_amount` of tokens.
-     *
-     *  @param _account  The account to burn tokens from.
-     *  @param _amount   The number of tokens to burn.
-     */
-    function burnFrom(address _account, uint256 _amount) external virtual override {
-        require(_canBurn(), "Not authorized to burn.");
-        require(balanceOf(_account) >= _amount, "not enough balance");
-        uint256 decreasedAllowance = allowance(_account, msg.sender) - _amount;
-        _approve(_account, msg.sender, 0);
-        _approve(_account, msg.sender, decreasedAllowance);
-        _burn(_account, _amount);
-    }
-
     /*//////////////////////////////////////////////////////////////
                         Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
@@ -91,11 +73,6 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit, IMintab
 
     /// @dev Returns whether tokens can be minted in the given execution context.
     function _canMint() internal view virtual returns (bool) {
-        return msg.sender == owner();
-    }
-
-    /// @dev Returns whether tokens can be burned in the given execution context.
-    function _canBurn() internal view virtual returns (bool) {
         return msg.sender == owner();
     }
 
