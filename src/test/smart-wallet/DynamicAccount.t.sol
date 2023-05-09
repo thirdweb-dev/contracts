@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 // Test utils
 import "../utils/BaseTest.sol";
 import "lib/dynamic-contracts/src/interface/IExtension.sol";
+import { IPermissionsSig as Roles } from "contracts/extension/interface/IPermissionsSig.sol";
 
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/smart-wallet/utils/Entrypoint.sol";
@@ -65,7 +66,55 @@ contract DynamicAccountTest is BaseTest {
     address private sender = 0x13123A79C89069aF0f6763dE5e25E26703477e79;
     address payable private beneficiary = payable(address(0x45654));
 
+    // Events
     event AccountCreated(address indexed account, address indexed accountAdmin);
+
+    // Signature-based roles utils
+    bytes32 internal typehashRoleRequest;
+    bytes32 internal nameHash;
+    bytes32 internal versionHash;
+    bytes32 internal typehashEip712;
+    bytes32 internal domainSeparator;
+
+    function _setupRoleRequest(address _signer, Roles.RoleAction _action)
+        internal
+        returns (Roles.RoleRequest memory request, bytes memory signature)
+    {
+        typehashRoleRequest = keccak256(
+            "RoleRequest(bytes32 role,address target,uint8 action,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+        );
+        nameHash = keccak256(bytes("PermissionsSig"));
+        versionHash = keccak256(bytes("1"));
+        typehashEip712 = keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
+        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
+
+        // Create RoleRequest
+        request = Roles.RoleRequest({
+            role: keccak256("SIGNER_ROLE"),
+            target: _signer,
+            action: _action,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: type(uint128).max,
+            uid: bytes32("random uid")
+        });
+
+        bytes memory encodedRequest = abi.encode(
+            typehashRoleRequest,
+            request.role,
+            request.target,
+            request.action,
+            request.validityStartTimestamp,
+            request.validityEndTimestamp,
+            request.uid
+        );
+        bytes32 structHash = keccak256(encodedRequest);
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
+        signature = abi.encodePacked(r, s, v);
+    }
 
     function _setupUserOp(
         uint256 _signerPKey,
@@ -301,8 +350,8 @@ contract DynamicAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin);
 
-        vm.prank(accountAdmin);
-        Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
+        (Roles.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(accountSigner, Roles.RoleAction.Grant);
+        Account(payable(account)).grantRole(req, sig);
 
         assertEq(numberContract.num(), 0);
 
@@ -343,8 +392,8 @@ contract DynamicAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin);
 
-        vm.prank(accountAdmin);
-        Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
+        (Roles.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(accountSigner, Roles.RoleAction.Grant);
+        Account(payable(account)).grantRole(req, sig);
 
         assertEq(numberContract.num(), 0);
 
