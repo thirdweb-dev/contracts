@@ -11,7 +11,7 @@ import "./../utils/BaseAccount.sol";
 // Extensions
 import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
-import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
+import "../../dynamic-contracts/extension/PermissionsSigEnumerable.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
 import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
 import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
@@ -34,7 +34,7 @@ contract Account is
     Multicall,
     BaseAccount,
     ContractMetadata,
-    PermissionsEnumerable,
+    PermissionsSigEnumerable,
     ERC721Holder,
     ERC1155Holder
 {
@@ -178,7 +178,7 @@ contract Account is
         super._setupRole(role, account);
 
         if (role == SIGNER_ROLE && factory.code.length > 0) {
-            AccountFactory(factory).addSigner(account);
+            AccountFactory(factory).onSignerAdded(account);
         }
     }
 
@@ -187,7 +187,7 @@ contract Account is
         super._revokeRole(role, account);
 
         if (role == SIGNER_ROLE && factory.code.length > 0) {
-            AccountFactory(factory).removeSigner(account);
+            AccountFactory(factory).onSignerRemoved(account);
         }
     }
 

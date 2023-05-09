@@ -14,7 +14,7 @@ import "../../dynamic-contracts/extension/Initializable.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
-import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
+import "../../dynamic-contracts/extension/PermissionsSigEnumerable.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -108,7 +108,7 @@ contract AccountCore is Initializable, Multicall, BaseAccount {
 
     /// @notice See Permissions-hasRole
     function _hasRole(bytes32 _role, address _account) internal view returns (bool) {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsSigStorage.Data storage data = PermissionsSigStorage.permissionsSigStorage();
         return data._hasRole[_role][_account];
     }
 
@@ -117,7 +117,7 @@ contract AccountCore is Initializable, Multicall, BaseAccount {
 
     /// @notice See Permissions-setupRole
     function _setupRole(bytes32 role, address account) internal virtual {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsSigStorage.Data storage data = PermissionsSigStorage.permissionsSigStorage();
         data._hasRole[role][account] = true;
         emit RoleGranted(role, account, msg.sender);
     }

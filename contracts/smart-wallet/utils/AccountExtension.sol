@@ -6,7 +6,7 @@ pragma solidity ^0.8.11;
 /* solhint-disable reason-string */
 
 // Extensions
-import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
+import "../../dynamic-contracts/extension/PermissionsSigEnumerable.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
 import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
 import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
@@ -25,7 +25,7 @@ import "../interfaces/IAccountFactory.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Holder, ERC1155Holder {
+contract AccountExtension is ContractMetadata, PermissionsSigEnumerable, ERC721Holder, ERC1155Holder {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -126,7 +126,7 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
         super._setupRole(role, account);
 
         if (role == SIGNER_ROLE && factory.code.length > 0) {
-            IAccountFactory(factory).addSigner(account);
+            IAccountFactory(factory).onSignerAdded(account);
         }
     }
 
@@ -135,7 +135,7 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
         super._revokeRole(role, account);
 
         if (role == SIGNER_ROLE && factory.code.length > 0) {
-            IAccountFactory(factory).removeSigner(account);
+            IAccountFactory(factory).onSignerRemoved(account);
         }
     }
 }
