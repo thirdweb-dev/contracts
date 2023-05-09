@@ -13,8 +13,8 @@ import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
 import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
-import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
+import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
