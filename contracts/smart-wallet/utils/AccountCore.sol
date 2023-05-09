@@ -11,6 +11,7 @@ import "./../utils/BaseAccount.sol";
 // Fixed Extensions
 import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
+import "../../eip/ERC1271.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
@@ -25,7 +26,7 @@ import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountCore is Initializable, Multicall, BaseAccount {
+contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271 {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -71,6 +72,20 @@ contract AccountCore is Initializable, Multicall, BaseAccount {
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
     function isValidSigner(address _signer) public view virtual returns (bool) {
         return _hasRole(SIGNER_ROLE, _signer) || _hasRole(DEFAULT_ADMIN_ROLE, _signer);
+    }
+
+    /// @notice See EIP-1271
+    function isValidSignature(bytes32 _hash, bytes memory _signature)
+        public
+        view
+        virtual
+        override
+        returns (bytes4 magicValue)
+    {
+        address signer = _hash.recover(_signature);
+        if (isValidSigner(signer)) {
+            magicValue = MAGICVALUE;
+        }
     }
 
     /*///////////////////////////////////////////////////////////////

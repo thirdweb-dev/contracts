@@ -15,6 +15,7 @@ import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
 import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
 import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
+import "../../eip/ERC1271.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
@@ -31,6 +32,7 @@ import "./AccountFactory.sol";
 
 contract Account is
     Initializable,
+    ERC1271,
     Multicall,
     BaseAccount,
     ContractMetadata,
@@ -104,6 +106,20 @@ contract Account is
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
     function isValidSigner(address _signer) public view virtual returns (bool) {
         return hasRole(SIGNER_ROLE, _signer) || hasRole(DEFAULT_ADMIN_ROLE, _signer);
+    }
+
+    /// @notice See EIP-1271
+    function isValidSignature(bytes32 _hash, bytes memory _signature)
+        public
+        view
+        virtual
+        override
+        returns (bytes4 magicValue)
+    {
+        address signer = _hash.recover(_signature);
+        if (isValidSigner(signer)) {
+            magicValue = MAGICVALUE;
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
