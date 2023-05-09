@@ -67,12 +67,6 @@ contract TokenERC1155 is
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC1155");
     uint256 private constant VERSION = 1;
 
-    /// @dev Fee type variants: percentage fee and flat fee
-    enum PlatformFeeType {
-        Bps,
-        Flat
-    }
-
     // Token name
     string public name;
 
@@ -135,12 +129,6 @@ contract TokenERC1155 is
 
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
-
-    /// @dev Emitted when flat fee on primary sales is updated.
-    event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee);
-
-    /// @dev Emitted when platform fee type is updated.
-    event PlatformFeeTypeUpdated(PlatformFeeType feeType);
 
     constructor() initializer {}
 

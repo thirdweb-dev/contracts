@@ -27,13 +27,29 @@ Returns the address of the Account implementation.
 |---|---|---|
 | _0 | address | undefined |
 
+### addSigner
+
+```solidity
+function addSigner(address signer) external nonpayable
+```
+
+Callback function for an Account to register its signers.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | undefined |
+
 ### createAccount
 
 ```solidity
-function createAccount(address admin, string accountId) external nonpayable returns (address account)
+function createAccount(address admin, bytes _data) external nonpayable returns (address account)
 ```
 
-Deploys a new Account with the given admin and accountId used as salt.
+Deploys a new Account for admin.
 
 
 
@@ -42,7 +58,7 @@ Deploys a new Account with the given admin and accountId used as salt.
 | Name | Type | Description |
 |---|---|---|
 | admin | address | undefined |
-| accountId | string | undefined |
+| _data | bytes | undefined |
 
 #### Returns
 
@@ -50,13 +66,13 @@ Deploys a new Account with the given admin and accountId used as salt.
 |---|---|---|
 | account | address | undefined |
 
-### getAddress
+### getAccountsOfSigner
 
 ```solidity
-function getAddress(string accountId) external view returns (address)
+function getAccountsOfSigner(address signer) external view returns (address[] accounts)
 ```
 
-Returns the address of an Account that would be deployed with the given accountId as salt.
+Returns all accounts that the given address is a signer of.
 
 
 
@@ -64,13 +80,73 @@ Returns the address of an Account that would be deployed with the given accountI
 
 | Name | Type | Description |
 |---|---|---|
-| accountId | string | undefined |
+| signer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| accounts | address[] | undefined |
+
+### getAddress
+
+```solidity
+function getAddress(address adminSigner) external view returns (address)
+```
+
+Returns the address of an Account that would be deployed with the given admin signer.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| adminSigner | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
+
+### getSignersOfAccount
+
+```solidity
+function getSignersOfAccount(address account) external view returns (address[] signers)
+```
+
+Returns all signers of an account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| signers | address[] | undefined |
+
+### removeSigner
+
+```solidity
+function removeSigner(address signer) external nonpayable
+```
+
+Callback function for an Account to un-register its signers.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| signer | address | undefined |
 
 
 
@@ -79,7 +155,7 @@ Returns the address of an Account that would be deployed with the given accountI
 ### AccountCreated
 
 ```solidity
-event AccountCreated(address indexed account, address indexed accountAdmin, string accountId)
+event AccountCreated(address indexed account, address indexed accountAdmin)
 ```
 
 Emitted when a new Account is created.
@@ -92,7 +168,40 @@ Emitted when a new Account is created.
 |---|---|---|
 | account `indexed` | address | undefined |
 | accountAdmin `indexed` | address | undefined |
-| accountId  | string | undefined |
+
+### SignerAdded
+
+```solidity
+event SignerAdded(address indexed account, address indexed signer)
+```
+
+Emitted when a new signer is added to an Account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account `indexed` | address | undefined |
+| signer `indexed` | address | undefined |
+
+### SignerRemoved
+
+```solidity
+event SignerRemoved(address indexed account, address indexed signer)
+```
+
+Emitted when a new signer is added to an Account.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account `indexed` | address | undefined |
+| signer `indexed` | address | undefined |
 
 
 

@@ -27,13 +27,13 @@ return the entryPoint used by this account. subclass should return the current e
 |---|---|---|
 | _0 | contract IEntryPoint | undefined |
 
-### nonce
+### getNonce
 
 ```solidity
-function nonce() external view returns (uint256)
+function getNonce() external view returns (uint256)
 ```
 
-return the account nonce. subclass should return a nonce value that is used both by _validateAndUpdateNonce, and by the external provider (to read the current nonce)
+Return the account nonce. This method returns the next sequential nonce. For a nonce of a specific key, use `entrypoint.getNonce(account, key)`
 
 
 

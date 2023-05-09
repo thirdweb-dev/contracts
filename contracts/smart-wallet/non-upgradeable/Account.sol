@@ -13,11 +13,13 @@ import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
 import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
-import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
+import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
+import "../../eip/ERC1271.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
+import "./AccountFactory.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -30,6 +32,7 @@ import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 
 contract Account is
     Initializable,
+    ERC1271,
     Multicall,
     BaseAccount,
     ContractMetadata,
@@ -45,6 +48,9 @@ contract Account is
 
     bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
 
+    /// @notice EIP 4337 factory for this contract.
+    address public immutable factory;
+
     /// @notice EIP 4337 Entrypoint contract.
     IEntryPoint private immutable entrypointContract;
 
@@ -55,12 +61,14 @@ contract Account is
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
-    constructor(IEntryPoint _entrypoint) {
+    constructor(IEntryPoint _entrypoint, address _factory) {
+        _disableInitializers();
+        factory = _factory;
         entrypointContract = _entrypoint;
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin) public virtual initializer {
+    function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
@@ -98,6 +106,20 @@ contract Account is
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
     function isValidSigner(address _signer) public view virtual returns (bool) {
         return hasRole(SIGNER_ROLE, _signer) || hasRole(DEFAULT_ADMIN_ROLE, _signer);
+    }
+
+    /// @notice See EIP-1271
+    function isValidSignature(bytes32 _hash, bytes memory _signature)
+        public
+        view
+        virtual
+        override
+        returns (bytes4 magicValue)
+    {
+        address signer = _hash.recover(_signature);
+        if (isValidSigner(signer)) {
+            magicValue = MAGICVALUE;
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -165,6 +187,24 @@ contract Account is
 
         if (!isValidSigner(signer)) return SIG_VALIDATION_FAILED;
         return 0;
+    }
+
+    /// @notice Registers a signer in the factory.
+    function _setupRole(bytes32 role, address account) internal virtual override {
+        super._setupRole(role, account);
+
+        if (role == SIGNER_ROLE && factory.code.length > 0) {
+            AccountFactory(factory).addSigner(account);
+        }
+    }
+
+    /// @notice Un-registers a signer in the factory.
+    function _revokeRole(bytes32 role, address account) internal virtual override {
+        super._revokeRole(role, account);
+
+        if (role == SIGNER_ROLE && factory.code.length > 0) {
+            AccountFactory(factory).removeSigner(account);
+        }
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.

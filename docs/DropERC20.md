@@ -396,6 +396,24 @@ function getClaimConditionById(uint256 _conditionId) external view returns (stru
 |---|---|---|
 | condition | IClaimCondition.ClaimCondition | undefined |
 
+### getFlatPlatformFeeInfo
+
+```solidity
+function getFlatPlatformFeeInfo() external view returns (address, uint256)
+```
+
+
+
+*Returns the platform fee bps and recipient.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+| _1 | uint256 | undefined |
+
 ### getPastTotalSupply
 
 ```solidity
@@ -458,6 +476,23 @@ function getPlatformFeeInfo() external view returns (address, uint16)
 |---|---|---|
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
+
+### getPlatformFeeType
+
+```solidity
+function getPlatformFeeType() external view returns (enum IPlatformFee.PlatformFeeType)
+```
+
+
+
+*Returns the platform fee bps and recipient.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | enum IPlatformFee.PlatformFeeType | undefined |
 
 ### getRoleAdmin
 
@@ -908,6 +943,23 @@ Lets a contract admin set the URI for contract-level metadata.
 |---|---|---|
 | _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
+### setFlatPlatformFeeInfo
+
+```solidity
+function setFlatPlatformFeeInfo(address _platformFeeRecipient, uint256 _flatFee) external nonpayable
+```
+
+Lets a module admin set a flat fee on primary sales.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _platformFeeRecipient | address | undefined |
+| _flatFee | uint256 | undefined |
+
 ### setMaxTotalSupply
 
 ```solidity
@@ -940,6 +992,22 @@ Updates the platform fee recipient and bps.
 |---|---|---|
 | _platformFeeRecipient | address | Address to be set as new platformFeeRecipient. |
 | _platformFeeBps | uint256 | Updated platformFeeBps. |
+
+### setPlatformFeeType
+
+```solidity
+function setPlatformFeeType(enum IPlatformFee.PlatformFeeType _feeType) external nonpayable
+```
+
+Lets a module admin set platform fee type.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _feeType | enum IPlatformFee.PlatformFeeType | undefined |
 
 ### setPrimarySaleRecipient
 
@@ -1157,6 +1225,23 @@ event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, ui
 | previousBalance  | uint256 | undefined |
 | newBalance  | uint256 | undefined |
 
+### FlatPlatformFeeUpdated
+
+```solidity
+event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeRecipient  | address | undefined |
+| flatFee  | uint256 | undefined |
+
 ### Initialized
 
 ```solidity
@@ -1205,6 +1290,22 @@ event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platf
 |---|---|---|
 | platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
+
+### PlatformFeeTypeUpdated
+
+```solidity
+event PlatformFeeTypeUpdated(enum IPlatformFee.PlatformFeeType feeType)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| feeType  | enum IPlatformFee.PlatformFeeType | undefined |
 
 ### PrimarySaleRecipientUpdated
 

@@ -125,6 +125,23 @@ Executes a sequence transaction (called directly from an admin, or by entryPoint
 | _value | uint256[] | undefined |
 | _calldata | bytes[] | undefined |
 
+### factory
+
+```solidity
+function factory() external view returns (address)
+```
+
+EIP 4337 factory for this contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### getDeposit
 
 ```solidity
@@ -132,6 +149,23 @@ function getDeposit() external view returns (uint256)
 ```
 
 Returns the balance of the account in Entrypoint.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### getNonce
+
+```solidity
+function getNonce() external view returns (uint256)
+```
+
+Return the account nonce. This method returns the next sequential nonce. For a nonce of a specific key, use `entrypoint.getNonce(account, key)`
 
 
 
@@ -275,7 +309,7 @@ Checks whether an account has a particular role;                  role restricti
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin) external nonpayable
+function initialize(address _defaultAdmin, bytes) external nonpayable
 ```
 
 Initializes the smart contract wallet.
@@ -287,6 +321,7 @@ Initializes the smart contract wallet.
 | Name | Type | Description |
 |---|---|---|
 | _defaultAdmin | address | undefined |
+| _1 | bytes | undefined |
 
 ### isValidSigner
 
@@ -331,23 +366,6 @@ Receives and executes a batch of function calls on this contract.
 | Name | Type | Description |
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
-
-### nonce
-
-```solidity
-function nonce() external view returns (uint256)
-```
-
-Returns the nonce of the account.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint256 | undefined |
 
 ### onERC1155BatchReceived
 

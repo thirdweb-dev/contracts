@@ -27,7 +27,7 @@ contract AccountBenchmarkTest is BaseTest {
     // Test params
     uint256 private signerPrivateKey = 100;
     address private walletSigner;
-    address private sender = 0x8617DC1aD4fF1f256D4d250cb842396c52C03CA3;
+    address private sender = 0xBB956D56140CA3f3060986586A2631922a4B347E;
     address payable private beneficiary = payable(address(0x45654));
     bytes private userOpSignature;
 
@@ -86,11 +86,7 @@ contract AccountBenchmarkTest is BaseTest {
         );
 
         // build UserOp
-        bytes memory initCallData = abi.encodeWithSignature(
-            "createAccount(address,string)",
-            walletSigner,
-            "random-salt"
-        );
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", walletSigner, bytes(""));
 
         UserOperation memory op = UserOperation({
             sender: sender,
@@ -142,7 +138,7 @@ contract AccountBenchmarkTest is BaseTest {
 
     /// @dev Create an account by directly calling the factory.
     function test_benchmark_createAccount_directWithFactory() public {
-        accountFactory.createAccount(address(0x456), "salt");
+        accountFactory.createAccount(address(0x456), bytes(""));
     }
 
     /// @dev Create an account when performing the first transaction from the account (all via Entrypoint).
