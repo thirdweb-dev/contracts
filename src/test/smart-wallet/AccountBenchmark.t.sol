@@ -35,6 +35,46 @@ contract AccountBenchmarkTest is BaseTest {
     UserOperation[] private userOpCreateAccount;
     UserOperation[] private userOpPerformTx;
 
+    function _encodeRequest(UserOperation memory _req, bytes32 _typehash) internal pure returns (bytes memory) {
+        return
+            abi.encode(
+                _typehash,
+                _req.sender,
+                _req.nonce,
+                keccak256(_req.initCode),
+                keccak256(_req.callData),
+                _req.callGasLimit,
+                _req.verificationGasLimit,
+                _req.preVerificationGas,
+                _req.maxFeePerGas,
+                _req.maxPriorityFeePerGas,
+                keccak256(_req.paymasterAndData),
+                keccak256(bytes("")) // A user signs a user op with an empty signature field
+            );
+    }
+
+    function _getUserOpSignature(UserOperation memory op, uint256 _signerPKey)
+        internal
+        returns (bytes memory signature, bytes32 typedDataHash)
+    {
+        bytes32 typehashUserOp = keccak256(
+            "UserOperation(address sender,uint256 nonce,bytes initCode,bytes callData,uint256 callGasLimit,uint256 verificationGasLimit,uint256 preVerificationGas,uint256 maxFeePerGas,uint256 maxPriorityFeePerGas,bytes paymasterAndData,bytes signature)"
+        );
+        bytes32 nameHash = keccak256(bytes("Account"));
+        bytes32 versionHash = keccak256(bytes("1"));
+        bytes32 typehashEip712 = keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
+        bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
+
+        bytes memory encodedRequest = _encodeRequest(op, typehashUserOp);
+        bytes32 structHash = keccak256(encodedRequest);
+        typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPKey, typedDataHash);
+        signature = abi.encodePacked(r, s, v);
+    }
+
     function _setupUserOp_performTx() private {
         // Get user op fields
         bytes memory subCallData = abi.encodeWithSignature("setNum(uint256)", 10);
@@ -60,14 +100,14 @@ contract AccountBenchmarkTest is BaseTest {
         });
 
         // Sign UserOp
-        bytes32 opHash = EntryPoint(entrypoint).getUserOpHash(op);
-        bytes32 msgHash = ECDSA.toEthSignedMessageHash(opHash);
+        bytes memory userOpSignature;
+        bytes32 typedDataHash;
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, msgHash);
-        userOpSignature = abi.encodePacked(r, s, v);
+        (userOpSignature, typedDataHash) = _getUserOpSignature(op, signerPrivateKey);
 
-        address recoveredSigner = ECDSA.recover(msgHash, v, r, s);
-        assertEq(recoveredSigner, walletSigner);
+        address recoveredSigner = ECDSA.recover(typedDataHash, userOpSignature);
+        address expectedSigner = vm.addr(signerPrivateKey);
+        assertEq(recoveredSigner, expectedSigner);
 
         op.signature = userOpSignature;
 
@@ -103,14 +143,14 @@ contract AccountBenchmarkTest is BaseTest {
         });
 
         // Sign UserOp
-        bytes32 opHash = EntryPoint(entrypoint).getUserOpHash(op);
-        bytes32 msgHash = ECDSA.toEthSignedMessageHash(opHash);
+        bytes memory userOpSignature;
+        bytes32 typedDataHash;
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPrivateKey, msgHash);
-        userOpSignature = abi.encodePacked(r, s, v);
+        (userOpSignature, typedDataHash) = _getUserOpSignature(op, signerPrivateKey);
 
-        address recoveredSigner = ECDSA.recover(msgHash, v, r, s);
-        assertEq(recoveredSigner, walletSigner);
+        address recoveredSigner = ECDSA.recover(typedDataHash, userOpSignature);
+        address expectedSigner = vm.addr(signerPrivateKey);
+        assertEq(recoveredSigner, expectedSigner);
 
         op.signature = userOpSignature;
 
