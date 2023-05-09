@@ -1,6 +1,7 @@
-pragma solidity ^0.5.0;
+// SPDX-License-Identifier: Apache 2.0
+pragma solidity ^0.8.0;
 
-contract ERC1271 {
+abstract contract ERC1271 {
     // bytes4(keccak256("isValidSignature(bytes32,bytes)")
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
 
@@ -13,5 +14,5 @@ contract ERC1271 {
      * MUST NOT modify state (using STATICCALL for solc < 0.5, view modifier for solc > 0.5)
      * MUST allow external calls
      */
-    function isValidSignature(bytes32 _hash, bytes memory _signature) public view returns (bytes4 magicValue);
+    function isValidSignature(bytes32 _hash, bytes memory _signature) public view virtual returns (bytes4 magicValue);
 }
