@@ -40,8 +40,6 @@ abstract contract PermissionsSigUtils is IPermissionsSig, EIP712 {
             "RoleRequest(bytes32 role,address target,uint8 action,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
-    constructor() EIP712("PermissionsSig", "1") {}
-
     /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
@@ -116,7 +114,7 @@ abstract contract PermissionsSigUtils is IPermissionsSig, EIP712 {
     ) internal view virtual returns (bool) {}
 }
 
-contract PermissionsSig is PermissionsSigUtils {
+abstract contract PermissionsSig is PermissionsSigUtils {
     /// @dev Default admin role for all roles. Only accounts with this role can grant/revoke other roles.
     bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
 

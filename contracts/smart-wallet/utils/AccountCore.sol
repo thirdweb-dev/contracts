@@ -12,6 +12,7 @@ import "./../utils/BaseAccount.sol";
 import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
 import "../../eip/ERC1271.sol";
+import "./AccountSigUtil.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
@@ -26,7 +27,7 @@ import "../../dynamic-contracts/extension/PermissionsSigEnumerable.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271 {
+contract AccountCore is Initializable, Multicall, AccountSigUtil, BaseAccount, ERC1271 {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -46,7 +47,7 @@ contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271 {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
-    constructor(IEntryPoint _entrypoint) {
+    constructor(IEntryPoint _entrypoint) EIP712("Account", "1") {
         entrypointContract = _entrypoint;
     }
 
@@ -108,17 +109,19 @@ contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271 {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Validates the signature of a user operation.
-    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
+    function _validateSignature(UserOperation calldata userOp, bytes32)
         internal
         virtual
         override
         returns (uint256 validationData)
     {
-        bytes32 hash = userOpHash.toEthSignedMessageHash();
-        address signer = hash.recover(userOp.signature);
-
-        if (!isValidSigner(signer)) return SIG_VALIDATION_FAILED;
+        if (!_verifySignature(userOp)) return SIG_VALIDATION_FAILED;
         return 0;
+    }
+
+    /// @dev Returns whether a given address is authorized to sign requests.
+    function _isAuthorizedSigner(address _signer) internal view virtual override returns (bool) {
+        return isValidSigner(_signer);
     }
 
     /// @notice See Permissions-hasRole

@@ -16,6 +16,7 @@ import "../../dynamic-contracts/extension/ContractMetadata.sol";
 import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
 import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
 import "../../eip/ERC1271.sol";
+import "../utils/AccountSigUtil.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
@@ -33,6 +34,7 @@ import "./AccountFactory.sol";
 contract Account is
     Initializable,
     ERC1271,
+    AccountSigUtil,
     Multicall,
     BaseAccount,
     ContractMetadata,
@@ -61,7 +63,7 @@ contract Account is
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
-    constructor(IEntryPoint _entrypoint, address _factory) {
+    constructor(IEntryPoint _entrypoint, address _factory) EIP712("Account", "1") {
         _disableInitializers();
         factory = _factory;
         entrypointContract = _entrypoint;
@@ -176,17 +178,19 @@ contract Account is
     }
 
     /// @notice Validates the signature of a user operation.
-    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
+    function _validateSignature(UserOperation calldata userOp, bytes32)
         internal
         virtual
         override
         returns (uint256 validationData)
     {
-        bytes32 hash = userOpHash.toEthSignedMessageHash();
-        address signer = hash.recover(userOp.signature);
-
-        if (!isValidSigner(signer)) return SIG_VALIDATION_FAILED;
+        if (!_verifySignature(userOp)) return SIG_VALIDATION_FAILED;
         return 0;
+    }
+
+    /// @dev Returns whether a given address is authorized to sign requests.
+    function _isAuthorizedSigner(address _signer) internal view virtual override returns (bool) {
+        return isValidSigner(_signer);
     }
 
     /// @notice Registers a signer in the factory.

@@ -47,7 +47,7 @@ contract AccountExtension is ContractMetadata, PermissionsSigEnumerable, ERC721H
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
-    constructor(address _entrypoint, address _factory) {
+    constructor(address _entrypoint, address _factory) EIP712("Account", "1") {
         factory = _factory;
         entrypointContract = _entrypoint;
     }
