@@ -17,8 +17,8 @@ remappings = [
   '@ds-test=lib/ds-test/src/',
   '@std=lib/forge-std/src/',
   'contracts/=contracts/',
-  'erc721a-upgradeable/=node_modules/erc721a-upgradeable/',
-  'erc721a/=node_modules/erc721a/',
+  'erc721a-upgradeable/=lib/ERC721A-Upgradeable/',
+  'erc721a/=lib/ERC721A/',
 ]
 src = 'contracts'
 test = 'src/test'
