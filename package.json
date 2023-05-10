@@ -67,6 +67,6 @@
     "forge:test": "forge test --hardhat",
     "export-abi": "hardhat export-abi",
     "forge:gas": "forge test --gas-report > gasreport.txt",
-    "forge:snapshop": "forge snapshop"
+    "forge:snapshot": "forge snapshot --check"
   }
 }
