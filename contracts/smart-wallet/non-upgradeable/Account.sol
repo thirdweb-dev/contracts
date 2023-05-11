@@ -99,7 +99,7 @@ contract Account is
     }
 
     /// @notice Returns the balance of the account in Entrypoint.
-    function getDeposit() public view returns (uint256) {
+    function getDeposit() public view virtual returns (uint256) {
         return entryPoint().balanceOf(address(this));
     }
 
@@ -148,12 +148,16 @@ contract Account is
     }
 
     /// @notice Deposit funds for this account in Entrypoint.
-    function addDeposit() public payable {
+    function addDeposit() public payable virtual {
         entryPoint().depositTo{ value: msg.value }(address(this));
     }
 
     /// @notice Withdraw funds for this account from Entrypoint.
-    function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function withdrawDepositTo(address payable withdrawAddress, uint256 amount)
+        public
+        virtual
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
@@ -166,7 +170,7 @@ contract Account is
         address _target,
         uint256 value,
         bytes memory _calldata
-    ) internal {
+    ) internal virtual {
         (bool success, bytes memory result) = _target.call{ value: value }(_calldata);
         if (!success) {
             assembly {
