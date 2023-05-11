@@ -44,6 +44,28 @@ function SIGNER_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
+### _verifySignature
+
+```solidity
+function _verifySignature(UserOperation _req) external view returns (bool success)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _req | UserOperation | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| success | bool | undefined |
+
 ### addDeposit
 
 ```solidity
@@ -246,19 +268,19 @@ Returns total number of accounts that have a role.
 ### grantRole
 
 ```solidity
-function grantRole(bytes32 role, address account) external nonpayable
+function grantRole(IPermissionsSig.RoleRequest req, bytes signature) external nonpayable
 ```
 
-Grants a role to an account, if not previously granted.
 
-*Caller must have admin role for the `role`.                  Emits {RoleGranted Event}.*
+
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account to which the role is being granted. |
+| req | IPermissionsSig.RoleRequest | undefined |
+| signature | bytes | undefined |
 
 ### hasRole
 
@@ -322,6 +344,29 @@ Initializes the smart contract wallet.
 |---|---|---|
 | _defaultAdmin | address | undefined |
 | _1 | bytes | undefined |
+
+### isValidSignature
+
+```solidity
+function isValidSignature(bytes32 _hash, bytes _signature) external view returns (bytes4 magicValue)
+```
+
+See EIP-1271
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _hash | bytes32 | undefined |
+| _signature | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| magicValue | bytes4 | undefined |
 
 ### isValidSigner
 
@@ -447,36 +492,36 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 ### renounceRole
 
 ```solidity
-function renounceRole(bytes32 role, address account) external nonpayable
+function renounceRole(IPermissionsSig.RoleRequest req, bytes signature) external nonpayable
 ```
 
-Revokes role from the account.
 
-*Caller must have the `role`, with caller being the same as `account`.                  Emits {RoleRevoked Event}.*
+
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account from which the role is being revoked. |
+| req | IPermissionsSig.RoleRequest | undefined |
+| signature | bytes | undefined |
 
 ### revokeRole
 
 ```solidity
-function revokeRole(bytes32 role, address account) external nonpayable
+function revokeRole(IPermissionsSig.RoleRequest req, bytes signature) external nonpayable
 ```
 
-Revokes role from an account.
 
-*Caller must have admin role for the `role`.                  Emits {RoleRevoked Event}.*
+
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account from which the role is being revoked. |
+| req | IPermissionsSig.RoleRequest | undefined |
+| signature | bytes | undefined |
 
 ### setContractURI
 
@@ -539,6 +584,30 @@ function validateUserOp(UserOperation userOp, bytes32 userOpHash, uint256 missin
 | Name | Type | Description |
 |---|---|---|
 | validationData | uint256 | undefined |
+
+### verifyRoleRequest
+
+```solidity
+function verifyRoleRequest(IPermissionsSig.RoleRequest req, bytes signature) external view returns (bool success, address signer)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| req | IPermissionsSig.RoleRequest | undefined |
+| signature | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| success | bool | undefined |
+| signer | address | undefined |
 
 ### withdrawDepositTo
 

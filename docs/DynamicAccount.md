@@ -61,6 +61,28 @@ function SIGNER_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
+### _verifySignature
+
+```solidity
+function _verifySignature(UserOperation _req) external view returns (bool success)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _req | UserOperation | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| success | bool | undefined |
+
 ### addDeposit
 
 ```solidity
@@ -299,6 +321,29 @@ Initializes the smart contract wallet.
 |---|---|---|
 | _defaultAdmin | address | undefined |
 | _1 | bytes | undefined |
+
+### isValidSignature
+
+```solidity
+function isValidSignature(bytes32 _hash, bytes _signature) external view returns (bytes4 magicValue)
+```
+
+See EIP-1271
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _hash | bytes32 | undefined |
+| _signature | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| magicValue | bytes4 | undefined |
 
 ### isValidSigner
 
