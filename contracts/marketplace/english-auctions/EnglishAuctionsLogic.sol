@@ -453,8 +453,8 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
 
         emit AuctionClosed(
             _targetAuction.auctionId,
-            _msgSender(),
             _targetAuction.assetContract,
+            _msgSender(),
             _targetAuction.tokenId,
             _targetAuction.auctionCreator,
             _winningBid.bidder
