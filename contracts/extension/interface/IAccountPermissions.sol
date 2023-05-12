@@ -8,19 +8,18 @@ interface IAccountPermissions {
                                 Types
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Roles can be granted, revoked or renounced by an authorized party.
+    /// @notice Roles can be granted or revoked by an authorized party.
     enum RoleAction {
-        Grant,
-        Revoke,
-        Renounce
+        GRANT,
+        REVOKE
     }
 
     /**
-     *  @notice The payload that must be signed by an authorized wallet to grant / revoke / renounce a role.
+     *  @notice The payload that must be signed by an authorized wallet to grant / revoke a role.
      *
-     *  @param role The role to grant / revoke / renounce.
-     *  @param target The address that is granted / revoked / renouncing the role.
-     *  @param action Whether to grant, revoke or renounce the role.
+     *  @param role The role to grant / revoke.
+     *  @param target The address to grant / revoke the role from.
+     *  @param action Whether to grant or revoke the role.
      *  @param validityStartTimestamp The UNIX timestamp at and after which a signature is valid.
      *  @param validityEndTimestamp The UNIX timestamp at and after which a signature is invalid/expired.
      *  @param uid A unique non-repeatable ID for the payload.
@@ -58,12 +57,18 @@ interface IAccountPermissions {
     /// @notice Emitted when the restrictions for a given role are updated.
     event RoleUpdated(bytes32 indexed role, Role restrictions);
 
-    /// @notice Emitted when a role is granted / revoked / renounced by an authorized party.
-    event RoleAssignment(bytes32 indexed role, address indexed account, RoleRequest request);
+    /// @notice Emitted when a role is granted / revoked by an authorized party.
+    event RoleAssignment(bytes32 indexed role, address indexed account, address indexed signer, RoleRequest request);
+
+    /// @notice Emitted when an admin is set or removed.
+    event AdminUpdated(address indexed account, bool isAdmin);
 
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @notice Returns whether the given account is an admin.
+    function isAdmin(address account) external view returns (bool);
 
     /// @notice Returns the role held by a given account.
     function getRoleOfAccount(address account) external view returns (Role memory role);
@@ -71,13 +76,22 @@ interface IAccountPermissions {
     /// @notice Returns the role restrictions for a given role.
     function getRoleRestrictions(bytes32 role) external view returns (Role memory restrictions);
 
+    /// @dev Verifies that a request is signed by an authorized account.
+    function verifyRoleRequest(RoleRequest calldata req, bytes calldata signature)
+        external
+        view
+        returns (bool success, address signer);
+
     /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Adds / removes an account as an admin.
+    function setAdmin(address account, bool isAdmin) external;
+
     /// @notice Sets the restrictions for a given role.
     function setRoleRestrictions(Role calldata role) external;
 
-    /// @notice Grant / revoke / renounce a role from a given signer.
+    /// @notice Grant / revoke a role from a given signer.
     function changeRole(RoleRequest calldata req, bytes calldata signature) external;
 }
