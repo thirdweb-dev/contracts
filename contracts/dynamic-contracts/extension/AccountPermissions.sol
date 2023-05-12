@@ -19,6 +19,8 @@ library AccountPermissionsStorage {
         mapping(address => bytes32) roleOfAccount;
         /// @dev Mapping from a signed request UID => whether the request is processed.
         mapping(bytes32 => bool) executed;
+        /// @dev Map from keccak256 hash of a role to its approved targets.
+        mapping(bytes32 => EnumerableSet.AddressSet) approvedTargets;
         /// @dev map from keccak256 hash of a role to its members' data. See {RoleMembers}.
         mapping(bytes32 => EnumerableSet.AddressSet) roleMembers;
     }
@@ -55,12 +57,21 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @notice Sets the restrictions for a given role.
-    function setRoleRestrictions(Role calldata role) external virtual onlyAdmin {
-        require(role.role != bytes32(0), "AccountPermissions: role cannot be empty");
+    function setRoleRestrictions(Role calldata _restrictions) external virtual onlyAdmin {
+        require(_restrictions.role != bytes32(0), "AccountPermissions: role cannot be empty");
 
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        data.roleRestriction[role.role] = role;
-        emit RoleUpdated(role.role, role);
+        data.roleRestriction[_restrictions.role] = _restrictions;
+
+        uint256 len = _restrictions.approvedTargets.length;
+        if (len > 0) {
+            delete data.approvedTargets[_restrictions.role];
+            for (uint256 i = 0; i < len; i++) {
+                data.approvedTargets[_restrictions.role].add(_restrictions.approvedTargets[i]);
+            }
+        }
+
+        emit RoleUpdated(_restrictions.role, _restrictions);
     }
 
     /// @notice Grant / revoke a role from a given signer.
@@ -133,6 +144,9 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @notice Runs after every `changeRole` run.
+    function _afterChangeRole(RoleRequest calldata _req) internal virtual;
 
     /// @notice Makes the given account an admin.
     function _setAdmin(address _account, bool _isAdmin) internal virtual {
