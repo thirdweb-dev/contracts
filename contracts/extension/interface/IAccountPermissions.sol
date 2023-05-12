@@ -76,6 +76,9 @@ interface IAccountPermissions {
     /// @notice Returns the role restrictions for a given role.
     function getRoleRestrictions(bytes32 role) external view returns (Role memory restrictions);
 
+    /// @notice Returns all accounts that have a role.
+    function getAllRoleMembers(bytes32 role) external view returns (address[] memory members);
+
     /// @dev Verifies that a request is signed by an authorized account.
     function verifyRoleRequest(RoleRequest calldata req, bytes calldata signature)
         external

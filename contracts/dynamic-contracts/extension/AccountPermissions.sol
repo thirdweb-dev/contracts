@@ -5,6 +5,7 @@ pragma solidity ^0.8.0;
 
 import "../../extension/interface/IAccountPermissions.sol";
 import "../../openzeppelin-presets/utils/cryptography/EIP712.sol";
+import "../../openzeppelin-presets/utils/structs/EnumerableSet.sol";
 
 library AccountPermissionsStorage {
     bytes32 public constant ACCOUNT_PERMISSIONS_STORAGE_POSITION = keccak256("account.permissions.storage");
@@ -18,6 +19,8 @@ library AccountPermissionsStorage {
         mapping(address => bytes32) roleOfAccount;
         /// @dev Mapping from a signed request UID => whether the request is processed.
         mapping(bytes32 => bool) executed;
+        /// @dev map from keccak256 hash of a role to its members' data. See {RoleMembers}.
+        mapping(bytes32 => EnumerableSet.AddressSet) roleMembers;
     }
 
     function accountPermissionsStorage() internal pure returns (Data storage accountPermissionsData) {
@@ -30,6 +33,7 @@ library AccountPermissionsStorage {
 
 abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     using ECDSA for bytes32;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     bytes32 private constant TYPEHASH =
         keccak256(
@@ -76,8 +80,10 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
         if (_req.action == RoleAction.GRANT) {
             data.roleOfAccount[_req.target] = _req.role;
+            data.roleMembers[_req.role].add(_req.target);
         } else {
             delete data.roleOfAccount[_req.target];
+            data.roleMembers[_req.role].remove(_req.target);
         }
 
         emit RoleAssignment(_req.role, _req.target, signer, _req);
@@ -104,6 +110,12 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     function getRoleRestrictions(bytes32 _role) external view virtual returns (Role memory) {
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
         return data.roleRestriction[_role];
+    }
+
+    /// @notice Returns all accounts that have a role.
+    function getAllRoleMembers(bytes32 _role) external view virtual returns (address[] memory) {
+        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+        return data.roleMembers[_role].values();
     }
 
     /// @dev Verifies that a request is signed by an authorized account.
