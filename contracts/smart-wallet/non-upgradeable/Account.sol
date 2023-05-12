@@ -13,8 +13,9 @@ import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
 import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
-import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-import "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
+import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
+import "../../eip/ERC1271.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
@@ -31,6 +32,7 @@ import "./AccountFactory.sol";
 
 contract Account is
     Initializable,
+    ERC1271,
     Multicall,
     BaseAccount,
     ContractMetadata,
@@ -97,13 +99,27 @@ contract Account is
     }
 
     /// @notice Returns the balance of the account in Entrypoint.
-    function getDeposit() public view returns (uint256) {
+    function getDeposit() public view virtual returns (uint256) {
         return entryPoint().balanceOf(address(this));
     }
 
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
     function isValidSigner(address _signer) public view virtual returns (bool) {
         return hasRole(SIGNER_ROLE, _signer) || hasRole(DEFAULT_ADMIN_ROLE, _signer);
+    }
+
+    /// @notice See EIP-1271
+    function isValidSignature(bytes32 _hash, bytes memory _signature)
+        public
+        view
+        virtual
+        override
+        returns (bytes4 magicValue)
+    {
+        address signer = _hash.recover(_signature);
+        if (isValidSigner(signer)) {
+            magicValue = MAGICVALUE;
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -132,12 +148,16 @@ contract Account is
     }
 
     /// @notice Deposit funds for this account in Entrypoint.
-    function addDeposit() public payable {
+    function addDeposit() public payable virtual {
         entryPoint().depositTo{ value: msg.value }(address(this));
     }
 
     /// @notice Withdraw funds for this account from Entrypoint.
-    function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public onlyRole(DEFAULT_ADMIN_ROLE) {
+    function withdrawDepositTo(address payable withdrawAddress, uint256 amount)
+        public
+        virtual
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
@@ -150,7 +170,7 @@ contract Account is
         address _target,
         uint256 value,
         bytes memory _calldata
-    ) internal {
+    ) internal virtual {
         (bool success, bytes memory result) = _target.call{ value: value }(_calldata);
         if (!success) {
             assembly {
