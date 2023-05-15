@@ -126,7 +126,7 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
         super._setupRole(role, account);
 
         if (role == SIGNER_ROLE && factory.code.length > 0) {
-            IAccountFactory(factory).addSigner(account);
+            IAccountFactory(factory).onSignerAdded(account);
         }
     }
 
@@ -135,7 +135,7 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
         super._revokeRole(role, account);
 
         if (role == SIGNER_ROLE && factory.code.length > 0) {
-            IAccountFactory(factory).removeSigner(account);
+            IAccountFactory(factory).onSignerRemoved(account);
         }
     }
 }
