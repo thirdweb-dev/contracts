@@ -64,7 +64,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @notice Callback function for an Account to register its signers.
-    function addSigner(address _signer) external {
+    function onSignerAdded(address _signer) external {
         address account = msg.sender;
 
         bool isAlreadyAccount = accountsOfSigner[_signer].add(account);
@@ -78,7 +78,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @notice Callback function for an Account to un-register its signers.
-    function removeSigner(address _signer) external {
+    function onSignerRemoved(address _signer) external {
         address account = msg.sender;
 
         bool isAccount = accountsOfSigner[_signer].remove(account);

@@ -198,7 +198,7 @@ contract Account is
         super._setupRole(role, account);
 
         if (role == SIGNER_ROLE && factory.code.length > 0) {
-            AccountFactory(factory).addSigner(account);
+            AccountFactory(factory).onSignerAdded(account);
         }
     }
 
@@ -207,7 +207,7 @@ contract Account is
         super._revokeRole(role, account);
 
         if (role == SIGNER_ROLE && factory.code.length > 0) {
-            AccountFactory(factory).removeSigner(account);
+            AccountFactory(factory).onSignerRemoved(account);
         }
     }
 
