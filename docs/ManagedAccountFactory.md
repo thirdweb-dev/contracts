@@ -60,22 +60,6 @@ function addExtension(IExtension.Extension _extension) external nonpayable
 |---|---|---|
 | _extension | IExtension.Extension | undefined |
 
-### addSigner
-
-```solidity
-function addSigner(address _signer) external nonpayable
-```
-
-Callback function for an Account to register its signers.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _signer | address | undefined |
-
 ### createAccount
 
 ```solidity
@@ -461,6 +445,38 @@ Receives and executes a batch of function calls on this contract.
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
+### onSignerAdded
+
+```solidity
+function onSignerAdded(address _signer) external nonpayable
+```
+
+Callback function for an Account to register its signers.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+
+### onSignerRemoved
+
+```solidity
+function onSignerRemoved(address _signer) external nonpayable
+```
+
+Callback function for an Account to un-register its signers.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+
 ### removeExtension
 
 ```solidity
@@ -476,22 +492,6 @@ function removeExtension(string _extensionName) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _extensionName | string | undefined |
-
-### removeSigner
-
-```solidity
-function removeSigner(address _signer) external nonpayable
-```
-
-Callback function for an Account to un-register its signers.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _signer | address | undefined |
 
 ### renounceRole
 
