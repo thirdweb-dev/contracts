@@ -65,6 +65,8 @@
     "build": "yarn clean && yarn compile",
     "forge:build": "forge build --hardhat",
     "forge:test": "forge test --hardhat",
-    "export-abi": "hardhat export-abi"
+    "export-abi": "hardhat export-abi",
+    "gas": "forge test --mc Benchmark --gas-report > gasreport.txt",
+    "forge:snapshot": "forge snapshot --check"
   }
 }

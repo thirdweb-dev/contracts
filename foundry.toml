@@ -4,7 +4,24 @@ solc-version = "0.8.12"
 cache = true
 evm_version = 'london'
 force = false
-gas_reports = ["Multiwrap", "SignatureDrop"]
+gas_reports = [
+  "DropERC721Benchmark",
+  "DropERC20Benchmark",
+  "DropERC1155Benchmark",
+  "TokenERC20Benchmark",
+  "TokenERC721Benchmark",
+  "TokenERC1155Benchmark",
+  "MultiwrapBenchmark",
+  "SignatureDropBenchmark",
+  "AirdropERC20Benchmark",
+  "AirdropERC721Benchmark",
+  "AirdropERC1155Benchmark",
+  "NFTStakeBenchmark",
+  "EditionStakeBenchmark",
+  "TokenStakeBenchmark",
+  "PackBenchmark",
+  "PackVRFDirectBenchmark",
+]
 libraries = []
 libs = ['lib']
 optimizer = true
