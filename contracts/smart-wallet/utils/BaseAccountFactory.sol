@@ -47,7 +47,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     /// @notice Deploys a new Account for admin.
     function createAccount(address _admin, bytes calldata _data) external virtual override returns (address) {
         address impl = accountImplementation;
-        bytes32 salt = keccak256(abi.encode(_admin));
+        bytes32 salt = _generateSalt(_admin, _data);
         address account = Clones.predictDeterministicAddress(impl, salt);
 
         if (account.code.length > 0) {
@@ -64,7 +64,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @notice Callback function for an Account to register its signers.
-    function addSigner(address _signer) external {
+    function onSignerAdded(address _signer) external {
         address account = msg.sender;
 
         bool isAlreadyAccount = accountsOfSigner[_signer].add(account);
@@ -78,7 +78,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @notice Callback function for an Account to un-register its signers.
-    function removeSigner(address _signer) external {
+    function onSignerRemoved(address _signer) external {
         address account = msg.sender;
 
         bool isAccount = accountsOfSigner[_signer].remove(account);
@@ -114,6 +114,11 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     /*///////////////////////////////////////////////////////////////
                             Internal functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev Returns the salt used when deploying an Account.
+    function _generateSalt(address _admin, bytes calldata) internal view virtual returns (bytes32) {
+        return keccak256(abi.encode(_admin));
+    }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
     function _initializeAccount(

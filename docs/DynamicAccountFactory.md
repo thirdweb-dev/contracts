@@ -27,22 +27,6 @@ Returns the address of the Account implementation.
 |---|---|---|
 | _0 | address | undefined |
 
-### addSigner
-
-```solidity
-function addSigner(address _signer) external nonpayable
-```
-
-Callback function for an Account to register its signers.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _signer | address | undefined |
-
 ### createAccount
 
 ```solidity
@@ -154,10 +138,26 @@ Receives and executes a batch of function calls on this contract.
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
-### removeSigner
+### onSignerAdded
 
 ```solidity
-function removeSigner(address _signer) external nonpayable
+function onSignerAdded(address _signer) external nonpayable
+```
+
+Callback function for an Account to register its signers.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+
+### onSignerRemoved
+
+```solidity
+function onSignerRemoved(address _signer) external nonpayable
 ```
 
 Callback function for an Account to un-register its signers.
