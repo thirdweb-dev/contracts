@@ -113,7 +113,7 @@ contract Account is
 
             // Check if the role is active. If the signer has no role, this condition will revert because both start and end timestamps are `0`.
             require(
-                restrictions.startTimestamp <= block.timestamp && restrictions.endTimestamp < block.timestamp,
+                restrictions.startTimestamp <= block.timestamp && block.timestamp < restrictions.endTimestamp,
                 "Account: role not active."
             );
 
