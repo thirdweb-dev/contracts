@@ -137,6 +137,8 @@ contract Account is
                     require(restrictions.maxValuePerTransaction >= values[i], "Account: value too high.");
                 }
             }
+
+            return true;
         }
     }
 
