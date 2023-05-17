@@ -9,6 +9,7 @@ import { EntryPoint, IEntryPoint } from "contracts/smart-wallet/utils/Entrypoint
 import { UserOperation } from "contracts/smart-wallet/utils/UserOperation.sol";
 
 // Target
+import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountFactory, Account } from "contracts/smart-wallet/non-upgradeable/AccountFactory.sol";
 
 /// @dev This is a dummy contract to test contract interactions with Account.
@@ -28,7 +29,7 @@ contract Number {
     }
 }
 
-contract AccountTest is BaseTest {
+contract SimpleAccountTest is BaseTest {
     // Target contracts
     EntryPoint private entrypoint;
     AccountFactory private accountFactory;
@@ -51,6 +52,46 @@ contract AccountTest is BaseTest {
     address payable private beneficiary = payable(address(0x45654));
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
+
+    function _setupRoleRequest(address _signer, IAccountPermissions.RoleAction _action)
+        internal
+        returns (IAccountPermissions.RoleRequest memory request, bytes memory signature)
+    {
+        bytes32 typehashRoleRequest = keccak256(
+            "RoleRequest(bytes32 role,address target,uint8 action,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+        );
+        bytes32 nameHash = keccak256(bytes("Account"));
+        bytes32 versionHash = keccak256(bytes("1"));
+        bytes32 typehashEip712 = keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
+        bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
+
+        // Create RoleRequest
+        request = IAccountPermissions.RoleRequest({
+            role: keccak256("SIGNER_ROLE"),
+            target: _signer,
+            action: _action,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: type(uint128).max,
+            uid: bytes32("random uid")
+        });
+
+        bytes memory encodedRequest = abi.encode(
+            typehashRoleRequest,
+            request.role,
+            request.target,
+            request.action,
+            request.validityStartTimestamp,
+            request.validityEndTimestamp,
+            request.uid
+        );
+        bytes32 structHash = keccak256(encodedRequest);
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
+        signature = abi.encodePacked(r, s, v);
+    }
 
     function _setupUserOp(
         uint256 _signerPKey,
@@ -190,6 +231,16 @@ contract AccountTest is BaseTest {
         );
 
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+
+        address account = accountFactory.getAddress(accountAdmin);
+
+        address[] memory approvedTargets = new address[](1);
+        approvedTargets[0] = address(numberContract);
+
+        vm.prank(accountAdmin);
+        Account(payable(account)).setRoleRestrictions(
+            IAccountPermissions.Role(keccak256("SIGNER_ROLE"), approvedTargets, 1 ether, 0, type(uint128).max)
+        );
     }
 
     /// @dev Perform a state changing transaction directly via account.
@@ -287,7 +338,11 @@ contract AccountTest is BaseTest {
         address account = accountFactory.getAddress(accountAdmin);
 
         vm.prank(accountAdmin);
-        Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
+        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+            accountSigner,
+            IAccountPermissions.RoleAction.GRANT
+        );
+        Account(payable(account)).changeRole(req, sig);
 
         assertEq(numberContract.num(), 0);
 
@@ -329,7 +384,11 @@ contract AccountTest is BaseTest {
         address account = accountFactory.getAddress(accountAdmin);
 
         vm.prank(accountAdmin);
-        Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
+        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+            accountSigner,
+            IAccountPermissions.RoleAction.GRANT
+        );
+        Account(payable(account)).changeRole(req, sig);
 
         assertEq(numberContract.num(), 0);
 
