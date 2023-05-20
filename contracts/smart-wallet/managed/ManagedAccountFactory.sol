@@ -40,6 +40,8 @@ contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, Bas
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    receive() external payable override { revert("Cannot accept ether.") }
+
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
