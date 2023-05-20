@@ -3,14 +3,13 @@ pragma solidity ^0.8.12;
 
 // Utils
 
-import "../utils/BaseRouter.sol";
+import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 import "../utils/BaseAccountFactory.sol";
 import "../utils/BaseAccount.sol";
 import "../../openzeppelin-presets/proxy/Clones.sol";
 
 // Smart wallet implementation
-import "../utils/AccountExtension.sol";
 import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
@@ -24,32 +23,18 @@ import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
 
 contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, BaseRouter {
     /*///////////////////////////////////////////////////////////////
-                                State
-    //////////////////////////////////////////////////////////////*/
-
-    address public immutable defaultExtension;
-
-    /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint)
+    constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
+        BaseRouter(_defaultExtensions)
         BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint, address(this)))))
     {
-        defaultExtension = address(new AccountExtension(address(_entrypoint)));
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    receive() external payable override { revert("Cannot accept ether.") }
-
-    /*///////////////////////////////////////////////////////////////
-                            View functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the extension implementation address stored in router, for the given function.
-    function getImplementationForFunction(bytes4 _functionSelector) public view override returns (address) {
-        address impl = getExtensionForFunction(_functionSelector).implementation;
-        return impl != address(0) ? impl : defaultExtension;
+    receive() external payable override {
+        revert("Cannot accept ether.");
     }
 
     /*///////////////////////////////////////////////////////////////

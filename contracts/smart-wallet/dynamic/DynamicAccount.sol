@@ -8,7 +8,7 @@ pragma solidity ^0.8.11;
 import "../non-upgradeable/Account.sol";
 import "../utils/AccountCore.sol";
 
-import "../utils/BaseRouter.sol";
+import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -21,34 +21,16 @@ import "../utils/BaseRouter.sol";
 
 contract DynamicAccount is AccountCore, BaseRouter {
     /*///////////////////////////////////////////////////////////////
-                                Constants
-    //////////////////////////////////////////////////////////////*/
-
-    address public immutable defaultExtension;
-
-    /*///////////////////////////////////////////////////////////////
-                        Constructor and Initializer
+                                Constructor
     //////////////////////////////////////////////////////////////*/
 
     receive() external payable override(Router, AccountCore) {}
 
-    constructor(
-        IEntryPoint _entrypoint,
-        address _factory,
-        address _defaultExtension
-    ) AccountCore(_entrypoint, _factory) {
+    constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
+        AccountCore(_entrypoint, msg.sender)
+        BaseRouter(_defaultExtensions)
+    {
         _disableInitializers();
-        defaultExtension = _defaultExtension;
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                            Public Overrides
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the extension implementation address stored in router, for the given function.
-    function getImplementationForFunction(bytes4 _functionSelector) public view virtual override returns (address) {
-        address impl = getExtensionForFunction(_functionSelector).implementation;
-        return impl != address(0) ? impl : defaultExtension;
     }
 
     /*///////////////////////////////////////////////////////////////
