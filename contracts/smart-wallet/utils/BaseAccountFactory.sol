@@ -67,10 +67,10 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     function onSignerAdded(address _signer) external {
         address account = msg.sender;
 
-        bool isAlreadyAccount = accountsOfSigner[_signer].add(account);
-        bool isAlreadySigner = signersOfAccount[account].add(_signer);
+        bool isNewAccount = accountsOfSigner[_signer].add(account);
+        bool isNewSigner = signersOfAccount[account].add(_signer);
 
-        if (!isAlreadyAccount || !isAlreadySigner) {
+        if (!isNewAccount || !isNewSigner) {
             revert("AccountFactory: signer already added");
         }
 

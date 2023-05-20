@@ -5,7 +5,6 @@ pragma solidity ^0.8.11;
 /* solhint-disable no-inline-assembly */
 /* solhint-disable reason-string */
 
-import "../non-upgradeable/Account.sol";
 import "../utils/AccountCore.sol";
 
 import "lib/dynamic-contracts/src/presets/BaseRouter.sol";

@@ -6,8 +6,6 @@ pragma solidity ^0.8.12;
 import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 import "../utils/BaseAccountFactory.sol";
-import "../utils/BaseAccount.sol";
-import "../../openzeppelin-presets/proxy/Clones.sol";
 
 // Smart wallet implementation
 import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
