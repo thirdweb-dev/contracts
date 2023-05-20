@@ -6,7 +6,7 @@ pragma solidity ^0.8.11;
 /* solhint-disable reason-string */
 
 // Extensions
-import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
+import "../../dynamic-contracts/extension/AccountPermissions.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
 import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
 import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
@@ -25,17 +25,12 @@ import "../interfaces/IAccountFactory.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Holder, ERC1155Holder {
+contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder, ERC1155Holder {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
-
-    bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
-
-    /// @notice EIP 4337 factory for this contract.
-    address public immutable factory;
 
     /// @notice EIP 4337 Entrypoint contract.
     address private immutable entrypointContract;
@@ -47,17 +42,14 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
-    constructor(address _entrypoint, address _factory) {
+    constructor(address _entrypoint) EIP712("Account", "1") {
         factory = _factory;
         entrypointContract = _entrypoint;
     }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() {
-        require(
-            msg.sender == entrypointContract || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
-            "Account: not admin or EntryPoint."
-        );
+        require(msg.sender == entrypointContract || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
         _;
     }
 
@@ -118,24 +110,8 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        return isAdmin(msg.sender);
     }
 
-    /// @notice Registers a signer in the factory.
-    function _setupRole(bytes32 role, address account) internal virtual override {
-        super._setupRole(role, account);
-
-        if (role == SIGNER_ROLE && factory.code.length > 0) {
-            IAccountFactory(factory).onSignerAdded(account);
-        }
-    }
-
-    /// @notice Un-registers a signer in the factory.
-    function _revokeRole(bytes32 role, address account) internal virtual override {
-        super._revokeRole(role, account);
-
-        if (role == SIGNER_ROLE && factory.code.length > 0) {
-            IAccountFactory(factory).onSignerRemoved(account);
-        }
-    }
+    function _afterChangeRole(RoleRequest calldata) internal virtual override {}
 }

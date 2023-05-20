@@ -24,7 +24,6 @@ contract DynamicAccount is AccountCore, BaseRouter {
                                 Constants
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 public constant EXTENSION_ADMIN_ROLE = keccak256("EXTENSION_ADMIN_ROLE");
     address public immutable defaultExtension;
 
     /*///////////////////////////////////////////////////////////////
@@ -33,14 +32,13 @@ contract DynamicAccount is AccountCore, BaseRouter {
 
     receive() external payable override(Router, AccountCore) {}
 
-    constructor(IEntryPoint _entrypoint, address _defaultExtension) AccountCore(_entrypoint) {
+    constructor(
+        IEntryPoint _entrypoint,
+        address _factory,
+        address _defaultExtension
+    ) AccountCore(_entrypoint, _factory) {
         _disableInitializers();
         defaultExtension = _defaultExtension;
-    }
-
-    function initialize(address _defaultAdmin, bytes calldata) public virtual override initializer {
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(EXTENSION_ADMIN_ROLE, _defaultAdmin);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -59,6 +57,6 @@ contract DynamicAccount is AccountCore, BaseRouter {
 
     /// @dev Returns whether a extension can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
-        return _hasRole(EXTENSION_ADMIN_ROLE, msg.sender);
+        return isAdmin(msg.sender);
     }
 }

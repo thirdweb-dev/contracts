@@ -28,7 +28,7 @@ contract DynamicAccountFactory is BaseAccountFactory {
         BaseAccountFactory(
             payable(
                 address(
-                    new DynamicAccount(_entrypoint, address(new AccountExtension(address(_entrypoint), address(this))))
+                    new DynamicAccount(_entrypoint, address(this), address(new AccountExtension(address(_entrypoint))))
                 )
             )
         )
