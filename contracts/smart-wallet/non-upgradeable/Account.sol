@@ -73,7 +73,7 @@ contract Account is
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() {
-        require(msg.sender == entrypointContract || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
+        require(msg.sender == address(entrypointContract) || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
         _;
     }
 

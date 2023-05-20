@@ -14,8 +14,6 @@ import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 
-import "../interfaces/IAccountFactory.sol";
-
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
 // $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
@@ -43,7 +41,6 @@ contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder,
     receive() external payable virtual {}
 
     constructor(address _entrypoint) EIP712("Account", "1") {
-        factory = _factory;
         entrypointContract = _entrypoint;
     }
 
