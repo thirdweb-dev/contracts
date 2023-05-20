@@ -158,13 +158,16 @@ contract OpenEditionERC721 is
         }
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
+        bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
-                revert("!Price");
-            }
+            validMsgValue = msg.value == totalPrice;
+        } else {
+            validMsgValue = msg.value == 0;
         }
+        require(validMsgValue, "!V");
+
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         uint256 fees;
         address feeRecipient;
@@ -178,7 +181,7 @@ contract OpenEditionERC721 is
             fees = (totalPrice * platformFeeBps) / MAX_BPS;
         }
 
-        require(totalPrice >= fees, "Price < fees");
+        require(totalPrice >= fees, "!F");
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), feeRecipient, fees);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - fees);
