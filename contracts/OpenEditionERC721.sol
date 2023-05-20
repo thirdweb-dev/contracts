@@ -32,7 +32,6 @@ import "./extension/PlatformFee.sol";
 import "./extension/Royalty.sol";
 import "./extension/PrimarySale.sol";
 import "./extension/Ownable.sol";
-import "./extension/DelayedReveal.sol";
 import "./extension/SharedMetadata.sol";
 import "./extension/PermissionsEnumerable.sol";
 import "./extension/Drop.sol";
@@ -63,7 +62,7 @@ contract OpenEditionERC721 is
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private transferRole;
-    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
+    /// @dev Only MINTER_ROLE holders can update the shared metadata of tokens.
     bytes32 private minterRole;
 
     /// @dev Max bps in the thirdweb system.
@@ -227,7 +226,7 @@ contract OpenEditionERC721 is
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Returns whether lazy minting can be done in the given execution context.
+    /// @dev Returns whether the shared metadata of tokens can be set in the given execution context.
     function _canSetSharedMetadata() internal view virtual override returns (bool) {
         return hasRole(minterRole, _msgSender());
     }
