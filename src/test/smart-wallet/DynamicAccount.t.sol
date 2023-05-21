@@ -384,6 +384,45 @@ contract DynamicAccountTest is BaseTest {
         assertEq(numberContract.num(), count);
     }
 
+    /// @dev Perform many state changing transactions in a batch via Entrypoint.
+    function test_state_executeBatchTransaction_viaAccountSigner() public {
+        _setup_executeTransaction();
+
+        assertEq(numberContract.num(), 0);
+
+        uint256 count = 3;
+        address[] memory targets = new address[](count);
+        uint256[] memory values = new uint256[](count);
+        bytes[] memory callData = new bytes[](count);
+
+        for (uint256 i = 0; i < count; i += 1) {
+            targets[i] = address(numberContract);
+            values[i] = 0;
+            callData[i] = abi.encodeWithSignature("incrementNum()", i);
+        }
+
+        address account = accountFactory.getAddress(accountAdmin);
+
+        vm.prank(accountAdmin);
+        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+            accountSigner,
+            IAccountPermissions.RoleAction.GRANT
+        );
+        Account(payable(account)).changeRole(req, sig);
+
+        UserOperation[] memory userOp = _setupUserOpExecuteBatch(
+            accountSignerPKey,
+            bytes(""),
+            targets,
+            values,
+            callData
+        );
+
+        EntryPoint(entrypoint).handleOps(userOp, beneficiary);
+
+        assertEq(numberContract.num(), count);
+    }
+
     /// @dev Perform a state changing transaction via Entrypoint and a SIGNER_ROLE holder.
     function test_state_executeTransaction_viaAccountSigner() public {
         _setup_executeTransaction();

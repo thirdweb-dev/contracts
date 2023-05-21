@@ -129,13 +129,15 @@ contract Account is
                 require(data.approvedTargets[role].contains(target), "Account: target not approved.");
             } else if (sig == this.executeBatch.selector) {
                 // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
-                (address[] memory targets, uint256[] memory values) = decodeExecuteBatchCalldata(_userOp.callData);
+                (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
 
                 // For each target+value pair, check if the value is within the allowed range and if the target is approved.
                 for (uint256 i = 0; i < targets.length; i++) {
                     require(data.approvedTargets[role].contains(targets[i]), "Account: target not approved.");
                     require(restrictions.maxValuePerTransaction >= values[i], "Account: value too high.");
                 }
+            } else {
+                revert("Account: calling invalid fn.");
             }
 
             return true;
@@ -218,81 +220,32 @@ contract Account is
     }
 
     function getFunctionSignature(bytes calldata data) internal pure returns (bytes4 functionSelector) {
-        require(data.length >= 4, "Calldata too short");
-
-        bytes4 temp;
-        assembly {
-            calldatacopy(0, add(32, data.offset), 4) // copy first 4 bytes from calldata to memory
-            temp := mload(0) // load from memory to temp
-        }
-
-        functionSelector = temp; // take first 4 bytes as function selector
+        require(data.length >= 4, "Data too short");
+        return bytes4(data[:4]);
     }
 
     function decodeExecuteCalldata(bytes calldata data) internal pure returns (address _target, uint256 _value) {
-        require(data.length >= 4 + 32 + 32, "Calldata too short");
+        require(data.length >= 4 + 32 + 32, "Data too short");
 
-        bytes32 rawAddress;
-        bytes32 rawValue;
-        assembly {
-            calldatacopy(0, add(36, data.offset), 32) // Copy address bytes to memory
-            rawAddress := mload(0) // Load from memory to variable
+        // Decode the address, which is bytes 4 to 35
+        _target = abi.decode(data[4:36], (address));
 
-            calldatacopy(0, add(68, data.offset), 32) // Copy value bytes to memory
-            rawValue := mload(0) // Load from memory to variable
-        }
-
-        return (address(uint160(uint256(rawAddress))), uint256(rawValue));
+        // Decode the value, which is bytes 36 to 68
+        _value = abi.decode(data[36:68], (uint256));
     }
 
     function decodeExecuteBatchCalldata(bytes calldata data)
         internal
         pure
-        returns (address[] memory _targets, uint256[] memory _values)
+        returns (
+            address[] memory _targets,
+            uint256[] memory _values,
+            bytes[] memory _callData
+        )
     {
-        // Check that data is long enough to contain the function selector and the offsets
-        require(data.length >= 4 + 32 * 3, "Calldata too short");
+        require(data.length >= 4 + 32 + 32 + 32, "Data too short");
 
-        uint256 targetsOffset;
-        uint256 valuesOffset;
-        assembly {
-            calldatacopy(0, add(36, data.offset), 32) // Copy the targetsOffset bytes to memory
-            targetsOffset := mload(0) // Load from memory to targetsOffset
-
-            calldatacopy(0, add(68, data.offset), 32) // Copy the valuesOffset bytes to memory
-            valuesOffset := mload(0) // Load from memory to valuesOffset
-        }
-
-        uint256 targetsLength;
-        uint256 valuesLength;
-        assembly {
-            calldatacopy(0, add(add(targetsOffset, 4), data.offset), 32) // Copy the targetsLength bytes to memory
-            targetsLength := mload(0) // Load from memory to targetsLength
-
-            calldatacopy(0, add(add(valuesOffset, 4), data.offset), 32) // Copy the valuesLength bytes to memory
-            valuesLength := mload(0) // Load from memory to valuesLength
-        }
-
-        _targets = new address[](targetsLength);
-        _values = new uint256[](valuesLength);
-
-        for (uint256 i = 0; i < targetsLength; i++) {
-            bytes32 rawAddress;
-            assembly {
-                calldatacopy(0, add(add(add(targetsOffset, 32), mul(i, 32)), data.offset), 32) // Copy the address bytes to memory
-                rawAddress := mload(0) // Load from memory to rawAddress
-            }
-            _targets[i] = address(uint160(uint256(rawAddress)));
-        }
-
-        for (uint256 j = 0; j < valuesLength; j++) {
-            uint256 rawValue;
-            assembly {
-                calldatacopy(0, add(add(add(valuesOffset, 32), mul(j, 32)), data.offset), 32) // Copy the value bytes to memory
-                rawValue := mload(0) // Load from memory to rawValue
-            }
-            _values[j] = rawValue;
-        }
+        (_targets, _values, _callData) = abi.decode(data[4:], (address[], uint256[], bytes[]));
     }
 
     /// @notice Validates the signature of a user operation.
