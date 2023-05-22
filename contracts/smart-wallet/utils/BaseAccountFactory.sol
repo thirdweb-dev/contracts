@@ -96,8 +96,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns the address of an Account that would be deployed with the given admin signer.
-    function getAddress(address _adminSigner) public view returns (address) {
-        bytes32 salt = keccak256(abi.encode(_adminSigner));
+    function getAddress(address _adminSigner, bytes calldata _data) public view returns (address) {
+        bytes32 salt = _generateSalt(_adminSigner, _data);
         return Clones.predictDeterministicAddress(accountImplementation, salt);
     }
 
@@ -121,9 +121,5 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(
-        address _account,
-        address _admin,
-        bytes calldata _data
-    ) internal virtual;
+    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal virtual;
 }
