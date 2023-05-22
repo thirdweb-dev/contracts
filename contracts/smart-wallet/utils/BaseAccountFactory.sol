@@ -121,5 +121,9 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal virtual;
+    function _initializeAccount(
+        address _account,
+        address _admin,
+        bytes calldata _data
+    ) internal virtual;
 }
