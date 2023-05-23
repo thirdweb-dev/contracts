@@ -213,7 +213,7 @@ contract ManagedAccountTest is BaseTest {
     function test_state_executeTransaction() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(numberContract.num(), 0);
 
@@ -227,7 +227,7 @@ contract ManagedAccountTest is BaseTest {
     function test_state_executeBatchTransaction() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(numberContract.num(), 0);
 
@@ -301,7 +301,7 @@ contract ManagedAccountTest is BaseTest {
     function test_state_executeTransaction_viaAccountSigner() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         vm.prank(accountAdmin);
         Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
@@ -343,7 +343,7 @@ contract ManagedAccountTest is BaseTest {
     function test_revert_executeTransaction_nonSigner_viaDirectCall() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         vm.prank(accountAdmin);
         Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
@@ -363,7 +363,7 @@ contract ManagedAccountTest is BaseTest {
     function test_state_accountReceivesNativeTokens() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(address(account).balance, 0);
 
@@ -379,7 +379,7 @@ contract ManagedAccountTest is BaseTest {
 
         uint256 value = 1000;
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
         vm.prank(accountAdmin);
         payable(account).call{ value: value }("");
         assertEq(address(account).balance, value);
@@ -398,7 +398,7 @@ contract ManagedAccountTest is BaseTest {
     function test_state_addAndWithdrawDeposit() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(Account(payable(account)).getDeposit(), 0);
 
@@ -418,7 +418,7 @@ contract ManagedAccountTest is BaseTest {
     /// @dev Send an ERC-721 NFT to an account.
     function test_state_receiveERC721NFT() public {
         _setup_executeTransaction();
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(erc721.balanceOf(account), 0);
 
@@ -430,7 +430,7 @@ contract ManagedAccountTest is BaseTest {
     /// @dev Send an ERC-1155 NFT to an account.
     function test_state_receiveERC1155NFT() public {
         _setup_executeTransaction();
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(erc1155.balanceOf(account, 0), 0);
 
@@ -446,7 +446,7 @@ contract ManagedAccountTest is BaseTest {
     /// @dev Make the account reject ERC-721 NFTs instead of accepting them.
     function test_scenario_changeExtensionForFunction() public {
         _setup_executeTransaction();
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         // The account can initially receive NFTs.
         assertEq(erc721.balanceOf(account), 0);
