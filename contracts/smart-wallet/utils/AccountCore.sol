@@ -84,7 +84,7 @@ contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271, AccountP
         } else {
             // If not an admin, check restrictions for the role held by the signer.
             bytes32 role = data.roleOfAccount[_signer];
-            Role memory restrictions = data.roleRestriction[role];
+            RoleStatic memory restrictions = data.roleRestrictions[role];
 
             // Check if the role is active. If the signer has no role, this condition will revert because both start and end timestamps are `0`.
             require(
@@ -133,7 +133,7 @@ contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271, AccountP
 
         // Get the role held by the recovered signer.
         bytes32 role = data.roleOfAccount[signer];
-        Role memory restrictions = data.roleRestriction[role];
+        RoleStatic memory restrictions = data.roleRestrictions[role];
 
         // Check if the role is active. If the signer has no role, this condition will fail because both start and end timestamps are `0`.
         if (restrictions.startTimestamp <= block.timestamp && restrictions.endTimestamp < block.timestamp) {

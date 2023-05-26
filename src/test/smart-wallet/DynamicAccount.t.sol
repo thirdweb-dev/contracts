@@ -292,7 +292,13 @@ contract DynamicAccountTest is BaseTest {
 
         vm.prank(accountAdmin);
         Account(payable(account)).setRoleRestrictions(
-            IAccountPermissions.Role(keccak256("SIGNER_ROLE"), approvedTargets, 1 ether, 0, type(uint128).max)
+            IAccountPermissions.RoleRestrictions(
+                keccak256("SIGNER_ROLE"),
+                approvedTargets,
+                1 ether,
+                0,
+                type(uint128).max
+            )
         );
     }
 

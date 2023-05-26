@@ -42,9 +42,24 @@ interface IAccountPermissions {
      *  @param startTimestamp The UNIX timestamp at and after which a role holder can call the approved targets.
      *  @param endTimestamp The UNIX timestamp at and after which a role holder can no longer call the approved targets.
      */
-    struct Role {
+    struct RoleRestrictions {
         bytes32 role;
         address[] approvedTargets;
+        uint256 maxValuePerTransaction;
+        uint128 startTimestamp;
+        uint128 endTimestamp;
+    }
+
+    /**
+     *  @notice Internal struct for storing roles without approved targets
+     *
+     *  @param role The unique role identifier.
+     *  @param maxValuePerTransaction The maximum value that can be transferred by a role holder in a single transaction.
+     *  @param startTimestamp The UNIX timestamp at and after which a role holder can call the approved targets.
+     *  @param endTimestamp The UNIX timestamp at and after which a role holder can no longer call the approved targets.
+     */
+    struct RoleStatic {
+        bytes32 role;
         uint256 maxValuePerTransaction;
         uint128 startTimestamp;
         uint128 endTimestamp;
@@ -55,7 +70,7 @@ interface IAccountPermissions {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Emitted when the restrictions for a given role are updated.
-    event RoleUpdated(bytes32 indexed role, Role restrictions);
+    event RoleUpdated(bytes32 indexed role, RoleRestrictions restrictions);
 
     /// @notice Emitted when a role is granted / revoked by an authorized party.
     event RoleAssignment(bytes32 indexed role, address indexed account, address indexed signer, RoleRequest request);
@@ -71,10 +86,10 @@ interface IAccountPermissions {
     function isAdmin(address account) external view returns (bool);
 
     /// @notice Returns the role held by a given account.
-    function getRoleOfAccount(address account) external view returns (Role memory role);
+    function getRoleOfAccount(address account) external view returns (RoleRestrictions memory role);
 
     /// @notice Returns the role restrictions for a given role.
-    function getRoleRestrictions(bytes32 role) external view returns (Role memory restrictions);
+    function getRoleRestrictions(bytes32 role) external view returns (RoleRestrictions memory restrictions);
 
     /// @notice Returns all accounts that have a role.
     function getAllRoleMembers(bytes32 role) external view returns (address[] memory members);
@@ -93,7 +108,7 @@ interface IAccountPermissions {
     function setAdmin(address account, bool isAdmin) external;
 
     /// @notice Sets the restrictions for a given role.
-    function setRoleRestrictions(Role calldata role) external;
+    function setRoleRestrictions(RoleRestrictions calldata role) external;
 
     /// @notice Grant / revoke a role from a given signer.
     function changeRole(RoleRequest calldata req, bytes calldata signature) external;

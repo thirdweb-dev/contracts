@@ -14,7 +14,7 @@ library AccountPermissionsStorage {
         /// @dev Map from address => whether the address is an admin.
         mapping(address => bool) isAdmin;
         /// @dev Map from keccak256 hash of a role => active restrictions for that role.
-        mapping(bytes32 => IAccountPermissions.Role) roleRestriction;
+        mapping(bytes32 => IAccountPermissions.RoleStatic) roleRestrictions;
         /// @dev Map from address => the role held by that address.
         mapping(address => bytes32) roleOfAccount;
         /// @dev Mapping from a signed request UID => whether the request is processed.
@@ -57,11 +57,16 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @notice Sets the restrictions for a given role.
-    function setRoleRestrictions(Role calldata _restrictions) external virtual onlyAdmin {
+    function setRoleRestrictions(RoleRestrictions calldata _restrictions) external virtual onlyAdmin {
         require(_restrictions.role != bytes32(0), "AccountPermissions: role cannot be empty");
 
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        data.roleRestriction[_restrictions.role] = _restrictions;
+        data.roleRestrictions[_restrictions.role] = RoleStatic(
+            _restrictions.role,
+            _restrictions.maxValuePerTransaction,
+            _restrictions.startTimestamp,
+            _restrictions.endTimestamp
+        );
 
         uint256 len = _restrictions.approvedTargets.length;
         delete data.approvedTargets[_restrictions.role];
@@ -109,16 +114,34 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @notice Returns the role held by a given account.
-    function getRoleOfAccount(address _account) external view virtual returns (Role memory) {
+    function getRoleOfAccount(address _account) external view virtual returns (RoleRestrictions memory) {
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
         bytes32 role = data.roleOfAccount[_account];
-        return data.roleRestriction[role];
+        RoleStatic memory roleRestrictions = data.roleRestrictions[role];
+
+        return
+            RoleRestrictions(
+                role,
+                data.approvedTargets[role].values(),
+                roleRestrictions.maxValuePerTransaction,
+                roleRestrictions.startTimestamp,
+                roleRestrictions.endTimestamp
+            );
     }
 
     /// @notice Returns the role restrictions for a given role.
-    function getRoleRestrictions(bytes32 _role) external view virtual returns (Role memory) {
+    function getRoleRestrictions(bytes32 _role) external view virtual returns (RoleRestrictions memory) {
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        return data.roleRestriction[_role];
+        RoleStatic memory roleRestrictions = data.roleRestrictions[_role];
+
+        return
+            RoleRestrictions(
+                _role,
+                data.approvedTargets[_role].values(),
+                roleRestrictions.maxValuePerTransaction,
+                roleRestrictions.startTimestamp,
+                roleRestrictions.endTimestamp
+            );
     }
 
     /// @notice Returns all accounts that have a role.
