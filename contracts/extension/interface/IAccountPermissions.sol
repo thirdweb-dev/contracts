@@ -85,8 +85,8 @@ interface IAccountPermissions {
     /// @notice Returns whether the given account is an admin.
     function isAdmin(address account) external view returns (bool);
 
-    /// @notice Returns the role held by a given account.
-    function getRoleOfAccount(address account) external view returns (RoleRestrictions memory role);
+    /// @notice Returns the role held by a given account along with its restrictions.
+    function getRoleRestrictionsForAccount(address account) external view returns (RoleRestrictions memory role);
 
     /// @notice Returns the role restrictions for a given role.
     function getRoleRestrictions(bytes32 role) external view returns (RoleRestrictions memory restrictions);

@@ -113,8 +113,8 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         return data.isAdmin[_account];
     }
 
-    /// @notice Returns the role held by a given account.
-    function getRoleOfAccount(address _account) external view virtual returns (RoleRestrictions memory) {
+    /// @notice Returns the role held by a given account along with its restrictions.
+    function getRoleRestrictionsForAccount(address _account) external view virtual returns (RoleRestrictions memory) {
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
         bytes32 role = data.roleOfAccount[_account];
         RoleStatic memory roleRestrictions = data.roleRestrictions[role];
