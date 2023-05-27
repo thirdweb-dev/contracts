@@ -73,7 +73,7 @@ contract Account is
     }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
-    modifier onlyAdminOrEntrypoint() {
+    modifier onlyAdminOrEntrypoint() virtual {
         require(
             msg.sender == address(entryPoint()) || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
             "Account: not admin or EntryPoint."
@@ -170,8 +170,9 @@ contract Account is
         address _target,
         uint256 value,
         bytes memory _calldata
-    ) internal virtual {
-        (bool success, bytes memory result) = _target.call{ value: value }(_calldata);
+    ) internal virtual returns (bytes memory result) {
+        bool success;
+        (success, result) = _target.call{ value: value }(_calldata);
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
