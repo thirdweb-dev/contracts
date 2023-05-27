@@ -6,6 +6,10 @@ import "../utils/BaseAccountFactory.sol";
 import "../utils/BaseAccount.sol";
 import "../../openzeppelin-presets/proxy/Clones.sol";
 
+// Extensions
+import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
+import "../../dynamic-contracts/extension/ContractMetadata.sol";
+
 // Interface
 import "../interfaces/IEntrypoint.sol";
 
@@ -21,12 +25,14 @@ import { Account } from "./Account.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountFactory is BaseAccountFactory {
+contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint) BaseAccountFactory(address(new Account(_entrypoint, address(this)))) {}
+    constructor(IEntryPoint _entrypoint) BaseAccountFactory(address(new Account(_entrypoint, address(this)))) {
+        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
 
     /*///////////////////////////////////////////////////////////////
                         Internal functions
@@ -39,5 +45,10 @@ contract AccountFactory is BaseAccountFactory {
         bytes calldata _data
     ) internal override {
         Account(payable(_account)).initialize(_admin, _data);
+    }
+
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }

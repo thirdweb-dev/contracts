@@ -2,10 +2,12 @@
 pragma solidity ^0.8.12;
 
 // Utils
-
 import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
-import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 import "../utils/BaseAccountFactory.sol";
+
+// Extensions
+import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
+import "../../dynamic-contracts/extension/ContractMetadata.sol";
 
 // Smart wallet implementation
 import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
@@ -19,7 +21,7 @@ import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, BaseRouter {
+contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable, BaseRouter {
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -50,6 +52,11 @@ contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, Bas
 
     /// @dev Returns whether an extension can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }
