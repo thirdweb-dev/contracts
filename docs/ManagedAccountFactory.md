@@ -60,6 +60,23 @@ function addExtension(IExtension.Extension _extension) external nonpayable
 |---|---|---|
 | _extension | IExtension.Extension | undefined |
 
+### contractURI
+
+```solidity
+function contractURI() external view returns (string)
+```
+
+Returns the contract metadata URI.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined |
+
 ### createAccount
 
 ```solidity
@@ -83,13 +100,13 @@ Deploys a new Account for admin.
 |---|---|---|
 | _0 | address | undefined |
 
-### defaultExtension
+### defaultExtensionSet
 
 ```solidity
-function defaultExtension() external view returns (address)
+function defaultExtensionSet() external view returns (address)
 ```
 
-
+The DefaultExtensionSet that stores default extensions of the router.
 
 
 
@@ -125,7 +142,7 @@ Returns all accounts that the given address is a signer of.
 ### getAddress
 
 ```solidity
-function getAddress(address _adminSigner) external view returns (address)
+function getAddress(address _adminSigner, bytes _data) external view returns (address)
 ```
 
 Returns the address of an Account that would be deployed with the given admin signer.
@@ -137,6 +154,7 @@ Returns the address of an Account that would be deployed with the given admin si
 | Name | Type | Description |
 |---|---|---|
 | _adminSigner | address | undefined |
+| _data | bytes | undefined |
 
 #### Returns
 
@@ -252,7 +270,7 @@ function getExtensionImplementation(string _extensionName) external view returns
 ### getImplementationForFunction
 
 ```solidity
-function getImplementationForFunction(bytes4 _functionSelector) external view returns (address)
+function getImplementationForFunction(bytes4 _functionSelector) external view returns (address extensionAddress)
 ```
 
 
@@ -269,7 +287,7 @@ function getImplementationForFunction(bytes4 _functionSelector) external view re
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| extensionAddress | address | undefined |
 
 ### getRoleAdmin
 
@@ -527,27 +545,21 @@ Revokes role from an account.
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
 
-### supportsInterface
+### setContractURI
 
 ```solidity
-function supportsInterface(bytes4 interfaceId) external view returns (bool)
+function setContractURI(string _uri) external nonpayable
 ```
 
+Lets a contract admin set the URI for contract-level metadata.
 
-
-*See {IERC165-supportsInterface}.*
+*Caller should be authorized to setup contractURI, e.g. contract admin.                  See {_canSetContractURI}.                  Emits {ContractURIUpdated Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 ### updateExtension
 
@@ -585,6 +597,23 @@ Emitted when a new Account is created.
 |---|---|---|
 | account `indexed` | address | undefined |
 | accountAdmin `indexed` | address | undefined |
+
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
 
 ### ExtensionAdded
 
