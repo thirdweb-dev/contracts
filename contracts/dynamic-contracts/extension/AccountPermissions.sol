@@ -42,7 +42,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
             "RoleRequest(bytes32 role,address target,uint8 action,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
-    modifier onlyAdmin() {
+    modifier onlyAdmin() virtual {
         require(isAdmin(msg.sender), "AccountPermissions: caller is not an admin");
         _;
     }
