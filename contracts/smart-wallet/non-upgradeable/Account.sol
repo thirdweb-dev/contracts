@@ -210,8 +210,9 @@ contract Account is
         address _target,
         uint256 value,
         bytes memory _calldata
-    ) internal virtual {
-        (bool success, bytes memory result) = _target.call{ value: value }(_calldata);
+    ) internal virtual returns (bytes memory result) {
+        bool success;
+        (success, result) = _target.call{ value: value }(_calldata);
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
