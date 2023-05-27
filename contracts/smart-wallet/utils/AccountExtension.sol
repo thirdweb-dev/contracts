@@ -53,7 +53,7 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
     }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
-    modifier onlyAdminOrEntrypoint() {
+    modifier onlyAdminOrEntrypoint() virtual {
         require(
             msg.sender == entrypointContract || hasRole(DEFAULT_ADMIN_ROLE, msg.sender),
             "Account: not admin or EntryPoint."
@@ -107,8 +107,9 @@ contract AccountExtension is ContractMetadata, PermissionsEnumerable, ERC721Hold
         address _target,
         uint256 value,
         bytes memory _calldata
-    ) internal {
-        (bool success, bytes memory result) = _target.call{ value: value }(_calldata);
+    ) internal virtual returns (bytes memory result) {
+        bool success;
+        (success, result) = _target.call{ value: value }(_calldata);
         if (!success) {
             assembly {
                 revert(add(result, 32), mload(result))
