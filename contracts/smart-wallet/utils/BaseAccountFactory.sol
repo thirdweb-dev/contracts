@@ -6,6 +6,7 @@ import "../../extension/Multicall.sol";
 import "../../openzeppelin-presets/proxy/Clones.sol";
 import "../../openzeppelin-presets/utils/structs/EnumerableSet.sol";
 import "../utils/BaseAccount.sol";
+import "../../extension/interface/IAccountPermissions.sol";
 
 // Interface
 import "../interfaces/IEntrypoint.sol";
@@ -67,6 +68,19 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     function onSignerAdded(address _signer) external {
         address account = msg.sender;
 
+        require(account.code.length > 0, "AccountFactory: not an account.");
+
+        bool isAdmin = IAccountPermissions(account).isAdmin(_signer);
+
+        if (!isAdmin) {
+            IAccountPermissions.RoleRestrictions memory restrictions = IAccountPermissions(account)
+                .getRoleRestrictionsForAccount(_signer);
+            require(
+                restrictions.startTimestamp <= block.timestamp && block.timestamp < restrictions.endTimestamp,
+                "AccountFactory: invalid signer."
+            );
+        }
+
         bool isNewAccount = accountsOfSigner[_signer].add(account);
         bool isNewSigner = signersOfAccount[account].add(_signer);
 
@@ -80,6 +94,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     /// @notice Callback function for an Account to un-register its signers.
     function onSignerRemoved(address _signer) external {
         address account = msg.sender;
+
+        require(account.code.length > 0, "AccountFactory: not an account.");
 
         bool isAccount = accountsOfSigner[_signer].remove(account);
         bool isSigner = signersOfAccount[account].remove(_signer);
