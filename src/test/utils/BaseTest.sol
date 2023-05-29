@@ -19,7 +19,6 @@ import { Pack } from "contracts/pack/Pack.sol";
 import { PackVRFDirect } from "contracts/pack/PackVRFDirect.sol";
 import { Split } from "contracts/Split.sol";
 import { DropERC20 } from "contracts/drop/DropERC20.sol";
-import { DropERC721 } from "contracts/drop/DropERC721.sol";
 import { DropERC1155 } from "contracts/drop/DropERC1155.sol";
 import { TokenERC20 } from "contracts/token/TokenERC20.sol";
 import { TokenERC721 } from "contracts/token/TokenERC721.sol";
@@ -115,8 +114,6 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new TokenERC721()));
         TWFactory(factory).addImplementation(address(new TokenERC1155()));
         TWFactory(factory).addImplementation(address(new DropERC20()));
-        TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC721"), 1)));
-        TWFactory(factory).addImplementation(address(new DropERC721()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC1155"), 1)));
         TWFactory(factory).addImplementation(address(new DropERC1155()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("SignatureDrop"), 1)));
@@ -211,24 +208,6 @@ abstract contract BaseTest is DSTest, Test {
                     saleRecipient,
                     platformFeeRecipient,
                     platformFeeBps
-                )
-            )
-        );
-        deployContractProxy(
-            "DropERC721",
-            abi.encodeCall(
-                DropERC721.initialize,
-                (
-                    deployer,
-                    NAME,
-                    SYMBOL,
-                    CONTRACT_URI,
-                    forwarders(),
-                    saleRecipient,
-                    royaltyRecipient,
-                    royaltyBps,
-                    platformFeeBps,
-                    platformFeeRecipient
                 )
             )
         );
