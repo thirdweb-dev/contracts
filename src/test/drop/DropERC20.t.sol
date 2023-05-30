@@ -1,28 +1,146 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "../utils/BaseTest.sol";
 import { DropERC20 } from "contracts/drop/DropERC20.sol";
+import { DropERC20Logic, Drop } from "contracts/drop/extension/DropERC20Logic.sol";
+import { PermissionsEnumerableImpl } from "contracts/dynamic-contracts/impl/PermissionsEnumerableImpl.sol";
+
+import "lib/dynamic-contracts/src/interface/IExtension.sol";
+
+import { TWProxy } from "contracts/TWProxy.sol";
 
 // Test imports
+// import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
 import "contracts/lib/TWStrings.sol";
-import "../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract DropERC20Test is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+contract DropERC20Test is BaseTest, IExtension {
+    using TWStrings for uint256;
+    using TWStrings for address;
 
-    DropERC20 public drop;
+    DropERC20Logic public drop;
 
     using stdStorage for StdStorage;
 
     function setUp() public override {
         super.setUp();
-        drop = DropERC20(getContract("DropERC20"));
+
+        // Deploy implementation.
+        Extension[] memory extensions = _setupExtensions();
+        address dropImpl = address(new DropERC20(extensions));
+
+        // Deploy proxy pointing to implementaion.
+        vm.prank(deployer);
+        drop = DropERC20Logic(
+            payable(
+                address(
+                    new TWProxy(
+                        dropImpl,
+                        abi.encodeCall(
+                            DropERC20.initialize,
+                            (
+                                deployer,
+                                NAME,
+                                SYMBOL,
+                                CONTRACT_URI,
+                                forwarders(),
+                                saleRecipient,
+                                platformFeeBps,
+                                platformFeeRecipient
+                            )
+                        )
+                    )
+                )
+            )
+        );
 
         erc20.mint(deployer, 1_000 ether);
         vm.deal(deployer, 1_000 ether);
+    }
+
+    function _setupExtensions() internal returns (Extension[] memory extensions) {
+        extensions = new Extension[](2);
+
+        // Extension: Permissions
+        address permissions = address(new PermissionsEnumerableImpl());
+
+        Extension memory extension_permissions;
+        extension_permissions.metadata = ExtensionMetadata({
+            name: "Permissions",
+            metadataURI: "ipfs://Permissions",
+            implementation: permissions
+        });
+
+        extension_permissions.functions = new ExtensionFunction[](7);
+        extension_permissions.functions[0] = ExtensionFunction(
+            Permissions.hasRole.selector,
+            "hasRole(bytes32,address)"
+        );
+        extension_permissions.functions[1] = ExtensionFunction(
+            Permissions.hasRoleWithSwitch.selector,
+            "hasRoleWithSwitch(bytes32,address)"
+        );
+        extension_permissions.functions[2] = ExtensionFunction(
+            Permissions.grantRole.selector,
+            "grantRole(bytes32,address)"
+        );
+        extension_permissions.functions[3] = ExtensionFunction(
+            Permissions.renounceRole.selector,
+            "renounceRole(bytes32,address)"
+        );
+        extension_permissions.functions[4] = ExtensionFunction(
+            Permissions.revokeRole.selector,
+            "revokeRole(bytes32,address)"
+        );
+        extension_permissions.functions[5] = ExtensionFunction(
+            PermissionsEnumerable.getRoleMemberCount.selector,
+            "getRoleMemberCount(bytes32)"
+        );
+        extension_permissions.functions[6] = ExtensionFunction(
+            PermissionsEnumerable.getRoleMember.selector,
+            "getRoleMember(bytes32,uint256)"
+        );
+
+        extensions[0] = extension_permissions;
+
+        address dropLogic = address(new DropERC20Logic());
+
+        Extension memory extension_drop;
+        extension_drop.metadata = ExtensionMetadata({
+            name: "DropERC20Logic",
+            metadataURI: "ipfs://DropERC20Logic",
+            implementation: dropLogic
+        });
+
+        extension_drop.functions = new ExtensionFunction[](8);
+        extension_drop.functions[0] = ExtensionFunction(Drop.claimCondition.selector, "claimCondition()");
+        extension_drop.functions[1] = ExtensionFunction(
+            Drop.claim.selector,
+            "claim(address,uint256,address,uint256,(bytes32[],uint256,uint256,address),bytes)"
+        );
+        extension_drop.functions[2] = ExtensionFunction(
+            Drop.setClaimConditions.selector,
+            "setClaimConditions((uint256,uint256,uint256,uint256,bytes32,uint256,address,string)[],bool)"
+        );
+        extension_drop.functions[3] = ExtensionFunction(
+            Drop.getActiveClaimConditionId.selector,
+            "getActiveClaimConditionId()"
+        );
+        extension_drop.functions[4] = ExtensionFunction(
+            Drop.getClaimConditionById.selector,
+            "getClaimConditionById(uint256)"
+        );
+        extension_drop.functions[5] = ExtensionFunction(
+            Drop.getSupplyClaimedByWallet.selector,
+            "getSupplyClaimedByWallet(uint256,address)"
+        );
+        extension_drop.functions[6] = ExtensionFunction(IERC20.balanceOf.selector, "balanceOf(address)");
+        extension_drop.functions[7] = ExtensionFunction(
+            IERC20.transferFrom.selector,
+            "transferFrom(address,address,uint256)"
+        );
+
+        extensions[1] = extension_drop;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -46,7 +164,7 @@ contract DropERC20Test is BaseTest {
             )
         );
 
-        drop.renounceRole(role, caller);
+        Permissions(address(drop)).renounceRole(role, caller);
     }
 
     /**
@@ -66,7 +184,7 @@ contract DropERC20Test is BaseTest {
             )
         );
 
-        drop.revokeRole(role, target);
+        Permissions(address(drop)).revokeRole(role, target);
     }
 
     /**
@@ -78,10 +196,10 @@ contract DropERC20Test is BaseTest {
 
         vm.startPrank(deployer);
 
-        drop.grantRole(role, receiver);
+        Permissions(address(drop)).grantRole(role, receiver);
 
         vm.expectRevert("Can only grant to non holders");
-        drop.grantRole(role, receiver);
+        Permissions(address(drop)).grantRole(role, receiver);
 
         vm.stopPrank();
     }
@@ -93,30 +211,30 @@ contract DropERC20Test is BaseTest {
         bytes32 role = keccak256("TRANSFER_ROLE");
 
         // check if admin and address(0) have transfer role in the beginning
-        bool checkAddressZero = drop.hasRole(role, address(0));
-        bool checkAdmin = drop.hasRole(role, deployer);
+        bool checkAddressZero = Permissions(address(drop)).hasRole(role, address(0));
+        bool checkAdmin = Permissions(address(drop)).hasRole(role, deployer);
         assertTrue(checkAddressZero);
         assertTrue(checkAdmin);
 
         // check if transfer role can be granted to a non-holder
         address receiver = getActor(0);
         vm.startPrank(deployer);
-        drop.grantRole(role, receiver);
+        Permissions(address(drop)).grantRole(role, receiver);
 
         // expect revert when granting to a holder
         vm.expectRevert("Can only grant to non holders");
-        drop.grantRole(role, receiver);
+        Permissions(address(drop)).grantRole(role, receiver);
 
         // check if receiver has transfer role
-        bool checkReceiver = drop.hasRole(role, receiver);
+        bool checkReceiver = Permissions(address(drop)).hasRole(role, receiver);
         assertTrue(checkReceiver);
 
         // check if role is correctly revoked
-        drop.revokeRole(role, receiver);
-        checkReceiver = drop.hasRole(role, receiver);
+        Permissions(address(drop)).revokeRole(role, receiver);
+        checkReceiver = Permissions(address(drop)).hasRole(role, receiver);
         assertFalse(checkReceiver);
-        drop.revokeRole(role, address(0));
-        checkAddressZero = drop.hasRole(role, address(0));
+        Permissions(address(drop)).revokeRole(role, address(0));
+        checkAddressZero = Permissions(address(drop)).hasRole(role, address(0));
         assertFalse(checkAddressZero);
 
         vm.stopPrank();
@@ -128,61 +246,61 @@ contract DropERC20Test is BaseTest {
     function test_state_getRoleMember_transferRole() public {
         bytes32 role = keccak256("TRANSFER_ROLE");
 
-        uint256 roleMemberCount = drop.getRoleMemberCount(role);
+        uint256 roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         assertEq(roleMemberCount, 2);
 
-        address roleMember = drop.getRoleMember(role, 1);
+        address roleMember = PermissionsEnumerable(address(drop)).getRoleMember(role, 1);
         assertEq(roleMember, address(0));
 
         vm.startPrank(deployer);
-        drop.grantRole(role, address(2));
-        drop.grantRole(role, address(3));
-        drop.grantRole(role, address(4));
+        Permissions(address(drop)).grantRole(role, address(2));
+        Permissions(address(drop)).grantRole(role, address(3));
+        Permissions(address(drop)).grantRole(role, address(4));
 
-        roleMemberCount = drop.getRoleMemberCount(role);
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
 
-        drop.revokeRole(role, address(2));
-        roleMemberCount = drop.getRoleMemberCount(role);
+        Permissions(address(drop)).revokeRole(role, address(2));
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
 
-        drop.revokeRole(role, address(0));
-        roleMemberCount = drop.getRoleMemberCount(role);
+        Permissions(address(drop)).revokeRole(role, address(0));
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
 
-        drop.grantRole(role, address(5));
-        roleMemberCount = drop.getRoleMemberCount(role);
+        Permissions(address(drop)).grantRole(role, address(5));
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
 
-        drop.grantRole(role, address(0));
-        roleMemberCount = drop.getRoleMemberCount(role);
+        Permissions(address(drop)).grantRole(role, address(0));
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
 
-        drop.grantRole(role, address(6));
-        roleMemberCount = drop.getRoleMemberCount(role);
+        Permissions(address(drop)).grantRole(role, address(6));
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
     }
@@ -196,10 +314,10 @@ contract DropERC20Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC20.AllowlistProof memory alp;
+        DropERC20Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -211,7 +329,7 @@ contract DropERC20Test is BaseTest {
 
         // revoke transfer role from address(0)
         vm.prank(deployer);
-        drop.revokeRole(keccak256("TRANSFER_ROLE"), address(0));
+        Permissions(address(drop)).revokeRole(keccak256("TRANSFER_ROLE"), address(0));
         vm.startPrank(receiver);
         vm.expectRevert("transfers restricted.");
         drop.transferFrom(receiver, address(123), 0);
@@ -225,13 +343,13 @@ contract DropERC20Test is BaseTest {
         address receiver = getActor(0);
 
         vm.startPrank(deployer);
-        uint256 roleMemberCount = drop.getRoleMemberCount(role);
+        uint256 roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
 
         assertEq(roleMemberCount, 0);
 
-        drop.grantRole(role, receiver);
+        Permissions(address(drop)).grantRole(role, receiver);
 
-        assertEq(drop.getRoleMemberCount(role), 1);
+        assertEq(PermissionsEnumerable(address(drop)).getRoleMemberCount(role), 1);
 
         vm.stopPrank();
     }
@@ -242,10 +360,10 @@ contract DropERC20Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC20.AllowlistProof memory alp;
+        DropERC20Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](1);
         conditions[0].startTimestamp = 100;
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
@@ -276,10 +394,10 @@ contract DropERC20Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC20.AllowlistProof memory alp;
+        DropERC20Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 200;
 
@@ -304,11 +422,11 @@ contract DropERC20Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC20.AllowlistProof memory alp;
+        DropERC20Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = x;
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -355,7 +473,7 @@ contract DropERC20Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        DropERC20.AllowlistProof memory alp;
+        DropERC20Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 300;
         alp.pricePerToken = 0;
@@ -365,7 +483,7 @@ contract DropERC20Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -403,7 +521,7 @@ contract DropERC20Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        DropERC20.AllowlistProof memory alp;
+        DropERC20Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 300 ether;
         alp.pricePerToken = 1 ether;
@@ -413,7 +531,7 @@ contract DropERC20Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500 ether;
         conditions[0].quantityLimitPerWallet = 10 ether;
         conditions[0].merkleRoot = root;
@@ -460,7 +578,7 @@ contract DropERC20Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        DropERC20.AllowlistProof memory alp;
+        DropERC20Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 300 ether;
         alp.pricePerToken = type(uint256).max;
@@ -470,7 +588,7 @@ contract DropERC20Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500 ether;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -513,7 +631,7 @@ contract DropERC20Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        DropERC20.AllowlistProof memory alp;
+        DropERC20Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 0;
         alp.pricePerToken = 5 ether;
@@ -523,7 +641,7 @@ contract DropERC20Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500 ether;
         conditions[0].quantityLimitPerWallet = 10 ether;
         conditions[0].merkleRoot = root;
@@ -567,7 +685,7 @@ contract DropERC20Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        DropERC20.AllowlistProof memory alp;
+        DropERC20Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = x;
         alp.pricePerToken = 0;
@@ -579,7 +697,7 @@ contract DropERC20Test is BaseTest {
 
         // bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = x;
         conditions[0].quantityLimitPerWallet = 1;
         conditions[0].merkleRoot = root;
@@ -616,10 +734,10 @@ contract DropERC20Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC20.AllowlistProof memory alp;
+        DropERC20Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -652,7 +770,7 @@ contract DropERC20Test is BaseTest {
         uint256 currentStartId = 0;
         uint256 count = 0;
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](2);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](2);
         conditions[0].startTimestamp = 0;
         conditions[0].maxClaimableSupply = 10;
         conditions[1].startTimestamp = 1;
@@ -684,7 +802,7 @@ contract DropERC20Test is BaseTest {
 
         uint256 activeConditionId = 0;
 
-        DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](3);
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](3);
         conditions[0].startTimestamp = 10;
         conditions[0].maxClaimableSupply = 11;
         conditions[0].quantityLimitPerWallet = 12;

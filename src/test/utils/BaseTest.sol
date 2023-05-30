@@ -18,7 +18,6 @@ import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
 import { Pack } from "contracts/pack/Pack.sol";
 import { PackVRFDirect } from "contracts/pack/PackVRFDirect.sol";
 import { Split } from "contracts/Split.sol";
-import { DropERC20 } from "contracts/drop/DropERC20.sol";
 import { TokenERC20 } from "contracts/token/TokenERC20.sol";
 import { TokenERC721 } from "contracts/token/TokenERC721.sol";
 import { TokenERC1155 } from "contracts/token/TokenERC1155.sol";
@@ -112,7 +111,6 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new TokenERC20()));
         TWFactory(factory).addImplementation(address(new TokenERC721()));
         TWFactory(factory).addImplementation(address(new TokenERC1155()));
-        TWFactory(factory).addImplementation(address(new DropERC20()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("SignatureDrop"), 1)));
         TWFactory(factory).addImplementation(address(new SignatureDrop()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Marketplace"), 1)));
@@ -189,22 +187,6 @@ abstract contract BaseTest is DSTest, Test {
                     royaltyBps,
                     platformFeeBps,
                     platformFeeRecipient
-                )
-            )
-        );
-        deployContractProxy(
-            "DropERC20",
-            abi.encodeCall(
-                DropERC20.initialize,
-                (
-                    deployer,
-                    NAME,
-                    SYMBOL,
-                    CONTRACT_URI,
-                    forwarders(),
-                    saleRecipient,
-                    platformFeeRecipient,
-                    platformFeeBps
                 )
             )
         );
