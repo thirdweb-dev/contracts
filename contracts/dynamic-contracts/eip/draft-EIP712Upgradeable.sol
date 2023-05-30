@@ -10,6 +10,7 @@ library EIP712Storage {
     bytes32 public constant EIP712_STORAGE_POSITION = keccak256("eip712.storage");
 
     struct Data {
+        /* solhint-disable var-name-mixedcase */
         bytes32 _HASHED_NAME;
         bytes32 _HASHED_VERSION;
     }
