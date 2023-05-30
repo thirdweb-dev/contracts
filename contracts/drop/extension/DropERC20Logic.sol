@@ -73,6 +73,16 @@ contract DropERC20Logic is
     }
 
     /*///////////////////////////////////////////////////////////////
+                        Getter functions
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Global max total supply of tokens.
+    function maxTotalSupply() public view returns (uint256) {
+        DropERC20Storage.Data storage data = DropERC20Storage.dropERC20Storage();
+        return data.maxTotalSupply;
+    }
+
+    /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 

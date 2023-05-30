@@ -275,6 +275,12 @@ contract DropERC721Logic is
         return data._currentIndex;
     }
 
+    /// @dev Global max total supply of NFTs.
+    function maxTotalSupply() public view returns (uint256) {
+        DropERC721Storage.Data storage data = DropERC721Storage.dropERC721Storage();
+        return data.maxTotalSupply;
+    }
+
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) external virtual {
         // note: ERC721AUpgradeable's `_burn(uint256,bool)` internally checks for token approvals.

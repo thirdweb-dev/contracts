@@ -117,6 +117,40 @@ contract DropERC1155Logic is
     }
 
     /*///////////////////////////////////////////////////////////////
+                        Getter functions
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Token name
+    function name() public view returns (string memory) {
+        DropERC1155Storage.Data storage data = DropERC1155Storage.dropERC1155Storage();
+        return data.name;
+    }
+
+    /// @dev Token symbol
+    function symbol() public view returns (string memory) {
+        DropERC1155Storage.Data storage data = DropERC1155Storage.dropERC1155Storage();
+        return data.symbol;
+    }
+
+    /// @dev Total circulating supply of tokens with a given tokenId.
+    function totalSupply(uint256 _tokenId) public view returns (uint256) {
+        DropERC1155Storage.Data storage data = DropERC1155Storage.dropERC1155Storage();
+        return data.totalSupply[_tokenId];
+    }
+
+    /// @dev Global max total supply of tokens with a given tokenId.
+    function maxTotalSupply(uint256 _tokenId) public view returns (uint256) {
+        DropERC1155Storage.Data storage data = DropERC1155Storage.dropERC1155Storage();
+        return data.maxTotalSupply[_tokenId];
+    }
+
+    /// @dev Address of the recipient of primary sales for a given tokenId.
+    function saleRecipient(uint256 _tokenId) public view returns (address) {
+        DropERC1155Storage.Data storage data = DropERC1155Storage.dropERC1155Storage();
+        return data.saleRecipient[_tokenId];
+    }
+
+    /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
