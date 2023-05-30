@@ -1,22 +1,29 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC1155, IPermissions, ILazyMint } from "contracts/drop/DropERC1155.sol";
+import "../utils/BaseTest.sol";
+import { DropERC1155 } from "contracts/drop/DropERC1155.sol";
+import { DropERC1155Logic, ERC1155Upgradeable, LazyMint, Drop1155 } from "contracts/drop/extension/DropERC1155Logic.sol";
+import { PermissionsEnumerableImpl } from "contracts/dynamic-contracts/impl/PermissionsEnumerableImpl.sol";
+import { Royalty } from "contracts/dynamic-contracts/extension/Royalty.sol";
+import { BatchMintMetadata } from "contracts/dynamic-contracts/extension/BatchMintMetadata.sol";
+
+import "lib/dynamic-contracts/src/interface/IExtension.sol";
+
+import { TWProxy } from "contracts/TWProxy.sol";
 
 // Test imports
+// import "contracts/eip/interface/IERC1155.sol";
 import "contracts/lib/TWStrings.sol";
-import "../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract DropERC1155Test is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+contract DropERC1155Test is BaseTest, IExtension {
+    using TWStrings for uint256;
+    using TWStrings for address;
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
-    DropERC1155 public drop;
+    DropERC1155Logic public drop;
 
     bytes private emptyEncodedBytes = abi.encode("", "");
 
@@ -24,10 +31,164 @@ contract DropERC1155Test is BaseTest {
 
     function setUp() public override {
         super.setUp();
-        drop = DropERC1155(getContract("DropERC1155"));
+        // Deploy implementation.
+        Extension[] memory extensions = _setupExtensions();
+        address dropImpl = address(new DropERC1155(extensions));
+
+        // Deploy proxy pointing to implementaion.
+        vm.prank(deployer);
+        drop = DropERC1155Logic(
+            payable(
+                address(
+                    new TWProxy(
+                        dropImpl,
+                        abi.encodeCall(
+                            DropERC1155.initialize,
+                            (
+                                deployer,
+                                NAME,
+                                SYMBOL,
+                                CONTRACT_URI,
+                                forwarders(),
+                                saleRecipient,
+                                royaltyRecipient,
+                                royaltyBps,
+                                platformFeeBps,
+                                platformFeeRecipient
+                            )
+                        )
+                    )
+                )
+            )
+        );
 
         erc20.mint(deployer, 1_000 ether);
         vm.deal(deployer, 1_000 ether);
+    }
+
+    function _setupExtensions() internal returns (Extension[] memory extensions) {
+        extensions = new Extension[](2);
+
+        // Extension: Permissions
+        address permissions = address(new PermissionsEnumerableImpl());
+
+        Extension memory extension_permissions;
+        extension_permissions.metadata = ExtensionMetadata({
+            name: "Permissions",
+            metadataURI: "ipfs://Permissions",
+            implementation: permissions
+        });
+
+        extension_permissions.functions = new ExtensionFunction[](7);
+        extension_permissions.functions[0] = ExtensionFunction(
+            Permissions.hasRole.selector,
+            "hasRole(bytes32,address)"
+        );
+        extension_permissions.functions[1] = ExtensionFunction(
+            Permissions.hasRoleWithSwitch.selector,
+            "hasRoleWithSwitch(bytes32,address)"
+        );
+        extension_permissions.functions[2] = ExtensionFunction(
+            Permissions.grantRole.selector,
+            "grantRole(bytes32,address)"
+        );
+        extension_permissions.functions[3] = ExtensionFunction(
+            Permissions.renounceRole.selector,
+            "renounceRole(bytes32,address)"
+        );
+        extension_permissions.functions[4] = ExtensionFunction(
+            Permissions.revokeRole.selector,
+            "revokeRole(bytes32,address)"
+        );
+        extension_permissions.functions[5] = ExtensionFunction(
+            PermissionsEnumerable.getRoleMemberCount.selector,
+            "getRoleMemberCount(bytes32)"
+        );
+        extension_permissions.functions[6] = ExtensionFunction(
+            PermissionsEnumerable.getRoleMember.selector,
+            "getRoleMember(bytes32,uint256)"
+        );
+
+        extensions[0] = extension_permissions;
+
+        address dropLogic = address(new DropERC1155Logic());
+
+        Extension memory extension_drop;
+        extension_drop.metadata = ExtensionMetadata({
+            name: "DropERC1155Logic",
+            metadataURI: "ipfs://DropERC1155Logic",
+            implementation: dropLogic
+        });
+
+        extension_drop.functions = new ExtensionFunction[](19);
+        extension_drop.functions[0] = ExtensionFunction(DropERC1155Logic.uri.selector, "uri(uint256)");
+        extension_drop.functions[1] = ExtensionFunction(LazyMint.lazyMint.selector, "lazyMint(uint256,string,bytes)");
+        extension_drop.functions[2] = ExtensionFunction(IERC721.ownerOf.selector, "ownerOf(uint256)");
+        extension_drop.functions[3] = ExtensionFunction(Drop1155.claimCondition.selector, "claimCondition(uint256)");
+        extension_drop.functions[4] = ExtensionFunction(
+            BatchMintMetadata.getBaseURICount.selector,
+            "getBaseURICount()"
+        );
+        extension_drop.functions[5] = ExtensionFunction(
+            Drop1155.claim.selector,
+            "claim(address,uint256,uint256,address,uint256,(bytes32[],uint256,uint256,address),bytes)"
+        );
+        extension_drop.functions[6] = ExtensionFunction(
+            Drop1155.setClaimConditions.selector,
+            "setClaimConditions(uint256,(uint256,uint256,uint256,uint256,bytes32,uint256,address,string)[],bool)"
+        );
+        extension_drop.functions[7] = ExtensionFunction(
+            Drop1155.getActiveClaimConditionId.selector,
+            "getActiveClaimConditionId(uint256)"
+        );
+        extension_drop.functions[8] = ExtensionFunction(
+            Drop1155.getClaimConditionById.selector,
+            "getClaimConditionById(uint256,uint256)"
+        );
+        extension_drop.functions[9] = ExtensionFunction(
+            Drop1155.getSupplyClaimedByWallet.selector,
+            "getSupplyClaimedByWallet(uint256,uint256,address)"
+        );
+        extension_drop.functions[10] = ExtensionFunction(
+            DropERC1155Logic.nextTokenIdToMint.selector,
+            "nextTokenIdToMint()"
+        );
+        extension_drop.functions[11] = ExtensionFunction(
+            DropERC1155Logic.setApprovalForAll.selector,
+            "setApprovalForAll(address,bool)"
+        );
+
+        extension_drop.functions[12] = ExtensionFunction(
+            ERC1155Upgradeable.balanceOf.selector,
+            "balanceOf(address,uint256)"
+        );
+        extension_drop.functions[13] = ExtensionFunction(
+            DropERC1155Logic.supportsInterface.selector,
+            "supportsInterface(bytes4)"
+        );
+        extension_drop.functions[14] = ExtensionFunction(Royalty.royaltyInfo.selector, "royaltyInfo(uint256,uint256)");
+        extension_drop.functions[15] = ExtensionFunction(
+            Royalty.getRoyaltyInfoForToken.selector,
+            "getRoyaltyInfoForToken(uint256)"
+        );
+        extension_drop.functions[16] = ExtensionFunction(
+            Royalty.getDefaultRoyaltyInfo.selector,
+            "getDefaultRoyaltyInfo()"
+        );
+        extension_drop.functions[17] = ExtensionFunction(
+            Royalty.setDefaultRoyaltyInfo.selector,
+            "setDefaultRoyaltyInfo(address,uint256)"
+        );
+        extension_drop.functions[18] = ExtensionFunction(
+            Royalty.setRoyaltyInfoForToken.selector,
+            "setRoyaltyInfoForToken(uint256,address,uint256)"
+        );
+        extension_drop.functions[12] = ExtensionFunction(
+            ERC1155Upgradeable.safeTransferFrom.selector,
+            "safeTransferFrom(address,address,uint256,uint256,bytes)"
+        );
+
+        extensions[1] = extension_drop;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -51,7 +212,7 @@ contract DropERC1155Test is BaseTest {
             )
         );
 
-        drop.renounceRole(role, caller);
+        Permissions(address(drop)).renounceRole(role, caller);
     }
 
     /**
@@ -71,7 +232,7 @@ contract DropERC1155Test is BaseTest {
             )
         );
 
-        drop.revokeRole(role, target);
+        Permissions(address(drop)).revokeRole(role, target);
     }
 
     /**
@@ -83,10 +244,10 @@ contract DropERC1155Test is BaseTest {
 
         vm.startPrank(deployer);
 
-        drop.grantRole(role, receiver);
+        Permissions(address(drop)).grantRole(role, receiver);
 
         vm.expectRevert("Can only grant to non holders");
-        drop.grantRole(role, receiver);
+        Permissions(address(drop)).grantRole(role, receiver);
 
         vm.stopPrank();
     }
@@ -98,30 +259,30 @@ contract DropERC1155Test is BaseTest {
         bytes32 role = keccak256("TRANSFER_ROLE");
 
         // check if admin and address(0) have transfer role in the beginning
-        bool checkAddressZero = drop.hasRole(role, address(0));
-        bool checkAdmin = drop.hasRole(role, deployer);
+        bool checkAddressZero = Permissions(address(drop)).hasRole(role, address(0));
+        bool checkAdmin = Permissions(address(drop)).hasRole(role, deployer);
         assertTrue(checkAddressZero);
         assertTrue(checkAdmin);
 
         // check if transfer role can be granted to a non-holder
         address receiver = getActor(0);
         vm.startPrank(deployer);
-        drop.grantRole(role, receiver);
+        Permissions(address(drop)).grantRole(role, receiver);
 
         // expect revert when granting to a holder
         vm.expectRevert("Can only grant to non holders");
-        drop.grantRole(role, receiver);
+        Permissions(address(drop)).grantRole(role, receiver);
 
         // check if receiver has transfer role
-        bool checkReceiver = drop.hasRole(role, receiver);
+        bool checkReceiver = Permissions(address(drop)).hasRole(role, receiver);
         assertTrue(checkReceiver);
 
         // check if role is correctly revoked
-        drop.revokeRole(role, receiver);
-        checkReceiver = drop.hasRole(role, receiver);
+        Permissions(address(drop)).revokeRole(role, receiver);
+        checkReceiver = Permissions(address(drop)).hasRole(role, receiver);
         assertFalse(checkReceiver);
-        drop.revokeRole(role, address(0));
-        checkAddressZero = drop.hasRole(role, address(0));
+        Permissions(address(drop)).revokeRole(role, address(0));
+        checkAddressZero = Permissions(address(drop)).hasRole(role, address(0));
         assertFalse(checkAddressZero);
 
         vm.stopPrank();
@@ -133,61 +294,61 @@ contract DropERC1155Test is BaseTest {
     function test_state_getRoleMember_transferRole() public {
         bytes32 role = keccak256("TRANSFER_ROLE");
 
-        uint256 roleMemberCount = drop.getRoleMemberCount(role);
+        uint256 roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         assertEq(roleMemberCount, 2);
 
-        address roleMember = drop.getRoleMember(role, 1);
+        address roleMember = PermissionsEnumerable(address(drop)).getRoleMember(role, 1);
         assertEq(roleMember, address(0));
 
         vm.startPrank(deployer);
-        drop.grantRole(role, address(2));
-        drop.grantRole(role, address(3));
-        drop.grantRole(role, address(4));
+        Permissions(address(drop)).grantRole(role, address(2));
+        Permissions(address(drop)).grantRole(role, address(3));
+        Permissions(address(drop)).grantRole(role, address(4));
 
-        roleMemberCount = drop.getRoleMemberCount(role);
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
 
-        drop.revokeRole(role, address(2));
-        roleMemberCount = drop.getRoleMemberCount(role);
+        Permissions(address(drop)).revokeRole(role, address(2));
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
 
-        drop.revokeRole(role, address(0));
-        roleMemberCount = drop.getRoleMemberCount(role);
+        Permissions(address(drop)).revokeRole(role, address(0));
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
 
-        drop.grantRole(role, address(5));
-        roleMemberCount = drop.getRoleMemberCount(role);
+        Permissions(address(drop)).grantRole(role, address(5));
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
 
-        drop.grantRole(role, address(0));
-        roleMemberCount = drop.getRoleMemberCount(role);
+        Permissions(address(drop)).grantRole(role, address(0));
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
 
-        drop.grantRole(role, address(6));
-        roleMemberCount = drop.getRoleMemberCount(role);
+        Permissions(address(drop)).grantRole(role, address(6));
+        roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
+            console.log(PermissionsEnumerable(address(drop)).getRoleMember(role, i));
         }
         console.log("");
     }
@@ -202,10 +363,10 @@ contract DropERC1155Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC1155.AllowlistProof memory alp;
+        DropERC1155Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -219,7 +380,7 @@ contract DropERC1155Test is BaseTest {
 
         // revoke transfer role from address(0)
         vm.prank(deployer);
-        drop.revokeRole(keccak256("TRANSFER_ROLE"), address(0));
+        Permissions(address(drop)).revokeRole(keccak256("TRANSFER_ROLE"), address(0));
         vm.startPrank(receiver);
         vm.expectRevert("restricted to TRANSFER_ROLE holders.");
         drop.safeTransferFrom(receiver, address(123), 0, 0, "");
@@ -233,13 +394,13 @@ contract DropERC1155Test is BaseTest {
         address receiver = getActor(0);
 
         vm.startPrank(deployer);
-        uint256 roleMemberCount = drop.getRoleMemberCount(role);
+        uint256 roleMemberCount = PermissionsEnumerable(address(drop)).getRoleMemberCount(role);
 
         assertEq(roleMemberCount, 0);
 
-        drop.grantRole(role, receiver);
+        Permissions(address(drop)).grantRole(role, receiver);
 
-        assertEq(drop.getRoleMemberCount(role), 1);
+        assertEq(PermissionsEnumerable(address(drop)).getRoleMemberCount(role), 1);
 
         vm.stopPrank();
     }
@@ -251,10 +412,10 @@ contract DropERC1155Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC1155.AllowlistProof memory alp;
+        DropERC1155Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](1);
         conditions[0].startTimestamp = 100;
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
@@ -407,10 +568,10 @@ contract DropERC1155Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC1155.AllowlistProof memory alp;
+        DropERC1155Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 200;
 
@@ -434,10 +595,10 @@ contract DropERC1155Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC1155.AllowlistProof memory alp;
+        DropERC1155Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 200;
 
@@ -465,11 +626,11 @@ contract DropERC1155Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC1155.AllowlistProof memory alp;
+        DropERC1155Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = x;
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -520,7 +681,7 @@ contract DropERC1155Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        DropERC1155.AllowlistProof memory alp;
+        DropERC1155Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 300;
         alp.pricePerToken = 0;
@@ -530,7 +691,7 @@ contract DropERC1155Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -571,7 +732,7 @@ contract DropERC1155Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        DropERC1155.AllowlistProof memory alp;
+        DropERC1155Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 300;
         alp.pricePerToken = 5;
@@ -581,7 +742,7 @@ contract DropERC1155Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -631,7 +792,7 @@ contract DropERC1155Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        DropERC1155.AllowlistProof memory alp;
+        DropERC1155Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 300;
         alp.pricePerToken = type(uint256).max;
@@ -641,7 +802,7 @@ contract DropERC1155Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -687,7 +848,7 @@ contract DropERC1155Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        DropERC1155.AllowlistProof memory alp;
+        DropERC1155Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 0;
         alp.pricePerToken = 5;
@@ -697,7 +858,7 @@ contract DropERC1155Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -744,7 +905,7 @@ contract DropERC1155Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        DropERC1155.AllowlistProof memory alp;
+        DropERC1155Logic.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = x;
         alp.pricePerToken = 0;
@@ -756,7 +917,7 @@ contract DropERC1155Test is BaseTest {
 
         // bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = x;
         conditions[0].quantityLimitPerWallet = 1;
         conditions[0].merkleRoot = root;
@@ -796,10 +957,10 @@ contract DropERC1155Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC1155.AllowlistProof memory alp;
+        DropERC1155Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -836,7 +997,7 @@ contract DropERC1155Test is BaseTest {
         uint256 currentStartId = 0;
         uint256 count = 0;
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](2);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](2);
         conditions[0].startTimestamp = 0;
         conditions[0].maxClaimableSupply = 10;
         conditions[1].startTimestamp = 1;
@@ -869,7 +1030,7 @@ contract DropERC1155Test is BaseTest {
         uint256 _tokenId = 0;
         uint256 activeConditionId = 0;
 
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](3);
+        DropERC1155Logic.ClaimCondition[] memory conditions = new DropERC1155Logic.ClaimCondition[](3);
         conditions[0].startTimestamp = 10;
         conditions[0].maxClaimableSupply = 11;
         conditions[0].quantityLimitPerWallet = 12;
