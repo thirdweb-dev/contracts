@@ -12,10 +12,12 @@ import "./../utils/BaseAccount.sol";
 import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
 import "../../eip/ERC1271.sol";
+import "../../dynamic-contracts/extension/AccountPermissions.sol";
 
 // Utils
+import "./BaseAccountFactory.sol";
+import "../non-upgradeable/Account.sol";
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
-import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -26,15 +28,16 @@ import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271 {
+contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271, AccountPermissions {
     using ECDSA for bytes32;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 public constant DEFAULT_ADMIN_ROLE = 0x00;
-    bytes32 public constant SIGNER_ROLE = keccak256("SIGNER_ROLE");
+    /// @notice EIP 4337 factory for this contract.
+    address public immutable factory;
 
     /// @notice EIP 4337 Entrypoint contract.
     IEntryPoint private immutable entrypointContract;
@@ -46,13 +49,15 @@ contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271 {
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
-    constructor(IEntryPoint _entrypoint) {
+    constructor(IEntryPoint _entrypoint, address _factory) EIP712("Account", "1") {
+        _disableInitializers();
+        factory = _factory;
         entrypointContract = _entrypoint;
     }
 
     /// @notice Initializes the smart contract wallet.
     function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setAdmin(_defaultAdmin, true);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -70,8 +75,48 @@ contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271 {
     }
 
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
-    function isValidSigner(address _signer) public view virtual returns (bool) {
-        return _hasRole(SIGNER_ROLE, _signer) || _hasRole(DEFAULT_ADMIN_ROLE, _signer);
+    function isValidSigner(address _signer, UserOperation calldata _userOp) public view virtual returns (bool) {
+        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+
+        // First, check if the signer is an admin.
+        if (data.isAdmin[_signer]) {
+            return true;
+        } else {
+            // If not an admin, check restrictions for the role held by the signer.
+            bytes32 role = data.roleOfAccount[_signer];
+            RoleStatic memory restrictions = data.roleRestrictions[role];
+
+            // Check if the role is active. If the signer has no role, this condition will revert because both start and end timestamps are `0`.
+            require(
+                restrictions.startTimestamp <= block.timestamp && block.timestamp < restrictions.endTimestamp,
+                "Account: role not active."
+            );
+
+            // Extract the function signature from the userOp calldata and check whether the signer is attempting to call `execute` or `executeBatch`.
+            bytes4 sig = getFunctionSignature(_userOp.callData);
+
+            if (sig == Account.execute.selector) {
+                // Extract the `target` and `value` arguments from the calldata for `execute`.
+                (address target, uint256 value) = decodeExecuteCalldata(_userOp.callData);
+
+                // Check if the value is within the allowed range and if the target is approved.
+                require(restrictions.maxValuePerTransaction >= value, "Account: value too high.");
+                require(data.approvedTargets[role].contains(target), "Account: target not approved.");
+            } else if (sig == Account.executeBatch.selector) {
+                // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
+                (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
+
+                // For each target+value pair, check if the value is within the allowed range and if the target is approved.
+                for (uint256 i = 0; i < targets.length; i++) {
+                    require(data.approvedTargets[role].contains(targets[i]), "Account: target not approved.");
+                    require(restrictions.maxValuePerTransaction >= values[i], "Account: value too high.");
+                }
+            } else {
+                revert("Account: calling invalid fn.");
+            }
+
+            return true;
+        }
     }
 
     /// @notice See EIP-1271
@@ -83,7 +128,15 @@ contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271 {
         returns (bytes4 magicValue)
     {
         address signer = _hash.recover(_signature);
-        if (isValidSigner(signer)) {
+
+        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+
+        // Get the role held by the recovered signer.
+        bytes32 role = data.roleOfAccount[signer];
+        RoleStatic memory restrictions = data.roleRestrictions[role];
+
+        // Check if the role is active. If the signer has no role, this condition will fail because both start and end timestamps are `0`.
+        if (restrictions.startTimestamp <= block.timestamp && restrictions.endTimestamp < block.timestamp) {
             magicValue = MAGICVALUE;
         }
     }
@@ -98,14 +151,42 @@ contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271 {
     }
 
     /// @notice Withdraw funds for this account from Entrypoint.
-    function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public {
-        require(_hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Account: not admin");
+    function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public onlyAdmin {
         entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
+
+    function getFunctionSignature(bytes calldata data) internal pure returns (bytes4 functionSelector) {
+        require(data.length >= 4, "Data too short");
+        return bytes4(data[:4]);
+    }
+
+    function decodeExecuteCalldata(bytes calldata data) internal pure returns (address _target, uint256 _value) {
+        require(data.length >= 4 + 32 + 32, "Data too short");
+
+        // Decode the address, which is bytes 4 to 35
+        _target = abi.decode(data[4:36], (address));
+
+        // Decode the value, which is bytes 36 to 68
+        _value = abi.decode(data[36:68], (uint256));
+    }
+
+    function decodeExecuteBatchCalldata(bytes calldata data)
+        internal
+        pure
+        returns (
+            address[] memory _targets,
+            uint256[] memory _values,
+            bytes[] memory _callData
+        )
+    {
+        require(data.length >= 4 + 32 + 32 + 32, "Data too short");
+
+        (_targets, _values, _callData) = abi.decode(data[4:], (address[], uint256[], bytes[]));
+    }
 
     /// @notice Validates the signature of a user operation.
     function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
@@ -117,23 +198,30 @@ contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271 {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         address signer = hash.recover(userOp.signature);
 
-        if (!isValidSigner(signer)) return SIG_VALIDATION_FAILED;
+        if (!isValidSigner(signer, userOp)) return SIG_VALIDATION_FAILED;
         return 0;
     }
 
-    /// @notice See Permissions-hasRole
-    function _hasRole(bytes32 _role, address _account) internal view returns (bool) {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
-        return data._hasRole[_role][_account];
+    /// @notice Makes the given account an admin.
+    function _setAdmin(address _account, bool _isAdmin) internal virtual override {
+        super._setAdmin(_account, _isAdmin);
+        if (factory.code.length > 0) {
+            if (_isAdmin) {
+                BaseAccountFactory(factory).onSignerAdded(_account);
+            } else {
+                BaseAccountFactory(factory).onSignerRemoved(_account);
+            }
+        }
     }
 
-    /// @notice See Permissions-RoleGranted
-    event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
-
-    /// @notice See Permissions-setupRole
-    function _setupRole(bytes32 role, address account) internal virtual {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
-        data._hasRole[role][account] = true;
-        emit RoleGranted(role, account, msg.sender);
+    /// @notice Runs after every `changeRole` run.
+    function _afterChangeRole(RoleRequest calldata _req) internal virtual override {
+        if (factory.code.length > 0) {
+            if (_req.action == RoleAction.GRANT) {
+                BaseAccountFactory(factory).onSignerAdded(_req.target);
+            } else if (_req.action == RoleAction.REVOKE) {
+                BaseAccountFactory(factory).onSignerRemoved(_req.target);
+            }
+        }
     }
 }
