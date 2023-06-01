@@ -27,22 +27,6 @@ Returns the address of the Account implementation.
 |---|---|---|
 | _0 | address | undefined |
 
-### addSigner
-
-```solidity
-function addSigner(address _signer) external nonpayable
-```
-
-Callback function for an Account to register its signers.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _signer | address | undefined |
-
 ### createAccount
 
 ```solidity
@@ -91,7 +75,7 @@ Returns all accounts that the given address is a signer of.
 ### getAddress
 
 ```solidity
-function getAddress(address _adminSigner) external view returns (address)
+function getAddress(address _adminSigner, bytes _data) external view returns (address)
 ```
 
 Returns the address of an Account that would be deployed with the given admin signer.
@@ -103,6 +87,7 @@ Returns the address of an Account that would be deployed with the given admin si
 | Name | Type | Description |
 |---|---|---|
 | _adminSigner | address | undefined |
+| _data | bytes | undefined |
 
 #### Returns
 
@@ -154,10 +139,26 @@ Receives and executes a batch of function calls on this contract.
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
-### removeSigner
+### onSignerAdded
 
 ```solidity
-function removeSigner(address _signer) external nonpayable
+function onSignerAdded(address _signer) external nonpayable
+```
+
+Callback function for an Account to register its signers.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+
+### onSignerRemoved
+
+```solidity
+function onSignerRemoved(address _signer) external nonpayable
 ```
 
 Callback function for an Account to un-register its signers.

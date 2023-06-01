@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-// OpenZeppelin Contracts (last updated v4.5.0) (utils/cryptography/ECDSA.sol)
+// OpenZeppelin Contracts (last updated v4.8.0) (utils/cryptography/ECDSA.sol)
 
 pragma solidity ^0.8.0;
 
@@ -17,7 +17,7 @@ library ECDSA {
         InvalidSignature,
         InvalidSignatureLength,
         InvalidSignatureS,
-        InvalidSignatureV
+        InvalidSignatureV // Deprecated in v4.8
     }
 
     function _throwError(RecoverError error) private pure {
@@ -29,8 +29,6 @@ library ECDSA {
             revert("ECDSA: invalid signature length");
         } else if (error == RecoverError.InvalidSignatureS) {
             revert("ECDSA: invalid signature 's' value");
-        } else if (error == RecoverError.InvalidSignatureV) {
-            revert("ECDSA: invalid signature 'v' value");
         }
     }
 
@@ -55,31 +53,19 @@ library ECDSA {
      * _Available since v4.3._
      */
     function tryRecover(bytes32 hash, bytes memory signature) internal pure returns (address, RecoverError) {
-        // Check the signature length
-        // - case 65: r,s,v signature (standard)
-        // - case 64: r,vs signature (cf https://eips.ethereum.org/EIPS/eip-2098) _Available since v4.1._
         if (signature.length == 65) {
             bytes32 r;
             bytes32 s;
             uint8 v;
             // ecrecover takes the signature parameters, and the only way to get them
             // currently is to use assembly.
+            /// @solidity memory-safe-assembly
             assembly {
                 r := mload(add(signature, 0x20))
                 s := mload(add(signature, 0x40))
                 v := byte(0, mload(add(signature, 0x60)))
             }
             return tryRecover(hash, v, r, s);
-        } else if (signature.length == 64) {
-            bytes32 r;
-            bytes32 vs;
-            // ecrecover takes the signature parameters, and the only way to get them
-            // currently is to use assembly.
-            assembly {
-                r := mload(add(signature, 0x20))
-                vs := mload(add(signature, 0x40))
-            }
-            return tryRecover(hash, r, vs);
         } else {
             return (address(0), RecoverError.InvalidSignatureLength);
         }
@@ -161,9 +147,6 @@ library ECDSA {
         if (uint256(s) > 0x7FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF5D576E7357A4501DDFE92F46681B20A0) {
             return (address(0), RecoverError.InvalidSignatureS);
         }
-        if (v != 27 && v != 28) {
-            return (address(0), RecoverError.InvalidSignatureV);
-        }
 
         // If the signature is valid (and not malleable), return the signer address
         address signer = ecrecover(hash, v, r, s);
@@ -197,10 +180,15 @@ library ECDSA {
      *
      * See {recover}.
      */
-    function toEthSignedMessageHash(bytes32 hash) internal pure returns (bytes32) {
+    function toEthSignedMessageHash(bytes32 hash) internal pure returns (bytes32 message) {
         // 32 is the length in bytes of hash,
         // enforced by the type signature above
-        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", hash));
+        /// @solidity memory-safe-assembly
+        assembly {
+            mstore(0x00, "\x19Ethereum Signed Message:\n32")
+            mstore(0x1c, hash)
+            message := keccak256(0x00, 0x3c)
+        }
     }
 
     /**
@@ -224,7 +212,24 @@ library ECDSA {
      *
      * See {recover}.
      */
-    function toTypedDataHash(bytes32 domainSeparator, bytes32 structHash) internal pure returns (bytes32) {
-        return keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+    function toTypedDataHash(bytes32 domainSeparator, bytes32 structHash) internal pure returns (bytes32 data) {
+        /// @solidity memory-safe-assembly
+        assembly {
+            let ptr := mload(0x40)
+            mstore(ptr, "\x19\x01")
+            mstore(add(ptr, 0x02), domainSeparator)
+            mstore(add(ptr, 0x22), structHash)
+            data := keccak256(ptr, 0x42)
+        }
+    }
+
+    /**
+     * @dev Returns an Ethereum Signed Data with intended validator, created from a
+     * `validator` and `data` according to the version 0 of EIP-191.
+     *
+     * See {recover}.
+     */
+    function toDataWithIntendedValidatorHash(address validator, bytes memory data) internal pure returns (bytes32) {
+        return keccak256(abi.encodePacked("\x19\x00", validator, data));
     }
 }

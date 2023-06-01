@@ -9,6 +9,7 @@ import { EntryPoint, IEntryPoint } from "contracts/smart-wallet/utils/Entrypoint
 import { UserOperation } from "contracts/smart-wallet/utils/UserOperation.sol";
 
 // Target
+import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountFactory, Account } from "contracts/smart-wallet/non-upgradeable/AccountFactory.sol";
 
 /// @dev This is a dummy contract to test contract interactions with Account.
@@ -28,7 +29,7 @@ contract Number {
     }
 }
 
-contract AccountTest is BaseTest {
+contract SimpleAccountTest is BaseTest {
     // Target contracts
     EntryPoint private entrypoint;
     AccountFactory private accountFactory;
@@ -51,6 +52,46 @@ contract AccountTest is BaseTest {
     address payable private beneficiary = payable(address(0x45654));
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
+
+    function _setupRoleRequest(address _signer, IAccountPermissions.RoleAction _action)
+        internal
+        returns (IAccountPermissions.RoleRequest memory request, bytes memory signature)
+    {
+        bytes32 typehashRoleRequest = keccak256(
+            "RoleRequest(bytes32 role,address target,uint8 action,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+        );
+        bytes32 nameHash = keccak256(bytes("Account"));
+        bytes32 versionHash = keccak256(bytes("1"));
+        bytes32 typehashEip712 = keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
+        bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
+
+        // Create RoleRequest
+        request = IAccountPermissions.RoleRequest({
+            role: keccak256("SIGNER_ROLE"),
+            target: _signer,
+            action: _action,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: type(uint128).max,
+            uid: bytes32("random uid")
+        });
+
+        bytes memory encodedRequest = abi.encode(
+            typehashRoleRequest,
+            request.role,
+            request.target,
+            request.action,
+            request.validityStartTimestamp,
+            request.validityEndTimestamp,
+            request.uid
+        );
+        bytes32 structHash = keccak256(encodedRequest);
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
+        signature = abi.encodePacked(r, s, v);
+    }
 
     function _setupUserOp(
         uint256 _signerPKey,
@@ -190,13 +231,29 @@ contract AccountTest is BaseTest {
         );
 
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
+
+        address[] memory approvedTargets = new address[](1);
+        approvedTargets[0] = address(numberContract);
+
+        vm.prank(accountAdmin);
+        Account(payable(account)).setRoleRestrictions(
+            IAccountPermissions.RoleRestrictions(
+                keccak256("SIGNER_ROLE"),
+                approvedTargets,
+                1 ether,
+                0,
+                type(uint128).max
+            )
+        );
     }
 
     /// @dev Perform a state changing transaction directly via account.
     function test_state_executeTransaction() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(numberContract.num(), 0);
 
@@ -210,7 +267,7 @@ contract AccountTest is BaseTest {
     function test_state_executeBatchTransaction() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(numberContract.num(), 0);
 
@@ -280,14 +337,57 @@ contract AccountTest is BaseTest {
         assertEq(numberContract.num(), count);
     }
 
+    /// @dev Perform many state changing transactions in a batch via Entrypoint.
+    function test_state_executeBatchTransaction_viaAccountSigner() public {
+        _setup_executeTransaction();
+
+        assertEq(numberContract.num(), 0);
+
+        uint256 count = 3;
+        address[] memory targets = new address[](count);
+        uint256[] memory values = new uint256[](count);
+        bytes[] memory callData = new bytes[](count);
+
+        for (uint256 i = 0; i < count; i += 1) {
+            targets[i] = address(numberContract);
+            values[i] = 0;
+            callData[i] = abi.encodeWithSignature("incrementNum()", i);
+        }
+
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
+
+        vm.prank(accountAdmin);
+        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+            accountSigner,
+            IAccountPermissions.RoleAction.GRANT
+        );
+        Account(payable(account)).changeRole(req, sig);
+
+        UserOperation[] memory userOp = _setupUserOpExecuteBatch(
+            accountSignerPKey,
+            bytes(""),
+            targets,
+            values,
+            callData
+        );
+
+        EntryPoint(entrypoint).handleOps(userOp, beneficiary);
+
+        assertEq(numberContract.num(), count);
+    }
+
     /// @dev Perform a state changing transaction via Entrypoint and a SIGNER_ROLE holder.
     function test_state_executeTransaction_viaAccountSigner() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         vm.prank(accountAdmin);
-        Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
+        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+            accountSigner,
+            IAccountPermissions.RoleAction.GRANT
+        );
+        Account(payable(account)).changeRole(req, sig);
 
         assertEq(numberContract.num(), 0);
 
@@ -326,10 +426,14 @@ contract AccountTest is BaseTest {
     function test_revert_executeTransaction_nonSigner_viaDirectCall() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         vm.prank(accountAdmin);
-        Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
+        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+            accountSigner,
+            IAccountPermissions.RoleAction.GRANT
+        );
+        Account(payable(account)).changeRole(req, sig);
 
         assertEq(numberContract.num(), 0);
 
@@ -346,7 +450,7 @@ contract AccountTest is BaseTest {
     function test_state_accountReceivesNativeTokens() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(address(account).balance, 0);
 
@@ -362,7 +466,7 @@ contract AccountTest is BaseTest {
 
         uint256 value = 1000;
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
         vm.prank(accountAdmin);
         payable(account).call{ value: value }("");
         assertEq(address(account).balance, value);
@@ -381,7 +485,7 @@ contract AccountTest is BaseTest {
     function test_state_addAndWithdrawDeposit() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(Account(payable(account)).getDeposit(), 0);
 
@@ -401,7 +505,7 @@ contract AccountTest is BaseTest {
     /// @dev Send an ERC-721 NFT to an account.
     function test_state_receiveERC721NFT() public {
         _setup_executeTransaction();
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(erc721.balanceOf(account), 0);
 
@@ -413,7 +517,7 @@ contract AccountTest is BaseTest {
     /// @dev Send an ERC-1155 NFT to an account.
     function test_state_receiveERC1155NFT() public {
         _setup_executeTransaction();
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(erc1155.balanceOf(account, 0), 0);
 

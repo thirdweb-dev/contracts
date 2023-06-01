@@ -23,10 +23,10 @@ interface IAccountFactory {
     function createAccount(address admin, bytes calldata _data) external returns (address account);
 
     /// @notice Callback function for an Account to register its signers.
-    function addSigner(address signer) external;
+    function onSignerAdded(address signer) external;
 
     /// @notice Callback function for an Account to un-register its signers.
-    function removeSigner(address signer) external;
+    function onSignerRemoved(address signer) external;
 
     /*///////////////////////////////////////////////////////////////
                             View Functions
@@ -36,7 +36,7 @@ interface IAccountFactory {
     function accountImplementation() external view returns (address);
 
     /// @notice Returns the address of an Account that would be deployed with the given admin signer.
-    function getAddress(address adminSigner) external view returns (address);
+    function getAddress(address adminSigner, bytes calldata data) external view returns (address);
 
     /// @notice Returns all signers of an account.
     function getSignersOfAccount(address account) external view returns (address[] memory signers);

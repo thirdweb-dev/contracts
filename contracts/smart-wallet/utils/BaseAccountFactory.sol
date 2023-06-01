@@ -6,6 +6,7 @@ import "../../extension/Multicall.sol";
 import "../../openzeppelin-presets/proxy/Clones.sol";
 import "../../openzeppelin-presets/utils/structs/EnumerableSet.sol";
 import "../utils/BaseAccount.sol";
+import "../../extension/interface/IAccountPermissions.sol";
 
 // Interface
 import "../interfaces/IEntrypoint.sol";
@@ -47,7 +48,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     /// @notice Deploys a new Account for admin.
     function createAccount(address _admin, bytes calldata _data) external virtual override returns (address) {
         address impl = accountImplementation;
-        bytes32 salt = keccak256(abi.encode(_admin));
+        bytes32 salt = _generateSalt(_admin, _data);
         address account = Clones.predictDeterministicAddress(impl, salt);
 
         if (account.code.length > 0) {
@@ -64,13 +65,26 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @notice Callback function for an Account to register its signers.
-    function addSigner(address _signer) external {
+    function onSignerAdded(address _signer) external {
         address account = msg.sender;
 
-        bool isAlreadyAccount = accountsOfSigner[_signer].add(account);
-        bool isAlreadySigner = signersOfAccount[account].add(_signer);
+        require(account.code.length > 0, "AccountFactory: not an account.");
 
-        if (!isAlreadyAccount || !isAlreadySigner) {
+        bool isAdmin = IAccountPermissions(account).isAdmin(_signer);
+
+        if (!isAdmin) {
+            IAccountPermissions.RoleRestrictions memory restrictions = IAccountPermissions(account)
+                .getRoleRestrictionsForAccount(_signer);
+            require(
+                restrictions.startTimestamp <= block.timestamp && block.timestamp < restrictions.endTimestamp,
+                "AccountFactory: invalid signer."
+            );
+        }
+
+        bool isNewAccount = accountsOfSigner[_signer].add(account);
+        bool isNewSigner = signersOfAccount[account].add(_signer);
+
+        if (!isNewAccount || !isNewSigner) {
             revert("AccountFactory: signer already added");
         }
 
@@ -78,8 +92,10 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @notice Callback function for an Account to un-register its signers.
-    function removeSigner(address _signer) external {
+    function onSignerRemoved(address _signer) external {
         address account = msg.sender;
+
+        require(account.code.length > 0, "AccountFactory: not an account.");
 
         bool isAccount = accountsOfSigner[_signer].remove(account);
         bool isSigner = signersOfAccount[account].remove(_signer);
@@ -96,8 +112,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns the address of an Account that would be deployed with the given admin signer.
-    function getAddress(address _adminSigner) public view returns (address) {
-        bytes32 salt = keccak256(abi.encode(_adminSigner));
+    function getAddress(address _adminSigner, bytes calldata _data) public view returns (address) {
+        bytes32 salt = _generateSalt(_adminSigner, _data);
         return Clones.predictDeterministicAddress(accountImplementation, salt);
     }
 
@@ -114,6 +130,11 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     /*///////////////////////////////////////////////////////////////
                             Internal functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev Returns the salt used when deploying an Account.
+    function _generateSalt(address _admin, bytes calldata) internal view virtual returns (bytes32) {
+        return keccak256(abi.encode(_admin));
+    }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
     function _initializeAccount(
