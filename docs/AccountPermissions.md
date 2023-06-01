@@ -1,4 +1,4 @@
-# AccountExtension
+# AccountPermissions
 
 
 
@@ -26,59 +26,6 @@ function changeRole(IAccountPermissions.RoleRequest _req, bytes _signature) exte
 |---|---|---|
 | _req | IAccountPermissions.RoleRequest | undefined |
 | _signature | bytes | undefined |
-
-### contractURI
-
-```solidity
-function contractURI() external view returns (string)
-```
-
-Returns the contract metadata URI.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | string | undefined |
-
-### execute
-
-```solidity
-function execute(address _target, uint256 _value, bytes _calldata) external nonpayable
-```
-
-Executes a transaction (called directly from an admin, or by entryPoint)
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _target | address | undefined |
-| _value | uint256 | undefined |
-| _calldata | bytes | undefined |
-
-### executeBatch
-
-```solidity
-function executeBatch(address[] _target, uint256[] _value, bytes[] _calldata) external nonpayable
-```
-
-Executes a sequence transaction (called directly from an admin, or by entryPoint)
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _target | address[] | undefined |
-| _value | uint256[] | undefined |
-| _calldata | bytes[] | undefined |
 
 ### getAllRoleMembers
 
@@ -168,83 +115,6 @@ Returns whether the given account is an admin.
 |---|---|---|
 | _0 | bool | undefined |
 
-### onERC1155BatchReceived
-
-```solidity
-function onERC1155BatchReceived(address, address, uint256[], uint256[], bytes) external nonpayable returns (bytes4)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-| _1 | address | undefined |
-| _2 | uint256[] | undefined |
-| _3 | uint256[] | undefined |
-| _4 | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes4 | undefined |
-
-### onERC1155Received
-
-```solidity
-function onERC1155Received(address, address, uint256, uint256, bytes) external nonpayable returns (bytes4)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-| _1 | address | undefined |
-| _2 | uint256 | undefined |
-| _3 | uint256 | undefined |
-| _4 | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes4 | undefined |
-
-### onERC721Received
-
-```solidity
-function onERC721Received(address, address, uint256, bytes) external nonpayable returns (bytes4)
-```
-
-
-
-*See {IERC721Receiver-onERC721Received}. Always returns `IERC721Receiver.onERC721Received.selector`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-| _1 | address | undefined |
-| _2 | uint256 | undefined |
-| _3 | bytes | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes4 | undefined |
-
 ### setAdmin
 
 ```solidity
@@ -262,22 +132,6 @@ Adds / removes an account as an admin.
 | _account | address | undefined |
 | _isAdmin | bool | undefined |
 
-### setContractURI
-
-```solidity
-function setContractURI(string _uri) external nonpayable
-```
-
-Lets a contract admin set the URI for contract-level metadata.
-
-*Caller should be authorized to setup contractURI, e.g. contract admin.                  See {_canSetContractURI}.                  Emits {ContractURIUpdated Event}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-
 ### setRoleRestrictions
 
 ```solidity
@@ -293,28 +147,6 @@ function setRoleRestrictions(IAccountPermissions.RoleRestrictions _restrictions)
 | Name | Type | Description |
 |---|---|---|
 | _restrictions | IAccountPermissions.RoleRestrictions | undefined |
-
-### supportsInterface
-
-```solidity
-function supportsInterface(bytes4 interfaceId) external view returns (bool)
-```
-
-See {IERC165-supportsInterface}.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| interfaceId | bytes4 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
 
 ### verifyRoleRequest
 
@@ -360,23 +192,6 @@ Emitted when an admin is set or removed.
 |---|---|---|
 | account `indexed` | address | undefined |
 | isAdmin  | bool | undefined |
-
-### ContractURIUpdated
-
-```solidity
-event ContractURIUpdated(string prevURI, string newURI)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| prevURI  | string | undefined |
-| newURI  | string | undefined |
 
 ### RoleAssignment
 
