@@ -21,4 +21,4 @@
 [submodule "lib/ERC721A"]
 	path = lib/ERC721A
 	url = https://github.com/chiru-labs/ERC721A
-	branch = v3.0.0
+	branch = v3.3.0
