@@ -87,6 +87,22 @@ function burn(uint256 tokenId) external nonpayable
 |---|---|---|
 | tokenId | uint256 | undefined |
 
+### burnAsAdmin
+
+```solidity
+function burnAsAdmin(uint256 tokenId) external nonpayable
+```
+
+
+
+*Burns `tokenId`. See {ERC721-_burn}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
+
 ### claim
 
 ```solidity

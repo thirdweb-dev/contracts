@@ -300,6 +300,12 @@ contract DynamicNFTDropLogic is
         _burn(tokenId, true);
     }
 
+    /// @dev Burns `tokenId`. See {ERC721-_burn}.
+    function burnAsAdmin(uint256 tokenId) external virtual {
+        require(_hasRole(keccak256("BURN_ROLE"), _msgSender()));
+        _burn(tokenId);
+    }
+
     /// @dev See {ERC721-_beforeTokenTransfer}.
     function _beforeTokenTransfers(
         address from,

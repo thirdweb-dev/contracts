@@ -87,6 +87,7 @@ contract DynamicNFTDrop is
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
         bytes32 _metadataRole = keccak256("METADATA_ROLE");
+        bytes32 _burnRole = keccak256("BURN_ROLE");
         bytes32 _extensionRole = keccak256("EXTENSION_ROLE");
         bytes32 _defaultAdminRole = 0x00;
 
@@ -98,6 +99,8 @@ contract DynamicNFTDrop is
         _setupRole(_operatorRole, address(0));
         _setupRole(_metadataRole, _defaultAdmin);
         _setRoleAdmin(_metadataRole, _metadataRole);
+        _setupRole(_burnRole, _defaultAdmin);
+        _setRoleAdmin(_burnRole, _burnRole);
         _setupRole(_extensionRole, _defaultAdmin);
         _setRoleAdmin(_extensionRole, _extensionRole);
     }
