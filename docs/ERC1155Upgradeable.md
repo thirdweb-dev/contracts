@@ -6,7 +6,7 @@
 
 
 
-*Implementation of the basic standard multi-token. See https://eips.ethereum.org/EIPS/eip-1155 Originally based on code by Enjin: https://github.com/enjin/erc-1155 _Available since v3.1._*
+*Implementation of the basic standard multi-token.*
 
 ## Methods
 
@@ -187,7 +187,7 @@ function uri(uint256) external view returns (string)
 ### ApprovalForAll
 
 ```solidity
-event ApprovalForAll(address indexed account, address indexed operator, bool approved)
+event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved)
 ```
 
 
@@ -198,9 +198,9 @@ event ApprovalForAll(address indexed account, address indexed operator, bool app
 
 | Name | Type | Description |
 |---|---|---|
-| account `indexed` | address | undefined |
-| operator `indexed` | address | undefined |
-| approved  | bool | undefined |
+| _owner `indexed` | address | undefined |
+| _operator `indexed` | address | undefined |
+| _approved  | bool | undefined |
 
 ### Initialized
 
@@ -221,7 +221,7 @@ event Initialized(uint8 version)
 ### TransferBatch
 
 ```solidity
-event TransferBatch(address indexed operator, address indexed from, address indexed to, uint256[] ids, uint256[] values)
+event TransferBatch(address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values)
 ```
 
 
@@ -232,16 +232,16 @@ event TransferBatch(address indexed operator, address indexed from, address inde
 
 | Name | Type | Description |
 |---|---|---|
-| operator `indexed` | address | undefined |
-| from `indexed` | address | undefined |
-| to `indexed` | address | undefined |
-| ids  | uint256[] | undefined |
-| values  | uint256[] | undefined |
+| _operator `indexed` | address | undefined |
+| _from `indexed` | address | undefined |
+| _to `indexed` | address | undefined |
+| _ids  | uint256[] | undefined |
+| _values  | uint256[] | undefined |
 
 ### TransferSingle
 
 ```solidity
-event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value)
+event TransferSingle(address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value)
 ```
 
 
@@ -252,16 +252,16 @@ event TransferSingle(address indexed operator, address indexed from, address ind
 
 | Name | Type | Description |
 |---|---|---|
-| operator `indexed` | address | undefined |
-| from `indexed` | address | undefined |
-| to `indexed` | address | undefined |
-| id  | uint256 | undefined |
-| value  | uint256 | undefined |
+| _operator `indexed` | address | undefined |
+| _from `indexed` | address | undefined |
+| _to `indexed` | address | undefined |
+| _id  | uint256 | undefined |
+| _value  | uint256 | undefined |
 
 ### URI
 
 ```solidity
-event URI(string value, uint256 indexed id)
+event URI(string _value, uint256 indexed _id)
 ```
 
 
@@ -272,8 +272,8 @@ event URI(string value, uint256 indexed id)
 
 | Name | Type | Description |
 |---|---|---|
-| value  | string | undefined |
-| id `indexed` | uint256 | undefined |
+| _value  | string | undefined |
+| _id `indexed` | uint256 | undefined |
 
 
 

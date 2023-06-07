@@ -1,4 +1,4 @@
-# DropERC20
+# DynamicNFTDrop
 
 
 
@@ -207,7 +207,7 @@ function getImplementationForFunction(bytes4 _functionSelector) external view re
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _saleRecipient, uint128 _platformFeeBps, address _platformFeeRecipient) external nonpayable
+function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _saleRecipient, address _royaltyRecipient, uint128 _royaltyBps, uint128 _platformFeeBps, address _platformFeeRecipient) external nonpayable
 ```
 
 
@@ -224,6 +224,8 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 | _contractURI | string | undefined |
 | _trustedForwarders | address[] | undefined |
 | _saleRecipient | address | undefined |
+| _royaltyRecipient | address | undefined |
+| _royaltyBps | uint128 | undefined |
 | _platformFeeBps | uint128 | undefined |
 | _platformFeeRecipient | address | undefined |
 
@@ -287,6 +289,28 @@ function removeExtension(string _extensionName) external nonpayable
 |---|---|---|
 | _extensionName | string | undefined |
 
+### supportsInterface
+
+```solidity
+function supportsInterface(bytes4 interfaceId) external view returns (bool)
+```
+
+
+
+*See ERC 165*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| interfaceId | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### updateExtension
 
 ```solidity
@@ -323,6 +347,23 @@ event ContractURIUpdated(string prevURI, string newURI)
 |---|---|---|
 | prevURI  | string | undefined |
 | newURI  | string | undefined |
+
+### DefaultRoyalty
+
+```solidity
+event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newRoyaltyRecipient `indexed` | address | undefined |
+| newRoyaltyBps  | uint256 | undefined |
 
 ### ExtensionAdded
 
@@ -394,6 +435,39 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+### OperatorRestriction
+
+```solidity
+event OperatorRestriction(bool restriction)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| restriction  | bool | undefined |
+
+### OwnerUpdated
+
+```solidity
+event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
 
 ### PlatformFeeInfoUpdated
 

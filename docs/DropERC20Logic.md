@@ -1,4 +1,4 @@
-# ERC20VotesUpgradeable
+# DropERC20Logic
 
 
 
@@ -6,7 +6,7 @@
 
 
 
-*Extension of ERC20 to support Compound-like voting and delegation.*
+
 
 ## Methods
 
@@ -95,6 +95,39 @@ function balanceOf(address account) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### burn
+
+```solidity
+function burn(uint256 amount) external nonpayable
+```
+
+
+
+*Destroys `amount` tokens from the caller. See {ERC20-_burn}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| amount | uint256 | undefined |
+
+### burnFrom
+
+```solidity
+function burnFrom(address account, uint256 amount) external nonpayable
+```
+
+
+
+*Destroys `amount` tokens from `account`, deducting from the caller&#39;s allowance. See {ERC20-_burn} and {ERC20-allowance}. Requirements: - the caller must have allowance for ``accounts``&#39;s tokens of at least `amount`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+| amount | uint256 | undefined |
+
 ### checkpoints
 
 ```solidity
@@ -117,6 +150,62 @@ function checkpoints(address account, uint32 pos) external view returns (struct 
 | Name | Type | Description |
 |---|---|---|
 | _0 | ERC20VotesUpgradeable.Checkpoint | undefined |
+
+### claim
+
+```solidity
+function claim(address _receiver, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop.AllowlistProof _allowlistProof, bytes _data) external payable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _receiver | address | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| _allowlistProof | IDrop.AllowlistProof | undefined |
+| _data | bytes | undefined |
+
+### claimCondition
+
+```solidity
+function claimCondition() external view returns (uint256, uint256)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+| _1 | uint256 | undefined |
+
+### contractURI
+
+```solidity
+function contractURI() external view returns (string)
+```
+
+Returns the contract metadata URI.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined |
 
 ### decimals
 
@@ -217,6 +306,45 @@ function delegates(address account) external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
+### getActiveClaimConditionId
+
+```solidity
+function getActiveClaimConditionId() external view returns (uint256)
+```
+
+
+
+*At any given moment, returns the uid for the active claim condition.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### getClaimConditionById
+
+```solidity
+function getClaimConditionById(uint256 _conditionId) external view returns (struct IClaimCondition.ClaimCondition condition)
+```
+
+
+
+*Returns the claim condition at the given uid.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| condition | IClaimCondition.ClaimCondition | undefined |
+
 ### getPastTotalSupply
 
 ```solidity
@@ -262,6 +390,47 @@ function getPastVotes(address account, uint256 blockNumber) external view return
 |---|---|---|
 | _0 | uint256 | undefined |
 
+### getPlatformFeeInfo
+
+```solidity
+function getPlatformFeeInfo() external view returns (address, uint16)
+```
+
+
+
+*Returns the platform fee recipient and bps.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
+
+### getSupplyClaimedByWallet
+
+```solidity
+function getSupplyClaimedByWallet(uint256 _conditionId, address _claimer) external view returns (uint256 supplyClaimedByWallet)
+```
+
+
+
+*Returns the supply claimed by claimer for a given conditionId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| supplyClaimedByWallet | uint256 | undefined |
+
 ### getVotes
 
 ```solidity
@@ -306,6 +475,45 @@ function increaseAllowance(address spender, uint256 addedValue) external nonpaya
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined |
+
+### isTrustedForwarder
+
+```solidity
+function isTrustedForwarder(address forwarder) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| forwarder | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### maxTotalSupply
+
+```solidity
+function maxTotalSupply() external view returns (uint256)
+```
+
+
+
+*Global max total supply of tokens.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
 
 ### name
 
@@ -390,6 +598,105 @@ function permit(address owner, address spender, uint256 value, uint256 deadline,
 | r | bytes32 | undefined |
 | s | bytes32 | undefined |
 
+### primarySaleRecipient
+
+```solidity
+function primarySaleRecipient() external view returns (address)
+```
+
+
+
+*Returns primary sale recipient address.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### setClaimConditions
+
+```solidity
+function setClaimConditions(IClaimCondition.ClaimCondition[] _conditions, bool _resetClaimEligibility) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditions | IClaimCondition.ClaimCondition[] | undefined |
+| _resetClaimEligibility | bool | undefined |
+
+### setContractURI
+
+```solidity
+function setContractURI(string _uri) external nonpayable
+```
+
+Lets a contract admin set the URI for contract-level metadata.
+
+*Caller should be authorized to setup contractURI, e.g. contract admin.                  See {_canSetContractURI}.                  Emits {ContractURIUpdated Event}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+
+### setMaxTotalSupply
+
+```solidity
+function setMaxTotalSupply(uint256 _maxTotalSupply) external nonpayable
+```
+
+
+
+*Lets a contract admin set the global maximum supply tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _maxTotalSupply | uint256 | undefined |
+
+### setPlatformFeeInfo
+
+```solidity
+function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
+```
+
+Updates the platform fee recipient and bps.
+
+*Caller should be authorized to set platform fee info.                  See {_canSetPlatformFeeInfo}.                  Emits {PlatformFeeInfoUpdated Event}; See {_setupPlatformFeeInfo}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _platformFeeRecipient | address | Address to be set as new platformFeeRecipient. |
+| _platformFeeBps | uint256 | Updated platformFeeBps. |
+
+### setPrimarySaleRecipient
+
+```solidity
+function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
+```
+
+Updates primary sale recipient.
+
+*Caller should be authorized to set primary sales info.                  See {_canSetPrimarySaleRecipient}.                  Emits {PrimarySaleRecipientUpdated Event}; See {_setupPrimarySaleRecipient}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _saleRecipient | address | Address to be set as new recipient of primary sales. |
+
 ### symbol
 
 ```solidity
@@ -471,6 +778,33 @@ function transferFrom(address from, address to, uint256 amount) external nonpaya
 |---|---|---|
 | _0 | bool | undefined |
 
+### verifyClaim
+
+```solidity
+function verifyClaim(uint256 _conditionId, address _claimer, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop.AllowlistProof _allowlistProof) external view returns (bool isOverride)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| _allowlistProof | IDrop.AllowlistProof | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| isOverride | bool | undefined |
+
 
 
 ## Events
@@ -492,6 +826,40 @@ event Approval(address indexed owner, address indexed spender, uint256 value)
 | owner `indexed` | address | undefined |
 | spender `indexed` | address | undefined |
 | value  | uint256 | undefined |
+
+### ClaimConditionsUpdated
+
+```solidity
+event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions, bool resetEligibility)
+```
+
+Emitted when the contract&#39;s claim conditions are updated.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| claimConditions  | IClaimCondition.ClaimCondition[] | undefined |
+| resetEligibility  | bool | undefined |
+
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
 
 ### DelegateChanged
 
@@ -529,6 +897,23 @@ event DelegateVotesChanged(address indexed delegate, uint256 previousBalance, ui
 | previousBalance  | uint256 | undefined |
 | newBalance  | uint256 | undefined |
 
+### FlatPlatformFeeUpdated
+
+```solidity
+event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeRecipient  | address | undefined |
+| flatFee  | uint256 | undefined |
+
 ### Initialized
 
 ```solidity
@@ -544,6 +929,91 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+### MaxTotalSupplyUpdated
+
+```solidity
+event MaxTotalSupplyUpdated(uint256 maxTotalSupply)
+```
+
+
+
+*Emitted when the global max supply of tokens is updated.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| maxTotalSupply  | uint256 | undefined |
+
+### PlatformFeeInfoUpdated
+
+```solidity
+event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeRecipient `indexed` | address | undefined |
+| platformFeeBps  | uint256 | undefined |
+
+### PlatformFeeTypeUpdated
+
+```solidity
+event PlatformFeeTypeUpdated(enum IPlatformFee.PlatformFeeType feeType)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| feeType  | enum IPlatformFee.PlatformFeeType | undefined |
+
+### PrimarySaleRecipientUpdated
+
+```solidity
+event PrimarySaleRecipientUpdated(address indexed recipient)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| recipient `indexed` | address | undefined |
+
+### TokensClaimed
+
+```solidity
+event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer, address indexed receiver, uint256 startTokenId, uint256 quantityClaimed)
+```
+
+Emitted when tokens are claimed via `claim`.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| claimConditionIndex `indexed` | uint256 | undefined |
+| claimer `indexed` | address | undefined |
+| receiver `indexed` | address | undefined |
+| startTokenId  | uint256 | undefined |
+| quantityClaimed  | uint256 | undefined |
 
 ### Transfer
 

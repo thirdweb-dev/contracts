@@ -1,0 +1,1202 @@
+# DropERC1155Logic
+
+
+
+
+
+
+
+
+
+## Methods
+
+### balanceOf
+
+```solidity
+function balanceOf(address account, uint256 id) external view returns (uint256)
+```
+
+
+
+*See {IERC1155-balanceOf}. Requirements: - `account` cannot be the zero address.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+| id | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### balanceOfBatch
+
+```solidity
+function balanceOfBatch(address[] accounts, uint256[] ids) external view returns (uint256[])
+```
+
+
+
+*See {IERC1155-balanceOfBatch}. Requirements: - `accounts` and `ids` must have the same length.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| accounts | address[] | undefined |
+| ids | uint256[] | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256[] | undefined |
+
+### burnBatch
+
+```solidity
+function burnBatch(address account, uint256[] ids, uint256[] values) external nonpayable
+```
+
+
+
+*Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+| ids | uint256[] | undefined |
+| values | uint256[] | undefined |
+
+### claim
+
+```solidity
+function claim(address _receiver, uint256 _tokenId, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop1155.AllowlistProof _allowlistProof, bytes _data) external payable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _receiver | address | undefined |
+| _tokenId | uint256 | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| _allowlistProof | IDrop1155.AllowlistProof | undefined |
+| _data | bytes | undefined |
+
+### claimCondition
+
+```solidity
+function claimCondition(uint256 _tokenId) external view returns (uint256, uint256)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+| _1 | uint256 | undefined |
+
+### contractURI
+
+```solidity
+function contractURI() external view returns (string)
+```
+
+Returns the contract metadata URI.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined |
+
+### getActiveClaimConditionId
+
+```solidity
+function getActiveClaimConditionId(uint256 _tokenId) external view returns (uint256)
+```
+
+
+
+*At any given moment, returns the uid for the active claim condition.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### getBaseURICount
+
+```solidity
+function getBaseURICount() external view returns (uint256)
+```
+
+Returns the count of batches of NFTs.
+
+*Each batch of tokens has an in ID and an associated `baseURI`.                  See {batchIds}.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### getBatchIdAtIndex
+
+```solidity
+function getBatchIdAtIndex(uint256 _index) external view returns (uint256)
+```
+
+Returns the ID for the batch of tokens the given tokenId belongs to.
+
+*See {getBaseURICount}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _index | uint256 | ID of a token. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### getClaimConditionById
+
+```solidity
+function getClaimConditionById(uint256 _tokenId, uint256 _conditionId) external view returns (struct IClaimCondition.ClaimCondition condition)
+```
+
+
+
+*Returns the claim condition at the given uid.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+| _conditionId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| condition | IClaimCondition.ClaimCondition | undefined |
+
+### getDefaultRoyaltyInfo
+
+```solidity
+function getDefaultRoyaltyInfo() external view returns (address, uint16)
+```
+
+Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
+
+### getPlatformFeeInfo
+
+```solidity
+function getPlatformFeeInfo() external view returns (address, uint16)
+```
+
+
+
+*Returns the platform fee recipient and bps.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
+
+### getRoyaltyInfoForToken
+
+```solidity
+function getRoyaltyInfoForToken(uint256 _tokenId) external view returns (address, uint16)
+```
+
+View royalty info for a given token.
+
+*Returns royalty recipient and bps for `_tokenId`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | The tokenID of the NFT for which to query royalty info. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+| _1 | uint16 | undefined |
+
+### getSupplyClaimedByWallet
+
+```solidity
+function getSupplyClaimedByWallet(uint256 _tokenId, uint256 _conditionId, address _claimer) external view returns (uint256 supplyClaimedByWallet)
+```
+
+
+
+*Returns the supply claimed by claimer for a given conditionId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| supplyClaimedByWallet | uint256 | undefined |
+
+### isApprovedForAll
+
+```solidity
+function isApprovedForAll(address account, address operator) external view returns (bool)
+```
+
+
+
+*See {IERC1155-isApprovedForAll}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account | address | undefined |
+| operator | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### isTrustedForwarder
+
+```solidity
+function isTrustedForwarder(address forwarder) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| forwarder | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### lazyMint
+
+```solidity
+function lazyMint(uint256 _amount, string _baseURIForTokens, bytes _data) external nonpayable returns (uint256 batchId)
+```
+
+Lets an authorized address lazy mint a given amount of NFTs.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _amount | uint256 | The number of NFTs to lazy mint. |
+| _baseURIForTokens | string | The base URI for the &#39;n&#39; number of NFTs being lazy minted, where the metadata for each                           of those NFTs is `${baseURIForTokens}/${tokenId}`. |
+| _data | bytes | Additional bytes data to be used at the discretion of the consumer of the contract. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| batchId | uint256 |          A unique integer identifier for the batch of NFTs lazy minted together. |
+
+### maxTotalSupply
+
+```solidity
+function maxTotalSupply(uint256 _tokenId) external view returns (uint256)
+```
+
+
+
+*Global max total supply of tokens with a given tokenId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### name
+
+```solidity
+function name() external view returns (string)
+```
+
+
+
+*Token name*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined |
+
+### nextTokenIdToMint
+
+```solidity
+function nextTokenIdToMint() external view returns (uint256)
+```
+
+
+
+*The tokenId of the next NFT that will be minted / lazy minted.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### operatorRestriction
+
+```solidity
+function operatorRestriction() external view returns (bool)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### owner
+
+```solidity
+function owner() external view returns (address)
+```
+
+Returns the owner of the contract.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### primarySaleRecipient
+
+```solidity
+function primarySaleRecipient() external view returns (address)
+```
+
+
+
+*Returns primary sale recipient address.*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### royaltyInfo
+
+```solidity
+function royaltyInfo(uint256 tokenId, uint256 salePrice) external view returns (address receiver, uint256 royaltyAmount)
+```
+
+View royalty info for a given token and sale price.
+
+*Returns royalty amount and recipient for `tokenId` and `salePrice`.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | The tokenID of the NFT for which to query royalty info. |
+| salePrice | uint256 | Sale price of the token. |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| receiver | address |        Address of royalty recipient account. |
+| royaltyAmount | uint256 |   Royalty amount calculated at current royaltyBps value. |
+
+### safeBatchTransferFrom
+
+```solidity
+function safeBatchTransferFrom(address from, address to, uint256[] ids, uint256[] amounts, bytes data) external nonpayable
+```
+
+
+
+*See {IERC1155-safeBatchTransferFrom}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| from | address | undefined |
+| to | address | undefined |
+| ids | uint256[] | undefined |
+| amounts | uint256[] | undefined |
+| data | bytes | undefined |
+
+### safeTransferFrom
+
+```solidity
+function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes data) external nonpayable
+```
+
+
+
+*See {IERC1155-safeTransferFrom}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| from | address | undefined |
+| to | address | undefined |
+| id | uint256 | undefined |
+| amount | uint256 | undefined |
+| data | bytes | undefined |
+
+### saleRecipient
+
+```solidity
+function saleRecipient(uint256 _tokenId) external view returns (address)
+```
+
+
+
+*Address of the recipient of primary sales for a given tokenId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### setApprovalForAll
+
+```solidity
+function setApprovalForAll(address operator, bool approved) external nonpayable
+```
+
+
+
+*See {ERC1155-setApprovalForAll}*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| operator | address | undefined |
+| approved | bool | undefined |
+
+### setClaimConditions
+
+```solidity
+function setClaimConditions(uint256 _tokenId, IClaimCondition.ClaimCondition[] _conditions, bool _resetClaimEligibility) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+| _conditions | IClaimCondition.ClaimCondition[] | undefined |
+| _resetClaimEligibility | bool | undefined |
+
+### setContractURI
+
+```solidity
+function setContractURI(string _uri) external nonpayable
+```
+
+Lets a contract admin set the URI for contract-level metadata.
+
+*Caller should be authorized to setup contractURI, e.g. contract admin.                  See {_canSetContractURI}.                  Emits {ContractURIUpdated Event}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+
+### setDefaultRoyaltyInfo
+
+```solidity
+function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external nonpayable
+```
+
+Updates default royalty recipient and bps.
+
+*Caller should be authorized to set royalty info.                  See {_canSetRoyaltyInfo}.                  Emits {DefaultRoyalty Event}; See {_setupDefaultRoyaltyInfo}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _royaltyRecipient | address | Address to be set as default royalty recipient. |
+| _royaltyBps | uint256 | Updated royalty bps. |
+
+### setMaxTotalSupply
+
+```solidity
+function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply) external nonpayable
+```
+
+
+
+*Lets a module admin set a max total supply for token.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+| _maxTotalSupply | uint256 | undefined |
+
+### setOperatorRestriction
+
+```solidity
+function setOperatorRestriction(bool _restriction) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _restriction | bool | undefined |
+
+### setOwner
+
+```solidity
+function setOwner(address _newOwner) external nonpayable
+```
+
+Lets an authorized wallet set a new owner for the contract.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _newOwner | address | The address to set as the new owner of the contract. |
+
+### setPlatformFeeInfo
+
+```solidity
+function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
+```
+
+Updates the platform fee recipient and bps.
+
+*Caller should be authorized to set platform fee info.                  See {_canSetPlatformFeeInfo}.                  Emits {PlatformFeeInfoUpdated Event}; See {_setupPlatformFeeInfo}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _platformFeeRecipient | address | Address to be set as new platformFeeRecipient. |
+| _platformFeeBps | uint256 | Updated platformFeeBps. |
+
+### setPrimarySaleRecipient
+
+```solidity
+function setPrimarySaleRecipient(address _saleRecipient) external nonpayable
+```
+
+Updates primary sale recipient.
+
+*Caller should be authorized to set primary sales info.                  See {_canSetPrimarySaleRecipient}.                  Emits {PrimarySaleRecipientUpdated Event}; See {_setupPrimarySaleRecipient}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _saleRecipient | address | Address to be set as new recipient of primary sales. |
+
+### setRoyaltyInfoForToken
+
+```solidity
+function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external nonpayable
+```
+
+Updates default royalty recipient and bps for a particular token.
+
+*Sets royalty info for `_tokenId`. Caller should be authorized to set royalty info.                  See {_canSetRoyaltyInfo}.                  Emits {RoyaltyForToken Event}; See {_setupRoyaltyInfoForToken}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+| _recipient | address | Address to be set as royalty recipient for given token Id. |
+| _bps | uint256 | Updated royalty bps for the token Id. |
+
+### setSaleRecipientForToken
+
+```solidity
+function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external nonpayable
+```
+
+
+
+*Lets a contract admin set the recipient for all primary sales.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+| _saleRecipient | address | undefined |
+
+### supportsInterface
+
+```solidity
+function supportsInterface(bytes4 interfaceId) external view returns (bool)
+```
+
+
+
+*See ERC 165*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| interfaceId | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+### symbol
+
+```solidity
+function symbol() external view returns (string)
+```
+
+
+
+*Token symbol*
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined |
+
+### totalSupply
+
+```solidity
+function totalSupply(uint256 _tokenId) external view returns (uint256)
+```
+
+
+
+*Total circulating supply of tokens with a given tokenId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+### uri
+
+```solidity
+function uri(uint256 _tokenId) external view returns (string)
+```
+
+
+
+*Returns the uri for a given tokenId.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined |
+
+### verifyClaim
+
+```solidity
+function verifyClaim(uint256 _conditionId, address _claimer, uint256 _tokenId, uint256 _quantity, address _currency, uint256 _pricePerToken, IDrop1155.AllowlistProof _allowlistProof) external view returns (bool isOverride)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _conditionId | uint256 | undefined |
+| _claimer | address | undefined |
+| _tokenId | uint256 | undefined |
+| _quantity | uint256 | undefined |
+| _currency | address | undefined |
+| _pricePerToken | uint256 | undefined |
+| _allowlistProof | IDrop1155.AllowlistProof | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| isOverride | bool | undefined |
+
+
+
+## Events
+
+### ApprovalForAll
+
+```solidity
+event ApprovalForAll(address indexed _owner, address indexed _operator, bool _approved)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _owner `indexed` | address | undefined |
+| _operator `indexed` | address | undefined |
+| _approved  | bool | undefined |
+
+### ClaimConditionsUpdated
+
+```solidity
+event ClaimConditionsUpdated(uint256 indexed tokenId, IClaimCondition.ClaimCondition[] claimConditions, bool resetEligibility)
+```
+
+Emitted when the contract&#39;s claim conditions are updated.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId `indexed` | uint256 | undefined |
+| claimConditions  | IClaimCondition.ClaimCondition[] | undefined |
+| resetEligibility  | bool | undefined |
+
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
+
+### DefaultRoyalty
+
+```solidity
+event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| newRoyaltyRecipient `indexed` | address | undefined |
+| newRoyaltyBps  | uint256 | undefined |
+
+### FlatPlatformFeeUpdated
+
+```solidity
+event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeRecipient  | address | undefined |
+| flatFee  | uint256 | undefined |
+
+### Initialized
+
+```solidity
+event Initialized(uint8 version)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| version  | uint8 | undefined |
+
+### MaxTotalSupplyUpdated
+
+```solidity
+event MaxTotalSupplyUpdated(uint256 tokenId, uint256 maxTotalSupply)
+```
+
+
+
+*Emitted when the global max supply of a token is updated.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId  | uint256 | undefined |
+| maxTotalSupply  | uint256 | undefined |
+
+### OperatorRestriction
+
+```solidity
+event OperatorRestriction(bool restriction)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| restriction  | bool | undefined |
+
+### OwnerUpdated
+
+```solidity
+event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevOwner `indexed` | address | undefined |
+| newOwner `indexed` | address | undefined |
+
+### PlatformFeeInfoUpdated
+
+```solidity
+event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeRecipient `indexed` | address | undefined |
+| platformFeeBps  | uint256 | undefined |
+
+### PlatformFeeTypeUpdated
+
+```solidity
+event PlatformFeeTypeUpdated(enum IPlatformFee.PlatformFeeType feeType)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| feeType  | enum IPlatformFee.PlatformFeeType | undefined |
+
+### PrimarySaleRecipientUpdated
+
+```solidity
+event PrimarySaleRecipientUpdated(address indexed recipient)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| recipient `indexed` | address | undefined |
+
+### RoyaltyForToken
+
+```solidity
+event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId `indexed` | uint256 | undefined |
+| royaltyRecipient `indexed` | address | undefined |
+| royaltyBps  | uint256 | undefined |
+
+### SaleRecipientForTokenUpdated
+
+```solidity
+event SaleRecipientForTokenUpdated(uint256 indexed tokenId, address saleRecipient)
+```
+
+
+
+*Emitted when the sale recipient for a particular tokenId is updated.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId `indexed` | uint256 | undefined |
+| saleRecipient  | address | undefined |
+
+### TokensClaimed
+
+```solidity
+event TokensClaimed(uint256 indexed claimConditionIndex, address indexed claimer, address indexed receiver, uint256 tokenId, uint256 quantityClaimed)
+```
+
+Emitted when tokens are claimed.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| claimConditionIndex `indexed` | uint256 | undefined |
+| claimer `indexed` | address | undefined |
+| receiver `indexed` | address | undefined |
+| tokenId  | uint256 | undefined |
+| quantityClaimed  | uint256 | undefined |
+
+### TokensLazyMinted
+
+```solidity
+event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| startTokenId `indexed` | uint256 | undefined |
+| endTokenId  | uint256 | undefined |
+| baseURI  | string | undefined |
+| encryptedBaseURI  | bytes | undefined |
+
+### TransferBatch
+
+```solidity
+event TransferBatch(address indexed _operator, address indexed _from, address indexed _to, uint256[] _ids, uint256[] _values)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _operator `indexed` | address | undefined |
+| _from `indexed` | address | undefined |
+| _to `indexed` | address | undefined |
+| _ids  | uint256[] | undefined |
+| _values  | uint256[] | undefined |
+
+### TransferSingle
+
+```solidity
+event TransferSingle(address indexed _operator, address indexed _from, address indexed _to, uint256 _id, uint256 _value)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _operator `indexed` | address | undefined |
+| _from `indexed` | address | undefined |
+| _to `indexed` | address | undefined |
+| _id  | uint256 | undefined |
+| _value  | uint256 | undefined |
+
+### URI
+
+```solidity
+event URI(string _value, uint256 indexed _id)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _value  | string | undefined |
+| _id `indexed` | uint256 | undefined |
+
+
+

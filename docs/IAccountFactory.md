@@ -75,7 +75,7 @@ Returns all accounts that the given address is a signer of.
 ### getAddress
 
 ```solidity
-function getAddress(address adminSigner) external view returns (address)
+function getAddress(address adminSigner, bytes data) external view returns (address)
 ```
 
 Returns the address of an Account that would be deployed with the given admin signer.
@@ -87,6 +87,7 @@ Returns the address of an Account that would be deployed with the given admin si
 | Name | Type | Description |
 |---|---|---|
 | adminSigner | address | undefined |
+| data | bytes | undefined |
 
 #### Returns
 
