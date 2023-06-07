@@ -82,6 +82,10 @@ contract DynamicNFTDropLogic is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        string memory metadataOverride = _getTokenURI(_tokenId);
+        if (bytes(metadataOverride).length > 0) {
+            return metadataOverride;
+        }
         (uint256 batchId, ) = _getBatchId(_tokenId);
         string memory batchUri = _getBaseURI(_tokenId);
 
