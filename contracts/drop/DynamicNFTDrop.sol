@@ -135,7 +135,7 @@ contract DynamicNFTDrop is
 
     /// @dev Returns whether a plugin can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
-        _hasRole(keccak256("EXTENSION_ROLE"), msg.sender);
+        return _hasRole(keccak256("EXTENSION_ROLE"), msg.sender);
     }
 
     /// @dev Checks whether an account holds the given role.
