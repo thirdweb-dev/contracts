@@ -3,10 +3,11 @@ pragma solidity ^0.8.0;
 
 import "../utils/BaseTest.sol";
 import { BurnToClaimDropERC721 } from "contracts/burn-to-claim-drop/BurnToClaimDropERC721.sol";
-import { BurnToClaimDrop721Logic, ERC721AUpgradeable, DelayedReveal, LazyMint, Drop } from "contracts/burn-to-claim-drop/extension/BurnToClaimDrop721Logic.sol";
+import { BurnToClaimDrop721Logic, ERC721AUpgradeable, DelayedReveal, LazyMint, Drop, BurnToClaim } from "contracts/burn-to-claim-drop/extension/BurnToClaimDrop721Logic.sol";
 import { PermissionsEnumerableImpl } from "contracts/dynamic-contracts/impl/PermissionsEnumerableImpl.sol";
 import { Royalty } from "contracts/dynamic-contracts/extension/Royalty.sol";
 import { BatchMintMetadata } from "contracts/dynamic-contracts/extension/BatchMintMetadata.sol";
+import { IBurnToClaim } from "contracts/extension/interface/IBurnToClaim.sol";
 
 import "lib/dynamic-contracts/src/interface/IExtension.sol";
 
@@ -121,7 +122,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
             implementation: dropLogic
         });
 
-        extension_drop.functions = new ExtensionFunction[](25);
+        extension_drop.functions = new ExtensionFunction[](29);
         extension_drop.functions[0] = ExtensionFunction(BurnToClaimDrop721Logic.tokenURI.selector, "tokenURI(uint256)");
         extension_drop.functions[1] = ExtensionFunction(
             BurnToClaimDrop721Logic.lazyMint.selector,
@@ -201,6 +202,26 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         );
         extension_drop.functions[23] = ExtensionFunction(IERC721.ownerOf.selector, "ownerOf(uint256)");
         extension_drop.functions[24] = ExtensionFunction(IERC1155.balanceOf.selector, "balanceOf(address,uint256)");
+        extension_drop.functions[25] = ExtensionFunction(
+            BurnToClaim.setBurnToClaimInfo.selector,
+            "setBurnToClaimInfo((address,uint8,uint256,uint256,address))"
+        );
+        extension_drop.functions[26] = ExtensionFunction(
+            BurnToClaim.getBurnToClaimInfo.selector,
+            "getBurnToClaimInfo()"
+        );
+        extension_drop.functions[27] = ExtensionFunction(
+            BurnToClaim.verifyBurnToClaim.selector,
+            "verifyBurnToClaim(address,uint256,uint256)"
+        );
+        extension_drop.functions[28] = ExtensionFunction(
+            BurnToClaimDrop721Logic.burnAndClaim.selector,
+            "burnAndClaim(uint256,uint256)"
+        );
+        extension_drop.functions[11] = ExtensionFunction(
+            BurnToClaimDrop721Logic.nextTokenIdToClaim.selector,
+            "nextTokenIdToClaim()"
+        );
 
         extensions[1] = extension_drop;
     }
@@ -1280,4 +1301,303 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         vm.stopPrank();
     }
+
+    /*///////////////////////////////////////////////////////////////
+                            Burn To Claim
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_burnAndClaim_1155Origin_zeroMintPrice() public {
+        IBurnToClaim.BurnToClaimInfo memory burnToClaimInfo;
+
+        burnToClaimInfo.originContractAddress = address(erc1155);
+        burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC1155;
+        burnToClaimInfo.tokenId = 0;
+        burnToClaimInfo.mintPriceForNewToken = 0;
+        burnToClaimInfo.currency = address(0);
+
+        // set origin contract details for burn and claim
+        vm.prank(deployer);
+        drop.setBurnToClaimInfo(burnToClaimInfo);
+
+        // check details correctly saved
+        BurnToClaimDrop721Logic.BurnToClaimInfo memory savedInfo = drop.getBurnToClaimInfo();
+        assertEq(savedInfo.originContractAddress, burnToClaimInfo.originContractAddress);
+        assertTrue(savedInfo.tokenType == burnToClaimInfo.tokenType);
+        assertEq(savedInfo.tokenId, burnToClaimInfo.tokenId);
+        assertEq(savedInfo.mintPriceForNewToken, burnToClaimInfo.mintPriceForNewToken);
+        assertEq(savedInfo.currency, burnToClaimInfo.currency);
+
+        // mint some erc1155 to a claimer
+        address claimer = getActor(0);
+        erc1155.mint(claimer, 0, 10);
+        assertEq(erc1155.balanceOf(claimer, 0), 10);
+        vm.prank(claimer);
+        erc1155.setApprovalForAll(address(drop), true);
+
+        // lazy mint tokens
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        // burn and claim
+        vm.prank(claimer);
+        drop.burnAndClaim(0, 10);
+
+        // check state
+        assertEq(erc1155.balanceOf(claimer, 0), 0);
+        assertEq(drop.balanceOf(claimer), 10);
+        assertEq(drop.nextTokenIdToClaim(), 10);
+    }
+
+    function test_state_burnAndClaim_1155Origin_nonZeroMintPrice() public {
+        IBurnToClaim.BurnToClaimInfo memory burnToClaimInfo;
+
+        burnToClaimInfo.originContractAddress = address(erc1155);
+        burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC1155;
+        burnToClaimInfo.tokenId = 0;
+        burnToClaimInfo.mintPriceForNewToken = 1;
+        burnToClaimInfo.currency = address(erc20);
+
+        // set origin contract details for burn and claim
+        vm.prank(deployer);
+        drop.setBurnToClaimInfo(burnToClaimInfo);
+
+        // check details correctly saved
+        BurnToClaimDrop721Logic.BurnToClaimInfo memory savedInfo = drop.getBurnToClaimInfo();
+        assertEq(savedInfo.originContractAddress, burnToClaimInfo.originContractAddress);
+        assertTrue(savedInfo.tokenType == burnToClaimInfo.tokenType);
+        assertEq(savedInfo.tokenId, burnToClaimInfo.tokenId);
+        assertEq(savedInfo.mintPriceForNewToken, burnToClaimInfo.mintPriceForNewToken);
+        assertEq(savedInfo.currency, burnToClaimInfo.currency);
+
+        // mint some erc1155 to a claimer
+        address claimer = getActor(0);
+        erc1155.mint(claimer, 0, 10);
+        assertEq(erc1155.balanceOf(claimer, 0), 10);
+        vm.prank(claimer);
+        erc1155.setApprovalForAll(address(drop), true);
+
+        // mint erc20 to claimer, to pay claim price
+        erc20.mint(claimer, 100);
+        vm.prank(claimer);
+        erc20.approve(address(drop), type(uint256).max);
+
+        // lazy mint tokens
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        // burn and claim
+        vm.prank(claimer);
+        drop.burnAndClaim(0, 10);
+
+        // check state
+        assertEq(erc1155.balanceOf(claimer, 0), 0);
+        assertEq(erc20.balanceOf(claimer), 90);
+        assertEq(erc20.balanceOf(saleRecipient), 10);
+        assertEq(drop.balanceOf(claimer), 10);
+        assertEq(drop.nextTokenIdToClaim(), 10);
+    }
+
+    function test_state_burnAndClaim_1155Origin_nonZeroMintPrice_nativeToken() public {
+        IBurnToClaim.BurnToClaimInfo memory burnToClaimInfo;
+
+        burnToClaimInfo.originContractAddress = address(erc1155);
+        burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC1155;
+        burnToClaimInfo.tokenId = 0;
+        burnToClaimInfo.mintPriceForNewToken = 1;
+        burnToClaimInfo.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+        // set origin contract details for burn and claim
+        vm.prank(deployer);
+        drop.setBurnToClaimInfo(burnToClaimInfo);
+
+        // check details correctly saved
+        BurnToClaimDrop721Logic.BurnToClaimInfo memory savedInfo = drop.getBurnToClaimInfo();
+        assertEq(savedInfo.originContractAddress, burnToClaimInfo.originContractAddress);
+        assertTrue(savedInfo.tokenType == burnToClaimInfo.tokenType);
+        assertEq(savedInfo.tokenId, burnToClaimInfo.tokenId);
+        assertEq(savedInfo.mintPriceForNewToken, burnToClaimInfo.mintPriceForNewToken);
+        assertEq(savedInfo.currency, burnToClaimInfo.currency);
+
+        // mint some erc1155 to a claimer
+        address claimer = getActor(0);
+        erc1155.mint(claimer, 0, 10);
+        assertEq(erc1155.balanceOf(claimer, 0), 10);
+        vm.prank(claimer);
+        erc1155.setApprovalForAll(address(drop), true);
+
+        // deal ether to claimer, to pay claim price
+        vm.deal(claimer, 100);
+
+        // lazy mint tokens
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        // burn and claim
+        vm.prank(claimer);
+        drop.burnAndClaim{ value: 10 }(0, 10);
+
+        // check state
+        assertEq(erc1155.balanceOf(claimer, 0), 0);
+        assertEq(claimer.balance, 90);
+        assertEq(saleRecipient.balance, 10);
+        assertEq(drop.balanceOf(claimer), 10);
+        assertEq(drop.nextTokenIdToClaim(), 10);
+    }
+
+    function test_state_burnAndClaim_721Origin_zeroMintPrice() public {
+        IBurnToClaim.BurnToClaimInfo memory burnToClaimInfo;
+
+        burnToClaimInfo.originContractAddress = address(erc721);
+        burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC721;
+        burnToClaimInfo.tokenId = 0;
+        burnToClaimInfo.mintPriceForNewToken = 0;
+        burnToClaimInfo.currency = address(0);
+
+        // set origin contract details for burn and claim
+        vm.prank(deployer);
+        drop.setBurnToClaimInfo(burnToClaimInfo);
+
+        // check details correctly saved
+        BurnToClaimDrop721Logic.BurnToClaimInfo memory savedInfo = drop.getBurnToClaimInfo();
+        assertEq(savedInfo.originContractAddress, burnToClaimInfo.originContractAddress);
+        assertTrue(savedInfo.tokenType == burnToClaimInfo.tokenType);
+        assertEq(savedInfo.tokenId, burnToClaimInfo.tokenId);
+        assertEq(savedInfo.mintPriceForNewToken, burnToClaimInfo.mintPriceForNewToken);
+        assertEq(savedInfo.currency, burnToClaimInfo.currency);
+
+        // mint some erc721 to a claimer
+        address claimer = getActor(0);
+        erc721.mint(claimer, 10);
+        assertEq(erc721.balanceOf(claimer), 10);
+        vm.prank(claimer);
+        erc721.setApprovalForAll(address(drop), true);
+
+        // lazy mint tokens
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        // burn and claim
+        vm.prank(claimer);
+        drop.burnAndClaim(0, 1);
+
+        // check state
+        assertEq(erc721.balanceOf(claimer), 9);
+        assertEq(drop.balanceOf(claimer), 1);
+        assertEq(drop.nextTokenIdToClaim(), 1);
+
+        vm.expectRevert("ERC721: invalid token ID"); // because the token doesn't exist anymore
+        erc721.ownerOf(0);
+    }
+
+    function test_state_burnAndClaim_721Origin_nonZeroMintPrice() public {
+        IBurnToClaim.BurnToClaimInfo memory burnToClaimInfo;
+
+        burnToClaimInfo.originContractAddress = address(erc721);
+        burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC721;
+        burnToClaimInfo.tokenId = 0;
+        burnToClaimInfo.mintPriceForNewToken = 1;
+        burnToClaimInfo.currency = address(erc20);
+
+        // set origin contract details for burn and claim
+        vm.prank(deployer);
+        drop.setBurnToClaimInfo(burnToClaimInfo);
+
+        // check details correctly saved
+        BurnToClaimDrop721Logic.BurnToClaimInfo memory savedInfo = drop.getBurnToClaimInfo();
+        assertEq(savedInfo.originContractAddress, burnToClaimInfo.originContractAddress);
+        assertTrue(savedInfo.tokenType == burnToClaimInfo.tokenType);
+        assertEq(savedInfo.tokenId, burnToClaimInfo.tokenId);
+        assertEq(savedInfo.mintPriceForNewToken, burnToClaimInfo.mintPriceForNewToken);
+        assertEq(savedInfo.currency, burnToClaimInfo.currency);
+
+        // mint some erc721 to a claimer
+        address claimer = getActor(0);
+        erc721.mint(claimer, 10);
+        assertEq(erc721.balanceOf(claimer), 10);
+        vm.prank(claimer);
+        erc721.setApprovalForAll(address(drop), true);
+
+        // mint erc20 to claimer, to pay claim price
+        erc20.mint(claimer, 100);
+        vm.prank(claimer);
+        erc20.approve(address(drop), type(uint256).max);
+
+        // lazy mint tokens
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        // burn and claim
+        vm.prank(claimer);
+        drop.burnAndClaim(0, 1);
+
+        // check state
+        assertEq(erc721.balanceOf(claimer), 9);
+        assertEq(drop.balanceOf(claimer), 1);
+        assertEq(drop.nextTokenIdToClaim(), 1);
+        assertEq(erc20.balanceOf(claimer), 99);
+        assertEq(erc20.balanceOf(saleRecipient), 1);
+
+        vm.expectRevert("ERC721: invalid token ID"); // because the token doesn't exist anymore
+        erc721.ownerOf(0);
+    }
+
+    function test_state_burnAndClaim_721Origin_nonZeroMintPrice_nativeToken() public {
+        IBurnToClaim.BurnToClaimInfo memory burnToClaimInfo;
+
+        burnToClaimInfo.originContractAddress = address(erc721);
+        burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC721;
+        burnToClaimInfo.tokenId = 0;
+        burnToClaimInfo.mintPriceForNewToken = 1;
+        burnToClaimInfo.currency = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+        // set origin contract details for burn and claim
+        vm.prank(deployer);
+        drop.setBurnToClaimInfo(burnToClaimInfo);
+
+        // check details correctly saved
+        BurnToClaimDrop721Logic.BurnToClaimInfo memory savedInfo = drop.getBurnToClaimInfo();
+        assertEq(savedInfo.originContractAddress, burnToClaimInfo.originContractAddress);
+        assertTrue(savedInfo.tokenType == burnToClaimInfo.tokenType);
+        assertEq(savedInfo.tokenId, burnToClaimInfo.tokenId);
+        assertEq(savedInfo.mintPriceForNewToken, burnToClaimInfo.mintPriceForNewToken);
+        assertEq(savedInfo.currency, burnToClaimInfo.currency);
+
+        // mint some erc721 to a claimer
+        address claimer = getActor(0);
+        erc721.mint(claimer, 10);
+        assertEq(erc721.balanceOf(claimer), 10);
+        vm.prank(claimer);
+        erc721.setApprovalForAll(address(drop), true);
+
+        // deal ether to claimer, to pay claim price
+        vm.deal(claimer, 100);
+
+        // lazy mint tokens
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        // burn and claim
+        vm.prank(claimer);
+        drop.burnAndClaim{ value: 1 }(0, 1);
+
+        // check state
+        assertEq(erc721.balanceOf(claimer), 9);
+        assertEq(drop.balanceOf(claimer), 1);
+        assertEq(drop.nextTokenIdToClaim(), 1);
+        assertEq(claimer.balance, 99);
+        assertEq(saleRecipient.balance, 1);
+
+        vm.expectRevert("ERC721: invalid token ID"); // because the token doesn't exist anymore
+        erc721.ownerOf(0);
+    }
+
+    // test setBurnAndClaimInfo function
+
+    // test access control for these
+
+    //
+
+    /*///////////////////////////////////////////////////////////////
+                    Extension Role and Upgradeability
+    //////////////////////////////////////////////////////////////*/
 }

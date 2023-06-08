@@ -6,7 +6,6 @@ pragma solidity ^0.8.0;
 interface IBurnToClaim {
     /// @notice The type of assets that can be burned.
     enum TokenType {
-        ERC20,
         ERC721,
         ERC1155
     }

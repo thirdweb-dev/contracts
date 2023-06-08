@@ -46,18 +46,20 @@ abstract contract BurnToClaim is IBurnToClaim {
         uint256 _quantity
     ) public view virtual {
         BurnToClaimInfo memory _burnToClaimInfo = getBurnToClaimInfo();
+        require(_burnToClaimInfo.originContractAddress != address(0), "Origin contract not set.");
 
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {
             require(_quantity == 1, "Invalid amount");
-            require(IERC721(_burnToClaimInfo.originContractAddress).ownerOf(_tokenId) == _tokenOwner);
+            require(IERC721(_burnToClaimInfo.originContractAddress).ownerOf(_tokenId) == _tokenOwner, "!Owner.");
         } else if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC1155) {
             uint256 _eligible1155TokenId = _burnToClaimInfo.tokenId;
 
-            require(_tokenId == _eligible1155TokenId || _eligible1155TokenId == type(uint256).max);
-            require(IERC1155(_burnToClaimInfo.originContractAddress).balanceOf(_tokenOwner, _tokenId) >= _quantity);
+            require(_tokenId == _eligible1155TokenId, "Invalid token Id");
+            require(
+                IERC1155(_burnToClaimInfo.originContractAddress).balanceOf(_tokenOwner, _tokenId) >= _quantity,
+                "!Balance"
+            );
         }
-
-        // TODO: check if additional verification steps are required / override in main contract
     }
 
     function _burnTokensOnOrigin(
@@ -66,12 +68,12 @@ abstract contract BurnToClaim is IBurnToClaim {
         uint256 _quantity
     ) internal virtual {
         BurnToClaimInfo memory _burnToClaimInfo = getBurnToClaimInfo();
+
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {
             ERC721Burnable(_burnToClaimInfo.originContractAddress).burn(_tokenId);
         } else if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC1155) {
             ERC1155Burnable(_burnToClaimInfo.originContractAddress).burn(_tokenOwner, _tokenId, _quantity);
         }
-        // TODO: check if additional migration steps are required / override in main contract
     }
 
     function _canSetBurnToClaim() internal view virtual returns (bool);
