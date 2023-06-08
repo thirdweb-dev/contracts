@@ -50,7 +50,7 @@ abstract contract BurnToClaim is IBurnToClaim {
 
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {
             require(_quantity == 1, "Invalid amount");
-            require(IERC721(_burnToClaimInfo.originContractAddress).ownerOf(_tokenId) == _tokenOwner, "!Owner.");
+            require(IERC721(_burnToClaimInfo.originContractAddress).ownerOf(_tokenId) == _tokenOwner, "!Owner");
         } else if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC1155) {
             uint256 _eligible1155TokenId = _burnToClaimInfo.tokenId;
 

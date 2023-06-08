@@ -122,7 +122,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
             implementation: dropLogic
         });
 
-        extension_drop.functions = new ExtensionFunction[](29);
+        extension_drop.functions = new ExtensionFunction[](30);
         extension_drop.functions[0] = ExtensionFunction(BurnToClaimDrop721Logic.tokenURI.selector, "tokenURI(uint256)");
         extension_drop.functions[1] = ExtensionFunction(
             BurnToClaimDrop721Logic.lazyMint.selector,
@@ -218,7 +218,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
             BurnToClaimDrop721Logic.burnAndClaim.selector,
             "burnAndClaim(uint256,uint256)"
         );
-        extension_drop.functions[11] = ExtensionFunction(
+        extension_drop.functions[29] = ExtensionFunction(
             BurnToClaimDrop721Logic.nextTokenIdToClaim.selector,
             "nextTokenIdToClaim()"
         );
@@ -1591,13 +1591,198 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         erc721.ownerOf(0);
     }
 
-    // test setBurnAndClaimInfo function
+    function test_revert_burnAndClaim_originNotSet() public {
+        // lazy mint tokens
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
 
-    // test access control for these
+        // burn and claim
+        vm.expectRevert("Origin contract not set.");
+        drop.burnAndClaim(0, 1);
+    }
 
-    //
+    function test_revert_burnAndClaim_noLazyMintedTokens() public {
+        // burn and claim
+        vm.expectRevert("!Tokens");
+        drop.burnAndClaim(0, 1);
+    }
+
+    function test_revert_burnAndClaim_invalidTokenId() public {
+        IBurnToClaim.BurnToClaimInfo memory burnToClaimInfo;
+
+        burnToClaimInfo.originContractAddress = address(erc1155);
+        burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC1155;
+        burnToClaimInfo.tokenId = 0;
+        burnToClaimInfo.mintPriceForNewToken = 0;
+        burnToClaimInfo.currency = address(0);
+
+        // set origin contract details for burn and claim
+        vm.prank(deployer);
+        drop.setBurnToClaimInfo(burnToClaimInfo);
+
+        // lazy mint tokens
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        // mint some erc1155 to a claimer
+        address claimer = getActor(0);
+        erc1155.mint(claimer, 0, 10);
+        assertEq(erc1155.balanceOf(claimer, 0), 10);
+        vm.prank(claimer);
+        erc1155.setApprovalForAll(address(drop), true);
+
+        // burn and claim
+        vm.prank(claimer);
+        vm.expectRevert("Invalid token Id");
+        drop.burnAndClaim(1, 1);
+    }
+
+    function test_revert_burnAndClaim_notEnoughBalance() public {
+        IBurnToClaim.BurnToClaimInfo memory burnToClaimInfo;
+
+        burnToClaimInfo.originContractAddress = address(erc1155);
+        burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC1155;
+        burnToClaimInfo.tokenId = 0;
+        burnToClaimInfo.mintPriceForNewToken = 0;
+        burnToClaimInfo.currency = address(0);
+
+        // set origin contract details for burn and claim
+        vm.prank(deployer);
+        drop.setBurnToClaimInfo(burnToClaimInfo);
+
+        // lazy mint tokens
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        // mint some erc1155 to a claimer
+        address claimer = getActor(0);
+        erc1155.mint(claimer, 0, 10);
+        assertEq(erc1155.balanceOf(claimer, 0), 10);
+        vm.prank(claimer);
+        erc1155.setApprovalForAll(address(drop), true);
+
+        // burn and claim
+        vm.prank(claimer);
+        vm.expectRevert("!Balance");
+        drop.burnAndClaim(0, 11);
+    }
+
+    function test_revert_burnAndClaim_notOwnerOfToken() public {
+        IBurnToClaim.BurnToClaimInfo memory burnToClaimInfo;
+
+        burnToClaimInfo.originContractAddress = address(erc721);
+        burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC721;
+        burnToClaimInfo.tokenId = 0;
+        burnToClaimInfo.mintPriceForNewToken = 1;
+        burnToClaimInfo.currency = address(erc20);
+
+        // set origin contract details for burn and claim
+        vm.prank(deployer);
+        drop.setBurnToClaimInfo(burnToClaimInfo);
+
+        // mint some erc721 to a claimer
+        address claimer = getActor(0);
+        erc721.mint(claimer, 10);
+        assertEq(erc721.balanceOf(claimer), 10);
+        vm.prank(claimer);
+        erc721.setApprovalForAll(address(drop), true);
+
+        // mint erc721 to another address
+        erc721.mint(address(0x567), 5);
+
+        // lazy mint tokens
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+        // burn and claim
+        vm.prank(claimer);
+        vm.expectRevert("!Owner");
+        drop.burnAndClaim(11, 1);
+    }
 
     /*///////////////////////////////////////////////////////////////
                     Extension Role and Upgradeability
     //////////////////////////////////////////////////////////////*/
+
+    function test_addExtension() public {
+        address permissionsNew = address(new PermissionsEnumerableImpl());
+
+        Extension memory extension_permissions_new;
+        extension_permissions_new.metadata = ExtensionMetadata({
+            name: "PermissionsNew",
+            metadataURI: "ipfs://PermissionsNew",
+            implementation: permissionsNew
+        });
+
+        extension_permissions_new.functions = new ExtensionFunction[](4);
+        extension_permissions_new.functions[0] = ExtensionFunction(
+            Permissions.hasRole.selector,
+            "hasRole(bytes32,address)"
+        );
+        extension_permissions_new.functions[1] = ExtensionFunction(
+            Permissions.hasRoleWithSwitch.selector,
+            "hasRoleWithSwitch(bytes32,address)"
+        );
+        extension_permissions_new.functions[2] = ExtensionFunction(
+            Permissions.grantRole.selector,
+            "grantRole(bytes32,address)"
+        );
+        extension_permissions_new.functions[3] = ExtensionFunction(
+            PermissionsEnumerable.getRoleMemberCount.selector,
+            "getRoleMemberCount(bytes32)"
+        );
+
+        // cast drop to router type
+        BurnToClaimDropERC721 dropRouter = BurnToClaimDropERC721(payable(address(drop)));
+
+        vm.prank(deployer);
+        dropRouter.addExtension(extension_permissions_new);
+
+        assertEq(
+            dropRouter.getExtensionForFunction(PermissionsEnumerable.getRoleMemberCount.selector).name,
+            "PermissionsNew"
+        );
+
+        assertEq(
+            dropRouter.getExtensionForFunction(PermissionsEnumerable.getRoleMemberCount.selector).implementation,
+            permissionsNew
+        );
+    }
+
+    function test_revert_addExtension_NotAuthorized() public {
+        Extension memory extension_permissions_new;
+
+        // cast drop to router type
+        BurnToClaimDropERC721 dropRouter = BurnToClaimDropERC721(payable(address(drop)));
+
+        vm.prank(address(0x123));
+        vm.expectRevert("BaseRouter: caller not authorized.");
+        dropRouter.addExtension(extension_permissions_new);
+    }
+
+    function test_revert_addExtension_deployerRenounceExtensionRole() public {
+        Extension memory extension_permissions_new;
+
+        // cast drop to router type
+        BurnToClaimDropERC721 dropRouter = BurnToClaimDropERC721(payable(address(drop)));
+
+        vm.prank(deployer);
+        Permissions(address(drop)).renounceRole(keccak256("EXTENSION_ROLE"), deployer);
+
+        vm.prank(deployer);
+        vm.expectRevert("BaseRouter: caller not authorized.");
+        dropRouter.addExtension(extension_permissions_new);
+
+        vm.startPrank(deployer);
+        vm.expectRevert(
+            abi.encodePacked(
+                "Permissions: account ",
+                TWStrings.toHexString(uint160(deployer), 20),
+                " is missing role ",
+                TWStrings.toHexString(uint256(keccak256("EXTENSION_ROLE")), 32)
+            )
+        );
+        Permissions(address(drop)).grantRole(keccak256("EXTENSION_ROLE"), address(0x12345));
+        vm.stopPrank();
+    }
 }
