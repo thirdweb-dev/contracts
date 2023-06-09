@@ -50,8 +50,8 @@ contract LoyaltyCard is
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
     /// @dev Only METADATA_ROLE holders can update NFT metadata.
     bytes32 private constant METADATA_ROLE = keccak256("METADATA_ROLE");
-    /// @dev Only BURN_ROLE holders can update NFT metadata.
-    bytes32 private constant BURN_ROLE = keccak256("BURN_ROLE");
+    /// @dev Only REVOKE_ROLE holders can revoke a loyalty card.
+    bytes32 private constant REVOKE_ROLE = keccak256("REVOKE_ROLE");
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -93,8 +93,8 @@ contract LoyaltyCard is
         _setupRole(METADATA_ROLE, _defaultAdmin);
         _setRoleAdmin(METADATA_ROLE, METADATA_ROLE);
 
-        _setupRole(BURN_ROLE, _defaultAdmin);
-        _setRoleAdmin(BURN_ROLE, BURN_ROLE);
+        _setupRole(REVOKE_ROLE, _defaultAdmin);
+        _setRoleAdmin(REVOKE_ROLE, REVOKE_ROLE);
 
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
@@ -159,7 +159,7 @@ contract LoyaltyCard is
     }
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
-    function revoke(uint256 tokenId) external virtual override onlyRole(BURN_ROLE) {
+    function revoke(uint256 tokenId) external virtual override onlyRole(REVOKE_ROLE) {
         _burn(tokenId);
     }
 

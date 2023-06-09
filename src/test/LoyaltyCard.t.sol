@@ -197,10 +197,10 @@ contract LoyaltyCardTest is BaseTest {
 
         address burner = address(0x123456);
         vm.prank(signer);
-        loyaltyCard.grantRole(keccak256("BURN_ROLE"), burner);
+        loyaltyCard.grantRole(keccak256("REVOKE_ROLE"), burner);
 
         vm.prank(signer);
-        loyaltyCard.renounceRole(keccak256("BURN_ROLE"), signer);
+        loyaltyCard.renounceRole(keccak256("REVOKE_ROLE"), signer);
 
         vm.expectRevert();
         vm.prank(signer);
