@@ -1,4 +1,4 @@
-# DynamicNFT
+# LoyaltyCard
 
 
 
@@ -66,26 +66,10 @@ function balanceOf(address owner) external view returns (uint256)
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### burn
+### cancel
 
 ```solidity
-function burn(uint256 tokenId) external nonpayable
-```
-
-
-
-*Burns `tokenId`. See {ERC721-_burn}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId | uint256 | undefined |
-
-### burnAsAdmin
-
-```solidity
-function burnAsAdmin(uint256 tokenId) external nonpayable
+function cancel(uint256 tokenId) external nonpayable
 ```
 
 
@@ -623,6 +607,22 @@ Revokes role from the account.
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
 
+### revoke
+
+```solidity
+function revoke(uint256 tokenId) external nonpayable
+```
+
+
+
+*Burns `tokenId`. See {ERC721-_burn}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
+
 ### revokeRole
 
 ```solidity
@@ -1077,6 +1077,23 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
 
+### BatchMetadataUpdate
+
+```solidity
+event BatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _fromTokenId  | uint256 | undefined |
+| _toTokenId  | uint256 | undefined |
+
 ### ContractURIUpdated
 
 ```solidity
@@ -1143,6 +1160,22 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
+
+### MetadataUpdate
+
+```solidity
+event MetadataUpdate(uint256 _tokenId)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId  | uint256 | undefined |
 
 ### OperatorRestriction
 
@@ -1297,24 +1330,6 @@ event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient,
 | tokenId `indexed` | uint256 | undefined |
 | royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
-
-### TokenURIUpdated
-
-```solidity
-event TokenURIUpdated(uint256 indexed tokenId, string prevURI, string newURI)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenId `indexed` | uint256 | undefined |
-| prevURI  | string | undefined |
-| newURI  | string | undefined |
 
 ### TokensMinted
 

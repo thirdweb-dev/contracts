@@ -27,27 +27,64 @@ Sets the metadata URI for a given NFT.
 | _tokenId | uint256 | undefined |
 | _uri | string | undefined |
 
-
-
-## Events
-
-### TokenURIUpdated
+### supportsInterface
 
 ```solidity
-event TokenURIUpdated(uint256 indexed tokenId, string prevURI, string newURI)
+function supportsInterface(bytes4 interfaceId) external view returns (bool)
 ```
 
 
 
-*Emitted when the token URI is updated.*
+*Returns true if this contract implements the interface defined by `interfaceId`. See the corresponding [EIP section](https://eips.ethereum.org/EIPS/eip-165#how-interfaces-are-identified) to learn more about how these ids are created. This function call must use less than 30 000 gas.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| tokenId `indexed` | uint256 | undefined |
-| prevURI  | string | undefined |
-| newURI  | string | undefined |
+| interfaceId | bytes4 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
+
+
+## Events
+
+### BatchMetadataUpdate
+
+```solidity
+event BatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _fromTokenId  | uint256 | undefined |
+| _toTokenId  | uint256 | undefined |
+
+### MetadataUpdate
+
+```solidity
+event MetadataUpdate(uint256 _tokenId)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _tokenId  | uint256 | undefined |
 
 
 
