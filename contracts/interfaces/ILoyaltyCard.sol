@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721Upgradeable.sol";
 import "../extension/interface/INFTMetadata.sol";
 import "../extension/interface/ISignatureMintERC721.sol";
+import "../eip/interface/IERC721.sol";
 
-interface IDynamicNFT is ISignatureMintERC721, INFTMetadata {
+interface ILoyaltyCard {
     /// @dev Emitted when an account with MINTER_ROLE mints an NFT.
     event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri);
 

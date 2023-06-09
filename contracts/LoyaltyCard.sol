@@ -2,7 +2,7 @@
 pragma solidity ^0.8.11;
 
 // Interface
-import "./interfaces/IDynamicNFT.sol";
+import "./interfaces/ILoyaltyCard.sol";
 
 // Base
 import "./eip/ERC721AVirtualApproveUpgradeable.sol";
@@ -24,8 +24,8 @@ import "./extension/DefaultOperatorFiltererUpgradeable.sol";
 import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
-contract DynamicNFT is
-    IDynamicNFT,
+contract LoyaltyCard is
+    ILoyaltyCard,
     ContractMetadata,
     Ownable,
     Royalty,
@@ -50,8 +50,6 @@ contract DynamicNFT is
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
     /// @dev Only METADATA_ROLE holders can update NFT metadata.
     bytes32 private constant METADATA_ROLE = keccak256("METADATA_ROLE");
-    /// @dev Only BURN_ROLE holders can burn NFTs without approvals.
-    bytes32 private constant BURN_ROLE = keccak256("BURN_ROLE");
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -91,9 +89,6 @@ contract DynamicNFT is
 
         _setupRole(METADATA_ROLE, _defaultAdmin);
         _setRoleAdmin(METADATA_ROLE, METADATA_ROLE);
-
-        _setupRole(BURN_ROLE, _defaultAdmin);
-        _setRoleAdmin(BURN_ROLE, BURN_ROLE);
 
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
@@ -152,13 +147,13 @@ contract DynamicNFT is
     }
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
-    function burn(uint256 tokenId) external virtual {
+    function cancelLoyalty(uint256 tokenId) external virtual {
         // note: ERC721AUpgradeable's `_burn(uint256,bool)` internally checks for token approvals.
         _burn(tokenId, true);
     }
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
-    function burnAsAdmin(uint256 tokenId) external virtual onlyRole(METADATA_ROLE) {
+    function revokeLoyalty(uint256 tokenId) external virtual onlyRole(DEFAULT_ADMIN_ROLE) {
         _burn(tokenId);
     }
 

@@ -14,9 +14,9 @@ abstract contract NFTMetadata is INFTMetadata {
     /// @notice SEts the metadata URI for a given NFT.
     function _setTokenURI(uint256 _tokenId, string memory _uri) internal virtual {
         require(bytes(_uri).length > 0, "NFTMetadata: empty metadata.");
-        string memory prev = _tokenURI[_tokenId];
         _tokenURI[_tokenId] = _uri;
-        emit TokenURIUpdated(_tokenId, prev, _uri);
+
+        emit MetadataUpdate(_tokenId);
     }
 
     /// @notice Sets the metadata URI for a given NFT.
