@@ -181,7 +181,7 @@ contract LoyaltyCardTest is BaseTest {
         loyaltyCard.setApprovalForAll(signer, true);
 
         vm.prank(signer);
-        loyaltyCard.cancelLoyalty(tokenIdMinted);
+        loyaltyCard.cancel(tokenIdMinted);
 
         vm.expectRevert();
         loyaltyCard.ownerOf(tokenIdMinted);
@@ -195,8 +195,19 @@ contract LoyaltyCardTest is BaseTest {
 
         assertEq(loyaltyCard.ownerOf(tokenIdMinted), recipient);
 
+        address burner = address(0x123456);
         vm.prank(signer);
-        loyaltyCard.revokeLoyalty(tokenIdMinted);
+        loyaltyCard.grantRole(keccak256("BURN_ROLE"), burner);
+
+        vm.prank(signer);
+        loyaltyCard.renounceRole(keccak256("BURN_ROLE"), signer);
+
+        vm.expectRevert();
+        vm.prank(signer);
+        loyaltyCard.revoke(tokenIdMinted);
+
+        vm.prank(burner);
+        loyaltyCard.revoke(tokenIdMinted);
 
         vm.expectRevert();
         loyaltyCard.ownerOf(tokenIdMinted);

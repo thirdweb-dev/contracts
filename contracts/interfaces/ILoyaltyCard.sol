@@ -18,4 +18,10 @@ interface ILoyaltyCard {
      *  @return tokenId of the NFT minted.
      */
     function mintTo(address to, string calldata uri) external returns (uint256);
+
+    /// @notice Let's a loyalty card owner or approved operator cancel the loyalty card.
+    function cancel(uint256 tokenId) external;
+
+    /// @notice Let's an approved party cancel the loyalty card (no approval needed).
+    function revoke(uint256 tokenId) external;
 }
