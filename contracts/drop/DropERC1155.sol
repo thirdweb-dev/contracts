@@ -88,6 +88,7 @@ contract DropERC1155 is
         bytes32 _operatorRole = keccak256("OPERATOR_ROLE");
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
+        bytes32 _extensionRole = keccak256("EXTENSION_ROLE");
         bytes32 _defaultAdminRole = 0x00;
 
         _setupRole(_defaultAdminRole, _defaultAdmin);
@@ -96,22 +97,10 @@ contract DropERC1155 is
         _setupRole(_transferRole, address(0));
         _setupRole(_operatorRole, _defaultAdmin);
         _setupRole(_operatorRole, address(0));
+
+        _setupRole(_extensionRole, _defaultAdmin);
+        _setRoleAdmin(_extensionRole, _extensionRole);
     }
-
-    /*///////////////////////////////////////////////////////////////
-                        ERC 165 / 1155 / 2981 logic
-    //////////////////////////////////////////////////////////////*/
-
-    // /// @dev See ERC 165
-    // function supportsInterface(bytes4 interfaceId)
-    //     public
-    //     view
-    //     virtual
-    //     override(ERC1155Upgradeable, IERC165)
-    //     returns (bool)
-    // {
-    //     return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
-    // }
 
     /*///////////////////////////////////////////////////////////////
                         Contract identifiers
@@ -131,10 +120,7 @@ contract DropERC1155 is
 
     /// @dev Returns whether a plugin can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
-        // bytes32 defaultAdminRole = 0x00;
-        // return _hasRole(defaultAdminRole, _msgSender());
-
-        false;
+        _hasRole(keccak256("EXTENSION_ROLE"), msg.sender);
     }
 
     /// @dev Checks whether an account holds the given role.

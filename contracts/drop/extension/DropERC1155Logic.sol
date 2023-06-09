@@ -22,6 +22,9 @@ import { Context, ERC1155Upgradeable, ERC1155Storage } from "../../dynamic-contr
 
 import { IERC2771Context } from "../../extension/interface/IERC2771Context.sol";
 
+import { IERC1155 } from "../../eip/interface/IERC1155.sol";
+import { IERC1155Metadata } from "../../eip/interface/IERC1155Metadata.sol";
+
 import { ERC2771ContextUpgradeable } from "../../dynamic-contracts/extension/ERC2771ContextUpgradeable.sol";
 import { PrimarySale } from "../../dynamic-contracts/extension/PrimarySale.sol";
 import { PlatformFee } from "../../dynamic-contracts/extension/PlatformFee.sol";
@@ -88,10 +91,14 @@ contract DropERC1155Logic is
         public
         view
         virtual
-        override(ERC1155Upgradeable, IERC165)
+        override(IERC165, ERC1155Upgradeable)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
+        return
+            interfaceId == type(IERC165).interfaceId ||
+            interfaceId == type(IERC2981).interfaceId ||
+            interfaceId == type(IERC1155).interfaceId ||
+            interfaceId == type(IERC1155Metadata).interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////

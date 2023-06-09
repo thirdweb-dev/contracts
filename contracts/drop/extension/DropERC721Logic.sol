@@ -22,6 +22,9 @@ import { Context, ERC721AUpgradeable, ERC721AStorage } from "../../dynamic-contr
 
 import { IERC2771Context } from "../../extension/interface/IERC2771Context.sol";
 
+import { IERC721 } from "../../eip/interface/IERC721.sol";
+import { IERC721Metadata } from "../../eip/interface/IERC721Metadata.sol";
+
 import { ERC2771ContextUpgradeable } from "../../dynamic-contracts/extension/ERC2771ContextUpgradeable.sol";
 import { DelayedReveal } from "../../dynamic-contracts/extension/DelayedReveal.sol";
 import { PrimarySale } from "../../dynamic-contracts/extension/PrimarySale.sol";
@@ -93,10 +96,14 @@ contract DropERC721Logic is
         public
         view
         virtual
-        override(ERC721AUpgradeable, IERC165)
+        override(IERC165, ERC721AUpgradeable)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
+        return
+            interfaceId == type(IERC165).interfaceId ||
+            interfaceId == type(IERC2981).interfaceId ||
+            interfaceId == type(IERC721).interfaceId ||
+            interfaceId == type(IERC721Metadata).interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////

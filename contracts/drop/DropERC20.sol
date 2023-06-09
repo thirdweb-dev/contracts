@@ -72,11 +72,15 @@ contract DropERC20 is
 
     function _setupRoles(address _defaultAdmin) internal onlyInitializing {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
+        bytes32 _extensionRole = keccak256("EXTENSION_ROLE");
         bytes32 _defaultAdminRole = 0x00;
 
         _setupRole(_defaultAdminRole, _defaultAdmin);
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
+
+        _setupRole(_extensionRole, _defaultAdmin);
+        _setRoleAdmin(_extensionRole, _extensionRole);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -97,10 +101,7 @@ contract DropERC20 is
 
     /// @dev Returns whether a plugin can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
-        // bytes32 defaultAdminRole = 0x00;
-        // return _hasRole(defaultAdminRole, _msgSender());
-
-        false;
+        _hasRole(keccak256("EXTENSION_ROLE"), msg.sender);
     }
 
     /// @dev Checks whether an account holds the given role.
