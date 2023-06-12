@@ -19,6 +19,8 @@ import "./BaseAccountFactory.sol";
 import "../non-upgradeable/Account.sol";
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 
+import "../interfaces/IAccountCore.sol";
+
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
 // $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
@@ -28,7 +30,7 @@ import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountCore is Initializable, Multicall, BaseAccount, ERC1271, AccountPermissions {
+contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC1271, AccountPermissions {
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 
