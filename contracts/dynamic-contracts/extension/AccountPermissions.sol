@@ -101,6 +101,8 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         }
 
         emit RoleAssignment(_req.role, _req.target, signer, _req);
+
+        _afterChangeRole(_req);
     }
 
     /*///////////////////////////////////////////////////////////////
