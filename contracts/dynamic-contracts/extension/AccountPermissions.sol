@@ -70,15 +70,16 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
             _restrictions.endTimestamp
         );
 
-        uint256 len = _restrictions.approvedTargets.length;
-        uint256 currentLen = data.approvedTargets[role].length();
+        address[] memory currentTargets = data.approvedTargets[role].values();
+        uint256 currentLen = currentTargets.length;
 
-        for (uint256 i = 0; i < currentLen; i++) {
-            data.approvedTargets[role].remove(data.approvedTargets[role].at(i));
+        for (uint256 i = 0; i < currentLen; i += 1) {
+            data.approvedTargets[role].remove(currentTargets[i]);
         }
 
-        for (uint256 i = 0; i < len; i++) {
-            data.approvedTargets[_restrictions.role].add(_restrictions.approvedTargets[i]);
+        uint256 len = _restrictions.approvedTargets.length;
+        for (uint256 i = 0; i < len; i += 1) {
+            data.approvedTargets[role].add(_restrictions.approvedTargets[i]);
         }
 
         emit RoleUpdated(_restrictions.role, _restrictions);
