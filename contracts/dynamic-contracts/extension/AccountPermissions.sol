@@ -58,18 +58,25 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
     /// @notice Sets the restrictions for a given role.
     function setRoleRestrictions(RoleRestrictions calldata _restrictions) external virtual onlyAdmin {
-        require(_restrictions.role != bytes32(0), "AccountPermissions: role cannot be empty");
+        bytes32 role = _restrictions.role;
+
+        require(role != bytes32(0), "AccountPermissions: role cannot be empty");
 
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        data.roleRestrictions[_restrictions.role] = RoleStatic(
-            _restrictions.role,
+        data.roleRestrictions[role] = RoleStatic(
+            role,
             _restrictions.maxValuePerTransaction,
             _restrictions.startTimestamp,
             _restrictions.endTimestamp
         );
 
         uint256 len = _restrictions.approvedTargets.length;
-        delete data.approvedTargets[_restrictions.role];
+        uint256 currentLen = data.approvedTargets[role].length();
+
+        for (uint256 i = 0; i < currentLen; i++) {
+            data.approvedTargets[role].remove(data.approvedTargets[role].at(i));
+        }
+
         for (uint256 i = 0; i < len; i++) {
             data.approvedTargets[_restrictions.role].add(_restrictions.approvedTargets[i]);
         }
