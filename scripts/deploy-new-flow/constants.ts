@@ -69,47 +69,19 @@ export const defaultFactories: Record<number, string> = {
   [ChainId.BinanceSmartChainTestnet]: CONTRACT_ADDRESSES[ChainId.BinanceSmartChainTestnet].twFactory,
 };
 
-export function getExplorerApiUrl(network: string): string {
-  const alchemyKey: string = process.env.ALCHEMY_KEY || "";
-  const polygonNetworkName = network === "polygon" ? "mainnet" : "mumbai";
-
-  let nodeUrl =
-    network === "polygon" || network === "mumbai"
-      ? `https://polygon-${polygonNetworkName}.g.alchemy.com/v2/${alchemyKey}`
-      : `https://eth-${network}.alchemyapi.io/v2/${alchemyKey}`;
-
-  switch (network) {
-    case "optimism":
-      nodeUrl = `https://opt-mainnet.g.alchemy.com/v2/${alchemyKey}`;
-      break;
-    case "optimism-goerli":
-      nodeUrl = `https://opt-goerli.g.alchemy.com/v2/${alchemyKey}`;
-      break;
-    case "arbitrum":
-      nodeUrl = `https://arb-mainnet.g.alchemy.com/v2/${alchemyKey}`;
-      break;
-    case "arbitrum-goerli":
-      nodeUrl = `https://arb-goerli.g.alchemy.com/v2/${alchemyKey}`;
-      break;
-    case "avalanche":
-      nodeUrl = "https://api.avax.network/ext/bc/C/rpc";
-      break;
-    case "avalanche-testnet":
-      nodeUrl = "https://api.avax-test.network/ext/bc/C/rpc";
-      break;
-    case "fantom":
-      nodeUrl = "https://rpc.ftm.tools";
-      break;
-    case "fantom-testnet":
-      nodeUrl = "https://rpc.testnet.fantom.network";
-      break;
-    case "binance":
-      nodeUrl = "https://bsc-dataseed1.binance.org/";
-      break;
-    case "binance-testnet":
-      nodeUrl = "https://data-seed-prebsc-1-s1.binance.org:8545/";
-      break;
-  }
-
-  return nodeUrl;
-}
+export const apiMap: Record<number, string> = {
+  1: "https://api.etherscan.io/api",
+  5: "https://api-goerli.etherscan.io/api",
+  10: "https://api-optimistic.etherscan.io/api",
+  56: "https://api.bscscan.com/api",
+  97: "https://api-testnet.bscscan.com/api",
+  137: "https://api.polygonscan.com/api",
+  250: "https://api.ftmscan.com/api",
+  420: "https://api-goerli-optimistic.etherscan.io/api",
+  4002: "https://api-testnet.ftmscan.com/api",
+  42161: "https://api.arbiscan.io/api",
+  43113: "https://api-testnet.snowtrace.io/api",
+  43114: "https://api.snowtrace.io/api",
+  421613: "https://api-goerli.arbiscan.io/api",
+  80001: "https://api-testnet.polygonscan.com/api",
+};
