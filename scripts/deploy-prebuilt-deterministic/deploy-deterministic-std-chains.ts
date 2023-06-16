@@ -14,13 +14,14 @@ import {
 import { Signer } from "ethers";
 import { apiMap, chainIdApiKey, chainIdToName } from "./constants";
 
-////// To run this script: `npx ts-node scripts/deploy-new-flow/deploy-new-flow-std-chains.ts` //////
+////// To run this script: `npx ts-node scripts/deploy-prebuilt-deterministic/deploy-deterministic-std-chains.ts` //////
 ///// MAKE SURE TO PUT IN THE RIGHT CONTRACT NAME HERE AFTER PUBLISHING IT /////
 //// THE CONTRACT SHOULD BE PUBLISHED WITH THE NEW PUBLISH FLOW ////
-const publishedContractName = "VoteERC20";
-const privateKey: string = process.env.DEPLOYER_KEY as string; // should be the correct deployer key
+const publishedContractName = "Split";
+const publisherKey: string = process.env.THIRDWEB_PUBLISHER_PRIVATE_KEY as string;
+const deployerKey: string = process.env.PRIVATE_KEY as string;
 
-const polygonSDK = ThirdwebSDK.fromPrivateKey(privateKey, "polygon");
+const polygonSDK = ThirdwebSDK.fromPrivateKey(publisherKey, "polygon");
 
 async function main() {
   const publisher = await polygonSDK.wallet.getAddress();
@@ -29,7 +30,7 @@ async function main() {
   if (latest && latest.metadataUri) {
     for (const [chainId, networkName] of Object.entries(chainIdToName)) {
       console.log(`Deploying ${publishedContractName} on ${networkName}`);
-      const sdk = ThirdwebSDK.fromPrivateKey(privateKey, chainId); // can also hardcode the chain here
+      const sdk = ThirdwebSDK.fromPrivateKey(deployerKey, chainId); // can also hardcode the chain here
       const signer = sdk.getSigner() as Signer;
       // const chainId = (await sdk.getProvider().getNetwork()).chainId;
 
