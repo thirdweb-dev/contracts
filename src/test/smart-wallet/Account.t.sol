@@ -51,12 +51,22 @@ contract SimpleAccountTest is BaseTest {
     address private sender = 0xBB956D56140CA3f3060986586A2631922a4B347E;
     address payable private beneficiary = payable(address(0x45654));
 
+    bytes32 private uidCache = bytes32("random uid");
+
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
     function _setupRoleRequest(address _signer, IAccountPermissions.RoleAction _action)
         internal
         returns (IAccountPermissions.RoleRequest memory request, bytes memory signature)
     {
+        return _setupRoleRequest(_signer, _action, keccak256("SIGNER_ROLE"));
+    }
+
+    function _setupRoleRequest(
+        address _signer,
+        IAccountPermissions.RoleAction _action,
+        bytes32 _role
+    ) internal returns (IAccountPermissions.RoleRequest memory request, bytes memory signature) {
         bytes32 typehashRoleRequest = keccak256(
             "RoleRequest(bytes32 role,address target,uint8 action,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
@@ -69,13 +79,15 @@ contract SimpleAccountTest is BaseTest {
 
         // Create RoleRequest
         request = IAccountPermissions.RoleRequest({
-            role: keccak256("SIGNER_ROLE"),
+            role: _role,
             target: _signer,
             action: _action,
             validityStartTimestamp: 0,
             validityEndTimestamp: type(uint128).max,
-            uid: bytes32("random uid")
+            uid: uidCache
         });
+
+        uidCache = keccak256(abi.encodePacked(uidCache));
 
         bytes memory encodedRequest = abi.encode(
             typehashRoleRequest,
@@ -524,5 +536,158 @@ contract SimpleAccountTest is BaseTest {
         erc1155.mint(account, 0, 1);
 
         assertEq(erc1155.balanceOf(account, 0), 1);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Test: account permissions
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_changeRole() public {
+        // Setup
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
+        bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
+
+        UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
+            accountAdminPKey,
+            initCode,
+            address(0),
+            0,
+            bytes("")
+        );
+
+        EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
+        bytes32 role = keccak256(abi.encode(accountSigner));
+
+        // Multicall: [1] `setRoleRestricitons` with 1 approved target, [2] `changeRole` to grant signer the role.
+
+        {
+            address[] memory approvedTargets = new address[](1);
+            approvedTargets[0] = address(numberContract);
+
+            bytes memory multicallData1 = abi.encodeWithSelector(
+                IAccountPermissions.setRoleRestrictions.selector,
+                IAccountPermissions.RoleRestrictions(role, approvedTargets, 1 ether, 0, type(uint128).max)
+            );
+
+            (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+                accountSigner,
+                IAccountPermissions.RoleAction.GRANT,
+                role
+            );
+            bytes memory multicallData2 = abi.encodeWithSelector(IAccountPermissions.changeRole.selector, req, sig);
+
+            bytes[] memory mul1 = new bytes[](2);
+            mul1[0] = multicallData1;
+            mul1[1] = multicallData2;
+
+            vm.prank(accountAdmin);
+            Account(payable(account)).multicall(mul1);
+
+            IAccountPermissions.RoleRestrictions memory restrictions = Account(payable(account))
+                .getRoleRestrictionsForAccount(accountSigner);
+            assertEq(restrictions.role, role);
+            assertEq(restrictions.approvedTargets.length, 1);
+
+            address[] memory allSigners = accountFactory.getSignersOfAccount(account);
+            assertEq(allSigners.length, 2);
+        }
+
+        // setRoleRestrictions: 2 approved targets
+
+        {
+            address[] memory approvedTargets = new address[](2);
+            approvedTargets[0] = address(numberContract);
+            approvedTargets[1] = address(accountAdmin);
+
+            vm.prank(accountAdmin);
+            Account(payable(account)).setRoleRestrictions(
+                IAccountPermissions.RoleRestrictions(role, approvedTargets, 1 ether, 0, type(uint128).max)
+            );
+
+            IAccountPermissions.RoleRestrictions memory restrictions = Account(payable(account))
+                .getRoleRestrictionsForAccount(accountSigner);
+            assertEq(restrictions.role, role);
+            assertEq(restrictions.approvedTargets.length, 2);
+
+            address[] memory allSigners = accountFactory.getSignersOfAccount(account);
+            assertEq(allSigners.length, 2);
+        }
+
+        // changeRole: revoke role from signer.
+
+        {
+            vm.prank(accountAdmin);
+            (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+                accountSigner,
+                IAccountPermissions.RoleAction.REVOKE,
+                role
+            );
+            Account(payable(account)).changeRole(req, sig);
+
+            IAccountPermissions.RoleRestrictions memory restrictions = Account(payable(account))
+                .getRoleRestrictionsForAccount(accountSigner);
+            assertEq(restrictions.role, bytes32(0));
+            assertEq(restrictions.approvedTargets.length, 0);
+
+            address[] memory allSigners = accountFactory.getSignersOfAccount(account);
+            assertEq(allSigners.length, 1);
+        }
+
+        // Multicall: [1] `setRoleRestricitons` with 1 approved target, [2] `changeRole` to grant signer the role.
+
+        {
+            address[] memory approvedTargets = new address[](1);
+            approvedTargets[0] = address(numberContract);
+
+            bytes memory multicallData1 = abi.encodeWithSelector(
+                IAccountPermissions.setRoleRestrictions.selector,
+                IAccountPermissions.RoleRestrictions(role, approvedTargets, 1 ether, 0, type(uint128).max)
+            );
+
+            (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+                accountSigner,
+                IAccountPermissions.RoleAction.GRANT,
+                role
+            );
+            bytes memory multicallData2 = abi.encodeWithSelector(IAccountPermissions.changeRole.selector, req, sig);
+
+            bytes[] memory mul1 = new bytes[](2);
+            mul1[0] = multicallData1;
+            mul1[1] = multicallData2;
+
+            vm.prank(accountAdmin);
+            Account(payable(account)).multicall(mul1);
+
+            IAccountPermissions.RoleRestrictions memory restrictions = Account(payable(account))
+                .getRoleRestrictionsForAccount(accountSigner);
+            assertEq(restrictions.role, role);
+            assertEq(restrictions.approvedTargets.length, 1);
+
+            address[] memory allSigners = accountFactory.getSignersOfAccount(account);
+            assertEq(allSigners.length, 2);
+        }
+
+        // setRoleRestrictions: 2 approved targets
+
+        {
+            address[] memory approvedTargets = new address[](2);
+            approvedTargets[0] = address(numberContract);
+            approvedTargets[1] = address(accountAdmin);
+
+            vm.prank(accountAdmin);
+            Account(payable(account)).setRoleRestrictions(
+                IAccountPermissions.RoleRestrictions(role, approvedTargets, 1 ether, 0, type(uint128).max)
+            );
+
+            IAccountPermissions.RoleRestrictions memory restrictions = Account(payable(account))
+                .getRoleRestrictionsForAccount(accountSigner);
+            assertEq(restrictions.role, role);
+            assertEq(restrictions.approvedTargets.length, 2);
+
+            address[] memory allSigners = accountFactory.getSignersOfAccount(account);
+            assertEq(allSigners.length, 2);
+        }
     }
 }
