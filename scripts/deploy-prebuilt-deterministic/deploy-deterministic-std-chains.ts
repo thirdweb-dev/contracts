@@ -5,6 +5,7 @@ import {
   deployContractDeterministic,
   deployCreate2Factory,
   deployWithThrowawayDeployer,
+  fetchAndCacheDeployMetadata,
   getCreate2FactoryAddress,
   getDeploymentInfo,
   getThirdwebContractAddress,
@@ -17,7 +18,7 @@ import { apiMap, chainIdApiKey, chainIdToName } from "./constants";
 ////// To run this script: `npx ts-node scripts/deploy-prebuilt-deterministic/deploy-deterministic-std-chains.ts` //////
 ///// MAKE SURE TO PUT IN THE RIGHT CONTRACT NAME HERE AFTER PUBLISHING IT /////
 //// THE CONTRACT SHOULD BE PUBLISHED WITH THE NEW PUBLISH FLOW ////
-const publishedContractName = "Split";
+const publishedContractName = "OpenEditionERC721";
 const publisherKey: string = process.env.THIRDWEB_PUBLISHER_PRIVATE_KEY as string;
 const deployerKey: string = process.env.PRIVATE_KEY as string;
 
@@ -28,7 +29,18 @@ async function main() {
   const latest = await polygonSDK.getPublisher().getLatest(publisher, publishedContractName);
 
   if (latest && latest.metadataUri) {
+    const { extendedMetadata } = await fetchAndCacheDeployMetadata(latest?.metadataUri, polygonSDK.storage);
+
     for (const [chainId, networkName] of Object.entries(chainIdToName)) {
+      const isNetworkEnabled =
+        extendedMetadata?.networksForDeployment?.networksEnabled.includes(parseInt(chainId)) ||
+        extendedMetadata?.networksForDeployment?.allNetworks;
+
+      if (extendedMetadata?.networksForDeployment && !isNetworkEnabled) {
+        console.log(`Deployment of ${publishedContractName} disabled on ${networkName}\n`);
+        continue;
+      }
+
       console.log(`Deploying ${publishedContractName} on ${networkName}`);
       const sdk = ThirdwebSDK.fromPrivateKey(deployerKey, chainId); // can also hardcode the chain here
       const signer = sdk.getSigner() as Signer;
@@ -105,6 +117,7 @@ async function main() {
             return deployContractDeterministic(signer, tx, {});
           }),
         );
+        console.log();
       } catch (e) {
         console.log("Error while deploying: ", e);
         console.log();
