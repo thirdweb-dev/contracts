@@ -207,25 +207,17 @@ contract ManagedAccountTest is BaseTest {
             implementation: address(new AccountExtension(address(entrypoint)))
         });
 
-        defaultExtension.functions = new IExtension.ExtensionFunction[](5);
+        defaultExtension.functions = new IExtension.ExtensionFunction[](3);
 
         defaultExtension.functions[0] = IExtension.ExtensionFunction(
             AccountExtension.supportsInterface.selector,
             "supportsInterface(bytes4)"
         );
         defaultExtension.functions[1] = IExtension.ExtensionFunction(
-            AccountExtension.execute.selector,
-            "execute(address,uint256,bytes)"
-        );
-        defaultExtension.functions[2] = IExtension.ExtensionFunction(
-            AccountExtension.executeBatch.selector,
-            "executeBatch(address[],uint256[],bytes[])"
-        );
-        defaultExtension.functions[3] = IExtension.ExtensionFunction(
             ERC721Holder.onERC721Received.selector,
             "onERC721Received(address,address,uint256,bytes)"
         );
-        defaultExtension.functions[4] = IExtension.ExtensionFunction(
+        defaultExtension.functions[2] = IExtension.ExtensionFunction(
             ERC1155Holder.onERC1155Received.selector,
             "onERC1155Received(address,address,uint256,uint256,bytes)"
         );

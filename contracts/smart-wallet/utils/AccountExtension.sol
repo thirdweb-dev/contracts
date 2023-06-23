@@ -44,12 +44,6 @@ contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder,
         entrypointContract = _entrypoint;
     }
 
-    /// @notice Checks whether the caller is the EntryPoint contract or the admin.
-    modifier onlyAdminOrEntrypoint() virtual {
-        require(msg.sender == entrypointContract || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
-        _;
-    }
-
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
@@ -63,48 +57,8 @@ contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder,
     }
 
     /*///////////////////////////////////////////////////////////////
-                            External functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(
-        address _target,
-        uint256 _value,
-        bytes calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
-        _call(_target, _value, _calldata);
-    }
-
-    /// @notice Executes a sequence transaction (called directly from an admin, or by entryPoint)
-    function executeBatch(
-        address[] calldata _target,
-        uint256[] calldata _value,
-        bytes[] calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
-        require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
-        for (uint256 i = 0; i < _target.length; i++) {
-            _call(_target[i], _value[i], _calldata[i]);
-        }
-    }
-
-    /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev Calls a target contract and reverts if it fails.
-    function _call(
-        address _target,
-        uint256 value,
-        bytes memory _calldata
-    ) internal returns (bytes memory result) {
-        bool success;
-        (success, result) = _target.call{ value: value }(_calldata);
-        if (!success) {
-            assembly {
-                revert(add(result, 32), mload(result))
-            }
-        }
-    }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {

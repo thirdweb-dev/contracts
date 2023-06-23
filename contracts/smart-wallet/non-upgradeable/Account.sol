@@ -6,7 +6,8 @@ pragma solidity ^0.8.11;
 /* solhint-disable reason-string */
 
 // Base
-import "./../utils/BaseAccount.sol";
+import "../utils/BaseAccount.sol";
+import "../utils/AccountStorage.sol";
 
 // Extensions
 import "../../extension/Multicall.sol";
@@ -176,6 +177,7 @@ contract Account is
         uint256 _value,
         bytes calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
+        _registerOnFactory();
         _call(_target, _value, _calldata);
     }
 
@@ -185,6 +187,8 @@ contract Account is
         uint256[] calldata _value,
         bytes[] calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
+        _registerOnFactory();
+
         require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
         for (uint256 i = 0; i < _target.length; i++) {
             _call(_target[i], _value[i], _calldata[i]);
@@ -204,6 +208,18 @@ contract Account is
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev Registers the account on the factory if it hasn't been registered yet.
+    function _registerOnFactory() internal virtual {
+        AccountFactory factoryContract = AccountFactory(factory);
+        AccountStorage.Data storage data = AccountStorage.accountStorage();
+        if (!data.isRegistered) {
+            if (!factoryContract.isRegistered(address(this))) {
+                factoryContract.onRegister();
+            }
+            data.isRegistered = true;
+        }
+    }
 
     /// @dev Calls a target contract and reverts if it fails.
     function _call(

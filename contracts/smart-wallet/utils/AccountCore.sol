@@ -20,6 +20,7 @@ import "../non-upgradeable/Account.sol";
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 
 import "../interfaces/IAccountCore.sol";
+import "./AccountStorage.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -48,6 +49,12 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Checks whether the caller is the EntryPoint contract or the admin.
+    modifier onlyAdminOrEntrypoint() virtual {
+        require(msg.sender == address(entrypointContract) || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
+        _;
+    }
+
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
@@ -60,6 +67,33 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
     /// @notice Initializes the smart contract wallet.
     function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
         _setAdmin(_defaultAdmin, true);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            External functions
+    //////////////////////////////////////////////////////////////*/
+
+    /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
+    function execute(
+        address _target,
+        uint256 _value,
+        bytes calldata _calldata
+    ) external virtual onlyAdminOrEntrypoint {
+        _registerOnFactory();
+        _call(_target, _value, _calldata);
+    }
+
+    /// @notice Executes a sequence transaction (called directly from an admin, or by entryPoint)
+    function executeBatch(
+        address[] calldata _target,
+        uint256[] calldata _value,
+        bytes[] calldata _calldata
+    ) external virtual onlyAdminOrEntrypoint {
+        _registerOnFactory();
+        require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
+        for (uint256 i = 0; i < _target.length; i++) {
+            _call(_target[i], _value[i], _calldata[i]);
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -212,6 +246,33 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
                 BaseAccountFactory(factory).onSignerAdded(_account);
             } else {
                 BaseAccountFactory(factory).onSignerRemoved(_account);
+            }
+        }
+    }
+
+    /// @dev Registers this account with the factory.
+    function _registerOnFactory() internal virtual {
+        AccountFactory factoryContract = AccountFactory(factory);
+        AccountStorage.Data storage data = AccountStorage.accountStorage();
+        if (!data.isRegistered) {
+            if (!factoryContract.isRegistered(address(this))) {
+                factoryContract.onRegister();
+            }
+            data.isRegistered = true;
+        }
+    }
+
+    /// @dev Calls a target contract and reverts if it fails.
+    function _call(
+        address _target,
+        uint256 value,
+        bytes memory _calldata
+    ) internal returns (bytes memory result) {
+        bool success;
+        (success, result) = _target.call{ value: value }(_calldata);
+        if (!success) {
+            assembly {
+                revert(add(result, 32), mload(result))
             }
         }
     }
