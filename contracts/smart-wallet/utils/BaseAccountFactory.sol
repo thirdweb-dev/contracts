@@ -129,8 +129,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         return allAccounts.contains(_account);
     }
 
-    /// @notice Returns all wallets created on the factory.
-    function getAllWallets() external view returns (address[] memory) {
+    /// @notice Returns all accounts created on the factory.
+    function getAllAccounts() external view returns (address[] memory) {
         return allAccounts.values();
     }
 
