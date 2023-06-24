@@ -50,6 +50,23 @@ Deploys a new Account for admin.
 |---|---|---|
 | _0 | address | undefined |
 
+### entrypoint
+
+```solidity
+function entrypoint() external view returns (address)
+```
+
+
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### getAccountsOfSigner
 
 ```solidity
@@ -95,6 +112,23 @@ Returns the address of an Account that would be deployed with the given admin si
 |---|---|---|
 | _0 | address | undefined |
 
+### getAllAccounts
+
+```solidity
+function getAllAccounts() external view returns (address[])
+```
+
+Returns all accounts created on the factory.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address[] | undefined |
+
 ### getSignersOfAccount
 
 ```solidity
@@ -116,6 +150,28 @@ Returns all signers of an account.
 | Name | Type | Description |
 |---|---|---|
 | signers | address[] | undefined |
+
+### isRegistered
+
+```solidity
+function isRegistered(address _account) external view returns (bool)
+```
+
+Returns whether an account is registered on this factory.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### multicall
 
@@ -139,13 +195,24 @@ Receives and executes a batch of function calls on this contract.
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
+### onRegister
+
+```solidity
+function onRegister() external nonpayable
+```
+
+Callback function for an Account to register itself on the factory.
+
+
+
+
 ### onSignerAdded
 
 ```solidity
 function onSignerAdded(address _signer) external nonpayable
 ```
 
-Callback function for an Account to register its signers.
+
 
 
 
