@@ -232,6 +232,7 @@ contract ManagedAccountTest is BaseTest {
 
         IExtension.Extension[] memory extensions = new IExtension.Extension[](1);
         extensions[0] = defaultExtension;
+
         // deploy account factory
         vm.prank(factoryDeployer);
         accountFactory = new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
@@ -248,6 +249,10 @@ contract ManagedAccountTest is BaseTest {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
         accountFactory.createAccount(accountAdmin, data);
+
+        address[] memory allAccounts = accountFactory.getAllAccounts();
+        assertEq(allAccounts.length, 1);
+        assertEq(allAccounts[0], sender);
     }
 
     /// @dev Create an account via Entrypoint.
@@ -266,6 +271,10 @@ contract ManagedAccountTest is BaseTest {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+
+        address[] memory allAccounts = accountFactory.getAllAccounts();
+        assertEq(allAccounts.length, 1);
+        assertEq(allAccounts[0], sender);
     }
 
     /*///////////////////////////////////////////////////////////////

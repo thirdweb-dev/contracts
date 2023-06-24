@@ -95,6 +95,23 @@ Returns the address of an Account that would be deployed with the given admin si
 |---|---|---|
 | _0 | address | undefined |
 
+### getAllAccounts
+
+```solidity
+function getAllAccounts() external view returns (address[])
+```
+
+Returns all accounts created on the factory.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address[] | undefined |
+
 ### getSignersOfAccount
 
 ```solidity
