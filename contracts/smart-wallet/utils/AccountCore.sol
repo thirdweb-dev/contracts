@@ -20,7 +20,6 @@ import "../non-upgradeable/Account.sol";
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 
 import "../interfaces/IAccountCore.sol";
-import "./AccountStorage.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -250,15 +249,11 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
         }
     }
 
-    /// @dev Registers this account with the factory.
+    /// @dev Registers the account on the factory if it hasn't been registered yet.
     function _registerOnFactory() internal virtual {
         AccountFactory factoryContract = AccountFactory(factory);
-        AccountStorage.Data storage data = AccountStorage.accountStorage();
-        if (!data.isRegistered) {
-            if (!factoryContract.isRegistered(address(this))) {
-                factoryContract.onRegister();
-            }
-            data.isRegistered = true;
+        if (!factoryContract.isRegistered(address(this))) {
+            factoryContract.onRegister();
         }
     }
 

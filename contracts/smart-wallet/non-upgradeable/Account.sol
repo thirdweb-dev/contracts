@@ -7,7 +7,6 @@ pragma solidity ^0.8.11;
 
 // Base
 import "../utils/BaseAccount.sol";
-import "../utils/AccountStorage.sol";
 
 // Extensions
 import "../../extension/Multicall.sol";
@@ -212,12 +211,8 @@ contract Account is
     /// @dev Registers the account on the factory if it hasn't been registered yet.
     function _registerOnFactory() internal virtual {
         AccountFactory factoryContract = AccountFactory(factory);
-        AccountStorage.Data storage data = AccountStorage.accountStorage();
-        if (!data.isRegistered) {
-            if (!factoryContract.isRegistered(address(this))) {
-                factoryContract.onRegister();
-            }
-            data.isRegistered = true;
+        if (!factoryContract.isRegistered(address(this))) {
+            factoryContract.onRegister();
         }
     }
 
