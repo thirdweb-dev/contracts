@@ -19,7 +19,7 @@ import "../../eip/ERC1271.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
-import "./AccountFactory.sol";
+import "../utils/BaseAccountFactory.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -210,7 +210,7 @@ contract Account is
 
     /// @dev Registers the account on the factory if it hasn't been registered yet.
     function _registerOnFactory() internal virtual {
-        AccountFactory factoryContract = AccountFactory(factory);
+        BaseAccountFactory factoryContract = BaseAccountFactory(factory);
         if (!factoryContract.isRegistered(address(this))) {
             factoryContract.onRegister();
         }
@@ -279,9 +279,9 @@ contract Account is
         super._setAdmin(_account, _isAdmin);
         if (factory.code.length > 0) {
             if (_isAdmin) {
-                AccountFactory(factory).onSignerAdded(_account);
+                BaseAccountFactory(factory).onSignerAdded(_account);
             } else {
-                AccountFactory(factory).onSignerRemoved(_account);
+                BaseAccountFactory(factory).onSignerRemoved(_account);
             }
         }
     }
@@ -290,9 +290,9 @@ contract Account is
     function _afterChangeRole(RoleRequest calldata _req) internal virtual override {
         if (factory.code.length > 0) {
             if (_req.action == RoleAction.GRANT) {
-                AccountFactory(factory).onSignerAdded(_req.target);
+                BaseAccountFactory(factory).onSignerAdded(_req.target);
             } else if (_req.action == RoleAction.REVOKE) {
-                AccountFactory(factory).onSignerRemoved(_req.target);
+                BaseAccountFactory(factory).onSignerRemoved(_req.target);
             }
         }
     }
