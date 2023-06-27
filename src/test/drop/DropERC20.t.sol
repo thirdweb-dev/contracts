@@ -870,7 +870,7 @@ contract DropERC20Test is BaseTest, IExtension {
         erc20.approve(address(drop), 10 ether);
 
         vm.prank(getActor(5));
-        vm.expectRevert("!ZeroValue");
+        vm.expectRevert(bytes("!V"));
         drop.claim{ value: 10 ether }(receiver, 10, address(erc20), 1 ether, alp, "");
     }
 }

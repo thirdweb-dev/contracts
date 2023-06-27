@@ -111,26 +111,34 @@ contract DropERC20Logic is
             return;
         }
 
-        (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
-
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
-
         // `_pricePerToken` is interpreted as price per 1 ether unit of the ERC20 tokens.
         uint256 totalPrice = (_quantityToClaim * _pricePerToken) / 1 ether;
         require(totalPrice > 0, "quantity too low");
 
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
-
+        bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
-                revert("!Price");
-            }
+            validMsgValue = msg.value == totalPrice;
         } else {
-            require(msg.value == 0, "!ZeroValue");
+            validMsgValue = msg.value == 0;
+        }
+        require(validMsgValue, "!V");
+
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+
+        uint256 fees;
+        address feeRecipient;
+
+        PlatformFeeType feeType = getPlatformFeeType();
+        if (feeType == PlatformFeeType.Flat) {
+            (feeRecipient, fees) = getFlatPlatformFeeInfo();
+        } else {
+            uint16 platformFeeBps;
+            (feeRecipient, platformFeeBps) = getPlatformFeeInfo();
+            fees = (totalPrice * platformFeeBps) / MAX_BPS;
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), feeRecipient, fees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - fees);
     }
 
     /// @dev Transfers the tokens being claimed.

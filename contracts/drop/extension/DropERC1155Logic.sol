@@ -190,7 +190,15 @@ contract DropERC1155Logic is
             return;
         }
 
-        (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
+        uint256 totalPrice = _quantityToClaim * _pricePerToken;
+
+        bool validMsgValue;
+        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
+            validMsgValue = msg.value == totalPrice;
+        } else {
+            validMsgValue = msg.value == 0;
+        }
+        require(validMsgValue, "!V");
 
         DropERC1155Storage.Data storage data = DropERC1155Storage.dropERC1155Storage();
         address _saleRecipientFromStorage = data.saleRecipient[_tokenId];
@@ -198,19 +206,22 @@ contract DropERC1155Logic is
             ? (_saleRecipientFromStorage == address(0) ? primarySaleRecipient() : _saleRecipientFromStorage)
             : _primarySaleRecipient;
 
-        uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        uint256 fees;
+        address feeRecipient;
 
-        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
-                revert("!Price");
-            }
+        PlatformFeeType feeType = getPlatformFeeType();
+        if (feeType == PlatformFeeType.Flat) {
+            (feeRecipient, fees) = getFlatPlatformFeeInfo();
         } else {
-            require(msg.value == 0, "!ZeroValue");
+            uint16 platformFeeBps;
+            (feeRecipient, platformFeeBps) = getPlatformFeeInfo();
+            fees = (totalPrice * platformFeeBps) / MAX_BPS;
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), _saleRecipient, totalPrice - platformFees);
+        require(totalPrice >= fees, "!F");
+
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), feeRecipient, fees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), _saleRecipient, totalPrice - fees);
     }
 
     /// @dev Transfers the NFTs being claimed.
