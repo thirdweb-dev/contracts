@@ -132,6 +132,8 @@ contract LoyaltyCard is
         nonReentrant
         returns (address signer)
     {
+        require(_req.quantity == 1, "LoyaltyCard: only 1 NFT can be minted at a time.");
+
         signer = _processRequest(_req, _signature);
         address receiver = _req.to;
         uint256 tokenIdMinted = _mintTo(receiver, _req.uri);

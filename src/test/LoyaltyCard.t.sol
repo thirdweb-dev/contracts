@@ -301,4 +301,25 @@ contract LoyaltyCardTest is BaseTest {
         vm.expectRevert("0 qty");
         loyaltyCard.mintWithSignature(_mintrequest, _signature);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                        Audit fixes tests
+    //////////////////////////////////////////////////////////////*/
+
+    function test_audit_quantity_not_1() public {
+        vm.warp(1000);
+        _mintrequest.pricePerToken = 1;
+        _mintrequest.quantity = 5;
+        _mintrequest.currency = address(erc20);
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        uint256 erc20BalanceOfSeller = erc20.balanceOf(address(saleRecipient));
+
+        vm.prank(recipient);
+        erc20.approve(address(loyaltyCard), 5);
+
+        vm.prank(recipient);
+        vm.expectRevert("LoyaltyCard: only 1 NFT can be minted at a time.");
+        loyaltyCard.mintWithSignature(_mintrequest, _signature);
+    }
 }
