@@ -24,7 +24,6 @@ import "../dynamic-contracts/init/ContractMetadataInit.sol";
 import "../dynamic-contracts/init/PlatformFeeInit.sol";
 import "../dynamic-contracts/init/PrimarySaleInit.sol";
 import "../dynamic-contracts/init/PermissionsEnumerableInit.sol";
-import "../dynamic-contracts/init/ReentrancyGuardInit.sol";
 import "../dynamic-contracts/init/ERC20Init.sol";
 import "../dynamic-contracts/init/ERC20PermitInit.sol";
 

@@ -28,7 +28,6 @@ import "../dynamic-contracts/init/OwnableInit.sol";
 import "../dynamic-contracts/init/ERC721AInit.sol";
 import "../dynamic-contracts/init/PermissionsEnumerableInit.sol";
 import "../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
-import "../dynamic-contracts/init/ReentrancyGuardInit.sol";
 
 contract DropERC721 is
     Initializable,

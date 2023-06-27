@@ -29,7 +29,6 @@ import "../dynamic-contracts/init/OwnableInit.sol";
 import "../dynamic-contracts/init/ERC1155Init.sol";
 import "../dynamic-contracts/init/PermissionsEnumerableInit.sol";
 import "../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
-import "../dynamic-contracts/init/ReentrancyGuardInit.sol";
 
 contract DropERC1155 is
     Initializable,
