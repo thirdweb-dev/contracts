@@ -80,6 +80,7 @@ contract LoyaltyCard is
         __ERC721A_init(_name, _symbol);
         __DefaultOperatorFilterer_init();
         __SignatureMintERC721_init();
+        __ReentrancyGuard_init();
 
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
