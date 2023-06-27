@@ -841,4 +841,36 @@ contract DropERC20Test is BaseTest, IExtension {
         vm.warp(40);
         assertEq(drop.getActiveClaimConditionId(), 2);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                        Audit fixes tests
+    //////////////////////////////////////////////////////////////*/
+
+    function test_audit_claim_sendNativeToken() public {
+        vm.warp(1);
+
+        address receiver = getActor(0);
+        bytes32[] memory proofs = new bytes32[](0);
+
+        DropERC20Logic.AllowlistProof memory alp;
+        alp.proof = proofs;
+
+        DropERC20Logic.ClaimCondition[] memory conditions = new DropERC20Logic.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 100;
+        conditions[0].quantityLimitPerWallet = 100;
+        conditions[0].pricePerToken = 1 ether;
+        conditions[0].currency = address(erc20);
+
+        vm.prank(deployer);
+        drop.setClaimConditions(conditions, false);
+
+        vm.deal(getActor(5), 1_000 ether);
+        erc20.mint(getActor(5), 1_000 ether);
+        vm.prank(getActor(5));
+        erc20.approve(address(drop), 10 ether);
+
+        vm.prank(getActor(5));
+        vm.expectRevert("!ZeroValue");
+        drop.claim{ value: 10 ether }(receiver, 10, address(erc20), 1 ether, alp, "");
+    }
 }

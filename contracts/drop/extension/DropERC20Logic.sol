@@ -125,6 +125,8 @@ contract DropERC20Logic is
             if (msg.value != totalPrice) {
                 revert("!Price");
             }
+        } else {
+            require(msg.value == 0, "!ZeroValue");
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
