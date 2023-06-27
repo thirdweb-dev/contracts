@@ -89,7 +89,6 @@ contract LoyaltyCard is
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, address(0));
 
         _setupRole(METADATA_ROLE, _defaultAdmin);
         _setRoleAdmin(METADATA_ROLE, METADATA_ROLE);

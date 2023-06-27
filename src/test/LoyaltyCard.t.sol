@@ -298,7 +298,7 @@ contract LoyaltyCardTest is BaseTest {
         _mintrequest.quantity = 0;
         _signature = signMintRequest(_mintrequest, privateKey);
 
-        vm.expectRevert("0 qty");
+        vm.expectRevert("LoyaltyCard: only 1 NFT can be minted at a time.");
         loyaltyCard.mintWithSignature(_mintrequest, _signature);
     }
 
