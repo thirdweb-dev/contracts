@@ -117,6 +117,20 @@ The thirdweb registry (`TWRegistry`) and factory (`TWFactory`) have been deploye
 - `TWFactory` (Fantom mainnet): [0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B](https://blockscan.com/address/0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B)
 
 
+## Contract Audits
+- [Audit 1](https://ipfs.io/ipfs/QmNgNaLwzgMxcx9r6qDvJmTFam6xxUxX7Vp8E99oRt7i74)
+- [Audit 2](https://ipfs.io/ipfs/QmWfueeKQrggrVQNjWkF4sYJECp56vNnuAXCPVecFFKz2j)
+- [Audit 3](https://gateway.ipfscdn.io/ipfs/QmfKqeUfUgNwFn5B1fUAxzikj89mneZEETKrF7JfaJg5St/)
+- [Audit 4](https://gateway.ipfscdn.io/ipfs/QmaMiezCMfmo5zWmwNc2WXLex11BuRZJ9p9ZhWj638Tdws/)
+- [Audit 5](https://gateway.ipfscdn.io/ipfs/QmSiyyHkL9fyYdBqb81Dm1Yb3HvuxLfunkArADKFk3WDKY)
+- [Audit 6](https://gateway.ipfscdn.io/ipfs/QmWcGjVt5bQiJCJHQYgMj24qRkHwxqsyVMTcU23zBptC26)
+- [Audit 7](https://gateway.ipfscdn.io/ipfs/QmWhvM4QBrs56EXLNRfW9rQ2izJ7JEzDTxDrWsFjLMi8DE)
+- [Audit 8](https://gateway.ipfscdn.io/ipfs/QmdawSEzMAvKGfjbeBZAW3sgXuh2jSVhcKwfqNpmiPTsrX)
+- [Audit 9](https://gateway.ipfscdn.io/ipfs/QmSKcP4cHyp1xP9RXkC84UwD6ugsotRAZqBy98WTjxnWwP)
+- [Audit 10](https://gateway.ipfscdn.io/ipfs/QmRoNX9uePGnjPiwxUzzEXscR2MaTeDy2RmoMHoSGCQk7Y)
+- [Audit 11](https://ipfs.thirdwebcdn.com/ipfs/QmYmWWwSnpEjZm4wTvvyUJ6QfBVXrtKCCnQoxa2cWAAJ8Z)
+- [Audit 12](https://ipfs-2.thirdwebcdn.com/ipfs/QmXWSH7X8CGe4Q3tfw3MAnCinyU5WKLDy45bRBCSSrritB/)
+
 ## Bug reports
 
 Found a security issue with our smart contracts? Send bug reports to security@thirdweb.com and we'll continue communicating with you from there. We're actively developing a bug bounty program; bug report payouts happen on a case by case basis, for now.
