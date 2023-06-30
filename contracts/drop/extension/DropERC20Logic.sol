@@ -137,6 +137,8 @@ contract DropERC20Logic is
             fees = (totalPrice * platformFeeBps) / MAX_BPS;
         }
 
+        require(totalPrice >= fees, "!F");
+
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), feeRecipient, fees);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - fees);
     }
