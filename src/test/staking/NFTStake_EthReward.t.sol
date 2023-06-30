@@ -307,7 +307,7 @@ contract NFTStakeEthRewardTest is BaseTest {
         assertEq(timeUnit, stakeContract.getTimeUnit());
 
         // set new value and check
-        uint256 newTimeUnit = 2 minutes;
+        uint80 newTimeUnit = 2 minutes;
         vm.prank(deployer);
         stakeContract.setTimeUnit(newTimeUnit);
         assertEq(newTimeUnit, stakeContract.getTimeUnit());
@@ -514,7 +514,7 @@ contract NFTStakeEthRewardTest is BaseTest {
         stakeContract.stake(_tokenIdsTwo);
 
         // set timeUnit to zero
-        uint256 newTimeUnit = 0;
+        uint80 newTimeUnit = 0;
         vm.prank(deployer);
         vm.expectRevert("time-unit can't be 0");
         stakeContract.setTimeUnit(newTimeUnit);

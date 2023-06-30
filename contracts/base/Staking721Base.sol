@@ -55,7 +55,7 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC
     uint256 private rewardTokenBalance;
 
     constructor(
-        uint256 _timeUnit,
+        uint80 _timeUnit,
         uint256 _rewardsPerUnitTime,
         address _stakingToken,
         address _rewardToken,

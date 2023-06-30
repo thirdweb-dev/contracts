@@ -49,10 +49,10 @@ interface IStaking721 {
      *  @param endTimestamp       Condition end timestamp.
      */
     struct StakingCondition {
-        uint256 timeUnit;
+        uint80 startTimestamp;
+        uint80 endTimestamp;
+        uint80 timeUnit;
         uint256 rewardsPerUnitTime;
-        uint256 startTimestamp;
-        uint256 endTimestamp;
     }
 
     /**

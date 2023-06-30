@@ -65,7 +65,7 @@ contract NFTStake is
         address[] memory _trustedForwarders,
         address _rewardToken,
         address _stakingToken,
-        uint256 _timeUnit,
+        uint80 _timeUnit,
         uint256 _rewardsPerUnitTime
     ) external initializer {
         __ERC2771Context_init_unchained(_trustedForwarders);

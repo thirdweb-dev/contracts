@@ -18,7 +18,7 @@ contract MyStakingContract is ERC20, Staking721, IERC721Receiver {
         string memory _name,
         string memory _symbol,
         address _nftCollection,
-        uint256 _timeUnit,
+        uint80 _timeUnit,
         uint256 _rewardsPerUnitTime
     ) ERC20(_name, _symbol) Staking721(_nftCollection) {
         condition = true;
@@ -63,7 +63,7 @@ contract StakingExtensionTest is DSTest, Test {
     MyStakingContract internal ext;
     MockERC721 public erc721;
 
-    uint256 timeUnit;
+    uint80 timeUnit;
     uint256 rewardsPerUnitTime;
 
     address deployer;
@@ -338,7 +338,7 @@ contract StakingExtensionTest is DSTest, Test {
         assertEq(timeUnit, ext.getTimeUnit());
 
         // set new value and check
-        uint256 newTimeUnit = 1 minutes;
+        uint80 newTimeUnit = 1 minutes;
         ext.setTimeUnit(newTimeUnit);
         assertEq(newTimeUnit, ext.getTimeUnit());
 

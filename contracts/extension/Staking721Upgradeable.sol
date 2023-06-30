@@ -93,7 +93,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
      *
      *  @param _timeUnit    New time unit.
      */
-    function setTimeUnit(uint256 _timeUnit) external virtual {
+    function setTimeUnit(uint80 _timeUnit) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
@@ -278,7 +278,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
     }
 
     /// @dev Set staking conditions.
-    function _setStakingCondition(uint256 _timeUnit, uint256 _rewardsPerUnitTime) internal virtual {
+    function _setStakingCondition(uint80 _timeUnit, uint256 _rewardsPerUnitTime) internal virtual {
         require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextConditionId;
         nextConditionId += 1;
@@ -286,12 +286,12 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
         stakingConditions[conditionId] = StakingCondition({
             timeUnit: _timeUnit,
             rewardsPerUnitTime: _rewardsPerUnitTime,
-            startTimestamp: block.timestamp,
+            startTimestamp: uint80(block.timestamp),
             endTimestamp: 0
         });
 
         if (conditionId > 0) {
-            stakingConditions[conditionId - 1].endTimestamp = block.timestamp;
+            stakingConditions[conditionId - 1].endTimestamp = uint80(block.timestamp);
         }
     }
 
