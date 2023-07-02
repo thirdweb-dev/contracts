@@ -181,12 +181,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
         for (uint256 i = 0; i < len; ++i) {
-            require(
-                IERC721(_stakingToken).ownerOf(_tokenIds[i]) == _stakeMsgSender() &&
-                    (IERC721(_stakingToken).getApproved(_tokenIds[i]) == address(this) ||
-                        IERC721(_stakingToken).isApprovedForAll(_stakeMsgSender(), address(this))),
-                "Not owned or approved"
-            );
+            
 
             isStaking = 2;
             IERC721(_stakingToken).safeTransferFrom(_stakeMsgSender(), address(this), _tokenIds[i]);
