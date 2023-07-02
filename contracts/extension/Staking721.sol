@@ -17,17 +17,14 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     ///@dev Address of ERC721 NFT contract -- staked tokens belong to this contract.
     address public stakingToken;
 
-    ///@dev List of token-ids ever staked.
-    uint256[] public indexedTokens;
-
-    /// @dev List of accounts that have staked their NFTs.
-    address[] public stakersArray;
-
     /// @dev Flag to check direct transfers of staking tokens.
     uint8 internal isStaking = 1;
 
     ///@dev Next staking condition Id. Tracks number of conditon updates so far.
     uint64 private nextConditionId;
+
+    ///@dev List of token-ids ever staked.
+    uint256[] public indexedTokens;
 
     ///@dev Mapping from token-id to whether it is indexed or not.
     mapping(uint256 => bool) public isIndexed;
@@ -133,12 +130,9 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
      *  @return _tokensStaked   List of token-ids staked by staker.
      *  @return _rewards        Available reward amount.
      */
-    function getStakeInfo(address _staker)
-        external
-        view
-        virtual
-        returns (uint256[] memory _tokensStaked, uint256 _rewards)
-    {
+    function getStakeInfo(
+        address _staker
+    ) external view virtual returns (uint256[] memory _tokensStaked, uint256 _rewards) {
         uint256[] memory _indexedTokens = indexedTokens;
         bool[] memory _isStakerToken = new bool[](_indexedTokens.length);
         uint256 indexedTokenCount = _indexedTokens.length;
@@ -183,7 +177,6 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
         if (stakers[_stakeMsgSender()].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(_stakeMsgSender());
         } else {
-            stakersArray.push(_stakeMsgSender());
             stakers[_stakeMsgSender()].timeOfLastUpdate = uint128(block.timestamp);
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
@@ -221,17 +214,6 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
         address _stakingToken = stakingToken;
 
         _updateUnclaimedRewardsForStaker(_stakeMsgSender());
-
-        if (_amountStaked == len) {
-            address[] memory _stakersArray = stakersArray;
-            for (uint256 i = 0; i < _stakersArray.length; ++i) {
-                if (_stakersArray[i] == _stakeMsgSender()) {
-                    stakersArray[i] = _stakersArray[_stakersArray.length - 1];
-                    stakersArray.pop();
-                    break;
-                }
-            }
-        }
         stakers[_stakeMsgSender()].amountStaked -= len;
 
         for (uint256 i = 0; i < len; ++i) {
