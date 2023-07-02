@@ -27,7 +27,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     uint8 internal isStaking = 1;
 
     ///@dev Next staking condition Id. Tracks number of conditon updates so far.
-    uint256 private nextConditionId;
+    uint64 private nextConditionId;
 
     ///@dev Mapping from token-id to whether it is indexed or not.
     mapping(uint256 => bool) public isIndexed;
@@ -175,7 +175,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
 
     /// @dev Staking logic. Override to add custom logic.
     function _stake(uint256[] calldata _tokenIds) internal virtual {
-        uint256 len = _tokenIds.length;
+        uint64 len = uint64(_tokenIds.length);
         require(len != 0, "Staking 0 tokens");
 
         address _stakingToken = stakingToken;
@@ -184,7 +184,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
             _updateUnclaimedRewardsForStaker(_stakeMsgSender());
         } else {
             stakersArray.push(_stakeMsgSender());
-            stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+            stakers[_stakeMsgSender()].timeOfLastUpdate = uint128(block.timestamp);
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
         for (uint256 i = 0; i < len; ++i) {
@@ -214,7 +214,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     /// @dev Withdraw logic. Override to add custom logic.
     function _withdraw(uint256[] calldata _tokenIds) internal virtual {
         uint256 _amountStaked = stakers[_stakeMsgSender()].amountStaked;
-        uint256 len = _tokenIds.length;
+        uint64 len = uint64(_tokenIds.length);
         require(len != 0, "Withdrawing 0 tokens");
         require(_amountStaked >= len, "Withdrawing more than staked");
 
@@ -249,7 +249,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
 
         require(rewards != 0, "No rewards");
 
-        stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+        stakers[_stakeMsgSender()].timeOfLastUpdate = uint128(block.timestamp);
         stakers[_stakeMsgSender()].unclaimedRewards = 0;
         stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
 
@@ -271,7 +271,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     function _updateUnclaimedRewardsForStaker(address _staker) internal virtual {
         uint256 rewards = _calculateRewards(_staker);
         stakers[_staker].unclaimedRewards += rewards;
-        stakers[_staker].timeOfLastUpdate = block.timestamp;
+        stakers[_staker].timeOfLastUpdate = uint128(block.timestamp);
         stakers[_staker].conditionIdOflastUpdate = nextConditionId - 1;
     }
 
