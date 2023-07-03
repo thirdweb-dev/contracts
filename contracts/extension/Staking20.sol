@@ -19,22 +19,22 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     address internal immutable nativeTokenWrapper;
 
     ///@dev Address of ERC20 contract -- staked tokens belong to this contract.
-    address public stakingToken;
+    address public immutable stakingToken;
+
+    ///@dev Next staking condition Id. Tracks number of conditon updates so far.
+    uint64 private nextConditionId;
 
     /// @dev Decimals of staking token.
-    uint256 public stakingTokenDecimals;
+    uint16 public immutable stakingTokenDecimals;
 
     /// @dev Decimals of reward token.
-    uint256 public rewardTokenDecimals;
-
-    /// @dev List of accounts that have staked that token-id.
-    address[] public stakersArray;
+    uint16 public immutable rewardTokenDecimals;
 
     /// @dev Total amount of tokens staked in the contract.
     uint256 public stakingTokenBalance;
 
-    ///@dev Next staking condition Id. Tracks number of conditon updates so far.
-    uint64 private nextConditionId;
+    /// @dev List of accounts that have staked that token-id.
+    address[] public stakersArray;
 
     ///@dev Mapping staker address to Staker struct. See {struct IStaking20.Staker}.
     mapping(address => Staker) public stakers;
@@ -45,8 +45,8 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     constructor(
         address _nativeTokenWrapper,
         address _stakingToken,
-        uint256 _stakingTokenDecimals,
-        uint256 _rewardTokenDecimals
+        uint16 _stakingTokenDecimals,
+        uint16 _rewardTokenDecimals
     ) ReentrancyGuard() {
         require(_stakingToken != address(0) && _nativeTokenWrapper != address(0), "address 0");
         require(_stakingTokenDecimals != 0 && _rewardTokenDecimals != 0, "decimals 0");
@@ -271,11 +271,7 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     }
 
     /// @dev Set staking conditions.
-    function _setStakingCondition(
-        uint80 _timeUnit,
-        uint256 _numerator,
-        uint256 _denominator
-    ) internal virtual {
+    function _setStakingCondition(uint80 _timeUnit, uint256 _numerator, uint256 _denominator) internal virtual {
         require(_denominator != 0, "divide by 0");
         require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextConditionId;
@@ -319,9 +315,9 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
             _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
         }
 
-        (, _rewards) = SafeMath.tryMul(_rewards, 10**rewardTokenDecimals);
+        (, _rewards) = SafeMath.tryMul(_rewards, 10 ** rewardTokenDecimals);
 
-        _rewards /= (10**stakingTokenDecimals);
+        _rewards /= (10 ** stakingTokenDecimals);
     }
 
     /*////////////////////////////////////////////////////////////////////
