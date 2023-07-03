@@ -21,14 +21,14 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     ///@dev Address of ERC20 contract -- staked tokens belong to this contract.
     address public immutable stakingToken;
 
-    ///@dev Next staking condition Id. Tracks number of conditon updates so far.
-    uint64 private nextConditionId;
-
     /// @dev Decimals of staking token.
     uint16 public immutable stakingTokenDecimals;
 
     /// @dev Decimals of reward token.
     uint16 public immutable rewardTokenDecimals;
+
+    ///@dev Next staking condition Id. Tracks number of conditon updates so far.
+    uint64 private nextConditionId;
 
     /// @dev Total amount of tokens staked in the contract.
     uint256 public stakingTokenBalance;
