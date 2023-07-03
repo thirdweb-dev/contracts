@@ -254,7 +254,7 @@ contract OpenEditionERC721Test is BaseTest {
         vm.prank(deployer);
         openEdition.revokeRole(keccak256("TRANSFER_ROLE"), address(0));
         vm.startPrank(receiver);
-        vm.expectRevert(("!Transfer-Role"));
+        vm.expectRevert(bytes("!T"));
         openEdition.transferFrom(receiver, address(123), 1);
     }
 

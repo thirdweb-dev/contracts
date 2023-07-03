@@ -119,7 +119,7 @@ contract OpenEditionERC721 is
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
         if (!_exists(_tokenId)) {
-            revert("OpenCollectionERC721: URI query for nonexistent token.");
+            revert("!ID");
         }
 
         return _getURIFromSharedMetadata(_tokenId);
@@ -139,6 +139,10 @@ contract OpenEditionERC721 is
     /// @dev The start token ID for the contract.
     function _startTokenId() internal pure override returns (uint256) {
         return 1;
+    }
+
+    function startTokenId() public pure returns (uint256) {
+        return _startTokenId();
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -190,9 +194,9 @@ contract OpenEditionERC721 is
     function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
         internal
         override
-        returns (uint256 startTokenId)
+        returns (uint256 startTokenId_)
     {
-        startTokenId = _currentIndex;
+        startTokenId_ = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
     }
 
@@ -269,15 +273,15 @@ contract OpenEditionERC721 is
     function _beforeTokenTransfers(
         address from,
         address to,
-        uint256 startTokenId,
+        uint256 startTokenId_,
         uint256 quantity
     ) internal virtual override {
-        super._beforeTokenTransfers(from, to, startTokenId, quantity);
+        super._beforeTokenTransfers(from, to, startTokenId_, quantity);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
             if (!hasRole(transferRole, from) && !hasRole(transferRole, to)) {
-                revert("!Transfer-Role");
+                revert("!T");
             }
         }
     }

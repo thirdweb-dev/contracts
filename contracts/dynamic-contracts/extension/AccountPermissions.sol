@@ -58,20 +58,28 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
     /// @notice Sets the restrictions for a given role.
     function setRoleRestrictions(RoleRestrictions calldata _restrictions) external virtual onlyAdmin {
-        require(_restrictions.role != bytes32(0), "AccountPermissions: role cannot be empty");
+        bytes32 role = _restrictions.role;
+
+        require(role != bytes32(0), "AccountPermissions: role cannot be empty");
 
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        data.roleRestrictions[_restrictions.role] = RoleStatic(
-            _restrictions.role,
+        data.roleRestrictions[role] = RoleStatic(
+            role,
             _restrictions.maxValuePerTransaction,
             _restrictions.startTimestamp,
             _restrictions.endTimestamp
         );
 
+        address[] memory currentTargets = data.approvedTargets[role].values();
+        uint256 currentLen = currentTargets.length;
+
+        for (uint256 i = 0; i < currentLen; i += 1) {
+            data.approvedTargets[role].remove(currentTargets[i]);
+        }
+
         uint256 len = _restrictions.approvedTargets.length;
-        delete data.approvedTargets[_restrictions.role];
-        for (uint256 i = 0; i < len; i++) {
-            data.approvedTargets[_restrictions.role].add(_restrictions.approvedTargets[i]);
+        for (uint256 i = 0; i < len; i += 1) {
+            data.approvedTargets[role].add(_restrictions.approvedTargets[i]);
         }
 
         emit RoleUpdated(_restrictions.role, _restrictions);
@@ -101,6 +109,8 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         }
 
         emit RoleAssignment(_req.role, _req.target, signer, _req);
+
+        _afterChangeRole(_req);
     }
 
     /*///////////////////////////////////////////////////////////////
