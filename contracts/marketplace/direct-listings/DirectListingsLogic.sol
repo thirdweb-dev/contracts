@@ -517,7 +517,8 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
 
         // Payout platform fee
         {
-            (address platformFeeRecipient, uint16 platformFeeBps) = PlatformFeeLogic(address(this)).getPlatformFeeInfo();
+            (address platformFeeRecipient, uint16 platformFeeBps) = PlatformFeeLogic(address(this))
+                .getPlatformFeeInfo();
             uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
             // Transfer platform fee
@@ -531,7 +532,6 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
 
             amountRemaining = _totalPayoutAmount - platformFeeCut;
         }
-
 
         // Payout royalties
         {

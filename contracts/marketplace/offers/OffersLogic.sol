@@ -321,7 +321,6 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
             amountRemaining = _totalPayoutAmount - platformFeeCut;
         }
 
-
         // Payout royalties
         {
             // Get royalty recipients and amounts
@@ -359,12 +358,6 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
         }
 
         // Distribute price to token owner
-        CurrencyTransferLib.transferCurrencyWithWrapper(
-            _currencyToUse,
-            _payer,
-            _payee,
-            amountRemaining,
-            address(0)
-        );
+        CurrencyTransferLib.transferCurrencyWithWrapper(_currencyToUse, _payer, _payee, amountRemaining, address(0));
     }
 }

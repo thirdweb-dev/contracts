@@ -52,7 +52,10 @@ contract MarketplaceV3 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _pluginMap, address _royaltyEngineAddress) RouterImmutable(_pluginMap) RoyaltyPaymentsLogic(_royaltyEngineAddress) {}
+    constructor(address _pluginMap, address _royaltyEngineAddress)
+        RouterImmutable(_pluginMap)
+        RoyaltyPaymentsLogic(_royaltyEngineAddress)
+    {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(

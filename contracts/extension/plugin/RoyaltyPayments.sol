@@ -62,7 +62,9 @@ abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
     ) external returns (address payable[] memory recipients, uint256[] memory amounts) {
         RoyaltyPaymentsStorage.Data storage data = RoyaltyPaymentsStorage.royaltyPaymentsStorage();
         address royaltyEngineOverride = data.royaltyEngineAddressOverride;
-        address royaltyEngineAddress = royaltyEngineOverride != address(0) ? royaltyEngineOverride : ROYALTY_ENGINE_ADDRESS;
+        address royaltyEngineAddress = royaltyEngineOverride != address(0)
+            ? royaltyEngineOverride
+            : ROYALTY_ENGINE_ADDRESS;
 
         if (royaltyEngineAddress == address(0)) {
             try IERC2981(tokenAddress).royaltyInfo(tokenId, value) returns (address recipient, uint256 amount) {

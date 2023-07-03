@@ -503,7 +503,6 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             amountRemaining = _totalPayoutAmount - platformFeeCut;
         }
 
-
         // Payout royalties
         {
             // Get royalty recipients and amounts
