@@ -34,7 +34,7 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     uint256 public stakingTokenBalance;
 
     ///@dev Next staking condition Id. Tracks number of conditon updates so far.
-    uint256 private nextConditionId;
+    uint64 private nextConditionId;
 
     ///@dev Mapping staker address to Staker struct. See {struct IStaking20.Staker}.
     mapping(address => Staker) public stakers;
@@ -101,7 +101,7 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
      *
      *  @param _timeUnit    New time unit.
      */
-    function setTimeUnit(uint256 _timeUnit) external virtual {
+    function setTimeUnit(uint80 _timeUnit) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
@@ -186,7 +186,7 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
             _updateUnclaimedRewardsForStaker(_stakeMsgSender());
         } else {
             stakersArray.push(_stakeMsgSender());
-            stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+            stakers[_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
 
@@ -244,7 +244,7 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
 
         require(rewards != 0, "No rewards");
 
-        stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+        stakers[_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
         stakers[_stakeMsgSender()].unclaimedRewards = 0;
         stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
 
@@ -266,13 +266,13 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     function _updateUnclaimedRewardsForStaker(address _staker) internal virtual {
         uint256 rewards = _calculateRewards(_staker);
         stakers[_staker].unclaimedRewards += rewards;
-        stakers[_staker].timeOfLastUpdate = block.timestamp;
+        stakers[_staker].timeOfLastUpdate = uint80(block.timestamp);
         stakers[_staker].conditionIdOflastUpdate = nextConditionId - 1;
     }
 
     /// @dev Set staking conditions.
     function _setStakingCondition(
-        uint256 _timeUnit,
+        uint80 _timeUnit,
         uint256 _numerator,
         uint256 _denominator
     ) internal virtual {
@@ -285,12 +285,12 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
             timeUnit: _timeUnit,
             rewardRatioNumerator: _numerator,
             rewardRatioDenominator: _denominator,
-            startTimestamp: block.timestamp,
+            startTimestamp: uint80(block.timestamp),
             endTimestamp: 0
         });
 
         if (conditionId > 0) {
-            stakingConditions[conditionId - 1].endTimestamp = block.timestamp;
+            stakingConditions[conditionId - 1].endTimestamp = uint80(block.timestamp);
         }
     }
 

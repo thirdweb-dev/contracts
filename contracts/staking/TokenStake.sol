@@ -57,7 +57,7 @@ contract TokenStake is
         address[] memory _trustedForwarders,
         address _rewardToken,
         address _stakingToken,
-        uint256 _timeUnit,
+        uint80 _timeUnit,
         uint256 _rewardRatioNumerator,
         uint256 _rewardRatioDenominator
     ) external initializer {
