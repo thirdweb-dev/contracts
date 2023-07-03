@@ -33,6 +33,7 @@ library RoyaltyPaymentsStorage {
  */
 
 abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
+    // solhint-disable-next-line var-name-mixedcase
     address immutable ROYALTY_ENGINE_ADDRESS;
 
     constructor(address _royaltyEngineAddress) {
