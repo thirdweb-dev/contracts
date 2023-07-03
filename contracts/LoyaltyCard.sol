@@ -1,6 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+/// @author thirdweb
+
+//   $$\     $$\       $$\                 $$\                         $$\
+//   $$ |    $$ |      \__|                $$ |                        $$ |
+// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
+// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
+//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
+//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
+//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
+//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
+
 // Interface
 import "./interfaces/ILoyaltyCard.sol";
 
@@ -24,6 +35,14 @@ import "./extension/DefaultOperatorFiltererUpgradeable.sol";
 import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
+/**
+ *  @title LoyaltyCard
+ *
+ *  @custom:description This contract is a loyalty card NFT collection. Each NFT represents a loyalty card, and the NFT's metadata
+ *                      contains the loyalty card's information. A loyalty card's metadata can be updated by an admin of the contract.
+ *                      A loyalty card can be cancelled (i.e. 'burned') by its owner or an approved operator. A loyalty card can be revoked
+ *                      (i.e. 'burned') without its owner's approval, by an admin of the contract.
+ */
 contract LoyaltyCard is
     ILoyaltyCard,
     ContractMetadata,
