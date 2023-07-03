@@ -104,7 +104,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         assertEq(map.getAllFunctionsOfPlugin(directListings).length, 13);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 
@@ -1564,7 +1564,7 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
 
         // [4] Deploy `MarketplaceV3`
 
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 

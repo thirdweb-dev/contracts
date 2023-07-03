@@ -103,7 +103,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 
@@ -1705,7 +1705,7 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
         assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 
@@ -1904,7 +1904,7 @@ contract BreitwieserTheBidder is BaseTest {
         assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 
@@ -2133,7 +2133,7 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
         assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 

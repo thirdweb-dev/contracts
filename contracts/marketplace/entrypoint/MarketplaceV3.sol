@@ -25,6 +25,7 @@ import "../../extension/plugin/PlatformFeeLogic.sol";
 import "../../extension/plugin/PermissionsEnumerableLogic.sol";
 import "../../extension/plugin/ReentrancyGuardLogic.sol";
 import "../../extension/plugin/ERC2771ContextUpgradeableLogic.sol";
+import { RoyaltyPaymentsLogic } from "../../extension/plugin/RoyaltyPayments.sol";
 
 /**
  * @author  thirdweb.com
@@ -35,6 +36,7 @@ contract MarketplaceV3 is
     PermissionsEnumerableLogic,
     ReentrancyGuardLogic,
     ERC2771ContextUpgradeableLogic,
+    RoyaltyPaymentsLogic,
     RouterImmutable,
     IERC721Receiver,
     IERC1155Receiver
@@ -50,7 +52,7 @@ contract MarketplaceV3 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _pluginMap) RouterImmutable(_pluginMap) {}
+    constructor(address _pluginMap, address _royaltyEngineAddress) RouterImmutable(_pluginMap) RoyaltyPaymentsLogic(_royaltyEngineAddress) {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -143,6 +145,11 @@ contract MarketplaceV3 is
 
     /// @dev Checks whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether royalty engine address can be set in the given execution context.
+    function _canSetRoyaltyEngine() internal view override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 

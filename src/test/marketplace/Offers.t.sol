@@ -63,7 +63,7 @@ contract MarketplaceOffersTest is BaseTest {
         assertEq(map.getAllFunctionsOfPlugin(offers).length, 7);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 
