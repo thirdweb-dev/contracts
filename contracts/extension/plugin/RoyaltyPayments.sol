@@ -61,11 +61,7 @@ abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
         uint256 tokenId,
         uint256 value
     ) external returns (address payable[] memory recipients, uint256[] memory amounts) {
-        RoyaltyPaymentsStorage.Data storage data = RoyaltyPaymentsStorage.royaltyPaymentsStorage();
-        address royaltyEngineOverride = data.royaltyEngineAddressOverride;
-        address royaltyEngineAddress = royaltyEngineOverride != address(0)
-            ? royaltyEngineOverride
-            : ROYALTY_ENGINE_ADDRESS;
+        address royaltyEngineAddress = getRoyaltyEngineAddress();
 
         if (royaltyEngineAddress == address(0)) {
             try IERC2981(tokenAddress).royaltyInfo(tokenId, value) returns (address recipient, uint256 amount) {
@@ -98,6 +94,15 @@ abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
         );
 
         _setupRoyaltyEngine(_royaltyEngineAddress);
+    }
+
+    /// @dev Returns original or overridden address for RoyaltyEngineV1
+    function getRoyaltyEngineAddress() public view returns (address royaltyEngineAddress) {
+        RoyaltyPaymentsStorage.Data storage data = RoyaltyPaymentsStorage.royaltyPaymentsStorage();
+        address royaltyEngineOverride = data.royaltyEngineAddressOverride;
+        address royaltyEngineAddress = royaltyEngineOverride != address(0)
+            ? royaltyEngineOverride
+            : ROYALTY_ENGINE_ADDRESS;
     }
 
     /// @dev Lets a contract admin update the royalty engine address
