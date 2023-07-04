@@ -435,7 +435,11 @@ contract MarketplaceDirectListingsTest is BaseTest {
             assertBalERC20Eq(address(erc20), platformFeeRecipient, platformFeeAmount);
 
             // Seller gets total price minus royalty amounts
-            assertBalERC20Eq(address(erc20), seller, totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - platformFeeAmount);
+            assertBalERC20Eq(
+                address(erc20),
+                seller,
+                totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - platformFeeAmount
+            );
         }
     }
 
@@ -481,7 +485,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // Buy tokens from listing.
         vm.warp(listing.startTimestamp);
-        
+
         vm.expectRevert("fees exceed the price");
         vm.prank(buyer);
         DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
