@@ -248,9 +248,6 @@ contract MarketplaceDirectListingsTest is BaseTest {
         uint128 endTimestamp = 200;
         bool reserved = false;
 
-        // Mint the ERC721 tokens to seller. These tokens will be listed.
-        _setupERC721BalanceForSeller(seller, 1);
-
         // Approve Marketplace to transfer token.
         vm.prank(seller);
         IERC721(erc721TokenAddress).setApprovalForAll(marketplace, true);
@@ -308,6 +305,8 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // 1. ========= Create listing =========
 
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
         uint256 listingId = _setupListingForRoyaltyTests(address(erc721));
 
         // 2. ========= Buy from listing =========
@@ -343,6 +342,8 @@ contract MarketplaceDirectListingsTest is BaseTest {
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
         ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        nft2981.mintTo(seller, "");
 
         vm.prank(marketplaceDeployer);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(nft2981));
@@ -372,6 +373,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
         ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        nft2981.mintTo(seller, "");
 
         vm.prank(marketplaceDeployer);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(nft2981));
@@ -417,6 +419,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // 1. ========= Create listing =========
 
+        _setupERC721BalanceForSeller(seller, 1);
         uint256 listingId = _setupListingForRoyaltyTests(address(erc721));
 
         // 2. ========= Buy from listing =========
@@ -464,6 +467,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
         // 1. ========= Create listing =========
 
+        _setupERC721BalanceForSeller(seller, 1);
         uint256 listingId = _setupListingForRoyaltyTests(address(erc721));
 
         // 2. ========= Buy from listing =========
