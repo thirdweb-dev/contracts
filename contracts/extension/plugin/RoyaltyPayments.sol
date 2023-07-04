@@ -100,9 +100,7 @@ abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
     function getRoyaltyEngineAddress() public view returns (address royaltyEngineAddress) {
         RoyaltyPaymentsStorage.Data storage data = RoyaltyPaymentsStorage.royaltyPaymentsStorage();
         address royaltyEngineOverride = data.royaltyEngineAddressOverride;
-        royaltyEngineAddress = royaltyEngineOverride != address(0)
-            ? royaltyEngineOverride
-            : ROYALTY_ENGINE_ADDRESS;
+        royaltyEngineAddress = royaltyEngineOverride != address(0) ? royaltyEngineOverride : ROYALTY_ENGINE_ADDRESS;
     }
 
     /// @dev Lets a contract admin update the royalty engine address
