@@ -130,9 +130,12 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
      *  @return _tokensStaked   List of token-ids staked by staker.
      *  @return _rewards        Available reward amount.
      */
-    function getStakeInfo(
-        address _staker
-    ) external view virtual returns (uint256[] memory _tokensStaked, uint256 _rewards) {
+    function getStakeInfo(address _staker)
+        external
+        view
+        virtual
+        returns (uint256[] memory _tokensStaked, uint256 _rewards)
+    {
         uint256[] memory _indexedTokens = indexedTokens;
         bool[] memory _isStakerToken = new bool[](_indexedTokens.length);
         uint256 indexedTokenCount = _indexedTokens.length;
@@ -181,8 +184,6 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
         for (uint256 i = 0; i < len; ++i) {
-            
-
             isStaking = 2;
             IERC721(_stakingToken).safeTransferFrom(_stakeMsgSender(), address(this), _tokenIds[i]);
             isStaking = 1;
