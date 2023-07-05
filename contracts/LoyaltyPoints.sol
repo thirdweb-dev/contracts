@@ -39,7 +39,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
  *                      (i.e. 'burned') without its owner's approval, by an admin of the contract.
  */
 
-abstract contract LoyaltyPoints is
+contract LoyaltyPoints is
     ILoyaltyPoints,
     ContractMetadata,
     PrimarySale,
