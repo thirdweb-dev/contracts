@@ -11,7 +11,7 @@ import "../utils/BaseAccount.sol";
 // Extensions
 import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
-import "../../dynamic-contracts/extension/AccountPermissions.sol";
+import "../../dynamic-contracts/extension/AccountPermissionsSimple.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
 import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
 import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
@@ -36,7 +36,7 @@ contract Account is
     Multicall,
     BaseAccount,
     ContractMetadata,
-    AccountPermissions,
+    AccountPermissionsSimple,
     ERC721Holder,
     ERC1155Holder
 {
@@ -287,9 +287,9 @@ contract Account is
     }
 
     /// @notice Runs after every `changeRole` run.
-    function _afterChangeRole(RoleRequest calldata _req) internal virtual override {
+    function _afterChangeRole(SignerPermissionRequest calldata _req) internal virtual override {
         if (factory.code.length > 0) {
-            if (_req.action == RoleAction.GRANT) {
+            if (_req.approvedTargets.length > 0) {
                 BaseAccountFactory(factory).onSignerAdded(_req.target);
             } else if (_req.action == RoleAction.REVOKE) {
                 BaseAccountFactory(factory).onSignerRemoved(_req.target);
