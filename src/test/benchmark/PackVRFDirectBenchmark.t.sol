@@ -191,7 +191,7 @@ contract PackVRFDirectBenchmarkTest is BaseTest {
         pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
     }
 
-    function test_benchmark_packvrf_openPackAdnClaimRewards() public {
+    function test_benchmark_packvrf_openPackAndClaimRewards() public {
         vm.pauseGasMetering();
         vm.warp(1000);
         uint256 packId = pack.nextTokenIdToMint();

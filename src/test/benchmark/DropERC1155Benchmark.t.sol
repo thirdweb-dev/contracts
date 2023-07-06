@@ -84,147 +84,6 @@ contract DropERC1155BenchmarkTest is BaseTest {
         drop.claim(receiver, _tokenId, 100, address(erc20), 5, alp, "");
     }
 
-    function test_bechmark_dropERC1155_setClaimConditions_one_condition() public {
-        vm.pauseGasMetering();
-        uint256 _tokenId = 0;
-        string[] memory inputs = new string[](5);
-
-        inputs[0] = "node";
-        inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = "300";
-        inputs[3] = "5";
-        inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
-
-        bytes memory result = vm.ffi(inputs);
-        // revert();
-        bytes32 root = abi.decode(result, (bytes32));
-
-        inputs[1] = "src/test/scripts/getProof.ts";
-        result = vm.ffi(inputs);
-        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
-
-        DropERC1155.AllowlistProof memory alp;
-        alp.proof = proofs;
-        alp.quantityLimitPerWallet = 300;
-        alp.pricePerToken = 5;
-        alp.currency = address(erc20);
-
-        vm.warp(1);
-
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
-
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
-        conditions[0].maxClaimableSupply = 500;
-        conditions[0].quantityLimitPerWallet = 10;
-        conditions[0].merkleRoot = root;
-        conditions[0].pricePerToken = 10;
-        conditions[0].currency = address(erc20);
-
-        vm.prank(deployer);
-        drop.lazyMint(500, "ipfs://", emptyEncodedBytes);
-        vm.prank(deployer);
-        vm.resumeGasMetering();
-        drop.setClaimConditions(_tokenId, conditions, false);
-    }
-
-    function test_bechmark_dropERC1155_setClaimConditions_two_conditions() public {
-        vm.pauseGasMetering();
-        uint256 _tokenId = 0;
-        string[] memory inputs = new string[](5);
-
-        inputs[0] = "node";
-        inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = "300";
-        inputs[3] = "5";
-        inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
-
-        bytes memory result = vm.ffi(inputs);
-        // revert();
-        bytes32 root = abi.decode(result, (bytes32));
-
-        inputs[1] = "src/test/scripts/getProof.ts";
-        result = vm.ffi(inputs);
-        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
-
-        DropERC1155.AllowlistProof memory alp;
-        alp.proof = proofs;
-        alp.quantityLimitPerWallet = 300;
-        alp.pricePerToken = 5;
-        alp.currency = address(erc20);
-
-        vm.warp(1);
-
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
-
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](2);
-        conditions[0].maxClaimableSupply = 500;
-        conditions[0].quantityLimitPerWallet = 10;
-        conditions[0].merkleRoot = root;
-        conditions[0].pricePerToken = 10;
-        conditions[0].currency = address(erc20);
-
-        conditions[1].maxClaimableSupply = 600;
-        conditions[1].pricePerToken = 20;
-        conditions[1].startTimestamp = 100000;
-
-        vm.prank(deployer);
-        drop.lazyMint(500, "ipfs://", emptyEncodedBytes);
-        vm.prank(deployer);
-        vm.resumeGasMetering();
-        drop.setClaimConditions(_tokenId, conditions, false);
-    }
-
-    function test_bechmark_dropERC1155_setClaimConditions_three_conditions() public {
-        vm.pauseGasMetering();
-        uint256 _tokenId = 0;
-        string[] memory inputs = new string[](5);
-
-        inputs[0] = "node";
-        inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = "300";
-        inputs[3] = "5";
-        inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
-
-        bytes memory result = vm.ffi(inputs);
-        // revert();
-        bytes32 root = abi.decode(result, (bytes32));
-
-        inputs[1] = "src/test/scripts/getProof.ts";
-        result = vm.ffi(inputs);
-        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
-
-        DropERC1155.AllowlistProof memory alp;
-        alp.proof = proofs;
-        alp.quantityLimitPerWallet = 300;
-        alp.pricePerToken = 5;
-        alp.currency = address(erc20);
-
-        vm.warp(1);
-
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
-
-        DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](3);
-        conditions[0].maxClaimableSupply = 500;
-        conditions[0].quantityLimitPerWallet = 10;
-        conditions[0].merkleRoot = root;
-        conditions[0].pricePerToken = 10;
-        conditions[0].currency = address(erc20);
-
-        conditions[1].maxClaimableSupply = 600;
-        conditions[1].pricePerToken = 20;
-        conditions[1].startTimestamp = 100000;
-
-        conditions[2].maxClaimableSupply = 700;
-        conditions[2].pricePerToken = 30;
-        conditions[2].startTimestamp = 200000;
-
-        vm.prank(deployer);
-        drop.lazyMint(500, "ipfs://", emptyEncodedBytes);
-        vm.prank(deployer);
-        vm.resumeGasMetering();
-        drop.setClaimConditions(_tokenId, conditions, false);
-    }
-
     function test_bechmark_dropERC1155_setClaimConditions_five_conditions() public {
         vm.pauseGasMetering();
         uint256 _tokenId = 0;
@@ -290,4 +149,145 @@ contract DropERC1155BenchmarkTest is BaseTest {
         vm.resumeGasMetering();
         drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
     }
+
+    // function test_bechmark_dropERC1155_setClaimConditions_one_condition() public {
+    //     vm.pauseGasMetering();
+    //     uint256 _tokenId = 0;
+    //     string[] memory inputs = new string[](5);
+
+    //     inputs[0] = "node";
+    //     inputs[1] = "src/test/scripts/generateRoot.ts";
+    //     inputs[2] = "300";
+    //     inputs[3] = "5";
+    //     inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
+
+    //     bytes memory result = vm.ffi(inputs);
+    //     // revert();
+    //     bytes32 root = abi.decode(result, (bytes32));
+
+    //     inputs[1] = "src/test/scripts/getProof.ts";
+    //     result = vm.ffi(inputs);
+    //     bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+    //     DropERC1155.AllowlistProof memory alp;
+    //     alp.proof = proofs;
+    //     alp.quantityLimitPerWallet = 300;
+    //     alp.pricePerToken = 5;
+    //     alp.currency = address(erc20);
+
+    //     vm.warp(1);
+
+    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+
+    //     DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
+    //     conditions[0].maxClaimableSupply = 500;
+    //     conditions[0].quantityLimitPerWallet = 10;
+    //     conditions[0].merkleRoot = root;
+    //     conditions[0].pricePerToken = 10;
+    //     conditions[0].currency = address(erc20);
+
+    //     vm.prank(deployer);
+    //     drop.lazyMint(500, "ipfs://", emptyEncodedBytes);
+    //     vm.prank(deployer);
+    //     vm.resumeGasMetering();
+    //     drop.setClaimConditions(_tokenId, conditions, false);
+    // }
+
+    // function test_bechmark_dropERC1155_setClaimConditions_two_conditions() public {
+    //     vm.pauseGasMetering();
+    //     uint256 _tokenId = 0;
+    //     string[] memory inputs = new string[](5);
+
+    //     inputs[0] = "node";
+    //     inputs[1] = "src/test/scripts/generateRoot.ts";
+    //     inputs[2] = "300";
+    //     inputs[3] = "5";
+    //     inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
+
+    //     bytes memory result = vm.ffi(inputs);
+    //     // revert();
+    //     bytes32 root = abi.decode(result, (bytes32));
+
+    //     inputs[1] = "src/test/scripts/getProof.ts";
+    //     result = vm.ffi(inputs);
+    //     bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+    //     DropERC1155.AllowlistProof memory alp;
+    //     alp.proof = proofs;
+    //     alp.quantityLimitPerWallet = 300;
+    //     alp.pricePerToken = 5;
+    //     alp.currency = address(erc20);
+
+    //     vm.warp(1);
+
+    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+
+    //     DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](2);
+    //     conditions[0].maxClaimableSupply = 500;
+    //     conditions[0].quantityLimitPerWallet = 10;
+    //     conditions[0].merkleRoot = root;
+    //     conditions[0].pricePerToken = 10;
+    //     conditions[0].currency = address(erc20);
+
+    //     conditions[1].maxClaimableSupply = 600;
+    //     conditions[1].pricePerToken = 20;
+    //     conditions[1].startTimestamp = 100000;
+
+    //     vm.prank(deployer);
+    //     drop.lazyMint(500, "ipfs://", emptyEncodedBytes);
+    //     vm.prank(deployer);
+    //     vm.resumeGasMetering();
+    //     drop.setClaimConditions(_tokenId, conditions, false);
+    // }
+
+    // function test_bechmark_dropERC1155_setClaimConditions_three_conditions() public {
+    //     vm.pauseGasMetering();
+    //     uint256 _tokenId = 0;
+    //     string[] memory inputs = new string[](5);
+
+    //     inputs[0] = "node";
+    //     inputs[1] = "src/test/scripts/generateRoot.ts";
+    //     inputs[2] = "300";
+    //     inputs[3] = "5";
+    //     inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
+
+    //     bytes memory result = vm.ffi(inputs);
+    //     // revert();
+    //     bytes32 root = abi.decode(result, (bytes32));
+
+    //     inputs[1] = "src/test/scripts/getProof.ts";
+    //     result = vm.ffi(inputs);
+    //     bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+    //     DropERC1155.AllowlistProof memory alp;
+    //     alp.proof = proofs;
+    //     alp.quantityLimitPerWallet = 300;
+    //     alp.pricePerToken = 5;
+    //     alp.currency = address(erc20);
+
+    //     vm.warp(1);
+
+    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+
+    //     DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](3);
+    //     conditions[0].maxClaimableSupply = 500;
+    //     conditions[0].quantityLimitPerWallet = 10;
+    //     conditions[0].merkleRoot = root;
+    //     conditions[0].pricePerToken = 10;
+    //     conditions[0].currency = address(erc20);
+
+    //     conditions[1].maxClaimableSupply = 600;
+    //     conditions[1].pricePerToken = 20;
+    //     conditions[1].startTimestamp = 100000;
+
+    //     conditions[2].maxClaimableSupply = 700;
+    //     conditions[2].pricePerToken = 30;
+    //     conditions[2].startTimestamp = 200000;
+
+    //     vm.prank(deployer);
+    //     drop.lazyMint(500, "ipfs://", emptyEncodedBytes);
+    //     vm.prank(deployer);
+    //     vm.resumeGasMetering();
+    //     drop.setClaimConditions(_tokenId, conditions, false);
+    // }
 }
