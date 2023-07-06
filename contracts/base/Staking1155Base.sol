@@ -55,7 +55,7 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155, E
     uint256 private rewardTokenBalance;
 
     constructor(
-        uint256 _defaultTimeUnit,
+        uint80 _defaultTimeUnit,
         uint256 _defaultRewardsPerUnitTime,
         address _stakingToken,
         address _rewardToken,

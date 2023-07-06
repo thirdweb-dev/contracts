@@ -99,7 +99,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
      *  @param _tokenId     ERC1155 token Id.
      *  @param _timeUnit    New time unit.
      */
-    function setTimeUnit(uint256 _tokenId, uint256 _timeUnit) external virtual {
+    function setTimeUnit(uint256 _tokenId, uint80 _timeUnit) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
@@ -149,7 +149,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
      *
      *  @param _defaultTimeUnit    New time unit.
      */
-    function setDefaultTimeUnit(uint256 _defaultTimeUnit) external virtual {
+    function setDefaultTimeUnit(uint80 _defaultTimeUnit) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
@@ -274,7 +274,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
             _updateUnclaimedRewardsForStaker(_tokenId, _stakeMsgSender());
         } else {
             stakersArray[_tokenId].push(_stakeMsgSender());
-            stakers[_tokenId][_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+            stakers[_tokenId][_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
 
             uint256 _conditionId = nextConditionId[_tokenId];
             stakers[_tokenId][_stakeMsgSender()].conditionIdOflastUpdate = _conditionId == 0
@@ -333,7 +333,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
 
         require(rewards != 0, "No rewards");
 
-        stakers[_tokenId][_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+        stakers[_tokenId][_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
         stakers[_tokenId][_stakeMsgSender()].unclaimedRewards = 0;
 
         uint256 _conditionId = nextConditionId[_tokenId];
@@ -359,7 +359,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     function _updateUnclaimedRewardsForStaker(uint256 _tokenId, address _staker) internal virtual {
         uint256 rewards = _calculateRewards(_tokenId, _staker);
         stakers[_tokenId][_staker].unclaimedRewards += rewards;
-        stakers[_tokenId][_staker].timeOfLastUpdate = block.timestamp;
+        stakers[_tokenId][_staker].timeOfLastUpdate = uint80(block.timestamp);
 
         uint256 _conditionId = nextConditionId[_tokenId];
         stakers[_tokenId][_staker].conditionIdOflastUpdate = _conditionId == 0
@@ -370,7 +370,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     /// @dev Set staking conditions, for a token-Id.
     function _setStakingCondition(
         uint256 _tokenId,
-        uint256 _timeUnit,
+        uint80 _timeUnit,
         uint256 _rewardsPerUnitTime
     ) internal virtual {
         require(_timeUnit != 0, "time-unit can't be 0");
@@ -390,12 +390,12 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
             }
         }
 
-        stakingConditions[_tokenId][conditionId - 1].endTimestamp = block.timestamp;
+        stakingConditions[_tokenId][conditionId - 1].endTimestamp = uint80(block.timestamp);
 
         stakingConditions[_tokenId][conditionId] = StakingCondition({
             timeUnit: _timeUnit,
             rewardsPerUnitTime: _rewardsPerUnitTime,
-            startTimestamp: block.timestamp,
+            startTimestamp: uint80(block.timestamp),
             endTimestamp: 0
         });
 
@@ -403,7 +403,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     }
 
     /// @dev Set default staking conditions.
-    function _setDefaultStakingCondition(uint256 _timeUnit, uint256 _rewardsPerUnitTime) internal virtual {
+    function _setDefaultStakingCondition(uint80 _timeUnit, uint256 _rewardsPerUnitTime) internal virtual {
         require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextDefaultConditionId;
         nextDefaultConditionId += 1;
@@ -411,12 +411,12 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         defaultCondition[conditionId] = StakingCondition({
             timeUnit: _timeUnit,
             rewardsPerUnitTime: _rewardsPerUnitTime,
-            startTimestamp: block.timestamp,
+            startTimestamp: uint80(block.timestamp),
             endTimestamp: 0
         });
 
         if (conditionId > 0) {
-            defaultCondition[conditionId - 1].endTimestamp = block.timestamp;
+            defaultCondition[conditionId - 1].endTimestamp = uint80(block.timestamp);
         }
     }
 

@@ -65,7 +65,7 @@ contract EditionStake is
         address[] memory _trustedForwarders,
         address _rewardToken,
         address _stakingToken,
-        uint256 _defaultTimeUnit,
+        uint80 _defaultTimeUnit,
         uint256 _defaultRewardsPerUnitTime
     ) external initializer {
         __ERC2771Context_init_unchained(_trustedForwarders);
