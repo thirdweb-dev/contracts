@@ -19,11 +19,12 @@ abstract contract SignatureMintERC20Upgradeable is Initializable, EIP712Upgradea
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
-    function __SignatureMintERC20_init() internal onlyInitializing {
-        __EIP712_init("SignatureMintERC20", "1");
+    function __SignatureMintERC20_init(string memory _name) internal onlyInitializing {
+        __EIP712_init(_name, "1");
+        __SignatureMintERC20_init_unchained(_name);
     }
 
-    function __SignatureMintERC20_init_unchained() internal onlyInitializing {}
+    function __SignatureMintERC20_init_unchained(string memory) internal onlyInitializing {}
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
     function verify(MintRequest calldata _req, bytes calldata _signature)

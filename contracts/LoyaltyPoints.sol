@@ -87,7 +87,7 @@ contract LoyaltyPoints is
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC20_init_unchained(_name, _symbol);
-        __SignatureMintERC20_init();
+        __SignatureMintERC20_init(_name);
         __ReentrancyGuard_init();
 
         _setupContractURI(_contractURI);
