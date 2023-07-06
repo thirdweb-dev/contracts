@@ -41,10 +41,10 @@ interface IStaking1155 {
      *  @param conditionIdOflastUpdate  Condition-Id when rewards were last updated for user.
      */
     struct Staker {
-        uint256 amountStaked;
-        uint256 timeOfLastUpdate;
+        uint64 conditionIdOflastUpdate;
+        uint64 amountStaked;
+        uint128 timeOfLastUpdate;
         uint256 unclaimedRewards;
-        uint256 conditionIdOflastUpdate;
     }
 
     /**
@@ -71,7 +71,7 @@ interface IStaking1155 {
      *  @param tokenId   ERC1155 token-id to stake.
      *  @param amount    Amount to stake.
      */
-    function stake(uint256 tokenId, uint256 amount) external;
+    function stake(uint256 tokenId, uint64 amount) external;
 
     /**
      *  @notice Withdraw staked tokens.
@@ -79,7 +79,7 @@ interface IStaking1155 {
      *  @param tokenId   ERC1155 token-id to withdraw.
      *  @param amount    Amount to withdraw.
      */
-    function withdraw(uint256 tokenId, uint256 amount) external;
+    function withdraw(uint256 tokenId, uint64 amount) external;
 
     /**
      *  @notice Claim accumulated rewards.
@@ -94,22 +94,17 @@ interface IStaking1155 {
      *  @param tokenId   Staked token Id.
      *  @param staker    Address for which to calculated rewards.
      */
-    function getStakeInfoForToken(uint256 tokenId, address staker)
-        external
-        view
-        returns (uint256 _tokensStaked, uint256 _rewards);
+    function getStakeInfoForToken(
+        uint256 tokenId,
+        address staker
+    ) external view returns (uint256 _tokensStaked, uint256 _rewards);
 
     /**
      *  @notice View amount staked and total rewards for a user.
      *
      *  @param staker    Address for which to calculated rewards.
      */
-    function getStakeInfo(address staker)
-        external
-        view
-        returns (
-            uint256[] memory _tokensStaked,
-            uint256[] memory _tokenAmounts,
-            uint256 _totalRewards
-        );
+    function getStakeInfo(
+        address staker
+    ) external view returns (uint256[] memory _tokensStaked, uint256[] memory _tokenAmounts, uint256 _totalRewards);
 }

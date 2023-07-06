@@ -21,7 +21,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     uint8 internal isStaking = 1;
 
     ///@dev Next staking condition Id. Tracks number of conditon updates so far.
-    uint256 private nextDefaultConditionId;
+    uint64 private nextDefaultConditionId;
 
     ///@dev List of token-ids ever staked.
     uint256[] public indexedTokens;
@@ -30,16 +30,16 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     mapping(uint256 => bool) public isIndexed;
 
     ///@dev Mapping from default condition-id to default condition.
-    mapping(uint256 => StakingCondition) private defaultCondition;
+    mapping(uint64 => StakingCondition) private defaultCondition;
 
     ///@dev Mapping from token-id to next staking condition Id for the token. Tracks number of conditon updates so far.
-    mapping(uint256 => uint256) private nextConditionId;
+    mapping(uint256 => uint64) private nextConditionId;
 
     ///@dev Mapping from token-id and staker address to Staker struct. See {struct IStaking1155.Staker}.
     mapping(uint256 => mapping(address => Staker)) public stakers;
 
     ///@dev Mapping from token-id and condition Id to staking condition. See {struct IStaking1155.StakingCondition}
-    mapping(uint256 => mapping(uint256 => StakingCondition)) private stakingConditions;
+    mapping(uint256 => mapping(uint64 => StakingCondition)) private stakingConditions;
 
     /// @dev Mapping from token-id to list of accounts that have staked that token-id.
     mapping(uint256 => address[]) public stakersArray;
@@ -61,7 +61,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
      *  @param _tokenId   ERC1155 token-id to stake.
      *  @param _amount    Amount to stake.
      */
-    function stake(uint256 _tokenId, uint256 _amount) external nonReentrant {
+    function stake(uint256 _tokenId, uint64 _amount) external nonReentrant {
         _stake(_tokenId, _amount);
     }
 
@@ -73,7 +73,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
      *  @param _tokenId   ERC1155 token-id to withdraw.
      *  @param _amount    Amount to withdraw.
      */
-    function withdraw(uint256 _tokenId, uint256 _amount) external nonReentrant {
+    function withdraw(uint256 _tokenId, uint64 _amount) external nonReentrant {
         _withdraw(_tokenId, _amount);
     }
 
@@ -104,7 +104,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
             revert("Not authorized");
         }
 
-        uint256 _nextConditionId = nextConditionId[_tokenId];
+        uint64 _nextConditionId = nextConditionId[_tokenId];
         StakingCondition memory condition = _nextConditionId == 0
             ? defaultCondition[nextDefaultConditionId - 1]
             : stakingConditions[_tokenId][_nextConditionId - 1];
@@ -130,7 +130,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
             revert("Not authorized");
         }
 
-        uint256 _nextConditionId = nextConditionId[_tokenId];
+        uint64 _nextConditionId = nextConditionId[_tokenId];
         StakingCondition memory condition = _nextConditionId == 0
             ? defaultCondition[nextDefaultConditionId - 1]
             : stakingConditions[_tokenId][_nextConditionId - 1];
@@ -242,13 +242,13 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     }
 
     function getTimeUnit(uint256 _tokenId) public view returns (uint256 _timeUnit) {
-        uint256 _nextConditionId = nextConditionId[_tokenId];
+        uint64 _nextConditionId = nextConditionId[_tokenId];
         require(_nextConditionId != 0, "Time unit not set. Check default time unit.");
         _timeUnit = stakingConditions[_tokenId][_nextConditionId - 1].timeUnit;
     }
 
     function getRewardsPerUnitTime(uint256 _tokenId) public view returns (uint256 _rewardsPerUnitTime) {
-        uint256 _nextConditionId = nextConditionId[_tokenId];
+        uint64 _nextConditionId = nextConditionId[_tokenId];
         require(_nextConditionId != 0, "Rewards not set. Check default rewards.");
         _rewardsPerUnitTime = stakingConditions[_tokenId][_nextConditionId - 1].rewardsPerUnitTime;
     }
@@ -266,7 +266,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Staking logic. Override to add custom logic.
-    function _stake(uint256 _tokenId, uint256 _amount) internal virtual {
+    function _stake(uint256 _tokenId, uint64 _amount) internal virtual {
         require(_amount != 0, "Staking 0 tokens");
         address _stakingToken = stakingToken;
 
@@ -276,7 +276,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
             stakersArray[_tokenId].push(_stakeMsgSender());
             stakers[_tokenId][_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
 
-            uint256 _conditionId = nextConditionId[_tokenId];
+            uint64 _conditionId = nextConditionId[_tokenId];
             stakers[_tokenId][_stakeMsgSender()].conditionIdOflastUpdate = _conditionId == 0
                 ? nextDefaultConditionId - 1
                 : _conditionId - 1;
@@ -302,7 +302,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     }
 
     /// @dev Withdraw logic. Override to add custom logic.
-    function _withdraw(uint256 _tokenId, uint256 _amount) internal virtual {
+    function _withdraw(uint256 _tokenId, uint64 _amount) internal virtual {
         uint256 _amountStaked = stakers[_tokenId][_stakeMsgSender()].amountStaked;
         require(_amount != 0, "Withdrawing 0 tokens");
         require(_amountStaked >= _amount, "Withdrawing more than staked");
@@ -336,7 +336,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         stakers[_tokenId][_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
         stakers[_tokenId][_stakeMsgSender()].unclaimedRewards = 0;
 
-        uint256 _conditionId = nextConditionId[_tokenId];
+        uint64 _conditionId = nextConditionId[_tokenId];
         stakers[_tokenId][_stakeMsgSender()].conditionIdOflastUpdate = _conditionId == 0
             ? nextDefaultConditionId - 1
             : _conditionId - 1;
@@ -361,7 +361,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         stakers[_tokenId][_staker].unclaimedRewards += rewards;
         stakers[_tokenId][_staker].timeOfLastUpdate = uint80(block.timestamp);
 
-        uint256 _conditionId = nextConditionId[_tokenId];
+        uint64 _conditionId = nextConditionId[_tokenId];
         stakers[_tokenId][_staker].conditionIdOflastUpdate = _conditionId == 0
             ? nextDefaultConditionId - 1
             : _conditionId - 1;
@@ -374,10 +374,10 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         uint256 _rewardsPerUnitTime
     ) internal virtual {
         require(_timeUnit != 0, "time-unit can't be 0");
-        uint256 conditionId = nextConditionId[_tokenId];
+        uint64 conditionId = nextConditionId[_tokenId];
 
         if (conditionId == 0) {
-            uint256 _nextDefaultConditionId = nextDefaultConditionId;
+            uint64 _nextDefaultConditionId = nextDefaultConditionId;
             for (; conditionId < _nextDefaultConditionId; conditionId += 1) {
                 StakingCondition memory _defaultCondition = defaultCondition[conditionId];
 
@@ -405,7 +405,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     /// @dev Set default staking conditions.
     function _setDefaultStakingCondition(uint80 _timeUnit, uint256 _rewardsPerUnitTime) internal virtual {
         require(_timeUnit != 0, "time-unit can't be 0");
-        uint256 conditionId = nextDefaultConditionId;
+        uint64 conditionId = nextDefaultConditionId;
         nextDefaultConditionId += 1;
 
         defaultCondition[conditionId] = StakingCondition({
@@ -423,13 +423,13 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     /// @dev Reward calculation logic. Override to implement custom logic.
     function _calculateRewards(uint256 _tokenId, address _staker) internal view virtual returns (uint256 _rewards) {
         Staker memory staker = stakers[_tokenId][_staker];
-        uint256 _stakerConditionId = staker.conditionIdOflastUpdate;
-        uint256 _nextConditionId = nextConditionId[_tokenId];
+        uint64 _stakerConditionId = staker.conditionIdOflastUpdate;
+        uint64 _nextConditionId = nextConditionId[_tokenId];
 
         if (_nextConditionId == 0) {
             _nextConditionId = nextDefaultConditionId;
 
-            for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
+            for (uint64 i = _stakerConditionId; i < _nextConditionId; i += 1) {
                 StakingCondition memory condition = defaultCondition[i];
 
                 uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
@@ -447,7 +447,7 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
                 _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
             }
         } else {
-            for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
+            for (uint64 i = _stakerConditionId; i < _nextConditionId; i += 1) {
                 StakingCondition memory condition = stakingConditions[_tokenId][i];
 
                 uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;

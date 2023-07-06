@@ -1058,7 +1058,7 @@ contract Macro_EditionStakeTest is BaseTest {
 
     uint256 internal defaultTimeUnit;
     uint256 internal defaultRewardsPerUnitTime;
-    uint256 internal tokenAmount = 100;
+    uint64 internal tokenAmount = 100;
     address internal stakerOne = address(0x345);
     address internal stakerTwo = address(0x567);
 
