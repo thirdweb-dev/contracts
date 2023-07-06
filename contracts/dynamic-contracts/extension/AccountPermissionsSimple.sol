@@ -113,8 +113,8 @@ abstract contract AccountPermissionsSimple is IAccountPermissionsSimple, EIP712 
         SignerPermissionsStatic memory permissions = data.signerPermissions[signer];
 
         return
-            permissions.permissionStartTimestamp <= block.timestamp &&
-            block.timestamp < permissions.permissionEndTimestamp &&
+            permissions.startTimestamp <= block.timestamp &&
+            block.timestamp < permissions.endTimestamp &&
             data.approvedTargets[signer].length() > 0;
     }
 
@@ -128,8 +128,8 @@ abstract contract AccountPermissionsSimple is IAccountPermissionsSimple, EIP712 
                 signer,
                 data.approvedTargets[signer].values(),
                 permissions.nativeTokenLimitPerTransaction,
-                permissions.permissionStartTimestamp,
-                permissions.permissionEndTimestamp
+                permissions.startTimestamp,
+                permissions.endTimestamp
             );
     }
 
@@ -160,8 +160,8 @@ abstract contract AccountPermissionsSimple is IAccountPermissionsSimple, EIP712 
                 signer,
                 data.approvedTargets[signer].values(),
                 permissions.nativeTokenLimitPerTransaction,
-                permissions.permissionStartTimestamp,
-                permissions.permissionEndTimestamp
+                permissions.startTimestamp,
+                permissions.endTimestamp
             );
         }
     }
@@ -198,8 +198,8 @@ abstract contract AccountPermissionsSimple is IAccountPermissionsSimple, EIP712 
                 signer,
                 data.approvedTargets[signer].values(),
                 permissions.nativeTokenLimitPerTransaction,
-                permissions.permissionStartTimestamp,
-                permissions.permissionEndTimestamp
+                permissions.startTimestamp,
+                permissions.endTimestamp
             );
         }
     }

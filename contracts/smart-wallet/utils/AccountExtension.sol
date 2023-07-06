@@ -6,7 +6,7 @@ pragma solidity ^0.8.11;
 /* solhint-disable reason-string */
 
 // Extensions
-import "../../dynamic-contracts/extension/AccountPermissions.sol";
+import "../../dynamic-contracts/extension/AccountPermissionsSimple.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
 import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
 import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
@@ -25,7 +25,7 @@ import "./AccountCore.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder, ERC1155Holder {
+contract AccountExtension is ContractMetadata, AccountPermissionsSimple, ERC721Holder, ERC1155Holder {
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
@@ -124,5 +124,5 @@ contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder,
         return isAdmin(msg.sender);
     }
 
-    function _afterChangeRole(RoleRequest calldata) internal virtual override {}
+    function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {}
 }

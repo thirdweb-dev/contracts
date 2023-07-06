@@ -10,7 +10,7 @@ import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
 
 // Smart wallet implementation
-import "./DynamicAccount.sol";
+import { DynamicAccount, IEntryPoint } from "./DynamicAccount.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |

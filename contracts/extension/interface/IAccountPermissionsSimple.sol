@@ -37,28 +37,28 @@ interface IAccountPermissionsSimple {
      *  @param signer The address of the signer.
      *  @param approvedTargets The list of approved targets that a role holder can call using the smart wallet.
      *  @param nativeTokenLimitPerTransaction The maximum value that can be transferred by a role holder in a single transaction.
-     *  @param permissionStartTimestamp The UNIX timestamp at and after which a signer has permission to use the smart wallet.
-     *  @param permissionEndTimestamp The UNIX timestamp at and after which a signer no longer has permission to use the smart wallet.
+     *  @param startTimestamp The UNIX timestamp at and after which a signer has permission to use the smart wallet.
+     *  @param endTimestamp The UNIX timestamp at and after which a signer no longer has permission to use the smart wallet.
      */
     struct SignerPermissions {
         address signer;
         address[] approvedTargets;
         uint256 nativeTokenLimitPerTransaction;
-        uint128 permissionStartTimestamp;
-        uint128 permissionEndTimestamp;
+        uint128 startTimestamp;
+        uint128 endTimestamp;
     }
 
     /**
      *  @notice Internal struct for storing permissions for a signer (without approved targets).
      *
      *  @param nativeTokenLimitPerTransaction The maximum value that can be transferred by a role holder in a single transaction.
-     *  @param permissionStartTimestamp The UNIX timestamp at and after which a signer has permission to use the smart wallet.
-     *  @param permissionEndTimestamp The UNIX timestamp at and after which a signer no longer has permission to use the smart wallet.
+     *  @param startTimestamp The UNIX timestamp at and after which a signer has permission to use the smart wallet.
+     *  @param endTimestamp The UNIX timestamp at and after which a signer no longer has permission to use the smart wallet.
      */
     struct SignerPermissionsStatic {
         uint256 nativeTokenLimitPerTransaction;
-        uint128 permissionStartTimestamp;
-        uint128 permissionEndTimestamp;
+        uint128 startTimestamp;
+        uint128 endTimestamp;
     }
 
     /*///////////////////////////////////////////////////////////////
