@@ -126,7 +126,7 @@ contract LoyaltyPoints is
         signer = _processRequest(_req, _signature);
         address receiver = _req.to;
 
-        _collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
+        _collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.price);
         _mintTo(receiver, _req.quantity);
 
         emit TokensMintedWithSignature(signer, receiver, _req);
@@ -167,19 +167,15 @@ contract LoyaltyPoints is
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _price
     ) internal {
-        if (_pricePerToken == 0) {
+        if (_price == 0) {
             return;
         }
 
-        // `_pricePerToken` is interpreted as price per 1 ether unit of the ERC20 tokens.
-        uint256 totalPrice = (_quantityToClaim * _pricePerToken) / 1 ether;
-        require(totalPrice > 0, "quantity too low");
-
         bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            validMsgValue = msg.value == totalPrice;
+            validMsgValue = msg.value == _price;
         } else {
             validMsgValue = msg.value == 0;
         }
@@ -196,13 +192,13 @@ contract LoyaltyPoints is
         } else {
             uint16 platformFeeBps;
             (feeRecipient, platformFeeBps) = getPlatformFeeInfo();
-            fees = (totalPrice * platformFeeBps) / MAX_BPS;
+            fees = (_price * platformFeeBps) / MAX_BPS;
         }
 
-        require(totalPrice >= fees, "!F");
+        require(_price >= fees, "!F");
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), feeRecipient, fees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - fees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, _price - fees);
     }
 
     /// @dev Runs on every transfer.
