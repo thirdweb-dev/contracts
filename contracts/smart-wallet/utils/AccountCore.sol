@@ -16,7 +16,7 @@ import "../../dynamic-contracts/extension/AccountPermissions.sol";
 
 // Utils
 import "./BaseAccountFactory.sol";
-import "../non-upgradeable/Account.sol";
+import { Account } from "../non-upgradeable/Account.sol";
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 
 import "../interfaces/IAccountCore.sol";

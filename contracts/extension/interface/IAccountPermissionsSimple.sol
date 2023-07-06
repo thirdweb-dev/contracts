@@ -34,12 +34,14 @@ interface IAccountPermissionsSimple {
     /**
      *  @notice The permissions that a signer has to use the smart wallet.
      *
+     *  @param signer The address of the signer.
      *  @param approvedTargets The list of approved targets that a role holder can call using the smart wallet.
      *  @param nativeTokenLimitPerTransaction The maximum value that can be transferred by a role holder in a single transaction.
      *  @param permissionStartTimestamp The UNIX timestamp at and after which a signer has permission to use the smart wallet.
      *  @param permissionEndTimestamp The UNIX timestamp at and after which a signer no longer has permission to use the smart wallet.
      */
     struct SignerPermissions {
+        address signer;
         address[] approvedTargets;
         uint256 nativeTokenLimitPerTransaction;
         uint128 permissionStartTimestamp;
@@ -85,6 +87,15 @@ interface IAccountPermissionsSimple {
 
     /// @notice Returns the restrictions under which a signer can use the smart wallet.
     function getPermissionsForSigner(address signer) external view returns (SignerPermissions memory permissions);
+
+    /// @notice Returns all active and inactive signers of the account.
+    function getAllSigners() external view returns (SignerPermissions[] memory signers);
+
+    /// @notice Returns all signers with active permissions to use the account.
+    function getAllActiveSigners() external view returns (SignerPermissions[] memory signers);
+
+    /// @notice Returns all admins of the account.
+    function getAllAdmins() external view returns (address[] memory admins);
 
     /// @dev Verifies that a request is signed by an authorized account.
     function verifySignerPermissionRequest(SignerPermissionRequest calldata req, bytes calldata signature)
