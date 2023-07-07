@@ -41,9 +41,6 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
     ///@dev Mapping from token-id and condition Id to staking condition. See {struct IStaking1155.StakingCondition}
     mapping(uint256 => mapping(uint64 => StakingCondition)) private stakingConditions;
 
-    /// @dev Mapping from token-id to list of accounts that have staked that token-id.
-    mapping(uint256 => address[]) public stakersArray;
-
     constructor(address _stakingToken) ReentrancyGuard() {
         require(address(_stakingToken) != address(0), "address 0");
         stakingToken = _stakingToken;
@@ -273,7 +270,6 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
         if (stakers[_tokenId][_stakeMsgSender()].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(_tokenId, _stakeMsgSender());
         } else {
-            stakersArray[_tokenId].push(_stakeMsgSender());
             stakers[_tokenId][_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
 
             uint64 _conditionId = nextConditionId[_tokenId];
@@ -309,16 +305,6 @@ abstract contract Staking1155 is ReentrancyGuard, IStaking1155 {
 
         _updateUnclaimedRewardsForStaker(_tokenId, _stakeMsgSender());
 
-        if (_amountStaked == _amount) {
-            address[] memory _stakersArray = stakersArray[_tokenId];
-            for (uint256 i = 0; i < _stakersArray.length; ++i) {
-                if (_stakersArray[i] == _stakeMsgSender()) {
-                    stakersArray[_tokenId][i] = _stakersArray[_stakersArray.length - 1];
-                    stakersArray[_tokenId].pop();
-                    break;
-                }
-            }
-        }
         stakers[_tokenId][_stakeMsgSender()].amountStaked -= _amount;
 
         IERC1155(stakingToken).safeTransferFrom(address(this), _stakeMsgSender(), _tokenId, _amount, "");
