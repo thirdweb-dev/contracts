@@ -189,12 +189,10 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
      *  @return _tokensStaked   Amount of tokens staked for given token-id.
      *  @return _rewards        Available reward amount.
      */
-    function getStakeInfoForToken(uint256 _tokenId, address _staker)
-        external
-        view
-        virtual
-        returns (uint256 _tokensStaked, uint256 _rewards)
-    {
+    function getStakeInfoForToken(
+        uint256 _tokenId,
+        address _staker
+    ) external view virtual returns (uint256 _tokensStaked, uint256 _rewards) {
         _tokensStaked = stakers[_tokenId][_staker].amountStaked;
         _rewards = _availableRewards(_tokenId, _staker);
     }
@@ -207,15 +205,13 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
      *  @return _tokenAmounts   Amount of each token-id staked.
      *  @return _totalRewards   Total rewards available.
      */
-    function getStakeInfo(address _staker)
+    function getStakeInfo(
+        address _staker
+    )
         external
         view
         virtual
-        returns (
-            uint256[] memory _tokensStaked,
-            uint256[] memory _tokenAmounts,
-            uint256 _totalRewards
-        )
+        returns (uint256[] memory _tokensStaked, uint256[] memory _tokenAmounts, uint256 _totalRewards)
     {
         uint256[] memory _indexedTokens = indexedTokens;
         uint256[] memory _stakedAmounts = new uint256[](_indexedTokens.length);
@@ -267,7 +263,6 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
     /// @dev Staking logic. Override to add custom logic.
     function _stake(uint256 _tokenId, uint64 _amount) internal virtual {
         require(_amount != 0, "Staking 0 tokens");
-        address _stakingToken = stakingToken;
 
         if (stakers[_tokenId][_stakeMsgSender()].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(_tokenId, _stakeMsgSender());
@@ -280,9 +275,8 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
                 : _conditionId - 1;
         }
 
-        
         isStaking = 2;
-        IERC1155(_stakingToken).safeTransferFrom(_stakeMsgSender(), address(this), _tokenId, _amount, "");
+        IERC1155(stakingToken).safeTransferFrom(_stakeMsgSender(), address(this), _tokenId, _amount, "");
         isStaking = 1;
         // stakerAddress[_tokenIds[i]] = _stakeMsgSender();
         stakers[_tokenId][_stakeMsgSender()].amountStaked += _amount;
@@ -319,9 +313,11 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         stakers[_tokenId][_stakeMsgSender()].unclaimedRewards = 0;
 
         uint64 _conditionId = nextConditionId[_tokenId];
-        stakers[_tokenId][_stakeMsgSender()].conditionIdOflastUpdate = _conditionId == 0
-            ? nextDefaultConditionId - 1
-            : _conditionId - 1;
+        unchecked {
+            stakers[_tokenId][_stakeMsgSender()].conditionIdOflastUpdate = _conditionId == 0
+                ? nextDefaultConditionId - 1
+                : _conditionId - 1;
+        }
 
         _mintRewards(_stakeMsgSender(), rewards);
 
@@ -344,17 +340,15 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         stakers[_tokenId][_staker].timeOfLastUpdate = uint80(block.timestamp);
 
         uint64 _conditionId = nextConditionId[_tokenId];
-        stakers[_tokenId][_staker].conditionIdOflastUpdate = _conditionId == 0
-            ? nextDefaultConditionId - 1
-            : _conditionId - 1;
+        unchecked {
+            stakers[_tokenId][_staker].conditionIdOflastUpdate = _conditionId == 0
+                ? nextDefaultConditionId - 1
+                : _conditionId - 1;
+        }
     }
 
     /// @dev Set staking conditions, for a token-Id.
-    function _setStakingCondition(
-        uint256 _tokenId,
-        uint80 _timeUnit,
-        uint256 _rewardsPerUnitTime
-    ) internal virtual {
+    function _setStakingCondition(uint256 _tokenId, uint80 _timeUnit, uint256 _rewardsPerUnitTime) internal virtual {
         require(_timeUnit != 0, "time-unit can't be 0");
         uint64 conditionId = nextConditionId[_tokenId];
 
@@ -427,6 +421,7 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
                 );
 
                 _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
+                
             }
         } else {
             for (uint64 i = _stakerConditionId; i < _nextConditionId; i += 1) {
