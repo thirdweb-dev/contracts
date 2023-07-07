@@ -30,7 +30,9 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint) BaseAccountFactory(address(new Account(_entrypoint, address(this)))) {
+    constructor(IEntryPoint _entrypoint)
+        BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint))
+    {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 

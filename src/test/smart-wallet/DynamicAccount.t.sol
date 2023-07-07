@@ -247,6 +247,10 @@ contract DynamicAccountTest is BaseTest {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
         accountFactory.createAccount(accountAdmin, data);
+
+        address[] memory allAccounts = accountFactory.getAllAccounts();
+        assertEq(allAccounts.length, 1);
+        assertEq(allAccounts[0], sender);
     }
 
     /// @dev Create an account via Entrypoint.
@@ -265,6 +269,10 @@ contract DynamicAccountTest is BaseTest {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+
+        address[] memory allAccounts = accountFactory.getAllAccounts();
+        assertEq(allAccounts.length, 1);
+        assertEq(allAccounts[0], sender);
     }
 
     /*///////////////////////////////////////////////////////////////

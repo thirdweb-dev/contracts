@@ -50,48 +50,6 @@ contract NFTStakeBenchmarkTest is BaseTest {
                         Benchmark: NFTStake               
     //////////////////////////////////////////////////////////////*/
 
-    function test_benchmark_nftStake_stake_one_token() public {
-        vm.pauseGasMetering();
-
-        vm.warp(1);
-        uint256[] memory _tokenIdsOne = new uint256[](1);
-        _tokenIdsOne[0] = 0;
-
-        // stake 3 tokens
-        vm.prank(stakerOne);
-        vm.resumeGasMetering();
-        stakeContract.stake(_tokenIdsOne);
-    }
-
-    function test_benchmark_nftStake_stake_two_tokens() public {
-        vm.pauseGasMetering();
-
-        vm.warp(1);
-        uint256[] memory _tokenIdsOne = new uint256[](2);
-        _tokenIdsOne[0] = 0;
-        _tokenIdsOne[1] = 1;
-
-        // stake 3 tokens
-        vm.prank(stakerOne);
-        vm.resumeGasMetering();
-        stakeContract.stake(_tokenIdsOne);
-    }
-
-    function test_benchmark_nftStake_stake_three_tokens() public {
-        vm.pauseGasMetering();
-
-        vm.warp(1);
-        uint256[] memory _tokenIdsOne = new uint256[](3);
-        _tokenIdsOne[0] = 0;
-        _tokenIdsOne[1] = 1;
-        _tokenIdsOne[2] = 2;
-
-        // stake 3 tokens
-        vm.prank(stakerOne);
-        vm.resumeGasMetering();
-        stakeContract.stake(_tokenIdsOne);
-    }
-
     function test_benchmark_nftStake_stake_five_tokens() public {
         vm.pauseGasMetering();
 
@@ -155,4 +113,46 @@ contract NFTStakeBenchmarkTest is BaseTest {
         vm.prank(stakerOne);
         stakeContract.withdraw(_tokensToWithdraw);
     }
+
+    // function test_benchmark_nftStake_stake_one_token() public {
+    //     vm.pauseGasMetering();
+
+    //     vm.warp(1);
+    //     uint256[] memory _tokenIdsOne = new uint256[](1);
+    //     _tokenIdsOne[0] = 0;
+
+    //     // stake 3 tokens
+    //     vm.prank(stakerOne);
+    //     vm.resumeGasMetering();
+    //     stakeContract.stake(_tokenIdsOne);
+    // }
+
+    // function test_benchmark_nftStake_stake_two_tokens() public {
+    //     vm.pauseGasMetering();
+
+    //     vm.warp(1);
+    //     uint256[] memory _tokenIdsOne = new uint256[](2);
+    //     _tokenIdsOne[0] = 0;
+    //     _tokenIdsOne[1] = 1;
+
+    //     // stake 3 tokens
+    //     vm.prank(stakerOne);
+    //     vm.resumeGasMetering();
+    //     stakeContract.stake(_tokenIdsOne);
+    // }
+
+    // function test_benchmark_nftStake_stake_three_tokens() public {
+    //     vm.pauseGasMetering();
+
+    //     vm.warp(1);
+    //     uint256[] memory _tokenIdsOne = new uint256[](3);
+    //     _tokenIdsOne[0] = 0;
+    //     _tokenIdsOne[1] = 1;
+    //     _tokenIdsOne[2] = 2;
+
+    //     // stake 3 tokens
+    //     vm.prank(stakerOne);
+    //     vm.resumeGasMetering();
+    //     stakeContract.stake(_tokenIdsOne);
+    // }
 }

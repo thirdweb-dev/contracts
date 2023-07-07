@@ -6,7 +6,7 @@ pragma solidity ^0.8.11;
 /* solhint-disable reason-string */
 
 // Base
-import "./../utils/BaseAccount.sol";
+import "../utils/BaseAccount.sol";
 
 // Extensions
 import "../../extension/Multicall.sol";
@@ -19,7 +19,7 @@ import "../../eip/ERC1271.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
-import "./AccountFactory.sol";
+import "../utils/BaseAccountFactory.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -176,6 +176,7 @@ contract Account is
         uint256 _value,
         bytes calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
+        _registerOnFactory();
         _call(_target, _value, _calldata);
     }
 
@@ -185,6 +186,8 @@ contract Account is
         uint256[] calldata _value,
         bytes[] calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
+        _registerOnFactory();
+
         require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
         for (uint256 i = 0; i < _target.length; i++) {
             _call(_target[i], _value[i], _calldata[i]);
@@ -204,6 +207,14 @@ contract Account is
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev Registers the account on the factory if it hasn't been registered yet.
+    function _registerOnFactory() internal virtual {
+        BaseAccountFactory factoryContract = BaseAccountFactory(factory);
+        if (!factoryContract.isRegistered(address(this))) {
+            factoryContract.onRegister();
+        }
+    }
 
     /// @dev Calls a target contract and reverts if it fails.
     function _call(
@@ -268,9 +279,9 @@ contract Account is
         super._setAdmin(_account, _isAdmin);
         if (factory.code.length > 0) {
             if (_isAdmin) {
-                AccountFactory(factory).onSignerAdded(_account);
+                BaseAccountFactory(factory).onSignerAdded(_account);
             } else {
-                AccountFactory(factory).onSignerRemoved(_account);
+                BaseAccountFactory(factory).onSignerRemoved(_account);
             }
         }
     }
@@ -279,9 +290,9 @@ contract Account is
     function _afterChangeRole(RoleRequest calldata _req) internal virtual override {
         if (factory.code.length > 0) {
             if (_req.action == RoleAction.GRANT) {
-                AccountFactory(factory).onSignerAdded(_req.target);
+                BaseAccountFactory(factory).onSignerAdded(_req.target);
             } else if (_req.action == RoleAction.REVOKE) {
-                AccountFactory(factory).onSignerRemoved(_req.target);
+                BaseAccountFactory(factory).onSignerRemoved(_req.target);
             }
         }
     }
