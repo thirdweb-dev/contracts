@@ -116,6 +116,20 @@ The thirdweb registry (`TWRegistry`) and factory (`TWFactory`) have been deploye
 - `TWFactory`: [0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0](https://blockscan.com/address/0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0)
 - `TWFactory` (Fantom mainnet): [0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B](https://blockscan.com/address/0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B)
 
+## Contract Audits
+
+- [Audit 1](audit-reports/audit-1.pdf)
+- [Audit 2](audit-reports/audit-2.pdf)
+- [Audit 3](audit-reports/audit-3.pdf)
+- [Audit 4](audit-reports/audit-4.pdf)
+- [Audit 5](audit-reports/audit-5.pdf)
+- [Audit 6](audit-reports/audit-6.pdf)
+- [Audit 7](audit-reports/audit-7.pdf)
+- [Audit 8](audit-reports/audit-8.pdf)
+- [Audit 9](audit-reports/audit-9.pdf)
+- [Audit 10](audit-reports/audit-10.pdf)
+- [Audit 11](audit-reports/audit-11.pdf)
+- [Audit 12](audit-reports/audit-12.pdf)
 
 ## Bug reports
 

@@ -36,7 +36,7 @@ const chainIds = {
 };
 
 // Ensure that we have all the environment variables we need.
-const testPrivateKey: string = process.env.TEST_PRIVATE_KEY || "";
+const testPrivateKey: string = process.env.PRIVATE_KEY || "";
 const alchemyKey: string = process.env.ALCHEMY_KEY || "";
 const explorerScanKey: string = process.env.SCAN_API_KEY || "";
 

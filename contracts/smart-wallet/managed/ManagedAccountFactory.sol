@@ -2,15 +2,14 @@
 pragma solidity ^0.8.12;
 
 // Utils
-
-import "../utils/BaseRouter.sol";
-import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
+import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 import "../utils/BaseAccountFactory.sol";
-import "../utils/BaseAccount.sol";
-import "../../openzeppelin-presets/proxy/Clones.sol";
+
+// Extensions
+import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
+import "../../dynamic-contracts/extension/ContractMetadata.sol";
 
 // Smart wallet implementation
-import "../utils/AccountExtension.sol";
 import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
@@ -22,30 +21,20 @@ import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, BaseRouter {
-    /*///////////////////////////////////////////////////////////////
-                                State
-    //////////////////////////////////////////////////////////////*/
-
-    address public immutable defaultExtension;
-
+contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable, BaseRouter {
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint) BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint)))) {
-        defaultExtension = address(new AccountExtension(address(_entrypoint), address(this)));
+    constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
+        BaseRouter(_defaultExtensions)
+        BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint, address(this)))), address(_entrypoint))
+    {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    /*///////////////////////////////////////////////////////////////
-                            View functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the extension implementation address stored in router, for the given function.
-    function getImplementationForFunction(bytes4 _functionSelector) public view override returns (address) {
-        address impl = getExtensionForFunction(_functionSelector).implementation;
-        return impl != address(0) ? impl : defaultExtension;
+    receive() external payable override {
+        revert("Cannot accept ether.");
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -63,6 +52,11 @@ contract ManagedAccountFactory is BaseAccountFactory, PermissionsEnumerable, Bas
 
     /// @dev Returns whether an extension can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }

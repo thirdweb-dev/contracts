@@ -10,40 +10,6 @@
 
 ## Methods
 
-### DEFAULT_ADMIN_ROLE
-
-```solidity
-function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
-### SIGNER_ROLE
-
-```solidity
-function SIGNER_ROLE() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
 ### addDeposit
 
 ```solidity
@@ -54,6 +20,23 @@ Deposit funds for this account in Entrypoint.
 
 
 
+
+### changeRole
+
+```solidity
+function changeRole(IAccountPermissions.RoleRequest _req, bytes _signature) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _req | IAccountPermissions.RoleRequest | undefined |
+| _signature | bytes | undefined |
 
 ### contractURI
 
@@ -142,6 +125,28 @@ EIP 4337 factory for this contract.
 |---|---|---|
 | _0 | address | undefined |
 
+### getAllRoleMembers
+
+```solidity
+function getAllRoleMembers(bytes32 _role) external view returns (address[])
+```
+
+Returns all accounts that have a role.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _role | bytes32 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address[] | undefined |
+
 ### getDeposit
 
 ```solidity
@@ -176,135 +181,49 @@ Return the account nonce. This method returns the next sequential nonce. For a n
 |---|---|---|
 | _0 | uint256 | undefined |
 
-### getRoleAdmin
+### getRoleRestrictions
 
 ```solidity
-function getRoleAdmin(bytes32 role) external view returns (bytes32)
+function getRoleRestrictions(bytes32 _role) external view returns (struct IAccountPermissions.RoleRestrictions)
 ```
 
-Returns the admin role that controls the specified role.
+Returns the role restrictions for a given role.
 
-*See {grantRole} and {revokeRole}.                  To change a role&#39;s admin, use {_setRoleAdmin}.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+| _role | bytes32 | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | bytes32 | undefined |
+| _0 | IAccountPermissions.RoleRestrictions | undefined |
 
-### getRoleMember
+### getRoleRestrictionsForAccount
 
 ```solidity
-function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
+function getRoleRestrictionsForAccount(address _account) external view returns (struct IAccountPermissions.RoleRestrictions)
 ```
 
-Returns the role-member from a list of members for a role,                  at a given index.
+Returns the role held by a given account along with its restrictions.
 
-*Returns `member` who has `role`, at `index` of role-members list.                  See struct {RoleMembers}, and mapping {roleMembers}*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| index | uint256 | Index in list of current members for the role. |
+| _account | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| member | address |  Address of account that has `role` |
-
-### getRoleMemberCount
-
-```solidity
-function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
-```
-
-Returns total number of accounts that have a role.
-
-*Returns `count` of accounts that have `role`.                  See struct {RoleMembers}, and mapping {roleMembers}*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| count | uint256 |   Total number of accounts that have `role` |
-
-### grantRole
-
-```solidity
-function grantRole(bytes32 role, address account) external nonpayable
-```
-
-Grants a role to an account, if not previously granted.
-
-*Caller must have admin role for the `role`.                  Emits {RoleGranted Event}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account to which the role is being granted. |
-
-### hasRole
-
-```solidity
-function hasRole(bytes32 role, address account) external view returns (bool)
-```
-
-Checks whether an account has a particular role.
-
-*Returns `true` if `account` has been granted `role`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account for which the role is being checked. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
-### hasRoleWithSwitch
-
-```solidity
-function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
-```
-
-Checks whether an account has a particular role;                  role restrictions can be swtiched on and off.
-
-*Returns `true` if `account` has been granted `role`.                  Role restrictions can be swtiched on and off:                      - If address(0) has ROLE, then the ROLE restrictions                        don&#39;t apply.                      - If address(0) does not have ROLE, then the ROLE                        restrictions will apply.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account for which the role is being checked. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
+| _0 | IAccountPermissions.RoleRestrictions | undefined |
 
 ### initialize
 
@@ -322,6 +241,28 @@ Initializes the smart contract wallet.
 |---|---|---|
 | _defaultAdmin | address | undefined |
 | _1 | bytes | undefined |
+
+### isAdmin
+
+```solidity
+function isAdmin(address _account) external view returns (bool)
+```
+
+Returns whether the given account is an admin.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### isValidSignature
 
@@ -349,10 +290,10 @@ See EIP-1271
 ### isValidSigner
 
 ```solidity
-function isValidSigner(address _signer) external view returns (bool)
+function isValidSigner(address _signer, UserOperation _userOp) external view returns (bool)
 ```
 
-Returns whether a signer is authorized to perform transactions using the wallet.
+
 
 
 
@@ -361,6 +302,7 @@ Returns whether a signer is authorized to perform transactions using the wallet.
 | Name | Type | Description |
 |---|---|---|
 | _signer | address | undefined |
+| _userOp | UserOperation | undefined |
 
 #### Returns
 
@@ -467,39 +409,22 @@ function onERC721Received(address, address, uint256, bytes) external nonpayable 
 |---|---|---|
 | _0 | bytes4 | undefined |
 
-### renounceRole
+### setAdmin
 
 ```solidity
-function renounceRole(bytes32 role, address account) external nonpayable
+function setAdmin(address _account, bool _isAdmin) external nonpayable
 ```
 
-Revokes role from the account.
+Adds / removes an account as an admin.
 
-*Caller must have the `role`, with caller being the same as `account`.                  Emits {RoleRevoked Event}.*
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account from which the role is being revoked. |
-
-### revokeRole
-
-```solidity
-function revokeRole(bytes32 role, address account) external nonpayable
-```
-
-Revokes role from an account.
-
-*Caller must have admin role for the `role`.                  Emits {RoleRevoked Event}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account from which the role is being revoked. |
+| _account | address | undefined |
+| _isAdmin | bool | undefined |
 
 ### setContractURI
 
@@ -516,6 +441,22 @@ Lets a contract admin set the URI for contract-level metadata.
 | Name | Type | Description |
 |---|---|---|
 | _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+
+### setRoleRestrictions
+
+```solidity
+function setRoleRestrictions(IAccountPermissions.RoleRestrictions _restrictions) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _restrictions | IAccountPermissions.RoleRestrictions | undefined |
 
 ### supportsInterface
 
@@ -563,6 +504,30 @@ function validateUserOp(UserOperation userOp, bytes32 userOpHash, uint256 missin
 |---|---|---|
 | validationData | uint256 | undefined |
 
+### verifyRoleRequest
+
+```solidity
+function verifyRoleRequest(IAccountPermissions.RoleRequest req, bytes signature) external view returns (bool success, address signer)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| req | IAccountPermissions.RoleRequest | undefined |
+| signature | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| success | bool | undefined |
+| signer | address | undefined |
+
 ### withdrawDepositTo
 
 ```solidity
@@ -583,6 +548,23 @@ Withdraw funds for this account from Entrypoint.
 
 
 ## Events
+
+### AdminUpdated
+
+```solidity
+event AdminUpdated(address indexed account, bool isAdmin)
+```
+
+Emitted when an admin is set or removed.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| account `indexed` | address | undefined |
+| isAdmin  | bool | undefined |
 
 ### ContractURIUpdated
 
@@ -617,31 +599,13 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-### RoleAdminChanged
+### RoleAssignment
 
 ```solidity
-event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
+event RoleAssignment(bytes32 indexed role, address indexed account, address indexed signer, IAccountPermissions.RoleRequest request)
 ```
 
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| previousAdminRole `indexed` | bytes32 | undefined |
-| newAdminRole `indexed` | bytes32 | undefined |
-
-### RoleGranted
-
-```solidity
-event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
-```
-
-
+Emitted when a role is granted / revoked by an authorized party.
 
 
 
@@ -651,15 +615,16 @@ event RoleGranted(bytes32 indexed role, address indexed account, address indexed
 |---|---|---|
 | role `indexed` | bytes32 | undefined |
 | account `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
+| signer `indexed` | address | undefined |
+| request  | IAccountPermissions.RoleRequest | undefined |
 
-### RoleRevoked
+### RoleUpdated
 
 ```solidity
-event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
+event RoleUpdated(bytes32 indexed role, IAccountPermissions.RoleRestrictions restrictions)
 ```
 
-
+Emitted when the restrictions for a given role are updated.
 
 
 
@@ -668,8 +633,7 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 | Name | Type | Description |
 |---|---|---|
 | role `indexed` | bytes32 | undefined |
-| account `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
+| restrictions  | IAccountPermissions.RoleRestrictions | undefined |
 
 
 

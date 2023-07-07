@@ -4,6 +4,9 @@ pragma solidity ^0.8.0;
 // Test utils
 import "../utils/BaseTest.sol";
 import "lib/dynamic-contracts/src/interface/IExtension.sol";
+import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
+import { AccountPermissions } from "contracts/dynamic-contracts/extension/AccountPermissions.sol";
+import { AccountExtension } from "contracts/smart-wallet/utils/AccountExtension.sol";
 
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/smart-wallet/utils/Entrypoint.sol";
@@ -62,10 +65,50 @@ contract DynamicAccountTest is BaseTest {
     bytes internal data = bytes("");
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0x13123A79C89069aF0f6763dE5e25E26703477e79;
+    address private sender = 0xbC12AEae5E1b1a80401dd20A6728f7a01a3A6166;
     address payable private beneficiary = payable(address(0x45654));
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
+
+    function _setupRoleRequest(address _signer, IAccountPermissions.RoleAction _action)
+        internal
+        returns (IAccountPermissions.RoleRequest memory request, bytes memory signature)
+    {
+        bytes32 typehashRoleRequest = keccak256(
+            "RoleRequest(bytes32 role,address target,uint8 action,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+        );
+        bytes32 nameHash = keccak256(bytes("Account"));
+        bytes32 versionHash = keccak256(bytes("1"));
+        bytes32 typehashEip712 = keccak256(
+            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+        );
+        bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
+
+        // Create RoleRequest
+        request = IAccountPermissions.RoleRequest({
+            role: keccak256("SIGNER_ROLE"),
+            target: _signer,
+            action: _action,
+            validityStartTimestamp: 0,
+            validityEndTimestamp: type(uint128).max,
+            uid: bytes32("random uid")
+        });
+
+        bytes memory encodedRequest = abi.encode(
+            typehashRoleRequest,
+            request.role,
+            request.target,
+            request.action,
+            request.validityStartTimestamp,
+            request.validityEndTimestamp,
+            request.uid
+        );
+        bytes32 structHash = keccak256(encodedRequest);
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
+        signature = abi.encodePacked(r, s, v);
+    }
 
     function _setupUserOp(
         uint256 _signerPKey,
@@ -153,8 +196,44 @@ contract DynamicAccountTest is BaseTest {
 
         // Setup contracts
         entrypoint = new EntryPoint();
+
+        // Setting up default extension.
+        IExtension.Extension memory defaultExtension;
+
+        defaultExtension.metadata = IExtension.ExtensionMetadata({
+            name: "AccountExtension",
+            metadataURI: "ipfs://AccountExtension",
+            implementation: address(new AccountExtension(address(entrypoint)))
+        });
+
+        defaultExtension.functions = new IExtension.ExtensionFunction[](5);
+
+        defaultExtension.functions[0] = IExtension.ExtensionFunction(
+            AccountExtension.supportsInterface.selector,
+            "supportsInterface(bytes4)"
+        );
+        defaultExtension.functions[1] = IExtension.ExtensionFunction(
+            AccountExtension.execute.selector,
+            "execute(address,uint256,bytes)"
+        );
+        defaultExtension.functions[2] = IExtension.ExtensionFunction(
+            AccountExtension.executeBatch.selector,
+            "executeBatch(address[],uint256[],bytes[])"
+        );
+        defaultExtension.functions[3] = IExtension.ExtensionFunction(
+            ERC721Holder.onERC721Received.selector,
+            "onERC721Received(address,address,uint256,bytes)"
+        );
+        defaultExtension.functions[4] = IExtension.ExtensionFunction(
+            ERC1155Holder.onERC1155Received.selector,
+            "onERC1155Received(address,address,uint256,uint256,bytes)"
+        );
+
+        IExtension.Extension[] memory extensions = new IExtension.Extension[](1);
+        extensions[0] = defaultExtension;
+
         // deploy account factory
-        accountFactory = new DynamicAccountFactory(IEntryPoint(payable(address(entrypoint))));
+        accountFactory = new DynamicAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
         // deploy dummy contract
         numberContract = new Number();
     }
@@ -168,6 +247,10 @@ contract DynamicAccountTest is BaseTest {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
         accountFactory.createAccount(accountAdmin, data);
+
+        address[] memory allAccounts = accountFactory.getAllAccounts();
+        assertEq(allAccounts.length, 1);
+        assertEq(allAccounts[0], sender);
     }
 
     /// @dev Create an account via Entrypoint.
@@ -186,6 +269,10 @@ contract DynamicAccountTest is BaseTest {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+
+        address[] memory allAccounts = accountFactory.getAllAccounts();
+        assertEq(allAccounts.length, 1);
+        assertEq(allAccounts[0], sender);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -205,13 +292,29 @@ contract DynamicAccountTest is BaseTest {
         );
 
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
+
+        address[] memory approvedTargets = new address[](1);
+        approvedTargets[0] = address(numberContract);
+
+        vm.prank(accountAdmin);
+        Account(payable(account)).setRoleRestrictions(
+            IAccountPermissions.RoleRestrictions(
+                keccak256("SIGNER_ROLE"),
+                approvedTargets,
+                1 ether,
+                0,
+                type(uint128).max
+            )
+        );
     }
 
     /// @dev Perform a state changing transaction directly via account.
     function test_state_executeTransaction() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(numberContract.num(), 0);
 
@@ -225,7 +328,7 @@ contract DynamicAccountTest is BaseTest {
     function test_state_executeBatchTransaction() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(numberContract.num(), 0);
 
@@ -295,14 +398,57 @@ contract DynamicAccountTest is BaseTest {
         assertEq(numberContract.num(), count);
     }
 
+    /// @dev Perform many state changing transactions in a batch via Entrypoint.
+    function test_state_executeBatchTransaction_viaAccountSigner() public {
+        _setup_executeTransaction();
+
+        assertEq(numberContract.num(), 0);
+
+        uint256 count = 3;
+        address[] memory targets = new address[](count);
+        uint256[] memory values = new uint256[](count);
+        bytes[] memory callData = new bytes[](count);
+
+        for (uint256 i = 0; i < count; i += 1) {
+            targets[i] = address(numberContract);
+            values[i] = 0;
+            callData[i] = abi.encodeWithSignature("incrementNum()", i);
+        }
+
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
+
+        vm.prank(accountAdmin);
+        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+            accountSigner,
+            IAccountPermissions.RoleAction.GRANT
+        );
+        Account(payable(account)).changeRole(req, sig);
+
+        UserOperation[] memory userOp = _setupUserOpExecuteBatch(
+            accountSignerPKey,
+            bytes(""),
+            targets,
+            values,
+            callData
+        );
+
+        EntryPoint(entrypoint).handleOps(userOp, beneficiary);
+
+        assertEq(numberContract.num(), count);
+    }
+
     /// @dev Perform a state changing transaction via Entrypoint and a SIGNER_ROLE holder.
     function test_state_executeTransaction_viaAccountSigner() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
+        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+            accountSigner,
+            IAccountPermissions.RoleAction.GRANT
+        );
         vm.prank(accountAdmin);
-        Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
+        Account(payable(account)).changeRole(req, sig);
 
         assertEq(numberContract.num(), 0);
 
@@ -341,10 +487,14 @@ contract DynamicAccountTest is BaseTest {
     function test_revert_executeTransaction_nonSigner_viaDirectCall() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         vm.prank(accountAdmin);
-        Account(payable(account)).grantRole(keccak256("SIGNER_ROLE"), accountSigner);
+        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+            accountSigner,
+            IAccountPermissions.RoleAction.GRANT
+        );
+        Account(payable(account)).changeRole(req, sig);
 
         assertEq(numberContract.num(), 0);
 
@@ -361,7 +511,7 @@ contract DynamicAccountTest is BaseTest {
     function test_state_accountReceivesNativeTokens() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(address(account).balance, 0);
 
@@ -377,7 +527,7 @@ contract DynamicAccountTest is BaseTest {
 
         uint256 value = 1000;
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
         vm.prank(accountAdmin);
         payable(account).call{ value: value }("");
         assertEq(address(account).balance, value);
@@ -396,7 +546,7 @@ contract DynamicAccountTest is BaseTest {
     function test_state_addAndWithdrawDeposit() public {
         _setup_executeTransaction();
 
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(Account(payable(account)).getDeposit(), 0);
 
@@ -416,7 +566,7 @@ contract DynamicAccountTest is BaseTest {
     /// @dev Send an ERC-721 NFT to an account.
     function test_state_receiveERC721NFT() public {
         _setup_executeTransaction();
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(erc721.balanceOf(account), 0);
 
@@ -428,7 +578,7 @@ contract DynamicAccountTest is BaseTest {
     /// @dev Send an ERC-1155 NFT to an account.
     function test_state_receiveERC1155NFT() public {
         _setup_executeTransaction();
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         assertEq(erc1155.balanceOf(account, 0), 0);
 
@@ -444,7 +594,7 @@ contract DynamicAccountTest is BaseTest {
     /// @dev Make the account reject ERC-721 NFTs instead of accepting them.
     function test_scenario_changeExtensionForFunction() public {
         _setup_executeTransaction();
-        address account = accountFactory.getAddress(accountAdmin);
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
         // The account can initially receive NFTs.
         assertEq(erc721.balanceOf(account), 0);
