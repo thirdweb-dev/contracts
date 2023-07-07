@@ -280,11 +280,7 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
                 : _conditionId - 1;
         }
 
-        require(
-            IERC1155(_stakingToken).balanceOf(_stakeMsgSender(), _tokenId) >= _amount &&
-                IERC1155(_stakingToken).isApprovedForAll(_stakeMsgSender(), address(this)),
-            "Not balance or approved"
-        );
+        
         isStaking = 2;
         IERC1155(_stakingToken).safeTransferFrom(_stakeMsgSender(), address(this), _tokenId, _amount, "");
         isStaking = 1;
@@ -301,9 +297,7 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
 
     /// @dev Withdraw logic. Override to add custom logic.
     function _withdraw(uint256 _tokenId, uint64 _amount) internal virtual {
-        uint256 _amountStaked = stakers[_tokenId][_stakeMsgSender()].amountStaked;
         require(_amount != 0, "Withdrawing 0 tokens");
-        require(_amountStaked >= _amount, "Withdrawing more than staked");
 
         _updateUnclaimedRewardsForStaker(_tokenId, _stakeMsgSender());
 
