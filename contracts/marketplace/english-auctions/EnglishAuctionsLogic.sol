@@ -142,7 +142,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         _handleBid(_targetAuction, newBid);
     }
 
-    function collectAuctionPayout(uint256 _auctionId) external nonReentrant onlyAuctionCreator(_auctionId) {
+    function collectAuctionPayout(uint256 _auctionId) external nonReentrant {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
 
         require(!data.payoutStatus[_auctionId].paidOutBidAmount, "Marketplace: payout already completed.");
