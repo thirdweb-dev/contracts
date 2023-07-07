@@ -60,21 +60,22 @@ function addExtension(IExtension.Extension _extension) external nonpayable
 |---|---|---|
 | _extension | IExtension.Extension | undefined |
 
-### addSigner
+### contractURI
 
 ```solidity
-function addSigner(address _signer) external nonpayable
+function contractURI() external view returns (string)
 ```
 
-Callback function for an Account to register its signers.
+Returns the contract metadata URI.
 
 
 
-#### Parameters
+
+#### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| _signer | address | undefined |
+| _0 | string | undefined |
 
 ### createAccount
 
@@ -99,10 +100,27 @@ Deploys a new Account for admin.
 |---|---|---|
 | _0 | address | undefined |
 
-### defaultExtension
+### defaultExtensionSet
 
 ```solidity
-function defaultExtension() external view returns (address)
+function defaultExtensionSet() external view returns (address)
+```
+
+The DefaultExtensionSet that stores default extensions of the router.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### entrypoint
+
+```solidity
+function entrypoint() external view returns (address)
 ```
 
 
@@ -141,7 +159,7 @@ Returns all accounts that the given address is a signer of.
 ### getAddress
 
 ```solidity
-function getAddress(address _adminSigner) external view returns (address)
+function getAddress(address _adminSigner, bytes _data) external view returns (address)
 ```
 
 Returns the address of an Account that would be deployed with the given admin signer.
@@ -153,12 +171,30 @@ Returns the address of an Account that would be deployed with the given admin si
 | Name | Type | Description |
 |---|---|---|
 | _adminSigner | address | undefined |
+| _data | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
+
+### getAllAccounts
+
+```solidity
+function getAllAccounts() external view returns (address[])
+```
+
+Returns all accounts created on the factory.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address[] | undefined |
 
 ### getAllExtensions
 
@@ -268,7 +304,7 @@ function getExtensionImplementation(string _extensionName) external view returns
 ### getImplementationForFunction
 
 ```solidity
-function getImplementationForFunction(bytes4 _functionSelector) external view returns (address)
+function getImplementationForFunction(bytes4 _functionSelector) external view returns (address extensionAddress)
 ```
 
 
@@ -285,7 +321,7 @@ function getImplementationForFunction(bytes4 _functionSelector) external view re
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | address | undefined |
+| extensionAddress | address | undefined |
 
 ### getRoleAdmin
 
@@ -439,6 +475,28 @@ Checks whether an account has a particular role;                  role restricti
 |---|---|---|
 | _0 | bool | undefined |
 
+### isRegistered
+
+```solidity
+function isRegistered(address _account) external view returns (bool)
+```
+
+Returns whether an account is registered on this factory.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### multicall
 
 ```solidity
@@ -461,6 +519,49 @@ Receives and executes a batch of function calls on this contract.
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
+### onRegister
+
+```solidity
+function onRegister() external nonpayable
+```
+
+Callback function for an Account to register itself on the factory.
+
+
+
+
+### onSignerAdded
+
+```solidity
+function onSignerAdded(address _signer) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+
+### onSignerRemoved
+
+```solidity
+function onSignerRemoved(address _signer) external nonpayable
+```
+
+Callback function for an Account to un-register its signers.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+
 ### removeExtension
 
 ```solidity
@@ -476,22 +577,6 @@ function removeExtension(string _extensionName) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _extensionName | string | undefined |
-
-### removeSigner
-
-```solidity
-function removeSigner(address _signer) external nonpayable
-```
-
-Callback function for an Account to un-register its signers.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _signer | address | undefined |
 
 ### renounceRole
 
@@ -527,27 +612,21 @@ Revokes role from an account.
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
 
-### supportsInterface
+### setContractURI
 
 ```solidity
-function supportsInterface(bytes4 interfaceId) external view returns (bool)
+function setContractURI(string _uri) external nonpayable
 ```
 
+Lets a contract admin set the URI for contract-level metadata.
 
-
-*See {IERC165-supportsInterface}.*
+*Caller should be authorized to setup contractURI, e.g. contract admin.                  See {_canSetContractURI}.                  Emits {ContractURIUpdated Event}.*
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| interfaceId | bytes4 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 
 ### updateExtension
 
@@ -585,6 +664,23 @@ Emitted when a new Account is created.
 |---|---|---|
 | account `indexed` | address | undefined |
 | accountAdmin `indexed` | address | undefined |
+
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
 
 ### ExtensionAdded
 

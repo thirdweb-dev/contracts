@@ -32,7 +32,6 @@ import "./extension/PlatformFee.sol";
 import "./extension/Royalty.sol";
 import "./extension/PrimarySale.sol";
 import "./extension/Ownable.sol";
-import "./extension/DelayedReveal.sol";
 import "./extension/SharedMetadata.sol";
 import "./extension/PermissionsEnumerable.sol";
 import "./extension/Drop.sol";
@@ -63,7 +62,7 @@ contract OpenEditionERC721 is
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private transferRole;
-    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
+    /// @dev Only MINTER_ROLE holders can update the shared metadata of tokens.
     bytes32 private minterRole;
 
     /// @dev Max bps in the thirdweb system.
@@ -120,7 +119,7 @@ contract OpenEditionERC721 is
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
         if (!_exists(_tokenId)) {
-            revert("OpenCollectionERC721: URI query for nonexistent token.");
+            revert("!ID");
         }
 
         return _getURIFromSharedMetadata(_tokenId);
@@ -142,6 +141,10 @@ contract OpenEditionERC721 is
         return 1;
     }
 
+    function startTokenId() public pure returns (uint256) {
+        return _startTokenId();
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -158,13 +161,16 @@ contract OpenEditionERC721 is
         }
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
+        bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
-                revert("!Price");
-            }
+            validMsgValue = msg.value == totalPrice;
+        } else {
+            validMsgValue = msg.value == 0;
         }
+        require(validMsgValue, "!V");
+
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         uint256 fees;
         address feeRecipient;
@@ -178,7 +184,7 @@ contract OpenEditionERC721 is
             fees = (totalPrice * platformFeeBps) / MAX_BPS;
         }
 
-        require(totalPrice >= fees, "Price < fees");
+        require(totalPrice >= fees, "!F");
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), feeRecipient, fees);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - fees);
@@ -188,9 +194,9 @@ contract OpenEditionERC721 is
     function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
         internal
         override
-        returns (uint256 startTokenId)
+        returns (uint256 startTokenId_)
     {
-        startTokenId = _currentIndex;
+        startTokenId_ = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
     }
 
@@ -224,7 +230,7 @@ contract OpenEditionERC721 is
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Returns whether lazy minting can be done in the given execution context.
+    /// @dev Returns whether the shared metadata of tokens can be set in the given execution context.
     function _canSetSharedMetadata() internal view virtual override returns (bool) {
         return hasRole(minterRole, _msgSender());
     }
@@ -267,15 +273,15 @@ contract OpenEditionERC721 is
     function _beforeTokenTransfers(
         address from,
         address to,
-        uint256 startTokenId,
+        uint256 startTokenId_,
         uint256 quantity
     ) internal virtual override {
-        super._beforeTokenTransfers(from, to, startTokenId, quantity);
+        super._beforeTokenTransfers(from, to, startTokenId_, quantity);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
             if (!hasRole(transferRole, from) && !hasRole(transferRole, to)) {
-                revert("!Transfer-Role");
+                revert("!T");
             }
         }
     }

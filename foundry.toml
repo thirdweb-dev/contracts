@@ -4,21 +4,38 @@ solc-version = "0.8.12"
 cache = true
 evm_version = 'london'
 force = false
-gas_reports = ["Multiwrap", "SignatureDrop"]
+gas_reports = [
+  "DropERC721Benchmark",
+  "DropERC20Benchmark",
+  "DropERC1155Benchmark",
+  "TokenERC20Benchmark",
+  "TokenERC721Benchmark",
+  "TokenERC1155Benchmark",
+  "MultiwrapBenchmark",
+  "SignatureDropBenchmark",
+  "AirdropERC20Benchmark",
+  "AirdropERC721Benchmark",
+  "AirdropERC1155Benchmark",
+  "NFTStakeBenchmark",
+  "EditionStakeBenchmark",
+  "TokenStakeBenchmark",
+  "PackBenchmark",
+  "PackVRFDirectBenchmark",
+]
 libraries = []
 libs = ['lib']
 optimizer = true
 optimizer_runs = 20
 out = 'artifacts_forge'
 remappings = [
-  #' @chainlink=node_modules/@chainlink/contracts/src/',
-  '@chainlink/contracts/src=node_modules/@chainlink/contracts/src/',
+  '@chainlink/=lib/chainlink/',
+  '@openzeppelin/contracts=lib/openzeppelin-contracts/contracts',
+  '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
   '@ds-test=lib/ds-test/src/',
-  '@openzeppelin=node_modules/@openzeppelin/',
   '@std=lib/forge-std/src/',
   'contracts/=contracts/',
-  'erc721a-upgradeable/=node_modules/erc721a-upgradeable/',
-  'erc721a/=node_modules/erc721a/',
+  'erc721a-upgradeable/=lib/ERC721A-Upgradeable/',
+  'erc721a/=lib/ERC721A/',
 ]
 src = 'contracts'
 test = 'src/test'

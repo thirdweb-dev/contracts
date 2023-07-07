@@ -27,22 +27,6 @@ Returns the address of the Account implementation.
 |---|---|---|
 | _0 | address | undefined |
 
-### addSigner
-
-```solidity
-function addSigner(address _signer) external nonpayable
-```
-
-Callback function for an Account to register its signers.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _signer | address | undefined |
-
 ### createAccount
 
 ```solidity
@@ -59,6 +43,23 @@ Deploys a new Account for admin.
 |---|---|---|
 | _admin | address | undefined |
 | _data | bytes | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
+### entrypoint
+
+```solidity
+function entrypoint() external view returns (address)
+```
+
+
+
+
+
 
 #### Returns
 
@@ -91,7 +92,7 @@ Returns all accounts that the given address is a signer of.
 ### getAddress
 
 ```solidity
-function getAddress(address _adminSigner) external view returns (address)
+function getAddress(address _adminSigner, bytes _data) external view returns (address)
 ```
 
 Returns the address of an Account that would be deployed with the given admin signer.
@@ -103,12 +104,30 @@ Returns the address of an Account that would be deployed with the given admin si
 | Name | Type | Description |
 |---|---|---|
 | _adminSigner | address | undefined |
+| _data | bytes | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
+
+### getAllAccounts
+
+```solidity
+function getAllAccounts() external view returns (address[])
+```
+
+Returns all accounts created on the factory.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address[] | undefined |
 
 ### getSignersOfAccount
 
@@ -132,6 +151,28 @@ Returns all signers of an account.
 |---|---|---|
 | signers | address[] | undefined |
 
+### isRegistered
+
+```solidity
+function isRegistered(address _account) external view returns (bool)
+```
+
+Returns whether an account is registered on this factory.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _account | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
+
 ### multicall
 
 ```solidity
@@ -154,10 +195,37 @@ Receives and executes a batch of function calls on this contract.
 |---|---|---|
 | results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
-### removeSigner
+### onRegister
 
 ```solidity
-function removeSigner(address _signer) external nonpayable
+function onRegister() external nonpayable
+```
+
+Callback function for an Account to register itself on the factory.
+
+
+
+
+### onSignerAdded
+
+```solidity
+function onSignerAdded(address _signer) external nonpayable
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _signer | address | undefined |
+
+### onSignerRemoved
+
+```solidity
+function onSignerRemoved(address _signer) external nonpayable
 ```
 
 Callback function for an Account to un-register its signers.

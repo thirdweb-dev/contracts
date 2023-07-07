@@ -18,17 +18,7 @@ import "../utils/AccountCore.sol";
 import "lib/dynamic-contracts/src/core/Router.sol";
 
 contract ManagedAccount is AccountCore, Router {
-    address public factory;
-
-    constructor(IEntryPoint _entrypoint) AccountCore(_entrypoint) {
-        _disableInitializers();
-    }
-
-    /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin, bytes calldata) public virtual override initializer {
-        factory = msg.sender;
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-    }
+    constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {}
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual override(Router, AccountCore) {}
