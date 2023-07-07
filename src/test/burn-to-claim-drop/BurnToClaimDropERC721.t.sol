@@ -2,8 +2,8 @@
 pragma solidity ^0.8.0;
 
 import "../utils/BaseTest.sol";
-import { BurnToClaimDropERC721 } from "contracts/burn-to-claim-drop/BurnToClaimDropERC721.sol";
-import { BurnToClaimDrop721Logic, ERC721AUpgradeable, DelayedReveal, LazyMint, Drop, BurnToClaim } from "contracts/burn-to-claim-drop/extension/BurnToClaimDrop721Logic.sol";
+import { BurnToClaimDropERC721 } from "contracts/unaudited/burn-to-claim-drop/BurnToClaimDropERC721.sol";
+import { BurnToClaimDrop721Logic, ERC721AUpgradeable, DelayedReveal, LazyMint, Drop, BurnToClaim } from "contracts/unaudited/burn-to-claim-drop/extension/BurnToClaimDrop721Logic.sol";
 import { PermissionsEnumerableImpl } from "contracts/dynamic-contracts/impl/PermissionsEnumerableImpl.sol";
 import { Royalty } from "contracts/dynamic-contracts/extension/Royalty.sol";
 import { BatchMintMetadata } from "contracts/dynamic-contracts/extension/BatchMintMetadata.sol";

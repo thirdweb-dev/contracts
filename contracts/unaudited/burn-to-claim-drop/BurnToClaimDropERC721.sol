@@ -14,21 +14,21 @@ pragma solidity ^0.8.11;
 
 import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 
-import "../extension/Multicall.sol";
+import "../../extension/Multicall.sol";
 
-import "../dynamic-contracts/extension/Initializable.sol";
-import "../dynamic-contracts/extension/Permissions.sol";
-import "../dynamic-contracts/extension/ERC2771ContextUpgradeable.sol";
+import "../../dynamic-contracts/extension/Initializable.sol";
+import "../../dynamic-contracts/extension/Permissions.sol";
+import "../../dynamic-contracts/extension/ERC2771ContextUpgradeable.sol";
 
-import "../dynamic-contracts/init/ContractMetadataInit.sol";
-import "../dynamic-contracts/init/PlatformFeeInit.sol";
-import "../dynamic-contracts/init/RoyaltyInit.sol";
-import "../dynamic-contracts/init/PrimarySaleInit.sol";
-import "../dynamic-contracts/init/OwnableInit.sol";
-import "../dynamic-contracts/init/ERC721AInit.sol";
-import "../dynamic-contracts/init/PermissionsEnumerableInit.sol";
-import "../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
-import "../dynamic-contracts/init/ReentrancyGuardInit.sol";
+import "../../dynamic-contracts/init/ContractMetadataInit.sol";
+import "../../dynamic-contracts/init/PlatformFeeInit.sol";
+import "../../dynamic-contracts/init/RoyaltyInit.sol";
+import "../../dynamic-contracts/init/PrimarySaleInit.sol";
+import "../../dynamic-contracts/init/OwnableInit.sol";
+import "../../dynamic-contracts/init/ERC721AInit.sol";
+import "../../dynamic-contracts/init/PermissionsEnumerableInit.sol";
+import "../../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
+import "../../dynamic-contracts/init/ReentrancyGuardInit.sol";
 
 contract BurnToClaimDropERC721 is
     Initializable,
