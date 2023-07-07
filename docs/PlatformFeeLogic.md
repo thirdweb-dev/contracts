@@ -49,6 +49,23 @@ Updates the platform fee recipient and bps.
 
 ## Events
 
+### FlatPlatformFeeUpdated
+
+```solidity
+event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeRecipient  | address | undefined |
+| flatFee  | uint256 | undefined |
+
 ### PlatformFeeInfoUpdated
 
 ```solidity
@@ -65,6 +82,22 @@ event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platf
 |---|---|---|
 | platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
+
+### PlatformFeeTypeUpdated
+
+```solidity
+event PlatformFeeTypeUpdated(enum IPlatformFee.PlatformFeeType feeType)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| feeType  | enum IPlatformFee.PlatformFeeType | undefined |
 
 
 

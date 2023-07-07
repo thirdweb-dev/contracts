@@ -283,6 +283,23 @@ event AuctionClosed(uint256 indexed listingId, address indexed closer, bool inde
 | auctionCreator  | address | undefined |
 | winningBidder  | address | undefined |
 
+### FlatPlatformFeeUpdated
+
+```solidity
+event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| platformFeeRecipient  | address | undefined |
+| flatFee  | uint256 | undefined |
+
 ### ListingAdded
 
 ```solidity
@@ -394,6 +411,22 @@ event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platf
 |---|---|---|
 | platformFeeRecipient `indexed` | address | undefined |
 | platformFeeBps  | uint256 | undefined |
+
+### PlatformFeeTypeUpdated
+
+```solidity
+event PlatformFeeTypeUpdated(enum IPlatformFee.PlatformFeeType feeType)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| feeType  | enum IPlatformFee.PlatformFeeType | undefined |
 
 
 

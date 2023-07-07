@@ -7,7 +7,7 @@ import { chainIdToName } from "./constants";
 ///// MAKE SURE TO PUT IN THE RIGHT CONTRACT NAME HERE AFTER CREATING A RELEASE FOR IT /////
 //// THE RELEASE SHOULD HAVE THE IMPLEMENTATIONS ALREADY DEPLOYED AND RECORDED (via dashboard) ////
 const releasedContractName = "TokenERC721";
-const privateKey: string = process.env.DEPLOYER_KEY as string; // should be the correct deployer key
+const privateKey: string = process.env.THIRDWEB_PUBLISHER_PRIVATE_KEY as string;
 
 const polygonSDK = ThirdwebSDK.fromPrivateKey(privateKey, "polygon");
 

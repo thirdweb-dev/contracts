@@ -34,7 +34,7 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
     bytes32 private constant ASSET_ROLE = keccak256("ASSET_ROLE");
 
     /// @dev The max bps of the contract. So, 10_000 == 100 %
-    uint64 public constant MAX_BPS = 10_000;
+    uint64 private constant MAX_BPS = 10_000;
 
     /*///////////////////////////////////////////////////////////////
                               Modifiers

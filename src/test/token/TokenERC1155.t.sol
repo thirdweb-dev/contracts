@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { TokenERC1155 } from "contracts/token/TokenERC1155.sol";
+import { TokenERC1155, IPlatformFee } from "contracts/token/TokenERC1155.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";
@@ -635,7 +635,7 @@ contract TokenERC1155Test is BaseTest {
 
         vm.startPrank(deployerSigner);
         tokenContract.setFlatPlatformFeeInfo(platformFeeRecipient, flatPlatformFee);
-        tokenContract.setPlatformFeeType(TokenERC1155.PlatformFeeType.Flat);
+        tokenContract.setPlatformFeeType(IPlatformFee.PlatformFeeType.Flat);
         vm.stopPrank();
 
         // update mintrequest data
@@ -680,7 +680,7 @@ contract TokenERC1155Test is BaseTest {
 
         vm.startPrank(deployerSigner);
         tokenContract.setFlatPlatformFeeInfo(platformFeeRecipient, flatPlatformFee);
-        tokenContract.setPlatformFeeType(TokenERC1155.PlatformFeeType.Flat);
+        tokenContract.setPlatformFeeType(IPlatformFee.PlatformFeeType.Flat);
         vm.stopPrank();
 
         // update mintrequest data
@@ -724,7 +724,7 @@ contract TokenERC1155Test is BaseTest {
 
         vm.startPrank(deployerSigner);
         tokenContract.setFlatPlatformFeeInfo(platformFeeRecipient, flatPlatformFee);
-        tokenContract.setPlatformFeeType(TokenERC1155.PlatformFeeType.Flat);
+        tokenContract.setPlatformFeeType(IPlatformFee.PlatformFeeType.Flat);
         vm.stopPrank();
 
         // update mintrequest data
@@ -765,7 +765,7 @@ contract TokenERC1155Test is BaseTest {
     function test_state_setPlatformFeeType() public {
         address _platformFeeRecipient = address(0x123);
         uint256 _flatFee = 1000;
-        TokenERC1155.PlatformFeeType _feeType = TokenERC1155.PlatformFeeType.Flat;
+        IPlatformFee.PlatformFeeType _feeType = IPlatformFee.PlatformFeeType.Flat;
 
         vm.prank(deployerSigner);
         tokenContract.setFlatPlatformFeeInfo(_platformFeeRecipient, _flatFee);
@@ -773,7 +773,7 @@ contract TokenERC1155Test is BaseTest {
         vm.prank(deployerSigner);
         tokenContract.setPlatformFeeType(_feeType);
 
-        TokenERC1155.PlatformFeeType updatedFeeType = tokenContract.getPlatformFeeType();
+        IPlatformFee.PlatformFeeType updatedFeeType = tokenContract.getPlatformFeeType();
         assertTrue(updatedFeeType == _feeType);
     }
 

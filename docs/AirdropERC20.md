@@ -27,10 +27,10 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
-### addAirdropRecipients
+### addRecipients
 
 ```solidity
-function addAirdropRecipients(IAirdropERC20.AirdropContent[] _contents) external payable
+function addRecipients(IAirdropERC20.AirdropContent[] _contents) external payable
 ```
 
 
@@ -46,10 +46,10 @@ function addAirdropRecipients(IAirdropERC20.AirdropContent[] _contents) external
 ### airdrop
 
 ```solidity
-function airdrop(uint256 paymentsToProcess) external nonpayable
+function airdrop(IAirdropERC20.AirdropContent[] _contents) external payable
 ```
 
-Lets contract-owner send ERC20 or native tokens to a list of addresses.
+
 
 
 
@@ -57,7 +57,46 @@ Lets contract-owner send ERC20 or native tokens to a list of addresses.
 
 | Name | Type | Description |
 |---|---|---|
-| paymentsToProcess | uint256 | undefined |
+| _contents | IAirdropERC20.AirdropContent[] | undefined |
+
+### cancelPendingPayments
+
+```solidity
+function cancelPendingPayments(uint256 numberOfPaymentsToCancel) external nonpayable
+```
+
+Lets contract-owner cancel any pending payments.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| numberOfPaymentsToCancel | uint256 | undefined |
+
+### cancelledPaymentIndices
+
+```solidity
+function cancelledPaymentIndices(uint256) external view returns (uint256 startIndex, uint256 endIndex)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| startIndex | uint256 | undefined |
+| endIndex | uint256 | undefined |
 
 ### contractType
 
@@ -96,13 +135,19 @@ function contractVersion() external pure returns (uint8)
 ### getAllAirdropPayments
 
 ```solidity
-function getAllAirdropPayments() external view returns (struct IAirdropERC20.AirdropContent[] contents)
+function getAllAirdropPayments(uint256 startId, uint256 endId) external view returns (struct IAirdropERC20.AirdropContent[] contents)
 ```
 
 Returns all airdrop payments set up -- pending, processed or failed.
 
 
 
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| startId | uint256 | undefined |
+| endId | uint256 | undefined |
 
 #### Returns
 
@@ -130,13 +175,19 @@ Returns all pending airdrop failed.
 ### getAllAirdropPaymentsPending
 
 ```solidity
-function getAllAirdropPaymentsPending() external view returns (struct IAirdropERC20.AirdropContent[] contents)
+function getAllAirdropPaymentsPending(uint256 startId, uint256 endId) external view returns (struct IAirdropERC20.AirdropContent[] contents)
 ```
 
 Returns all pending airdrop payments.
 
 
 
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| startId | uint256 | undefined |
+| endId | uint256 | undefined |
 
 #### Returns
 
@@ -144,13 +195,13 @@ Returns all pending airdrop payments.
 |---|---|---|
 | contents | IAirdropERC20.AirdropContent[] | undefined |
 
-### getAllAirdropPaymentsProcessed
+### getCancelledPaymentIndices
 
 ```solidity
-function getAllAirdropPaymentsProcessed() external view returns (struct IAirdropERC20.AirdropContent[] contents)
+function getCancelledPaymentIndices() external view returns (struct IAirdropERC20.CancelledPayments[])
 ```
 
-Returns all pending airdrop processed.
+Returns all blocks of cancelled payments as an array of index range.
 
 
 
@@ -159,7 +210,7 @@ Returns all pending airdrop processed.
 
 | Name | Type | Description |
 |---|---|---|
-| contents | IAirdropERC20.AirdropContent[] | undefined |
+| _0 | IAirdropERC20.CancelledPayments[] | undefined |
 
 ### getRoleAdmin
 
@@ -291,6 +342,28 @@ Checks whether an account has a particular role;                  role restricti
 |---|---|---|
 | _0 | bool | undefined |
 
+### indicesOfFailed
+
+```solidity
+function indicesOfFailed(uint256) external view returns (uint256)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256 | undefined |
+
 ### initialize
 
 ```solidity
@@ -362,6 +435,22 @@ function payeeCount() external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
+
+### processPayments
+
+```solidity
+function processPayments(uint256 paymentsToProcess) external nonpayable
+```
+
+Lets contract-owner send ERC20 or native tokens to a list of addresses.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| paymentsToProcess | uint256 | undefined |
 
 ### processedCount
 
@@ -437,7 +526,7 @@ Lets an authorized wallet set a new owner for the contract.
 ### AirdropPayment
 
 ```solidity
-event AirdropPayment(address indexed recipient, IAirdropERC20.AirdropContent content)
+event AirdropPayment(address indexed recipient, uint256 index, bool failed)
 ```
 
 Emitted when an airdrop payment is made to a recipient.
@@ -449,7 +538,8 @@ Emitted when an airdrop payment is made to a recipient.
 | Name | Type | Description |
 |---|---|---|
 | recipient `indexed` | address | undefined |
-| content  | IAirdropERC20.AirdropContent | undefined |
+| index  | uint256 | undefined |
+| failed  | bool | undefined |
 
 ### Initialized
 
@@ -484,10 +574,27 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 | prevOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
 
+### PaymentsCancelledByAdmin
+
+```solidity
+event PaymentsCancelledByAdmin(uint256 startIndex, uint256 endIndex)
+```
+
+Emitted when pending payments are cancelled, and processed count is reset.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| startIndex  | uint256 | undefined |
+| endIndex  | uint256 | undefined |
+
 ### RecipientsAdded
 
 ```solidity
-event RecipientsAdded(IAirdropERC20.AirdropContent[] _contents)
+event RecipientsAdded(uint256 startIndex, uint256 endIndex)
 ```
 
 Emitted when airdrop recipients are uploaded to the contract.
@@ -498,7 +605,8 @@ Emitted when airdrop recipients are uploaded to the contract.
 
 | Name | Type | Description |
 |---|---|---|
-| _contents  | IAirdropERC20.AirdropContent[] | undefined |
+| startIndex  | uint256 | undefined |
+| endIndex  | uint256 | undefined |
 
 ### RoleAdminChanged
 
@@ -553,6 +661,24 @@ event RoleRevoked(bytes32 indexed role, address indexed account, address indexed
 | role `indexed` | bytes32 | undefined |
 | account `indexed` | address | undefined |
 | sender `indexed` | address | undefined |
+
+### StatelessAirdrop
+
+```solidity
+event StatelessAirdrop(address indexed recipient, IAirdropERC20.AirdropContent content, bool failed)
+```
+
+Emitted when an airdrop is made using the stateless airdrop function.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| recipient `indexed` | address | undefined |
+| content  | IAirdropERC20.AirdropContent | undefined |
+| failed  | bool | undefined |
 
 
 
