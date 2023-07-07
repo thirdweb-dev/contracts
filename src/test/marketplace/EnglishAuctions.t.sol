@@ -175,7 +175,6 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     }
 
     function _setupAuctionForRoyaltyTests(address erc721TokenAddress) private returns (uint256 auctionId) {
-        // auction the token not supporting ERC2981
         // Sample auction parameters.
         address assetContract = erc721TokenAddress;
         uint256 tokenId = 0;

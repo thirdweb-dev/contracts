@@ -237,7 +237,6 @@ contract MarketplaceDirectListingsTest is BaseTest {
     }
 
     function _setupListingForRoyaltyTests(address erc721TokenAddress) private returns (uint256 listingId) {
-        // list the token not supporting ERC2981
         // Sample listing parameters.
         address assetContract = erc721TokenAddress;
         uint256 tokenId = 0;
