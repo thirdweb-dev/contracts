@@ -3,8 +3,6 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../interfaces/airdrop/IAirdropERC721.sol";
-
 /**
  *  @title   Batch-mint Metadata
  *  @notice  The `BatchMintMetadata` is a contract extension for any base NFT contract. It lets the smart contract
@@ -80,7 +78,7 @@ contract BatchAirdropContent {
     }
 
     /// @dev Sets the base URI for the batch of tokens with the given batchId.
-    function _setBatch(uint256 _batchId, AirdropContent memory _batch) internal {
+    function _setBatch(uint256 _batchId, AirdropBatch memory _batch) internal {
         airdropBatch[_batchId] = _batch;
     }
 
@@ -116,7 +114,7 @@ contract BatchAirdropContent {
         address _tokenOwner,
         address _tokenAddress,
         uint256 _payeeCount
-    ) internal returns (AirdropContent storage) {
+    ) internal returns (AirdropBatch storage) {
         uint256 len = batchIds.length;
         batchIds.push(_payeeCount);
 
