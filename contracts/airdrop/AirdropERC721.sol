@@ -18,6 +18,8 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
+import "lib/sstore2/contracts/SSTORE2.sol";
+
 //  ==========  Internal imports    ==========
 
 import "../interfaces/airdrop/IAirdropERC721.sol";
@@ -25,11 +27,13 @@ import "../interfaces/airdrop/IAirdropERC721.sol";
 //  ==========  Features    ==========
 import "../extension/Ownable.sol";
 import "../extension/PermissionsEnumerable.sol";
+import "../extension/BatchAirdropContent.sol";
 
 contract AirdropERC721 is
     Initializable,
     Ownable,
     PermissionsEnumerable,
+    BatchAirdropContent,
     ReentrancyGuardUpgradeable,
     MulticallUpgradeable,
     IAirdropERC721
@@ -40,6 +44,8 @@ contract AirdropERC721 is
 
     bytes32 private constant MODULE_TYPE = bytes32("AirdropERC721");
     uint256 private constant VERSION = 1;
+
+    uint256 private constant CONTENT_COUNT_FOR_POINTER = 100;
 
     uint256 public payeeCount;
     uint256 public processedCount;
@@ -82,19 +88,45 @@ contract AirdropERC721 is
     //////////////////////////////////////////////////////////////*/
 
     ///@notice Lets contract-owner set up an airdrop of ERC721 NFTs to a list of addresses.
-    function addRecipients(AirdropContent[] calldata _contents) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function addRecipients(
+        address tokenOwner,
+        address tokenAddress,
+        AirdropContent[] calldata _contents
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
         require(len > 0, "No payees provided.");
 
         uint256 currentCount = payeeCount;
         payeeCount += len;
 
+        AirdropContent storage batch = _saveAirdropBatch(tokenOwner, tokenAddress, currentCount + len);
+
+        uint256 size = len > CONTENT_COUNT_FOR_POINTER ? CONTENT_COUNT_FOR_POINTER : len;
+        AirdropContent[] memory tempContent = new AirdropContent[](size);
+
+        uint256 tempContentIndex = 0;
         for (uint256 i = 0; i < len; ) {
-            airdropContent[i + currentCount] = _contents[i];
+            // airdropContent[i + currentCount] = _contents[i];
+            tempContent[tempContentIndex++] = _contents[i];
+
+            if (tempContentIndex == CONTENT_COUNT_FOR_POINTER - 1) {
+                address pointer = SSTORE2.write(abi.encode(tempContent));
+                batch.pointers.push(pointer);
+
+                uint256 size = (len - i - 1) > CONTENT_COUNT_FOR_POINTER ? CONTENT_COUNT_FOR_POINTER : (len - i - 1);
+                tempContent = new AirdropContent[](size);
+                tempContentIndex = 0;
+                continue;
+            }
 
             unchecked {
                 i += 1;
             }
+        }
+
+        if (tempContent.length > 0) {
+            address pointer = SSTORE2.write(abi.encode(tempContent));
+            batch.pointers.push(pointer);
         }
 
         emit RecipientsAdded(currentCount, currentCount + len);
@@ -126,36 +158,56 @@ contract AirdropERC721 is
 
         require(countOfProcessed + paymentsToProcess <= totalPayees, "invalid no. of payments");
 
+        (uint256 _startBatchId, uint256 _endBatchId) = _getBatchesToProcess(
+            countOfProcessed,
+            countOfProcessed + paymentsToProcess
+        );
+
         processedCount += paymentsToProcess;
 
-        for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); ) {
-            AirdropContent memory content = airdropContent[i];
+        uint256 remainingPayments = paymentsToProcess;
+        for (uint256 i = _startBatchId; i <= _endBatchId; i++) {
+            AirdropBatch memory batch = _getBatch(i);
+            uint256 _paymentCount = countOfProcessed + remainingPayments < batch.batchEndIndex
+                ? countOfProcessed + paymentsToProcess
+                : batch.batchEndIndex;
 
-            bool failed;
-            try
-                IERC721(content.tokenAddress).safeTransferFrom{ gas: 80_000 }(
-                    content.tokenOwner,
-                    content.recipient,
-                    content.tokenId
-                )
-            {} catch {
-                // revert if failure is due to unapproved tokens
-                require(
-                    (IERC721(content.tokenAddress).ownerOf(content.tokenId) == content.tokenOwner &&
-                        address(this) == IERC721(content.tokenAddress).getApproved(content.tokenId)) ||
-                        IERC721(content.tokenAddress).isApprovedForAll(content.tokenOwner, address(this)),
-                    "Not owner or approved"
-                );
+            uint256 _totalPointers = batch.pointers.length;
+            uint256 _pointerIdToProcess = batch.pointerIdToProcess;
 
-                // record all other failures, likely originating from recipient accounts
-                indicesOfFailed.push(i);
-                failed = true;
-            }
+            while (_pointerIdToProcess < _totalPointers) {
+                bytes memory pointerData = SSTORE2.read(batch.pointers[_pointerIdToProcess]);
+                AirdropContent[] memory content = abi.decode(pointerData, (AirdropContent[]));
 
-            emit AirdropPayment(content.recipient, i, failed);
+                for (uint256 j = 0; j < content.length && remainingPayments > 0; ) {
+                    remainingPayments--;
+                    bool failed;
+                    try
+                        IERC721(batch.tokenAddress).safeTransferFrom{ gas: 80_000 }(
+                            batch.tokenOwner,
+                            content.recipient,
+                            content.tokenId
+                        )
+                    {} catch {
+                        // revert if failure is due to unapproved tokens
+                        require(
+                            (IERC721(batch.tokenAddress).ownerOf(content.tokenId) == batch.tokenOwner &&
+                                address(this) == IERC721(batch.tokenAddress).getApproved(content.tokenId)) ||
+                                IERC721(batch.tokenAddress).isApprovedForAll(batch.tokenOwner, address(this)),
+                            "Not owner or approved"
+                        );
 
-            unchecked {
-                i += 1;
+                        // record all other failures, likely originating from recipient accounts
+                        indicesOfFailed.push(j);
+                        failed = true;
+                    }
+
+                    emit AirdropPayment(content.recipient, j, failed);
+
+                    unchecked {
+                        j += 1;
+                    }
+                }
             }
         }
     }
@@ -167,23 +219,23 @@ contract AirdropERC721 is
      *
      *  @param _contents        List containing recipient, tokenId to airdrop.
      */
-    function airdrop(AirdropContent[] calldata _contents) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
+    function airdrop(
+        address tokenOwner,
+        address tokenAddress,
+        AirdropContent[] calldata _contents
+    ) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; ) {
             bool failed;
             try
-                IERC721(_contents[i].tokenAddress).safeTransferFrom(
-                    _contents[i].tokenOwner,
-                    _contents[i].recipient,
-                    _contents[i].tokenId
-                )
+                IERC721(tokenAddress).safeTransferFrom(tokenOwner, _contents[i].recipient, _contents[i].tokenId)
             {} catch {
                 // revert if failure is due to unapproved tokens
                 require(
-                    (IERC721(_contents[i].tokenAddress).ownerOf(_contents[i].tokenId) == _contents[i].tokenOwner &&
-                        address(this) == IERC721(_contents[i].tokenAddress).getApproved(_contents[i].tokenId)) ||
-                        IERC721(_contents[i].tokenAddress).isApprovedForAll(_contents[i].tokenOwner, address(this)),
+                    (IERC721(tokenAddress).ownerOf(_contents[i].tokenId) == tokenOwner &&
+                        address(this) == IERC721(tokenAddress).getApproved(_contents[i].tokenId)) ||
+                        IERC721(tokenAddress).isApprovedForAll(tokenOwner, address(this)),
                     "Not owner or approved"
                 );
 

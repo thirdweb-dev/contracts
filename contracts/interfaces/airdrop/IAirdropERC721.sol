@@ -22,14 +22,10 @@ interface IAirdropERC721 {
     /**
      *  @notice Details of amount and recipient for airdropped token.
      *
-     *  @param tokenAddress The contract address of the tokens to transfer.
-     *  @param tokenOwner The owner of the the tokens to transfer.
      *  @param recipient The recipient of the tokens.
      *  @param tokenId ID of the ERC721 token being airdropped.
      */
     struct AirdropContent {
-        address tokenAddress;
-        address tokenOwner;
         address recipient;
         uint256 tokenId;
     }
@@ -66,9 +62,15 @@ interface IAirdropERC721 {
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
+     *  @param tokenOwner The owner of the the tokens to transfer.
+     *  @param tokenAddress The contract address of the tokens to transfer.
      *  @param _contents  List containing recipients, tokenIds to airdrop.
      */
-    function addRecipients(AirdropContent[] calldata _contents) external;
+    function addRecipients(
+        address tokenOwner,
+        address tokenAddress,
+        AirdropContent[] calldata _contents
+    ) external;
 
     /**
      *  @notice          Lets contract-owner cancel any pending payments.
@@ -89,7 +91,13 @@ interface IAirdropERC721 {
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
+     *  @param tokenOwner The owner of the the tokens to transfer.
+     *  @param tokenAddress The contract address of the tokens to transfer.
      *  @param _contents        List containing recipient, tokenId to airdrop.
      */
-    function airdrop(AirdropContent[] calldata _contents) external;
+    function airdrop(
+        address tokenOwner,
+        address tokenAddress,
+        AirdropContent[] calldata _contents
+    ) external;
 }
