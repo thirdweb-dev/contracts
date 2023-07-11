@@ -171,12 +171,14 @@ contract AirdropERC721 is
 
             uint256 _totalPointers = batch.pointers.length;
             uint256 _pointerIdToProcess = batch.pointerIdToProcess;
+            uint256 _countProcessedInPointer = batch.countProcessedInPointer;
 
             while (_pointerIdToProcess < _totalPointers) {
                 bytes memory pointerData = SSTORE2.read(batch.pointers[_pointerIdToProcess]);
                 AirdropContent[] memory content = abi.decode(pointerData, (AirdropContent[]));
 
-                for (uint256 j = 0; j < content.length && remainingPayments > 0; ) {
+                uint256 j = 0;
+                for (; j < content.length && remainingPayments > 0; ) {
                     bool failed;
                     try
                         IERC721(batch.tokenAddress).safeTransferFrom{ gas: 80_000 }(
@@ -207,13 +209,17 @@ contract AirdropERC721 is
                 }
 
                 if (remainingPayments == 0) {
-                    // break
+                    _countProcessedInPointer = j;
+                    break;
                 }
 
                 _pointerIdToProcess += 1;
             }
 
-            // write state of batch
+            batch.pointerIdToProcess = _pointerIdToProcess;
+            batch.countProcessedInPointer = _countProcessedInPointer;
+
+            _saveBatch(i, batch);
         }
     }
 
