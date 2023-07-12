@@ -99,7 +99,7 @@ contract AirdropERC721 is
         uint256 currentCount = payeeCount;
         payeeCount += len;
 
-        AirdropContent storage batch = _saveAirdropBatch(tokenOwner, tokenAddress, currentCount + len);
+        AirdropBatch storage batch = _createAirdropBatch(tokenOwner, tokenAddress, currentCount + len);
 
         uint256 size = len > CONTENT_COUNT_FOR_POINTER ? CONTENT_COUNT_FOR_POINTER : len;
         AirdropContent[] memory tempContent = new AirdropContent[](size);
@@ -175,22 +175,22 @@ contract AirdropERC721 is
 
             while (_pointerIdToProcess < _totalPointers) {
                 bytes memory pointerData = SSTORE2.read(batch.pointers[_pointerIdToProcess]);
-                AirdropContent[] memory content = abi.decode(pointerData, (AirdropContent[]));
+                AirdropContent[] memory contents = abi.decode(pointerData, (AirdropContent[]));
 
                 uint256 j = 0;
-                for (; j < content.length && remainingPayments > 0; ) {
+                for (; j < contents.length && remainingPayments > 0; ) {
                     bool failed;
                     try
                         IERC721(batch.tokenAddress).safeTransferFrom{ gas: 80_000 }(
                             batch.tokenOwner,
-                            content.recipient,
-                            content.tokenId
+                            contents[j].recipient,
+                            contents[j].tokenId
                         )
                     {} catch {
                         // revert if failure is due to unapproved tokens
                         require(
-                            (IERC721(batch.tokenAddress).ownerOf(content.tokenId) == batch.tokenOwner &&
-                                address(this) == IERC721(batch.tokenAddress).getApproved(content.tokenId)) ||
+                            (IERC721(batch.tokenAddress).ownerOf(contents[j].tokenId) == batch.tokenOwner &&
+                                address(this) == IERC721(batch.tokenAddress).getApproved(contents[j].tokenId)) ||
                                 IERC721(batch.tokenAddress).isApprovedForAll(batch.tokenOwner, address(this)),
                             "Not owner or approved"
                         );
@@ -200,7 +200,7 @@ contract AirdropERC721 is
                         failed = true;
                     }
 
-                    emit AirdropPayment(content.recipient, j, failed);
+                    emit AirdropPayment(contents[j].recipient, j, failed);
 
                     unchecked {
                         remainingPayments--;
@@ -219,7 +219,7 @@ contract AirdropERC721 is
             batch.pointerIdToProcess = _pointerIdToProcess;
             batch.countProcessedInPointer = _countProcessedInPointer;
 
-            _saveBatch(i, batch);
+            _setBatch(i, batch);
         }
     }
 

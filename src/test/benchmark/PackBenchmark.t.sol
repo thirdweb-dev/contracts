@@ -39,123 +39,105 @@ contract PackBenchmarkTest is BaseTest {
         tokenOwner = getWallet();
         packUri = "ipfs://";
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc721),
-        //         tokenType: ITokenBundle.TokenType.ERC721,
-        //         tokenId: 0,
-        //         totalAmount: 1
-        //     })
-        // );
-        // numOfRewardUnits.push(1);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 0,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc1155),
-        //         tokenType: ITokenBundle.TokenType.ERC1155,
-        //         tokenId: 0,
-        //         totalAmount: 100
-        //     })
-        // );
-        // numOfRewardUnits.push(20);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc1155),
+                tokenType: ITokenBundle.TokenType.ERC1155,
+                tokenId: 0,
+                totalAmount: 100
+            })
+        );
+        numOfRewardUnits.push(20);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc20),
-        //         tokenType: ITokenBundle.TokenType.ERC20,
-        //         tokenId: 0,
-        //         totalAmount: 1000 ether
-        //     })
-        // );
-        // numOfRewardUnits.push(50);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc20),
+                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenId: 0,
+                totalAmount: 1000 ether
+            })
+        );
+        numOfRewardUnits.push(50);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc721),
-        //         tokenType: ITokenBundle.TokenType.ERC721,
-        //         tokenId: 1,
-        //         totalAmount: 1
-        //     })
-        // );
-        // numOfRewardUnits.push(1);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 1,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc721),
-        //         tokenType: ITokenBundle.TokenType.ERC721,
-        //         tokenId: 2,
-        //         totalAmount: 1
-        //     })
-        // );
-        // numOfRewardUnits.push(1);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 2,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc20),
-        //         tokenType: ITokenBundle.TokenType.ERC20,
-        //         tokenId: 0,
-        //         totalAmount: 1000 ether
-        //     })
-        // );
-        // numOfRewardUnits.push(100);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc20),
+                tokenType: ITokenBundle.TokenType.ERC20,
+                tokenId: 0,
+                totalAmount: 1000 ether
+            })
+        );
+        numOfRewardUnits.push(100);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc721),
-        //         tokenType: ITokenBundle.TokenType.ERC721,
-        //         tokenId: 3,
-        //         totalAmount: 1
-        //     })
-        // );
-        // numOfRewardUnits.push(1);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 3,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc721),
-        //         tokenType: ITokenBundle.TokenType.ERC721,
-        //         tokenId: 4,
-        //         totalAmount: 1
-        //     })
-        // );
-        // numOfRewardUnits.push(1);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 4,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc721),
-        //         tokenType: ITokenBundle.TokenType.ERC721,
-        //         tokenId: 5,
-        //         totalAmount: 1
-        //     })
-        // );
-        // numOfRewardUnits.push(1);
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc721),
+                tokenType: ITokenBundle.TokenType.ERC721,
+                tokenId: 5,
+                totalAmount: 1
+            })
+        );
+        numOfRewardUnits.push(1);
 
-        // packContents.push(
-        //     ITokenBundle.Token({
-        //         assetContract: address(erc1155),
-        //         tokenType: ITokenBundle.TokenType.ERC1155,
-        //         tokenId: 1,
-        //         totalAmount: 500
-        //     })
-        // );
-        // numOfRewardUnits.push(50);
-
-        for (uint256 i = 0; i < 50; i++) {
-            MockERC20 newToken = new MockERC20();
-            newToken.mint(address(tokenOwner), 10 ether);
-            tokenOwner.setAllowanceERC20(address(newToken), address(pack), type(uint256).max);
-
-            packContents.push(
-                ITokenBundle.Token({
-                    assetContract: address(new MockERC20()),
-                    tokenType: ITokenBundle.TokenType.ERC20,
-                    tokenId: 0,
-                    totalAmount: 300 ether
-                })
-            );
-            numOfRewardUnits.push(300);
-
-            // console.log(address(newToken));
-        }
+        packContents.push(
+            ITokenBundle.Token({
+                assetContract: address(erc1155),
+                tokenType: ITokenBundle.TokenType.ERC1155,
+                tokenId: 1,
+                totalAmount: 500
+            })
+        );
+        numOfRewardUnits.push(50);
 
         erc20.mint(address(tokenOwner), 2000 ether);
         erc721.mint(address(tokenOwner), 6);
@@ -226,17 +208,14 @@ contract PackBenchmarkTest is BaseTest {
 
     function test_benchmark_pack_openPack() public {
         vm.pauseGasMetering();
-        for (uint256 i = 0; i < 50; i++) {
-            MockERC20(packContents[i].assetContract).mint(address(tokenOwner), 300 ether);
-            tokenOwner.setAllowanceERC20(packContents[i].assetContract, address(pack), type(uint256).max);
-        }
         vm.warp(1000);
         uint256 packId = pack.nextTokenIdToMint();
-        uint256 packsToOpen = 1;
+        uint256 packsToOpen = 3;
         address recipient = address(1);
+
         vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
-        console.log(totalSupply);
+        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+
         vm.prank(recipient, recipient);
         vm.resumeGasMetering();
         pack.openPack(packId, packsToOpen);
