@@ -109,13 +109,15 @@ contract AirdropERC721 is
             // airdropContent[i + currentCount] = _contents[i];
             tempContent[tempContentIndex++] = _contents[i];
 
-            if (tempContentIndex == CONTENT_COUNT_FOR_POINTER - 1) {
+            if (tempContentIndex == CONTENT_COUNT_FOR_POINTER) {
                 address pointer = SSTORE2.write(abi.encode(tempContent));
                 batch.pointers.push(pointer);
 
                 uint256 size = (len - i - 1) > CONTENT_COUNT_FOR_POINTER ? CONTENT_COUNT_FOR_POINTER : (len - i - 1);
                 tempContent = new AirdropContent[](size);
                 tempContentIndex = 0;
+
+                i += 1;
                 continue;
             }
 
@@ -269,14 +271,58 @@ contract AirdropERC721 is
     function getAllAirdropPayments(uint256 startId, uint256 endId)
         external
         view
-        returns (AirdropContent[] memory contents)
+        returns (AirdropContent[] memory airdropContents)
     {
         require(startId <= endId && endId < payeeCount, "invalid range");
 
-        contents = new AirdropContent[](endId - startId + 1);
+        airdropContents = new AirdropContent[](endId - startId + 1);
 
-        for (uint256 i = startId; i <= endId; i += 1) {
-            contents[i - startId] = airdropContent[i];
+        (uint256 _startBatchId, uint256 _endBatchId) = _getBatchesToProcess(startId, endId);
+
+        uint256 index = 0;
+        uint256 startingPointer = type(uint256).max;
+        for (uint256 i = _startBatchId; i <= _endBatchId; i++) {
+            AirdropBatch memory batch = _getBatch(i);
+
+            uint256 _totalPointers = batch.pointers.length;
+            uint256 _pointerIdToProcess = 0;
+
+            uint256 startIndexInFirstBatch = 0;
+            if (i == _startBatchId) {
+                startIndexInFirstBatch = _startBatchId == 0
+                    ? startId
+                    : startId - _getBatch(_startBatchId - 1).batchEndIndex;
+            }
+
+            while (_pointerIdToProcess < _totalPointers) {
+                bytes memory pointerData = SSTORE2.read(batch.pointers[_pointerIdToProcess]);
+                AirdropContent[] memory contents = abi.decode(pointerData, (AirdropContent[]));
+
+                uint256 j = 0;
+                if (i == _startBatchId && startingPointer != type(uint256).max) {
+                    if (contents.length < startIndexInFirstBatch) {
+                        startIndexInFirstBatch -= contents.length;
+                        _pointerIdToProcess += 1;
+                        continue;
+                    }
+
+                    j = startIndexInFirstBatch;
+                    startingPointer = _pointerIdToProcess;
+                }
+
+                for (; j < contents.length; ) {
+                    if (index == endId - startId + 1) {
+                        return airdropContents;
+                    }
+
+                    airdropContents[index++] = contents[j];
+                    unchecked {
+                        j += 1;
+                    }
+                }
+
+                _pointerIdToProcess += 1;
+            }
         }
     }
 
