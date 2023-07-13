@@ -117,7 +117,7 @@ contract ERC1155Base is
 
         if (_tokenId == type(uint256).max) {
             tokenIdToMint = nextIdToMint;
-            nextTokenIdToMint_ += 1;
+            ++nextTokenIdToMint_;
             _setTokenURI(nextIdToMint, _tokenURI);
         } else {
             require(_tokenId < nextIdToMint, "invalid id");
@@ -145,23 +145,28 @@ contract ERC1155Base is
         uint256[] memory _amounts,
         string memory _baseURI
     ) public virtual {
+        uint256 amtLen = _amounts.length;
+        uint256 tokenLen = _tokenIds.length;
         require(_canMint(), "Not authorized to mint.");
-        require(_amounts.length > 0, "Minting zero tokens.");
-        require(_tokenIds.length == _amounts.length, "Length mismatch.");
+        require(amtLen > 0, "Minting zero tokens.");
+        require(tokenLen == amtLen, "Length mismatch.");
 
         uint256 nextIdToMint = nextTokenIdToMint();
         uint256 startNextIdToMint = nextIdToMint;
 
         uint256 numOfNewNFTs;
 
-        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
+        for (uint256 i; i < tokenLen;) {
             if (_tokenIds[i] == type(uint256).max) {
                 _tokenIds[i] = nextIdToMint;
 
-                nextIdToMint += 1;
-                numOfNewNFTs += 1;
+                ++nextIdToMint;//check for later and re.quantity
+                ++numOfNewNFTs;
             } else {
                 require(_tokenIds[i] < nextIdToMint, "invalid id");
+            }
+            unchecked {
+                ++i;
             }
         }
 
@@ -206,12 +211,15 @@ contract ERC1155Base is
         uint256[] memory _amounts
     ) external virtual {
         address caller = msg.sender;
-
+        uint256 tknLen = _tokenIds.length;
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
-        require(_tokenIds.length == _amounts.length, "Length mismatch");
+        require(tknLen == _amounts.length, "Length mismatch");
 
-        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
+        for (uint256 i; i < tknLen;) {
             require(balanceOf[_owner][_tokenIds[i]] >= _amounts[i], "Not enough tokens owned");
+            unchecked {
+                ++i;
+            }
         }
 
         _burnBatch(_owner, _tokenIds, _amounts);
@@ -318,16 +326,22 @@ contract ERC1155Base is
         bytes memory data
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-
+        uint256 idLen = ids.length;
         if (from == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
+            for (uint256 i; i < idLen;) {
                 totalSupply[ids[i]] += amounts[i];
+                unchecked {
+                    ++i;
+                }
             }
         }
 
         if (to == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
+            for (uint256 i; i < idLen;) {
                 totalSupply[ids[i]] -= amounts[i];
+                unchecked {
+                    ++i;
+                }
             }
         }
     }

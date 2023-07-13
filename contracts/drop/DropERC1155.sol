@@ -67,9 +67,10 @@ contract DropERC1155 is
     string public symbol;
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private transferRole;
+    uint256 private immutable transferRole =
+        60161385426789692149059917683466708061875606619057841735915967165702158708588;
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
-    bytes32 private minterRole;
+    uint256 private immutable minterRole = 71998914331801701415977457805802827292338598818749192222732755537001613711014;
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -116,8 +117,6 @@ contract DropERC1155 is
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
-        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
-        bytes32 _minterRole = keccak256("MINTER_ROLE");
 
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
@@ -130,16 +129,13 @@ contract DropERC1155 is
         _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(_minterRole, _defaultAdmin);
-        _setupRole(_transferRole, _defaultAdmin);
-        _setupRole(_transferRole, address(0));
+        _setupRole(bytes32(minterRole), _defaultAdmin);
+        _setupRole(bytes32(transferRole), _defaultAdmin);
+        _setupRole(bytes32(transferRole), address(0));
 
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
-
-        transferRole = _transferRole;
-        minterRole = _minterRole;
         name = _name;
         symbol = _symbol;
     }
@@ -173,8 +169,8 @@ contract DropERC1155 is
         return bytes32("DropERC1155");
     }
 
-    function contractVersion() external pure returns (uint8) {
-        return uint8(4);
+    function contractVersion() external pure returns (uint256) {
+        return 4;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -227,8 +223,9 @@ contract DropERC1155 is
 
         (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
 
-        address _saleRecipient = _primarySaleRecipient == address(0)
-            ? (saleRecipient[_tokenId] == address(0) ? primarySaleRecipient() : saleRecipient[_tokenId])
+        //******************************************************************************** */check later
+        address _saleRecipient = uint160(_primarySaleRecipient) == 0
+            ? (uint160(saleRecipient[_tokenId]) == 0 ? primarySaleRecipient() : saleRecipient[_tokenId])
             : _primarySaleRecipient;
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
@@ -245,11 +242,7 @@ contract DropERC1155 is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(
-        address _to,
-        uint256 _tokenId,
-        uint256 _quantityBeingClaimed
-    ) internal override {
+    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed) internal override {
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
 
@@ -285,7 +278,7 @@ contract DropERC1155 is
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
-        return hasRole(minterRole, _msgSender());
+        return hasRole(bytes32(minterRole), _msgSender());
     }
 
     /// @dev Returns whether operator restriction can be set in the given execution context.
@@ -303,11 +296,7 @@ contract DropERC1155 is
     }
 
     /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
-    function burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory values
-    ) public virtual {
+    function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
             "ERC1155: caller is not owner nor approved."
@@ -330,19 +319,26 @@ contract DropERC1155 is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(transferRole, from) || hasRole(transferRole, to), "restricted to TRANSFER_ROLE holders.");
+        if (!hasRole(bytes32(transferRole), address(0)) && from != address(0) && to != address(0)) {
+            require(hasRole(bytes32(transferRole), from) || hasRole(bytes32(transferRole), to), "restricted to TRANSFER_ROLE holders.");
         }
 
-        if (from == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
+        uint256 idLen = ids.length;
+        if (uint160(from) == 0) {
+            for (uint256 i; i < idLen;) {
                 totalSupply[ids[i]] += amounts[i];
+                unchecked{
+                    ++i;
+                }
             }
         }
 
-        if (to == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
+        if (uint160(to) == 0) {
+            for (uint256 i; i < idLen;) {
                 totalSupply[ids[i]] -= amounts[i];
+                unchecked{
+                    ++i;
+                }
             }
         }
     }
@@ -355,13 +351,11 @@ contract DropERC1155 is
     /**
      * @dev See {IERC1155-safeTransferFrom}.
      */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) public override(ERC1155Upgradeable) onlyAllowedOperator(from) {
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
+        public
+        override(ERC1155Upgradeable)
+        onlyAllowedOperator(from)
+    {
         super.safeTransferFrom(from, to, id, amount, data);
     }
 

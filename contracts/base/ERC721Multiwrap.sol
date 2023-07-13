@@ -42,11 +42,14 @@ contract ERC721Multiwrap is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Only MINTER_ROLE holders can wrap tokens, when wrapping is restricted.
-    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    //keccak256("MINTER_ROLE")
+    uint256 private constant MINTER_ROLE = 71998914331801701415977457805802827292338598818749192222732755537001613711014;
     /// @dev Only UNWRAP_ROLE holders can unwrap tokens, when unwrapping is restricted.
-    bytes32 private constant UNWRAP_ROLE = keccak256("UNWRAP_ROLE");
+    //keccak256("UNWRAP_ROLE")
+    uint256 private constant UNWRAP_ROLE = 84139059899158579757998814948193412200566640136130869897771462053434805388611;
     /// @dev Only assets with ASSET_ROLE can be wrapped, when wrapping is restricted to particular assets.
-    bytes32 private constant ASSET_ROLE = keccak256("ASSET_ROLE");
+    //keccak256("ASSET_ROLE")
+    uint256 private constant ASSET_ROLE = 60987689077407889598560405654698036834037939593577549754865473102703270824678;
 
     /*//////////////////////////////////////////////////////////////
                                 Events
@@ -93,11 +96,11 @@ contract ERC721Multiwrap is
         _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(MINTER_ROLE, msg.sender);
-        _setupRole(TRANSFER_ROLE, msg.sender);
+        _setupRole(bytes32(MINTER_ROLE), msg.sender);
+        _setupRole(bytes32(TRANSFER_ROLE), msg.sender);
 
-        _setupRole(ASSET_ROLE, address(0));
-        _setupRole(UNWRAP_ROLE, address(0));
+        _setupRole(bytes32(ASSET_ROLE), address(0));
+        _setupRole(bytes32(UNWRAP_ROLE), address(0));
 
         restrictTransfers(false);
     }
@@ -149,10 +152,15 @@ contract ERC721Multiwrap is
         Token[] calldata _tokensToWrap,
         string calldata _uriForWrappedToken,
         address _recipient
-    ) public payable virtual onlyRoleWithSwitch(MINTER_ROLE) returns (uint256 tokenId) {
-        if (!hasRole(ASSET_ROLE, address(0))) {
-            for (uint256 i = 0; i < _tokensToWrap.length; i += 1) {
-                _checkRole(ASSET_ROLE, _tokensToWrap[i].assetContract);
+    ) public payable virtual onlyRoleWithSwitch(bytes32(MINTER_ROLE)) returns (uint256 tokenId) {
+        uint256 length = _tokensToWrap.length;
+        if (!hasRole(bytes32(ASSET_ROLE), address(0))) {
+            for (uint256 i; i <  length;) {
+                _checkRole(bytes32(ASSET_ROLE), _tokensToWrap[i].assetContract);
+
+                unchecked {
+                    i++;
+                }
             }
         }
 
@@ -171,7 +179,7 @@ contract ERC721Multiwrap is
      *  @param _tokenId   The token Id of the wrapped NFT to unwrap.
      *  @param _recipient The recipient of the underlying ERC1155, ERC721, ERC20 tokens of the wrapped NFT.
      */
-    function unwrap(uint256 _tokenId, address _recipient) public virtual onlyRoleWithSwitch(UNWRAP_ROLE) {
+    function unwrap(uint256 _tokenId, address _recipient) public virtual onlyRoleWithSwitch(bytes32(UNWRAP_ROLE)) {
         require(_tokenId < nextTokenIdToMint(), "wrapped NFT DNE.");
         require(isApprovedOrOwner(msg.sender, _tokenId), "caller not approved for unwrapping.");
 

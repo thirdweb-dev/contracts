@@ -60,7 +60,7 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC
         address _stakingToken,
         address _rewardToken,
         address _nativeTokenWrapper
-    ) Staking721(_stakingToken) {
+    ) Staking721(_stakingToken) payable {
         _setupOwner(msg.sender);
         _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
 
@@ -147,9 +147,8 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC
             _amount,
             nativeTokenWrapper
         );
-        uint256 actualAmount = IERC20(_rewardToken).balanceOf(address(this)) - balanceBefore;
 
-        rewardTokenBalance += actualAmount;
+        rewardTokenBalance += IERC20(_rewardToken).balanceOf(address(this)) - balanceBefore;
     }
 
     /// @dev Admin can withdraw excess reward tokens -- override for custom logic.

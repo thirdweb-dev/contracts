@@ -128,7 +128,7 @@ contract ERC721Drop is
     ) public virtual override returns (uint256 batchId) {
         if (_data.length > 0) {
             (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
-            if (encryptedURI.length != 0 && provenanceHash != "") {
+            if (encryptedURI.length > 0 && uint256(provenanceHash) > 0) {
                 _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
             }
         }

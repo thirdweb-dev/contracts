@@ -156,9 +156,9 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155, E
             _amount,
             nativeTokenWrapper
         );
-        uint256 actualAmount = IERC20(_rewardToken).balanceOf(address(this)) - balanceBefore;
 
-        rewardTokenBalance += actualAmount;
+
+        rewardTokenBalance += IERC20(_rewardToken).balanceOf(address(this)) - balanceBefore;
     }
 
     /// @dev Admin can withdraw excess reward tokens -- override for custom logic.

@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 import "./ERC20Base.sol";
 
 import "../extension/PrimarySale.sol";
-import { SignatureMintERC20 } from "../extension/SignatureMintERC20.sol";
+import {SignatureMintERC20} from "../extension/SignatureMintERC20.sol";
 
 import "../lib/CurrencyTransferLib.sol";
 
@@ -28,11 +28,7 @@ contract ERC20SignatureMint is ERC20Base, PrimarySale, SignatureMintERC20 {
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        address _primarySaleRecipient
-    ) ERC20Base(_name, _symbol) {
+    constructor(string memory _name, string memory _symbol, address _primarySaleRecipient) ERC20Base(_name, _symbol) {
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 
@@ -100,7 +96,11 @@ contract ERC20SignatureMint is ERC20Base, PrimarySale, SignatureMintERC20 {
             require(msg.value == totalPrice, "Must send total price.");
         }
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
-        CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            msg.sender,
+            (_primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient),
+            totalPrice
+        );
     }
 }

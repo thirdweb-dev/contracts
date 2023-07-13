@@ -38,7 +38,9 @@ contract AirdropERC1155 is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("AirdropERC1155");
+    // bytes32("AirdropERC1155")
+    uint256 private constant MODULE_TYPE = 29586643606843690852087293058321567235744234250338640108960591401393269506048;
+
     uint256 private constant VERSION = 1;
 
     uint256 public payeeCount;
@@ -68,13 +70,13 @@ contract AirdropERC1155 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
+    function contractType() external pure returns (bytes32 _type) {
+        _type = bytes32(MODULE_TYPE);
     }
 
     /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
+    function contractVersion() external pure returns (uint256) {
+        return VERSION;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -89,11 +91,11 @@ contract AirdropERC1155 is
         uint256 currentCount = payeeCount;
         payeeCount += len;
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i; i < len;) {
             airdropContent[i + currentCount] = _contents[i];
 
             unchecked {
-                i += 1;
+                ++i;
             }
         }
 
@@ -109,10 +111,8 @@ contract AirdropERC1155 is
         require(newProcessedCount <= payeeCount, "Exceeds total payees.");
         processedCount = newProcessedCount;
 
-        CancelledPayments memory range = CancelledPayments({
-            startIndex: countOfProcessed,
-            endIndex: newProcessedCount - 1
-        });
+        CancelledPayments memory range =
+            CancelledPayments({startIndex: countOfProcessed, endIndex: newProcessedCount - 1});
 
         cancelledPaymentIndices.push(range);
 
@@ -123,28 +123,23 @@ contract AirdropERC1155 is
     function processPayments(uint256 paymentsToProcess) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 totalPayees = payeeCount;
         uint256 countOfProcessed = processedCount;
+        uint256 addedCountOfProcessed = countOfProcessed + paymentsToProcess;
 
-        require(countOfProcessed + paymentsToProcess <= totalPayees, "invalid no. of payments");
+        require(addedCountOfProcessed <= totalPayees, "invalid no. of payments");
 
         processedCount += paymentsToProcess;
 
-        for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); ) {
+        for (uint256 i = countOfProcessed; i < (addedCountOfProcessed);) {
             AirdropContent memory content = airdropContent[i];
 
             bool failed;
-            try
-                IERC1155(content.tokenAddress).safeTransferFrom{ gas: 80_000 }(
-                    content.tokenOwner,
-                    content.recipient,
-                    content.tokenId,
-                    content.amount,
-                    ""
-                )
-            {} catch {
+            try IERC1155(content.tokenAddress).safeTransferFrom{gas: 80_000}(
+                content.tokenOwner, content.recipient, content.tokenId, content.amount, ""
+            ) {} catch {
                 // revert if failure is due to unapproved tokens
                 require(
-                    IERC1155(content.tokenAddress).balanceOf(content.tokenOwner, content.tokenId) >= content.amount &&
-                        IERC1155(content.tokenAddress).isApprovedForAll(content.tokenOwner, address(this)),
+                    IERC1155(content.tokenAddress).balanceOf(content.tokenOwner, content.tokenId) >= content.amount
+                        && IERC1155(content.tokenAddress).isApprovedForAll(content.tokenOwner, address(this)),
                     "Not balance or approved"
                 );
 
@@ -156,7 +151,7 @@ contract AirdropERC1155 is
             emit AirdropPayment(content.recipient, i, failed);
 
             unchecked {
-                i += 1;
+                ++i;
             }
         }
     }
@@ -171,22 +166,16 @@ contract AirdropERC1155 is
     function airdrop(AirdropContent[] calldata _contents) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i; i < len;) {
             bool failed;
-            try
-                IERC1155(_contents[i].tokenAddress).safeTransferFrom(
-                    _contents[i].tokenOwner,
-                    _contents[i].recipient,
-                    _contents[i].tokenId,
-                    _contents[i].amount,
-                    ""
-                )
-            {} catch {
+            try IERC1155(_contents[i].tokenAddress).safeTransferFrom(
+                _contents[i].tokenOwner, _contents[i].recipient, _contents[i].tokenId, _contents[i].amount, ""
+            ) {} catch {
                 // revert if failure is due to unapproved tokens
                 require(
-                    IERC1155(_contents[i].tokenAddress).balanceOf(_contents[i].tokenOwner, _contents[i].tokenId) >=
-                        _contents[i].amount &&
-                        IERC1155(_contents[i].tokenAddress).isApprovedForAll(_contents[i].tokenOwner, address(this)),
+                    IERC1155(_contents[i].tokenAddress).balanceOf(_contents[i].tokenOwner, _contents[i].tokenId)
+                        >= _contents[i].amount
+                        && IERC1155(_contents[i].tokenAddress).isApprovedForAll(_contents[i].tokenOwner, address(this)),
                     "Not balance or approved"
                 );
 
@@ -196,7 +185,7 @@ contract AirdropERC1155 is
             emit StatelessAirdrop(_contents[i].recipient, _contents[i], failed);
 
             unchecked {
-                i += 1;
+                ++i;
             }
         }
     }
@@ -215,8 +204,11 @@ contract AirdropERC1155 is
 
         contents = new AirdropContent[](endId - startId + 1);
 
-        for (uint256 i = startId; i <= endId; i += 1) {
+        for (uint256 i = startId; i <= endId;) {
             contents[i - startId] = airdropContent[i];
+            unchecked{
+              ++i;
+            }
         }
     }
 
@@ -226,10 +218,12 @@ contract AirdropERC1155 is
         view
         returns (AirdropContent[] memory contents)
     {
-        require(startId <= endId && endId < payeeCount, "invalid range");
+        //cached payee
+        uint256 payee = payeeCount;
+        require(startId <= endId && endId < payee, "invalid range");
 
         uint256 processed = processedCount;
-        if (processed == payeeCount) {
+        if (processed == payee) {
             return contents;
         }
 
@@ -239,7 +233,7 @@ contract AirdropERC1155 is
         contents = new AirdropContent[](endId - startId + 1);
 
         uint256 idx;
-        for (uint256 i = startId; i <= endId; i += 1) {
+        for (uint256 i = startId; i <= endId; ++i) {
             contents[idx] = airdropContent[i];
             idx += 1;
         }
@@ -250,8 +244,11 @@ contract AirdropERC1155 is
         uint256 count = indicesOfFailed.length;
         contents = new AirdropContent[](count);
 
-        for (uint256 i = 0; i < count; i += 1) {
+        for (uint256 i; i < count;) {
             contents[i] = airdropContent[indicesOfFailed[i]];
+            unchecked {
+                ++i;
+            }
         }
     }
 

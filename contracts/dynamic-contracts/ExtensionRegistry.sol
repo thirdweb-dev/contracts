@@ -52,8 +52,11 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionState, PermissionsEnu
 
         allExtensions = new Extension[](len);
 
-        for (uint256 i = 0; i < len; i += 1) {
+        for (uint256 i; i < len;) {
             allExtensions[i] = data.extensions[names[i]];
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -82,7 +85,7 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionState, PermissionsEnu
     function getExtensionForFunction(bytes4 _functionSelector) external view returns (ExtensionMetadata memory) {
         ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
         ExtensionMetadata memory metadata = data.extensionMetadata[_functionSelector];
-        require(metadata.implementation != address(0), "ExtensionRegistry: no extension for function.");
+        require(uint160(metadata.implementation) > 0, "ExtensionRegistry: no extension for function.");
         return metadata;
     }
 }

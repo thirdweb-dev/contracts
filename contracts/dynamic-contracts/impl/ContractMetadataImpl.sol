@@ -7,10 +7,10 @@ import "../../extension/interface/IPermissions.sol";
 import "../../extension/interface/IERC2771Context.sol";
 
 contract ContractMetadataImpl is ContractMetadata {
-    bytes32 private constant DEFAULT_ADMIN_ROLE = 0x00;
+    uint256 private constant DEFAULT_ADMIN_ROLE = 0x00;
 
     function _canSetContractURI() internal view override returns (bool) {
-        return IPermissions(address(this)).hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return IPermissions(address(this)).hasRole(bytes32(DEFAULT_ADMIN_ROLE), _msgSender());
     }
 
     function _msgSender() internal view returns (address sender) {

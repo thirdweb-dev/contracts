@@ -39,9 +39,12 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
 
         uint256 len = _extensionNames.length;
 
-        for (uint256 i = 0; i < len; i += 1) {
+        for (uint256 i; i < len;) {
             Extension memory extension = IExtensionRegistry(_extensionRegistry).getExtension(_extensionNames[i]);
             map.setExtension(extension);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -90,41 +93,49 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
         string[] memory names = data.extensionNames.values();
         uint256 namesLen = names.length;
 
-        uint256 overrides = 0;
-        for (uint256 i = 0; i < mapExtensionsLen; i += 1) {
+        uint256 overrides;
+        for (uint256 i; i < mapExtensionsLen;) {
             if (data.extensionNames.contains(mapExtensions[i].metadata.name)) {
-                overrides += 1;
+                ++overrides;
+                unchecked {
+                    ++i;
+                }
             }
         }
 
-        uint256 total = (namesLen + mapExtensionsLen) - overrides;
+        allExtensions = new Extension[]((namesLen + mapExtensionsLen) - overrides);
+        uint256 idx;
 
-        allExtensions = new Extension[](total);
-        uint256 idx = 0;
-
-        for (uint256 i = 0; i < mapExtensionsLen; i += 1) {
+        for (uint256 i; i < mapExtensionsLen;) {
             string memory name = mapExtensions[i].metadata.name;
             if (!data.extensionNames.contains(name)) {
                 allExtensions[idx] = mapExtensions[i];
-                idx += 1;
+                //overflow impossible as long as i < mapExtensionsLen and since idx starts from 0
+                unchecked {
+                    ++idx;
+                }
+            }
+            unchecked {
+                ++i;
             }
         }
 
-        for (uint256 i = 0; i < namesLen; i += 1) {
+        for (uint256 i; i < namesLen;) {
             allExtensions[idx] = data.extensions[names[i]];
             idx += 1;
+            unchecked {
+                ++i;
+            }
         }
     }
 
     /// @dev Returns the extension metadata and functions for a given extension.
     function getExtension(string memory _extensionName) public view returns (Extension memory) {
         ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
-        bool isLocalExtension = data.extensionNames.contains(_extensionName);
 
-        return
-            isLocalExtension
-                ? data.extensions[_extensionName]
-                : IDefaultExtensionSet(defaultExtensionSet).getExtension(_extensionName);
+        return (data.extensionNames.contains(_extensionName))
+            ? data.extensions[_extensionName]
+            : IDefaultExtensionSet(defaultExtensionSet).getExtension(_extensionName);
     }
 
     /// @dev Returns the extension's implementation smart contract address.
@@ -146,12 +157,9 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
         ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
         ExtensionMetadata memory metadata = data.extensionMetadata[_functionSelector];
 
-        bool isLocalExtension = metadata.implementation != address(0);
-
-        return
-            isLocalExtension
-                ? metadata
-                : IDefaultExtensionSet(defaultExtensionSet).getExtensionForFunction(_functionSelector);
+        return (uint160(metadata.implementation) > 0)
+            ? metadata
+            : IDefaultExtensionSet(defaultExtensionSet).getExtensionForFunction(_functionSelector);
     }
 
     /// @dev Returns the extension implementation address stored in router, for the given function.

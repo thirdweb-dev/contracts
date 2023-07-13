@@ -64,7 +64,7 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
          *        mempool can be frontrun by copying the input data, since the minted tokens
          *        will be sent to the `_msgSender()` in this case.
          */
-        address receiver = _req.to == address(0) ? msg.sender : _req.to;
+        address receiver =uint160( _req.to) == 0 ? msg.sender : _req.to;
 
         // Collect price
         _collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
@@ -107,7 +107,7 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
             require(msg.value == totalPrice, "Must send total price.");
         }
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        address saleRecipient = uint160(_primarySaleRecipient) == 0 ? primarySaleRecipient() : _primarySaleRecipient;
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 }

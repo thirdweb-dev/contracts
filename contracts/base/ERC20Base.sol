@@ -48,7 +48,7 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit, IMintab
      */
     function mintTo(address _to, uint256 _amount) public virtual {
         require(_canMint(), "Not authorized to mint.");
-        require(_amount != 0, "Minting zero tokens.");
+        require(_amount > 0, "Minting zero tokens.");
 
         _mint(_to, _amount);
     }
@@ -74,9 +74,8 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit, IMintab
     function burnFrom(address _account, uint256 _amount) external virtual override {
         require(_canBurn(), "Not authorized to burn.");
         require(balanceOf(_account) >= _amount, "not enough balance");
-        uint256 decreasedAllowance = allowance(_account, msg.sender) - _amount;
         _approve(_account, msg.sender, 0);
-        _approve(_account, msg.sender, decreasedAllowance);
+        _approve(_account, msg.sender, (allowance(_account, msg.sender) - _amount));
         _burn(_account, _amount);
     }
 

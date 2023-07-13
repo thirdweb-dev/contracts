@@ -51,7 +51,7 @@ contract DropERC20 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private transferRole;
+    uint256 private immutable transferRole =  60161385426789692149059917683466708061875606619057841735915967165702158708588;
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -79,8 +79,6 @@ contract DropERC20 is
         address _platformFeeRecipient,
         uint128 _platformFeeBps
     ) external initializer {
-        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
-
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC20Permit_init(_name);
@@ -89,13 +87,11 @@ contract DropERC20 is
         _setupContractURI(_contractURI);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(_transferRole, _defaultAdmin);
-        _setupRole(_transferRole, address(0));
+        _setupRole(bytes32(transferRole), _defaultAdmin);
+        _setupRole(bytes32(transferRole), address(0));
 
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupPrimarySaleRecipient(_saleRecipient);
-
-        transferRole = _transferRole;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -106,8 +102,8 @@ contract DropERC20 is
         return bytes32("DropERC20");
     }
 
-    function contractVersion() external pure returns (uint8) {
-        return uint8(4);
+    function contractVersion() external pure returns (uint256) {
+        return 4;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -125,14 +121,11 @@ contract DropERC20 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Runs before every `claim` function call.
-    function _beforeClaim(
-        address,
-        uint256 _quantity,
-        address,
-        uint256,
-        AllowlistProof calldata,
-        bytes memory
-    ) internal view override {
+    function _beforeClaim(address, uint256 _quantity, address, uint256, AllowlistProof calldata, bytes memory)
+        internal
+        view
+        override
+    {
         uint256 _maxTotalSupply = maxTotalSupply;
         require(_maxTotalSupply == 0 || totalSupply() + _quantity <= _maxTotalSupply, "exceed max total supply.");
     }
@@ -150,8 +143,6 @@ contract DropERC20 is
 
         (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
-
         // `_pricePerToken` is interpreted as price per 1 ether unit of the ERC20 tokens.
         uint256 totalPrice = (_quantityToClaim * _pricePerToken) / 1 ether;
         require(totalPrice > 0, "quantity too low");
@@ -165,7 +156,12 @@ contract DropERC20 is
         }
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            _msgSender(),
+            (_primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient),
+            totalPrice - platformFees
+        );
     }
 
     /// @dev Transfers the tokens being claimed.
@@ -198,32 +194,36 @@ contract DropERC20 is
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
-    function _mint(address account, uint256 amount) internal virtual override(ERC20Upgradeable, ERC20VotesUpgradeable) {
+    function _mint(address account, uint256 amount)
+        internal
+        virtual
+        override(ERC20Upgradeable, ERC20VotesUpgradeable)
+    {
         super._mint(account, amount);
     }
 
-    function _burn(address account, uint256 amount) internal virtual override(ERC20Upgradeable, ERC20VotesUpgradeable) {
+    function _burn(address account, uint256 amount)
+        internal
+        virtual
+        override(ERC20Upgradeable, ERC20VotesUpgradeable)
+    {
         super._burn(account, amount);
     }
 
-    function _afterTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal virtual override(ERC20Upgradeable, ERC20VotesUpgradeable) {
+    function _afterTokenTransfer(address from, address to, uint256 amount)
+        internal
+        virtual
+        override(ERC20Upgradeable, ERC20VotesUpgradeable)
+    {
         super._afterTokenTransfer(from, to, amount);
     }
 
     /// @dev Runs on every transfer.
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override(ERC20Upgradeable) {
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override(ERC20Upgradeable) {
         super._beforeTokenTransfer(from, to, amount);
 
-        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(transferRole, from) || hasRole(transferRole, to), "transfers restricted.");
+        if (!hasRole(bytes32(transferRole), address(0)) && uint160(from) > 0 && uint160(to) > 0) {
+            require(hasRole(bytes32(transferRole), from) || hasRole(bytes32(transferRole), to), "transfers restricted.");
         }
     }
 

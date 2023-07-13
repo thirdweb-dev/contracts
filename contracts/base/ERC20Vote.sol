@@ -48,7 +48,7 @@ contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes, IMintabl
      */
     function mintTo(address _to, uint256 _amount) public virtual {
         require(_canMint(), "Not authorized to mint.");
-        require(_amount != 0, "Minting zero tokens.");
+        require(_amount > 0, "Minting zero tokens.");
 
         _mint(_to, _amount);
     }

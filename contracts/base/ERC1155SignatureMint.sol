@@ -55,17 +55,20 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         override
         returns (address signer)
     {
-        require(_req.quantity > 0, "Minting zero tokens.");
+        uint256 quantity = _req.quantity;
+
+        require(quantity > 0, "Minting zero tokens.");
 
         uint256 tokenIdToMint;
         uint256 nextIdToMint = nextTokenIdToMint();
+        uint256 tknID = _req.tokenId;
 
-        if (_req.tokenId == type(uint256).max) {
-            tokenIdToMint = nextIdToMint;
-            nextTokenIdToMint_ += 1;
+        if (tknID == type(uint256).max) {
+            tokenIdToMint = nextIdToMint; //check
+            ++nextTokenIdToMint_;
         } else {
-            require(_req.tokenId < nextIdToMint, "invalid id");
-            tokenIdToMint = _req.tokenId;
+            require(tknID < nextIdToMint, "invalid id");
+            tokenIdToMint = tknID;
         }
 
         // Verify and process payload.
@@ -74,7 +77,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         address receiver = _req.to;
 
         // Collect price
-        _collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
+        _collectPriceOnClaim(_req.primarySaleRecipient, quantity, _req.currency, _req.pricePerToken);
 
         // Set royalties, if applicable.
         if (_req.royaltyRecipient != address(0)) {
@@ -82,12 +85,12 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         }
 
         // Set URI
-        if (_req.tokenId == type(uint256).max) {
+        if (tknID == type(uint256).max) {
             _setTokenURI(tokenIdToMint, _req.uri);
         }
 
         // Mint tokens.
-        _mint(receiver, tokenIdToMint, _req.quantity, "");
+        _mint(receiver, tokenIdToMint, quantity, "");
 
         emit TokensMintedWithSignature(signer, receiver, tokenIdToMint, _req);
     }
@@ -123,7 +126,11 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
             require(msg.value == totalPrice, "Must send total price.");
         }
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
-        CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            msg.sender,
+            (_primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient),
+            totalPrice
+        );
     }
 }

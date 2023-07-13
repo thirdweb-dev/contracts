@@ -40,7 +40,7 @@ contract AirdropERC1155Claimable is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("AirdropERC1155Claimable");
+    uint256 private constant MODULE_TYPE = 29586643606843690852087293058321573109147369830996041617204722584018577522688;
     uint256 private constant VERSION = 1;
 
     /// @dev address of token being airdropped.
@@ -97,18 +97,21 @@ contract AirdropERC1155Claimable is
         airdropTokenAddress = _airdropTokenAddress;
         tokenIds = _tokenIds;
         expirationTimestamp = _expirationTimestamp;
+        //cache tokenIds length
+        uint256 len = tokenIds.length;
 
         require(
-            _maxWalletClaimCount.length == _tokenIds.length &&
-                _merkleRoot.length == _tokenIds.length &&
-                _availableAmounts.length == _tokenIds.length,
+            _maxWalletClaimCount.length == len && _merkleRoot.length == len && _availableAmounts.length == len,
             "length mismatch."
         );
 
-        for (uint256 i = 0; i < _tokenIds.length; i++) {
+        for (uint256 i; i < len;) {
             merkleRoot[_tokenIds[i]] = _merkleRoot[i];
             maxWalletClaimCount[_tokenIds[i]] = _maxWalletClaimCount[i];
             availableAmount[_tokenIds[i]] = _availableAmounts[i];
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -117,13 +120,13 @@ contract AirdropERC1155Claimable is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
+    function contractType() external pure returns (bytes32 _type) {
+        _type = bytes32(MODULE_TYPE);
     }
 
     /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
+    function contractVersion() external pure returns (uint256) {
+        return VERSION;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -158,11 +161,7 @@ contract AirdropERC1155Claimable is
     }
 
     /// @dev Transfers the tokens being claimed.
-    function _transferClaimedTokens(
-        address _to,
-        uint256 _quantityBeingClaimed,
-        uint256 _tokenId
-    ) internal {
+    function _transferClaimedTokens(address _to, uint256 _quantityBeingClaimed, uint256 _tokenId) internal {
         // if transfer claimed tokens is called when `to != msg.sender`, it'd use msg.sender's limits.
         // behavior would be similar to `msg.sender` mint for itself, then transfer to `_to`.
         supplyClaimedByWallet[_tokenId][_msgSender()] += _quantityBeingClaimed;
@@ -182,15 +181,10 @@ contract AirdropERC1155Claimable is
         bool isOverride;
 
         bytes32 mroot = merkleRoot[_tokenId];
-        if (mroot != bytes32(0)) {
-            (isOverride, ) = MerkleProof.verify(
-                _proofs,
-                mroot,
-                keccak256(abi.encodePacked(_claimer, _proofMaxQuantityForWallet))
-            );
+        if (mroot > bytes32(0)) {
+            (isOverride,) =
+                MerkleProof.verify(_proofs, mroot, keccak256(abi.encodePacked(_claimer, _proofMaxQuantityForWallet)));
         }
-
-        uint256 supplyClaimedAlready = supplyClaimedByWallet[_tokenId][_claimer];
 
         require(_quantity > 0, "Claiming zero tokens");
         require(_quantity <= availableAmount[_tokenId], "exceeds available tokens.");
@@ -199,7 +193,7 @@ contract AirdropERC1155Claimable is
         require(expTimestamp == 0 || block.timestamp < expTimestamp, "airdrop expired.");
 
         uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : maxWalletClaimCount[_tokenId];
-        require(_quantity + supplyClaimedAlready <= claimLimitForWallet, "invalid quantity.");
+        require(_quantity + supplyClaimedByWallet[_tokenId][_claimer] <= claimLimitForWallet, "invalid quantity.");
     }
 
     /*///////////////////////////////////////////////////////////////

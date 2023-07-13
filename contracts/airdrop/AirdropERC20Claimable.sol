@@ -39,8 +39,9 @@ contract AirdropERC20Claimable is
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
-
-    bytes32 private constant MODULE_TYPE = bytes32("AirdropERC20Claimable");
+    
+    //bytes32("AirdropERC20Claimable")
+    uint256 private constant MODULE_TYPE = 29586643606843690852087293431085645652668706737932658720402202613769287237632;
     uint256 private constant VERSION = 1;
 
     /// @dev address of token being airdropped.
@@ -102,13 +103,13 @@ contract AirdropERC20Claimable is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
+    function contractType() external pure returns (bytes32 _type) {
+        _type = bytes32(MODULE_TYPE);
     }
 
     /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
+    function contractVersion() external pure returns (uint256) {
+        return VERSION;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -148,7 +149,7 @@ contract AirdropERC20Claimable is
         uint256 _proofMaxQuantityForWallet
     ) public view {
         bool isOverride;
-        if (merkleRoot != bytes32(0)) {
+        if (merkleRoot > bytes32(0)) {
             (isOverride, ) = MerkleProof.verify(
                 _proofs,
                 merkleRoot,

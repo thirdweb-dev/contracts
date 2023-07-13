@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import { ERC1155 } from "../eip/ERC1155.sol";
+import {ERC1155} from "../eip/ERC1155.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/Multicall.sol";
@@ -90,11 +90,10 @@ contract ERC1155Drop is
 
     /// @notice Returns whether this contract supports the given interface.
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
-        return
-            interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
-            interfaceId == 0xd9b67a26 || // ERC165 Interface ID for ERC1155
-            interfaceId == 0x0e89341c || // ERC165 Interface ID for ERC1155MetadataURI
-            interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
+        return interfaceId == 0x01ffc9a7 // ERC165 Interface ID for ERC165
+            || interfaceId == 0xd9b67a26 // ERC165 Interface ID for ERC1155
+            || interfaceId == 0x0e89341c // ERC165 Interface ID for ERC1155MetadataURI
+            || interfaceId == type(IERC2981).interfaceId; // ERC165 ID for ERC2981
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -108,11 +107,7 @@ contract ERC1155Drop is
      *  @param _tokenId The tokenId of the NFT to burn.
      *  @param _amount  The amount of the NFT to burn.
      */
-    function burn(
-        address _owner,
-        uint256 _tokenId,
-        uint256 _amount
-    ) external virtual {
+    function burn(address _owner, uint256 _tokenId, uint256 _amount) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
@@ -128,18 +123,17 @@ contract ERC1155Drop is
      *  @param _tokenIds The tokenIds of the NFTs to burn.
      *  @param _amounts  The amounts of the NFTs to burn.
      */
-    function burnBatch(
-        address _owner,
-        uint256[] memory _tokenIds,
-        uint256[] memory _amounts
-    ) external virtual {
+    function burnBatch(address _owner, uint256[] memory _tokenIds, uint256[] memory _amounts) external virtual {
         address caller = msg.sender;
-
+        uint256 tknLen = _tokenIds.length;
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
-        require(_tokenIds.length == _amounts.length, "Length mismatch");
+        require(tknLen == _amounts.length, "Length mismatch");
 
-        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
+        for (uint256 i; i < tknLen;) {
             require(balanceOf[_owner][_tokenIds[i]] >= _amounts[i], "Not enough tokens owned");
+            unchecked {
+                ++i;
+            }
         }
 
         _burnBatch(_owner, _tokenIds, _amounts);
@@ -156,7 +150,7 @@ contract ERC1155Drop is
      *  @param _tokenId The tokenId of an NFT.
      */
     function uri(uint256 _tokenId) public view virtual override returns (string memory) {
-        (uint256 batchId, ) = _getBatchId(_tokenId);
+        (uint256 batchId,) = _getBatchId(_tokenId);
         string memory batchUri = _getBaseURI(_tokenId);
 
         if (isEncryptedBatch(batchId)) {
@@ -201,14 +195,15 @@ contract ERC1155Drop is
      *  @param _data             The encrypted base URI + provenance hash for the batch of NFTs being lazy minted.
      *  @return batchId          A unique integer identifier for the batch of NFTs lazy minted together.
      */
-    function lazyMint(
-        uint256 _amount,
-        string calldata _baseURIForTokens,
-        bytes calldata _data
-    ) public virtual override returns (uint256 batchId) {
+    function lazyMint(uint256 _amount, string calldata _baseURIForTokens, bytes calldata _data)
+        public
+        virtual
+        override
+        returns (uint256 batchId)
+    {
         if (_data.length > 0) {
             (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
-            if (encryptedURI.length != 0 && provenanceHash != "") {
+            if (encryptedURI.length > 0 && uint256(provenanceHash) > 0) {
                 _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
             }
         }
@@ -238,13 +233,12 @@ contract ERC1155Drop is
     /**
      * @dev See {IERC1155-safeTransferFrom}.
      */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) public virtual override(ERC1155) onlyAllowedOperator(from) {
+    function safeTransferFrom(address from, address to, uint256 id, uint256 amount, bytes memory data)
+        public
+        virtual
+        override(ERC1155)
+        onlyAllowedOperator(from)
+    {
         super.safeTransferFrom(from, to, id, amount, data);
     }
 
@@ -266,15 +260,12 @@ contract ERC1155Drop is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Runs before every `claim` function call.
-    function _beforeClaim(
-        uint256 _tokenId,
-        address,
-        uint256,
-        address,
-        uint256,
-        AllowlistProof calldata,
-        bytes memory
-    ) internal view virtual override {
+    function _beforeClaim(uint256 _tokenId, address, uint256, address, uint256, AllowlistProof calldata, bytes memory)
+        internal
+        view
+        virtual
+        override
+    {
         if (_tokenId >= nextTokenIdToLazyMint) {
             revert("Not enough minted tokens");
         }
@@ -299,16 +290,20 @@ contract ERC1155Drop is
             }
         }
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
-        CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            msg.sender,
+            (_primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient),
+            totalPrice
+        );
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _tokenId,
-        uint256 _quantityBeingClaimed
-    ) internal virtual override {
+    function _transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed)
+        internal
+        virtual
+        override
+    {
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
 
@@ -322,16 +317,22 @@ contract ERC1155Drop is
         bytes memory data
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
-
+        uint256 idsLen = ids.length;
         if (from == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
+            for (uint256 i; i < idsLen;) {
                 totalSupply[ids[i]] += amounts[i];
+                unchecked {
+                    ++i;
+                }
             }
         }
 
         if (to == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
+            for (uint256 i; i < idsLen;) {
                 totalSupply[ids[i]] -= amounts[i];
+                unchecked{
+                    ++i;
+                }
             }
         }
     }

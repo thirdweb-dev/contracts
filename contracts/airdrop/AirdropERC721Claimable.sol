@@ -40,7 +40,8 @@ contract AirdropERC721Claimable is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("AirdropERC721Claimable");
+    uint256 private constant MODULE_TYPE =  29586643606843690852087295304627069501965910696573580135805533079298499411968;
+
     uint256 private constant VERSION = 1;
 
     /// @dev address of token being airdropped.
@@ -110,13 +111,15 @@ contract AirdropERC721Claimable is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
+    function contractType() external pure returns (bytes32 _type) {
+        assembly{
+          _type := 29586643606843690852087295304627069501965910696573580135805533079298499411968
+        }
     }
 
     /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
+    function contractVersion() external pure returns (uint256) {
+        return VERSION;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -156,7 +159,7 @@ contract AirdropERC721Claimable is
         uint256 _proofMaxQuantityForWallet
     ) public view {
         bool isOverride;
-        if (merkleRoot != bytes32(0)) {
+        if (merkleRoot > bytes32(0)) {
             (isOverride, ) = MerkleProof.verify(
                 _proofs,
                 merkleRoot,
@@ -164,7 +167,7 @@ contract AirdropERC721Claimable is
             );
         }
 
-        uint256 supplyClaimedAlready = supplyClaimedByWallet[_claimer];
+         
 
         require(_quantity > 0, "Claiming zero tokens");
         require(_quantity <= availableAmount, "exceeds available tokens.");
@@ -173,7 +176,7 @@ contract AirdropERC721Claimable is
         require(expTimestamp == 0 || block.timestamp < expTimestamp, "airdrop expired.");
 
         uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : maxWalletClaimCount;
-        require(_quantity + supplyClaimedAlready <= claimLimitForWallet, "invalid quantity.");
+        require(_quantity + supplyClaimedByWallet[_claimer]  <= claimLimitForWallet, "invalid quantity.");
     }
 
     /// @dev Transfers the tokens being claimed.
@@ -188,9 +191,12 @@ contract AirdropERC721Claimable is
         address _tokenAddress = airdropTokenAddress;
         address _tokenOwner = tokenOwner;
 
-        for (uint256 i = 0; i < _quantityBeingClaimed; i += 1) {
+        for (uint256 i; i < _quantityBeingClaimed;) {
             IERC721(_tokenAddress).safeTransferFrom(_tokenOwner, _to, _tokenIds[index]);
-            index += 1;
+            ++index;
+            unchecked {
+                ++i;
+            }
         }
         nextIndex = index;
     }

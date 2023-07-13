@@ -8,7 +8,8 @@ import "../../openzeppelin-presets/utils/cryptography/EIP712.sol";
 import "../../openzeppelin-presets/utils/structs/EnumerableSet.sol";
 
 library AccountPermissionsStorage {
-    bytes32 public constant ACCOUNT_PERMISSIONS_STORAGE_POSITION = keccak256("account.permissions.storage");
+    //keccak256("account.permissions.storage")
+    uint256 public constant ACCOUNT_PERMISSIONS_STORAGE_POSITION = 109670636035465682859596539175355885392535949959845900855707016174305890754896;
 
     struct Data {
         /// @dev Map from address => whether the address is an admin.
@@ -26,7 +27,7 @@ library AccountPermissionsStorage {
     }
 
     function accountPermissionsStorage() internal pure returns (Data storage accountPermissionsData) {
-        bytes32 position = ACCOUNT_PERMISSIONS_STORAGE_POSITION;
+        uint256 position = ACCOUNT_PERMISSIONS_STORAGE_POSITION;
         assembly {
             accountPermissionsData.slot := position
         }
@@ -37,10 +38,8 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    bytes32 private constant TYPEHASH =
-        keccak256(
-            "RoleRequest(bytes32 role,address target,uint8 action,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
-        );
+    uint256 private constant TYPEHASH =
+    44888236309801804787164113078962499267102323340981079065490787188455172006809;
 
     modifier onlyAdmin() virtual {
         require(isAdmin(msg.sender), "AccountPermissions: caller is not an admin");
@@ -73,13 +72,19 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         address[] memory currentTargets = data.approvedTargets[role].values();
         uint256 currentLen = currentTargets.length;
 
-        for (uint256 i = 0; i < currentLen; i += 1) {
+        for (uint256 i; i < currentLen;) {
             data.approvedTargets[role].remove(currentTargets[i]);
+            unchecked {
+                ++i;
+            }
         }
 
         uint256 len = _restrictions.approvedTargets.length;
-        for (uint256 i = 0; i < len; i += 1) {
+        for (uint256 i; i < len; i) {
             data.approvedTargets[role].add(_restrictions.approvedTargets[i]);
+            unchecked {
+               ++i;
+            }
         }
 
         emit RoleUpdated(_restrictions.role, _restrictions);
