@@ -152,6 +152,97 @@ contract MarketplaceDirectListingsTest is BaseTest {
                             Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     *  @dev Tests contract state for Lister role.
+     */
+    function test_state_getRoleMember_listerRole() public {
+        bytes32 role = keccak256("LISTER_ROLE");
+
+        uint256 roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 1);
+
+        address roleMember = PermissionsEnumerable(marketplace).getRoleMember(role, 1);
+        assertEq(roleMember, address(0));
+
+        vm.startPrank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(role, address(2));
+        Permissions(marketplace).grantRole(role, address(3));
+        Permissions(marketplace).grantRole(role, address(4));
+
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 4);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).revokeRole(role, address(2));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 3);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).grantRole(role, address(5));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 4);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).grantRole(role, address(0));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 5);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).grantRole(role, address(6));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 6);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).revokeRole(role, address(3));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 5);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).revokeRole(role, address(4));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 4);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).revokeRole(role, address(0));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 3);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        vm.stopPrank();
+    }
+
     function test_state_approvedCurrencies() public {
         (uint256 listingId, IDirectListings.ListingParameters memory listingParams) = _setup_updateListing();
         address currencyToApprove = address(erc20); // same currency as main listing
