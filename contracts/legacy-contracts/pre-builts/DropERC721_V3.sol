@@ -54,13 +54,13 @@ contract DropERC721_V3 is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("DropERC721");
+    uint256 private constant MODULE_TYPE = 30959463389705759676286382173546857702512721070673506331541858425539009708032;
     uint256 private constant VERSION = 3;
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    uint256 private constant TRANSFER_ROLE = 60161385426789692149059917683466708061875606619057841735915967165702158708588;
     /// @dev Only MINTER_ROLE holders can lazy mint NFTs.
-    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    uint256 private constant MINTER_ROLE = 71998914331801701415977457805802827292338598818749192222732755537001613711014;
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -160,9 +160,9 @@ contract DropERC721_V3 is
         _owner = _defaultAdmin;
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(MINTER_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, address(0));
+        _setupRole(bytes32(MINTER_ROLE), _defaultAdmin);
+        _setupRole(bytes32(TRANSFER_ROLE), _defaultAdmin);
+        _setupRole(bytes32(TRANSFER_ROLE), address(0));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -171,7 +171,7 @@ contract DropERC721_V3 is
 
     /// @dev Returns the type of the contract.
     function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
+        return bytes32(MODULE_TYPE);
     }
 
     /// @dev Returns the version of the contract.
@@ -192,13 +192,17 @@ contract DropERC721_V3 is
 
     /// @dev Returns the URI for a given tokenId.
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        for (uint256 i = 0; i < baseURIIndices.length; i += 1) {
+        uint256 len = baseURIIndices.length;
+        for (uint256 i; i < len; i += 1) {
             if (_tokenId < baseURIIndices[i]) {
                 if (encryptedData[baseURIIndices[i]].length != 0) {
                     return string(abi.encodePacked(baseURI[baseURIIndices[i]], "0"));
                 } else {
                     return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
                 }
+            }
+            unchecked {
+                ++i;
             }
         }
 
@@ -240,7 +244,7 @@ contract DropERC721_V3 is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _data
-    ) external onlyRole(MINTER_ROLE) {
+    ) external onlyRole(bytes32(MINTER_ROLE)) {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
 
@@ -262,7 +266,7 @@ contract DropERC721_V3 is
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
     function reveal(uint256 index, bytes calldata _key)
         external
-        onlyRole(MINTER_ROLE)
+        onlyRole(bytes32(MINTER_ROLE))
         returns (string memory revealedURI)
     {
         require(index < baseURIIndices.length, "invalid index.");
@@ -727,8 +731,8 @@ contract DropERC721_V3 is
         super._beforeTokenTransfer(from, to, tokenId);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "!TRANSFER_ROLE");
+        if (!hasRole(bytes32(TRANSFER_ROLE), address(0)) && uint160(from) != 0 && uint160(to) != 0) {
+            require(hasRole(bytes32(TRANSFER_ROLE), from) || hasRole(bytes32(TRANSFER_ROLE), to), "!TRANSFER_ROLE");
         }
     }
 

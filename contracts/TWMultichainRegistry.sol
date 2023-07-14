@@ -37,12 +37,7 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Multicall, ERC2771Contex
     }
 
     // slither-disable-next-line similar-names
-    function add(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId,
-        string memory metadataUri
-    ) external {
+    function add(address _deployer, address _deployment, uint256 _chainId, string memory metadataUri) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
         bool added = deployments[_deployer][_chainId].add(_deployment);
@@ -58,11 +53,7 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Multicall, ERC2771Contex
     }
 
     // slither-disable-next-line similar-names
-    function remove(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId
-    ) external {
+    function remove(address _deployer, address _deployment, uint256 _chainId) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
         bool removed = deployments[_deployer][_chainId].remove(_deployment);
@@ -75,28 +66,38 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Multicall, ERC2771Contex
         uint256 totalDeployments;
         uint256 chainIdsLen = chainIds.length();
 
-        for (uint256 i = 0; i < chainIdsLen; i += 1) {
+        for (uint256 i; i < chainIdsLen; ) {
             uint256 chainId = chainIds.at(i);
 
             totalDeployments += deployments[_deployer][chainId].length();
+
+            unchecked {
+                ++i;
+            }
         }
 
         allDeployments = new Deployment[](totalDeployments);
         uint256 idx;
 
-        for (uint256 j = 0; j < chainIdsLen; j += 1) {
+        for (uint256 j; j < chainIdsLen; ) {
             uint256 chainId = chainIds.at(j);
 
             uint256 len = deployments[_deployer][chainId].length();
             address[] memory deploymentAddrs = deployments[_deployer][chainId].values();
 
-            for (uint256 k = 0; k < len; k += 1) {
+            for (uint256 k; k < len; ) {
                 allDeployments[idx] = Deployment({
                     deploymentAddress: deploymentAddrs[k],
                     chainId: chainId,
                     metadataURI: addressToMetadataUri[chainId][deploymentAddrs[k]]
                 });
-                idx += 1;
+                unchecked {
+                    ++idx;
+                    ++k;
+                }
+            }
+            unchecked {
+                ++j;
             }
         }
     }
@@ -104,10 +105,14 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Multicall, ERC2771Contex
     function count(address _deployer) external view returns (uint256 deploymentCount) {
         uint256 chainIdsLen = chainIds.length();
 
-        for (uint256 i = 0; i < chainIdsLen; i += 1) {
+        for (uint256 i; i < chainIdsLen;) {
             uint256 chainId = chainIds.at(i);
 
             deploymentCount += deployments[_deployer][chainId].length();
+
+            unchecked {
+                ++i;
+            }
         }
     }
 

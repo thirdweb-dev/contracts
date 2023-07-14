@@ -118,8 +118,13 @@ contract Pack is
          */
         address[] memory forwarders = new address[](_trustedForwarders.length + 1);
         uint256 i;
-        for (; i < _trustedForwarders.length; i++) {
+        
+        for (; i < _trustedForwarders.length;) {
             forwarders[i] = _trustedForwarders[i];
+
+            unchecked {
+                ++i;
+            }
         }
         forwarders[i] = forwarder;
         __ERC2771Context_init(forwarders);

@@ -12,7 +12,7 @@ import "../../lib/TWStrings.sol";
  */
 
 library PermissionsStorage {
-    bytes32 public constant PERMISSIONS_STORAGE_POSITION = keccak256("permissions.storage");
+    bytes32 private constant PERMISSIONS_STORAGE_POSITION = keccak256("permissions.storage");
 
     struct Data {
         /// @dev Map from keccak256 hash of a role => a map from address => whether address has role.

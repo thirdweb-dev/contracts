@@ -214,31 +214,39 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         external
         view
         virtual
-        returns (
-            uint256[] memory _tokensStaked,
-            uint256[] memory _tokenAmounts,
-            uint256 _totalRewards
-        )
+        returns (uint256[] memory _tokensStaked, uint256[] memory _tokenAmounts, uint256 _totalRewards)
     {
         uint256[] memory _indexedTokens = indexedTokens;
         uint256[] memory _stakedAmounts = new uint256[](_indexedTokens.length);
         uint256 indexedTokenCount = _indexedTokens.length;
-        uint256 stakerTokenCount = 0;
+        uint256 stakerTokenCount;
 
-        for (uint256 i = 0; i < indexedTokenCount; i++) {
+        for (uint256 i; i < indexedTokenCount;) {
             _stakedAmounts[i] = stakers[_indexedTokens[i]][_staker].amountStaked;
-            if (_stakedAmounts[i] > 0) stakerTokenCount += 1;
+            if (_stakedAmounts[i] > 0) {
+                unchecked {
+                    ++stakerTokenCount;
+                }
+            }
+            unchecked {
+                ++i;
+            }
         }
 
         _tokensStaked = new uint256[](stakerTokenCount);
         _tokenAmounts = new uint256[](stakerTokenCount);
-        uint256 count = 0;
-        for (uint256 i = 0; i < indexedTokenCount; i++) {
+        uint256 count;
+        for (uint256 i; i < indexedTokenCount;) {
             if (_stakedAmounts[i] > 0) {
                 _tokensStaked[count] = _indexedTokens[i];
                 _tokenAmounts[count] = _stakedAmounts[i];
                 _totalRewards += _availableRewards(_indexedTokens[i], _staker);
-                count += 1;
+                unchecked {
+                    ++count;
+                }
+            }
+            unchecked {
+                ++i;
             }
         }
     }
@@ -279,14 +287,13 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
             stakers[_tokenId][_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
 
             uint256 _conditionId = nextConditionId[_tokenId];
-            stakers[_tokenId][_stakeMsgSender()].conditionIdOflastUpdate = _conditionId == 0
-                ? nextDefaultConditionId - 1
-                : _conditionId - 1;
+            stakers[_tokenId][_stakeMsgSender()].conditionIdOflastUpdate =
+                _conditionId == 0 ? nextDefaultConditionId - 1 : _conditionId - 1;
         }
 
         require(
-            IERC1155(_stakingToken).balanceOf(_stakeMsgSender(), _tokenId) >= _amount &&
-                IERC1155(_stakingToken).isApprovedForAll(_stakeMsgSender(), address(this)),
+            IERC1155(_stakingToken).balanceOf(_stakeMsgSender(), _tokenId) >= _amount
+                && IERC1155(_stakingToken).isApprovedForAll(_stakeMsgSender(), address(this)),
             "Not balance or approved"
         );
         isStaking = 2;
@@ -313,11 +320,14 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
 
         if (_amountStaked == _amount) {
             address[] memory _stakersArray = stakersArray[_tokenId];
-            for (uint256 i = 0; i < _stakersArray.length; ++i) {
-                if (_stakersArray[i] == _stakeMsgSender()) {
-                    stakersArray[_tokenId][i] = _stakersArray[_stakersArray.length - 1];
-                    stakersArray[_tokenId].pop();
-                    break;
+            uint256 length = _stakersArray.length;
+            unchecked {
+                for (uint256 i; i < length; ++i) {
+                    if (_stakersArray[i] == _stakeMsgSender()) {
+                        stakersArray[_tokenId][i] = _stakersArray[length - 1];
+                        stakersArray[_tokenId].pop();
+                        break;
+                    }
                 }
             }
         }
@@ -330,8 +340,8 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
 
     /// @dev Logic for claiming rewards. Override to add custom logic.
     function _claimRewards(uint256 _tokenId) internal virtual {
-        uint256 rewards = stakers[_tokenId][_stakeMsgSender()].unclaimedRewards +
-            _calculateRewards(_tokenId, _stakeMsgSender());
+        uint256 rewards =
+            stakers[_tokenId][_stakeMsgSender()].unclaimedRewards + _calculateRewards(_tokenId, _stakeMsgSender());
 
         require(rewards != 0, "No rewards");
 
@@ -339,9 +349,8 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         stakers[_tokenId][_stakeMsgSender()].unclaimedRewards = 0;
 
         uint256 _conditionId = nextConditionId[_tokenId];
-        stakers[_tokenId][_stakeMsgSender()].conditionIdOflastUpdate = _conditionId == 0
-            ? nextDefaultConditionId - 1
-            : _conditionId - 1;
+        stakers[_tokenId][_stakeMsgSender()].conditionIdOflastUpdate =
+            _conditionId == 0 ? nextDefaultConditionId - 1 : _conditionId - 1;
 
         _mintRewards(_stakeMsgSender(), rewards);
 
@@ -364,17 +373,12 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         stakers[_tokenId][_staker].timeOfLastUpdate = block.timestamp;
 
         uint256 _conditionId = nextConditionId[_tokenId];
-        stakers[_tokenId][_staker].conditionIdOflastUpdate = _conditionId == 0
-            ? nextDefaultConditionId - 1
-            : _conditionId - 1;
+        stakers[_tokenId][_staker].conditionIdOflastUpdate =
+            _conditionId == 0 ? nextDefaultConditionId - 1 : _conditionId - 1;
     }
 
     /// @dev Set staking conditions, for a token-Id.
-    function _setStakingCondition(
-        uint256 _tokenId,
-        uint256 _timeUnit,
-        uint256 _rewardsPerUnitTime
-    ) internal virtual {
+    function _setStakingCondition(uint256 _tokenId, uint256 _timeUnit, uint256 _rewardsPerUnitTime) internal virtual {
         require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextConditionId[_tokenId];
 
@@ -431,40 +435,38 @@ abstract contract Staking1155Upgradeable is ReentrancyGuardUpgradeable, IStaking
         if (_nextConditionId == 0) {
             _nextConditionId = nextDefaultConditionId;
 
-            for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
+            for (uint256 i = _stakerConditionId; i < _nextConditionId;) {
                 StakingCondition memory condition = defaultCondition[i];
 
                 uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
                 uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
 
-                (bool noOverflowProduct, uint256 rewardsProduct) = SafeMath.tryMul(
-                    (endTime - startTime) * staker.amountStaked,
-                    condition.rewardsPerUnitTime
-                );
-                (bool noOverflowSum, uint256 rewardsSum) = SafeMath.tryAdd(
-                    _rewards,
-                    rewardsProduct / condition.timeUnit
-                );
+                (bool noOverflowProduct, uint256 rewardsProduct) =
+                    SafeMath.tryMul((endTime - startTime) * staker.amountStaked, condition.rewardsPerUnitTime);
+                (bool noOverflowSum, uint256 rewardsSum) =
+                    SafeMath.tryAdd(_rewards, rewardsProduct / condition.timeUnit);
 
                 _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
+                unchecked {
+                    ++i;
+                }
             }
         } else {
-            for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
+            for (uint256 i = _stakerConditionId; i < _nextConditionId;) {
                 StakingCondition memory condition = stakingConditions[_tokenId][i];
 
                 uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
                 uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
 
-                (bool noOverflowProduct, uint256 rewardsProduct) = SafeMath.tryMul(
-                    (endTime - startTime) * staker.amountStaked,
-                    condition.rewardsPerUnitTime
-                );
-                (bool noOverflowSum, uint256 rewardsSum) = SafeMath.tryAdd(
-                    _rewards,
-                    rewardsProduct / condition.timeUnit
-                );
+                (bool noOverflowProduct, uint256 rewardsProduct) =
+                    SafeMath.tryMul((endTime - startTime) * staker.amountStaked, condition.rewardsPerUnitTime);
+                (bool noOverflowSum, uint256 rewardsSum) =
+                    SafeMath.tryAdd(_rewards, rewardsProduct / condition.timeUnit);
 
                 _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
+                unchecked {
+                    ++i;
+                }
             }
         }
     }

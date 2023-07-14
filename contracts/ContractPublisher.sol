@@ -82,13 +82,19 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         uint256 total = prevTotal + currentTotal;
         published = new CustomContractInstance[](total);
         // fill in previously published contracts
-        for (uint256 i = 0; i < prevTotal; i += 1) {
+        for (uint256 i; i < prevTotal;) {
             published[i] = linkedData[i];
+            unchecked {
+                ++i;
+            }
         }
         // fill in current published contracts
-        for (uint256 i = 0; i < currentTotal; i += 1) {
+        for (uint256 i; i < currentTotal;) {
             bytes32 contractId = EnumerableSet.at(contractsOfPublisher[_publisher].contractIds, i);
             published[i + prevTotal] = contractsOfPublisher[_publisher].contracts[contractId].latest;
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -111,8 +117,11 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         published = new CustomContractInstance[](total);
 
         // fill in previously published contracts
-        for (uint256 i = 0; i < prevTotal; i += 1) {
+        for (uint256 i; i < prevTotal;) {
             published[i] = linkedVersions[i];
+            unchecked {
+                ++i;
+            }
         }
         // fill in current published contracts
         for (uint256 i = 0; i < currentTotal; i += 1) {

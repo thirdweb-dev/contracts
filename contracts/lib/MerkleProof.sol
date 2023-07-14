@@ -27,10 +27,10 @@ library MerkleProof {
         bytes32 leaf
     ) internal pure returns (bool, uint256) {
         bytes32 computedHash = leaf;
-        uint256 index = 0;
-
-        for (uint256 i = 0; i < proof.length; i++) {
-            index *= 2;
+        uint256 index;
+        uint len = proof.length;
+        for (uint256 i; i < len;) {
+            index <<= 1;
             bytes32 proofElement = proof[i];
 
             if (computedHash <= proofElement) {
@@ -39,7 +39,10 @@ library MerkleProof {
             } else {
                 // Hash(current element of the proof + current computed hash)
                 computedHash = keccak256(abi.encodePacked(proofElement, computedHash));
-                index += 1;
+                ++index;
+            }
+            unchecked {
+                ++i;
             }
         }
 

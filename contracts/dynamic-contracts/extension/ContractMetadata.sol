@@ -15,7 +15,7 @@ import "../../extension/interface/IContractMetadata.sol";
  */
 
 library ContractMetadataStorage {
-    bytes32 public constant CONTRACT_METADATA_STORAGE_POSITION = keccak256("contract.metadata.storage");
+    bytes32 private constant CONTRACT_METADATA_STORAGE_POSITION = keccak256("contract.metadata.storage");
 
     struct Data {
         /// @notice Returns the contract metadata URI.

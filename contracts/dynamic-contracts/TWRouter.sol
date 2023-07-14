@@ -96,8 +96,8 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
         uint256 overrides;
         for (uint256 i; i < mapExtensionsLen;) {
             if (data.extensionNames.contains(mapExtensions[i].metadata.name)) {
-                ++overrides;
                 unchecked {
+                    ++overrides;
                     ++i;
                 }
             }

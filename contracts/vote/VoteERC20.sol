@@ -123,8 +123,11 @@ contract VoteERC20 is
         uint256 nextProposalIndex = proposalIndex;
 
         allProposals = new Proposal[](nextProposalIndex);
-        for (uint256 i = 0; i < nextProposalIndex; i += 1) {
+        for (uint256 i; i < nextProposalIndex;) {
             allProposals[i] = proposals[i];
+            unchecked{
+                ++i;
+            }
         }
     }
 

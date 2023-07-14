@@ -8,7 +8,7 @@ import "../interface/IRoyaltyEngineV1.sol";
 import { IERC2981 } from "../../eip/interface/IERC2981.sol";
 
 library RoyaltyPaymentsStorage {
-    bytes32 public constant ROYALTY_PAYMENTS_STORAGE_POSITION = keccak256("royalty.payments.storage");
+    bytes32 private constant ROYALTY_PAYMENTS_STORAGE_POSITION = keccak256("royalty.payments.storage");
 
     struct Data {
         /// @dev The address of RoyaltyEngineV1, replacing the one set during construction.
@@ -39,7 +39,7 @@ abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
     constructor(address _royaltyEngineAddress) {
         // allow address(0) in case RoyaltyEngineV1 not present on a network
         require(
-            _royaltyEngineAddress == address(0) ||
+            uint160(_royaltyEngineAddress) == 0 ||
                 IERC165(_royaltyEngineAddress).supportsInterface(type(IRoyaltyEngineV1).interfaceId),
             "Doesn't support IRoyaltyEngineV1 interface"
         );

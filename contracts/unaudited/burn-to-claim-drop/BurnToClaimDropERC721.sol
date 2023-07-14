@@ -119,8 +119,8 @@ contract BurnToClaimDropERC721 is
         return bytes32("BurnToClaimDropERC721");
     }
 
-    function contractVersion() external pure returns (uint8) {
-        return uint8(5);
+    function contractVersion() external pure returns (uint256) {
+        return 5;
     }
 
     /*///////////////////////////////////////////////////////////////

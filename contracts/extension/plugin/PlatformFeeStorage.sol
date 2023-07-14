@@ -7,7 +7,7 @@ pragma solidity ^0.8.0;
  *  @author  thirdweb.com
  */
 library PlatformFeeStorage {
-    bytes32 public constant PLATFORM_FEE_STORAGE_POSITION = keccak256("platform.fee.storage");
+    bytes32 private constant PLATFORM_FEE_STORAGE_POSITION = keccak256("platform.fee.storage");
 
     struct Data {
         /// @dev The address that receives all platform fees from all sales.

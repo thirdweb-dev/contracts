@@ -318,7 +318,7 @@ contract ERC1155Drop is
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
         uint256 idsLen = ids.length;
-        if (from == address(0)) {
+        if (uint160(from) == 0) {
             for (uint256 i; i < idsLen;) {
                 totalSupply[ids[i]] += amounts[i];
                 unchecked {

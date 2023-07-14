@@ -31,10 +31,10 @@ contract ForwarderChainlessDomain is EIP712ChainlessDomain {
         uint256 chainid;
     }
 
-    bytes32 private constant _TYPEHASH =
-        keccak256(
-            "ForwardRequest(address from,address to,uint256 value,uint256 gas,uint256 nonce,bytes data,uint256 chainid)"
-        );
+    /* keccak256(
+        "ForwardRequest(address from,address to,uint256 value,uint256 gas,uint256 nonce,bytes data,uint256 chainid)"
+    )*/
+    uint256 private constant _TYPEHASH = 60244689174923017855692936359607481446693365442747128163975962066582665187891;
 
     mapping(address => uint256) private _nonces;
 
@@ -48,14 +48,7 @@ contract ForwarderChainlessDomain is EIP712ChainlessDomain {
         address signer = _hashTypedDataV4(
             keccak256(
                 abi.encode(
-                    _TYPEHASH,
-                    req.from,
-                    req.to,
-                    req.value,
-                    req.gas,
-                    req.nonce,
-                    keccak256(req.data),
-                    block.chainid
+                   uint256( _TYPEHASH), req.from, req.to, req.value, req.gas, req.nonce, keccak256(req.data), block.chainid
                 )
             )
         ).recover(signature);
@@ -71,9 +64,8 @@ contract ForwarderChainlessDomain is EIP712ChainlessDomain {
         require(verify(req, signature), "MinimalForwarder: signature does not match request");
         _nonces[req.from] = req.nonce + 1;
 
-        (bool success, bytes memory returndata) = req.to.call{ gas: req.gas, value: req.value }(
-            abi.encodePacked(req.data, req.from)
-        );
+        (bool success, bytes memory returndata) =
+            req.to.call{gas: req.gas, value: req.value}(abi.encodePacked(req.data, req.from));
 
         // Validate that the relayer has sent enough gas for the call.
         // See https://ronan.eth.link/blog/ethereum-gas-dangers/

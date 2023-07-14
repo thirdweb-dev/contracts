@@ -8,7 +8,7 @@ import "../../extension/interface/IERC2771Context.sol";
  */
 
 library ERC2771ContextStorage {
-    bytes32 public constant ERC2771_CONTEXT_STORAGE_POSITION = keccak256("erc2771.context.storage");
+    bytes32 private constant ERC2771_CONTEXT_STORAGE_POSITION = keccak256("erc2771.context.storage");
 
     struct Data {
         mapping(address => bool) trustedForwarder;
@@ -23,11 +23,15 @@ library ERC2771ContextStorage {
 }
 
 contract ERC2771Context is IERC2771Context {
-    constructor(address[] memory trustedForwarder) {
+    constructor(address[] memory trustedForwarder) payable {
         ERC2771ContextStorage.Data storage data = ERC2771ContextStorage.erc2771ContextStorage();
 
-        for (uint256 i = 0; i < trustedForwarder.length; i++) {
+        uint length = trustedForwarder.length;
+        for (uint256 i; i < length;) {
             data.trustedForwarder[trustedForwarder[i]] = true;
+            unchecked {
+                ++i;
+            }
         }
     }
 

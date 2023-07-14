@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 /// @author thirdweb
 
 library ERC2771ContextUpgradeableStorage {
-    bytes32 public constant ERC2771_CONTEXT_UPGRADEABLE_STORAGE_POSITION =
+    bytes32 private constant ERC2771_CONTEXT_UPGRADEABLE_STORAGE_POSITION =
         keccak256("erc2771.context.upgradeable.storage");
 
     struct Data {

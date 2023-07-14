@@ -83,7 +83,7 @@ contract DropERC721 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor() initializer {}
+    constructor() initializer payable {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -246,7 +246,7 @@ contract DropERC721 is
         CurrencyTransferLib.transferCurrency(
             _currency,
             _msgSender(),
-            (_primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient),
+            (uint160(_primarySaleRecipient) == 0 ? primarySaleRecipient() : _primarySaleRecipient),
             totalPrice - platformFees
         );
     }

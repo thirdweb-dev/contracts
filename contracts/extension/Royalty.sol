@@ -52,11 +52,11 @@ abstract contract Royalty is IRoyalty {
      */
     function getRoyaltyInfoForToken(uint256 _tokenId) public view override returns (address, uint16) {
         RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
-
+        address receipients = royaltyForToken.recipient;
         return
-            royaltyForToken.recipient == address(0)
+            uint160(receipients) == 0
                 ? (royaltyRecipient, uint16(royaltyBps))
-                : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
+                : (receipients, uint16(royaltyForToken.bps));
     }
 
     /**

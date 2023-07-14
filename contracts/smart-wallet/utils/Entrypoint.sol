@@ -106,7 +106,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuard 
             uint256 collected = 0;
             emit BeforeExecution();
 
-            for (uint256 i = 0; i < opslen; i++) {
+            for (uint256 i; i < opslen;) {
                 collected += _executeUserOp(i, ops[i], opInfos[i]);
             }
 
@@ -124,8 +124,8 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuard 
         nonReentrant
     {
         uint256 opasLen = opsPerAggregator.length;
-        uint256 totalOps = 0;
-        for (uint256 i = 0; i < opasLen; i++) {
+        uint256 totalOps;
+        for (uint256 i; i < opasLen;) {
             UserOpsPerAggregator calldata opa = opsPerAggregator[i];
             UserOperation[] calldata ops = opa.userOps;
             IAggregator aggregator = opa.aggregator;
@@ -141,13 +141,16 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuard 
             }
 
             totalOps += ops.length;
+            unchecked {
+                ++i;
+            }
         }
 
         UserOpInfo[] memory opInfos = new UserOpInfo[](totalOps);
 
         emit BeforeExecution();
 
-        uint256 opIndex = 0;
+        uint256 opIndex;
         for (uint256 a = 0; a < opasLen; a++) {
             UserOpsPerAggregator calldata opa = opsPerAggregator[a];
             UserOperation[] calldata ops = opa.userOps;

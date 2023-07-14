@@ -102,7 +102,7 @@ contract DropERC1155 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor() initializer {}
+    constructor()  payable {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -319,7 +319,7 @@ contract DropERC1155 is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(bytes32(transferRole), address(0)) && from != address(0) && to != address(0)) {
+        if (!hasRole(bytes32(transferRole), address(0)) && uint160(from) != 0 && uint160(to) != 0) {
             require(hasRole(bytes32(transferRole), from) || hasRole(bytes32(transferRole), to), "restricted to TRANSFER_ROLE holders.");
         }
 

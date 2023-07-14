@@ -140,7 +140,7 @@ contract TokenERC20 is
     ) internal override {
         super._beforeTokenTransfer(from, to, amount);
 
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
+        if (!hasRole(TRANSFER_ROLE, address(0)) && uint160(from) != 0 && uint160(to) != 0) {
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
         }
     }
@@ -211,14 +211,16 @@ contract TokenERC20 is
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectPrice(MintRequest calldata _req) internal {
-        if (_req.price == 0) {
+        uint price = _req.price;
+        address currency = _req.currency;
+        if (price == 0) {
             return;
         }
 
-        uint256 platformFees = (_req.price * platformFeeBps) / MAX_BPS;
+        uint256 platformFees = (price * platformFeeBps) / MAX_BPS;
 
-        if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == _req.price, "must send total price.");
+        if (currency == CurrencyTransferLib.NATIVE_TOKEN) {
+            require(msg.value == price, "must send total price.");
         } else {
             require(msg.value == 0, "msg value not zero");
         }
@@ -227,8 +229,8 @@ contract TokenERC20 is
             ? primarySaleRecipient
             : _req.primarySaleRecipient;
 
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, _req.price - platformFees);
+        CurrencyTransferLib.transferCurrency(currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(currency, _msgSender(), saleRecipient, price - platformFees);
     }
 
     /// @dev Mints `amount` of tokens to `to`
@@ -246,7 +248,7 @@ contract TokenERC20 is
             _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
             "request expired"
         );
-        require(_req.to != address(0), "recipient undefined");
+        require(uint160(_req.to) != 0, "recipient undefined");
         require(_req.quantity > 0, "zero quantity");
 
         minted[_req.uid] = true;

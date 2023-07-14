@@ -109,9 +109,13 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
                 (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
 
                 // For each target+value pair, check if the value is within the allowed range and if the target is approved.
-                for (uint256 i = 0; i < targets.length; i++) {
+                uint len = targets.length;
+                for (uint256 i; i < len;) {
                     require(data.approvedTargets[role].contains(targets[i]), "Account: target not approved.");
                     require(restrictions.maxValuePerTransaction >= values[i], "Account: value too high.");
+                    unchecked {
+                        ++i;
+                    }
                 }
             } else {
                 revert("Account: calling invalid fn.");
@@ -162,12 +166,12 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
     //////////////////////////////////////////////////////////////*/
 
     function getFunctionSignature(bytes calldata data) internal pure returns (bytes4 functionSelector) {
-        require(data.length >= 4, "Data too short");
+        require(data.length > 3, "Data too short");
         return bytes4(data[:4]);
     }
 
     function decodeExecuteCalldata(bytes calldata data) internal pure returns (address _target, uint256 _value) {
-        require(data.length >= 4 + 32 + 32, "Data too short");
+        require(data.length > 69, "Data too short");
 
         // Decode the address, which is bytes 4 to 35
         _target = abi.decode(data[4:36], (address));
@@ -185,7 +189,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
             bytes[] memory _callData
         )
     {
-        require(data.length >= 4 + 32 + 32 + 32, "Data too short");
+        require(data.length >= 99, "Data too short");
 
         (_targets, _values, _callData) = abi.decode(data[4:], (address[], uint256[], bytes[]));
     }

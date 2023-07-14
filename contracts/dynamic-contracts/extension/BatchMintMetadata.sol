@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 library BatchMintMetadataStorage {
-    bytes32 public constant BATCH_MINT_METADATA_STORAGE_POSITION = keccak256("batch.mint.metadata.storage");
+    uint256 private constant BATCH_MINT_METADATA_STORAGE_POSITION = 19709329245835266207127135352831520558873252361745999625323546690127075750828;
 
     struct Data {
         /// @dev Largest tokenId of each batch of tokens with the same baseURI.
@@ -12,7 +12,7 @@ library BatchMintMetadataStorage {
     }
 
     function batchMintMetadataStorage() internal pure returns (Data storage batchMintMetadataData) {
-        bytes32 position = BATCH_MINT_METADATA_STORAGE_POSITION;
+        bytes32 position = bytes32(BATCH_MINT_METADATA_STORAGE_POSITION);
         assembly {
             batchMintMetadataData.slot := position
         }
@@ -58,12 +58,15 @@ contract BatchMintMetadata {
         uint256 numOfTokenBatches = getBaseURICount();
         uint256[] memory indices = data.batchIds;
 
-        for (uint256 i = 0; i < numOfTokenBatches; i += 1) {
+        for (uint256 i; i < numOfTokenBatches;) {
             if (_tokenId < indices[i]) {
                 index = i;
                 batchId = indices[i];
-
+                
                 return (batchId, index);
+            }
+            unchecked {
+                ++i;
             }
         }
 
@@ -77,9 +80,12 @@ contract BatchMintMetadata {
         uint256 numOfTokenBatches = getBaseURICount();
         uint256[] memory indices = data.batchIds;
 
-        for (uint256 i = 0; i < numOfTokenBatches; i += 1) {
+        for (uint256 i; i < numOfTokenBatches;) {
             if (_tokenId < indices[i]) {
                 return data.baseURI[indices[i]];
+            }
+            unchecked {
+                ++i;
             }
         }
         revert("Invalid tokenId");

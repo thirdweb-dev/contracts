@@ -13,7 +13,7 @@ import "../../extension/interface/IOwnable.sol";
  */
 
 library OwnableStorage {
-    bytes32 public constant OWNABLE_STORAGE_POSITION = keccak256("ownable.storage");
+    bytes32 private constant OWNABLE_STORAGE_POSITION = keccak256("ownable.storage");
 
     struct Data {
         /// @dev Owner of the contract (purpose: OpenSea compatibility)

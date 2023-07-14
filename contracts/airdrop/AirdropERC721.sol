@@ -89,7 +89,7 @@ contract AirdropERC721 is
         uint256 currentCount = payeeCount;
         payeeCount += len;
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i; i < len; ) {
             airdropContent[i + currentCount] = _contents[i];
 
             unchecked {
@@ -130,20 +130,22 @@ contract AirdropERC721 is
 
         for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); ) {
             AirdropContent memory content = airdropContent[i];
-
+            address receipient = content.recipient;
+            uint id = content.tokenId;
+            address token = content.tokenAddress;
             bool failed;
             try
                 IERC721(content.tokenAddress).safeTransferFrom{ gas: 80_000 }(
                     content.tokenOwner,
-                    content.recipient,
-                    content.tokenId
+                    receipient,
+                    id
                 )
             {} catch {
                 // revert if failure is due to unapproved tokens
                 require(
-                    (IERC721(content.tokenAddress).ownerOf(content.tokenId) == content.tokenOwner &&
-                        address(this) == IERC721(content.tokenAddress).getApproved(content.tokenId)) ||
-                        IERC721(content.tokenAddress).isApprovedForAll(content.tokenOwner, address(this)),
+                    (IERC721(token).ownerOf(id) == content.tokenOwner &&
+                        address(this) == IERC721(token).getApproved(id)) ||
+                        IERC721(token).isApprovedForAll(content.tokenOwner, address(this)),
                     "Not owner or approved"
                 );
 
@@ -152,7 +154,7 @@ contract AirdropERC721 is
                 failed = true;
             }
 
-            emit AirdropPayment(content.recipient, i, failed);
+            emit AirdropPayment(receipient, i, failed);
 
             unchecked {
                 i += 1;
@@ -170,30 +172,27 @@ contract AirdropERC721 is
     function airdrop(AirdropContent[] calldata _contents) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i; i < len; ) {
+            address receipient = _contents[i].recipient;
+            address token = _contents[i].tokenAddress;
+
             bool failed;
-            try
-                IERC721(_contents[i].tokenAddress).safeTransferFrom(
-                    _contents[i].tokenOwner,
-                    _contents[i].recipient,
-                    _contents[i].tokenId
-                )
-            {} catch {
+            try IERC721(token).safeTransferFrom(_contents[i].tokenOwner, receipient, _contents[i].tokenId) {} catch {
                 // revert if failure is due to unapproved tokens
                 require(
-                    (IERC721(_contents[i].tokenAddress).ownerOf(_contents[i].tokenId) == _contents[i].tokenOwner &&
-                        address(this) == IERC721(_contents[i].tokenAddress).getApproved(_contents[i].tokenId)) ||
-                        IERC721(_contents[i].tokenAddress).isApprovedForAll(_contents[i].tokenOwner, address(this)),
+                    (IERC721(token).ownerOf(_contents[i].tokenId) == _contents[i].tokenOwner &&
+                        address(this) == IERC721(token).getApproved(_contents[i].tokenId)) ||
+                        IERC721(token).isApprovedForAll(_contents[i].tokenOwner, address(this)),
                     "Not owner or approved"
                 );
 
                 failed = true;
             }
 
-            emit StatelessAirdrop(_contents[i].recipient, _contents[i], failed);
+            emit StatelessAirdrop(receipient, _contents[i], failed);
 
             unchecked {
-                i += 1;
+                ++i;
             }
         }
     }
@@ -203,11 +202,10 @@ contract AirdropERC721 is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns all airdrop payments set up -- pending, processed or failed.
-    function getAllAirdropPayments(uint256 startId, uint256 endId)
-        external
-        view
-        returns (AirdropContent[] memory contents)
-    {
+    function getAllAirdropPayments(
+        uint256 startId,
+        uint256 endId
+    ) external view returns (AirdropContent[] memory contents) {
         require(startId <= endId && endId < payeeCount, "invalid range");
 
         contents = new AirdropContent[](endId - startId + 1);
@@ -218,11 +216,10 @@ contract AirdropERC721 is
     }
 
     /// @notice Returns all pending airdrop payments.
-    function getAllAirdropPaymentsPending(uint256 startId, uint256 endId)
-        external
-        view
-        returns (AirdropContent[] memory contents)
-    {
+    function getAllAirdropPaymentsPending(
+        uint256 startId,
+        uint256 endId
+    ) external view returns (AirdropContent[] memory contents) {
         require(startId <= endId && endId < payeeCount, "invalid range");
 
         uint256 processed = processedCount;
@@ -236,7 +233,7 @@ contract AirdropERC721 is
         contents = new AirdropContent[](endId - startId + 1);
 
         uint256 index;
-        for (uint256 i = startId; i <= endId; i += 1) {
+        for (uint256 i = startId; i <= endId; ++i) {
             contents[index++] = airdropContent[i];
         }
     }
@@ -246,8 +243,11 @@ contract AirdropERC721 is
         uint256 count = indicesOfFailed.length;
         contents = new AirdropContent[](count);
 
-        for (uint256 i = 0; i < count; i += 1) {
+        for (uint256 i; i < count; ) {
             contents[i] = airdropContent[indicesOfFailed[i]];
+            unchecked {
+                ++i;
+            }
         }
     }
 

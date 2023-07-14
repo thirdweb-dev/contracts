@@ -82,8 +82,11 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
         uint256 len = tokens.length;
         baseURIs = new string[](len);
 
-        for (uint256 i = 0; i < len; i += 1) {
+        for (uint256 i; i < len; ) {
             baseURIs[i] = _getBaseURI(tokens[i].startIdInclusive);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -94,9 +97,13 @@ abstract contract LazyMintWithTier is ILazyMintWithTier, BatchMintMetadata {
 
         metadataForAllTiers = new TierMetadata[](len);
 
-        for (uint256 i = 0; i < len; i += 1) {
+        for (uint256 i; i < len; ) {
             (TokenRange[] memory tokens, string[] memory baseURIs) = _getMetadataInTier(allTiers[i]);
             metadataForAllTiers[i] = TierMetadata(allTiers[i], tokens, baseURIs);
+
+            unchecked {
+                ++i;
+            }
         }
     }
 

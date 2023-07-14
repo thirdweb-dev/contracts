@@ -12,7 +12,7 @@ import "../../openzeppelin-presets/utils/EnumerableSet.sol";
  *  @author  thirdweb.com
  */
 library RouterStorage {
-    bytes32 public constant ROUTER_STORAGE_POSITION = keccak256("router.storage");
+    bytes32 private constant ROUTER_STORAGE_POSITION = keccak256("router.storage");
 
     struct Data {
         EnumerableSet.Bytes32Set allSelectors;

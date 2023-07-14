@@ -151,6 +151,7 @@ contract LoyaltyCard is
         nonReentrant
         returns (address signer)
     {
+        address recipient = _req.royaltyRecipient;
         require(_req.quantity == 1, "LoyaltyCard: only 1 NFT can be minted at a time.");
 
         signer = _processRequest(_req, _signature);
@@ -158,8 +159,8 @@ contract LoyaltyCard is
         uint256 tokenIdMinted = _mintTo(receiver, _req.uri);
 
         // Set royalties, if applicable.
-        if (_req.royaltyRecipient != address(0) && _req.royaltyBps != 0) {
-            _setupRoyaltyInfoForToken(tokenIdMinted, _req.royaltyRecipient, _req.royaltyBps);
+        if (uint160(recipient) != 0 && _req.royaltyBps != 0) {
+            _setupRoyaltyInfoForToken(tokenIdMinted,recipient, _req.royaltyBps);
         }
 
         _collectPrice(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
@@ -307,7 +308,7 @@ contract LoyaltyCard is
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
+        if (!hasRole(TRANSFER_ROLE, address(0)) && uint160(from) != 0 && uint160(to) != 0) {
             if (!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) {
                 revert("!Transfer-Role");
             }

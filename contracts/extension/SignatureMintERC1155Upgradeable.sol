@@ -11,10 +11,7 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgra
 abstract contract SignatureMintERC1155Upgradeable is Initializable, EIP712Upgradeable, ISignatureMintERC1155 {
     using ECDSAUpgradeable for bytes32;
 
-    bytes32 internal constant TYPEHASH =
-        keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
-        );
+    uint256 internal constant TYPEHASH = 90309509487354880545504211906431526728058351567957257980487011694635458302797;
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
@@ -49,7 +46,7 @@ abstract contract SignatureMintERC1155Upgradeable is Initializable, EIP712Upgrad
             _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
             "Request expired"
         );
-        require(_req.to != address(0), "recipient undefined");
+        require(uint160(_req.to) != 0, "recipient undefined");
         require(_req.quantity > 0, "0 qty");
 
         minted[_req.uid] = true;
@@ -64,7 +61,7 @@ abstract contract SignatureMintERC1155Upgradeable is Initializable, EIP712Upgrad
     function _encodeRequest(MintRequest calldata _req) internal pure returns (bytes memory) {
         return
             abi.encode(
-                TYPEHASH,
+                bytes32(TYPEHASH),
                 _req.to,
                 _req.royaltyRecipient,
                 _req.royaltyBps,

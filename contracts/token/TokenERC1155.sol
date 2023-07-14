@@ -130,7 +130,7 @@ contract TokenERC1155 is
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
-    constructor() initializer {}
+    constructor() initializer payable {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -215,7 +215,7 @@ contract TokenERC1155 is
         uint256 tokenIdToMint;
         if (_tokenId == type(uint256).max) {
             tokenIdToMint = nextTokenIdToMint;
-            nextTokenIdToMint += 1;
+            ++nextTokenIdToMint;
         } else {
             require(_tokenId < nextTokenIdToMint, "invalid id");
             tokenIdToMint = _tokenId;
@@ -228,12 +228,10 @@ contract TokenERC1155 is
     ///     =====   External functions  =====
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view virtual returns (address receiver, uint256 royaltyAmount) {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
@@ -247,13 +245,13 @@ contract TokenERC1155 is
         uint256 tokenIdToMint;
         if (_req.tokenId == type(uint256).max) {
             tokenIdToMint = nextTokenIdToMint;
-            nextTokenIdToMint += 1;
+            ++nextTokenIdToMint;
         } else {
             require(_req.tokenId < nextTokenIdToMint, "invalid id");
             tokenIdToMint = _req.tokenId;
         }
 
-        if (_req.royaltyRecipient != address(0)) {
+        if (uint160(_req.royaltyRecipient) != 0) {
             royaltyInfoForToken[tokenIdToMint] = RoyaltyInfo({
                 recipient: _req.royaltyRecipient,
                 bps: _req.royaltyBps
@@ -276,10 +274,10 @@ contract TokenERC1155 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setDefaultRoyaltyInfo(
+        address _royaltyRecipient,
+        uint256 _royaltyBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -302,10 +300,10 @@ contract TokenERC1155 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -315,10 +313,10 @@ contract TokenERC1155 is
     }
 
     /// @dev Lets a module admin set a flat fee on primary sales.
-    function setFlatPlatformFeeInfo(address _platformFeeRecipient, uint256 _flatFee)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setFlatPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _flatFee
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         flatPlatformFee = _flatFee;
         platformFeeRecipient = _platformFeeRecipient;
 
@@ -381,12 +379,7 @@ contract TokenERC1155 is
     ///     =====   Internal functions  =====
 
     /// @dev Mints an NFT to `to`
-    function _mintTo(
-        address _to,
-        string calldata _uri,
-        uint256 _tokenId,
-        uint256 _amount
-    ) internal {
+    function _mintTo(address _to, string calldata _uri, uint256 _tokenId, uint256 _amount) internal {
         if (bytes(_tokenURI[_tokenId]).length == 0) {
             require(bytes(_uri).length > 0, "empty uri.");
             _tokenURI[_tokenId] = _uri;
@@ -431,7 +424,7 @@ contract TokenERC1155 is
             _req.validityStartTimestamp <= block.timestamp && _req.validityEndTimestamp >= block.timestamp,
             "request expired"
         );
-        require(_req.to != address(0), "recipient undefined");
+        require(uint160(_req.to) != 0, "recipient undefined");
         require(_req.quantity > 0, "zero quantity");
 
         minted[_req.uid] = true;
@@ -441,11 +434,13 @@ contract TokenERC1155 is
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectPrice(MintRequest calldata _req) internal {
-        if (_req.pricePerToken == 0) {
+        uint price = _req.pricePerToken;
+        address currency = _req.currency;
+        if (price == 0) {
             return;
         }
 
-        uint256 totalPrice = _req.pricePerToken * _req.quantity;
+        uint256 totalPrice = price * _req.quantity;
         uint256 platformFees = platformFeeType == PlatformFeeType.Flat
             ? flatPlatformFee
             : ((totalPrice * platformFeeBps) / MAX_BPS);
@@ -461,18 +456,14 @@ contract TokenERC1155 is
             ? primarySaleRecipient
             : _req.primarySaleRecipient;
 
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(currency, _msgSender(), saleRecipient, totalPrice - platformFees);
     }
 
     ///     =====   Low-level overrides  =====
 
     /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
-    function burn(
-        address account,
-        uint256 id,
-        uint256 value
-    ) public virtual {
+    function burn(address account, uint256 id, uint256 value) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
             "ERC1155: caller is not owner nor approved."
@@ -482,11 +473,7 @@ contract TokenERC1155 is
     }
 
     /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
-    function burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory values
-    ) public virtual {
+    function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
             "ERC1155: caller is not owner nor approved."
@@ -513,25 +500,31 @@ contract TokenERC1155 is
             require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
         }
 
-        if (from == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
+        uint len = ids.length;
+        if (uint160(from) == 0) {
+            for (uint256 i; i < len; ) {
                 totalSupply[ids[i]] += amounts[i];
+                unchecked {
+                    ++i;
+                }
             }
         }
 
-        if (to == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
+        if (uint160(to) == 0) {
+            for (uint256 i; i < len; ) {
                 totalSupply[ids[i]] -= amounts[i];
+                unchecked {
+                    ++i;
+                }
             }
         }
     }
 
     /// @dev See {ERC1155-setApprovalForAll}
-    function setApprovalForAll(address operator, bool approved)
-        public
-        override(ERC1155Upgradeable, IERC1155Upgradeable)
-        onlyAllowedOperatorApproval(operator)
-    {
+    function setApprovalForAll(
+        address operator,
+        bool approved
+    ) public override(ERC1155Upgradeable, IERC1155Upgradeable) onlyAllowedOperatorApproval(operator) {
         super.setApprovalForAll(operator, approved);
     }
 
@@ -561,7 +554,9 @@ contract TokenERC1155 is
         super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual

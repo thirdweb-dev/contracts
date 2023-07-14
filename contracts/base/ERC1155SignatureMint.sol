@@ -34,7 +34,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _primarySaleRecipient
-    ) ERC1155Base(_name, _symbol, _royaltyRecipient, _royaltyBps) {
+    ) ERC1155Base(_name, _symbol, _royaltyRecipient, _royaltyBps) payable {
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 
@@ -80,7 +80,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         _collectPriceOnClaim(_req.primarySaleRecipient, quantity, _req.currency, _req.pricePerToken);
 
         // Set royalties, if applicable.
-        if (_req.royaltyRecipient != address(0)) {
+        if (uint160(_req.royaltyRecipient) != 0) {
             _setupRoyaltyInfoForToken(tokenIdToMint, _req.royaltyRecipient, _req.royaltyBps);
         }
 

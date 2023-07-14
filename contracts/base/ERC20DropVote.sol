@@ -42,7 +42,7 @@ contract ERC20DropVote is ContractMetadata, Multicall, Ownable, ERC20Votes, Prim
         string memory _name,
         string memory _symbol,
         address _primarySaleRecipient
-    ) ERC20Permit(_name, _symbol) {
+    ) ERC20Permit(_name, _symbol) payable {
         _setupOwner(msg.sender);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
@@ -84,7 +84,7 @@ contract ERC20DropVote is ContractMetadata, Multicall, Ownable, ERC20Votes, Prim
             require(msg.value == totalPrice, "Must send total price.");
         }
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        address saleRecipient = uint160(_primarySaleRecipient) == 0 ? primarySaleRecipient() : _primarySaleRecipient;
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 

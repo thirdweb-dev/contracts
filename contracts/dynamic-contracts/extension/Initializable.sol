@@ -5,11 +5,11 @@ import "../../lib/TWAddress.sol";
 
 library InitStorage {
     /// @dev The location of the storage of the entrypoint contract's data.
-    bytes32 constant INIT_STORAGE_POSITION = keccak256("init.storage");
+    bytes32 private constant INIT_STORAGE_POSITION = keccak256("init.storage");
 
     /// @dev Layout of the entrypoint contract's storage.
     struct Data {
-        uint8 initialized;
+        uint248 initialized;
         bool initializing;
     }
 
@@ -34,7 +34,7 @@ abstract contract Initializable {
      */
     modifier initializer() {
         InitStorage.Data storage data = InitStorage.initStorage();
-        uint8 _initialized = data.initialized;
+        uint248 _initialized = data.initialized;
         bool _initializing = data.initializing;
 
         bool isTopLevelCall = !_initializing;
@@ -67,7 +67,7 @@ abstract contract Initializable {
      */
     modifier reinitializer(uint8 version) {
         InitStorage.Data storage data = InitStorage.initStorage();
-        uint8 _initialized = data.initialized;
+        uint248 _initialized = data.initialized;
         bool _initializing = data.initializing;
 
         require(!_initializing && _initialized < version, "Initializable: contract is already initialized");
@@ -96,7 +96,7 @@ abstract contract Initializable {
      */
     function _disableInitializers() internal virtual {
         InitStorage.Data storage data = InitStorage.initStorage();
-        uint8 _initialized = data.initialized;
+        uint248 _initialized = data.initialized;
         bool _initializing = data.initializing;
 
         require(!_initializing, "Initializable: contract is initializing");

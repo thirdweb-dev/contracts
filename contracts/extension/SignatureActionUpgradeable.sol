@@ -9,8 +9,8 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgra
 abstract contract SignatureActionUpgradeable is EIP712Upgradeable, ISignatureAction {
     using ECDSAUpgradeable for bytes32;
 
-    bytes32 private constant TYPEHASH =
-        keccak256("GenericRequest(uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid,bytes data)");
+    //keccak256("GenericRequest(uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid,bytes data)")
+    uint256 private constant TYPEHASH = 16359396157621522191437982979879401866039063114110333603808997655164441869570;
 
     /// @dev Mapping from a signed request UID => whether the request is processed.
     mapping(bytes32 => bool) private executed;
@@ -63,7 +63,7 @@ abstract contract SignatureActionUpgradeable is EIP712Upgradeable, ISignatureAct
     function _encodeRequest(GenericRequest calldata _req) internal pure returns (bytes memory) {
         return
             abi.encode(
-                TYPEHASH,
+                bytes32(TYPEHASH),
                 _req.validityStartTimestamp,
                 _req.validityEndTimestamp,
                 _req.uid,

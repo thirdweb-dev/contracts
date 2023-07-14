@@ -69,7 +69,7 @@ abstract contract DelayedReveal is IDelayedReveal {
         }
 
         // Iterate over the data stepping by 32 bytes
-        for (uint256 i = 0; i < length; i += 32) {
+        for (uint256 i; i < length; i += 32) {
             // Generate hash of the key and offset
             bytes32 hash = keccak256(abi.encodePacked(key, i));
 

@@ -48,7 +48,7 @@ contract TokenStake is
     /// @dev Total amount of reward tokens in the contract.
     uint256 private rewardTokenBalance;
 
-    constructor(address _nativeTokenWrapper) initializer Staking20Upgradeable(_nativeTokenWrapper) {}
+    constructor(address _nativeTokenWrapper) initializer Staking20Upgradeable(_nativeTokenWrapper) payable {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(

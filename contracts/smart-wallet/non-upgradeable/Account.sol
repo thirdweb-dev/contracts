@@ -187,10 +187,13 @@ contract Account is
         bytes[] calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
         _registerOnFactory();
-
-        require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
-        for (uint256 i = 0; i < _target.length; i++) {
+        uint len = _target.length;
+        require(len == _calldata.length && len == _value.length, "Account: wrong array lengths.");
+        for (uint256 i; i < len; ) {
             _call(_target[i], _value[i], _calldata[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -232,12 +235,12 @@ contract Account is
     }
 
     function getFunctionSignature(bytes calldata data) internal pure returns (bytes4 functionSelector) {
-        require(data.length >= 4, "Data too short");
+        require(data.length > 3, "Data too short");
         return bytes4(data[:4]);
     }
 
     function decodeExecuteCalldata(bytes calldata data) internal pure returns (address _target, uint256 _value) {
-        require(data.length >= 4 + 32 + 32, "Data too short");
+        require(data.length > 69, "Data too short");
 
         // Decode the address, which is bytes 4 to 35
         _target = abi.decode(data[4:36], (address));
@@ -255,7 +258,7 @@ contract Account is
             bytes[] memory _callData
         )
     {
-        require(data.length >= 4 + 32 + 32 + 32, "Data too short");
+        require(data.length > 99, "Data too short");
 
         (_targets, _values, _callData) = abi.decode(data[4:], (address[], uint256[], bytes[]));
     }

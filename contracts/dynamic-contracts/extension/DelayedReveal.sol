@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 import "../../extension/interface/IDelayedReveal.sol";
 
 library DelayedRevealStorage {
-    bytes32 public constant DELAYED_REVEAL_STORAGE_POSITION = keccak256("delayed.reveal.storage");
+    bytes32 private constant DELAYED_REVEAL_STORAGE_POSITION = keccak256("delayed.reveal.storage");
 
     struct Data {
         /// @dev Mapping from tokenId of a batch of tokens => to delayed reveal data.
@@ -91,7 +91,7 @@ abstract contract DelayedReveal is IDelayedReveal {
         }
 
         // Iterate over the data stepping by 32 bytes
-        for (uint256 i = 0; i < length; i += 32) {
+        for (uint256 i; i < length; i += 32) {
             // Generate hash of the key and offset
             bytes32 hash = keccak256(abi.encodePacked(key, i));
 
@@ -102,7 +102,9 @@ abstract contract DelayedReveal is IDelayedReveal {
                 chunk := mload(add(data, add(i, 32)))
             }
             // XOR the chunk with hash
-            chunk ^= hash;
+            assembly{
+                chunk := xor(chunk,hash)
+            }
             // solhint-disable-next-line no-inline-assembly
             assembly {
                 // Write 32-byte encrypted chunk

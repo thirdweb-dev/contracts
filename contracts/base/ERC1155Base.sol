@@ -68,7 +68,7 @@ contract ERC1155Base is
         string memory _symbol,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    ) ERC1155(_name, _symbol) {
+    ) ERC1155(_name, _symbol) payable {
         _setupOwner(msg.sender);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setOperatorRestriction(true);
@@ -161,7 +161,11 @@ contract ERC1155Base is
                 _tokenIds[i] = nextIdToMint;
 
                 ++nextIdToMint;//check for later and re.quantity
+                unchecked {
+                    
+                
                 ++numOfNewNFTs;
+                }
             } else {
                 require(_tokenIds[i] < nextIdToMint, "invalid id");
             }
@@ -327,7 +331,7 @@ contract ERC1155Base is
     ) internal virtual override {
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
         uint256 idLen = ids.length;
-        if (from == address(0)) {
+        if (uint160(from) == 0) {
             for (uint256 i; i < idLen;) {
                 totalSupply[ids[i]] += amounts[i];
                 unchecked {
@@ -336,7 +340,7 @@ contract ERC1155Base is
             }
         }
 
-        if (to == address(0)) {
+        if (uint160(to) == 0) {
             for (uint256 i; i < idLen;) {
                 totalSupply[ids[i]] -= amounts[i];
                 unchecked {

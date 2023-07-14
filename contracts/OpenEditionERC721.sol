@@ -279,7 +279,7 @@ contract OpenEditionERC721 is
         super._beforeTokenTransfers(from, to, startTokenId_, quantity);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
+        if (!hasRole(transferRole, address(0)) && uint160(from) != 0 && uint160(to) != 0) {
             if (!hasRole(transferRole, from) && !hasRole(transferRole, to)) {
                 revert("!T");
             }

@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 import "../../extension/interface/IPrimarySale.sol";
 
 library PrimarySaleStorage {
-    bytes32 public constant PRIMARY_SALE_STORAGE_POSITION = keccak256("primary.sale.storage");
+    bytes32 private constant PRIMARY_SALE_STORAGE_POSITION = keccak256("primary.sale.storage");
 
     struct Data {
         address recipient;

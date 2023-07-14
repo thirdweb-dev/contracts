@@ -9,10 +9,12 @@ import "../openzeppelin-presets/utils/cryptography/EIP712.sol";
 abstract contract SignatureMintERC20 is EIP712, ISignatureMintERC20 {
     using ECDSA for bytes32;
 
-    bytes32 private constant TYPEHASH =
-        keccak256(
-            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
-        );
+    /*
+    keccak256(
+        "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+    )
+    */
+    uint256 private constant TYPEHASH = 98240341241218896667421503521402454680199974092938016101547006222695413906699;
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
@@ -43,7 +45,7 @@ abstract contract SignatureMintERC20 is EIP712, ISignatureMintERC20 {
             _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
             "Request expired"
         );
-        require(_req.to != address(0), "recipient undefined");
+        require(uint160(_req.to) != 0, "recipient undefined");
         require(_req.quantity > 0, "0 qty");
 
         minted[_req.uid] = true;
@@ -58,7 +60,7 @@ abstract contract SignatureMintERC20 is EIP712, ISignatureMintERC20 {
     function _encodeRequest(MintRequest calldata _req) internal pure returns (bytes memory) {
         return
             abi.encode(
-                TYPEHASH,
+                bytes32(TYPEHASH),
                 _req.to,
                 _req.primarySaleRecipient,
                 _req.quantity,

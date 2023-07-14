@@ -43,19 +43,18 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     mapping(uint256 => StakingCondition) private stakingConditions;
 
     constructor(address _nativeTokenWrapper) {
-        require(_nativeTokenWrapper != address(0), "address 0");
+        require(uint160(_nativeTokenWrapper) != 0, "address 0");
 
         nativeTokenWrapper = _nativeTokenWrapper;
     }
 
-    function __Staking20_init(
-        address _stakingToken,
-        uint256 _stakingTokenDecimals,
-        uint256 _rewardTokenDecimals
-    ) internal onlyInitializing {
+    function __Staking20_init(address _stakingToken, uint256 _stakingTokenDecimals, uint256 _rewardTokenDecimals)
+        internal
+        onlyInitializing
+    {
         __ReentrancyGuard_init();
 
-        require(address(_stakingToken) != address(0), "token address 0");
+        require(uint160(_stakingToken) != 0, "token address 0");
         require(_stakingTokenDecimals != 0 && _rewardTokenDecimals != 0, "decimals 0");
 
         stakingToken = _stakingToken;
@@ -113,11 +112,12 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         }
 
         StakingCondition memory condition = stakingConditions[nextConditionId - 1];
-        require(_timeUnit != condition.timeUnit, "Time-unit unchanged.");
+        uint256 cachedTime = condition.timeUnit;
+        require(_timeUnit != cachedTime, "Time-unit unchanged.");
 
         _setStakingCondition(_timeUnit, condition.rewardRatioNumerator, condition.rewardRatioDenominator);
 
-        emit UpdatedTimeUnit(condition.timeUnit, _timeUnit);
+        emit UpdatedTimeUnit(cachedTime, _timeUnit);
     }
 
     /**
@@ -137,6 +137,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         }
 
         StakingCondition memory condition = stakingConditions[nextConditionId - 1];
+
         require(
             _numerator != condition.rewardRatioNumerator || _denominator != condition.rewardRatioDenominator,
             "Reward ratio unchanged."
@@ -144,10 +145,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         _setStakingCondition(condition.timeUnit, _numerator, _denominator);
 
         emit UpdatedRewardRatio(
-            condition.rewardRatioNumerator,
-            _numerator,
-            condition.rewardRatioDenominator,
-            _denominator
+            condition.rewardRatioNumerator, _numerator, condition.rewardRatioDenominator, _denominator
         );
     }
 
@@ -181,11 +179,12 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         require(_amount != 0, "Staking 0 tokens");
 
         address _stakingToken;
-        if (stakingToken == CurrencyTransferLib.NATIVE_TOKEN) {
+        address cachedStakeToken = stakingToken;
+        if (cachedStakeToken == CurrencyTransferLib.NATIVE_TOKEN) {
             _stakingToken = nativeTokenWrapper;
         } else {
             require(msg.value == 0, "Value not 0");
-            _stakingToken = stakingToken;
+            _stakingToken = cachedStakeToken;
         }
 
         if (stakers[_stakeMsgSender()].amountStaked > 0) {
@@ -198,11 +197,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
 
         uint256 balanceBefore = IERC20(_stakingToken).balanceOf(address(this));
         CurrencyTransferLib.transferCurrencyWithWrapper(
-            stakingToken,
-            _stakeMsgSender(),
-            address(this),
-            _amount,
-            nativeTokenWrapper
+            cachedStakeToken, _stakeMsgSender(), address(this), _amount, nativeTokenWrapper
         );
         uint256 actualAmount = IERC20(_stakingToken).balanceOf(address(this)) - balanceBefore;
 
@@ -222,23 +217,26 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
 
         if (_amountStaked == _amount) {
             address[] memory _stakersArray = stakersArray;
-            for (uint256 i = 0; i < _stakersArray.length; ++i) {
-                if (_stakersArray[i] == _stakeMsgSender()) {
-                    stakersArray[i] = _stakersArray[_stakersArray.length - 1];
-                    stakersArray.pop();
-                    break;
+            uint256 length = _stakersArray.length;
+            unchecked {
+                for (uint256 i; i < length; ++i) {
+                    if (_stakersArray[i] == _stakeMsgSender()) {
+                        stakersArray[i] = _stakersArray[length - 1];
+                        stakersArray.pop();
+                        break;
+                    }
                 }
             }
         }
-        stakers[_stakeMsgSender()].amountStaked -= _amount;
+
+        //underflow impossible, amount already checked
+        unchecked {
+            stakers[_stakeMsgSender()].amountStaked -= _amount;
+        }
         stakingTokenBalance -= _amount;
 
         CurrencyTransferLib.transferCurrencyWithWrapper(
-            stakingToken,
-            address(this),
-            _stakeMsgSender(),
-            _amount,
-            nativeTokenWrapper
+            stakingToken, address(this), _stakeMsgSender(), _amount, nativeTokenWrapper
         );
 
         emit TokensWithdrawn(_stakeMsgSender(), _amount);
@@ -277,11 +275,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     }
 
     /// @dev Set staking conditions.
-    function _setStakingCondition(
-        uint256 _timeUnit,
-        uint256 _numerator,
-        uint256 _denominator
-    ) internal virtual {
+    function _setStakingCondition(uint256 _timeUnit, uint256 _numerator, uint256 _denominator) internal virtual {
         require(_denominator != 0, "divide by 0");
         require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextConditionId;
@@ -307,27 +301,27 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         uint256 _stakerConditionId = staker.conditionIdOflastUpdate;
         uint256 _nextConditionId = nextConditionId;
 
-        for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
+        for (uint256 i = _stakerConditionId; i < _nextConditionId;) {
             StakingCondition memory condition = stakingConditions[i];
 
             uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
             uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
 
-            (bool noOverflowProduct, uint256 rewardsProduct) = SafeMath.tryMul(
-                (endTime - startTime) * staker.amountStaked,
-                condition.rewardRatioNumerator
-            );
-            (bool noOverflowSum, uint256 rewardsSum) = SafeMath.tryAdd(
-                _rewards,
-                (rewardsProduct / condition.timeUnit) / condition.rewardRatioDenominator
-            );
+            (bool noOverflowProduct, uint256 rewardsProduct) =
+                SafeMath.tryMul((endTime - startTime) * staker.amountStaked, condition.rewardRatioNumerator);
+            (bool noOverflowSum, uint256 rewardsSum) =
+                SafeMath.tryAdd(_rewards, (rewardsProduct / condition.timeUnit) / condition.rewardRatioDenominator);
 
             _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
+
+            unchecked {
+                ++i;
+            }
         }
 
-        (, _rewards) = SafeMath.tryMul(_rewards, 10**rewardTokenDecimals);
+        (, _rewards) = SafeMath.tryMul(_rewards, 10 ** rewardTokenDecimals);
 
-        _rewards /= (10**stakingTokenDecimals);
+        _rewards /= (10 ** stakingTokenDecimals);
     }
 
     /*////////////////////////////////////////////////////////////////////

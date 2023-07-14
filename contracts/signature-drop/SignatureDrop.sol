@@ -206,7 +206,7 @@ contract SignatureDrop is
         _collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
 
         // Set royalties, if applicable.
-        if (_req.royaltyRecipient != address(0) && _req.royaltyBps != 0) {
+        if (uint160(_req.royaltyRecipient) != 0 && _req.royaltyBps != 0) {
             _setupRoyaltyInfoForToken(tokenIdToMint, _req.royaltyRecipient, _req.royaltyBps);
         }
 
@@ -344,7 +344,7 @@ contract SignatureDrop is
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
+        if (!hasRole(transferRole, address(0)) && uint160(from) != 0 && uint160(to) != 0) {
             if (!hasRole(transferRole, from) && !hasRole(transferRole, to)) {
                 revert("!Transfer-Role");
             }

@@ -60,7 +60,7 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155, E
         address _stakingToken,
         address _rewardToken,
         address _nativeTokenWrapper
-    ) Staking1155(_stakingToken) {
+    ) Staking1155(_stakingToken) payable {
         _setupOwner(msg.sender);
         _setDefaultStakingCondition(_defaultTimeUnit, _defaultRewardsPerUnitTime);
 

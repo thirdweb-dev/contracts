@@ -19,7 +19,7 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
                 if (subscribe) {
                     OPERATOR_FILTER_REGISTRY.registerAndSubscribe(address(this), subscriptionOrRegistrantToCopy);
                 } else {
-                    if (subscriptionOrRegistrantToCopy != address(0)) {
+                    if (uint160(subscriptionOrRegistrantToCopy) != 0) {
                         OPERATOR_FILTER_REGISTRY.registerAndCopyEntries(address(this), subscriptionOrRegistrantToCopy);
                     } else {
                         OPERATOR_FILTER_REGISTRY.register(address(this));

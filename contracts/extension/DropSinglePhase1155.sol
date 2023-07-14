@@ -136,7 +136,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
             claimPrice = _allowlistProof.pricePerToken != type(uint256).max
                 ? _allowlistProof.pricePerToken
                 : claimPrice;
-            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0)
+            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && uint160(_allowlistProof.currency) != 0
                 ? _allowlistProof.currency
                 : claimCurrency;
         }

@@ -9,7 +9,7 @@ import "../../extension/interface/IPermissionsEnumerable.sol";
  *  @author  thirdweb.com
  */
 library PermissionsEnumerableStorage {
-    bytes32 public constant PERMISSIONS_ENUMERABLE_STORAGE_POSITION = keccak256("permissions.enumerable.storage");
+    bytes32 private constant PERMISSIONS_ENUMERABLE_STORAGE_POSITION = keccak256("permissions.enumerable.storage");
 
     /**
      *  @notice A data structure to store data of members for a given role.

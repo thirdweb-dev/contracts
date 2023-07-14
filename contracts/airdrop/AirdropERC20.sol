@@ -20,7 +20,7 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import "../interfaces/airdrop/IAirdropERC20.sol";
-import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
+import {CurrencyTransferLib} from "../lib/CurrencyTransferLib.sol";
 import "../eip/interface/IERC20.sol";
 
 //  ==========  Features    ==========
@@ -39,7 +39,9 @@ contract AirdropERC20 is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    uint256 private constant MODULE_TYPE = bytes32("AirdropERC20");
+    //bytes32("AirdropERC20")
+    uint256 private constant MODULE_TYPE = 29586643606843690852087293430700726304775292774467414433021018081583108718592;
+
     uint256 private constant VERSION = 1;
 
     uint256 public payeeCount;
@@ -55,7 +57,7 @@ contract AirdropERC20 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor() initializer {}
+    constructor() initializer payable {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(address _defaultAdmin) external initializer {
@@ -69,13 +71,15 @@ contract AirdropERC20 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
+    function contractType() external pure returns (bytes32 _type) {
+       _type = bytes32(MODULE_TYPE);
     }
 
     /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
+    function contractVersion() external pure returns (uint256 _version) {
+        assembly {
+            _version := VERSION
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -92,7 +96,7 @@ contract AirdropERC20 is
 
         uint256 nativeTokenAmount;
 
-        for (uint256 i; i < len; ) {
+        for (uint256 i; i < len;) {
             airdropContent[i + currentCount] = _contents[i];
 
             if (_contents[i].tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -119,14 +123,12 @@ contract AirdropERC20 is
         require(newProcessedCount <= payeeCount, "Exceeds total payees.");
         processedCount = newProcessedCount;
 
-        CancelledPayments memory range = CancelledPayments({
-            startIndex: countOfProcessed,
-            endIndex: newProcessedCount - 1
-        });
+        CancelledPayments memory range =
+            CancelledPayments({startIndex: countOfProcessed, endIndex: newProcessedCount - 1});
 
         cancelledPaymentIndices.push(range);
 
-        for (uint256 i = countOfProcessed; i < newProcessedCount; ) {
+        for (uint256 i = countOfProcessed; i < newProcessedCount;) {
             AirdropContent memory content = airdropContent[i];
 
             if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -134,7 +136,7 @@ contract AirdropERC20 is
             }
 
             unchecked {
-                i += 1;
+                ++i;
             }
         }
 
@@ -151,32 +153,32 @@ contract AirdropERC20 is
         uint256 totalPayees = payeeCount;
         uint256 countOfProcessed = processedCount;
         uint256 nativeTokenAmount;
+        uint256 addedCountOfProcessed = countOfProcessed + paymentsToProcess;
 
-        require(countOfProcessed + paymentsToProcess <= totalPayees, "invalid no. of payments");
+        require(addedCountOfProcessed <= totalPayees, "invalid no. of payments");
 
         processedCount += paymentsToProcess;
 
-        for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); ) {
+        for (uint256 i = countOfProcessed; i < (addedCountOfProcessed);) {
             AirdropContent memory content = airdropContent[i];
-
+            uint256 amt = content.amount;
+            address recipients = content.recipient;
+            address owner = content.tokenAddress;
             bool success = _transferCurrencyWithReturnVal(
-                content.tokenAddress,
-                content.tokenOwner,
-                content.recipient,
-                content.amount
+                owner, content.tokenOwner, recipients, amt
             );
 
             if (!success) {
                 indicesOfFailed.push(i);
 
-                if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
-                    nativeTokenAmount += content.amount;
+                if (owner == CurrencyTransferLib.NATIVE_TOKEN) {
+                    nativeTokenAmount += amt;
                 }
 
                 success = false;
             }
 
-            emit AirdropPayment(content.recipient, i, !success);
+            emit AirdropPayment(recipients, i, !success);
 
             unchecked {
                 ++i;
@@ -201,12 +203,9 @@ contract AirdropERC20 is
         uint256 nativeTokenAmount;
         uint256 refundAmount;
 
-        for (uint256 i; i < len; ) {
+        for (uint256 i; i < len;) {
             bool success = _transferCurrencyWithReturnVal(
-                _contents[i].tokenAddress,
-                _contents[i].tokenOwner,
-                _contents[i].recipient,
-                _contents[i].amount
+                _contents[i].tokenAddress, _contents[i].tokenOwner, _contents[i].recipient, _contents[i].amount
             );
 
             if (_contents[i].tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -246,11 +245,8 @@ contract AirdropERC20 is
 
         contents = new AirdropContent[](endId - startId + 1);
 
-        for (uint256 i = startId; i <= endId;) {
+        for (uint256 i = startId; i <= endId; ++i) {
             contents[i - startId] = airdropContent[i];
-            unchecked {
-                ++i;
-            }
         }
     }
 
@@ -260,45 +256,40 @@ contract AirdropERC20 is
         view
         returns (AirdropContent[] memory contents)
     {
-        uint256 payee = payeeCount;
-        require(startId <= endId && endId < payee, "invalid range");
+        require(startId <= endId && endId < payeeCount, "invalid range");
 
         uint256 processed = processedCount;
-        if (processed == payee) {
+        if (processed == payeeCount) {
             return contents;
         }
-      assembly{
-        if lt(startId , processed) {
-            startId := processed;
+
+        if (startId < processed) {
+            startId = processed;
         }
-    }
         contents = new AirdropContent[](endId - startId + 1);
 
         uint256 idx;
-        unchecked {
-            
-        
         for (uint256 i = startId; i <= endId;) {
             contents[idx] = airdropContent[i];
-            idx += 1;
+            ++idx;
+
             unchecked {
                 ++i;
             }
         }
-    }
     }
 
     /// @notice Returns all pending airdrop failed.
     function getAllAirdropPaymentsFailed() external view returns (AirdropContent[] memory contents) {
         uint256 count = indicesOfFailed.length;
         contents = new AirdropContent[](count);
-unchecked {
-    
 
-        for (uint256 i; i < count; ++i) {
+        for (uint256 i; i < count;) {
             contents[i] = airdropContent[indicesOfFailed[i]];
+            unchecked {
+                ++i;
+            }
         }
-    }
     }
 
     /// @notice Returns all blocks of cancelled payments as an array of index range.
@@ -311,33 +302,29 @@ unchecked {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Transfers ERC20 tokens and returns a boolean i.e. the status of the transfer.
-    function _transferCurrencyWithReturnVal(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal returns (bool success) {
-        if (_amount == 0) {
-            success = true;
-            return success;
+    function _transferCurrencyWithReturnVal(address _currency, address _from, address _to, uint256 _amount)
+        internal
+        returns (bool success)
+    {
+        assembly {
+            if iszero(_amount) { success := true }
         }
 
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             // solhint-disable avoid-low-level-calls
             // slither-disable-next-line low-level-calls
-            (success, ) = _to.call{ value: _amount, gas: 80_000 }("");
+            (success,) = _to.call{value: _amount, gas: 80_000}("");
         } else {
-            (bool success_, bytes memory data_) = _currency.call(
-                abi.encodeWithSelector(IERC20.transferFrom.selector, _from, _to, _amount)
-            );
+            (bool success_, bytes memory data_) =
+                _currency.call(abi.encodeWithSelector(IERC20.transferFrom.selector, _from, _to, _amount));
 
             success = success_;
             if (!success || (data_.length > 0 && !abi.decode(data_, (bool)))) {
                 success = false;
 
                 require(
-                    IERC20(_currency).balanceOf(_from) >= _amount &&
-                        IERC20(_currency).allowance(_from, address(this)) >= _amount,
+                    IERC20(_currency).balanceOf(_from) >= _amount
+                        && IERC20(_currency).allowance(_from, address(this)) >= _amount,
                     "Not balance or allowance"
                 );
             }

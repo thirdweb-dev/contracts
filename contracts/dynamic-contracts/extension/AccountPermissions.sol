@@ -80,7 +80,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         }
 
         uint256 len = _restrictions.approvedTargets.length;
-        for (uint256 i; i < len; i) {
+        for (uint256 i; i < len; ) {
             data.approvedTargets[role].add(_restrictions.approvedTargets[i]);
             unchecked {
                ++i;

@@ -12,7 +12,7 @@ import "../../eip/interface/IERC721.sol";
 import "../../extension/interface/IBurnToClaim.sol";
 
 library BurnToClaimStorage {
-    bytes32 public constant BURN_TO_CLAIM_STORAGE_POSITION = keccak256("burn.to.claim.storage");
+    bytes32 private constant BURN_TO_CLAIM_STORAGE_POSITION = keccak256("burn.to.claim.storage");
 
     struct Data {
         IBurnToClaim.BurnToClaimInfo burnToClaimInfo;

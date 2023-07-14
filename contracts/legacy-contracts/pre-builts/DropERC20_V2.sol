@@ -50,11 +50,11 @@ contract DropERC20_V2 is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("DropERC20");
+    uint256 private constant MODULE_TYPE =  30959463389705759644847140371711843655237584411995716535279449162747274592256;
     uint128 private constant VERSION = 2;
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    uint256 private constant TRANSFER_ROLE = 60161385426789692149059917683466708061875606619057841735915967165702158708588;
 
     /// @dev Contract level metadata.
     string public contractURI;
@@ -116,8 +116,8 @@ contract DropERC20_V2 is
         platformFeeBps = uint128(_platformFeeBps);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, _defaultAdmin);
-        _setupRole(TRANSFER_ROLE, address(0));
+        _setupRole(bytes32(TRANSFER_ROLE), _defaultAdmin);
+        _setupRole(bytes32(TRANSFER_ROLE), address(0));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -126,7 +126,7 @@ contract DropERC20_V2 is
 
     /// @dev Returns the type of the contract.
     function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
+        return bytes32(MODULE_TYPE);
     }
 
     /// @dev Returns the version of the contract.
@@ -165,8 +165,8 @@ contract DropERC20_V2 is
     ) internal override(ERC20Upgradeable) {
         super._beforeTokenTransfer(from, to, amount);
 
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
+        if (!hasRole(bytes32(TRANSFER_ROLE), address(0)) && uint160(from) != 0 && uint160(to) != 0) {
+            require(hasRole(bytes32(TRANSFER_ROLE), from) || hasRole(bytes32(TRANSFER_ROLE), to), "transfers restricted.");
         }
     }
 
@@ -260,7 +260,8 @@ contract DropERC20_V2 is
         claimCondition.currentStartId = newStartIndex;
 
         uint256 lastConditionStartTimestamp;
-        for (uint256 i = 0; i < _phases.length; i++) {
+        uint len = _phases.length;
+        for (uint256 i; i < len;) {
             require(
                 i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp,
                 "startTimestamp must be in ascending order."
@@ -273,6 +274,9 @@ contract DropERC20_V2 is
             claimCondition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
 
             lastConditionStartTimestamp = _phases[i].startTimestamp;
+            unchecked {
+                ++i;
+            }
         }
 
         /**
@@ -286,16 +290,23 @@ contract DropERC20_V2 is
          *  by the conditions in `_phases`.
          */
         if (_resetClaimEligibility) {
-            for (uint256 i = existingStartIndex; i < newStartIndex; i++) {
+            for (uint256 i = existingStartIndex; i < newStartIndex;) {
                 delete claimCondition.phases[i];
                 delete claimCondition.limitMerkleProofClaim[i];
+                unchecked {
+                    ++i;
+                }
             }
         } else {
             if (existingPhaseCount > _phases.length) {
-                for (uint256 i = _phases.length; i < existingPhaseCount; i++) {
+                for (uint256 i = _phases.length; i < existingPhaseCount;) {
                     delete claimCondition.phases[newStartIndex + i];
                     delete claimCondition.limitMerkleProofClaim[newStartIndex + i];
+                    unchecked {
+                        ++i;
+                    }
                 }
+
             }
         }
 
@@ -415,7 +426,8 @@ contract DropERC20_V2 is
 
     /// @dev At any given moment, returns the uid for the active claim condition.
     function getActiveClaimConditionId() public view returns (uint256) {
-        for (uint256 i = claimCondition.currentStartId + claimCondition.count; i > claimCondition.currentStartId; i--) {
+        uint256 cacheId = claimCondition.currentStartId;
+        for (uint256 i = cacheId + claimCondition.count; i > cacheId; i--) {
             if (block.timestamp >= claimCondition.phases[i - 1].startTimestamp) {
                 return i - 1;
             }

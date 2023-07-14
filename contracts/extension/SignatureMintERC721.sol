@@ -9,10 +9,7 @@ import "../openzeppelin-presets/utils/cryptography/EIP712.sol";
 abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
     using ECDSA for bytes32;
 
-    bytes32 private constant TYPEHASH =
-        keccak256(
-            "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
-        );
+    uint256 private constant TYPEHASH = 108177002243808163283825093704716998026923343744095389917224182209905575861572;
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
@@ -45,7 +42,7 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
         if (_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) {
             revert("Req expired");
         }
-        require(_req.to != address(0), "recipient undefined");
+        require(uint160(_req.to) != 0, "recipient undefined");
         require(_req.quantity > 0, "0 qty");
 
         minted[_req.uid] = true;
@@ -58,20 +55,19 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
 
     /// @dev Resolves 'stack too deep' error in `recoverAddress`.
     function _encodeRequest(MintRequest calldata _req) internal pure returns (bytes memory) {
-        return
-            abi.encode(
-                TYPEHASH,
-                _req.to,
-                _req.royaltyRecipient,
-                _req.royaltyBps,
-                _req.primarySaleRecipient,
-                keccak256(bytes(_req.uri)),
-                _req.quantity,
-                _req.pricePerToken,
-                _req.currency,
-                _req.validityStartTimestamp,
-                _req.validityEndTimestamp,
-                _req.uid
-            );
+        return abi.encode(
+            bytes32(TYPEHASH),
+            _req.to,
+            _req.royaltyRecipient,
+            _req.royaltyBps,
+            _req.primarySaleRecipient,
+            keccak256(bytes(_req.uri)),
+            _req.quantity,
+            _req.pricePerToken,
+            _req.currency,
+            _req.validityStartTimestamp,
+            _req.validityEndTimestamp,
+            _req.uid
+        );
     }
 }

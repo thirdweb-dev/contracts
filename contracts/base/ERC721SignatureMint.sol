@@ -111,7 +111,7 @@ contract ERC721SignatureMint is ERC721Base, PrimarySale, SignatureMintERC721 {
             require(msg.value == totalPrice, "Must send total price.");
         }
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        address saleRecipient = uint160(_primarySaleRecipient) == 0 ? primarySaleRecipient() : _primarySaleRecipient;
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 }

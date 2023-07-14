@@ -28,7 +28,7 @@ contract ERC20SignatureMint is ERC20Base, PrimarySale, SignatureMintERC20 {
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(string memory _name, string memory _symbol, address _primarySaleRecipient) ERC20Base(_name, _symbol) {
+    constructor(string memory _name, string memory _symbol, address _primarySaleRecipient) ERC20Base(_name, _symbol) payable {
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 

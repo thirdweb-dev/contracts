@@ -9,8 +9,7 @@ import "../openzeppelin-presets/utils/cryptography/EIP712.sol";
 abstract contract SignatureAction is EIP712, ISignatureAction {
     using ECDSA for bytes32;
 
-    bytes32 private constant TYPEHASH =
-        keccak256("GenericRequest(uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid,bytes data)");
+    uint256 private constant TYPEHASH = 16359396157621522191437982979879401866039063114110333603808997655164441869570;
 
     /// @dev Mapping from a signed request UID => whether the request is processed.
     mapping(bytes32 => bool) private executed;
@@ -59,7 +58,7 @@ abstract contract SignatureAction is EIP712, ISignatureAction {
     function _encodeRequest(GenericRequest calldata _req) internal pure returns (bytes memory) {
         return
             abi.encode(
-                TYPEHASH,
+                bytes32(TYPEHASH),
                 _req.validityStartTimestamp,
                 _req.validityEndTimestamp,
                 _req.uid,

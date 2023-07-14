@@ -138,8 +138,8 @@ contract TieredDrop is
         address _royaltyRecipient,
         uint16 _royaltyBps
     ) external initializer {
-        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
-        bytes32 _minterRole = keccak256("MINTER_ROLE");
+        uint256 _transferRole = 60161385426789692149059917683466708061875606619057841735915967165702158708588;
+        uint256 _minterRole = 71998914331801701415977457805802827292338598818749192222732755537001613711014;
 
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
@@ -150,15 +150,15 @@ contract TieredDrop is
         _setupOwner(_defaultAdmin);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(_minterRole, _defaultAdmin);
-        _setupRole(_transferRole, _defaultAdmin);
-        _setupRole(_transferRole, address(0));
+        _setupRole(bytes32(_minterRole), _defaultAdmin);
+        _setupRole(bytes32(_transferRole), _defaultAdmin);
+        _setupRole(bytes32(transferRole), address(0));
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
 
-        transferRole = _transferRole;
-        minterRole = _minterRole;
+        transferRole = bytes32(_transferRole);
+        minterRole = bytes32(_minterRole);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -183,13 +183,9 @@ contract TieredDrop is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
@@ -225,11 +221,10 @@ contract TieredDrop is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
-        external
-        onlyRole(minterRole)
-        returns (string memory revealedURI)
-    {
+    function reveal(
+        uint256 _index,
+        bytes calldata _key
+    ) external onlyRole(minterRole) returns (string memory revealedURI) {
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
@@ -246,11 +241,10 @@ contract TieredDrop is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function claimWithSignature(GenericRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        returns (address signer)
-    {
+    function claimWithSignature(
+        GenericRequest calldata _req,
+        bytes calldata _signature
+    ) external payable returns (address signer) {
         (
             string[] memory tiersInPriority,
             address to,
@@ -278,7 +272,7 @@ contract TieredDrop is
         collectPriceOnClaim(primarySaleRecipient, currency, totalPrice);
 
         // Set royalties, if applicable.
-        if (royaltyRecipient != address(0) && royaltyBps != 0) {
+        if (uint160(royaltyRecipient) != 0 && royaltyBps != 0) {
             _setupRoyaltyInfoForToken(tokenIdToMint, royaltyRecipient, royaltyBps);
         }
 
@@ -292,11 +286,7 @@ contract TieredDrop is
                         Internal functions
     //////////////////////////////////////////////////////////////*/
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectPriceOnClaim(
-        address _primarySaleRecipient,
-        address _currency,
-        uint256 _totalPrice
-    ) internal {
+    function collectPriceOnClaim(address _primarySaleRecipient, address _currency, uint256 _totalPrice) internal {
         if (_totalPrice == 0) {
             return;
         }
@@ -313,17 +303,13 @@ contract TieredDrop is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(
-        address _to,
-        uint256 _totalQuantityBeingClaimed,
-        string[] memory _tiers
-    ) internal {
+    function transferTokensOnClaim(address _to, uint256 _totalQuantityBeingClaimed, string[] memory _tiers) internal {
         uint256 startTokenIdToMint = _currentIndex;
 
         uint256 startIdToMap = startTokenIdToMint;
         uint256 remaningToDistribute = _totalQuantityBeingClaimed;
-
-        for (uint256 i = 0; i < _tiers.length; i += 1) {
+        uint len = _tiers.length;
+        for (uint256 i; i < len; ) {
             string memory tier = _tiers[i];
 
             uint256 qtyFulfilled = _getQuantityFulfilledByTier(tier, remaningToDistribute);
@@ -344,6 +330,9 @@ contract TieredDrop is
             } else {
                 break;
             }
+            unchecked {
+                ++i;
+            }
         }
 
         require(remaningToDistribute == 0, "Insufficient tokens in tiers.");
@@ -352,11 +341,7 @@ contract TieredDrop is
     }
 
     /// @dev Maps lazy minted metadata to NFT tokenIds.
-    function _mapTokensToTier(
-        string memory _tier,
-        uint256 _startIdToMap,
-        uint256 _quantity
-    ) private {
+    function _mapTokensToTier(string memory _tier, uint256 _startIdToMap, uint256 _quantity) private {
         uint256 nextIdFromTier = nextMetadataIdToMapFromTier[_tier];
         uint256 startTokenId = _startIdToMap;
 
@@ -365,9 +350,9 @@ contract TieredDrop is
 
         uint256 qtyRemaining = _quantity;
 
-        for (uint256 i = 0; i < len; i += 1) {
+        for (uint256 i; i < len; ) {
             TokenRange memory range = tokensInTier[i];
-            uint256 gap = 0;
+            uint256 gap;
 
             if (range.startIdInclusive <= nextIdFromTier && nextIdFromTier < range.endIdNonInclusive) {
                 uint256 proxyStartId = nextIdFromTier;
@@ -395,6 +380,10 @@ contract TieredDrop is
                 } else {
                     nextIdFromTier = type(uint256).max;
                 }
+
+                unchecked {
+                    ++i;
+                }
             }
 
             if (qtyRemaining == 0) {
@@ -405,11 +394,10 @@ contract TieredDrop is
     }
 
     /// @dev Returns how much of the total-quantity-to-distribute can come from the given tier.
-    function _getQuantityFulfilledByTier(string memory _tier, uint256 _quantity)
-        private
-        view
-        returns (uint256 fulfilled)
-    {
+    function _getQuantityFulfilledByTier(
+        string memory _tier,
+        uint256 _quantity
+    ) private view returns (uint256 fulfilled) {
         uint256 total = totalRemainingInTier[_tier];
 
         if (total >= _quantity) {
@@ -423,11 +411,14 @@ contract TieredDrop is
     function getTierForToken(uint256 _tokenId) external view returns (string memory) {
         uint256 len = lengthEndIdsAtMint;
 
-        for (uint256 i = 0; i < len; i += 1) {
+        for (uint256 i; i < len; ) {
             uint256 endId = endIdsAtMint[i];
 
             if (_tokenId < endId) {
                 return tierAtEndId[endId];
+            }
+            unchecked {
+                ++i;
             }
         }
 
@@ -449,33 +440,43 @@ contract TieredDrop is
 
         require(_startIdx < _endIdx && _endIdx <= len, "TieredDrop: invalid indices.");
 
-        uint256 numOfRangesForTier = 0;
+        uint256 numOfRangesForTier;
         bytes32 hashOfTier = keccak256(abi.encodePacked(_tier));
 
-        for (uint256 i = _startIdx; i < _endIdx; i += 1) {
+        for (uint256 i = _startIdx; i < _endIdx; ) {
             bytes32 hashOfStoredTier = keccak256(abi.encodePacked(tierAtEndId[endIdsAtMint[i]]));
 
             if (hashOfStoredTier == hashOfTier) {
-                numOfRangesForTier += 1;
+                unchecked {
+                    numOfRangesForTier += 1;
+                }
+            }
+            unchecked {
+                ++i;
             }
         }
 
         ranges = new TokenRange[](numOfRangesForTier);
-        uint256 idx = 0;
+        uint256 idx;
 
-        for (uint256 i = _startIdx; i < _endIdx; i += 1) {
+        for (uint256 i = _startIdx; i < _endIdx;) {
             bytes32 hashOfStoredTier = keccak256(abi.encodePacked(tierAtEndId[endIdsAtMint[i]]));
 
             if (hashOfStoredTier == hashOfTier) {
                 uint256 end = endIdsAtMint[i];
 
-                uint256 start = 0;
+                uint256 start;
                 if (i > 0) {
                     start = endIdsAtMint[i - 1];
                 }
 
                 ranges[idx] = TokenRange(start, end);
+                unchecked {
+                    
+                
                 idx += 1;
+                ++i;
+                }
             }
         }
     }
@@ -484,7 +485,7 @@ contract TieredDrop is
     function _getMetadataId(uint256 _tokenId) private view returns (uint256) {
         uint256 len = lengthEndIdsAtMint;
 
-        for (uint256 i = 0; i < len; i += 1) {
+        for (uint256 i; i < len;) {
             if (_tokenId < endIdsAtMint[i]) {
                 uint256 targetEndId = endIdsAtMint[i];
                 uint256 diff = targetEndId - _tokenId;
@@ -492,6 +493,9 @@ contract TieredDrop is
                 TokenRange memory range = proxyTokenRange[targetEndId];
 
                 return range.endIdNonInclusive - diff;
+            }
+            unchecked {
+                ++i;
             }
         }
 
@@ -594,7 +598,7 @@ contract TieredDrop is
         super._beforeTokenTransfers(from, to, startTokenId, quantity);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
+        if (!hasRole(transferRole, address(0)) && uint160(from) != 0 && uint160(to) != 0) {
             if (!hasRole(transferRole, from) && !hasRole(transferRole, to)) {
                 revert("!TRANSFER");
             }

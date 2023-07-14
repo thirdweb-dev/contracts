@@ -17,7 +17,7 @@ import "./PermissionsEnumerable.sol";
 
 abstract contract SoulboundERC721A is PermissionsEnumerable {
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 public constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    uint256 public constant TRANSFER_ROLE = 60161385426789692149059917683466708061875606619057841735915967165702158708588;
 
     event TransfersRestricted(bool isRestricted);
 
@@ -30,9 +30,9 @@ abstract contract SoulboundERC721A is PermissionsEnumerable {
      */
     function restrictTransfers(bool _toRestrict) public virtual {
         if (_toRestrict) {
-            _revokeRole(TRANSFER_ROLE, address(0));
+            _revokeRole(bytes32(TRANSFER_ROLE), address(0));
         } else {
-            _setupRole(TRANSFER_ROLE, address(0));
+            _setupRole(bytes32(TRANSFER_ROLE), address(0));
         }
     }
 
@@ -47,8 +47,8 @@ abstract contract SoulboundERC721A is PermissionsEnumerable {
         uint256
     ) internal virtual {
         // If transfers are restricted on the contract, we still want to allow burning and minting.
-        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            if (!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) {
+        if (!hasRole(bytes32(TRANSFER_ROLE), address(0)) && uint160(from) != 0 && uint160(to) != 0) {
+            if (!hasRole(bytes32(TRANSFER_ROLE), from) && !hasRole(bytes32(TRANSFER_ROLE), to)) {
                 revert("!TRANSFER_ROLE");
             }
         }

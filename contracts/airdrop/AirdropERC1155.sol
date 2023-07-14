@@ -167,15 +167,16 @@ contract AirdropERC1155 is
         uint256 len = _contents.length;
 
         for (uint256 i; i < len;) {
+            address token = _contents[i].tokenAddress;
             bool failed;
             try IERC1155(_contents[i].tokenAddress).safeTransferFrom(
                 _contents[i].tokenOwner, _contents[i].recipient, _contents[i].tokenId, _contents[i].amount, ""
             ) {} catch {
                 // revert if failure is due to unapproved tokens
                 require(
-                    IERC1155(_contents[i].tokenAddress).balanceOf(_contents[i].tokenOwner, _contents[i].tokenId)
+                    IERC1155(token).balanceOf(_contents[i].tokenOwner, _contents[i].tokenId)
                         >= _contents[i].amount
-                        && IERC1155(_contents[i].tokenAddress).isApprovedForAll(_contents[i].tokenOwner, address(this)),
+                        && IERC1155(token).isApprovedForAll(token, address(this)),
                     "Not balance or approved"
                 );
 
@@ -235,7 +236,10 @@ contract AirdropERC1155 is
         uint256 idx;
         for (uint256 i = startId; i <= endId; ++i) {
             contents[idx] = airdropContent[i];
-            idx += 1;
+            unchecked{
+            ++idx;
+            ++i;
+            }
         }
     }
 
