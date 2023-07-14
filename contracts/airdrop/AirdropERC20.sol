@@ -39,7 +39,7 @@ contract AirdropERC20 is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 private constant MODULE_TYPE = bytes32("AirdropERC20");
+    uint256 private constant MODULE_TYPE = bytes32("AirdropERC20");
     uint256 private constant VERSION = 1;
 
     uint256 public payeeCount;
@@ -92,7 +92,7 @@ contract AirdropERC20 is
 
         uint256 nativeTokenAmount;
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i; i < len; ) {
             airdropContent[i + currentCount] = _contents[i];
 
             if (_contents[i].tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -100,7 +100,7 @@ contract AirdropERC20 is
             }
 
             unchecked {
-                i += 1;
+                ++i;
             }
         }
 
@@ -179,7 +179,7 @@ contract AirdropERC20 is
             emit AirdropPayment(content.recipient, i, !success);
 
             unchecked {
-                i += 1;
+                ++i;
             }
         }
 
@@ -201,7 +201,7 @@ contract AirdropERC20 is
         uint256 nativeTokenAmount;
         uint256 refundAmount;
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i; i < len; ) {
             bool success = _transferCurrencyWithReturnVal(
                 _contents[i].tokenAddress,
                 _contents[i].tokenOwner,
@@ -220,7 +220,7 @@ contract AirdropERC20 is
             emit StatelessAirdrop(_contents[i].recipient, _contents[i], !success);
 
             unchecked {
-                i += 1;
+                ++i;
             }
         }
 
@@ -246,8 +246,11 @@ contract AirdropERC20 is
 
         contents = new AirdropContent[](endId - startId + 1);
 
-        for (uint256 i = startId; i <= endId; i += 1) {
+        for (uint256 i = startId; i <= endId;) {
             contents[i - startId] = airdropContent[i];
+            unchecked {
+                ++i;
+            }
         }
     }
 
@@ -257,33 +260,45 @@ contract AirdropERC20 is
         view
         returns (AirdropContent[] memory contents)
     {
-        require(startId <= endId && endId < payeeCount, "invalid range");
+        uint256 payee = payeeCount;
+        require(startId <= endId && endId < payee, "invalid range");
 
         uint256 processed = processedCount;
-        if (processed == payeeCount) {
+        if (processed == payee) {
             return contents;
         }
-
-        if (startId < processed) {
-            startId = processed;
+      assembly{
+        if lt(startId , processed) {
+            startId := processed;
         }
+    }
         contents = new AirdropContent[](endId - startId + 1);
 
         uint256 idx;
-        for (uint256 i = startId; i <= endId; i += 1) {
+        unchecked {
+            
+        
+        for (uint256 i = startId; i <= endId;) {
             contents[idx] = airdropContent[i];
             idx += 1;
+            unchecked {
+                ++i;
+            }
         }
+    }
     }
 
     /// @notice Returns all pending airdrop failed.
     function getAllAirdropPaymentsFailed() external view returns (AirdropContent[] memory contents) {
         uint256 count = indicesOfFailed.length;
         contents = new AirdropContent[](count);
+unchecked {
+    
 
-        for (uint256 i = 0; i < count; i += 1) {
+        for (uint256 i; i < count; ++i) {
             contents[i] = airdropContent[indicesOfFailed[i]];
         }
+    }
     }
 
     /// @notice Returns all blocks of cancelled payments as an array of index range.
