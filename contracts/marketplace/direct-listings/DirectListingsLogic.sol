@@ -470,10 +470,23 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuardLogic, ERC2771Co
                 IERC1155(_assetContract).balanceOf(_tokenOwner, _tokenId) >= _quantity &&
                 IERC1155(_assetContract).isApprovedForAll(_tokenOwner, market);
         } else if (_tokenType == TokenType.ERC721) {
+            address owner;
+            address operator;
+
+            // failsafe for reverts in case of non-existent tokens
+            try IERC721(_assetContract).ownerOf(_tokenId) returns (address _owner) {
+                owner = _owner;
+
+                // Nesting the approval check inside this try block, to run only if owner check doesn't revert.
+                // If the previous check for owner fails, then the return value will always evaluate to false.
+                try IERC721(_assetContract).getApproved(_tokenId) returns (address _operator) {
+                    operator = _operator;
+                } catch {}
+            } catch {}
+
             isValid =
-                IERC721(_assetContract).ownerOf(_tokenId) == _tokenOwner &&
-                (IERC721(_assetContract).getApproved(_tokenId) == market ||
-                    IERC721(_assetContract).isApprovedForAll(_tokenOwner, market));
+                owner == _tokenOwner &&
+                (operator == market || IERC721(_assetContract).isApprovedForAll(_tokenOwner, market));
         }
     }
 

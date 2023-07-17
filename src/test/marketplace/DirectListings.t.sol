@@ -155,6 +155,52 @@ contract MarketplaceDirectListingsTest is BaseTest {
                             Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
+    function test_getValidListings_burnListedTokens() public {
+        // Sample listing parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 pricePerToken = 1 ether;
+        uint128 startTimestamp = 100;
+        uint128 endTimestamp = 200;
+        bool reserved = true;
+
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // List tokens.
+        IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
+        );
+
+        vm.prank(seller);
+        uint256 listingId = DirectListingsLogic(marketplace).createListing(listingParams);
+
+        // Total listings incremented
+        assertEq(DirectListingsLogic(marketplace).totalListings(), 1);
+
+        // burn listed token
+        vm.prank(seller);
+        erc721.burn(0);
+
+        vm.warp(150);
+        // Fetch listing and verify state.
+        uint256 totalListings = DirectListingsLogic(marketplace).totalListings();
+        assertEq(DirectListingsLogic(marketplace).getAllValidListings(0, totalListings - 1).length, 0);
+    }
+
     /**
      *  @dev Tests contract state for Lister role.
      */
