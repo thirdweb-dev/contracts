@@ -279,7 +279,6 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
     function getWinningBid(uint256 _auctionId)
         external
         view
-        onlyExistingAuction(_auctionId)
         returns (
             address _bidder,
             address _currency,
