@@ -6,9 +6,12 @@ import "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
 import { PluginMap, IPluginMap } from "contracts/extension/plugin/PluginMap.sol";
-import { MarketplaceV3 } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
+import { RoyaltyPaymentsLogic } from "contracts/extension/plugin/RoyaltyPayments.sol";
+import { MarketplaceV3, IPlatformFee } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
 import { DirectListingsLogic } from "contracts/marketplace/direct-listings/DirectListingsLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
+import { ERC721Base } from "contracts/base/ERC721Base.sol";
+import { MockRoyaltyEngineV1 } from "../mocks/MockRoyaltyEngineV1.sol";
 
 import { IDirectListings } from "contracts/marketplace/IMarketplace.sol";
 
@@ -104,7 +107,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         assertEq(map.getAllFunctionsOfPlugin(directListings).length, 13);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 
@@ -198,6 +201,97 @@ contract MarketplaceDirectListingsTest is BaseTest {
         assertEq(DirectListingsLogic(marketplace).getAllValidListings(0, totalListings - 1).length, 0);
     }
 
+    /**
+     *  @dev Tests contract state for Lister role.
+     */
+    function test_state_getRoleMember_listerRole() public {
+        bytes32 role = keccak256("LISTER_ROLE");
+
+        uint256 roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 1);
+
+        address roleMember = PermissionsEnumerable(marketplace).getRoleMember(role, 1);
+        assertEq(roleMember, address(0));
+
+        vm.startPrank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(role, address(2));
+        Permissions(marketplace).grantRole(role, address(3));
+        Permissions(marketplace).grantRole(role, address(4));
+
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 4);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).revokeRole(role, address(2));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 3);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).grantRole(role, address(5));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 4);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).grantRole(role, address(0));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 5);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).grantRole(role, address(6));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 6);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).revokeRole(role, address(3));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 5);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).revokeRole(role, address(4));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 4);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        Permissions(marketplace).revokeRole(role, address(0));
+        roleMemberCount = PermissionsEnumerable(marketplace).getRoleMemberCount(role);
+        assertEq(roleMemberCount, 3);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(PermissionsEnumerable(marketplace).getRoleMember(role, i));
+        }
+        console.log("");
+
+        vm.stopPrank();
+    }
+
     function test_state_approvedCurrencies() public {
         (uint256 listingId, IDirectListings.ListingParameters memory listingParams) = _setup_updateListing();
         address currencyToApprove = address(erc20); // same currency as main listing
@@ -254,6 +348,288 @@ contract MarketplaceDirectListingsTest is BaseTest {
 
     //     assertEq(map.getExtension(DirectListingsLogic.createListing.selector), address(0x1234));
     // }
+
+    /*///////////////////////////////////////////////////////////////
+                Royalty Tests (incl Royalty Engine / Registry)
+    //////////////////////////////////////////////////////////////*/
+
+    function _setupRoyaltyEngine()
+        private
+        returns (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory mockRecipients,
+            uint256[] memory mockAmounts
+        )
+    {
+        mockRecipients = new address payable[](2);
+        mockAmounts = new uint256[](2);
+
+        mockRecipients[0] = payable(address(0x12345));
+        mockRecipients[1] = payable(address(0x56789));
+
+        mockAmounts[0] = 10;
+        mockAmounts[1] = 15;
+
+        royaltyEngine = new MockRoyaltyEngineV1(mockRecipients, mockAmounts);
+    }
+
+    function _setupListingForRoyaltyTests(address erc721TokenAddress) private returns (uint256 listingId) {
+        // Sample listing parameters.
+        address assetContract = erc721TokenAddress;
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 pricePerToken = 100 ether;
+        uint128 startTimestamp = 100;
+        uint128 endTimestamp = 200;
+        bool reserved = false;
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        IERC721(erc721TokenAddress).setApprovalForAll(marketplace, true);
+
+        // List tokens.
+        IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
+        );
+
+        vm.prank(seller);
+        listingId = DirectListingsLogic(marketplace).createListing(listingParams);
+    }
+
+    function _buyFromListingForRoyaltyTests(uint256 listingId) private returns (uint256 totalPrice) {
+        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(listingId);
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        totalPrice = pricePerToken * quantityToBuy;
+
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice);
+
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, totalPrice);
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+    }
+
+    function test_royaltyEngine_tokenWithCustomRoyalties() public {
+        (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory customRoyaltyRecipients,
+            uint256[] memory customRoyaltyAmounts
+        ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // 1. ========= Create listing =========
+
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+        uint256 listingId = _setupListingForRoyaltyTests(address(erc721));
+
+        // 2. ========= Buy from listing =========
+
+        uint256 totalPrice = _buyFromListingForRoyaltyTests(listingId);
+
+        // 3. ======== Check balances after royalty payments ========
+
+        {
+            // Royalty recipients receive correct amounts
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
+
+            // Seller gets total price minus royalty amounts
+            assertBalERC20Eq(address(erc20), seller, totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1]);
+        }
+    }
+
+    function test_royaltyEngine_tokenWithERC2981() public {
+        (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory customRoyaltyRecipients,
+            uint256[] memory customRoyaltyAmounts
+        ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // create token with ERC2981
+        address royaltyRecipient = address(0x12345);
+        uint128 royaltyBps = 10;
+        ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        nft2981.mintTo(seller, "");
+
+        vm.prank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(nft2981));
+
+        // 1. ========= Create listing =========
+
+        uint256 listingId = _setupListingForRoyaltyTests(address(nft2981));
+
+        // 2. ========= Buy from listing =========
+
+        uint256 totalPrice = _buyFromListingForRoyaltyTests(listingId);
+
+        // 3. ======== Check balances after royalty payments ========
+
+        {
+            uint256 royaltyAmount = (royaltyBps * totalPrice) / 10_000;
+            // Royalty recipient receives correct amounts
+            assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
+
+            // Seller gets total price minus royalty amount
+            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount);
+        }
+    }
+
+    function test_noRoyaltyEngine_defaultERC2981Token() public {
+        // create token with ERC2981
+        address royaltyRecipient = address(0x12345);
+        uint128 royaltyBps = 10;
+        ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        nft2981.mintTo(seller, "");
+
+        vm.prank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(nft2981));
+
+        // 1. ========= Create listing =========
+
+        uint256 listingId = _setupListingForRoyaltyTests(address(nft2981));
+
+        // 2. ========= Buy from listing =========
+
+        uint256 totalPrice = _buyFromListingForRoyaltyTests(listingId);
+
+        // 3. ======== Check balances after royalty payments ========
+
+        {
+            uint256 royaltyAmount = (royaltyBps * totalPrice) / 10_000;
+            // Royalty recipient receives correct amounts
+            assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
+
+            // Seller gets total price minus royalty amount
+            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount);
+        }
+    }
+
+    function test_royaltyEngine_correctlyDistributeAllFees() public {
+        (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory customRoyaltyRecipients,
+            uint256[] memory customRoyaltyAmounts
+        ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // Set platform fee on marketplace
+        address platformFeeRecipient = marketplaceDeployer;
+        uint128 platformFeeBps = 5;
+        vm.prank(marketplaceDeployer);
+        IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
+
+        // 1. ========= Create listing =========
+
+        _setupERC721BalanceForSeller(seller, 1);
+        uint256 listingId = _setupListingForRoyaltyTests(address(erc721));
+
+        // 2. ========= Buy from listing =========
+
+        uint256 totalPrice = _buyFromListingForRoyaltyTests(listingId);
+
+        // 3. ======== Check balances after fee payments (platform fee + royalty) ========
+
+        {
+            // Royalty recipients receive correct amounts
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
+
+            // Platform fee recipient
+            uint256 platformFeeAmount = (platformFeeBps * totalPrice) / 10_000;
+            assertBalERC20Eq(address(erc20), platformFeeRecipient, platformFeeAmount);
+
+            // Seller gets total price minus royalty amounts
+            assertBalERC20Eq(
+                address(erc20),
+                seller,
+                totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - platformFeeAmount
+            );
+        }
+    }
+
+    function test_revert_feesExceedTotalPrice() public {
+        (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory customRoyaltyRecipients,
+            uint256[] memory customRoyaltyAmounts
+        ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // Set platform fee on marketplace
+        address platformFeeRecipient = marketplaceDeployer;
+        uint128 platformFeeBps = 10_000; // equal to max bps 10_000 or 100%
+        vm.prank(marketplaceDeployer);
+        IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
+
+        // 1. ========= Create listing =========
+
+        _setupERC721BalanceForSeller(seller, 1);
+        uint256 listingId = _setupListingForRoyaltyTests(address(erc721));
+
+        // 2. ========= Buy from listing =========
+
+        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(listingId);
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice);
+
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, totalPrice);
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+
+        vm.expectRevert("fees exceed the price");
+        vm.prank(buyer);
+        DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+    }
 
     /*///////////////////////////////////////////////////////////////
                             Create listing
@@ -1610,7 +1986,7 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
 
         // [4] Deploy `MarketplaceV3`
 
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 

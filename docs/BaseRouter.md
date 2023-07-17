@@ -26,6 +26,23 @@ function addExtension(IExtension.Extension _extension) external nonpayable
 |---|---|---|
 | _extension | IExtension.Extension | undefined |
 
+### defaultExtensionSet
+
+```solidity
+function defaultExtensionSet() external view returns (address)
+```
+
+The DefaultExtensionSet that stores default extensions of the router.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | address | undefined |
+
 ### getAllExtensions
 
 ```solidity
@@ -168,28 +185,6 @@ function removeExtension(string _extensionName) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _extensionName | string | undefined |
-
-### supportsInterface
-
-```solidity
-function supportsInterface(bytes4 interfaceId) external view returns (bool)
-```
-
-
-
-*See {IERC165-supportsInterface}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| interfaceId | bytes4 | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
 
 ### updateExtension
 
