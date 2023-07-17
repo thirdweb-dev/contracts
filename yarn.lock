@@ -1161,10 +1161,10 @@
   dependencies:
     defer-to-connect "^1.0.1"
 
-"@thirdweb-dev/chains@0.1.28":
-  version "0.1.28"
-  resolved "https://registry.yarnpkg.com/@thirdweb-dev/chains/-/chains-0.1.28.tgz#a639f4b3722915725bde8a3246a180c5116d461f"
-  integrity sha512-zwrZ04wgvJaOZokIqxUJF49MVR174mS4vCc2kDVivK1txmJ1vEk/QAZu1sGF6lsC7Tr4BlqZXgTrNmGuKkiPyg==
+"@thirdweb-dev/chains@0.1.32":
+  version "0.1.32"
+  resolved "https://registry.yarnpkg.com/@thirdweb-dev/chains/-/chains-0.1.32.tgz#516fe92cce2671e58a4cd9170a31428fd0305bc3"
+  integrity sha512-Fm1T9XhjPBUOqFLn9dv/lR1brafeMxX6JcdxZw0axn6wac4wfIr3K0VjdRUeZNa5sxt4fF7T+LK+r81451KaJg==
 
 "@thirdweb-dev/contracts-js@1.3.9":
   version "1.3.9"
@@ -1183,15 +1183,15 @@
   resolved "https://registry.yarnpkg.com/@thirdweb-dev/generated-abis/-/generated-abis-0.0.1.tgz#0d788d6aff0ac08f11e9eeb9ae4c8321845272a8"
   integrity sha512-vO9/3lSLO8smyyH1QVeYravSTzFwV1nf1C/Im1NBDPdH8//YvcbhtETGGiNfHWpyCvSi0vRYwvf+/7FKdwpDGQ==
 
-"@thirdweb-dev/sdk@3.10.29":
-  version "3.10.29"
-  resolved "https://registry.yarnpkg.com/@thirdweb-dev/sdk/-/sdk-3.10.29.tgz#4281af0e11acb391ceeae75b827df2ebbedc19df"
-  integrity sha512-XbdGPKtf6RE5vpEjl0yqyGQNMzkWPdwoAA7eHhXeIPEIdM0KcQ7sxMFVIgvKPpC3NKICjre/SC/Bm0QY4FaSAw==
+"@thirdweb-dev/sdk@3.10.33":
+  version "3.10.33"
+  resolved "https://registry.yarnpkg.com/@thirdweb-dev/sdk/-/sdk-3.10.33.tgz#6f7d8bc868c4aedc5fff9e1361dc114435a55bd9"
+  integrity sha512-TSF/BTc0186dNTMqAUdIdGGayBihuyoX/NZEP259JqlqZPmXiFPfq7c9TpRI5eM1ag1+eQdyLiA312gYAe2kEw==
   dependencies:
-    "@thirdweb-dev/chains" "0.1.28"
+    "@thirdweb-dev/chains" "0.1.32"
     "@thirdweb-dev/contracts-js" "1.3.9"
     "@thirdweb-dev/generated-abis" "0.0.1"
-    "@thirdweb-dev/storage" "1.1.7"
+    "@thirdweb-dev/storage" "1.1.8"
     abitype "^0.2.5"
     bn.js "^5.2.1"
     bs58 "^5.0.0"
@@ -1206,10 +1206,10 @@
     yaml "^2.3.1"
     zod "^3.20.2"
 
-"@thirdweb-dev/storage@1.1.7":
-  version "1.1.7"
-  resolved "https://registry.yarnpkg.com/@thirdweb-dev/storage/-/storage-1.1.7.tgz#a5ed10ebede158ca22ea5c8feabba179e3cb8838"
-  integrity sha512-jxDGBIGuSQJvvZi8dJW05lPV1aovAUS/wrd8Dkz3sawStEOzgX/tFbdyxEx82BdejV0JnRK7T8xaZhcLhOPAVg==
+"@thirdweb-dev/storage@1.1.8":
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/@thirdweb-dev/storage/-/storage-1.1.8.tgz#08e6a541344eb7aff7b844d0118a21fe83e4dfff"
+  integrity sha512-ZckBdIc4k6HyPCYKF7NpLE8dyiA99QwUSotJzoAK4LrXaUQgXJsC6OoRJ7pOpo/950gvsTqHZ63UDXD0Wrpjtg==
   dependencies:
     cid-tool "^3.0.0"
     cross-fetch "^3.1.6"

@@ -38,7 +38,7 @@ export const chainIdApiKey: Record<number, string | undefined> = {
   [ChainId.BinanceSmartChainMainnet]: process.env.BINANCE_SCAN_API_KEY || process.env.SCAN_API_KEY,
   [ChainId.BinanceSmartChainTestnet]: process.env.BINANCE_SCAN_API_KEY || process.env.SCAN_API_KEY,
   [84531]: "" as string,
-  [8453]: "" as string,
+  [8453]: process.env.BASE_SCAN_API_KEY || process.env.SCAN_API_KEY,
 };
 
 export const apiMap: Record<number, string> = {
@@ -61,16 +61,26 @@ export const apiMap: Record<number, string> = {
 };
 
 export const contractsToDeploy = [
+  "OpenEditionERC721",
   "DropERC721",
   "DropERC1155",
   "DropERC20",
   "TokenERC20",
   "TokenERC721",
   "TokenERC1155",
-  "MarketplaceV3",
   "Split",
   "VoteERC20",
   "NFTStake",
   "TokenStake",
   "EditionStake",
+  "AirdropERC20",
+  "AirdropERC721",
+  "AirdropERC1155",
+  "DirectListingsLogic",
+  "EnglishAuctionsLogic",
+  "OffersLogic",
+  "MarketplaceV3",
+  // "Forwarder",
+  // "TWCloneFactory",
+  // "PluginMap",
 ];

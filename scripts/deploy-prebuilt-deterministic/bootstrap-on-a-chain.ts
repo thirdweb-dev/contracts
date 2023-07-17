@@ -24,14 +24,16 @@ const deployerKey: string = process.env.PRIVATE_KEY as string;
 
 const polygonSDK = ThirdwebSDK.fromPrivateKey(publisherKey, "polygon");
 
-const chainId = "84531"; // update here
-const networkName = "base-goerli"; // update here
+const chainId = "8453"; // update here
+const networkName = "base"; // update here
 
 async function main() {
   const publisher = await polygonSDK.wallet.getAddress();
 
   const sdk = ThirdwebSDK.fromPrivateKey(deployerKey, chainId); // can also hardcode the chain here
   const signer = sdk.getSigner() as Signer;
+
+  console.log("balance: ", await sdk.wallet.balance());
 
   // Deploy CREATE2 factory (if not already exists)
   const create2FactoryAddress = await getCreate2FactoryAddress(sdk.getProvider());
@@ -77,7 +79,6 @@ async function main() {
       } catch (error) {}
 
       try {
-        console.log("Deploying as", await signer?.getAddress());
         // any evm deployment flow
 
         // get deployment info for any evm
@@ -91,6 +92,14 @@ async function main() {
         const implementationAddress = deploymentInfo.find(i => i.type === "implementation")?.transaction
           .predictedAddress as string;
 
+        const isDeployed = await isContractDeployed(implementationAddress, sdk.getProvider());
+        if (isDeployed) {
+          console.log(`implementation ${implementationAddress} already deployed on chainId: ${chainId}`);
+          console.log();
+          continue;
+        }
+
+        console.log("Deploying as", await signer?.getAddress());
         // filter out already deployed contracts (data is empty)
         const transactionsToSend = deploymentInfo.filter(i => i.transaction.data && i.transaction.data.length > 0);
         const transactionsforDirectDeploy = transactionsToSend

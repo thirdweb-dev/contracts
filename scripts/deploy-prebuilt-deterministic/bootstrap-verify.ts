@@ -3,7 +3,7 @@ import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 import { apiMap, chainIdApiKey, contractsToDeploy } from "./constants";
 
 ////// To run this script: `npx ts-node scripts/deploy-prebuilt-deterministic/bootstrap-verify.ts` //////
-const chainId = "84531"; // update here
+const chainId = "8453"; // update here
 
 async function main() {
   console.log("---------- Verification ---------");
