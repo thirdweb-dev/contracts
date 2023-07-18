@@ -123,28 +123,16 @@ contract CoreRouter is IBaseRouter, Router, ExtensionState, ContractMetadata, Ow
 
     /// @dev Returns whether a extension can be set in the given execution context.
     function _canSetExtension() internal view virtual returns (bool) {
-        try PermissionOverrideCoreRouter(address(this)).canSetExtension(msg.sender) returns (bool canSetContractURI) {
-            return canSetContractURI;
-        } catch {
-            return msg.sender == owner();
-        }
+        return msg.sender == owner();
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {
-        try PermissionOverrideCoreRouter(address(this)).canSetContractURI(msg.sender) returns (bool canSetContractURI) {
-            return canSetContractURI;
-        } catch {
-            return msg.sender == owner();
-        }
+        return msg.sender == owner();
     }
 
     /// @dev Returns whether owner can be set in the given execution context.
     function _canSetOwner() internal view virtual override returns (bool) {
-        try PermissionOverrideCoreRouter(address(this)).canSetOwner(msg.sender) returns (bool canSetContractURI) {
-            return canSetContractURI;
-        } catch {
-            return msg.sender == owner();
-        }
+        return msg.sender == owner();
     }
 }
