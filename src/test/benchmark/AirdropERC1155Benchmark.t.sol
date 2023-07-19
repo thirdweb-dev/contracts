@@ -38,25 +38,13 @@ contract AirdropERC1155BenchmarkTest is BaseTest {
 
         for (uint256 i = 0; i < countOne; i++) {
             _contentsOne.push(
-                IAirdropERC1155.AirdropContent({
-                    tokenAddress: address(erc1155),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    tokenId: i % 5,
-                    amount: 5
-                })
+                IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
             );
         }
 
         for (uint256 i = countOne; i < countOne + countTwo; i++) {
             _contentsTwo.push(
-                IAirdropERC1155.AirdropContent({
-                    tokenAddress: address(erc1155),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    tokenId: i % 5,
-                    amount: 5
-                })
+                IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
             );
         }
     }
@@ -69,6 +57,6 @@ contract AirdropERC1155BenchmarkTest is BaseTest {
         vm.pauseGasMetering();
         vm.prank(deployer);
         vm.resumeGasMetering();
-        drop.airdrop(_contentsOne);
+        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
     }
 }

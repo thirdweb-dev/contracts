@@ -77,16 +77,22 @@ contract AirdropERC1155 is
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
+     *  @param _tokenAddress    The contract address of the tokens to transfer.
+     *  @param _tokenOwner      The owner of the the tokens to transfer.
      *  @param _contents        List containing recipient, tokenId and amounts to airdrop.
      */
-    function airdrop(AirdropContent[] calldata _contents) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
+    function airdrop(
+        address _tokenAddress,
+        address _tokenOwner,
+        AirdropContent[] calldata _contents
+    ) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; ) {
             bool failed;
             try
-                IERC1155(_contents[i].tokenAddress).safeTransferFrom{ gas: 80_000 }(
-                    _contents[i].tokenOwner,
+                IERC1155(_tokenAddress).safeTransferFrom{ gas: 80_000 }(
+                    _tokenOwner,
                     _contents[i].recipient,
                     _contents[i].tokenId,
                     _contents[i].amount,
@@ -95,16 +101,22 @@ contract AirdropERC1155 is
             {} catch {
                 // revert if failure is due to unapproved tokens
                 require(
-                    IERC1155(_contents[i].tokenAddress).balanceOf(_contents[i].tokenOwner, _contents[i].tokenId) >=
-                        _contents[i].amount &&
-                        IERC1155(_contents[i].tokenAddress).isApprovedForAll(_contents[i].tokenOwner, address(this)),
+                    IERC1155(_tokenAddress).balanceOf(_tokenOwner, _contents[i].tokenId) >= _contents[i].amount &&
+                        IERC1155(_tokenAddress).isApprovedForAll(_tokenOwner, address(this)),
                     "Not balance or approved"
                 );
 
                 failed = true;
             }
 
-            emit StatelessAirdrop(_contents[i].recipient, _contents[i], failed);
+            emit Airdrop(
+                _tokenAddress,
+                _tokenOwner,
+                _contents[i].recipient,
+                _contents[i].tokenId,
+                _contents[i].amount,
+                failed
+            );
 
             unchecked {
                 i += 1;

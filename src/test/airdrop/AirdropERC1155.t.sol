@@ -38,25 +38,13 @@ contract AirdropERC1155Test is BaseTest {
 
         for (uint256 i = 0; i < countOne; i++) {
             _contentsOne.push(
-                IAirdropERC1155.AirdropContent({
-                    tokenAddress: address(erc1155),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    tokenId: i % 5,
-                    amount: 5
-                })
+                IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
             );
         }
 
         for (uint256 i = countOne; i < countOne + countTwo; i++) {
             _contentsTwo.push(
-                IAirdropERC1155.AirdropContent({
-                    tokenAddress: address(erc1155),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    tokenId: i % 5,
-                    amount: 5
-                })
+                IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
             );
         }
     }
@@ -67,7 +55,7 @@ contract AirdropERC1155Test is BaseTest {
 
     function test_state_airdrop() public {
         vm.prank(deployer);
-        drop.airdrop(_contentsOne);
+        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
 
         for (uint256 i = 0; i < countOne; i++) {
             assertEq(erc1155.balanceOf(_contentsOne[i].recipient, i % 5), 5);
@@ -90,7 +78,7 @@ contract AirdropERC1155Test is BaseTest {
                 TWStrings.toHexString(uint256(0x00), 32)
             )
         );
-        drop.airdrop(_contentsOne);
+        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
     }
 
     function test_revert_airdrop_notApproved() public {
@@ -98,7 +86,7 @@ contract AirdropERC1155Test is BaseTest {
 
         vm.startPrank(deployer);
         vm.expectRevert("Not balance or approved");
-        drop.airdrop(_contentsOne);
+        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
         vm.stopPrank();
     }
 }
