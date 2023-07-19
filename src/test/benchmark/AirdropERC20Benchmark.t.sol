@@ -34,25 +34,11 @@ contract AirdropERC20BenchmarkTest is BaseTest {
         countTwo = 200;
 
         for (uint256 i = 0; i < countOne; i++) {
-            _contentsOne.push(
-                IAirdropERC20.AirdropContent({
-                    tokenAddress: address(erc20),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    amount: 10 ether
-                })
-            );
+            _contentsOne.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
         }
 
         for (uint256 i = countOne; i < countOne + countTwo; i++) {
-            _contentsTwo.push(
-                IAirdropERC20.AirdropContent({
-                    tokenAddress: address(erc20),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    amount: 10 ether
-                })
-            );
+            _contentsTwo.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
         }
     }
 
@@ -64,6 +50,6 @@ contract AirdropERC20BenchmarkTest is BaseTest {
         vm.pauseGasMetering();
         vm.prank(deployer);
         vm.resumeGasMetering();
-        drop.airdrop(_contentsOne);
+        drop.airdrop(address(erc20), address(tokenOwner), _contentsOne);
     }
 }

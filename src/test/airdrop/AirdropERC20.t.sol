@@ -34,25 +34,11 @@ contract AirdropERC20Test is BaseTest {
         countTwo = 200;
 
         for (uint256 i = 0; i < countOne; i++) {
-            _contentsOne.push(
-                IAirdropERC20.AirdropContent({
-                    tokenAddress: address(erc20),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    amount: 10 ether
-                })
-            );
+            _contentsOne.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
         }
 
         for (uint256 i = countOne; i < countOne + countTwo; i++) {
-            _contentsTwo.push(
-                IAirdropERC20.AirdropContent({
-                    tokenAddress: address(erc20),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    amount: 10 ether
-                })
-            );
+            _contentsTwo.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
         }
     }
 
@@ -62,7 +48,7 @@ contract AirdropERC20Test is BaseTest {
 
     function test_state_airdrop() public {
         vm.prank(deployer);
-        drop.airdrop(_contentsOne);
+        drop.airdrop(address(erc20), address(tokenOwner), _contentsOne);
 
         for (uint256 i = 0; i < countOne; i++) {
             assertEq(erc20.balanceOf(_contentsOne[i].recipient), _contentsOne[i].amount);
@@ -80,7 +66,7 @@ contract AirdropERC20Test is BaseTest {
                 TWStrings.toHexString(uint256(0x00), 32)
             )
         );
-        drop.airdrop(_contentsOne);
+        drop.airdrop(address(erc20), address(tokenOwner), _contentsOne);
     }
 
     function test_revert_airdrop_notApproved() public {
@@ -88,7 +74,7 @@ contract AirdropERC20Test is BaseTest {
 
         vm.startPrank(deployer);
         vm.expectRevert("Not balance or allowance");
-        drop.airdrop(_contentsOne);
+        drop.airdrop(address(erc20), address(tokenOwner), _contentsOne);
         vm.stopPrank();
     }
 }
@@ -121,31 +107,17 @@ contract AirdropERC20AuditTest is BaseTest {
         countTwo = 200;
 
         for (uint256 i = 0; i < countOne; i++) {
-            _contentsOne.push(
-                IAirdropERC20.AirdropContent({
-                    tokenAddress: address(erc20_nonCompliant),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    amount: 10 ether
-                })
-            );
+            _contentsOne.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
         }
 
         for (uint256 i = countOne; i < countOne + countTwo; i++) {
-            _contentsTwo.push(
-                IAirdropERC20.AirdropContent({
-                    tokenAddress: address(erc20_nonCompliant),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    amount: 10 ether
-                })
-            );
+            _contentsTwo.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
         }
     }
 
     function test_process_payments_with_non_compliant_token() public {
         vm.prank(deployer);
-        drop.airdrop(_contentsOne);
+        drop.airdrop(address(erc20_nonCompliant), address(tokenOwner), _contentsOne);
 
         // check balances after airdrop
         for (uint256 i = 0; i < countOne; i++) {

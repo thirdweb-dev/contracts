@@ -11,19 +11,21 @@ pragma solidity ^0.8.11;
 
 interface IAirdropERC20 {
     /// @notice Emitted when an airdrop is made using the stateless airdrop function.
-    event StatelessAirdrop(address indexed recipient, AirdropContent content, bool failed);
+    event Airdrop(
+        address indexed tokenAddress,
+        address indexed tokenOwner,
+        address indexed recipient,
+        uint256 amount,
+        bool failed
+    );
 
     /**
      *  @notice Details of amount and recipient for airdropped token.
      *
-     *  @param tokenAddress The contract address of the tokens to transfer.
-     *  @param tokenOwner The owner of the the tokens to transfer.
      *  @param recipient The recipient of the tokens.
      *  @param amount The quantity of tokens to airdrop.
      */
     struct AirdropContent {
-        address tokenAddress;
-        address tokenOwner;
         address recipient;
         uint256 amount;
     }
@@ -33,7 +35,13 @@ interface IAirdropERC20 {
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
-     *  @param _contents        List containing recipient, tokenId to airdrop.
+     *  @param tokenAddress    The contract address of the tokens to transfer.
+     *  @param tokenOwner      The owner of the the tokens to transfer.
+     *  @param contents        List containing recipient, tokenId to airdrop.
      */
-    function airdrop(AirdropContent[] calldata _contents) external payable;
+    function airdrop(
+        address tokenAddress,
+        address tokenOwner,
+        AirdropContent[] calldata contents
+    ) external payable;
 }

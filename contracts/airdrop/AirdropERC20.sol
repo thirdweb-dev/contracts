@@ -78,22 +78,28 @@ contract AirdropERC20 is
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
+     *  @param _tokenAddress    The contract address of the tokens to transfer.
+     *  @param _tokenOwner      The owner of the the tokens to transfer.
      *  @param _contents        List containing recipient, tokenId and amounts to airdrop.
      */
-    function airdrop(AirdropContent[] calldata _contents) external payable nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
+    function airdrop(
+        address _tokenAddress,
+        address _tokenOwner,
+        AirdropContent[] calldata _contents
+    ) external payable nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
         uint256 nativeTokenAmount;
         uint256 refundAmount;
 
         for (uint256 i = 0; i < len; ) {
             bool success = _transferCurrencyWithReturnVal(
-                _contents[i].tokenAddress,
-                _contents[i].tokenOwner,
+                _tokenAddress,
+                _tokenOwner,
                 _contents[i].recipient,
                 _contents[i].amount
             );
 
-            if (_contents[i].tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
+            if (_tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += _contents[i].amount;
 
                 if (!success) {
@@ -101,7 +107,7 @@ contract AirdropERC20 is
                 }
             }
 
-            emit StatelessAirdrop(_contents[i].recipient, _contents[i], !success);
+            emit Airdrop(_tokenAddress, _tokenOwner, _contents[i].recipient, _contents[i].amount, !success);
 
             unchecked {
                 i += 1;
