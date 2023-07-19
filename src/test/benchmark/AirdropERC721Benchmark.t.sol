@@ -51,16 +51,16 @@ contract AirdropERC721BenchmarkTest is BaseTest {
         drop.addRecipients(address(tokenOwner), address(erc721), _contentsOne);
     }
 
-    //     function test_benchmark_airdropERC721_processPayments() public {
-    //         vm.pauseGasMetering();
-    //         vm.prank(deployer);
-    //         drop.addRecipients(_contentsOne);
+    function test_benchmark_airdropERC721_processPayments() public {
+        vm.pauseGasMetering();
+        vm.prank(deployer);
+        drop.addRecipients(address(tokenOwner), address(erc721), _contentsOne);
 
-    //         // perform airdrop
-    //         vm.prank(deployer);
-    //         vm.resumeGasMetering();
-    //         drop.processPayments(_contentsOne.length);
-    //     }
+        // perform airdrop
+        vm.prank(deployer);
+        vm.resumeGasMetering();
+        drop.processPayments(_contentsOne.length);
+    }
 
     //     function test_benchmark_airdropERC721_cancelPendingPayments() public {
     //         vm.pauseGasMetering();

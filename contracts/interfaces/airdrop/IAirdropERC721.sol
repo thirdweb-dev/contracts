@@ -30,6 +30,13 @@ interface IAirdropERC721 {
         uint256 tokenId;
     }
 
+    struct AirdropContentView {
+        address tokenOwner;
+        address tokenAddress;
+        address recipient;
+        uint256 tokenId;
+    }
+
     /**
      *  @notice Range of indices of a set of cancelled payments. Each call to cancel payments
      *          stores this range in an array.
@@ -46,7 +53,7 @@ interface IAirdropERC721 {
     function getAllAirdropPayments(uint256 startId, uint256 endId)
         external
         view
-        returns (AirdropContent[] memory contents);
+        returns (AirdropContentView[] memory contents);
 
     /// @notice Returns all pending airdrop payments.
     function getAllAirdropPaymentsPending(uint256 startId, uint256 endId)

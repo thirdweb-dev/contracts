@@ -45,7 +45,7 @@ contract AirdropERC721 is
     bytes32 private constant MODULE_TYPE = bytes32("AirdropERC721");
     uint256 private constant VERSION = 1;
 
-    uint256 private constant CONTENT_COUNT_FOR_POINTER = 100;
+    uint256 private constant CONTENT_COUNT_FOR_POINTER = 1000;
 
     uint256 public payeeCount;
     uint256 public processedCount;
@@ -202,7 +202,7 @@ contract AirdropERC721 is
                         failed = true;
                     }
 
-                    emit AirdropPayment(contents[j].recipient, j, failed);
+                    // emit AirdropPayment(contents[j].recipient, j, failed);
 
                     unchecked {
                         remainingPayments--;
@@ -271,11 +271,11 @@ contract AirdropERC721 is
     function getAllAirdropPayments(uint256 startId, uint256 endId)
         external
         view
-        returns (AirdropContent[] memory airdropContents)
+        returns (AirdropContentView[] memory airdropContents)
     {
         require(startId <= endId && endId < payeeCount, "invalid range");
 
-        airdropContents = new AirdropContent[](endId - startId + 1);
+        airdropContents = new AirdropContentView[](endId - startId + 1);
 
         (uint256 _startBatchId, uint256 _endBatchId) = _getBatchesToProcess(startId, endId);
 
@@ -315,7 +315,11 @@ contract AirdropERC721 is
                         return airdropContents;
                     }
 
-                    airdropContents[index++] = contents[j];
+                    airdropContents[index].tokenOwner = batch.tokenOwner;
+                    airdropContents[index].tokenAddress = batch.tokenAddress;
+                    airdropContents[index].recipient = contents[j].recipient;
+                    airdropContents[index].tokenId = contents[j].tokenId;
+                    index++;
                     unchecked {
                         j += 1;
                     }

@@ -40,85 +40,87 @@ contract AirdropERC721Test is BaseTest {
         }
     }
 
-    // /*///////////////////////////////////////////////////////////////
-    //                 Unit tests: `addRecipients`
-    // //////////////////////////////////////////////////////////////*/
+    /*///////////////////////////////////////////////////////////////
+                    Unit tests: `addRecipients`
+    //////////////////////////////////////////////////////////////*/
 
-    // function test_addRecipients() public {
-    //     vm.prank(deployer);
-    //     drop.addRecipients(address(tokenOwner), address(erc721), _contentsOne);
+    function test_addRecipients() public {
+        vm.prank(deployer);
+        drop.addRecipients(address(tokenOwner), address(erc721), _contentsOne);
 
-    //     IAirdropERC721.AirdropContent[] memory contents = drop.getAllAirdropPayments(0, countOne - 1);
+        // IAirdropERC721.AirdropContentView[] memory contents = drop.getAllAirdropPayments(0, countOne - 1);
 
-    //     // for (uint256 i = 0; i < _contentsOne.length; i++) {
-    //     //     console.log(_contentsOne[i].recipient, _contentsOne[i].tokenId);
-    //     // }
-    //     // console.log("length: ", _contentsOne.length);
+        // for (uint256 i = 0; i < _contentsOne.length; i++) {
+        //     console.log(contents[i].tokenOwner, contents[i].tokenAddress, contents[i].recipient, contents[i].tokenId);
+        // }
+        // console.log("length: ", contents.length);
+        // console.log(address(tokenOwner));
+        // console.log(address(erc721));
 
-    //     // check state before airdrop
-    //     // assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-    //     // assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, countOne);
-    //     // assertEq(drop.payeeCount(), countOne);
-    //     // assertEq(drop.processedCount(), 0);
-    // }
+        // check state before airdrop
+        // assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
+        // assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, countOne);
+        // assertEq(drop.payeeCount(), countOne);
+        // assertEq(drop.processedCount(), 0);
+    }
 
     /*///////////////////////////////////////////////////////////////
                         Unit tests: `processPayments`
     //////////////////////////////////////////////////////////////*/
 
-    //     function test_state_processPayments_full() public {
-    //         vm.prank(deployer);
-    //         drop.addRecipients(address(tokenOwner), address(erc721), _contentsOne);
+    function test_state_processPayments_full() public {
+        vm.prank(deployer);
+        drop.addRecipients(address(tokenOwner), address(erc721), _contentsOne);
 
-    //         // check state before airdrop
-    //         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-    //         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, countOne);
-    //         assertEq(drop.payeeCount(), countOne);
-    //         assertEq(drop.processedCount(), 0);
+        // check state before airdrop
+        assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
+        // assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, countOne);
+        // assertEq(drop.payeeCount(), countOne);
+        // assertEq(drop.processedCount(), 0);
 
-    //         // perform airdrop
-    //         vm.prank(deployer);
-    //         drop.processPayments(_contentsOne.length);
+        // perform airdrop
+        vm.prank(deployer);
+        drop.processPayments(_contentsOne.length);
 
-    //         // check state after airdrop
-    //         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-    //         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, 0);
-    //         assertEq(drop.payeeCount(), countOne);
-    //         assertEq(drop.processedCount(), countOne);
+        // check state after airdrop
+        assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
+        // assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, 0);
+        // assertEq(drop.payeeCount(), countOne);
+        // assertEq(drop.processedCount(), countOne);
 
-    //         for (uint256 i = 0; i < 1000; i++) {
-    //             assertEq(erc721.ownerOf(i), _contentsOne[i].recipient);
-    //         }
-    //     }
+        for (uint256 i = 0; i < 1000; i++) {
+            assertEq(erc721.ownerOf(i), _contentsOne[i].recipient);
+        }
+    }
 
-    //     function test_state_processPayments_partial() public {
-    //         vm.prank(deployer);
-    //         drop.addRecipients(_contentsOne);
+    function test_state_processPayments_partial() public {
+        vm.prank(deployer);
+        drop.addRecipients(address(tokenOwner), address(erc721), _contentsOne);
 
-    //         // check state before airdrop
-    //         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-    //         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, countOne);
-    //         assertEq(drop.payeeCount(), countOne);
-    //         assertEq(drop.processedCount(), 0);
+        // check state before airdrop
+        assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
+        // assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, countOne);
+        // assertEq(drop.payeeCount(), countOne);
+        // assertEq(drop.processedCount(), 0);
 
-    //         // perform airdrop
-    //         vm.prank(deployer);
-    //         drop.processPayments(countOne - 300);
+        // perform airdrop
+        vm.prank(deployer);
+        drop.processPayments(countOne - 300);
 
-    //         // check state after airdrop
-    //         assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-    //         assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, 300);
-    //         assertEq(drop.payeeCount(), countOne);
-    //         assertEq(drop.processedCount(), countOne - 300);
+        // check state after airdrop
+        assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
+        // assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, 300);
+        // assertEq(drop.payeeCount(), countOne);
+        // assertEq(drop.processedCount(), countOne - 300);
 
-    //         for (uint256 i = 0; i < 700; i++) {
-    //             assertEq(erc721.ownerOf(i), _contentsOne[i].recipient);
-    //         }
+        for (uint256 i = 0; i < 700; i++) {
+            assertEq(erc721.ownerOf(i), _contentsOne[i].recipient);
+        }
 
-    //         for (uint256 i = 700; i < 1000; i++) {
-    //             assertEq(erc721.ownerOf(i), address(tokenOwner));
-    //         }
-    //     }
+        for (uint256 i = 700; i < 1000; i++) {
+            assertEq(erc721.ownerOf(i), address(tokenOwner));
+        }
+    }
 
     //     function test_revert_processPayments_notOwner() public {
     //         vm.prank(address(25));
@@ -253,14 +255,14 @@ contract AirdropERC721Test is BaseTest {
     //                         Unit tests: stateless airdrop
     //     //////////////////////////////////////////////////////////////*/
 
-    //     function test_state_airdrop() public {
-    //         vm.prank(deployer);
-    //         drop.airdrop(_contentsOne);
+    function test_state_airdrop() public {
+        vm.prank(deployer);
+        drop.airdrop(address(tokenOwner), address(erc721), _contentsOne);
 
-    //         for (uint256 i = 0; i < 1000; i++) {
-    //             assertEq(erc721.ownerOf(i), _contentsOne[i].recipient);
-    //         }
-    //     }
+        // for (uint256 i = 0; i < 1000; i++) {
+        //     assertEq(erc721.ownerOf(i), _contentsOne[i].recipient);
+        // }
+    }
 
     //     function test_revert_airdrop_notOwner() public {
     //         vm.prank(address(25));
