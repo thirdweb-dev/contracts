@@ -89,9 +89,6 @@ contract AirdropGriefingTest is BaseTest {
             );
         }
 
-        vm.prank(deployer);
-        dropERC721.addRecipients(contentsERC721);
-
         // setup erc1155
         dropERC1155 = AirdropERC1155(getContract("AirdropERC1155"));
 
@@ -121,9 +118,6 @@ contract AirdropGriefingTest is BaseTest {
             );
         }
 
-        vm.prank(deployer);
-        dropERC1155.addRecipients(contentsERC1155);
-
         // setup erc20
         dropERC20 = AirdropERC20(getContract("AirdropERC20"));
 
@@ -149,23 +143,20 @@ contract AirdropGriefingTest is BaseTest {
         }
 
         vm.deal(deployer, 10_000 ether);
-
-        vm.prank(deployer);
-        dropERC20.addRecipients{ value: 6 }(contentsERC20);
     }
 
     function test_GriefingERC721_Exceeds_30M_Gas() public {
         vm.prank(deployer);
-        dropERC721.processPayments(6);
+        dropERC721.airdrop(contentsERC721);
     }
 
     function test_GriefingERC1155_Exceeds_30M_Gas() public {
         vm.prank(deployer);
-        dropERC1155.processPayments(6);
+        dropERC1155.airdrop(contentsERC1155);
     }
 
     function test_GriefingERC20_Exceeds_30M_Gas() public {
         vm.prank(deployer);
-        dropERC20.processPayments(6);
+        dropERC20.airdrop{ value: 6 }(contentsERC20);
     }
 }
