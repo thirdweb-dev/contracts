@@ -69,24 +69,10 @@ contract AirdropGriefingTest is BaseTest {
         griefingContract = new GriefingContract();
 
         // add griefing contract to airdrop
-        contentsERC721.push(
-            IAirdropERC721.AirdropContent({
-                tokenAddress: address(erc721),
-                tokenOwner: address(tokenOwner),
-                recipient: address(griefingContract),
-                tokenId: 50
-            })
-        );
+        contentsERC721.push(IAirdropERC721.AirdropContent({ recipient: address(griefingContract), tokenId: 50 }));
 
         for (uint256 i = 0; i < 5; i++) {
-            contentsERC721.push(
-                IAirdropERC721.AirdropContent({
-                    tokenAddress: address(erc721),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    tokenId: i
-                })
-            );
+            contentsERC721.push(IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i }));
         }
 
         // setup erc1155
@@ -133,7 +119,7 @@ contract AirdropGriefingTest is BaseTest {
 
     function test_GriefingERC721_Exceeds_30M_Gas() public {
         vm.prank(deployer);
-        dropERC721.airdrop(contentsERC721);
+        dropERC721.airdrop(address(erc721), address(tokenOwner), contentsERC721);
     }
 
     function test_GriefingERC1155_Exceeds_30M_Gas() public {
