@@ -89,7 +89,6 @@ contract AirdropERC1155 is
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; ) {
-            bool failed;
             try
                 IERC1155(_tokenAddress).safeTransferFrom{ gas: 80_000 }(
                     _tokenOwner,
@@ -106,17 +105,14 @@ contract AirdropERC1155 is
                     "Not balance or approved"
                 );
 
-                failed = true;
+                emit AirdropFailed(
+                    _tokenAddress,
+                    _tokenOwner,
+                    _contents[i].recipient,
+                    _contents[i].tokenId,
+                    _contents[i].amount
+                );
             }
-
-            emit Airdrop(
-                _tokenAddress,
-                _tokenOwner,
-                _contents[i].recipient,
-                _contents[i].tokenId,
-                _contents[i].amount,
-                failed
-            );
 
             unchecked {
                 i += 1;

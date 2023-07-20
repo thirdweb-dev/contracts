@@ -10,14 +10,13 @@ pragma solidity ^0.8.11;
  */
 
 interface IAirdropERC1155 {
-    /// @notice Emitted when an airdrop is made using the stateless airdrop function.
-    event Airdrop(
+    /// @notice Emitted when an airdrop fails for a recipient address.
+    event AirdropFailed(
         address indexed tokenAddress,
         address indexed tokenOwner,
         address indexed recipient,
         uint256 tokenId,
-        uint256 amount,
-        bool failed
+        uint256 amount
     );
 
     /**

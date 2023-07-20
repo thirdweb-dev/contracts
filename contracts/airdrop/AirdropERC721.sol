@@ -89,7 +89,6 @@ contract AirdropERC721 is
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; ) {
-            bool failed;
             try
                 IERC721(_tokenAddress).safeTransferFrom{ gas: 80_000 }(
                     _tokenOwner,
@@ -105,10 +104,8 @@ contract AirdropERC721 is
                     "Not owner or approved"
                 );
 
-                failed = true;
+                emit AirdropFailed(_tokenAddress, _tokenOwner, _contents[i].recipient, _contents[i].tokenId);
             }
-
-            emit Airdrop(_tokenAddress, _tokenOwner, _contents[i].recipient, _contents[i].tokenId, failed);
 
             unchecked {
                 i += 1;

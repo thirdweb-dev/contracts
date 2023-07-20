@@ -99,6 +99,10 @@ contract AirdropERC20 is
                 _contents[i].amount
             );
 
+            if (!success) {
+                emit AirdropFailed(_tokenAddress, _tokenOwner, _contents[i].recipient, _contents[i].amount);
+            }
+
             if (_tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += _contents[i].amount;
 
@@ -106,8 +110,6 @@ contract AirdropERC20 is
                     refundAmount += _contents[i].amount;
                 }
             }
-
-            emit Airdrop(_tokenAddress, _tokenOwner, _contents[i].recipient, _contents[i].amount, !success);
 
             unchecked {
                 i += 1;
