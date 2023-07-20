@@ -111,6 +111,23 @@ Lets an owner a given amount of their tokens.
 |---|---|---|
 | _amount | uint256 | The number of tokens to burn. |
 
+### burnFrom
+
+```solidity
+function burnFrom(address _account, uint256 _amount) external nonpayable
+```
+
+Lets an owner burn a given amount of an account&#39;s tokens.
+
+*`_account` should own the `_amount` of tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _account | address | The account to burn tokens from. |
+| _amount | uint256 | The number of tokens to burn. |
+
 ### claim
 
 ```solidity

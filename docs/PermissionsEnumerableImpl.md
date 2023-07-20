@@ -1,4 +1,4 @@
-# AirdropERC20
+# PermissionsEnumerableImpl
 
 
 
@@ -26,58 +26,6 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bytes32 | undefined |
-
-### airdrop
-
-```solidity
-function airdrop(address _tokenAddress, address _tokenOwner, IAirdropERC20.AirdropContent[] _contents) external payable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _tokenAddress | address | undefined |
-| _tokenOwner | address | undefined |
-| _contents | IAirdropERC20.AirdropContent[] | undefined |
-
-### contractType
-
-```solidity
-function contractType() external pure returns (bytes32)
-```
-
-
-
-*Returns the type of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
-### contractVersion
-
-```solidity
-function contractVersion() external pure returns (uint8)
-```
-
-
-
-*Returns the version of the contract.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | uint8 | undefined |
 
 ### getRoleAdmin
 
@@ -209,61 +157,6 @@ Checks whether an account has a particular role;                  role restricti
 |---|---|---|
 | _0 | bool | undefined |
 
-### initialize
-
-```solidity
-function initialize(address _defaultAdmin) external nonpayable
-```
-
-
-
-*Initiliazes the contract, like a constructor.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _defaultAdmin | address | undefined |
-
-### multicall
-
-```solidity
-function multicall(bytes[] data) external nonpayable returns (bytes[] results)
-```
-
-
-
-*Receives and executes a batch of function calls on this contract.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes[] | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| results | bytes[] | undefined |
-
-### owner
-
-```solidity
-function owner() external view returns (address)
-```
-
-Returns the owner of the contract.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### renounceRole
 
 ```solidity
@@ -298,77 +191,9 @@ Revokes role from an account.
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
 
-### setOwner
-
-```solidity
-function setOwner(address _newOwner) external nonpayable
-```
-
-Lets an authorized wallet set a new owner for the contract.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _newOwner | address | The address to set as the new owner of the contract. |
-
 
 
 ## Events
-
-### AirdropFailed
-
-```solidity
-event AirdropFailed(address indexed tokenAddress, address indexed tokenOwner, address indexed recipient, uint256 amount)
-```
-
-Emitted when an airdrop fails for a recipient address.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| tokenAddress `indexed` | address | undefined |
-| tokenOwner `indexed` | address | undefined |
-| recipient `indexed` | address | undefined |
-| amount  | uint256 | undefined |
-
-### Initialized
-
-```solidity
-event Initialized(uint8 version)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| version  | uint8 | undefined |
-
-### OwnerUpdated
-
-```solidity
-event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| prevOwner `indexed` | address | undefined |
-| newOwner `indexed` | address | undefined |
 
 ### RoleAdminChanged
 
