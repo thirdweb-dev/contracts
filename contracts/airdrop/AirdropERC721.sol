@@ -37,7 +37,7 @@ contract AirdropERC721 is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("AirdropERC721");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 2;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
