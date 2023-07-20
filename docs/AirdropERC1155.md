@@ -247,23 +247,6 @@ function multicall(bytes[] data) external nonpayable returns (bytes[] results)
 |---|---|---|
 | results | bytes[] | undefined |
 
-### owner
-
-```solidity
-function owner() external view returns (address)
-```
-
-Returns the owner of the contract.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-
 ### renounceRole
 
 ```solidity
@@ -297,22 +280,6 @@ Revokes role from an account.
 |---|---|---|
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
-
-### setOwner
-
-```solidity
-function setOwner(address _newOwner) external nonpayable
-```
-
-Lets an authorized wallet set a new owner for the contract.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _newOwner | address | The address to set as the new owner of the contract. |
 
 
 
@@ -353,23 +320,6 @@ event Initialized(uint8 version)
 | Name | Type | Description |
 |---|---|---|
 | version  | uint8 | undefined |
-
-### OwnerUpdated
-
-```solidity
-event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| prevOwner `indexed` | address | undefined |
-| newOwner `indexed` | address | undefined |
 
 ### RoleAdminChanged
 
