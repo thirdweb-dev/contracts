@@ -24,12 +24,10 @@ import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 import "../eip/interface/IERC20.sol";
 
 //  ==========  Features    ==========
-import "../extension/Ownable.sol";
 import "../extension/PermissionsEnumerable.sol";
 
 contract AirdropERC20 is
     Initializable,
-    Ownable,
     PermissionsEnumerable,
     ReentrancyGuardUpgradeable,
     MulticallUpgradeable,
@@ -51,7 +49,6 @@ contract AirdropERC20 is
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(address _defaultAdmin) external initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupOwner(_defaultAdmin);
         __ReentrancyGuard_init();
     }
 
@@ -105,6 +102,8 @@ contract AirdropERC20 is
 
             if (_tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += _contents[i].amount;
+
+                require(nativeTokenAmount <= msg.value, "Insufficient native token amount");
 
                 if (!success) {
                     refundAmount += _contents[i].amount;
@@ -160,10 +159,5 @@ contract AirdropERC20 is
                 );
             }
         }
-    }
-
-    /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal view virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }

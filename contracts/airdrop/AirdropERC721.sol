@@ -23,12 +23,10 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "../interfaces/airdrop/IAirdropERC721.sol";
 
 //  ==========  Features    ==========
-import "../extension/Ownable.sol";
 import "../extension/PermissionsEnumerable.sol";
 
 contract AirdropERC721 is
     Initializable,
-    Ownable,
     PermissionsEnumerable,
     ReentrancyGuardUpgradeable,
     MulticallUpgradeable,
@@ -50,7 +48,6 @@ contract AirdropERC721 is
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(address _defaultAdmin) external initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupOwner(_defaultAdmin);
         __ReentrancyGuard_init();
     }
 
@@ -111,14 +108,5 @@ contract AirdropERC721 is
                 i += 1;
             }
         }
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Miscellaneous
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal view virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }

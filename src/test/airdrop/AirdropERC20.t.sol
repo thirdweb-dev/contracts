@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { AirdropERC20, IAirdropERC20 } from "contracts/airdrop/AirdropERC20.sol";
+import { CurrencyTransferLib } from "contracts/lib/CurrencyTransferLib.sol";
 
 // Test imports
 import { Wallet } from "../utils/Wallet.sol";
@@ -54,6 +55,12 @@ contract AirdropERC20Test is BaseTest {
             assertEq(erc20.balanceOf(_contentsOne[i].recipient), _contentsOne[i].amount);
         }
         assertEq(erc20.balanceOf(address(tokenOwner)), 0);
+    }
+
+    function test_revert_airdrop_insufficientValue() public {
+        vm.prank(deployer);
+        vm.expectRevert("Insufficient native token amount");
+        drop.airdrop(CurrencyTransferLib.NATIVE_TOKEN, address(tokenOwner), _contentsOne);
     }
 
     function test_revert_airdrop_notOwner() public {
