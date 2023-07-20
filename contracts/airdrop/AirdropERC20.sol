@@ -24,12 +24,10 @@ import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 import "../eip/interface/IERC20.sol";
 
 //  ==========  Features    ==========
-import "../extension/Ownable.sol";
 import "../extension/PermissionsEnumerable.sol";
 
 contract AirdropERC20 is
     Initializable,
-    Ownable,
     PermissionsEnumerable,
     ReentrancyGuardUpgradeable,
     MulticallUpgradeable,
@@ -42,15 +40,6 @@ contract AirdropERC20 is
     bytes32 private constant MODULE_TYPE = bytes32("AirdropERC20");
     uint256 private constant VERSION = 1;
 
-    uint256 public payeeCount;
-    uint256 public processedCount;
-
-    uint256[] public indicesOfFailed;
-
-    mapping(uint256 => AirdropContent) private airdropContent;
-
-    CancelledPayments[] public cancelledPaymentIndices;
-
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
@@ -60,7 +49,6 @@ contract AirdropERC20 is
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(address _defaultAdmin) external initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupOwner(_defaultAdmin);
         __ReentrancyGuard_init();
     }
 
@@ -82,142 +70,45 @@ contract AirdropERC20 is
                             Airdrop logic
     //////////////////////////////////////////////////////////////*/
 
-    ///@notice Lets contract-owner set up an airdrop of ERC20 or native tokens to a list of addresses.
-    function addRecipients(AirdropContent[] calldata _contents) external payable onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 len = _contents.length;
-        require(len > 0, "No payees provided.");
-
-        uint256 currentCount = payeeCount;
-        payeeCount += len;
-
-        uint256 nativeTokenAmount;
-
-        for (uint256 i = 0; i < len; ) {
-            airdropContent[i + currentCount] = _contents[i];
-
-            if (_contents[i].tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
-                nativeTokenAmount += _contents[i].amount;
-            }
-
-            unchecked {
-                i += 1;
-            }
-        }
-
-        require(nativeTokenAmount == msg.value, "Incorrect native token amount");
-
-        emit RecipientsAdded(currentCount, currentCount + len);
-    }
-
-    ///@notice Lets contract-owner cancel any pending payments.
-    function cancelPendingPayments(uint256 numberOfPaymentsToCancel) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 countOfProcessed = processedCount;
-        uint256 nativeTokenAmount;
-
-        // increase processedCount by the specified count -- all pending payments in between will be treated as cancelled.
-        uint256 newProcessedCount = countOfProcessed + numberOfPaymentsToCancel;
-        require(newProcessedCount <= payeeCount, "Exceeds total payees.");
-        processedCount = newProcessedCount;
-
-        CancelledPayments memory range = CancelledPayments({
-            startIndex: countOfProcessed,
-            endIndex: newProcessedCount - 1
-        });
-
-        cancelledPaymentIndices.push(range);
-
-        for (uint256 i = countOfProcessed; i < newProcessedCount; ) {
-            AirdropContent memory content = airdropContent[i];
-
-            if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
-                nativeTokenAmount += content.amount;
-            }
-
-            unchecked {
-                i += 1;
-            }
-        }
-
-        if (nativeTokenAmount > 0) {
-            // refund amount to contract admin address
-            CurrencyTransferLib.safeTransferNativeToken(msg.sender, nativeTokenAmount);
-        }
-
-        emit PaymentsCancelledByAdmin(countOfProcessed, newProcessedCount - 1);
-    }
-
-    /// @notice Lets contract-owner send ERC20 or native tokens to a list of addresses.
-    function processPayments(uint256 paymentsToProcess) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 totalPayees = payeeCount;
-        uint256 countOfProcessed = processedCount;
-        uint256 nativeTokenAmount;
-
-        require(countOfProcessed + paymentsToProcess <= totalPayees, "invalid no. of payments");
-
-        processedCount += paymentsToProcess;
-
-        for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); ) {
-            AirdropContent memory content = airdropContent[i];
-
-            bool success = _transferCurrencyWithReturnVal(
-                content.tokenAddress,
-                content.tokenOwner,
-                content.recipient,
-                content.amount
-            );
-
-            if (!success) {
-                indicesOfFailed.push(i);
-
-                if (content.tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
-                    nativeTokenAmount += content.amount;
-                }
-
-                success = false;
-            }
-
-            emit AirdropPayment(content.recipient, i, !success);
-
-            unchecked {
-                i += 1;
-            }
-        }
-
-        if (nativeTokenAmount > 0) {
-            // refund failed payments' amount to contract admin address
-            CurrencyTransferLib.safeTransferNativeToken(msg.sender, nativeTokenAmount);
-        }
-    }
-
     /**
      *  @notice          Lets contract-owner send ERC20 tokens to a list of addresses.
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
+     *  @param _tokenAddress    The contract address of the tokens to transfer.
+     *  @param _tokenOwner      The owner of the the tokens to transfer.
      *  @param _contents        List containing recipient, tokenId and amounts to airdrop.
      */
-    function airdrop(AirdropContent[] calldata _contents) external payable nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
+    function airdrop(
+        address _tokenAddress,
+        address _tokenOwner,
+        AirdropContent[] calldata _contents
+    ) external payable nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 len = _contents.length;
         uint256 nativeTokenAmount;
         uint256 refundAmount;
 
         for (uint256 i = 0; i < len; ) {
             bool success = _transferCurrencyWithReturnVal(
-                _contents[i].tokenAddress,
-                _contents[i].tokenOwner,
+                _tokenAddress,
+                _tokenOwner,
                 _contents[i].recipient,
                 _contents[i].amount
             );
 
-            if (_contents[i].tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
+            if (!success) {
+                emit AirdropFailed(_tokenAddress, _tokenOwner, _contents[i].recipient, _contents[i].amount);
+            }
+
+            if (_tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
                 nativeTokenAmount += _contents[i].amount;
+
+                require(nativeTokenAmount <= msg.value, "Insufficient native token amount");
 
                 if (!success) {
                     refundAmount += _contents[i].amount;
                 }
             }
-
-            emit StatelessAirdrop(_contents[i].recipient, _contents[i], !success);
 
             unchecked {
                 i += 1;
@@ -230,65 +121,6 @@ contract AirdropERC20 is
             // refund failed payments' amount to contract admin address
             CurrencyTransferLib.safeTransferNativeToken(msg.sender, refundAmount);
         }
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Airdrop view logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Returns all airdrop payments set up -- pending, processed or failed.
-    function getAllAirdropPayments(uint256 startId, uint256 endId)
-        external
-        view
-        returns (AirdropContent[] memory contents)
-    {
-        require(startId <= endId && endId < payeeCount, "invalid range");
-
-        contents = new AirdropContent[](endId - startId + 1);
-
-        for (uint256 i = startId; i <= endId; i += 1) {
-            contents[i - startId] = airdropContent[i];
-        }
-    }
-
-    /// @notice Returns all pending airdrop payments.
-    function getAllAirdropPaymentsPending(uint256 startId, uint256 endId)
-        external
-        view
-        returns (AirdropContent[] memory contents)
-    {
-        require(startId <= endId && endId < payeeCount, "invalid range");
-
-        uint256 processed = processedCount;
-        if (processed == payeeCount) {
-            return contents;
-        }
-
-        if (startId < processed) {
-            startId = processed;
-        }
-        contents = new AirdropContent[](endId - startId + 1);
-
-        uint256 idx;
-        for (uint256 i = startId; i <= endId; i += 1) {
-            contents[idx] = airdropContent[i];
-            idx += 1;
-        }
-    }
-
-    /// @notice Returns all pending airdrop failed.
-    function getAllAirdropPaymentsFailed() external view returns (AirdropContent[] memory contents) {
-        uint256 count = indicesOfFailed.length;
-        contents = new AirdropContent[](count);
-
-        for (uint256 i = 0; i < count; i += 1) {
-            contents[i] = airdropContent[indicesOfFailed[i]];
-        }
-    }
-
-    /// @notice Returns all blocks of cancelled payments as an array of index range.
-    function getCancelledPaymentIndices() external view returns (CancelledPayments[] memory) {
-        return cancelledPaymentIndices;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -327,10 +159,5 @@ contract AirdropERC20 is
                 );
             }
         }
-    }
-
-    /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal view virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }
