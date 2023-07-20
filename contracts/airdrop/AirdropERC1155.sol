@@ -37,7 +37,7 @@ contract AirdropERC1155 is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("AirdropERC1155");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 2;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
