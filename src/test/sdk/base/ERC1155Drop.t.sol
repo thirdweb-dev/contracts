@@ -38,7 +38,7 @@ contract ERC1155DropTest is DSTest, Test {
         vm.deal(nftHolder, 100 ether);
 
         vm.prank(admin);
-        base = new ERC1155Drop("name", "symbol", admin, 0, saleRecipient);
+        base = new ERC1155Drop(admin, "name", "symbol", admin, 0, saleRecipient);
 
         targetTokenId = base.nextTokenIdToMint();
 

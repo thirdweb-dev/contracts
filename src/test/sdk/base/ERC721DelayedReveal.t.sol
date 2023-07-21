@@ -13,7 +13,7 @@ contract BaseERC721DelayedRevealTest is BaseUtilTest {
 
     function setUp() public override {
         vm.prank(deployer);
-        base = new ERC721DelayedReveal(NAME, SYMBOL, royaltyRecipient, royaltyBps);
+        base = new ERC721DelayedReveal(deployer, NAME, SYMBOL, royaltyRecipient, royaltyBps);
     }
 
     /*///////////////////////////////////////////////////////////////

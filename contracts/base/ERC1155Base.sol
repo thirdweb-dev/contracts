@@ -64,12 +64,13 @@ contract ERC1155Base is
     //////////////////////////////////////////////////////////////*/
 
     constructor(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         address _royaltyRecipient,
         uint128 _royaltyBps
     ) ERC1155(_name, _symbol) {
-        _setupOwner(msg.sender);
+        _setupOwner(_defaultAdmin);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setOperatorRestriction(true);
     }
