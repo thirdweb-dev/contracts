@@ -84,7 +84,7 @@ contract OpenEditionERC721 is
         uint128 _royaltyBps,
         uint128 _platformFeeBps,
         address _platformFeeRecipient
-    ) external initializer {
+    ) external initializerERC721A initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
 
