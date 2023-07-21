@@ -68,44 +68,6 @@ abstract contract ERC721AQueryableUpgradeable is
     }
 
     /**
-     * @dev Returns an array of `TokenOwnership` structs at `tokenIds` in order.
-     * See {ERC721AQueryable-explicitOwnershipOf}
-     */
-    function explicitOwnershipsOf(uint256[] calldata tokenIds)
-        external
-        view
-        virtual
-        override
-        returns (TokenOwnership[] memory)
-    {
-        TokenOwnership[] memory ownerships;
-        uint256 i = tokenIds.length;
-        assembly {
-            // Grab the free memory pointer.
-            ownerships := mload(0x40)
-            // Store the length.
-            mstore(ownerships, i)
-            // Allocate one word for the length,
-            // `tokenIds.length` words for the pointers.
-            i := shl(5, i) // Multiply `i` by 32.
-            mstore(0x40, add(add(ownerships, 0x20), i))
-        }
-        while (i != 0) {
-            uint256 tokenId;
-            assembly {
-                i := sub(i, 0x20)
-                tokenId := calldataload(add(tokenIds.offset, i))
-            }
-            TokenOwnership memory ownership = explicitOwnershipOf(tokenId);
-            assembly {
-                // Store the pointer of `ownership` in the `ownerships` array.
-                mstore(add(add(ownerships, 0x20), i), ownership)
-            }
-        }
-        return ownerships;
-    }
-
-    /**
      * @dev Returns an array of token IDs owned by `owner`,
      * in the range [`start`, `stop`)
      * (i.e. `start <= tokenId < stop`).
