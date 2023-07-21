@@ -17,7 +17,7 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-import "./eip/ERC721AVirtualApproveUpgradeable.sol";
+import "./eip/queryable/ERC721AQueryableUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
@@ -28,7 +28,6 @@ import "./lib/CurrencyTransferLib.sol";
 
 import "./extension/Multicall.sol";
 import "./extension/ContractMetadata.sol";
-import "./extension/PlatformFee.sol";
 import "./extension/Royalty.sol";
 import "./extension/PrimarySale.sol";
 import "./extension/Ownable.sol";
@@ -42,7 +41,6 @@ import "./extension/DefaultOperatorFiltererUpgradeable.sol";
 contract OpenEditionERC721 is
     Initializable,
     ContractMetadata,
-    PlatformFee,
     Royalty,
     PrimarySale,
     Ownable,
@@ -52,7 +50,7 @@ contract OpenEditionERC721 is
     ERC2771ContextUpgradeable,
     Multicall,
     DefaultOperatorFiltererUpgradeable,
-    ERC721AUpgradeable
+    ERC721AQueryableUpgradeable
 {
     using StringsUpgradeable for uint256;
 
@@ -104,7 +102,6 @@ contract OpenEditionERC721 is
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
 
-        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
 
@@ -117,7 +114,13 @@ contract OpenEditionERC721 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
+    function tokenURI(uint256 _tokenId)
+        public
+        view
+        virtual
+        override(ERC721AUpgradeable, IERC721AUpgradeable)
+        returns (string memory)
+    {
         if (!_exists(_tokenId)) {
             revert("!ID");
         }
@@ -130,7 +133,7 @@ contract OpenEditionERC721 is
         public
         view
         virtual
-        override(ERC721AUpgradeable, IERC165)
+        override(ERC721AUpgradeable, IERC165, IERC721AUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
@@ -172,22 +175,7 @@ contract OpenEditionERC721 is
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
-        uint256 fees;
-        address feeRecipient;
-
-        PlatformFeeType feeType = getPlatformFeeType();
-        if (feeType == PlatformFeeType.Flat) {
-            (feeRecipient, fees) = getFlatPlatformFeeInfo();
-        } else {
-            uint16 platformFeeBps;
-            (feeRecipient, platformFeeBps) = getPlatformFeeInfo();
-            fees = (totalPrice * platformFeeBps) / MAX_BPS;
-        }
-
-        require(totalPrice >= fees, "!F");
-
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), feeRecipient, fees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - fees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice);
     }
 
     /// @dev Transfers the NFTs being claimed.
@@ -196,13 +184,8 @@ contract OpenEditionERC721 is
         override
         returns (uint256 startTokenId_)
     {
-        startTokenId_ = _currentIndex;
+        startTokenId_ = ERC721AStorage.layout()._currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
-    }
-
-    /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether primary sale recipient can be set in the given execution context.
@@ -249,18 +232,18 @@ contract OpenEditionERC721 is
      */
     function totalMinted() external view returns (uint256) {
         unchecked {
-            return _currentIndex - _startTokenId();
+            return ERC721AStorage.layout()._currentIndex - _startTokenId();
         }
     }
 
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     function nextTokenIdToMint() external view returns (uint256) {
-        return _currentIndex;
+        return ERC721AStorage.layout()._currentIndex;
     }
 
     /// @dev The next token ID of the NFT that can be claimed.
     function nextTokenIdToClaim() external view returns (uint256) {
-        return _currentIndex;
+        return ERC721AStorage.layout()._currentIndex;
     }
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
@@ -287,12 +270,21 @@ contract OpenEditionERC721 is
     }
 
     /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved) public override onlyAllowedOperatorApproval(operator) {
+    function setApprovalForAll(address operator, bool approved)
+        public
+        override(IERC721AUpgradeable, ERC721AUpgradeable)
+        onlyAllowedOperatorApproval(operator)
+    {
         super.setApprovalForAll(operator, approved);
     }
 
     /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId) public override onlyAllowedOperatorApproval(operator) {
+    function approve(address operator, uint256 tokenId)
+        public
+        payable
+        override(ERC721AUpgradeable, IERC721AUpgradeable)
+        onlyAllowedOperatorApproval(operator)
+    {
         super.approve(operator, tokenId);
     }
 
@@ -301,7 +293,7 @@ contract OpenEditionERC721 is
         address from,
         address to,
         uint256 tokenId
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
+    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
         super.transferFrom(from, to, tokenId);
     }
 
@@ -310,7 +302,7 @@ contract OpenEditionERC721 is
         address from,
         address to,
         uint256 tokenId
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
+    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, tokenId);
     }
 
@@ -320,7 +312,7 @@ contract OpenEditionERC721 is
         address to,
         uint256 tokenId,
         bytes memory data
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
+    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
         super.safeTransferFrom(from, to, tokenId, data);
     }
 
@@ -328,23 +320,11 @@ contract OpenEditionERC721 is
         return _msgSender();
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override(ERC2771ContextUpgradeable) returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override(ERC2771ContextUpgradeable) returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

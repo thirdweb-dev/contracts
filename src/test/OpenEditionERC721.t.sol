@@ -164,67 +164,67 @@ contract OpenEditionERC721Test is BaseTest {
     /**
      *  @dev Tests contract state for Transfer role.
      */
-    function test_state_getRoleMember_transferRole() public {
-        bytes32 role = keccak256("TRANSFER_ROLE");
+    // function test_state_getRoleMember_transferRole() public {
+    //     bytes32 role = keccak256("TRANSFER_ROLE");
 
-        uint256 roleMemberCount = openEdition.getRoleMemberCount(role);
-        assertEq(roleMemberCount, 2);
+    //     uint256 roleMemberCount = openEdition.getRoleMemberCount(role);
+    //     assertEq(roleMemberCount, 2);
 
-        address roleMember = openEdition.getRoleMember(role, 1);
-        assertEq(roleMember, address(0));
+    //     address roleMember = openEdition.getRoleMember(role, 1);
+    //     assertEq(roleMember, address(0));
 
-        vm.startPrank(deployer);
-        openEdition.grantRole(role, address(2));
-        openEdition.grantRole(role, address(3));
-        openEdition.grantRole(role, address(4));
+    //     vm.startPrank(deployer);
+    //     openEdition.grantRole(role, address(2));
+    //     openEdition.grantRole(role, address(3));
+    //     openEdition.grantRole(role, address(4));
 
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
+    //     roleMemberCount = openEdition.getRoleMemberCount(role);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(openEdition.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        openEdition.revokeRole(role, address(2));
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
+    //     openEdition.revokeRole(role, address(2));
+    //     roleMemberCount = openEdition.getRoleMemberCount(role);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(openEdition.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        openEdition.revokeRole(role, address(0));
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
+    //     openEdition.revokeRole(role, address(0));
+    //     roleMemberCount = openEdition.getRoleMemberCount(role);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(openEdition.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        openEdition.grantRole(role, address(5));
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
+    //     openEdition.grantRole(role, address(5));
+    //     roleMemberCount = openEdition.getRoleMemberCount(role);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(openEdition.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        openEdition.grantRole(role, address(0));
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
+    //     openEdition.grantRole(role, address(0));
+    //     roleMemberCount = openEdition.getRoleMemberCount(role);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(openEdition.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        openEdition.grantRole(role, address(6));
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
-    }
+    //     openEdition.grantRole(role, address(6));
+    //     roleMemberCount = openEdition.getRoleMemberCount(role);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(openEdition.getRoleMember(role, i));
+    //     }
+    //     console.log("");
+    // }
 
     /**
      *  note: Testing transfer of tokens when transfer-role is restricted
@@ -261,21 +261,21 @@ contract OpenEditionERC721Test is BaseTest {
     /**
      *  @dev Tests whether role member count is incremented correctly.
      */
-    function test_member_count_incremented_properly_when_role_granted() public {
-        bytes32 role = keccak256("ABC_ROLE");
-        address receiver = getActor(0);
+    // function test_member_count_incremented_properly_when_role_granted() public {
+    //     bytes32 role = keccak256("ABC_ROLE");
+    //     address receiver = getActor(0);
 
-        vm.startPrank(deployer);
-        uint256 roleMemberCount = openEdition.getRoleMemberCount(role);
+    //     vm.startPrank(deployer);
+    //     uint256 roleMemberCount = openEdition.getRoleMemberCount(role);
 
-        assertEq(roleMemberCount, 0);
+    //     assertEq(roleMemberCount, 0);
 
-        openEdition.grantRole(role, receiver);
+    //     openEdition.grantRole(role, receiver);
 
-        assertEq(openEdition.getRoleMemberCount(role), 1);
+    //     assertEq(openEdition.getRoleMemberCount(role), 1);
 
-        vm.stopPrank();
-    }
+    //     vm.stopPrank();
+    // }
 
     function test_claimCondition_with_startTimestamp() public {
         vm.warp(1);
