@@ -21,14 +21,18 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import "../interfaces/airdrop/IAirdropERC1155.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
 import "../extension/PermissionsEnumerable.sol";
+import "../extension/ContractMetadata.sol";
 
 contract AirdropERC1155 is
     Initializable,
+    ContractMetadata,
     PermissionsEnumerable,
     ReentrancyGuardUpgradeable,
+    ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     IAirdropERC1155
 {
@@ -46,7 +50,14 @@ contract AirdropERC1155 is
     constructor() initializer {}
 
     /// @dev Initiliazes the contract, like a constructor.
-    function initialize(address _defaultAdmin) external initializer {
+    function initialize(
+        address _defaultAdmin,
+        string memory _contractURI,
+        address[] memory _trustedForwarders
+    ) external initializer {
+        __ERC2771Context_init_unchained(_trustedForwarders);
+
+        _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         __ReentrancyGuard_init();
     }
@@ -82,7 +93,9 @@ contract AirdropERC1155 is
         address _tokenAddress,
         address _tokenOwner,
         AirdropContent[] calldata _contents
-    ) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
+    ) external nonReentrant {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized.");
+
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; ) {
@@ -115,5 +128,24 @@ contract AirdropERC1155 is
                 i += 1;
             }
         }
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Miscellaneous
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Checks whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev See ERC2771
+    function _msgSender() internal view virtual override returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
+    }
+
+    /// @dev See ERC2771
+    function _msgData() internal view virtual override returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 }
