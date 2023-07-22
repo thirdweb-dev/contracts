@@ -62,6 +62,23 @@ function contractType() external pure returns (bytes32)
 |---|---|---|
 | _0 | bytes32 | undefined |
 
+### contractURI
+
+```solidity
+function contractURI() external view returns (string)
+```
+
+Returns the contract metadata URI.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | string | undefined |
+
 ### contractVersion
 
 ```solidity
@@ -212,7 +229,7 @@ Checks whether an account has a particular role;                  role restricti
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin) external nonpayable
+function initialize(address _defaultAdmin, string _contractURI, address[] _trustedForwarders) external nonpayable
 ```
 
 
@@ -224,6 +241,30 @@ function initialize(address _defaultAdmin) external nonpayable
 | Name | Type | Description |
 |---|---|---|
 | _defaultAdmin | address | undefined |
+| _contractURI | string | undefined |
+| _trustedForwarders | address[] | undefined |
+
+### isTrustedForwarder
+
+```solidity
+function isTrustedForwarder(address forwarder) external view returns (bool)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| forwarder | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | bool | undefined |
 
 ### multicall
 
@@ -281,6 +322,22 @@ Revokes role from an account.
 | role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
 | account | address | Address of the account from which the role is being revoked. |
 
+### setContractURI
+
+```solidity
+function setContractURI(string _uri) external nonpayable
+```
+
+Lets a contract admin set the URI for contract-level metadata.
+
+*Caller should be authorized to setup contractURI, e.g. contract admin.                  See {_canSetContractURI}.                  Emits {ContractURIUpdated Event}.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _uri | string | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
+
 
 
 ## Events
@@ -303,6 +360,23 @@ Emitted when an airdrop fails for a recipient address.
 | tokenOwner `indexed` | address | undefined |
 | recipient `indexed` | address | undefined |
 | tokenId  | uint256 | undefined |
+
+### ContractURIUpdated
+
+```solidity
+event ContractURIUpdated(string prevURI, string newURI)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| prevURI  | string | undefined |
+| newURI  | string | undefined |
 
 ### Initialized
 
