@@ -12,7 +12,11 @@ contract AirdropERC1155Test is BaseTest {
 
     Wallet internal tokenOwner;
 
-    IAirdropERC1155.AirdropContent[] internal _contents;
+    IAirdropERC1155.AirdropContent[] internal _contentsOne;
+    IAirdropERC1155.AirdropContent[] internal _contentsTwo;
+
+    uint256 countOne;
+    uint256 countTwo;
 
     function setUp() public override {
         super.setUp();
@@ -29,32 +33,34 @@ contract AirdropERC1155Test is BaseTest {
 
         tokenOwner.setApprovalForAllERC1155(address(erc1155), address(drop), true);
 
-        for (uint256 i = 0; i < 1000; i++) {
-            _contents.push(
-                IAirdropERC1155.AirdropContent({
-                    tokenAddress: address(erc1155),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    tokenId: i % 5,
-                    amount: 5
-                })
+        countOne = 1000;
+        countTwo = 200;
+
+        for (uint256 i = 0; i < countOne; i++) {
+            _contentsOne.push(
+                IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
+            );
+        }
+
+        for (uint256 i = countOne; i < countOne + countTwo; i++) {
+            _contentsTwo.push(
+                IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
             );
         }
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Unit tests: `createPack`
+                        Unit tests: stateless airdrop
     //////////////////////////////////////////////////////////////*/
 
     function test_state_airdrop() public {
-        vm.startPrank(deployer);
-        drop.addAirdropRecipients(_contents);
-        drop.airdrop(_contents.length);
-        vm.stopPrank();
+        vm.prank(deployer);
+        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
 
-        for (uint256 i = 0; i < 1000; i++) {
-            assertEq(erc1155.balanceOf(_contents[i].recipient, i % 5), 5);
+        for (uint256 i = 0; i < countOne; i++) {
+            assertEq(erc1155.balanceOf(_contentsOne[i].recipient, i % 5), 5);
         }
+
         assertEq(erc1155.balanceOf(address(tokenOwner), 0), 0);
         assertEq(erc1155.balanceOf(address(tokenOwner), 1), 1000);
         assertEq(erc1155.balanceOf(address(tokenOwner), 2), 2000);
@@ -72,16 +78,71 @@ contract AirdropERC1155Test is BaseTest {
                 TWStrings.toHexString(uint256(0x00), 32)
             )
         );
-        drop.addAirdropRecipients(_contents);
+        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
     }
 
     function test_revert_airdrop_notApproved() public {
         tokenOwner.setApprovalForAllERC1155(address(erc1155), address(drop), false);
 
         vm.startPrank(deployer);
-        drop.addAirdropRecipients(_contents);
-        vm.expectRevert("ERC1155: caller is not token owner nor approved");
-        drop.airdrop(_contents.length);
+        vm.expectRevert("Not balance or approved");
+        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
         vm.stopPrank();
+    }
+}
+
+contract AirdropERC1155GasTest is BaseTest {
+    AirdropERC1155 internal drop;
+
+    Wallet internal tokenOwner;
+
+    function setUp() public override {
+        super.setUp();
+
+        drop = AirdropERC1155(getContract("AirdropERC1155"));
+
+        tokenOwner = getWallet();
+
+        erc1155.mint(address(tokenOwner), 0, 1000);
+
+        tokenOwner.setApprovalForAllERC1155(address(erc1155), address(drop), true);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: gas benchmarks, etc.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_safeTransferFrom_toEOA() public {
+        vm.prank(address(tokenOwner));
+        erc1155.safeTransferFrom(address(tokenOwner), address(0x123), 0, 10, "");
+    }
+
+    function test_safeTransferFrom_toContract() public {
+        vm.prank(address(tokenOwner));
+        erc1155.safeTransferFrom(address(tokenOwner), address(this), 0, 10, "");
+    }
+
+    function test_safeTransferFrom_toEOA_gasOverride() public {
+        vm.prank(address(tokenOwner));
+        console.log(gasleft());
+        erc1155.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(this), 0, 10, "");
+        console.log(gasleft());
+    }
+
+    function test_safeTransferFrom_toContract_gasOverride() public {
+        vm.prank(address(tokenOwner));
+        console.log(gasleft());
+        erc1155.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(this), 0, 10, "");
+        console.log(gasleft());
+    }
+
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes calldata
+    ) external returns (bytes4) {
+        return this.onERC1155Received.selector;
     }
 }

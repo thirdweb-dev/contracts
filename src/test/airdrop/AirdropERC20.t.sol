@@ -1,18 +1,25 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/airdrop/AirdropERC20.sol";
+import { AirdropERC20, IAirdropERC20 } from "contracts/airdrop/AirdropERC20.sol";
+import { CurrencyTransferLib } from "contracts/lib/CurrencyTransferLib.sol";
 
 // Test imports
 import { Wallet } from "../utils/Wallet.sol";
 import "../utils/BaseTest.sol";
+
+import "../mocks/MockERC20NonCompliant.sol";
 
 contract AirdropERC20Test is BaseTest {
     AirdropERC20 internal drop;
 
     Wallet internal tokenOwner;
 
-    IAirdropERC20.AirdropContent[] internal _contents;
+    IAirdropERC20.AirdropContent[] internal _contentsOne;
+    IAirdropERC20.AirdropContent[] internal _contentsTwo;
+
+    uint256 countOne;
+    uint256 countTwo;
 
     function setUp() public override {
         super.setUp();
@@ -24,69 +31,39 @@ contract AirdropERC20Test is BaseTest {
         erc20.mint(address(tokenOwner), 10_000 ether);
         tokenOwner.setAllowanceERC20(address(erc20), address(drop), type(uint256).max);
 
-        for (uint256 i = 0; i < 1000; i++) {
-            _contents.push(
-                IAirdropERC20.AirdropContent({
-                    tokenAddress: address(erc20),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    amount: 10 ether
-                })
-            );
+        countOne = 1000;
+        countTwo = 200;
+
+        for (uint256 i = 0; i < countOne; i++) {
+            _contentsOne.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
+        }
+
+        for (uint256 i = countOne; i < countOne + countTwo; i++) {
+            _contentsTwo.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
         }
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Unit tests: `createPack`
+                        Unit tests: stateless airdrop
     //////////////////////////////////////////////////////////////*/
 
     function test_state_airdrop() public {
-        vm.startPrank(deployer);
-        drop.addAirdropRecipients(_contents);
-        drop.airdrop(_contents.length);
-        vm.stopPrank();
+        vm.prank(deployer);
+        drop.airdrop(address(erc20), address(tokenOwner), _contentsOne);
 
-        for (uint256 i = 0; i < 1000; i++) {
-            assertEq(erc20.balanceOf(_contents[i].recipient), _contents[i].amount);
+        for (uint256 i = 0; i < countOne; i++) {
+            assertEq(erc20.balanceOf(_contentsOne[i].recipient), _contentsOne[i].amount);
         }
         assertEq(erc20.balanceOf(address(tokenOwner)), 0);
     }
 
-    function test_state_airdrop_nativeToken() public {
-        vm.deal(deployer, 10_000 ether);
-
-        uint256 balBefore = deployer.balance;
-
-        for (uint256 i = 0; i < 1000; i++) {
-            _contents[i].tokenAddress = NATIVE_TOKEN;
-        }
-
-        vm.startPrank(deployer);
-        drop.addAirdropRecipients{ value: 10_000 ether }(_contents);
-        drop.airdrop(_contents.length);
-        vm.stopPrank();
-
-        for (uint256 i = 0; i < 1000; i++) {
-            assertEq(_contents[i].recipient.balance, _contents[i].amount);
-        }
-        assertEq(deployer.balance, balBefore - 10_000 ether);
-    }
-
-    function test_revert_airdrop_incorrectNativeTokenAmt() public {
-        vm.deal(deployer, 11_000 ether);
-
-        uint256 incorrectAmt = 10_000 ether + 1;
-
-        for (uint256 i = 0; i < 1000; i++) {
-            _contents[i].tokenAddress = NATIVE_TOKEN;
-        }
-
+    function test_revert_airdrop_insufficientValue() public {
         vm.prank(deployer);
-        vm.expectRevert("Incorrect native token amount");
-        drop.addAirdropRecipients{ value: incorrectAmt }(_contents);
+        vm.expectRevert("Insufficient native token amount");
+        drop.airdrop(CurrencyTransferLib.NATIVE_TOKEN, address(tokenOwner), _contentsOne);
     }
 
-    function test_revert_airdrop_notAdmin() public {
+    function test_revert_airdrop_notOwner() public {
         vm.prank(address(25));
         vm.expectRevert(
             abi.encodePacked(
@@ -96,16 +73,108 @@ contract AirdropERC20Test is BaseTest {
                 TWStrings.toHexString(uint256(0x00), 32)
             )
         );
-        drop.addAirdropRecipients(_contents);
+        drop.airdrop(address(erc20), address(tokenOwner), _contentsOne);
     }
 
     function test_revert_airdrop_notApproved() public {
         tokenOwner.setAllowanceERC20(address(erc20), address(drop), 0);
 
         vm.startPrank(deployer);
-        drop.addAirdropRecipients(_contents);
-        vm.expectRevert("ERC20: insufficient allowance");
-        drop.airdrop(_contents.length);
+        vm.expectRevert("Not balance or allowance");
+        drop.airdrop(address(erc20), address(tokenOwner), _contentsOne);
         vm.stopPrank();
+    }
+}
+
+contract AirdropERC20AuditTest is BaseTest {
+    AirdropERC20 internal drop;
+
+    Wallet internal tokenOwner;
+
+    IAirdropERC20.AirdropContent[] internal _contentsOne;
+    IAirdropERC20.AirdropContent[] internal _contentsTwo;
+
+    uint256 countOne;
+    uint256 countTwo;
+
+    MockERC20NonCompliant public erc20_nonCompliant;
+
+    function setUp() public override {
+        super.setUp();
+
+        erc20_nonCompliant = new MockERC20NonCompliant();
+        drop = AirdropERC20(getContract("AirdropERC20"));
+
+        tokenOwner = getWallet();
+
+        erc20_nonCompliant.mint(address(tokenOwner), 10_000 ether);
+        tokenOwner.setAllowanceERC20(address(erc20_nonCompliant), address(drop), type(uint256).max);
+
+        countOne = 1000;
+        countTwo = 200;
+
+        for (uint256 i = 0; i < countOne; i++) {
+            _contentsOne.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
+        }
+
+        for (uint256 i = countOne; i < countOne + countTwo; i++) {
+            _contentsTwo.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
+        }
+    }
+
+    function test_process_payments_with_non_compliant_token() public {
+        vm.prank(deployer);
+        drop.airdrop(address(erc20_nonCompliant), address(tokenOwner), _contentsOne);
+
+        // check balances after airdrop
+        for (uint256 i = 0; i < countOne; i++) {
+            assertEq(erc20_nonCompliant.balanceOf(_contentsOne[i].recipient), _contentsOne[i].amount);
+        }
+        assertEq(erc20_nonCompliant.balanceOf(address(tokenOwner)), 0);
+    }
+}
+
+contract AirdropERC20GasTest is BaseTest {
+    AirdropERC20 internal drop;
+
+    Wallet internal tokenOwner;
+
+    function setUp() public override {
+        super.setUp();
+
+        drop = AirdropERC20(getContract("AirdropERC20"));
+
+        tokenOwner = getWallet();
+
+        erc20.mint(address(tokenOwner), 10_000 ether);
+        tokenOwner.setAllowanceERC20(address(erc20), address(drop), type(uint256).max);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: gas benchmarks, etc.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_transferNativeToken_toEOA() public {
+        vm.prank(address(tokenOwner));
+        address(0x123).call{ value: 1 ether }("");
+    }
+
+    function test_transferNativeToken_toContract() public {
+        vm.prank(address(tokenOwner));
+        address(this).call{ value: 1 ether }("");
+    }
+
+    function test_transferNativeToken_toEOA_gasOverride() public {
+        vm.prank(address(tokenOwner));
+        console.log(gasleft());
+        address(0x123).call{ value: 1 ether, gas: 100_000 }("");
+        console.log(gasleft());
+    }
+
+    function test_transferNativeToken_toContract_gasOverride() public {
+        vm.prank(address(tokenOwner));
+        console.log(gasleft());
+        address(this).call{ value: 1 ether, gas: 100_000 }("");
+        console.log(gasleft());
     }
 }

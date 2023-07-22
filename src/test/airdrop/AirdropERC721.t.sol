@@ -12,7 +12,11 @@ contract AirdropERC721Test is BaseTest {
 
     Wallet internal tokenOwner;
 
-    IAirdropERC721.AirdropContent[] internal _contents;
+    IAirdropERC721.AirdropContent[] internal _contentsOne;
+    IAirdropERC721.AirdropContent[] internal _contentsTwo;
+
+    uint256 countOne;
+    uint256 countTwo;
 
     function setUp() public override {
         super.setUp();
@@ -21,33 +25,31 @@ contract AirdropERC721Test is BaseTest {
 
         tokenOwner = getWallet();
 
-        erc721.mint(address(tokenOwner), 1000);
+        erc721.mint(address(tokenOwner), 1500);
         tokenOwner.setApprovalForAllERC721(address(erc721), address(drop), true);
 
-        for (uint256 i = 0; i < 1000; i++) {
-            _contents.push(
-                IAirdropERC721.AirdropContent({
-                    tokenAddress: address(erc721),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    tokenId: i
-                })
-            );
+        countOne = 1000;
+        countTwo = 200;
+
+        for (uint256 i = 0; i < countOne; i++) {
+            _contentsOne.push(IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i }));
+        }
+
+        for (uint256 i = countOne; i < countOne + countTwo; i++) {
+            _contentsTwo.push(IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i }));
         }
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Unit tests: `createPack`
+                        Unit tests: stateless airdrop
     //////////////////////////////////////////////////////////////*/
 
     function test_state_airdrop() public {
-        vm.startPrank(deployer);
-        drop.addAirdropRecipients(_contents);
-        drop.airdrop(_contents.length);
-        vm.stopPrank();
+        vm.prank(deployer);
+        drop.airdrop(address(erc721), address(tokenOwner), _contentsOne);
 
         for (uint256 i = 0; i < 1000; i++) {
-            assertEq(erc721.ownerOf(i), _contents[i].recipient);
+            assertEq(erc721.ownerOf(i), _contentsOne[i].recipient);
         }
     }
 
@@ -61,16 +63,67 @@ contract AirdropERC721Test is BaseTest {
                 TWStrings.toHexString(uint256(0x00), 32)
             )
         );
-        drop.addAirdropRecipients(_contents);
+        drop.airdrop(address(erc721), address(tokenOwner), _contentsOne);
     }
 
     function test_revert_airdrop_notApproved() public {
         tokenOwner.setApprovalForAllERC721(address(erc721), address(drop), false);
 
         vm.startPrank(deployer);
-        drop.addAirdropRecipients(_contents);
-        vm.expectRevert("ERC721: caller is not token owner nor approved");
-        drop.airdrop(_contents.length);
+        vm.expectRevert("Not owner or approved");
+        drop.airdrop(address(erc721), address(tokenOwner), _contentsOne);
         vm.stopPrank();
+    }
+}
+
+contract AirdropERC721GasTest is BaseTest {
+    AirdropERC721 internal drop;
+
+    Wallet internal tokenOwner;
+
+    function setUp() public override {
+        super.setUp();
+
+        drop = AirdropERC721(getContract("AirdropERC721"));
+
+        tokenOwner = getWallet();
+
+        erc721.mint(address(tokenOwner), 1500);
+        tokenOwner.setApprovalForAllERC721(address(erc721), address(drop), true);
+
+        vm.startPrank(address(tokenOwner));
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: gas benchmarks, etc.
+    //////////////////////////////////////////////////////////////*/
+
+    function test_safeTransferFrom_toEOA() public {
+        erc721.safeTransferFrom(address(tokenOwner), address(0x123), 0);
+    }
+
+    function test_safeTransferFrom_toContract() public {
+        erc721.safeTransferFrom(address(tokenOwner), address(this), 0);
+    }
+
+    function test_safeTransferFrom_toEOA_gasOverride() public {
+        console.log(gasleft());
+        erc721.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(0x123), 0);
+        console.log(gasleft());
+    }
+
+    function test_safeTransferFrom_toContract_gasOverride() public {
+        console.log(gasleft());
+        erc721.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(this), 0);
+        console.log(gasleft());
+    }
+
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external view returns (bytes4) {
+        return this.onERC721Received.selector;
     }
 }

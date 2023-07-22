@@ -19,9 +19,25 @@ abstract contract PlatformFee is IPlatformFee {
     /// @dev The % of primary sales collected as platform fees.
     uint16 private platformFeeBps;
 
+    /// @dev The flat amount collected by the contract as fees on primary sales.
+    uint256 private flatPlatformFee;
+
+    /// @dev Fee type variants: percentage fee and flat fee
+    PlatformFeeType private platformFeeType;
+
     /// @dev Returns the platform fee recipient and bps.
     function getPlatformFeeInfo() public view override returns (address, uint16) {
         return (platformFeeRecipient, uint16(platformFeeBps));
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getFlatPlatformFeeInfo() public view returns (address, uint256) {
+        return (platformFeeRecipient, flatPlatformFee);
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getPlatformFeeType() public view returns (PlatformFeeType) {
+        return platformFeeType;
     }
 
     /**
@@ -40,7 +56,7 @@ abstract contract PlatformFee is IPlatformFee {
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
     }
 
-    /// @dev Lets a contract admin update the platform fee recipient and bps
+    /// @dev Sets the platform fee recipient and bps
     function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
         if (_platformFeeBps > 10_000) {
             revert("Exceeds max bps");
@@ -50,6 +66,40 @@ abstract contract PlatformFee is IPlatformFee {
         platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
+    }
+
+    /// @notice Lets a module admin set a flat fee on primary sales.
+    function setFlatPlatformFeeInfo(address _platformFeeRecipient, uint256 _flatFee) external {
+        if (!_canSetPlatformFeeInfo()) {
+            revert("Not authorized");
+        }
+
+        _setupFlatPlatformFeeInfo(_platformFeeRecipient, _flatFee);
+    }
+
+    /// @dev Sets a flat fee on primary sales.
+    function _setupFlatPlatformFeeInfo(address _platformFeeRecipient, uint256 _flatFee) internal {
+        flatPlatformFee = _flatFee;
+        platformFeeRecipient = _platformFeeRecipient;
+
+        emit FlatPlatformFeeUpdated(_platformFeeRecipient, _flatFee);
+    }
+
+    /// @notice Lets a module admin set platform fee type.
+    function setPlatformFeeType(PlatformFeeType _feeType) external {
+        if (!_canSetPlatformFeeInfo()) {
+            revert("Not authorized");
+        }
+        platformFeeType = _feeType;
+
+        emit PlatformFeeTypeUpdated(_feeType);
+    }
+
+    /// @dev Sets platform fee type.
+    function _setupPlatformFeeType(PlatformFeeType _feeType) internal {
+        platformFeeType = _feeType;
+
+        emit PlatformFeeTypeUpdated(_feeType);
     }
 
     /// @dev Returns whether platform fee info can be set in the given execution context.

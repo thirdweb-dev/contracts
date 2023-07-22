@@ -10,117 +10,35 @@ Thirdweb&#39;s `Airdrop` contracts provide a lightweight and easy to use mechani
 
 ## Methods
 
-### addAirdropRecipients
-
-```solidity
-function addAirdropRecipients(IAirdropERC721.AirdropContent[] _contents) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _contents | IAirdropERC721.AirdropContent[] | undefined |
-
 ### airdrop
 
 ```solidity
-function airdrop(uint256 paymentsToProcess) external nonpayable
+function airdrop(address tokenAddress, address tokenOwner, IAirdropERC721.AirdropContent[] contents) external nonpayable
 ```
 
-Lets contract-owner set up an airdrop of ERC721 tokens to a list of addresses.
 
-*The token-owner should approve target tokens to Airdrop contract,                   which acts as operator for the tokens.*
+
+
 
 #### Parameters
 
 | Name | Type | Description |
 |---|---|---|
-| paymentsToProcess | uint256 | The number of airdrop payments to process. |
-
-### getAllAirdropPayments
-
-```solidity
-function getAllAirdropPayments() external view returns (struct IAirdropERC721.AirdropContent[] contents)
-```
-
-Returns all airdrop payments set up -- pending, processed or failed.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| contents | IAirdropERC721.AirdropContent[] | undefined |
-
-### getAllAirdropPaymentsFailed
-
-```solidity
-function getAllAirdropPaymentsFailed() external view returns (struct IAirdropERC721.AirdropContent[] contents)
-```
-
-Returns all pending airdrop failed.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| contents | IAirdropERC721.AirdropContent[] | undefined |
-
-### getAllAirdropPaymentsPending
-
-```solidity
-function getAllAirdropPaymentsPending() external view returns (struct IAirdropERC721.AirdropContent[] contents)
-```
-
-Returns all pending airdrop payments.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| contents | IAirdropERC721.AirdropContent[] | undefined |
-
-### getAllAirdropPaymentsProcessed
-
-```solidity
-function getAllAirdropPaymentsProcessed() external view returns (struct IAirdropERC721.AirdropContent[] contents)
-```
-
-Returns all pending airdrop processed.
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
+| tokenAddress | address | undefined |
+| tokenOwner | address | undefined |
 | contents | IAirdropERC721.AirdropContent[] | undefined |
 
 
 
 ## Events
 
-### AirdropPayment
+### AirdropFailed
 
 ```solidity
-event AirdropPayment(address indexed recipient, IAirdropERC721.AirdropContent content)
+event AirdropFailed(address indexed tokenAddress, address indexed tokenOwner, address indexed recipient, uint256 tokenId)
 ```
 
-Emitted when an airdrop payment is made to a recipient.
+Emitted when an airdrop fails for a recipient address.
 
 
 
@@ -128,24 +46,10 @@ Emitted when an airdrop payment is made to a recipient.
 
 | Name | Type | Description |
 |---|---|---|
+| tokenAddress `indexed` | address | undefined |
+| tokenOwner `indexed` | address | undefined |
 | recipient `indexed` | address | undefined |
-| content  | IAirdropERC721.AirdropContent | undefined |
-
-### RecipientsAdded
-
-```solidity
-event RecipientsAdded(IAirdropERC721.AirdropContent[] _contents)
-```
-
-Emitted when airdrop recipients are uploaded to the contract.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _contents  | IAirdropERC721.AirdropContent[] | undefined |
+| tokenId  | uint256 | undefined |
 
 
 
