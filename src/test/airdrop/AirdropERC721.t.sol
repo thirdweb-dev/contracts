@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "contracts/airdrop/AirdropERC721.sol";
+import { TokenERC721 } from "contracts/token/TokenERC721.sol";
 
 // Test imports
 import { Wallet } from "../utils/Wallet.sol";
@@ -71,6 +72,7 @@ contract AirdropERC721Test is BaseTest {
 
 contract AirdropERC721GasTest is BaseTest {
     AirdropERC721 internal drop;
+    TokenERC721 public tokenContract;
 
     Wallet internal tokenOwner;
 
@@ -78,11 +80,13 @@ contract AirdropERC721GasTest is BaseTest {
         super.setUp();
 
         drop = AirdropERC721(getContract("AirdropERC721"));
+        tokenContract = TokenERC721(getContract("TokenERC721"));
 
         tokenOwner = getWallet();
 
-        erc721.mint(address(tokenOwner), 1500);
-        tokenOwner.setApprovalForAllERC721(address(erc721), address(drop), true);
+        vm.prank(signer);
+        tokenContract.mintTo(address(tokenOwner), "ipfs://");
+        tokenOwner.setApprovalForAllERC721(address(tokenContract), address(drop), true);
 
         vm.startPrank(address(tokenOwner));
     }
@@ -92,22 +96,22 @@ contract AirdropERC721GasTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function test_safeTransferFrom_toEOA() public {
-        erc721.safeTransferFrom(address(tokenOwner), address(0x123), 0);
+        tokenContract.safeTransferFrom(address(tokenOwner), address(0x123), 0);
     }
 
     function test_safeTransferFrom_toContract() public {
-        erc721.safeTransferFrom(address(tokenOwner), address(this), 0);
+        tokenContract.safeTransferFrom(address(tokenOwner), address(this), 0);
     }
 
     function test_safeTransferFrom_toEOA_gasOverride() public {
         console.log(gasleft());
-        erc721.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(0x123), 0);
+        tokenContract.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(0x123), 0);
         console.log(gasleft());
     }
 
     function test_safeTransferFrom_toContract_gasOverride() public {
         console.log(gasleft());
-        erc721.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(this), 0);
+        tokenContract.safeTransferFrom{ gas: 100_000 }(address(tokenOwner), address(this), 0);
         console.log(gasleft());
     }
 
