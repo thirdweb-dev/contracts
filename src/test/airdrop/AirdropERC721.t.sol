@@ -71,7 +71,6 @@ contract AirdropERC721Test is BaseTest {
 }
 
 contract AirdropERC721GasTest is BaseTest {
-    AirdropERC721 internal drop;
     TokenERC721 public tokenContract;
 
     Wallet internal tokenOwner;
@@ -79,7 +78,6 @@ contract AirdropERC721GasTest is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        drop = AirdropERC721(getContract("AirdropERC721"));
         tokenContract = TokenERC721(getContract("TokenERC721"));
 
         tokenOwner = getWallet();
