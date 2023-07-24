@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { ERC721AUpgradeable, OpenEditionERC721, ISharedMetadata } from "contracts/OpenEditionERC721.sol";
+import { ERC721AUpgradeable, OpenEditionERC721Queryable, ISharedMetadata } from "contracts/OpenEditionERC721Queryable.sol";
 import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRendererLib.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 
@@ -12,13 +12,13 @@ import "./utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract OpenEditionERC721Test is BaseTest {
+contract OpenEditionERC721QueryableTest is BaseTest {
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for address;
 
     event SharedMetadataUpdated(string name, string description, string imageURI, string animationURI);
 
-    OpenEditionERC721 public openEdition;
+    OpenEditionERC721Queryable public openEdition;
     ISharedMetadata.SharedMetadataInfo public sharedMetadata;
 
     bytes private emptyEncodedBytes = abi.encode("", "");
@@ -27,15 +27,15 @@ contract OpenEditionERC721Test is BaseTest {
 
     function setUp() public override {
         super.setUp();
-        address openEditionImpl = address(new OpenEditionERC721());
+        address openEditionImpl = address(new OpenEditionERC721Queryable());
 
         vm.prank(deployer);
-        openEdition = OpenEditionERC721(
+        openEdition = OpenEditionERC721Queryable(
             address(
                 new TWProxy(
                     openEditionImpl,
                     abi.encodeCall(
-                        OpenEditionERC721.initialize,
+                        OpenEditionERC721Queryable.initialize,
                         (
                             deployer,
                             NAME,
@@ -44,9 +44,7 @@ contract OpenEditionERC721Test is BaseTest {
                             forwarders(),
                             saleRecipient,
                             royaltyRecipient,
-                            royaltyBps,
-                            platformFeeBps,
-                            platformFeeRecipient
+                            royaltyBps
                         )
                     )
                 )
@@ -162,71 +160,6 @@ contract OpenEditionERC721Test is BaseTest {
     }
 
     /**
-     *  @dev Tests contract state for Transfer role.
-     */
-    function test_state_getRoleMember_transferRole() public {
-        bytes32 role = keccak256("TRANSFER_ROLE");
-
-        uint256 roleMemberCount = openEdition.getRoleMemberCount(role);
-        assertEq(roleMemberCount, 2);
-
-        address roleMember = openEdition.getRoleMember(role, 1);
-        assertEq(roleMember, address(0));
-
-        vm.startPrank(deployer);
-        openEdition.grantRole(role, address(2));
-        openEdition.grantRole(role, address(3));
-        openEdition.grantRole(role, address(4));
-
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
-
-        openEdition.revokeRole(role, address(2));
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
-
-        openEdition.revokeRole(role, address(0));
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
-
-        openEdition.grantRole(role, address(5));
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
-
-        openEdition.grantRole(role, address(0));
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
-
-        openEdition.grantRole(role, address(6));
-        roleMemberCount = openEdition.getRoleMemberCount(role);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(openEdition.getRoleMember(role, i));
-        }
-        console.log("");
-    }
-
-    /**
      *  note: Testing transfer of tokens when transfer-role is restricted
      */
     function test_claim_transferRole() public {
@@ -235,10 +168,12 @@ contract OpenEditionERC721Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721Queryable.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            1
+        );
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -258,35 +193,18 @@ contract OpenEditionERC721Test is BaseTest {
         openEdition.transferFrom(receiver, address(123), 1);
     }
 
-    /**
-     *  @dev Tests whether role member count is incremented correctly.
-     */
-    function test_member_count_incremented_properly_when_role_granted() public {
-        bytes32 role = keccak256("ABC_ROLE");
-        address receiver = getActor(0);
-
-        vm.startPrank(deployer);
-        uint256 roleMemberCount = openEdition.getRoleMemberCount(role);
-
-        assertEq(roleMemberCount, 0);
-
-        openEdition.grantRole(role, receiver);
-
-        assertEq(openEdition.getRoleMemberCount(role), 1);
-
-        vm.stopPrank();
-    }
-
     function test_claimCondition_with_startTimestamp() public {
         vm.warp(1);
 
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721Queryable.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            1
+        );
         conditions[0].startTimestamp = 100;
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
@@ -336,7 +254,7 @@ contract OpenEditionERC721Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721Queryable.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 300;
         alp.pricePerToken = 0;
@@ -346,7 +264,9 @@ contract OpenEditionERC721Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            1
+        );
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -414,10 +334,12 @@ contract OpenEditionERC721Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721Queryable.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            1
+        );
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 200;
 
@@ -444,11 +366,13 @@ contract OpenEditionERC721Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721Queryable.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = x;
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            1
+        );
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -498,7 +422,7 @@ contract OpenEditionERC721Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721Queryable.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 300;
         alp.pricePerToken = 0;
@@ -508,7 +432,9 @@ contract OpenEditionERC721Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            1
+        );
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -548,7 +474,7 @@ contract OpenEditionERC721Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721Queryable.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 300;
         alp.pricePerToken = 5;
@@ -558,7 +484,9 @@ contract OpenEditionERC721Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            1
+        );
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -607,7 +535,7 @@ contract OpenEditionERC721Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721Queryable.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 300;
         alp.pricePerToken = type(uint256).max;
@@ -617,7 +545,9 @@ contract OpenEditionERC721Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            1
+        );
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -662,7 +592,7 @@ contract OpenEditionERC721Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721Queryable.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 0;
         alp.pricePerToken = 5;
@@ -672,7 +602,9 @@ contract OpenEditionERC721Test is BaseTest {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            1
+        );
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -718,7 +650,7 @@ contract OpenEditionERC721Test is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721Queryable.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = x;
         alp.pricePerToken = 0;
@@ -730,7 +662,9 @@ contract OpenEditionERC721Test is BaseTest {
 
         // bytes32[] memory proofs = new bytes32[](0);
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            1
+        );
         conditions[0].maxClaimableSupply = x;
         conditions[0].quantityLimitPerWallet = 1;
         conditions[0].merkleRoot = root;
@@ -769,10 +703,12 @@ contract OpenEditionERC721Test is BaseTest {
         address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721Queryable.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            1
+        );
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -808,7 +744,9 @@ contract OpenEditionERC721Test is BaseTest {
         uint256 currentStartId = 0;
         uint256 count = 0;
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](2);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            2
+        );
         conditions[0].startTimestamp = 0;
         conditions[0].maxClaimableSupply = 10;
         conditions[1].startTimestamp = 1;
@@ -840,7 +778,9 @@ contract OpenEditionERC721Test is BaseTest {
 
         uint256 activeConditionId = 0;
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](3);
+        OpenEditionERC721Queryable.ClaimCondition[] memory conditions = new OpenEditionERC721Queryable.ClaimCondition[](
+            3
+        );
         conditions[0].startTimestamp = 10;
         conditions[0].maxClaimableSupply = 11;
         conditions[0].quantityLimitPerWallet = 12;

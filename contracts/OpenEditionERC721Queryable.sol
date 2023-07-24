@@ -38,7 +38,7 @@ import "./extension/Drop.sol";
 // OpenSea operator filter
 import "./extension/DefaultOperatorFiltererUpgradeable.sol";
 
-contract OpenEditionERC721 is
+contract OpenEditionERC721Queryable is
     Initializable,
     ContractMetadata,
     Royalty,
