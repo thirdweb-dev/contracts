@@ -9,7 +9,7 @@ import { EntryPoint, IEntryPoint } from "contracts/smart-wallet/utils/Entrypoint
 import { UserOperation } from "contracts/smart-wallet/utils/UserOperation.sol";
 
 // Target
-import { IAccountPermissionsSimple } from "contracts/extension/interface/IAccountPermissionsSimple.sol";
+import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountFactory, Account } from "contracts/smart-wallet/non-upgradeable/AccountFactory.sol";
 
 /// @dev This is a dummy contract to test contract interactions with Account.
@@ -55,8 +55,9 @@ contract SimpleAccountTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _signSignerPermissionRequest(IAccountPermissionsSimple.SignerPermissionRequest memory _req)
+    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
         internal
+        view
         returns (bytes memory signature)
     {
         bytes32 typehashSignerPermissionRequest = keccak256(
@@ -345,17 +346,16 @@ contract SimpleAccountTest is BaseTest {
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(numberContract);
 
-        IAccountPermissionsSimple.SignerPermissionRequest memory permissionsReq = IAccountPermissionsSimple
-            .SignerPermissionRequest(
-                accountSigner,
-                approvedTargets,
-                1 ether,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -383,17 +383,16 @@ contract SimpleAccountTest is BaseTest {
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(numberContract);
 
-        IAccountPermissionsSimple.SignerPermissionRequest memory permissionsReq = IAccountPermissionsSimple
-            .SignerPermissionRequest(
-                accountSigner,
-                approvedTargets,
-                1 ether,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -439,17 +438,16 @@ contract SimpleAccountTest is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(numberContract);
-        IAccountPermissionsSimple.SignerPermissionRequest memory permissionsReq = IAccountPermissionsSimple
-            .SignerPermissionRequest(
-                accountSigner,
-                approvedTargets,
-                1 ether,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -475,6 +473,7 @@ contract SimpleAccountTest is BaseTest {
         assertEq(address(account).balance, 0);
 
         vm.prank(accountAdmin);
+        // solhint-disable-next-line avoid-low-level-calls
         payable(account).call{ value: 1000 }("");
 
         assertEq(address(account).balance, 1000);
@@ -488,6 +487,7 @@ contract SimpleAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         vm.prank(accountAdmin);
+        // solhint-disable-next-line avoid-low-level-calls
         payable(account).call{ value: value }("");
         assertEq(address(account).balance, value);
 

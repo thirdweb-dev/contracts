@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 // Test utils
 import "../utils/BaseTest.sol";
 import "lib/dynamic-contracts/src/interface/IExtension.sol";
-import { IAccountPermissionsSimple } from "contracts/extension/interface/IAccountPermissionsSimple.sol";
+import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountPermissions } from "contracts/dynamic-contracts/extension/AccountPermissions.sol";
 import { AccountExtension } from "contracts/smart-wallet/utils/AccountExtension.sol";
 
@@ -73,8 +73,9 @@ contract ManagedAccountTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _signSignerPermissionRequest(IAccountPermissionsSimple.SignerPermissionRequest memory _req)
+    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
         internal
+        view
         returns (bytes memory signature)
     {
         bytes32 typehashSignerPermissionRequest = keccak256(
@@ -387,17 +388,16 @@ contract ManagedAccountTest is BaseTest {
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(numberContract);
 
-        IAccountPermissionsSimple.SignerPermissionRequest memory permissionsReq = IAccountPermissionsSimple
-            .SignerPermissionRequest(
-                accountSigner,
-                approvedTargets,
-                1 ether,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -458,17 +458,16 @@ contract ManagedAccountTest is BaseTest {
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(numberContract);
 
-        IAccountPermissionsSimple.SignerPermissionRequest memory permissionsReq = IAccountPermissionsSimple
-            .SignerPermissionRequest(
-                accountSigner,
-                approvedTargets,
-                1 ether,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -496,17 +495,16 @@ contract ManagedAccountTest is BaseTest {
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(numberContract);
 
-        IAccountPermissionsSimple.SignerPermissionRequest memory permissionsReq = IAccountPermissionsSimple
-            .SignerPermissionRequest(
-                accountSigner,
-                approvedTargets,
-                1 ether,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -532,6 +530,7 @@ contract ManagedAccountTest is BaseTest {
         assertEq(address(account).balance, 0);
 
         vm.prank(accountAdmin);
+        // solhint-disable-next-line avoid-low-level-calls
         payable(account).call{ value: 1000 }("");
 
         assertEq(address(account).balance, 1000);
@@ -545,6 +544,7 @@ contract ManagedAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         vm.prank(accountAdmin);
+        // solhint-disable-next-line avoid-low-level-calls
         payable(account).call{ value: value }("");
         assertEq(address(account).balance, value);
 

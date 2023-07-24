@@ -12,7 +12,7 @@ import "./../utils/BaseAccount.sol";
 import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
 import "../../eip/ERC1271.sol";
-import "../../dynamic-contracts/extension/AccountPermissionsSimple.sol";
+import "../../dynamic-contracts/extension/AccountPermissions.sol";
 
 // Utils
 import "./BaseAccountFactory.sol";
@@ -30,7 +30,7 @@ import "../interfaces/IAccountCore.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC1271, AccountPermissionsSimple {
+contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC1271, AccountPermissions {
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 

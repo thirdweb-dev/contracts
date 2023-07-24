@@ -11,18 +11,18 @@ library AccountPermissionsStorage {
     bytes32 public constant ACCOUNT_PERMISSIONS_STORAGE_POSITION = keccak256("account.permissions.storage");
 
     struct Data {
+        /// @dev The set of all admins of the wallet.
+        EnumerableSet.AddressSet allAdmins;
+        /// @dev The set of all signers with permission to use the account.
+        EnumerableSet.AddressSet allSigners;
         /// @dev Map from address => whether the address is an admin.
         mapping(address => bool) isAdmin;
-        /// @dev Map from keccak256 hash of a role => active restrictions for that role.
-        mapping(bytes32 => IAccountPermissions.RoleStatic) roleRestrictions;
-        /// @dev Map from address => the role held by that address.
-        mapping(address => bytes32) roleOfAccount;
+        /// @dev Map from signer address => active restrictions for that signer.
+        mapping(address => IAccountPermissions.SignerPermissionsStatic) signerPermissions;
+        /// @dev Map from signer address => approved target the signer can call using the account contract.
+        mapping(address => EnumerableSet.AddressSet) approvedTargets;
         /// @dev Mapping from a signed request UID => whether the request is processed.
         mapping(bytes32 => bool) executed;
-        /// @dev Map from keccak256 hash of a role to its approved targets.
-        mapping(bytes32 => EnumerableSet.AddressSet) approvedTargets;
-        /// @dev map from keccak256 hash of a role to its members' data. See {RoleMembers}.
-        mapping(bytes32 => EnumerableSet.AddressSet) roleMembers;
     }
 
     function accountPermissionsStorage() internal pure returns (Data storage accountPermissionsData) {
@@ -39,7 +39,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "RoleRequest(bytes32 role,address target,uint8 action,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "SignerPermissionRequest(address signer,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
 
     modifier onlyAdmin() virtual {
@@ -56,61 +56,45 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         _setAdmin(_account, _isAdmin);
     }
 
-    /// @notice Sets the restrictions for a given role.
-    function setRoleRestrictions(RoleRestrictions calldata _restrictions) external virtual onlyAdmin {
-        bytes32 role = _restrictions.role;
+    /// @notice Sets the permissions for a given signer.
+    function setPermissionsForSigner(SignerPermissionRequest calldata _req, bytes calldata _signature) external {
+        address targetSigner = _req.signer;
+        require(!isAdmin(targetSigner), "AccountPermissions: signer is already an admin");
 
-        require(role != bytes32(0), "AccountPermissions: role cannot be empty");
-
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        data.roleRestrictions[role] = RoleStatic(
-            role,
-            _restrictions.maxValuePerTransaction,
-            _restrictions.startTimestamp,
-            _restrictions.endTimestamp
-        );
-
-        address[] memory currentTargets = data.approvedTargets[role].values();
-        uint256 currentLen = currentTargets.length;
-
-        for (uint256 i = 0; i < currentLen; i += 1) {
-            data.approvedTargets[role].remove(currentTargets[i]);
-        }
-
-        uint256 len = _restrictions.approvedTargets.length;
-        for (uint256 i = 0; i < len; i += 1) {
-            data.approvedTargets[role].add(_restrictions.approvedTargets[i]);
-        }
-
-        emit RoleUpdated(_restrictions.role, _restrictions);
-    }
-
-    /// @notice Grant / revoke a role from a given signer.
-    function changeRole(RoleRequest calldata _req, bytes calldata _signature) external virtual {
-        require(_req.role != bytes32(0), "AccountPermissions: role cannot be empty");
         require(
-            _req.validityStartTimestamp < block.timestamp && block.timestamp < _req.validityEndTimestamp,
-            "AccountPermissions: invalid validity period"
+            _req.reqValidityStartTimestamp <= block.timestamp && block.timestamp < _req.reqValidityEndTimestamp,
+            "AccountPermissions: invalid request validity period"
         );
 
-        (bool success, address signer) = verifyRoleRequest(_req, _signature);
-
+        (bool success, address signer) = verifySignerPermissionRequest(_req, _signature);
         require(success, "AccountPermissions: invalid signature");
 
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+
+        data.allSigners.add(targetSigner);
         data.executed[_req.uid] = true;
 
-        if (_req.action == RoleAction.GRANT) {
-            data.roleOfAccount[_req.target] = _req.role;
-            data.roleMembers[_req.role].add(_req.target);
-        } else {
-            delete data.roleOfAccount[_req.target];
-            data.roleMembers[_req.role].remove(_req.target);
+        data.signerPermissions[targetSigner] = SignerPermissionsStatic(
+            _req.nativeTokenLimitPerTransaction,
+            _req.permissionStartTimestamp,
+            _req.permissionEndTimestamp
+        );
+
+        address[] memory currentTargets = data.approvedTargets[targetSigner].values();
+        uint256 currentLen = currentTargets.length;
+
+        for (uint256 i = 0; i < currentLen; i += 1) {
+            data.approvedTargets[targetSigner].remove(currentTargets[i]);
         }
 
-        emit RoleAssignment(_req.role, _req.target, signer, _req);
+        uint256 len = _req.approvedTargets.length;
+        for (uint256 i = 0; i < len; i += 1) {
+            data.approvedTargets[targetSigner].add(_req.approvedTargets[i]);
+        }
 
-        _afterChangeRole(_req);
+        _afterSignerPermissionsUpdate(_req);
+
+        emit SignerPermissionsUpdated(signer, targetSigner, _req);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -123,45 +107,34 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         return data.isAdmin[_account];
     }
 
-    /// @notice Returns the role held by a given account along with its restrictions.
-    function getRoleRestrictionsForAccount(address _account) external view virtual returns (RoleRestrictions memory) {
+    /// @notice Returns whether the given account is an active signer on the account.
+    function isActiveSigner(address signer) public view returns (bool) {
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        bytes32 role = data.roleOfAccount[_account];
-        RoleStatic memory roleRestrictions = data.roleRestrictions[role];
+        SignerPermissionsStatic memory permissions = data.signerPermissions[signer];
 
         return
-            RoleRestrictions(
-                role,
-                data.approvedTargets[role].values(),
-                roleRestrictions.maxValuePerTransaction,
-                roleRestrictions.startTimestamp,
-                roleRestrictions.endTimestamp
-            );
+            permissions.startTimestamp <= block.timestamp &&
+            block.timestamp < permissions.endTimestamp &&
+            data.approvedTargets[signer].length() > 0;
     }
 
-    /// @notice Returns the role restrictions for a given role.
-    function getRoleRestrictions(bytes32 _role) external view virtual returns (RoleRestrictions memory) {
+    /// @notice Returns the restrictions under which a signer can use the smart wallet.
+    function getPermissionsForSigner(address signer) external view returns (SignerPermissions memory) {
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        RoleStatic memory roleRestrictions = data.roleRestrictions[_role];
+        SignerPermissionsStatic memory permissions = data.signerPermissions[signer];
 
         return
-            RoleRestrictions(
-                _role,
-                data.approvedTargets[_role].values(),
-                roleRestrictions.maxValuePerTransaction,
-                roleRestrictions.startTimestamp,
-                roleRestrictions.endTimestamp
+            SignerPermissions(
+                signer,
+                data.approvedTargets[signer].values(),
+                permissions.nativeTokenLimitPerTransaction,
+                permissions.startTimestamp,
+                permissions.endTimestamp
             );
-    }
-
-    /// @notice Returns all accounts that have a role.
-    function getAllRoleMembers(bytes32 _role) external view virtual returns (address[] memory) {
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        return data.roleMembers[_role].values();
     }
 
     /// @dev Verifies that a request is signed by an authorized account.
-    function verifyRoleRequest(RoleRequest calldata req, bytes calldata signature)
+    function verifySignerPermissionRequest(SignerPermissionRequest calldata req, bytes calldata signature)
         public
         view
         virtual
@@ -172,23 +145,94 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         success = !data.executed[req.uid] && isAdmin(signer);
     }
 
+    /// @notice Returns all active and inactive signers of the account.
+    function getAllSigners() external view returns (SignerPermissions[] memory signers) {
+        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+        address[] memory allSigners = data.allSigners.values();
+
+        uint256 len = allSigners.length;
+        signers = new SignerPermissions[](len);
+        for (uint256 i = 0; i < len; i += 1) {
+            address signer = allSigners[i];
+            SignerPermissionsStatic memory permissions = data.signerPermissions[signer];
+
+            signers[i] = SignerPermissions(
+                signer,
+                data.approvedTargets[signer].values(),
+                permissions.nativeTokenLimitPerTransaction,
+                permissions.startTimestamp,
+                permissions.endTimestamp
+            );
+        }
+    }
+
+    /// @notice Returns all signers with active permissions to use the account.
+    function getAllActiveSigners() external view returns (SignerPermissions[] memory signers) {
+        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+        address[] memory allSigners = data.allSigners.values();
+
+        uint256 len = allSigners.length;
+        uint256 numOfActiveSigners = 0;
+        bool[] memory isSignerActive = new bool[](len);
+
+        for (uint256 i = 0; i < len; i += 1) {
+            address signer = allSigners[i];
+
+            bool isActive = isActiveSigner(signer);
+            isSignerActive[i] = isActive;
+            if (isActive) {
+                numOfActiveSigners++;
+            }
+        }
+
+        signers = new SignerPermissions[](numOfActiveSigners);
+        uint256 index = 0;
+        for (uint256 i = 0; i < len; i += 1) {
+            if (!isSignerActive[i]) {
+                continue;
+            }
+            address signer = allSigners[i];
+            SignerPermissionsStatic memory permissions = data.signerPermissions[signer];
+
+            signers[index++] = SignerPermissions(
+                signer,
+                data.approvedTargets[signer].values(),
+                permissions.nativeTokenLimitPerTransaction,
+                permissions.startTimestamp,
+                permissions.endTimestamp
+            );
+        }
+    }
+
+    /// @notice Returns all admins of the account.
+    function getAllAdmins() external view returns (address[] memory) {
+        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+        return data.allAdmins.values();
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Runs after every `changeRole` run.
-    function _afterChangeRole(RoleRequest calldata _req) internal virtual;
+    function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual;
 
     /// @notice Makes the given account an admin.
     function _setAdmin(address _account, bool _isAdmin) internal virtual {
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
         data.isAdmin[_account] = _isAdmin;
 
+        if (_isAdmin) {
+            data.allAdmins.add(_account);
+        } else {
+            data.allAdmins.remove(_account);
+        }
+
         emit AdminUpdated(_account, _isAdmin);
     }
 
     /// @dev Returns the address of the signer of the request.
-    function _recoverAddress(RoleRequest calldata _req, bytes calldata _signature)
+    function _recoverAddress(SignerPermissionRequest calldata _req, bytes calldata _signature)
         internal
         view
         virtual
@@ -198,15 +242,17 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @dev Encodes a request for recovery of the signer in `recoverAddress`.
-    function _encodeRequest(RoleRequest calldata _req) internal pure virtual returns (bytes memory) {
+    function _encodeRequest(SignerPermissionRequest calldata _req) internal pure virtual returns (bytes memory) {
         return
             abi.encode(
                 TYPEHASH,
-                _req.role,
-                _req.target,
-                _req.action,
-                _req.validityStartTimestamp,
-                _req.validityEndTimestamp,
+                _req.signer,
+                _req.approvedTargets,
+                _req.nativeTokenLimitPerTransaction,
+                _req.permissionStartTimestamp,
+                _req.permissionEndTimestamp,
+                _req.reqValidityStartTimestamp,
+                _req.reqValidityEndTimestamp,
                 _req.uid
             );
     }

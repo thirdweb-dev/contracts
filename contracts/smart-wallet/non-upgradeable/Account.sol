@@ -11,7 +11,7 @@ import "../utils/BaseAccount.sol";
 // Extensions
 import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
-import "../../dynamic-contracts/extension/AccountPermissionsSimple.sol";
+import "../../dynamic-contracts/extension/AccountPermissions.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
 import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
 import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
@@ -36,7 +36,7 @@ contract Account is
     Multicall,
     BaseAccount,
     ContractMetadata,
-    AccountPermissionsSimple,
+    AccountPermissions,
     ERC721Holder,
     ERC1155Holder
 {
