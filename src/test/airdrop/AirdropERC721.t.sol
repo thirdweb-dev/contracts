@@ -84,7 +84,6 @@ contract AirdropERC721GasTest is BaseTest {
 
         vm.prank(signer);
         tokenContract.mintTo(address(tokenOwner), "ipfs://");
-        tokenOwner.setApprovalForAllERC721(address(tokenContract), address(drop), true);
 
         vm.startPrank(address(tokenOwner));
     }
