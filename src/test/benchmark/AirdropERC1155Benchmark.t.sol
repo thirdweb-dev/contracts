@@ -38,25 +38,13 @@ contract AirdropERC1155BenchmarkTest is BaseTest {
 
         for (uint256 i = 0; i < countOne; i++) {
             _contentsOne.push(
-                IAirdropERC1155.AirdropContent({
-                    tokenAddress: address(erc1155),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    tokenId: i % 5,
-                    amount: 5
-                })
+                IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
             );
         }
 
         for (uint256 i = countOne; i < countOne + countTwo; i++) {
             _contentsTwo.push(
-                IAirdropERC1155.AirdropContent({
-                    tokenAddress: address(erc1155),
-                    tokenOwner: address(tokenOwner),
-                    recipient: getActor(uint160(i)),
-                    tokenId: i % 5,
-                    amount: 5
-                })
+                IAirdropERC1155.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i % 5, amount: 5 })
             );
         }
     }
@@ -65,48 +53,10 @@ contract AirdropERC1155BenchmarkTest is BaseTest {
                         Benchmark: AirdropERC1155
     //////////////////////////////////////////////////////////////*/
 
-    function test_benchmark_airdropERC1155_addRecipients() public {
+    function test_benchmark_airdropERC1155_airdrop() public {
         vm.pauseGasMetering();
         vm.prank(deployer);
         vm.resumeGasMetering();
-        drop.addRecipients(_contentsOne);
-    }
-
-    function test_benchmark_airdropERC1155_processPayments() public {
-        vm.pauseGasMetering();
-        vm.prank(deployer);
-        drop.addRecipients(_contentsOne);
-
-        // perform airdrop
-        vm.prank(deployer);
-        vm.resumeGasMetering();
-        drop.processPayments(_contentsOne.length);
-    }
-
-    function test_benchmark_airdropERC1155_cancelPendingPayments() public {
-        vm.pauseGasMetering();
-        vm.prank(deployer);
-        drop.addRecipients(_contentsOne);
-
-        // check state before airdrop
-        assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-        assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, countOne);
-        assertEq(drop.payeeCount(), countOne);
-        assertEq(drop.processedCount(), 0);
-
-        // perform airdrop
-        vm.prank(deployer);
-        drop.processPayments(countOne - 300);
-
-        // check state after airdrop
-        assertEq(drop.getAllAirdropPayments(0, countOne - 1).length, countOne);
-        assertEq(drop.getAllAirdropPaymentsPending(0, countOne - 1).length, 300);
-        assertEq(drop.payeeCount(), countOne);
-        assertEq(drop.processedCount(), countOne - 300);
-
-        // cancel payments
-        vm.prank(deployer);
-        vm.resumeGasMetering();
-        drop.cancelPendingPayments(300);
+        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
     }
 }

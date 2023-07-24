@@ -21,6 +21,7 @@ import "../../extension/interface/IPlatformFee.sol";
 
 import "../../extension/plugin/ReentrancyGuardLogic.sol";
 import "../../extension/plugin/PermissionsEnumerableLogic.sol";
+import { RoyaltyPaymentsLogic } from "../../extension/plugin/RoyaltyPayments.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 /**
@@ -301,44 +302,62 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
         uint256 _totalPayoutAmount,
         Offer memory _offer
     ) internal {
-        (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
-        uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
+        uint256 amountRemaining;
 
-        uint256 royaltyCut;
-        address royaltyRecipient;
+        // Payout platform fee
+        {
+            (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
+            uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
-        // Distribute royalties. See Sushiswap's https://github.com/sushiswap/shoyu/blob/master/contracts/base/BaseExchange.sol#L296
-        try IERC2981(_offer.assetContract).royaltyInfo(_offer.tokenId, _totalPayoutAmount) returns (
-            address royaltyFeeRecipient,
-            uint256 royaltyFeeAmount
-        ) {
-            if (royaltyFeeRecipient != address(0) && royaltyFeeAmount > 0) {
-                require(royaltyFeeAmount + platformFeeCut <= _totalPayoutAmount, "fees exceed the price");
-                royaltyRecipient = royaltyFeeRecipient;
-                royaltyCut = royaltyFeeAmount;
+            // Transfer platform fee
+            CurrencyTransferLib.transferCurrencyWithWrapper(
+                _currencyToUse,
+                _payer,
+                platformFeeRecipient,
+                platformFeeCut,
+                address(0)
+            );
+
+            amountRemaining = _totalPayoutAmount - platformFeeCut;
+        }
+
+        // Payout royalties
+        {
+            // Get royalty recipients and amounts
+            (address payable[] memory recipients, uint256[] memory amounts) = RoyaltyPaymentsLogic(address(this))
+                .getRoyalty(_offer.assetContract, _offer.tokenId, _totalPayoutAmount);
+
+            uint256 royaltyRecipientCount = recipients.length;
+
+            if (royaltyRecipientCount != 0) {
+                uint256 royaltyCut;
+                address royaltyRecipient;
+
+                for (uint256 i = 0; i < royaltyRecipientCount; ) {
+                    royaltyRecipient = recipients[i];
+                    royaltyCut = amounts[i];
+
+                    // Check payout amount remaining is enough to cover royalty payment
+                    require(amountRemaining >= royaltyCut, "fees exceed the price");
+
+                    // Transfer royalty
+                    CurrencyTransferLib.transferCurrencyWithWrapper(
+                        _currencyToUse,
+                        _payer,
+                        royaltyRecipient,
+                        royaltyCut,
+                        address(0)
+                    );
+
+                    unchecked {
+                        amountRemaining -= royaltyCut;
+                        ++i;
+                    }
+                }
             }
-        } catch {}
+        }
 
-        CurrencyTransferLib.transferCurrencyWithWrapper(
-            _currencyToUse,
-            _payer,
-            platformFeeRecipient,
-            platformFeeCut,
-            address(0)
-        );
-        CurrencyTransferLib.transferCurrencyWithWrapper(
-            _currencyToUse,
-            _payer,
-            royaltyRecipient,
-            royaltyCut,
-            address(0)
-        );
-        CurrencyTransferLib.transferCurrencyWithWrapper(
-            _currencyToUse,
-            _payer,
-            _payee,
-            _totalPayoutAmount - (platformFeeCut + royaltyCut),
-            address(0)
-        );
+        // Distribute price to token owner
+        CurrencyTransferLib.transferCurrencyWithWrapper(_currencyToUse, _payer, _payee, amountRemaining, address(0));
     }
 }

@@ -21,16 +21,18 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import "../interfaces/airdrop/IAirdropERC1155.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
-import "../extension/Ownable.sol";
 import "../extension/PermissionsEnumerable.sol";
+import "../extension/ContractMetadata.sol";
 
 contract AirdropERC1155 is
     Initializable,
-    Ownable,
+    ContractMetadata,
     PermissionsEnumerable,
     ReentrancyGuardUpgradeable,
+    ERC2771ContextUpgradeable,
     MulticallUpgradeable,
     IAirdropERC1155
 {
@@ -39,16 +41,7 @@ contract AirdropERC1155 is
     //////////////////////////////////////////////////////////////*/
 
     bytes32 private constant MODULE_TYPE = bytes32("AirdropERC1155");
-    uint256 private constant VERSION = 1;
-
-    uint256 public payeeCount;
-    uint256 public processedCount;
-
-    uint256[] public indicesOfFailed;
-
-    mapping(uint256 => AirdropContent) private airdropContent;
-
-    CancelledPayments[] public cancelledPaymentIndices;
+    uint256 private constant VERSION = 2;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -57,9 +50,15 @@ contract AirdropERC1155 is
     constructor() initializer {}
 
     /// @dev Initiliazes the contract, like a constructor.
-    function initialize(address _defaultAdmin) external initializer {
+    function initialize(
+        address _defaultAdmin,
+        string memory _contractURI,
+        address[] memory _trustedForwarders
+    ) external initializer {
+        __ERC2771Context_init_unchained(_trustedForwarders);
+
+        _setupContractURI(_contractURI);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupOwner(_defaultAdmin);
         __ReentrancyGuard_init();
     }
 
@@ -81,101 +80,28 @@ contract AirdropERC1155 is
                             Airdrop logic
     //////////////////////////////////////////////////////////////*/
 
-    ///@notice Lets contract-owner set up an airdrop of ERC721 NFTs to a list of addresses.
-    function addRecipients(AirdropContent[] calldata _contents) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 len = _contents.length;
-        require(len > 0, "No payees provided.");
-
-        uint256 currentCount = payeeCount;
-        payeeCount += len;
-
-        for (uint256 i = 0; i < len; ) {
-            airdropContent[i + currentCount] = _contents[i];
-
-            unchecked {
-                i += 1;
-            }
-        }
-
-        emit RecipientsAdded(currentCount, currentCount + len);
-    }
-
-    ///@notice Lets contract-owner cancel any pending payments.
-    function cancelPendingPayments(uint256 numberOfPaymentsToCancel) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 countOfProcessed = processedCount;
-
-        // increase processedCount by the specified count -- all pending payments in between will be treated as cancelled.
-        uint256 newProcessedCount = countOfProcessed + numberOfPaymentsToCancel;
-        require(newProcessedCount <= payeeCount, "Exceeds total payees.");
-        processedCount = newProcessedCount;
-
-        CancelledPayments memory range = CancelledPayments({
-            startIndex: countOfProcessed,
-            endIndex: newProcessedCount - 1
-        });
-
-        cancelledPaymentIndices.push(range);
-
-        emit PaymentsCancelledByAdmin(countOfProcessed, newProcessedCount - 1);
-    }
-
-    /// @notice Lets contract-owner send ERC721 NFTs to a list of addresses.
-    function processPayments(uint256 paymentsToProcess) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
-        uint256 totalPayees = payeeCount;
-        uint256 countOfProcessed = processedCount;
-
-        require(countOfProcessed + paymentsToProcess <= totalPayees, "invalid no. of payments");
-
-        processedCount += paymentsToProcess;
-
-        for (uint256 i = countOfProcessed; i < (countOfProcessed + paymentsToProcess); ) {
-            AirdropContent memory content = airdropContent[i];
-
-            bool failed;
-            try
-                IERC1155(content.tokenAddress).safeTransferFrom{ gas: 80_000 }(
-                    content.tokenOwner,
-                    content.recipient,
-                    content.tokenId,
-                    content.amount,
-                    ""
-                )
-            {} catch {
-                // revert if failure is due to unapproved tokens
-                require(
-                    IERC1155(content.tokenAddress).balanceOf(content.tokenOwner, content.tokenId) >= content.amount &&
-                        IERC1155(content.tokenAddress).isApprovedForAll(content.tokenOwner, address(this)),
-                    "Not balance or approved"
-                );
-
-                // record and continue for all other failures, likely originating from recipient accounts
-                indicesOfFailed.push(i);
-                failed = true;
-            }
-
-            emit AirdropPayment(content.recipient, i, failed);
-
-            unchecked {
-                i += 1;
-            }
-        }
-    }
-
     /**
      *  @notice          Lets contract-owner send ERC1155 tokens to a list of addresses.
      *  @dev             The token-owner should approve target tokens to Airdrop contract,
      *                   which acts as operator for the tokens.
      *
+     *  @param _tokenAddress    The contract address of the tokens to transfer.
+     *  @param _tokenOwner      The owner of the the tokens to transfer.
      *  @param _contents        List containing recipient, tokenId and amounts to airdrop.
      */
-    function airdrop(AirdropContent[] calldata _contents) external nonReentrant onlyRole(DEFAULT_ADMIN_ROLE) {
+    function airdrop(
+        address _tokenAddress,
+        address _tokenOwner,
+        AirdropContent[] calldata _contents
+    ) external nonReentrant {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized.");
+
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; ) {
-            bool failed;
             try
-                IERC1155(_contents[i].tokenAddress).safeTransferFrom(
-                    _contents[i].tokenOwner,
+                IERC1155(_tokenAddress).safeTransferFrom{ gas: 80_000 }(
+                    _tokenOwner,
                     _contents[i].recipient,
                     _contents[i].tokenId,
                     _contents[i].amount,
@@ -184,16 +110,19 @@ contract AirdropERC1155 is
             {} catch {
                 // revert if failure is due to unapproved tokens
                 require(
-                    IERC1155(_contents[i].tokenAddress).balanceOf(_contents[i].tokenOwner, _contents[i].tokenId) >=
-                        _contents[i].amount &&
-                        IERC1155(_contents[i].tokenAddress).isApprovedForAll(_contents[i].tokenOwner, address(this)),
+                    IERC1155(_tokenAddress).balanceOf(_tokenOwner, _contents[i].tokenId) >= _contents[i].amount &&
+                        IERC1155(_tokenAddress).isApprovedForAll(_tokenOwner, address(this)),
                     "Not balance or approved"
                 );
 
-                failed = true;
+                emit AirdropFailed(
+                    _tokenAddress,
+                    _tokenOwner,
+                    _contents[i].recipient,
+                    _contents[i].tokenId,
+                    _contents[i].amount
+                );
             }
-
-            emit StatelessAirdrop(_contents[i].recipient, _contents[i], failed);
 
             unchecked {
                 i += 1;
@@ -202,70 +131,21 @@ contract AirdropERC1155 is
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Airdrop view logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice Returns all airdrop payments set up -- pending, processed or failed.
-    function getAllAirdropPayments(uint256 startId, uint256 endId)
-        external
-        view
-        returns (AirdropContent[] memory contents)
-    {
-        require(startId <= endId && endId < payeeCount, "invalid range");
-
-        contents = new AirdropContent[](endId - startId + 1);
-
-        for (uint256 i = startId; i <= endId; i += 1) {
-            contents[i - startId] = airdropContent[i];
-        }
-    }
-
-    /// @notice Returns all pending airdrop payments.
-    function getAllAirdropPaymentsPending(uint256 startId, uint256 endId)
-        external
-        view
-        returns (AirdropContent[] memory contents)
-    {
-        require(startId <= endId && endId < payeeCount, "invalid range");
-
-        uint256 processed = processedCount;
-        if (processed == payeeCount) {
-            return contents;
-        }
-
-        if (startId < processed) {
-            startId = processed;
-        }
-        contents = new AirdropContent[](endId - startId + 1);
-
-        uint256 idx;
-        for (uint256 i = startId; i <= endId; i += 1) {
-            contents[idx] = airdropContent[i];
-            idx += 1;
-        }
-    }
-
-    /// @notice Returns all pending airdrop failed.
-    function getAllAirdropPaymentsFailed() external view returns (AirdropContent[] memory contents) {
-        uint256 count = indicesOfFailed.length;
-        contents = new AirdropContent[](count);
-
-        for (uint256 i = 0; i < count; i += 1) {
-            contents[i] = airdropContent[indicesOfFailed[i]];
-        }
-    }
-
-    /// @notice Returns all blocks of cancelled payments as an array of index range.
-    function getCancelledPaymentIndices() external view returns (CancelledPayments[] memory) {
-        return cancelledPaymentIndices;
-    }
-
-    /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal view virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    /// @dev Checks whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev See ERC2771
+    function _msgSender() internal view virtual override returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
+    }
+
+    /// @dev See ERC2771
+    function _msgData() internal view virtual override returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 }

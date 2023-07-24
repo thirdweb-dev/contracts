@@ -298,9 +298,18 @@ abstract contract BaseTest is DSTest, Test {
             )
         );
 
-        deployContractProxy("AirdropERC721", abi.encodeCall(AirdropERC721.initialize, (deployer)));
-        deployContractProxy("AirdropERC20", abi.encodeCall(AirdropERC20.initialize, (deployer)));
-        deployContractProxy("AirdropERC1155", abi.encodeCall(AirdropERC1155.initialize, (deployer)));
+        deployContractProxy(
+            "AirdropERC721",
+            abi.encodeCall(AirdropERC721.initialize, (deployer, CONTRACT_URI, forwarders()))
+        );
+        deployContractProxy(
+            "AirdropERC20",
+            abi.encodeCall(AirdropERC20.initialize, (deployer, CONTRACT_URI, forwarders()))
+        );
+        deployContractProxy(
+            "AirdropERC1155",
+            abi.encodeCall(AirdropERC1155.initialize, (deployer, CONTRACT_URI, forwarders()))
+        );
         deployContractProxy(
             "AirdropERC721Claimable",
             abi.encodeCall(

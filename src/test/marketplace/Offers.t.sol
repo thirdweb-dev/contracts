@@ -7,9 +7,12 @@ import "../utils/BaseTest.sol";
 // Test contracts and interfaces
 
 import { PluginMap, IPluginMap } from "contracts/extension/plugin/PluginMap.sol";
-import { MarketplaceV3 } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
+import { RoyaltyPaymentsLogic } from "contracts/extension/plugin/RoyaltyPayments.sol";
+import { MarketplaceV3, IPlatformFee } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
 import { OffersLogic } from "contracts/marketplace/offers/OffersLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
+import { ERC721Base } from "contracts/base/ERC721Base.sol";
+import { MockRoyaltyEngineV1 } from "../mocks/MockRoyaltyEngineV1.sol";
 
 import { IOffers } from "contracts/marketplace/IMarketplace.sol";
 
@@ -63,7 +66,7 @@ contract MarketplaceOffersTest is BaseTest {
         assertEq(map.getAllFunctionsOfPlugin(offers).length, 7);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 
@@ -99,6 +102,273 @@ contract MarketplaceOffersTest is BaseTest {
     function test_state_initial() public {
         uint256 totalOffers = OffersLogic(marketplace).totalOffers();
         assertEq(totalOffers, 0);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                Royalty Tests (incl Royalty Engine / Registry)
+    //////////////////////////////////////////////////////////////*/
+
+    function _setupRoyaltyEngine()
+        private
+        returns (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory mockRecipients,
+            uint256[] memory mockAmounts
+        )
+    {
+        mockRecipients = new address payable[](2);
+        mockAmounts = new uint256[](2);
+
+        mockRecipients[0] = payable(address(0x12345));
+        mockRecipients[1] = payable(address(0x56789));
+
+        mockAmounts[0] = 10;
+        mockAmounts[1] = 15;
+
+        royaltyEngine = new MockRoyaltyEngineV1(mockRecipients, mockAmounts);
+    }
+
+    function _setupOfferForRoyaltyTests(address erc721TokenAddress) private returns (uint256 offerId) {
+        // Sample offer parameters.
+        address assetContract = erc721TokenAddress;
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 totalPrice = 1 ether;
+        uint256 expirationTimestamp = 200;
+
+        // mint total-price to buyer
+        erc20.mint(buyer, totalPrice);
+
+        // Approve Marketplace to transfer currency tokens.
+        vm.prank(buyer);
+        erc20.approve(marketplace, totalPrice);
+
+        // Make offer.
+        IOffers.OfferParams memory offerParams = IOffers.OfferParams(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            totalPrice,
+            expirationTimestamp
+        );
+
+        vm.prank(buyer);
+        offerId = OffersLogic(marketplace).makeOffer(offerParams);
+    }
+
+    function _acceptOfferForRoyaltyTests(uint256 offerId) private returns (uint256 totalPrice) {
+        IOffers.Offer memory offer = OffersLogic(marketplace).getOffer(offerId);
+
+        totalPrice = offer.totalPrice;
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        IERC721(offer.assetContract).setApprovalForAll(marketplace, true);
+
+        // Accept offer
+        vm.prank(seller);
+        OffersLogic(marketplace).acceptOffer(offerId);
+    }
+
+    function test_royaltyEngine_tokenWithCustomRoyalties() public {
+        (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory customRoyaltyRecipients,
+            uint256[] memory customRoyaltyAmounts
+        ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // 1. ========= Make offer =========
+
+        uint256 offerId = _setupOfferForRoyaltyTests(address(erc721));
+
+        // 2. ========= Accept offer =========
+
+        // Mint the ERC721 tokens to seller. These tokens will be sold.
+        erc721.mint(seller, 1);
+        uint256 totalPrice = _acceptOfferForRoyaltyTests(offerId);
+
+        // 3. ======== Check balances after royalty payments ========
+
+        {
+            // Royalty recipients receive correct amounts
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
+
+            // Seller gets total price minus royalty amounts
+            assertBalERC20Eq(address(erc20), seller, totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1]);
+        }
+    }
+
+    function test_royaltyEngine_tokenWithERC2981() public {
+        (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory customRoyaltyRecipients,
+            uint256[] memory customRoyaltyAmounts
+        ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // create token with ERC2981
+        address royaltyRecipient = address(0x12345);
+        uint128 royaltyBps = 10;
+        ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        // Mint the ERC721 tokens to seller. These tokens will be sold.
+        nft2981.mintTo(seller, "");
+
+        vm.prank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(nft2981));
+
+        // 1. ========= Make offer =========
+
+        uint256 offerId = _setupOfferForRoyaltyTests(address(nft2981));
+
+        // 2. ========= Accept offer =========
+
+        uint256 totalPrice = _acceptOfferForRoyaltyTests(offerId);
+
+        // 3. ======== Check balances after royalty payments ========
+
+        {
+            uint256 royaltyAmount = (royaltyBps * totalPrice) / 10_000;
+            // Royalty recipient receives correct amounts
+            assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
+
+            // Seller gets total price minus royalty amount
+            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount);
+        }
+    }
+
+    function test_noRoyaltyEngine_defaultERC2981Token() public {
+        // create token with ERC2981
+        address royaltyRecipient = address(0x12345);
+        uint128 royaltyBps = 10;
+        ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        nft2981.mintTo(seller, "");
+
+        vm.prank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(nft2981));
+
+        // 1. ========= Make offer =========
+
+        uint256 offerId = _setupOfferForRoyaltyTests(address(nft2981));
+
+        // 2. ========= Accept offer =========
+
+        uint256 totalPrice = _acceptOfferForRoyaltyTests(offerId);
+
+        // 3. ======== Check balances after royalty payments ========
+
+        {
+            uint256 royaltyAmount = (royaltyBps * totalPrice) / 10_000;
+            // Royalty recipient receives correct amounts
+            assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
+
+            // Seller gets total price minus royalty amount
+            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount);
+        }
+    }
+
+    function test_royaltyEngine_correctlyDistributeAllFees() public {
+        (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory customRoyaltyRecipients,
+            uint256[] memory customRoyaltyAmounts
+        ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // Set platform fee on marketplace
+        address platformFeeRecipient = marketplaceDeployer;
+        uint128 platformFeeBps = 5;
+        vm.prank(marketplaceDeployer);
+        IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
+
+        // 1. ========= Make offer =========
+
+        uint256 offerId = _setupOfferForRoyaltyTests(address(erc721));
+
+        // 2. ========= Accept offer =========
+
+        // Mint the ERC721 tokens to seller. These tokens will be sold.
+        erc721.mint(seller, 1);
+        uint256 totalPrice = _acceptOfferForRoyaltyTests(offerId);
+
+        // 3. ======== Check balances after royalty payments ========
+
+        {
+            // Royalty recipients receive correct amounts
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
+
+            // Platform fee recipient
+            uint256 platformFeeAmount = (platformFeeBps * totalPrice) / 10_000;
+            assertBalERC20Eq(address(erc20), platformFeeRecipient, platformFeeAmount);
+
+            // Seller gets total price minus royalty amounts
+            assertBalERC20Eq(
+                address(erc20),
+                seller,
+                totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - platformFeeAmount
+            );
+        }
+    }
+
+    function test_revert_feesExceedTotalPrice() public {
+        (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory customRoyaltyRecipients,
+            uint256[] memory customRoyaltyAmounts
+        ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // Set platform fee on marketplace
+        address platformFeeRecipient = marketplaceDeployer;
+        uint128 platformFeeBps = 10_000; // equal to max bps 10_000 or 100%
+        vm.prank(marketplaceDeployer);
+        IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
+
+        // 1. ========= Make offer =========
+
+        uint256 offerId = _setupOfferForRoyaltyTests(address(erc721));
+
+        // 2. ========= Accept offer =========
+
+        // Mint the ERC721 tokens to seller. These tokens will be sold.
+        erc721.mint(seller, 1);
+
+        IOffers.Offer memory offer = OffersLogic(marketplace).getOffer(offerId);
+
+        uint256 totalPrice = offer.totalPrice;
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        IERC721(offer.assetContract).setApprovalForAll(marketplace, true);
+
+        // Accept offer
+        vm.expectRevert("fees exceed the price");
+        vm.prank(seller);
+        OffersLogic(marketplace).acceptOffer(offerId);
     }
 
     /*///////////////////////////////////////////////////////////////
