@@ -90,7 +90,7 @@ contract DynamicAccountTest is BaseTest {
         bytes memory encodedRequest = abi.encode(
             typehashSignerPermissionRequest,
             _req.signer,
-            _req.approvedTargets,
+            keccak256(abi.encodePacked(_req.approvedTargets)),
             _req.nativeTokenLimitPerTransaction,
             _req.permissionStartTimestamp,
             _req.permissionEndTimestamp,
