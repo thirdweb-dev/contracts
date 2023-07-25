@@ -37,7 +37,7 @@ contract DynamicAccount is AccountCore, BaseRouter {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether a extension can be set in the given execution context.
-    function _canSetExtension() internal view virtual override returns (bool) {
+    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
         return isAdmin(msg.sender);
     }
 }

@@ -128,7 +128,7 @@ contract BurnToClaimDropERC721 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether an extension can be set in the given execution context.
-    function _canSetExtension() internal view virtual override returns (bool) {
+    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
         return _hasRole(keccak256("EXTENSION_ROLE"), msg.sender);
     }
 
