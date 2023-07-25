@@ -6,7 +6,7 @@
 	url = https://github.com/dapphub/ds-test
 [submodule "lib/dynamic-contracts"]
 	path = lib/dynamic-contracts
-	url = https://github.com/thirdweb-dev/dynamic-contracts
+	url = https://github.com/lib/dynamic-contracts
 	branch = v1.0.2
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
