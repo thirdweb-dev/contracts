@@ -70,14 +70,7 @@ contract AirdropERC1155Test is BaseTest {
 
     function test_revert_airdrop_notOwner() public {
         vm.prank(address(25));
-        vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                TWStrings.toHexString(uint160(address(25)), 20),
-                " is missing role ",
-                TWStrings.toHexString(uint256(0x00), 32)
-            )
-        );
+        vm.expectRevert("Not authorized.");
         drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
     }
 
