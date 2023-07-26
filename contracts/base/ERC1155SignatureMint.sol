@@ -29,12 +29,13 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
     //////////////////////////////////////////////////////////////*/
 
     constructor(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _primarySaleRecipient
-    ) ERC1155Base(_name, _symbol, _royaltyRecipient, _royaltyBps) {
+    ) ERC1155Base(_defaultAdmin, _name, _symbol, _royaltyRecipient, _royaltyBps) {
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 

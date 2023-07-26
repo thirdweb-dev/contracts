@@ -29,7 +29,7 @@ contract ERC1155DelayedRevealTest is DSTest, Test {
         nftHolder = address(0x456);
 
         vm.prank(admin);
-        base = new ERC1155DelayedReveal("name", "symbol", admin, 0);
+        base = new ERC1155DelayedReveal(admin, "name", "symbol", admin, 0);
 
         bytes memory encryptedBaseURI = base.encryptDecrypt(bytes(baseURI), key);
         bytes32 provenanceHash = keccak256(abi.encodePacked(baseURI, key, block.chainid));

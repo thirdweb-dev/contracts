@@ -30,12 +30,13 @@ contract ERC721SignatureMint is ERC721Base, PrimarySale, SignatureMintERC721 {
     //////////////////////////////////////////////////////////////*/
 
     constructor(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _primarySaleRecipient
-    ) ERC721Base(_name, _symbol, _royaltyRecipient, _royaltyBps) {
+    ) ERC721Base(_defaultAdmin, _name, _symbol, _royaltyRecipient, _royaltyBps) {
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 
