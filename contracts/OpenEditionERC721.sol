@@ -182,7 +182,7 @@ contract OpenEditionERC721 is
         override
         returns (uint256 startTokenId_)
     {
-        startTokenId_ = ERC721AStorage.layout()._currentIndex;
+        startTokenId_ = _nextTokenId();
         _safeMint(_to, _quantityBeingClaimed);
     }
 
@@ -230,18 +230,18 @@ contract OpenEditionERC721 is
      */
     function totalMinted() external view returns (uint256) {
         unchecked {
-            return ERC721AStorage.layout()._currentIndex - _startTokenId();
+            return _nextTokenId() - _startTokenId();
         }
     }
 
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     function nextTokenIdToMint() external view returns (uint256) {
-        return ERC721AStorage.layout()._currentIndex;
+        return _nextTokenId();
     }
 
     /// @dev The next token ID of the NFT that can be claimed.
     function nextTokenIdToClaim() external view returns (uint256) {
-        return ERC721AStorage.layout()._currentIndex;
+        return _nextTokenId();
     }
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
