@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.13;
+pragma solidity ^0.8.0;
 
-import "@erc6551/src/lib/ERC6551AccountLib.sol";
-import "@erc6551/src/interfaces/IERC6551Account.sol";
+import "./erc6551-utils/ERC6551AccountLib.sol";
+import "./erc6551-utils/IERC6551Account.sol";
 
-import "./eip/interface/IERC721.sol";
-import "./smart-wallet/non-upgradeable/Account.sol";
+import "../eip/interface/IERC721.sol";
+import "../smart-wallet/non-upgradeable/Account.sol";
 
 contract TokenBoundAccount is Account, IERC6551Account {
     using ECDSA for bytes32;

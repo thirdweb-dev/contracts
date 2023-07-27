@@ -36,7 +36,6 @@ remappings = [
   'contracts/=contracts/',
   'erc721a-upgradeable/=lib/ERC721A-Upgradeable/',
   'erc721a/=lib/ERC721A/',
-  '@erc6551/=lib/reference/'
 ]
 src = 'contracts'
 test = 'src/test'
