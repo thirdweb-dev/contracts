@@ -22,3 +22,7 @@
 [submodule "lib/ERC721A"]
 	path = lib/ERC721A
 	url = https://github.com/chiru-labs/ERC721A
+[submodule "lib/reference"]
+	path = lib/reference
+	url = https://github.com/erc6551/reference
+	branch = v0.2.0
