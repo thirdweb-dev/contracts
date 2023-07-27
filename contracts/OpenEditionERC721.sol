@@ -126,13 +126,9 @@ contract OpenEditionERC721 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
@@ -187,52 +183,16 @@ contract OpenEditionERC721 is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId) {
         startTokenId = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
     }
 
     /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetPlatformFeeInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
-    /// @dev Checks whether primary sale recipient can be set in the given execution context.
-    function _canSetPrimarySaleRecipient() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
-    /// @dev Checks whether owner can be set in the given execution context.
-    function _canSetOwner() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
-    /// @dev Checks whether royalty info can be set in the given execution context.
-    function _canSetRoyaltyInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
-    /// @dev Checks whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
-    /// @dev Checks whether platform fee info can be set in the given execution context.
-    function _canSetClaimConditions() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
-    /// @dev Returns whether the shared metadata of tokens can be set in the given execution context.
-    function _canSetSharedMetadata() internal view virtual override returns (bool) {
-        return hasRole(minterRole, _msgSender());
-    }
-
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
+    function _isDefaultAdmin() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
