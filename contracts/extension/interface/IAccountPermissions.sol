@@ -8,59 +8,55 @@ interface IAccountPermissions {
                                 Types
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Roles can be granted or revoked by an authorized party.
-    enum RoleAction {
-        GRANT,
-        REVOKE
-    }
-
     /**
-     *  @notice The payload that must be signed by an authorized wallet to grant / revoke a role.
+     *  @notice The payload that must be signed by an authorized wallet to set permissions for a signer to use the smart wallet.
      *
-     *  @param role The role to grant / revoke.
-     *  @param target The address to grant / revoke the role from.
-     *  @param action Whether to grant or revoke the role.
-     *  @param validityStartTimestamp The UNIX timestamp at and after which a signature is valid.
-     *  @param validityEndTimestamp The UNIX timestamp at and after which a signature is invalid/expired.
+     *  @param signer The addres of the signer to give permissions.
+     *  @param approvedTargets The list of approved targets that a role holder can call using the smart wallet.
+     *  @param nativeTokenLimitPerTransaction The maximum value that can be transferred by a role holder in a single transaction.
+     *  @param permissionStartTimestamp The UNIX timestamp at and after which a signer has permission to use the smart wallet.
+     *  @param permissionEndTimestamp The UNIX timestamp at and after which a signer no longer has permission to use the smart wallet.
+     *  @param reqValidityStartTimestamp The UNIX timestamp at and after which a signature is valid.
+     *  @param reqValidityEndTimestamp The UNIX timestamp at and after which a signature is invalid/expired.
      *  @param uid A unique non-repeatable ID for the payload.
      */
-    struct RoleRequest {
-        bytes32 role;
-        address target;
-        RoleAction action;
-        uint128 validityStartTimestamp;
-        uint128 validityEndTimestamp;
+    struct SignerPermissionRequest {
+        address signer;
+        address[] approvedTargets;
+        uint256 nativeTokenLimitPerTransaction;
+        uint128 permissionStartTimestamp;
+        uint128 permissionEndTimestamp;
+        uint128 reqValidityStartTimestamp;
+        uint128 reqValidityEndTimestamp;
         bytes32 uid;
     }
 
     /**
-     *  @notice Restrictions that can be applied to a given role.
+     *  @notice The permissions that a signer has to use the smart wallet.
      *
-     *  @param role The unique role identifier.
+     *  @param signer The address of the signer.
      *  @param approvedTargets The list of approved targets that a role holder can call using the smart wallet.
-     *  @param maxValuePerTransaction The maximum value that can be transferred by a role holder in a single transaction.
-     *  @param startTimestamp The UNIX timestamp at and after which a role holder can call the approved targets.
-     *  @param endTimestamp The UNIX timestamp at and after which a role holder can no longer call the approved targets.
+     *  @param nativeTokenLimitPerTransaction The maximum value that can be transferred by a role holder in a single transaction.
+     *  @param startTimestamp The UNIX timestamp at and after which a signer has permission to use the smart wallet.
+     *  @param endTimestamp The UNIX timestamp at and after which a signer no longer has permission to use the smart wallet.
      */
-    struct RoleRestrictions {
-        bytes32 role;
+    struct SignerPermissions {
+        address signer;
         address[] approvedTargets;
-        uint256 maxValuePerTransaction;
+        uint256 nativeTokenLimitPerTransaction;
         uint128 startTimestamp;
         uint128 endTimestamp;
     }
 
     /**
-     *  @notice Internal struct for storing roles without approved targets
+     *  @notice Internal struct for storing permissions for a signer (without approved targets).
      *
-     *  @param role The unique role identifier.
-     *  @param maxValuePerTransaction The maximum value that can be transferred by a role holder in a single transaction.
-     *  @param startTimestamp The UNIX timestamp at and after which a role holder can call the approved targets.
-     *  @param endTimestamp The UNIX timestamp at and after which a role holder can no longer call the approved targets.
+     *  @param nativeTokenLimitPerTransaction The maximum value that can be transferred by a role holder in a single transaction.
+     *  @param startTimestamp The UNIX timestamp at and after which a signer has permission to use the smart wallet.
+     *  @param endTimestamp The UNIX timestamp at and after which a signer no longer has permission to use the smart wallet.
      */
-    struct RoleStatic {
-        bytes32 role;
-        uint256 maxValuePerTransaction;
+    struct SignerPermissionsStatic {
+        uint256 nativeTokenLimitPerTransaction;
         uint128 startTimestamp;
         uint128 endTimestamp;
     }
@@ -69,33 +65,40 @@ interface IAccountPermissions {
                                 Events
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Emitted when the restrictions for a given role are updated.
-    event RoleUpdated(bytes32 indexed role, RoleRestrictions restrictions);
-
-    /// @notice Emitted when a role is granted / revoked by an authorized party.
-    event RoleAssignment(bytes32 indexed role, address indexed account, address indexed signer, RoleRequest request);
+    /// @notice Emitted when permissions for a signer are updated.
+    event SignerPermissionsUpdated(
+        address indexed authorizingSigner,
+        address indexed targetSigner,
+        SignerPermissionRequest permissions
+    );
 
     /// @notice Emitted when an admin is set or removed.
-    event AdminUpdated(address indexed account, bool isAdmin);
+    event AdminUpdated(address indexed signer, bool isAdmin);
 
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns whether the given account is an admin.
-    function isAdmin(address account) external view returns (bool);
+    function isAdmin(address signer) external view returns (bool);
 
-    /// @notice Returns the role held by a given account along with its restrictions.
-    function getRoleRestrictionsForAccount(address account) external view returns (RoleRestrictions memory role);
+    /// @notice Returns whether the given account is an active signer on the account.
+    function isActiveSigner(address signer) external view returns (bool);
 
-    /// @notice Returns the role restrictions for a given role.
-    function getRoleRestrictions(bytes32 role) external view returns (RoleRestrictions memory restrictions);
+    /// @notice Returns the restrictions under which a signer can use the smart wallet.
+    function getPermissionsForSigner(address signer) external view returns (SignerPermissions memory permissions);
 
-    /// @notice Returns all accounts that have a role.
-    function getAllRoleMembers(bytes32 role) external view returns (address[] memory members);
+    /// @notice Returns all active and inactive signers of the account.
+    function getAllSigners() external view returns (SignerPermissions[] memory signers);
+
+    /// @notice Returns all signers with active permissions to use the account.
+    function getAllActiveSigners() external view returns (SignerPermissions[] memory signers);
+
+    /// @notice Returns all admins of the account.
+    function getAllAdmins() external view returns (address[] memory admins);
 
     /// @dev Verifies that a request is signed by an authorized account.
-    function verifyRoleRequest(RoleRequest calldata req, bytes calldata signature)
+    function verifySignerPermissionRequest(SignerPermissionRequest calldata req, bytes calldata signature)
         external
         view
         returns (bool success, address signer);
@@ -107,9 +110,6 @@ interface IAccountPermissions {
     /// @notice Adds / removes an account as an admin.
     function setAdmin(address account, bool isAdmin) external;
 
-    /// @notice Sets the restrictions for a given role.
-    function setRoleRestrictions(RoleRestrictions calldata role) external;
-
-    /// @notice Grant / revoke a role from a given signer.
-    function changeRole(RoleRequest calldata req, bytes calldata signature) external;
+    /// @notice Sets the permissions for a given signer.
+    function setPermissionsForSigner(SignerPermissionRequest calldata req, bytes calldata signature) external;
 }

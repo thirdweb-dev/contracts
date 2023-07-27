@@ -23,7 +23,7 @@ contract ERC1155BaseTest is DSTest, Test {
         nftHolder = address(0x456);
 
         vm.prank(admin);
-        base = new ERC1155Base("name", "symbol", admin, 0);
+        base = new ERC1155Base(admin, "name", "symbol", admin, 0);
     }
 
     // ================== `mintTo` tests ========================

@@ -70,7 +70,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
         vm.deal(nftHolder, 100 ether);
 
         vm.prank(admin);
-        base = new ERC1155SignatureMint("name", "symbol", admin, 0, saleRecipient);
+        base = new ERC1155SignatureMint(admin, "name", "symbol", admin, 0, saleRecipient);
 
         typehashMintRequest = keccak256(
             "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"

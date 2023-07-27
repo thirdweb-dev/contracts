@@ -13,7 +13,7 @@ contract BaseERC721BaseTest is BaseUtilTest {
 
     function setUp() public override {
         vm.prank(deployer);
-        base = new ERC721Base(NAME, SYMBOL, royaltyRecipient, royaltyBps);
+        base = new ERC721Base(deployer, NAME, SYMBOL, royaltyRecipient, royaltyBps);
     }
 
     /*///////////////////////////////////////////////////////////////
