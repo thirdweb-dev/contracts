@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import "@thirdweb-dev/contracts/smart-wallet/non-upgradeable/Account.sol";
-import "@thirdweb-dev/contracts/eip/interface/IERC721.sol";
 import "@erc6551/src/lib/ERC6551AccountLib.sol";
 import "@erc6551/src/interfaces/IERC6551Account.sol";
+
+import "./eip/interface/IERC721.sol";
+import "./smart-wallet/non-upgradeable/Account.sol";
 
 contract TokenBoundAccount is Account, IERC6551Account {
     /*///////////////////////////////////////////////////////////////
@@ -31,7 +32,7 @@ contract TokenBoundAccount is Account, IERC6551Account {
     receive() external payable override(IERC6551Account, Account) {}
 
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
-    function isValidSigner(address _signer) public view override returns (bool) {
+    function isValidSigner(address _signer, UserOperation calldata) public view override returns (bool) {
         return (owner() == _signer);
     }
 
@@ -57,7 +58,15 @@ contract TokenBoundAccount is Account, IERC6551Account {
         entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
-    function token() external view returns (uint256 chainId, address tokenContract, uint256 tokenId) {
+    function token()
+        external
+        view
+        returns (
+            uint256 chainId,
+            address tokenContract,
+            uint256 tokenId
+        )
+    {
         return ERC6551AccountLib.token();
     }
 
