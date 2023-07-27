@@ -8,6 +8,8 @@ import "./eip/interface/IERC721.sol";
 import "./smart-wallet/non-upgradeable/Account.sol";
 
 contract TokenBoundAccount is Account, IERC6551Account {
+    using ECDSA for bytes32;
+
     /*///////////////////////////////////////////////////////////////
                             Events
     //////////////////////////////////////////////////////////////*/
@@ -34,6 +36,21 @@ contract TokenBoundAccount is Account, IERC6551Account {
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
     function isValidSigner(address _signer, UserOperation calldata) public view override returns (bool) {
         return (owner() == _signer);
+    }
+
+    /// @notice See EIP-1271
+    function isValidSignature(bytes32 _hash, bytes memory _signature)
+        public
+        view
+        virtual
+        override
+        returns (bytes4 magicValue)
+    {
+        address signer = _hash.recover(_signature);
+
+        if (owner() == signer) {
+            magicValue = MAGICVALUE;
+        }
     }
 
     function owner() public view returns (address) {
