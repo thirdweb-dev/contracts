@@ -55,6 +55,7 @@ contract EvolvingNFTs is
     ERC721AUpgradeable
 {
     using StringsUpgradeable for uint256;
+    using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
@@ -119,8 +120,21 @@ contract EvolvingNFTs is
             revert("!ID");
         }
 
+        // Get score
         uint256 score = getScore(ownerOf(_tokenId));
-        return _getURIFromSharedMetadata(keccak256(abi.encode(score)), _tokenId);
+
+        // Get the target ID i.e. `start` of the range that the score falls into.
+        bytes32[] memory ids = _sharedMetadataBatchStorage().ids.values();
+        bytes32 targetId = 0;
+
+        for (uint256 i = 0; i < ids.length; i += 1) {
+            if (uint256(ids[i]) <= score) {
+                targetId = ids[i];
+            } else {
+                break;
+            }
+        }
+        return _getURIFromSharedMetadata(targetId, _tokenId);
     }
 
     /// @dev See ERC 165
