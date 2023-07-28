@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+import "../../lib/NFTMetadataRendererLib.sol";
 import "../../extension/interface/ISharedMetadataBatch.sol";
 import "../../openzeppelin-presets/utils/EnumerableSet.sol";
 
@@ -52,6 +53,20 @@ abstract contract SharedMetadataBatch is ISharedMetadataBatch {
         _sharedMetadataBatchStorage().metadata[id] = SharedMetadataWithId(id, metadata);
 
         emit SharedMetadataUpdated(id, metadata.name, metadata.description, metadata.imageURI, metadata.animationURI);
+    }
+
+    /// @dev Token URI information getter
+    function _getURIFromSharedMetadata(bytes32 id, uint256 tokenId) internal view returns (string memory) {
+        SharedMetadataInfo memory info = _sharedMetadataBatchStorage().metadata[id].metadata;
+
+        return
+            NFTMetadataRenderer.createMetadataEdition({
+                name: info.name,
+                description: info.description,
+                imageURI: info.imageURI,
+                animationURI: info.animationURI,
+                tokenOfEdition: tokenId
+            });
     }
 
     /// @dev Get contract storage
