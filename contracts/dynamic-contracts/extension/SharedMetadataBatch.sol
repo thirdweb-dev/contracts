@@ -35,6 +35,16 @@ abstract contract SharedMetadataBatch is ISharedMetadataBatch {
         _createSharedMetadata(metadata, _id);
     }
 
+    /// @notice Delete shared metadata for NFTs
+    function deleteSharedMetadata(bytes32 _id) external {
+        require(_canSetSharedMetadata(), "SharedMetadataBatch: cannot set shared metadata");
+        require(_sharedMetadataBatchStorage().ids.remove(_id), "SharedMetadataBatch: shared metadata does not exist");
+
+        delete _sharedMetadataBatchStorage().metadata[_id];
+
+        emit SharedMetadataDeleted(_id);
+    }
+
     /// @notice Get all shared metadata
     function getAllSharedMetadata() external view returns (SharedMetadataWithId[] memory metadata) {
         bytes32[] memory ids = _sharedMetadataBatchStorage().ids.values();

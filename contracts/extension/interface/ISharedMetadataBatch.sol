@@ -13,6 +13,9 @@ interface ISharedMetadataBatch {
         string animationURI
     );
 
+    /// @notice Emitted when shared metadata is deleted.
+    event SharedMetadataDeleted(bytes32 indexed id);
+
     /**
      *  @notice Structure for metadata shared across all tokens
      *
@@ -39,6 +42,12 @@ interface ISharedMetadataBatch {
      *  @param id UID for the metadata
      */
     function createSharedMetadata(SharedMetadataInfo calldata metadata, bytes32 id) external;
+
+    /**
+     *  @notice Delete shared metadata for NFTs
+     *  @param id UID for the metadata
+     */
+    function deleteSharedMetadata(bytes32 id) external;
 
     /**
      *  @notice Get all shared metadata
