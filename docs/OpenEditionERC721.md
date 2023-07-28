@@ -30,7 +30,7 @@ function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
 ### approve
 
 ```solidity
-function approve(address operator, uint256 tokenId) external nonpayable
+function approve(address operator, uint256 tokenId) external payable
 ```
 
 
@@ -52,7 +52,7 @@ function balanceOf(address owner) external view returns (uint256)
 
 
 
-*See {IERC721-balanceOf}.*
+*Returns the number of tokens in `owner`&#39;s account.*
 
 #### Parameters
 
@@ -138,6 +138,28 @@ Returns the contract metadata URI.
 |---|---|---|
 | _0 | string | undefined |
 
+### explicitOwnershipOf
+
+```solidity
+function explicitOwnershipOf(uint256 tokenId) external view returns (struct IERC721AUpgradeable.TokenOwnership ownership)
+```
+
+
+
+*Returns the `TokenOwnership` struct at `tokenId` without reverting. If the `tokenId` is out of bounds: - `addr = address(0)` - `startTimestamp = 0` - `burned = false` - `extraData = 0` If the `tokenId` is burned: - `addr = &lt;Address of owner before token was burned&gt;` - `startTimestamp = &lt;Timestamp when token was burned&gt;` - `burned = true` - `extraData = &lt;Extra data when token was burned&gt;` Otherwise: - `addr = &lt;Address of owner&gt;` - `startTimestamp = &lt;Timestamp of start of ownership&gt;` - `burned = false` - `extraData = &lt;Extra data at start of ownership&gt;`*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| tokenId | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| ownership | IERC721AUpgradeable.TokenOwnership | undefined |
+
 ### getActiveClaimConditionId
 
 ```solidity
@@ -163,7 +185,7 @@ function getApproved(uint256 tokenId) external view returns (address)
 
 
 
-*See {IERC721-getApproved}.*
+*Returns the account approved for `tokenId` token. Requirements: - `tokenId` must exist.*
 
 #### Parameters
 
@@ -216,59 +238,6 @@ Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 |---|---|---|
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
-
-### getFlatPlatformFeeInfo
-
-```solidity
-function getFlatPlatformFeeInfo() external view returns (address, uint256)
-```
-
-
-
-*Returns the platform fee bps and recipient.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-| _1 | uint256 | undefined |
-
-### getPlatformFeeInfo
-
-```solidity
-function getPlatformFeeInfo() external view returns (address, uint16)
-```
-
-
-
-*Returns the platform fee recipient and bps.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | address | undefined |
-| _1 | uint16 | undefined |
-
-### getPlatformFeeType
-
-```solidity
-function getPlatformFeeType() external view returns (enum IPlatformFee.PlatformFeeType)
-```
-
-
-
-*Returns the platform fee bps and recipient.*
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | enum IPlatformFee.PlatformFeeType | undefined |
 
 ### getRoleAdmin
 
@@ -449,7 +418,7 @@ Checks whether an account has a particular role;                  role restricti
 ### initialize
 
 ```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _saleRecipient, address _royaltyRecipient, uint128 _royaltyBps, uint128 _platformFeeBps, address _platformFeeRecipient) external nonpayable
+function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _saleRecipient, address _royaltyRecipient, uint128 _royaltyBps) external nonpayable
 ```
 
 
@@ -468,8 +437,6 @@ function initialize(address _defaultAdmin, string _name, string _symbol, string 
 | _saleRecipient | address | undefined |
 | _royaltyRecipient | address | undefined |
 | _royaltyBps | uint128 | undefined |
-| _platformFeeBps | uint128 | undefined |
-| _platformFeeRecipient | address | undefined |
 
 ### isApprovedForAll
 
@@ -479,7 +446,7 @@ function isApprovedForAll(address owner, address operator) external view returns
 
 
 
-*See {IERC721-isApprovedForAll}.*
+*Returns if the `operator` is allowed to manage all of the assets of `owner`. See {setApprovalForAll}.*
 
 #### Parameters
 
@@ -546,7 +513,7 @@ function name() external view returns (string)
 
 
 
-*See {IERC721Metadata-name}.*
+*Returns the token collection name.*
 
 
 #### Returns
@@ -631,7 +598,7 @@ function ownerOf(uint256 tokenId) external view returns (address)
 
 
 
-*See {IERC721-ownerOf}.*
+*Returns the owner of the `tokenId` token. Requirements: - `tokenId` must exist.*
 
 #### Parameters
 
@@ -723,7 +690,7 @@ View royalty info for a given token and sale price.
 ### safeTransferFrom
 
 ```solidity
-function safeTransferFrom(address from, address to, uint256 tokenId) external nonpayable
+function safeTransferFrom(address from, address to, uint256 tokenId) external payable
 ```
 
 
@@ -741,7 +708,7 @@ function safeTransferFrom(address from, address to, uint256 tokenId) external no
 ### safeTransferFrom
 
 ```solidity
-function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) external nonpayable
+function safeTransferFrom(address from, address to, uint256 tokenId, bytes data) external payable
 ```
 
 
@@ -824,23 +791,6 @@ Updates default royalty recipient and bps.
 | _royaltyRecipient | address | Address to be set as default royalty recipient. |
 | _royaltyBps | uint256 | Updated royalty bps. |
 
-### setFlatPlatformFeeInfo
-
-```solidity
-function setFlatPlatformFeeInfo(address _platformFeeRecipient, uint256 _flatFee) external nonpayable
-```
-
-Lets a module admin set a flat fee on primary sales.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _platformFeeRecipient | address | undefined |
-| _flatFee | uint256 | undefined |
-
 ### setOperatorRestriction
 
 ```solidity
@@ -872,39 +822,6 @@ Lets an authorized wallet set a new owner for the contract.
 | Name | Type | Description |
 |---|---|---|
 | _newOwner | address | The address to set as the new owner of the contract. |
-
-### setPlatformFeeInfo
-
-```solidity
-function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external nonpayable
-```
-
-Updates the platform fee recipient and bps.
-
-*Caller should be authorized to set platform fee info.                  See {_canSetPlatformFeeInfo}.                  Emits {PlatformFeeInfoUpdated Event}; See {_setupPlatformFeeInfo}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _platformFeeRecipient | address | Address to be set as new platformFeeRecipient. |
-| _platformFeeBps | uint256 | Updated platformFeeBps. |
-
-### setPlatformFeeType
-
-```solidity
-function setPlatformFeeType(enum IPlatformFee.PlatformFeeType _feeType) external nonpayable
-```
-
-Lets a module admin set platform fee type.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _feeType | enum IPlatformFee.PlatformFeeType | undefined |
 
 ### setPrimarySaleRecipient
 
@@ -1039,7 +956,7 @@ function symbol() external view returns (string)
 
 
 
-*See {IERC721Metadata-symbol}.*
+*Returns the token collection symbol.*
 
 
 #### Returns
@@ -1070,6 +987,52 @@ function tokenURI(uint256 _tokenId) external view returns (string)
 |---|---|---|
 | _0 | string | undefined |
 
+### tokensOfOwner
+
+```solidity
+function tokensOfOwner(address owner) external view returns (uint256[])
+```
+
+
+
+*Returns an array of token IDs owned by `owner`. This function scans the ownership mapping and is O(`totalSupply`) in complexity. It is meant to be called off-chain. See {ERC721AQueryable-tokensOfOwnerIn} for splitting the scan into multiple smaller scans if the collection is large enough to cause an out-of-gas error (10K collections should be fine).*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| owner | address | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256[] | undefined |
+
+### tokensOfOwnerIn
+
+```solidity
+function tokensOfOwnerIn(address owner, uint256 start, uint256 stop) external view returns (uint256[])
+```
+
+
+
+*Returns an array of token IDs owned by `owner`, in the range [`start`, `stop`) (i.e. `start &lt;= tokenId &lt; stop`). This function allows for tokens to be queried if the collection grows too big for a single call of {ERC721AQueryable-tokensOfOwner}. Requirements: - `start &lt; stop`*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| owner | address | undefined |
+| start | uint256 | undefined |
+| stop | uint256 | undefined |
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| _0 | uint256[] | undefined |
+
 ### totalMinted
 
 ```solidity
@@ -1095,7 +1058,7 @@ function totalSupply() external view returns (uint256)
 
 
 
-*Burned tokens are calculated here, use _totalMinted() if you want to count just minted tokens.*
+*Returns the total number of tokens in existence. Burned tokens will reduce the count. To get the total number of tokens minted, please see {_totalMinted}.*
 
 
 #### Returns
@@ -1107,7 +1070,7 @@ function totalSupply() external view returns (uint256)
 ### transferFrom
 
 ```solidity
-function transferFrom(address from, address to, uint256 tokenId) external nonpayable
+function transferFrom(address from, address to, uint256 tokenId) external payable
 ```
 
 
@@ -1206,6 +1169,25 @@ Emitted when the contract&#39;s claim conditions are updated.
 | claimConditions  | IClaimCondition.ClaimCondition[] | undefined |
 | resetEligibility  | bool | undefined |
 
+### ConsecutiveTransfer
+
+```solidity
+event ConsecutiveTransfer(uint256 indexed fromTokenId, uint256 toTokenId, address indexed from, address indexed to)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| fromTokenId `indexed` | uint256 | undefined |
+| toTokenId  | uint256 | undefined |
+| from `indexed` | address | undefined |
+| to `indexed` | address | undefined |
+
 ### ContractURIUpdated
 
 ```solidity
@@ -1239,23 +1221,6 @@ event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps)
 |---|---|---|
 | newRoyaltyRecipient `indexed` | address | undefined |
 | newRoyaltyBps  | uint256 | undefined |
-
-### FlatPlatformFeeUpdated
-
-```solidity
-event FlatPlatformFeeUpdated(address platformFeeRecipient, uint256 flatFee)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| platformFeeRecipient  | address | undefined |
-| flatFee  | uint256 | undefined |
 
 ### Initialized
 
@@ -1305,39 +1270,6 @@ event OwnerUpdated(address indexed prevOwner, address indexed newOwner)
 |---|---|---|
 | prevOwner `indexed` | address | undefined |
 | newOwner `indexed` | address | undefined |
-
-### PlatformFeeInfoUpdated
-
-```solidity
-event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| platformFeeRecipient `indexed` | address | undefined |
-| platformFeeBps  | uint256 | undefined |
-
-### PlatformFeeTypeUpdated
-
-```solidity
-event PlatformFeeTypeUpdated(enum IPlatformFee.PlatformFeeType feeType)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| feeType  | enum IPlatformFee.PlatformFeeType | undefined |
 
 ### PrimarySaleRecipientUpdated
 
@@ -1510,28 +1442,6 @@ The token does not exist.
 
 
 
-### ApprovalToCurrentOwner
-
-```solidity
-error ApprovalToCurrentOwner()
-```
-
-The caller cannot approve to the current owner.
-
-
-
-
-### ApproveToCaller
-
-```solidity
-error ApproveToCaller()
-```
-
-The caller cannot approve to their own address.
-
-
-
-
 ### BalanceQueryForZeroAddress
 
 ```solidity
@@ -1539,6 +1449,28 @@ error BalanceQueryForZeroAddress()
 ```
 
 Cannot query the balance for the zero address.
+
+
+
+
+### InvalidQueryRange
+
+```solidity
+error InvalidQueryRange()
+```
+
+Invalid query range (`start` &gt;= `stop`).
+
+
+
+
+### MintERC2309QuantityExceedsLimit
+
+```solidity
+error MintERC2309QuantityExceedsLimit()
+```
+
+The `quantity` minted with ERC2309 exceeds the safety limit.
 
 
 
@@ -1588,6 +1520,17 @@ error OwnerQueryForNonexistentToken()
 ```
 
 The token does not exist.
+
+
+
+
+### OwnershipNotInitializedForExtraData
+
+```solidity
+error OwnershipNotInitializedForExtraData()
+```
+
+The `extraData` cannot be set on an unintialized ownership slot.
 
 
 
