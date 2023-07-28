@@ -51,12 +51,12 @@ abstract contract RulesEngine is IRulesEngine {
     }
 
     function createRule(Rule memory rule) external returns (uint256 ruleId) {
-        require(_canSetRules(), "RulesEngine: cannot set rules");
+        require(_canSetMetadataRules(), "RulesEngine: cannot set rules");
         ruleId = _createRule(rule);
     }
 
     function deleteRule(uint256 _ruleId) external {
-        require(_canSetRules(), "RulesEngine: cannot set rules");
+        require(_canSetMetadataRules(), "RulesEngine: cannot set rules");
         _deleteRule(_ruleId);
     }
 
@@ -81,5 +81,5 @@ abstract contract RulesEngine is IRulesEngine {
         data = RulesEngineStorage.rulesEngineStorage();
     }
 
-    function _canSetRules() internal view virtual returns (bool);
+    function _canSetMetadataRules() internal view virtual returns (bool);
 }
