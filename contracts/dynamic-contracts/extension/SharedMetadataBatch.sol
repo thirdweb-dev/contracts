@@ -30,7 +30,7 @@ abstract contract SharedMetadataBatch is ISharedMetadataBatch {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /// @notice Set shared metadata for NFTs
-    function createSharedMetadata(SharedMetadataInfo calldata metadata, bytes32 _id) external {
+    function setSharedMetadata(SharedMetadataInfo calldata metadata, bytes32 _id) external {
         require(_canSetSharedMetadata(), "SharedMetadataBatch: cannot set shared metadata");
         _createSharedMetadata(metadata, _id);
     }
