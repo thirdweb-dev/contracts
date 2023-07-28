@@ -30,9 +30,9 @@ abstract contract SharedMetadataBatch is ISharedMetadataBatch {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /// @notice Set shared metadata for NFTs
-    function createSharedMetadata(SharedMetadataInfo calldata metadata) external returns (bytes32 id) {
+    function createSharedMetadata(SharedMetadataInfo calldata metadata, bytes32 _id) external {
         require(_canSetSharedMetadata(), "SharedMetadataBatch: cannot set shared metadata");
-        id = _createSharedMetadata(metadata);
+        _createSharedMetadata(metadata, _id);
     }
 
     /// @notice Get all shared metadata
@@ -46,13 +46,18 @@ abstract contract SharedMetadataBatch is ISharedMetadataBatch {
     }
 
     /// @dev Store shared metadata
-    function _createSharedMetadata(SharedMetadataInfo calldata metadata) internal returns (bytes32 id) {
-        id = keccak256(abi.encodePacked(metadata.name, metadata.description, metadata.imageURI, metadata.animationURI));
-        require(_sharedMetadataBatchStorage().ids.add(id), "SharedMetadataBatch: shared metadata already exists");
+    function _createSharedMetadata(SharedMetadataInfo calldata _metadata, bytes32 _id) internal {
+        require(_sharedMetadataBatchStorage().ids.add(_id), "SharedMetadataBatch: shared metadata already exists");
 
-        _sharedMetadataBatchStorage().metadata[id] = SharedMetadataWithId(id, metadata);
+        _sharedMetadataBatchStorage().metadata[_id] = SharedMetadataWithId(_id, _metadata);
 
-        emit SharedMetadataUpdated(id, metadata.name, metadata.description, metadata.imageURI, metadata.animationURI);
+        emit SharedMetadataUpdated(
+            _id,
+            _metadata.name,
+            _metadata.description,
+            _metadata.imageURI,
+            _metadata.animationURI
+        );
     }
 
     /// @dev Token URI information getter

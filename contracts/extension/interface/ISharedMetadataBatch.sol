@@ -36,9 +36,9 @@ interface ISharedMetadataBatch {
     /**
      *  @notice Set shared metadata for NFTs
      *  @param metadata common metadata for all tokens
-     *  @return id UID for the metadata
+     *  @param id UID for the metadata
      */
-    function createSharedMetadata(SharedMetadataInfo calldata metadata) external returns (bytes32 id);
+    function createSharedMetadata(SharedMetadataInfo calldata metadata, bytes32 id) external;
 
     /**
      *  @notice Get all shared metadata
