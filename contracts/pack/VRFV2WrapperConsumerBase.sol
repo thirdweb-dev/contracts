@@ -28,7 +28,9 @@ import "@chainlink/contracts/src/v0.8/interfaces/VRFV2WrapperInterface.sol";
  * @dev fulfillment with the randomness result.
  */
 abstract contract VRFV2WrapperConsumerBase {
+    // solhint-disable-next-line var-name-mixedcase
     LinkTokenInterface internal immutable LINK;
+    // solhint-disable-next-line var-name-mixedcase
     VRFV2WrapperInterface internal immutable VRF_V2_WRAPPER;
 
     /**
