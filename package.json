@@ -68,5 +68,6 @@
     "export-abi": "hardhat export-abi",
     "gas": "forge test --mc Benchmark --gas-report > gasreport.txt",
     "forge:snapshot": "forge snapshot --check"
-  }
+  },
+  "dependencies": {}
 }

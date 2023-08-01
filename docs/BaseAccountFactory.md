@@ -129,28 +129,6 @@ Returns all accounts created on the factory.
 |---|---|---|
 | _0 | address[] | undefined |
 
-### getSignersOfAccount
-
-```solidity
-function getSignersOfAccount(address account) external view returns (address[] signers)
-```
-
-Returns all signers of an account.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| signers | address[] | undefined |
-
 ### isRegistered
 
 ```solidity

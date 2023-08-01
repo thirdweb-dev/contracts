@@ -477,8 +477,9 @@ contract MarketplaceDirectListingsTest is BaseTest {
         // create token with ERC2981
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
-        ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
         // Mint the ERC721 tokens to seller. These tokens will be listed.
+        vm.prank(address(0x12345));
         nft2981.mintTo(seller, "");
 
         vm.prank(marketplaceDeployer);
@@ -508,7 +509,8 @@ contract MarketplaceDirectListingsTest is BaseTest {
         // create token with ERC2981
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
-        ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        vm.prank(address(0x12345));
         nft2981.mintTo(seller, "");
 
         vm.prank(marketplaceDeployer);

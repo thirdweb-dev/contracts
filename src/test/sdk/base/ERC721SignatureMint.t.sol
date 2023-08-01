@@ -25,7 +25,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
     function setUp() public override {
         super.setUp();
         vm.prank(signer);
-        base = new ERC721SignatureMint(NAME, SYMBOL, royaltyRecipient, royaltyBps, saleRecipient);
+        base = new ERC721SignatureMint(signer, NAME, SYMBOL, royaltyRecipient, royaltyBps, saleRecipient);
 
         recipient = address(0x123);
         erc20.mint(recipient, 1_000);

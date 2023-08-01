@@ -62,13 +62,14 @@ contract ERC721Drop is
     //////////////////////////////////////////////////////////////*/
 
     constructor(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _primarySaleRecipient
     ) ERC721A(_name, _symbol) {
-        _setupOwner(msg.sender);
+        _setupOwner(_defaultAdmin);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
         _setOperatorRestriction(true);
