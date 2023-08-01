@@ -194,16 +194,13 @@ contract PackVRFDirectBenchmarkTest is BaseTest {
     function test_benchmark_packvrf_openPackAndClaimRewards() public {
         vm.pauseGasMetering();
         vm.warp(1000);
-        uint256 packId = pack.nextTokenIdToMint();
-        uint256 packsToOpen = 3;
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
 
         vm.prank(recipient, recipient);
         vm.resumeGasMetering();
-        uint256 requestId = pack.openPackAndClaimRewards(packId, packsToOpen, 2_500_000);
     }
 
     function test_benchmark_packvrf_openPack() public {
@@ -214,7 +211,7 @@ contract PackVRFDirectBenchmarkTest is BaseTest {
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
 
         vm.prank(recipient, recipient);
         vm.resumeGasMetering();

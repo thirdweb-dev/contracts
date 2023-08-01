@@ -156,16 +156,6 @@ contract MarketplaceDirectListingsTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function test_getValidListings_burnListedTokens() public {
-        // Sample listing parameters.
-        address assetContract = address(erc721);
-        uint256 tokenId = 0;
-        uint256 quantity = 1;
-        address currency = address(erc20);
-        uint256 pricePerToken = 1 ether;
-        uint128 startTimestamp = 100;
-        uint128 endTimestamp = 200;
-        bool reserved = true;
-
         // Mint the ERC721 tokens to seller. These tokens will be listed.
         _setupERC721BalanceForSeller(seller, 1);
 
@@ -173,20 +163,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         vm.prank(seller);
         erc721.setApprovalForAll(marketplace, true);
 
-        // List tokens.
-        IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract,
-            tokenId,
-            quantity,
-            currency,
-            pricePerToken,
-            startTimestamp,
-            endTimestamp,
-            reserved
-        );
-
         vm.prank(seller);
-        uint256 listingId = DirectListingsLogic(marketplace).createListing(listingParams);
 
         // Total listings incremented
         assertEq(DirectListingsLogic(marketplace).totalListings(), 1);
@@ -462,11 +439,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
     }
 
     function test_royaltyEngine_tokenWithERC2981() public {
-        (
-            MockRoyaltyEngineV1 royaltyEngine,
-            address payable[] memory customRoyaltyRecipients,
-            uint256[] memory customRoyaltyAmounts
-        ) = _setupRoyaltyEngine();
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
 
         // Add RoyaltyEngine to marketplace
         vm.prank(marketplaceDeployer);
@@ -585,11 +558,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
     }
 
     function test_revert_feesExceedTotalPrice() public {
-        (
-            MockRoyaltyEngineV1 royaltyEngine,
-            address payable[] memory customRoyaltyRecipients,
-            uint256[] memory customRoyaltyAmounts
-        ) = _setupRoyaltyEngine();
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
 
         // Add RoyaltyEngine to marketplace
         vm.prank(marketplaceDeployer);
@@ -2074,9 +2043,7 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
     function test_state_buyFromListing_after_update() public {
         (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
 
-        address buyFor = buyer;
         uint256 quantityToBuy = listing.quantity;
-        address currency = listing.currency;
         uint256 pricePerToken = listing.pricePerToken;
         uint256 totalPrice = pricePerToken * quantityToBuy;
 

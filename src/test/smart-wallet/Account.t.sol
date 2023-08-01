@@ -474,7 +474,10 @@ contract SimpleAccountTest is BaseTest {
 
         vm.prank(accountAdmin);
         // solhint-disable-next-line avoid-low-level-calls
-        payable(account).call{ value: 1000 }("");
+        (bool success, bytes memory data) = payable(account).call{ value: 1000 }("");
+
+        // Silence warning: Return value of low-level calls not used.
+        (success, data) = (success, data);
 
         assertEq(address(account).balance, 1000);
     }
@@ -488,8 +491,11 @@ contract SimpleAccountTest is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         vm.prank(accountAdmin);
         // solhint-disable-next-line avoid-low-level-calls
-        payable(account).call{ value: value }("");
+        (bool success, bytes memory data) = payable(account).call{ value: value }("");
         assertEq(address(account).balance, value);
+
+        // Silence warning: Return value of low-level calls not used.
+        (success, data) = (success, data);
 
         address recipient = address(0x3456);
 

@@ -78,13 +78,10 @@ contract NFTStakeBenchmarkTest is BaseTest {
         // stake 3 tokens
         vm.prank(stakerOne);
         stakeContract.stake(_tokenIdsOne);
-        uint256 timeOfLastUpdate_one = block.timestamp;
 
         //=================== warp timestamp to claim rewards
         vm.roll(100);
         vm.warp(1000);
-
-        uint256 rewardBalanceBefore = stakeContract.getRewardTokenBalance();
         vm.prank(stakerOne);
         vm.resumeGasMetering();
         stakeContract.claimRewards();
