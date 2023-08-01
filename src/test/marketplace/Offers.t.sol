@@ -208,11 +208,7 @@ contract MarketplaceOffersTest is BaseTest {
     }
 
     function test_royaltyEngine_tokenWithERC2981() public {
-        (
-            MockRoyaltyEngineV1 royaltyEngine,
-            address payable[] memory customRoyaltyRecipients,
-            uint256[] memory customRoyaltyAmounts
-        ) = _setupRoyaltyEngine();
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
 
         // Add RoyaltyEngine to marketplace
         vm.prank(marketplaceDeployer);
@@ -332,11 +328,7 @@ contract MarketplaceOffersTest is BaseTest {
     }
 
     function test_revert_feesExceedTotalPrice() public {
-        (
-            MockRoyaltyEngineV1 royaltyEngine,
-            address payable[] memory customRoyaltyRecipients,
-            uint256[] memory customRoyaltyAmounts
-        ) = _setupRoyaltyEngine();
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
 
         // Add RoyaltyEngine to marketplace
         vm.prank(marketplaceDeployer);
@@ -360,8 +352,6 @@ contract MarketplaceOffersTest is BaseTest {
         erc721.mint(seller, 1);
 
         IOffers.Offer memory offer = OffersLogic(marketplace).getOffer(offerId);
-
-        uint256 totalPrice = offer.totalPrice;
 
         // Approve Marketplace to transfer token.
         vm.prank(seller);

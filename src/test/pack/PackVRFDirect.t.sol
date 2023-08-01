@@ -534,7 +534,7 @@ contract PackVRFDirectTest is BaseTest {
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
 
         vm.prank(recipient, recipient);
         uint256 requestId = pack.openPackAndClaimRewards(packId, packsToOpen, 2_500_000);
@@ -564,7 +564,7 @@ contract PackVRFDirectTest is BaseTest {
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
 
         vm.prank(recipient, recipient);
         uint256 requestId = pack.openPackAndClaimRewards(packId, packsToOpen, 2);
@@ -596,7 +596,7 @@ contract PackVRFDirectTest is BaseTest {
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
 
         vm.prank(recipient, recipient);
         uint256 requestId = pack.openPackAndClaimRewards(packId, packsToOpen, 2_500_000);
@@ -797,7 +797,7 @@ contract PackVRFDirectTest is BaseTest {
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
 
         vm.prank(recipient, recipient);
         uint256 requestId = pack.openPack(packId, packsToOpen);

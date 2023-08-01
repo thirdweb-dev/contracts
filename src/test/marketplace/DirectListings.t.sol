@@ -186,7 +186,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
         );
 
         vm.prank(seller);
-        uint256 listingId = DirectListingsLogic(marketplace).createListing(listingParams);
+        DirectListingsLogic(marketplace).createListing(listingParams);
 
         // Total listings incremented
         assertEq(DirectListingsLogic(marketplace).totalListings(), 1);
@@ -462,11 +462,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
     }
 
     function test_royaltyEngine_tokenWithERC2981() public {
-        (
-            MockRoyaltyEngineV1 royaltyEngine,
-            address payable[] memory customRoyaltyRecipients,
-            uint256[] memory customRoyaltyAmounts
-        ) = _setupRoyaltyEngine();
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
 
         // Add RoyaltyEngine to marketplace
         vm.prank(marketplaceDeployer);
@@ -585,11 +581,7 @@ contract MarketplaceDirectListingsTest is BaseTest {
     }
 
     function test_revert_feesExceedTotalPrice() public {
-        (
-            MockRoyaltyEngineV1 royaltyEngine,
-            address payable[] memory customRoyaltyRecipients,
-            uint256[] memory customRoyaltyAmounts
-        ) = _setupRoyaltyEngine();
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
 
         // Add RoyaltyEngine to marketplace
         vm.prank(marketplaceDeployer);
@@ -2074,9 +2066,7 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest {
     function test_state_buyFromListing_after_update() public {
         (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
 
-        address buyFor = buyer;
         uint256 quantityToBuy = listing.quantity;
-        address currency = listing.currency;
         uint256 pricePerToken = listing.pricePerToken;
         uint256 totalPrice = pricePerToken * quantityToBuy;
 

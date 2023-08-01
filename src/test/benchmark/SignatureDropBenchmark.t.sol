@@ -86,8 +86,6 @@ contract SignatureDropBenchmarkTest is BaseTest {
     function test_bechmark_signatureDrop_setClaimConditions() public {
         vm.pauseGasMetering();
         vm.warp(1);
-
-        address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
         SignatureDrop.AllowlistProof memory alp;
