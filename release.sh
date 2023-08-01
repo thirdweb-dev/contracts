@@ -29,8 +29,7 @@ set -- "${POSITIONAL_ARGS[@]}" # restore positional parameters
 
 echo "### Release script started..."
 if [[ $skip_build -eq 0 ]]; then
-forge clean
-forge build
+yarn build
 fi
 echo "### Build finished. Copying abis."
 rm -rf contracts/abi
