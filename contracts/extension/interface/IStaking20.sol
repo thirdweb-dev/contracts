@@ -39,10 +39,10 @@ interface IStaking20 {
      *  @param conditionIdOflastUpdate  Condition-Id when rewards were last updated for user.
      */
     struct Staker {
+        uint128 timeOfLastUpdate;
+        uint64 conditionIdOflastUpdate;
         uint256 amountStaked;
-        uint256 timeOfLastUpdate;
         uint256 unclaimedRewards;
-        uint256 conditionIdOflastUpdate;
     }
 
     /**
@@ -61,11 +61,11 @@ interface IStaking20 {
      *  @param endTimestamp             Condition end timestamp.
      */
     struct StakingCondition {
-        uint256 timeUnit;
+        uint80 timeUnit;
+        uint80 startTimestamp;
+        uint80 endTimestamp;
         uint256 rewardRatioNumerator;
         uint256 rewardRatioDenominator;
-        uint256 startTimestamp;
-        uint256 endTimestamp;
     }
 
     /**
