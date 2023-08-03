@@ -15,7 +15,7 @@ import "./IClaimConditionMultiPhase.sol";
 
 interface IDrop1155 is IClaimConditionMultiPhase {
     /**
-     *  @param proof Prood of concerned wallet's inclusion in an allowlist.
+     *  @param proof Proof of concerned wallet's inclusion in an allowlist.
      *  @param quantityLimitPerWallet The total quantity of tokens the allowlisted wallet is eligible to claim over time.
      *  @param pricePerToken The price per token the allowlisted wallet must pay to claim tokens.
      *  @param currency The currency in which the allowlisted wallet must pay the price for claiming tokens.
