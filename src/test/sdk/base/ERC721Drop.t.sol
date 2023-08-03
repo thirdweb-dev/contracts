@@ -19,7 +19,7 @@ contract BaseERC721DropTest is BaseUtilTest {
         recipient = address(0x123);
 
         vm.prank(signer);
-        base = new ERC721Drop(NAME, SYMBOL, royaltyRecipient, royaltyBps, saleRecipient);
+        base = new ERC721Drop(signer, NAME, SYMBOL, royaltyRecipient, royaltyBps, saleRecipient);
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -2,7 +2,7 @@ import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 
 import { apiMap, chainIdApiKey, chainIdToName } from "./constants";
 
-////// To run this script: `npx ts-node scripts/deploy-new-flow/verify.ts` //////
+////// To run this script: `npx ts-node scripts/deploy-prebuilt-deterministic/verify.ts` //////
 const deployedContractName = "VoteERC20";
 
 async function main() {

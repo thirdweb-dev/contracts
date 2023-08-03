@@ -10,6 +10,7 @@ import "../extension/Multicall.sol";
 import "../extension/Ownable.sol";
 import "../extension/PrimarySale.sol";
 import "../extension/DropSinglePhase.sol";
+import "../extension/interface/IBurnableERC20.sol";
 
 import "../lib/CurrencyTransferLib.sol";
 
@@ -33,17 +34,18 @@ import "../lib/CurrencyTransferLib.sol";
  *
  */
 
-contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, PrimarySale, DropSinglePhase {
+contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, PrimarySale, DropSinglePhase, IBurnableERC20 {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         address _primarySaleRecipient
     ) ERC20Permit(_name, _symbol) {
-        _setupOwner(msg.sender);
+        _setupOwner(_defaultAdmin);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 
@@ -60,6 +62,22 @@ contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, Primary
     function burn(uint256 _amount) external virtual {
         require(balanceOf(msg.sender) >= _amount, "not enough balance");
         _burn(msg.sender, _amount);
+    }
+
+    /**
+     *  @notice          Lets an owner burn a given amount of an account's tokens.
+     *  @dev             `_account` should own the `_amount` of tokens.
+     *
+     *  @param _account  The account to burn tokens from.
+     *  @param _amount   The number of tokens to burn.
+     */
+    function burnFrom(address _account, uint256 _amount) external virtual override {
+        require(_canBurn(), "Not authorized to burn.");
+        require(balanceOf(_account) >= _amount, "not enough balance");
+        uint256 decreasedAllowance = allowance(_account, msg.sender) - _amount;
+        _approve(_account, msg.sender, 0);
+        _approve(_account, msg.sender, decreasedAllowance);
+        _burn(_account, _amount);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -111,6 +129,11 @@ contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, Primary
 
     /// @dev Returns whether tokens can be minted in the given execution context.
     function _canMint() internal view virtual returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether tokens can be burned in the given execution context.
+    function _canBurn() internal view virtual returns (bool) {
         return msg.sender == owner();
     }
 

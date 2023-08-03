@@ -1,6 +1,6 @@
 # Marketplace design document.
 
-This is a live document that explains what the [thirdweb](https://thirdweb.com/) `Marketplace` smart contract is, how it works and can be used, and why it is written the way it is. 
+This is a live document that explains what the [thirdweb](https://thirdweb.com/) `Marketplace` smart contract is, how it works and can be used, and why it is written the way it is.
 
 The document is written for technical and non-technical readers. To ask further questions about `Marketplace`, please join the [thirdweb discord](https://discord.gg/thirdweb) or create a [github issue](https://github.com/thirdweb-dev/contracts/issues).
 
@@ -38,7 +38,7 @@ To make an offer to a direct listing, a buyer specifies —
 
 When making an offer to a direct listing, the offer amount is not escrowed in the Marketplace. Instead, making an offer requires the buyer to approve Marketplace to transfer the appropriate amount of currency to let Marketplace transfer the offer amount from the buyer to the lister, in case the lister accepts the buyer's offer.
 
-To buy NFTs from a direct listing buy paying the listing's specified price, a buyer specifes -
+To buy NFTs from a direct listing buy paying the listing's specified price, a buyer specifies -
 
 | Parameter | Type | Description |
 | --- | --- | --- |
@@ -48,7 +48,7 @@ To buy NFTs from a direct listing buy paying the listing's specified price, a bu
 | `currency` | address | The currency in which to pay for the NFTs being bought. |
 | `totalPrice` | uint256 | The total price to pay for the NFTs being bought. |
 
-A sale will fail to execute if either (1) the buyer does not own or has not approved Marketplace to transfer the appropriate amount of currency (or hasn't sent the appropriate amount of native tokens), or (2) the lister does not own or has removed Markeplace's approval to transfer the tokens listed for sale.
+A sale will fail to execute if either (1) the buyer does not own or has not approved Marketplace to transfer the appropriate amount of currency (or hasn't sent the appropriate amount of native tokens), or (2) the lister does not own or has removed Marketplace's approval to transfer the tokens listed for sale.
 
 A sale is executed when either a buyer pays the fixed price, or the seller accepts an offer made to the listing.
 
@@ -78,11 +78,11 @@ Every auction listing obeys two 'buffers' to make it a fair auction:
 
 These buffer values are contract-wide, which means every auction conducted in the Marketplace obeys, at any given moment, the same buffers. These buffers can be configured by contract admins i.e. accounts with the `DEFAULT_ADMIN_ROLE` role.
 
-The NFTs to list in an auction *do* leave the wallet of the lister, and are escrowed in the market until the closing of the auction. Whenever a new winning bid is made by a buyer, the buyer deposits this bid amount into the market; this bid amount is escrowed in the market until a new winning bid is made. The previous winning bid amount is automatically refunded to the respective bidder. 
+The NFTs to list in an auction *do* leave the wallet of the lister, and are escrowed in the market until the closing of the auction. Whenever a new winning bid is made by a buyer, the buyer deposits this bid amount into the market; this bid amount is escrowed in the market until a new winning bid is made. The previous winning bid amount is automatically refunded to the respective bidder.
 
 **Note:** As a result, the new winning bidder pays for the gas used in refunding the previous winning bidder. This trade-off is made for better UX for bidders — a bidder that has been outbid is automatically refunded, and does not need to pull out their deposited bid manually. This reduces bidding to a single action, instead of two actions — bidding, and pulling out the bid on being outbid.
 
-If the lister sets a `buyoutPricePerToken`, the marketplace expects the `buyoutPricePerToken` to be greater than or equal to the `rerservePricePerToken` of the auction.
+If the lister sets a `buyoutPricePerToken`, the marketplace expects the `buyoutPricePerToken` to be greater than or equal to the `reservePricePerToken` of the auction.
 
 Once the auction window ends, the seller collects the highest bid, and the buyer collects the auctioned NFTs.
 
@@ -116,16 +116,16 @@ To thirdweb customers, the `Marketplace` can be set up like any of the other thi
 To the end users of thirdweb customers, the experience of using the marketplace will feel familiar to popular marketplace platforms like OpenSea, Zora, etc. The biggest difference in user experience will be that performing any action on the marketplace requires gas fees.
 
 - Thirdweb's customers
-    - Deploy the marketplace contract like any other thirdweb contract.
-    - Can set a % 'platform fee'. This % is collected on every sale — when a buyer buys tokens from a direct listing, and when a seller collects the highest bid on auction closing. This platform fee is distributed to the platform fee recipient (set by a contract admin).
-    - Can set auction buffers. These auction buffers apply to all auctions being conducted in the market.
-- End users of thirdweb customers
-    - Can list NFTs for sale at a fixed price.
-    - Can edit an existing listing's parameters, e.g. the currency accepted. An auction's parameters cannot be edited once it has started.
-    - Can make offers to NFTs listed for a fixed price.
-    - Can auction NFTs.
-    - Can make bids to auctions.
-    - Must pay gas fees to perform any actions, including the actions just listed.
+  - Deploy the marketplace contract like any other thirdweb contract.
+  - Can set a % 'platform fee'. This % is collected on every sale — when a buyer buys tokens from a direct listing, and when a seller collects the highest bid on auction closing. This platform fee is distributed to the platform fee recipient (set by a contract admin).
+  - Can set auction buffers. These auction buffers apply to all auctions being conducted in the market.
+  - End users of thirdweb customers
+  - Can list NFTs for sale at a fixed price.
+  - Can edit an existing listing's parameters, e.g. the currency accepted. An auction's parameters cannot be edited once it has started.
+  - Can make offers to NFTs listed for a fixed price.
+  - Can auction NFTs.
+  - Can make bids to auctions.
+  - Must pay gas fees to perform any actions, including the actions just listed.
 
 ## Technical details
 
@@ -160,7 +160,7 @@ We use common functions and data structures wherever an (1) action is common to 
 **Example**: Common action and data handled.
 
 - Action: creating a listing | Data: `ListingParameters`
-  
+
 ```solidity
 struct ListingParameters {
     address assetContract;
@@ -183,9 +183,9 @@ An auction has the concept of formally being closed whereas a direct listing doe
 
 ### EIPs implemented / supported
 
-To be able to escrow NFTs in the case of auctions, Marketplace implements the receiver interfaces for [ERC1155](https://eips.ethereum.org/EIPS/eip-1155) and [ERC721](https://eips.ethereum.org/EIPS/eip-721) tokens. 
+To be able to escrow NFTs in the case of auctions, Marketplace implements the receiver interfaces for [ERC1155](https://eips.ethereum.org/EIPS/eip-1155) and [ERC721](https://eips.ethereum.org/EIPS/eip-721) tokens.
 
-To enable meta-transactions (gasless), Marketplace implements [ERC2771](https://eips.ethereum.org/EIPS/eip-2771). 
+To enable meta-transactions (gasless), Marketplace implements [ERC2771](https://eips.ethereum.org/EIPS/eip-2771).
 
 Marketplace also honors [ERC2981](https://eips.ethereum.org/EIPS/eip-2981) for the distribution of royalties on direct and auction listings.
 
@@ -200,7 +200,7 @@ The `Marketplace` contract supports both ERC20 currencies, and a chain's native 
 
 💡 **Note**: The only exception is offers to direct listings — these can only be made with ERC20 tokens, since Marketplace needs to transfer the offer amount from the buyer to the lister, in case the lister accepts the buyer's offer. This cannot be done with native tokens without escrowing the requisite amount of currency.
 
-The contract wraps all native tokens deposited into it as the canonical ERC20 wrapped version of the native token (e.g. WETH for ether). The contract unwraps the wrapped native token when transferring native tokens to a given address. 
+The contract wraps all native tokens deposited into it as the canonical ERC20 wrapped version of the native token (e.g. WETH for ether). The contract unwraps the wrapped native token when transferring native tokens to a given address.
 
 If the contract fails to transfer out native tokens, it wraps them back to wrapped native tokens, and transfers the wrapped native tokens to the concerned address. The contract may fail to transfer out native tokens to an address, if the address represents a smart contract that cannot accept native tokens transferred to it directly.
 
@@ -208,7 +208,7 @@ If the contract fails to transfer out native tokens, it wraps them back to wrapp
 
 **Two contracts instead of one:**
 
-The main alternative design considered for the `Marketplace` was to split the smart contract into two smart contracts, where each handles (1) only direct listings + offers, or (2) only auction listings + bids. 
+The main alternative design considered for the `Marketplace` was to split the smart contract into two smart contracts, where each handles (1) only direct listings + offers, or (2) only auction listings + bids.
 
 Such a design gives us two 'lean' contracts instead of one large one, and the cost for deploying just one of these two contracts is less than deploying the single, large `Marketplace` contract. Having two separate contracts positions the thirdweb system to be more modular, where a thirdweb customer can only deploy the smart contract that gives them the specific functionality they want.
 

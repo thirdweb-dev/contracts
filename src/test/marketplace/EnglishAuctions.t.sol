@@ -6,9 +6,12 @@ import "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
 import { PluginMap, IPluginMap } from "contracts/extension/plugin/PluginMap.sol";
-import { MarketplaceV3 } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
+import { RoyaltyPaymentsLogic } from "contracts/extension/plugin/RoyaltyPayments.sol";
+import { MarketplaceV3, IPlatformFee } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
 import { EnglishAuctionsLogic } from "contracts/marketplace/english-auctions/EnglishAuctionsLogic.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
+import { ERC721Base } from "contracts/base/ERC721Base.sol";
+import { MockRoyaltyEngineV1 } from "../mocks/MockRoyaltyEngineV1.sol";
 
 import { IEnglishAuctions } from "contracts/marketplace/IMarketplace.sol";
 
@@ -103,7 +106,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 
@@ -145,6 +148,304 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     function test_state_initial() public {
         uint256 totoalAuctions = EnglishAuctionsLogic(marketplace).totalAuctions();
         assertEq(totoalAuctions, 0);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                Royalty Tests (incl Royalty Engine / Registry)
+    //////////////////////////////////////////////////////////////*/
+
+    function _setupRoyaltyEngine()
+        private
+        returns (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory mockRecipients,
+            uint256[] memory mockAmounts
+        )
+    {
+        mockRecipients = new address payable[](2);
+        mockAmounts = new uint256[](2);
+
+        mockRecipients[0] = payable(address(0x12345));
+        mockRecipients[1] = payable(address(0x56789));
+
+        mockAmounts[0] = 10;
+        mockAmounts[1] = 15;
+
+        royaltyEngine = new MockRoyaltyEngineV1(mockRecipients, mockAmounts);
+    }
+
+    function _setupAuctionForRoyaltyTests(address erc721TokenAddress) private returns (uint256 auctionId) {
+        // Sample auction parameters.
+        address assetContract = erc721TokenAddress;
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        IERC721(erc721TokenAddress).setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
+    }
+
+    function _buyoutAuctionForRoyaltyTests(uint256 auctionId) private returns (uint256 buyoutAmount) {
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
+
+        buyoutAmount = existingAuction.buyoutBidAmount;
+
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, buyoutAmount);
+
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.approve(marketplace, buyoutAmount);
+
+        // Place buyout bid in auction.
+        vm.warp(existingAuction.startTimestamp);
+        vm.prank(buyer);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, buyoutAmount);
+    }
+
+    function test_royaltyEngine_tokenWithCustomRoyalties() public {
+        (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory customRoyaltyRecipients,
+            uint256[] memory customRoyaltyAmounts
+        ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // 1. ========= Create auction =========
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+        uint256 auctionId = _setupAuctionForRoyaltyTests(address(erc721));
+
+        // 2. ========= Bid in auction =========
+
+        uint256 buyoutAmount = _buyoutAuctionForRoyaltyTests(auctionId);
+
+        // 3. ========= Seller collects auction payout
+
+        vm.prank(seller);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
+
+        // 4. ======== Check balances after royalty payments ========
+
+        {
+            // Royalty recipients receive correct amounts
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
+
+            // Seller gets total price minus royalty amounts
+            assertBalERC20Eq(address(erc20), seller, buyoutAmount - customRoyaltyAmounts[0] - customRoyaltyAmounts[1]);
+        }
+    }
+
+    function test_royaltyEngine_tokenWithERC2981() public {
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // create token with ERC2981
+        address royaltyRecipient = address(0x12345);
+        uint128 royaltyBps = 10;
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        vm.prank(address(0x12345));
+        nft2981.mintTo(seller, "");
+
+        vm.prank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(nft2981));
+
+        // 1. ========= Create auction =========
+
+        uint256 auctionId = _setupAuctionForRoyaltyTests(address(nft2981));
+
+        // 2. ========= Bid in auction =========
+
+        uint256 buyoutAmount = _buyoutAuctionForRoyaltyTests(auctionId);
+
+        // 3. ========= Seller collects auction payout
+
+        vm.prank(seller);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
+
+        // 4. ======== Check balances after royalty payments ========
+
+        {
+            uint256 royaltyAmount = (royaltyBps * buyoutAmount) / 10_000;
+            // Royalty recipient receives correct amounts
+            assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
+
+            // Seller gets total price minus royalty amount
+            assertBalERC20Eq(address(erc20), seller, buyoutAmount - royaltyAmount);
+        }
+    }
+
+    function test_noRoyaltyEngine_defaultERC2981Token() public {
+        // create token with ERC2981
+        address royaltyRecipient = address(0x12345);
+        uint128 royaltyBps = 10;
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        vm.prank(address(0x12345));
+        nft2981.mintTo(seller, "");
+
+        vm.prank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(nft2981));
+
+        // 1. ========= Create auction =========
+
+        uint256 auctionId = _setupAuctionForRoyaltyTests(address(nft2981));
+
+        // 2. ========= Bid in auction =========
+
+        uint256 buyoutAmount = _buyoutAuctionForRoyaltyTests(auctionId);
+
+        // 3. ========= Seller collects auction payout
+
+        vm.prank(seller);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
+
+        // 4. ======== Check balances after royalty payments ========
+
+        {
+            uint256 royaltyAmount = (royaltyBps * buyoutAmount) / 10_000;
+            // Royalty recipient receives correct amounts
+            assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
+
+            // Seller gets total price minus royalty amount
+            assertBalERC20Eq(address(erc20), seller, buyoutAmount - royaltyAmount);
+        }
+    }
+
+    function test_royaltyEngine_correctlyDistributeAllFees() public {
+        (
+            MockRoyaltyEngineV1 royaltyEngine,
+            address payable[] memory customRoyaltyRecipients,
+            uint256[] memory customRoyaltyAmounts
+        ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // Set platform fee on marketplace
+        address platformFeeRecipient = marketplaceDeployer;
+        uint128 platformFeeBps = 5;
+        vm.prank(marketplaceDeployer);
+        IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
+
+        // 1. ========= Create auction =========
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+        uint256 auctionId = _setupAuctionForRoyaltyTests(address(erc721));
+
+        // 2. ========= Bid in auction =========
+
+        uint256 buyoutAmount = _buyoutAuctionForRoyaltyTests(auctionId);
+
+        // 3. ========= Seller collects auction payout
+
+        vm.prank(seller);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
+
+        // 4. ======== Check balances after royalty payments ========
+
+        {
+            // Royalty recipients receive correct amounts
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
+            assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
+
+            // Platform fee recipient
+            uint256 platformFeeAmount = (platformFeeBps * buyoutAmount) / 10_000;
+            assertBalERC20Eq(address(erc20), platformFeeRecipient, platformFeeAmount);
+
+            // Seller gets total price minus royalty amounts
+            assertBalERC20Eq(
+                address(erc20),
+                seller,
+                buyoutAmount - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - platformFeeAmount
+            );
+        }
+    }
+
+    function test_revert_feesExceedTotalPrice() public {
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
+
+        // Add RoyaltyEngine to marketplace
+        vm.prank(marketplaceDeployer);
+        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
+
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+
+        // Set platform fee on marketplace
+        address platformFeeRecipient = marketplaceDeployer;
+        uint128 platformFeeBps = 10_000; // equal to max bps 10_000 or 100%
+        vm.prank(marketplaceDeployer);
+        IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
+
+        // 1. ========= Create auction =========
+
+        _setupERC721BalanceForSeller(seller, 1);
+        uint256 auctionId = _setupAuctionForRoyaltyTests(address(erc721));
+
+        // 2. ========= Bid in auction =========
+
+        IEnglishAuctions.Auction memory auction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
+
+        uint256 buyoutAmount = auction.buyoutBidAmount;
+
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, buyoutAmount);
+
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, buyoutAmount);
+
+        // Buy tokens from auction.
+        vm.warp(auction.startTimestamp);
+
+        vm.prank(buyer);
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, buyoutAmount);
+
+        // 3. ========= Seller collects auction payout
+
+        vm.expectRevert("fees exceed the price");
+        vm.prank(seller);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -1705,7 +2006,7 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
         assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 
@@ -1904,7 +2205,7 @@ contract BreitwieserTheBidder is BaseTest {
         assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 
@@ -1944,7 +2245,6 @@ contract BreitwieserTheBidder is BaseTest {
 
         // Condition: multiple copies in circulation and attacker has at least 1.
         uint256 tokenId = 999;
-        uint256 quantity = 2;
         // Victim.
         erc1155.mint(seller, tokenId, 1);
         erc1155.mint(attacker, tokenId, 1);
@@ -1957,7 +2257,7 @@ contract BreitwieserTheBidder is BaseTest {
             address currency = address(erc20);
             uint256 minimumBidAmount = 1 ether;
             uint256 buyoutBidAmount = 10 ether;
-            uint256 quantity = 1;
+            uint256 qty = 1;
             uint64 timeBufferInSeconds = 10 seconds;
             uint64 bidBufferBps = 1000;
             uint64 startTimestamp = 0;
@@ -1965,7 +2265,7 @@ contract BreitwieserTheBidder is BaseTest {
             auctionParams1 = IEnglishAuctions.AuctionParameters(
                 assetContract,
                 tokenId,
-                quantity,
+                qty,
                 currency,
                 minimumBidAmount,
                 buyoutBidAmount,
@@ -2133,7 +2433,7 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
         assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
 
         // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map));
+        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
 
         vm.stopPrank();
 
