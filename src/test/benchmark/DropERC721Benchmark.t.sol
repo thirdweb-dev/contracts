@@ -109,8 +109,6 @@ contract DropERC721BenchmarkTest is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
-
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](5);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
@@ -152,8 +150,6 @@ contract DropERC721BenchmarkTest is BaseTest {
         string memory baseURI = "ipfs://";
         bytes memory encryptedBaseURI = "encryptedBaseURI://";
         bytes32 provenanceHash = bytes32("whatever");
-
-        uint256 nextTokenIdToMintBefore = drop.nextTokenIdToMint();
 
         vm.prank(deployer);
         vm.resumeGasMetering();

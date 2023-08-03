@@ -179,7 +179,6 @@ contract PackBenchmarkTest is BaseTest {
 
     function test_benchmark_pack_createPack() public {
         vm.pauseGasMetering();
-        uint256 packId = pack.nextTokenIdToMint();
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
@@ -214,7 +213,7 @@ contract PackBenchmarkTest is BaseTest {
         address recipient = address(1);
 
         vm.prank(address(tokenOwner));
-        (, uint256 totalSupply) = pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
+        pack.createPack(packContents, numOfRewardUnits, packUri, 0, 2, recipient);
 
         vm.prank(recipient, recipient);
         vm.resumeGasMetering();

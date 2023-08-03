@@ -69,14 +69,17 @@ contract ManagedAccountTest is BaseTest {
     address private sender = 0x56C860085A6A0AEd5137b17a185160865bf6a75A;
     address payable private beneficiary = payable(address(0x45654));
 
+    bytes32 private uidCache = bytes32("random uid");
+
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _setupRoleRequest(address _signer, IAccountPermissions.RoleAction _action)
+    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
         internal
-        returns (IAccountPermissions.RoleRequest memory request, bytes memory signature)
+        view
+        returns (bytes memory signature)
     {
-        bytes32 typehashRoleRequest = keccak256(
-            "RoleRequest(bytes32 role,address target,uint8 action,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+        bytes32 typehashSignerPermissionRequest = keccak256(
+            "SignerPermissionRequest(address signer,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
         bytes32 nameHash = keccak256(bytes("Account"));
         bytes32 versionHash = keccak256(bytes("1"));
@@ -85,24 +88,16 @@ contract ManagedAccountTest is BaseTest {
         );
         bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
 
-        // Create RoleRequest
-        request = IAccountPermissions.RoleRequest({
-            role: keccak256("SIGNER_ROLE"),
-            target: _signer,
-            action: _action,
-            validityStartTimestamp: 0,
-            validityEndTimestamp: type(uint128).max,
-            uid: bytes32("random uid")
-        });
-
         bytes memory encodedRequest = abi.encode(
-            typehashRoleRequest,
-            request.role,
-            request.target,
-            request.action,
-            request.validityStartTimestamp,
-            request.validityEndTimestamp,
-            request.uid
+            typehashSignerPermissionRequest,
+            _req.signer,
+            keccak256(abi.encodePacked(_req.approvedTargets)),
+            _req.nativeTokenLimitPerTransaction,
+            _req.permissionStartTimestamp,
+            _req.permissionEndTimestamp,
+            _req.reqValidityStartTimestamp,
+            _req.reqValidityEndTimestamp,
+            _req.uid
         );
         bytes32 structHash = keccak256(encodedRequest);
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
@@ -294,22 +289,6 @@ contract ManagedAccountTest is BaseTest {
         );
 
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
-
-        address account = accountFactory.getAddress(accountAdmin, bytes(""));
-
-        address[] memory approvedTargets = new address[](1);
-        approvedTargets[0] = address(numberContract);
-
-        vm.prank(accountAdmin);
-        Account(payable(account)).setRoleRestrictions(
-            IAccountPermissions.RoleRestrictions(
-                keccak256("SIGNER_ROLE"),
-                approvedTargets,
-                1 ether,
-                0,
-                type(uint128).max
-            )
-        );
     }
 
     /// @dev Perform a state changing transaction directly via account.
@@ -406,12 +385,23 @@ contract ManagedAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
-        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+        address[] memory approvedTargets = new address[](1);
+        approvedTargets[0] = address(numberContract);
+
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
-            IAccountPermissions.RoleAction.GRANT
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
         );
+
         vm.prank(accountAdmin);
-        Account(payable(account)).changeRole(req, sig);
+        bytes memory sig = _signSignerPermissionRequest(permissionsReq);
+        Account(payable(account)).setPermissionsForSigner(permissionsReq, sig);
 
         assertEq(numberContract.num(), 0);
 
@@ -465,12 +455,23 @@ contract ManagedAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
-        vm.prank(accountAdmin);
-        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+        address[] memory approvedTargets = new address[](1);
+        approvedTargets[0] = address(numberContract);
+
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
-            IAccountPermissions.RoleAction.GRANT
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
         );
-        Account(payable(account)).changeRole(req, sig);
+
+        vm.prank(accountAdmin);
+        bytes memory sig = _signSignerPermissionRequest(permissionsReq);
+        Account(payable(account)).setPermissionsForSigner(permissionsReq, sig);
 
         UserOperation[] memory userOp = _setupUserOpExecuteBatch(
             accountSignerPKey,
@@ -491,12 +492,23 @@ contract ManagedAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
-        (IAccountPermissions.RoleRequest memory req, bytes memory sig) = _setupRoleRequest(
+        address[] memory approvedTargets = new address[](1);
+        approvedTargets[0] = address(numberContract);
+
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
-            IAccountPermissions.RoleAction.GRANT
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
         );
+
         vm.prank(accountAdmin);
-        Account(payable(account)).changeRole(req, sig);
+        bytes memory sig = _signSignerPermissionRequest(permissionsReq);
+        Account(payable(account)).setPermissionsForSigner(permissionsReq, sig);
 
         assertEq(numberContract.num(), 0);
 
@@ -518,9 +530,13 @@ contract ManagedAccountTest is BaseTest {
         assertEq(address(account).balance, 0);
 
         vm.prank(accountAdmin);
-        payable(account).call{ value: 1000 }("");
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory ret) = payable(account).call{ value: 1000 }("");
 
         assertEq(address(account).balance, 1000);
+
+        // Silence warning: Return value of low-level calls not used.
+        (success, ret) = (success, ret);
     }
 
     /// @dev Transfer native tokens out of an account.
@@ -531,8 +547,12 @@ contract ManagedAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         vm.prank(accountAdmin);
-        payable(account).call{ value: value }("");
+        // solhint-disable-next-line avoid-low-level-calls
+        (bool success, bytes memory ret) = payable(account).call{ value: value }("");
         assertEq(address(account).balance, value);
+
+        // Silence warning: Return value of low-level calls not used.
+        (success, ret) = (success, ret);
 
         address recipient = address(0x3456);
 

@@ -10,23 +10,6 @@
 
 ## Methods
 
-### changeRole
-
-```solidity
-function changeRole(IAccountPermissions.RoleRequest req, bytes signature) external nonpayable
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| req | IAccountPermissions.RoleRequest | undefined |
-| signature | bytes | undefined |
-
 ### factory
 
 ```solidity
@@ -44,13 +27,64 @@ function factory() external view returns (address)
 |---|---|---|
 | _0 | address | undefined |
 
-### getAllRoleMembers
+### getAllActiveSigners
 
 ```solidity
-function getAllRoleMembers(bytes32 role) external view returns (address[] members)
+function getAllActiveSigners() external view returns (struct IAccountPermissions.SignerPermissions[] signers)
 ```
 
-Returns all accounts that have a role.
+Returns all signers with active permissions to use the account.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| signers | IAccountPermissions.SignerPermissions[] | undefined |
+
+### getAllAdmins
+
+```solidity
+function getAllAdmins() external view returns (address[] admins)
+```
+
+Returns all admins of the account.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| admins | address[] | undefined |
+
+### getAllSigners
+
+```solidity
+function getAllSigners() external view returns (struct IAccountPermissions.SignerPermissions[] signers)
+```
+
+Returns all active and inactive signers of the account.
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| signers | IAccountPermissions.SignerPermissions[] | undefined |
+
+### getPermissionsForSigner
+
+```solidity
+function getPermissionsForSigner(address signer) external view returns (struct IAccountPermissions.SignerPermissions permissions)
+```
+
+Returns the restrictions under which a signer can use the smart wallet.
 
 
 
@@ -58,21 +92,21 @@ Returns all accounts that have a role.
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined |
+| signer | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| members | address[] | undefined |
+| permissions | IAccountPermissions.SignerPermissions | undefined |
 
-### getRoleRestrictions
+### isActiveSigner
 
 ```solidity
-function getRoleRestrictions(bytes32 role) external view returns (struct IAccountPermissions.RoleRestrictions restrictions)
+function isActiveSigner(address signer) external view returns (bool)
 ```
 
-Returns the role restrictions for a given role.
+Returns whether the given account is an active signer on the account.
 
 
 
@@ -80,40 +114,18 @@ Returns the role restrictions for a given role.
 
 | Name | Type | Description |
 |---|---|---|
-| role | bytes32 | undefined |
+| signer | address | undefined |
 
 #### Returns
 
 | Name | Type | Description |
 |---|---|---|
-| restrictions | IAccountPermissions.RoleRestrictions | undefined |
-
-### getRoleRestrictionsForAccount
-
-```solidity
-function getRoleRestrictionsForAccount(address account) external view returns (struct IAccountPermissions.RoleRestrictions role)
-```
-
-Returns the role held by a given account along with its restrictions.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| role | IAccountPermissions.RoleRestrictions | undefined |
+| _0 | bool | undefined |
 
 ### isAdmin
 
 ```solidity
-function isAdmin(address account) external view returns (bool)
+function isAdmin(address signer) external view returns (bool)
 ```
 
 Returns whether the given account is an admin.
@@ -124,7 +136,7 @@ Returns whether the given account is an admin.
 
 | Name | Type | Description |
 |---|---|---|
-| account | address | undefined |
+| signer | address | undefined |
 
 #### Returns
 
@@ -171,10 +183,10 @@ Adds / removes an account as an admin.
 | account | address | undefined |
 | isAdmin | bool | undefined |
 
-### setRoleRestrictions
+### setPermissionsForSigner
 
 ```solidity
-function setRoleRestrictions(IAccountPermissions.RoleRestrictions role) external nonpayable
+function setPermissionsForSigner(IAccountPermissions.SignerPermissionRequest req, bytes signature) external nonpayable
 ```
 
 
@@ -185,7 +197,8 @@ function setRoleRestrictions(IAccountPermissions.RoleRestrictions role) external
 
 | Name | Type | Description |
 |---|---|---|
-| role | IAccountPermissions.RoleRestrictions | undefined |
+| req | IAccountPermissions.SignerPermissionRequest | undefined |
+| signature | bytes | undefined |
 
 ### validateUserOp
 
@@ -211,10 +224,10 @@ function validateUserOp(UserOperation userOp, bytes32 userOpHash, uint256 missin
 |---|---|---|
 | validationData | uint256 | undefined |
 
-### verifyRoleRequest
+### verifySignerPermissionRequest
 
 ```solidity
-function verifyRoleRequest(IAccountPermissions.RoleRequest req, bytes signature) external view returns (bool success, address signer)
+function verifySignerPermissionRequest(IAccountPermissions.SignerPermissionRequest req, bytes signature) external view returns (bool success, address signer)
 ```
 
 
@@ -225,7 +238,7 @@ function verifyRoleRequest(IAccountPermissions.RoleRequest req, bytes signature)
 
 | Name | Type | Description |
 |---|---|---|
-| req | IAccountPermissions.RoleRequest | undefined |
+| req | IAccountPermissions.SignerPermissionRequest | undefined |
 | signature | bytes | undefined |
 
 #### Returns
@@ -242,7 +255,7 @@ function verifyRoleRequest(IAccountPermissions.RoleRequest req, bytes signature)
 ### AdminUpdated
 
 ```solidity
-event AdminUpdated(address indexed account, bool isAdmin)
+event AdminUpdated(address indexed signer, bool isAdmin)
 ```
 
 Emitted when an admin is set or removed.
@@ -253,16 +266,16 @@ Emitted when an admin is set or removed.
 
 | Name | Type | Description |
 |---|---|---|
-| account `indexed` | address | undefined |
+| signer `indexed` | address | undefined |
 | isAdmin  | bool | undefined |
 
-### RoleAssignment
+### SignerPermissionsUpdated
 
 ```solidity
-event RoleAssignment(bytes32 indexed role, address indexed account, address indexed signer, IAccountPermissions.RoleRequest request)
+event SignerPermissionsUpdated(address indexed authorizingSigner, address indexed targetSigner, IAccountPermissions.SignerPermissionRequest permissions)
 ```
 
-Emitted when a role is granted / revoked by an authorized party.
+Emitted when permissions for a signer are updated.
 
 
 
@@ -270,27 +283,9 @@ Emitted when a role is granted / revoked by an authorized party.
 
 | Name | Type | Description |
 |---|---|---|
-| role `indexed` | bytes32 | undefined |
-| account `indexed` | address | undefined |
-| signer `indexed` | address | undefined |
-| request  | IAccountPermissions.RoleRequest | undefined |
-
-### RoleUpdated
-
-```solidity
-event RoleUpdated(bytes32 indexed role, IAccountPermissions.RoleRestrictions restrictions)
-```
-
-Emitted when the restrictions for a given role are updated.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| restrictions  | IAccountPermissions.RoleRestrictions | undefined |
+| authorizingSigner `indexed` | address | undefined |
+| targetSigner `indexed` | address | undefined |
+| permissions  | IAccountPermissions.SignerPermissionRequest | undefined |
 
 
 

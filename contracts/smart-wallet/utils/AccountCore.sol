@@ -16,7 +16,7 @@ import "../../dynamic-contracts/extension/AccountPermissions.sol";
 
 // Utils
 import "./BaseAccountFactory.sol";
-import "../non-upgradeable/Account.sol";
+import { Account } from "../non-upgradeable/Account.sol";
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 
 import "../interfaces/IAccountCore.sol";
@@ -78,47 +78,59 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
 
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
     function isValidSigner(address _signer, UserOperation calldata _userOp) public view virtual returns (bool) {
+        // We use the underlying storage instead of high level view functions to save gas.
+        // We use the underlying storage instead of high level view functions to save gas.
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
 
         // First, check if the signer is an admin.
         if (data.isAdmin[_signer]) {
             return true;
-        } else {
-            // If not an admin, check restrictions for the role held by the signer.
-            bytes32 role = data.roleOfAccount[_signer];
-            RoleStatic memory restrictions = data.roleRestrictions[role];
-
-            // Check if the role is active. If the signer has no role, this condition will revert because both start and end timestamps are `0`.
-            require(
-                restrictions.startTimestamp <= block.timestamp && block.timestamp < restrictions.endTimestamp,
-                "Account: role not active."
-            );
-
-            // Extract the function signature from the userOp calldata and check whether the signer is attempting to call `execute` or `executeBatch`.
-            bytes4 sig = getFunctionSignature(_userOp.callData);
-
-            if (sig == Account.execute.selector) {
-                // Extract the `target` and `value` arguments from the calldata for `execute`.
-                (address target, uint256 value) = decodeExecuteCalldata(_userOp.callData);
-
-                // Check if the value is within the allowed range and if the target is approved.
-                require(restrictions.maxValuePerTransaction >= value, "Account: value too high.");
-                require(data.approvedTargets[role].contains(target), "Account: target not approved.");
-            } else if (sig == Account.executeBatch.selector) {
-                // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
-                (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
-
-                // For each target+value pair, check if the value is within the allowed range and if the target is approved.
-                for (uint256 i = 0; i < targets.length; i++) {
-                    require(data.approvedTargets[role].contains(targets[i]), "Account: target not approved.");
-                    require(restrictions.maxValuePerTransaction >= values[i], "Account: value too high.");
-                }
-            } else {
-                revert("Account: calling invalid fn.");
-            }
-
-            return true;
         }
+
+        SignerPermissionsStatic memory permissions = data.signerPermissions[_signer];
+
+        // If not an admin, check if the signer is active.
+        if (
+            permissions.startTimestamp > block.timestamp ||
+            block.timestamp >= permissions.endTimestamp ||
+            data.approvedTargets[_signer].length() == 0
+        ) {
+            // Account: no active permissions.
+            return false;
+        }
+
+        // Extract the function signature from the userOp calldata and check whether the signer is attempting to call `execute` or `executeBatch`.
+        bytes4 sig = getFunctionSignature(_userOp.callData);
+
+        if (sig == Account.execute.selector) {
+            // Extract the `target` and `value` arguments from the calldata for `execute`.
+            (address target, uint256 value) = decodeExecuteCalldata(_userOp.callData);
+
+            // Check if the value is within the allowed range and if the target is approved.
+            if (permissions.nativeTokenLimitPerTransaction < value || !data.approvedTargets[_signer].contains(target)) {
+                // Account: value too high OR Account: target not approved.
+                return false;
+            }
+        } else if (sig == Account.executeBatch.selector) {
+            // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
+            (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
+
+            // For each target+value pair, check if the value is within the allowed range and if the target is approved.
+            for (uint256 i = 0; i < targets.length; i++) {
+                if (
+                    permissions.nativeTokenLimitPerTransaction < values[i] ||
+                    !data.approvedTargets[_signer].contains(targets[i])
+                ) {
+                    // Account: value too high OR Account: target not approved.
+                    return false;
+                }
+            }
+        } else {
+            // Account: calling invalid fn.
+            return false;
+        }
+
+        return true;
     }
 
     /// @notice See EIP-1271
@@ -131,14 +143,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
     {
         address signer = _hash.recover(_signature);
 
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-
-        // Get the role held by the recovered signer.
-        bytes32 role = data.roleOfAccount[signer];
-        RoleStatic memory restrictions = data.roleRestrictions[role];
-
-        // Check if the role is active. If the signer has no role, this condition will fail because both start and end timestamps are `0`.
-        if (restrictions.startTimestamp <= block.timestamp && restrictions.endTimestamp < block.timestamp) {
+        if (isAdmin(signer) || isActiveSigner(signer)) {
             magicValue = MAGICVALUE;
         }
     }
@@ -217,13 +222,9 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
     }
 
     /// @notice Runs after every `changeRole` run.
-    function _afterChangeRole(RoleRequest calldata _req) internal virtual override {
+    function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {
         if (factory.code.length > 0) {
-            if (_req.action == RoleAction.GRANT) {
-                BaseAccountFactory(factory).onSignerAdded(_req.target);
-            } else if (_req.action == RoleAction.REVOKE) {
-                BaseAccountFactory(factory).onSignerRemoved(_req.target);
-            }
+            BaseAccountFactory(factory).onSignerAdded(_req.signer);
         }
     }
 }

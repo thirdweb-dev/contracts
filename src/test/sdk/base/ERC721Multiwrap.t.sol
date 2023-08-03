@@ -21,7 +21,14 @@ contract BaseERC721MultiwrapTest is BaseUtilTest {
         super.setUp();
 
         vm.prank(deployer);
-        base = new ERC721Multiwrap(NAME, SYMBOL, royaltyRecipient, royaltyBps, CurrencyTransferLib.NATIVE_TOKEN);
+        base = new ERC721Multiwrap(
+            deployer,
+            NAME,
+            SYMBOL,
+            royaltyRecipient,
+            royaltyBps,
+            CurrencyTransferLib.NATIVE_TOKEN
+        );
 
         tokenOwner = getWallet();
         uriForWrappedToken = "ipfs://baseURI/";
