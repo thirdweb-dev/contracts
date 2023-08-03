@@ -17,17 +17,14 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
     ///@dev Address of ERC721 NFT contract -- staked tokens belong to this contract.
     address public stakingToken;
 
-    ///@dev List of token-ids ever staked.
-    uint256[] public indexedTokens;
-
-    /// @dev List of accounts that have staked their NFTs.
-    address[] public stakersArray;
-
     /// @dev Flag to check direct transfers of staking tokens.
     uint8 internal isStaking = 1;
 
     ///@dev Next staking condition Id. Tracks number of conditon updates so far.
-    uint256 private nextConditionId;
+    uint64 private nextConditionId;
+
+    ///@dev List of token-ids ever staked.
+    uint256[] public indexedTokens;
 
     ///@dev Mapping from token-id to whether it is indexed or not.
     mapping(uint256 => bool) public isIndexed;
@@ -177,7 +174,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
 
     /// @dev Staking logic. Override to add custom logic.
     function _stake(uint256[] calldata _tokenIds) internal virtual {
-        uint256 len = _tokenIds.length;
+        uint64 len = uint64(_tokenIds.length);
         require(len != 0, "Staking 0 tokens");
 
         address _stakingToken = stakingToken;
@@ -185,18 +182,10 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
         if (stakers[_stakeMsgSender()].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(_stakeMsgSender());
         } else {
-            stakersArray.push(_stakeMsgSender());
-            stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+            stakers[_stakeMsgSender()].timeOfLastUpdate = uint128(block.timestamp);
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
         for (uint256 i = 0; i < len; ++i) {
-            require(
-                IERC721(_stakingToken).ownerOf(_tokenIds[i]) == _stakeMsgSender() &&
-                    (IERC721(_stakingToken).getApproved(_tokenIds[i]) == address(this) ||
-                        IERC721(_stakingToken).isApprovedForAll(_stakeMsgSender(), address(this))),
-                "Not owned or approved"
-            );
-
             isStaking = 2;
             IERC721(_stakingToken).safeTransferFrom(_stakeMsgSender(), address(this), _tokenIds[i]);
             isStaking = 1;
@@ -216,7 +205,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
     /// @dev Withdraw logic. Override to add custom logic.
     function _withdraw(uint256[] calldata _tokenIds) internal virtual {
         uint256 _amountStaked = stakers[_stakeMsgSender()].amountStaked;
-        uint256 len = _tokenIds.length;
+        uint64 len = uint64(_tokenIds.length);
         require(len != 0, "Withdrawing 0 tokens");
         require(_amountStaked >= len, "Withdrawing more than staked");
 
@@ -224,16 +213,6 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
 
         _updateUnclaimedRewardsForStaker(_stakeMsgSender());
 
-        if (_amountStaked == len) {
-            address[] memory _stakersArray = stakersArray;
-            for (uint256 i = 0; i < _stakersArray.length; ++i) {
-                if (_stakersArray[i] == _stakeMsgSender()) {
-                    stakersArray[i] = _stakersArray[_stakersArray.length - 1];
-                    stakersArray.pop();
-                    break;
-                }
-            }
-        }
         stakers[_stakeMsgSender()].amountStaked -= len;
 
         for (uint256 i = 0; i < len; ++i) {
@@ -251,7 +230,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
 
         require(rewards != 0, "No rewards");
 
-        stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+        stakers[_stakeMsgSender()].timeOfLastUpdate = uint128(block.timestamp);
         stakers[_stakeMsgSender()].unclaimedRewards = 0;
         stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
 
@@ -273,7 +252,7 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
     function _updateUnclaimedRewardsForStaker(address _staker) internal virtual {
         uint256 rewards = _calculateRewards(_staker);
         stakers[_staker].unclaimedRewards += rewards;
-        stakers[_staker].timeOfLastUpdate = block.timestamp;
+        stakers[_staker].timeOfLastUpdate = uint128(block.timestamp);
         stakers[_staker].conditionIdOflastUpdate = nextConditionId - 1;
     }
 
