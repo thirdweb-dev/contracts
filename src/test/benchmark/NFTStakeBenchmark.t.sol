@@ -108,6 +108,7 @@ contract NFTStakeBenchmarkTest is BaseTest {
         _tokensToWithdraw[0] = 1;
 
         vm.prank(stakerOne);
+        vm.resumeGasMetering();
         stakeContract.withdraw(_tokensToWithdraw);
     }
 
