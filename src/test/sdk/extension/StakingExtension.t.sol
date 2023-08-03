@@ -198,7 +198,7 @@ contract StakingExtensionTest is DSTest, Test {
         _tokenIds[0] = 6;
 
         vm.prank(stakerOne);
-        vm.expectRevert("Not owned or approved");
+        vm.expectRevert("ERC721: transfer from incorrect owner");
         ext.stake(_tokenIds);
     }
 

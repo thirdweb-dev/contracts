@@ -31,10 +31,10 @@ interface IStaking721 {
      *  @param conditionIdOflastUpdate  Condition-Id when rewards were last updated for user.
      */
     struct Staker {
-        uint256 amountStaked;
-        uint256 timeOfLastUpdate;
+        uint64 amountStaked;
+        uint64 conditionIdOflastUpdate;
+        uint128 timeOfLastUpdate;
         uint256 unclaimedRewards;
-        uint256 conditionIdOflastUpdate;
     }
 
     /**

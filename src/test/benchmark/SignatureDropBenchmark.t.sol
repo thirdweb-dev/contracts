@@ -136,6 +136,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         sigdrop.lazyMint(amountToLazyMint, placeholderURI, abi.encode(encryptedURI, provenanceHash));
 
         vm.prank(deployerSigner);
+        vm.resumeGasMetering();
         sigdrop.reveal(0, key);
     }
 

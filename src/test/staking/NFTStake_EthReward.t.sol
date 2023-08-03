@@ -160,7 +160,7 @@ contract NFTStakeEthRewardTest is BaseTest {
         _tokenIds[0] = 6;
 
         vm.prank(stakerOne);
-        vm.expectRevert("Not owned or approved");
+        vm.expectRevert("ERC721: transfer from incorrect owner");
         stakeContract.stake(_tokenIds);
     }
 

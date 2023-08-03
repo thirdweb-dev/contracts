@@ -57,7 +57,7 @@ contract TokenStake is
         address[] memory _trustedForwarders,
         address _rewardToken,
         address _stakingToken,
-        uint256 _timeUnit,
+        uint80 _timeUnit,
         uint256 _rewardRatioNumerator,
         uint256 _rewardRatioDenominator
     ) external initializer {
@@ -66,10 +66,10 @@ contract TokenStake is
         require(_rewardToken != _stakingToken, "Reward Token and Staking Token can't be same.");
         rewardToken = _rewardToken;
 
-        uint256 _stakingTokenDecimals = _stakingToken == CurrencyTransferLib.NATIVE_TOKEN
+        uint16 _stakingTokenDecimals = _stakingToken == CurrencyTransferLib.NATIVE_TOKEN
             ? 18
             : IERC20Metadata(_stakingToken).decimals();
-        uint256 _rewardTokenDecimals = _rewardToken == CurrencyTransferLib.NATIVE_TOKEN
+        uint16 _rewardTokenDecimals = _rewardToken == CurrencyTransferLib.NATIVE_TOKEN
             ? 18
             : IERC20Metadata(_rewardToken).decimals();
 
