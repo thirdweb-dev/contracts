@@ -51,8 +51,9 @@ contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
     uint256 private rewardTokenBalance;
 
     constructor(
+
+        uint80 _timeUnit,
         address _defaultAdmin,
-        uint256 _timeUnit,
         uint256 _rewardRatioNumerator,
         uint256 _rewardRatioDenominator,
         address _stakingToken,
