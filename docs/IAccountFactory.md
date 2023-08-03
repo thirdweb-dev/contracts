@@ -56,7 +56,7 @@ Deploys a new Account for admin.
 function getAccountsOfSigner(address signer) external view returns (address[] accounts)
 ```
 
-Returns all accounts that the given address is a signer of.
+Returns all accounts on which a signer has (active or inactive) permissions.
 
 
 
@@ -111,28 +111,6 @@ Returns all accounts created on the factory.
 | Name | Type | Description |
 |---|---|---|
 | _0 | address[] | undefined |
-
-### getSignersOfAccount
-
-```solidity
-function getSignersOfAccount(address account) external view returns (address[] signers)
-```
-
-Returns all signers of an account.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| signers | address[] | undefined |
 
 ### onSignerAdded
 

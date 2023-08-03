@@ -111,6 +111,23 @@ Lets an owner a given amount of their tokens.
 |---|---|---|
 | _amount | uint256 | The number of tokens to burn. |
 
+### burnFrom
+
+```solidity
+function burnFrom(address _account, uint256 _amount) external nonpayable
+```
+
+Lets an owner burn a given amount of an account&#39;s tokens.
+
+*`_account` should own the `_amount` of tokens.*
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _account | address | The account to burn tokens from. |
+| _amount | uint256 | The number of tokens to burn. |
+
 ### contractURI
 
 ```solidity
@@ -572,6 +589,23 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 | Name | Type | Description |
 |---|---|---|
 | recipient `indexed` | address | undefined |
+
+### TokensMinted
+
+```solidity
+event TokensMinted(address indexed mintedTo, uint256 quantityMinted)
+```
+
+
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| mintedTo `indexed` | address | undefined |
+| quantityMinted  | uint256 | undefined |
 
 ### TokensMintedWithSignature
 

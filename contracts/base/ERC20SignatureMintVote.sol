@@ -29,10 +29,11 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
     //////////////////////////////////////////////////////////////*/
 
     constructor(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         address _primarySaleRecipient
-    ) ERC20Vote(_name, _symbol) {
+    ) ERC20Vote(_defaultAdmin, _name, _symbol) {
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 

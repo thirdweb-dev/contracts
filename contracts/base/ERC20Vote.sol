@@ -6,6 +6,8 @@ pragma solidity ^0.8.0;
 import "../openzeppelin-presets/token/ERC20/extensions/ERC20Votes.sol";
 
 import "./ERC20Base.sol";
+import "../extension/interface/IMintableERC20.sol";
+import "../extension/interface/IBurnableERC20.sol";
 
 /**
  *  The `ERC20Vote` smart contract implements the ERC20 standard and ERC20Votes.
@@ -24,13 +26,17 @@ import "./ERC20Base.sol";
  *                             presenting a message signed by the account.
  */
 
-contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes {
+contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes, IMintableERC20, IBurnableERC20 {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(string memory _name, string memory _symbol) ERC20Permit(_name, _symbol) {
-        _setupOwner(msg.sender);
+    constructor(
+        address _defaultAdmin,
+        string memory _name,
+        string memory _symbol
+    ) ERC20Permit(_name, _symbol) {
+        _setupOwner(_defaultAdmin);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -62,6 +68,22 @@ contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes {
         _burn(msg.sender, _amount);
     }
 
+    /**
+     *  @notice          Lets an owner burn a given amount of an account's tokens.
+     *  @dev             `_account` should own the `_amount` of tokens.
+     *
+     *  @param _account  The account to burn tokens from.
+     *  @param _amount   The number of tokens to burn.
+     */
+    function burnFrom(address _account, uint256 _amount) external virtual override {
+        require(_canBurn(), "Not authorized to burn.");
+        require(balanceOf(_account) >= _amount, "not enough balance");
+        uint256 decreasedAllowance = allowance(_account, msg.sender) - _amount;
+        _approve(_account, msg.sender, 0);
+        _approve(_account, msg.sender, decreasedAllowance);
+        _burn(_account, _amount);
+    }
+
     /*//////////////////////////////////////////////////////////////
                         Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
@@ -73,6 +95,11 @@ contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes {
 
     /// @dev Returns whether tokens can be minted in the given execution context.
     function _canMint() internal view virtual returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Returns whether tokens can be burned in the given execution context.
+    function _canBurn() internal view virtual returns (bool) {
         return msg.sender == owner();
     }
 

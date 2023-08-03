@@ -390,28 +390,6 @@ Returns total number of accounts that have a role.
 |---|---|---|
 | count | uint256 |   Total number of accounts that have `role` |
 
-### getSignersOfAccount
-
-```solidity
-function getSignersOfAccount(address account) external view returns (address[] signers)
-```
-
-Returns all signers of an account.
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| account | address | undefined |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| signers | address[] | undefined |
-
 ### grantRole
 
 ```solidity
