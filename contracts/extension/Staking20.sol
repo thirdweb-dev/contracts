@@ -33,6 +33,9 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     /// @dev Total amount of tokens staked in the contract.
     uint256 public stakingTokenBalance;
 
+    /// @dev List of accounts that have staked that token-id.
+    address[] public stakersArray;
+
     ///@dev Mapping staker address to Staker struct. See {struct IStaking20.Staker}.
     mapping(address => Staker) public stakers;
 
@@ -182,6 +185,7 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
         if (stakers[_stakeMsgSender()].amountStaked > 0) {
             _updateUnclaimedRewardsForStaker(_stakeMsgSender());
         } else {
+            stakersArray.push(_stakeMsgSender());
             stakers[_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
@@ -210,6 +214,16 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
 
         _updateUnclaimedRewardsForStaker(_stakeMsgSender());
 
+        if (_amountStaked == _amount) {
+            address[] memory _stakersArray = stakersArray;
+            for (uint256 i = 0; i < _stakersArray.length; ++i) {
+                if (_stakersArray[i] == _stakeMsgSender()) {
+                    stakersArray[i] = _stakersArray[_stakersArray.length - 1];
+                    stakersArray.pop();
+                    break;
+                }
+            }
+        }
         stakers[_stakeMsgSender()].amountStaked -= _amount;
         stakingTokenBalance -= _amount;
 
