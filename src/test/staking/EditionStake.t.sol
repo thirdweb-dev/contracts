@@ -595,7 +595,7 @@ contract EditionStakeTest is BaseTest {
 
     function test_state_setTimeUnit_token0() public {
         // set value and check
-        uint256 timeUnit = 100;
+        uint80 timeUnit = 100;
         vm.prank(deployer);
         stakeContract.setTimeUnit(0, timeUnit);
         assertEq(timeUnit, stakeContract.getTimeUnit(0));
@@ -679,7 +679,7 @@ contract EditionStakeTest is BaseTest {
 
     function test_state_setTimeUnit_bothTokens() public {
         // set value and check
-        uint256 timeUnit = 100;
+        uint80 timeUnit = 100;
         vm.prank(deployer);
         stakeContract.setTimeUnit(0, timeUnit);
         assertEq(timeUnit, stakeContract.getTimeUnit(0));
@@ -1018,7 +1018,7 @@ contract EditionStakeTest is BaseTest {
         stakeContract.stake(0, 50);
 
         // set default timeUnit to zero
-        uint256 newTimeUnit = 0;
+        uint80 newTimeUnit = 0;
         vm.prank(deployer);
         vm.expectRevert("time-unit can't be 0");
         stakeContract.setDefaultTimeUnit(newTimeUnit);
@@ -1058,7 +1058,7 @@ contract Macro_EditionStakeTest is BaseTest {
 
     uint256 internal defaultTimeUnit;
     uint256 internal defaultRewardsPerUnitTime;
-    uint256 internal tokenAmount = 100;
+    uint64 internal tokenAmount = 100;
     address internal stakerOne = address(0x345);
     address internal stakerTwo = address(0x567);
 
@@ -1096,7 +1096,7 @@ contract Macro_EditionStakeTest is BaseTest {
         stakeContract.stake(2, tokenAmount);
 
         // set timeUnit to zero
-        uint256 newTimeUnit = 0;
+        uint80 newTimeUnit = 0;
         vm.prank(deployer);
         vm.expectRevert("time-unit can't be 0");
         stakeContract.setDefaultTimeUnit(newTimeUnit);

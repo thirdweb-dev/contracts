@@ -41,10 +41,10 @@ interface IStaking1155 {
      *  @param conditionIdOflastUpdate  Condition-Id when rewards were last updated for user.
      */
     struct Staker {
-        uint256 amountStaked;
-        uint256 timeOfLastUpdate;
+        uint64 conditionIdOflastUpdate;
+        uint64 amountStaked;
+        uint128 timeOfLastUpdate;
         uint256 unclaimedRewards;
-        uint256 conditionIdOflastUpdate;
     }
 
     /**
@@ -59,10 +59,10 @@ interface IStaking1155 {
      *  @param endTimestamp       Condition end timestamp.
      */
     struct StakingCondition {
-        uint256 timeUnit;
+        uint80 timeUnit;
+        uint80 startTimestamp;
+        uint80 endTimestamp;
         uint256 rewardsPerUnitTime;
-        uint256 startTimestamp;
-        uint256 endTimestamp;
     }
 
     /**
@@ -71,7 +71,7 @@ interface IStaking1155 {
      *  @param tokenId   ERC1155 token-id to stake.
      *  @param amount    Amount to stake.
      */
-    function stake(uint256 tokenId, uint256 amount) external;
+    function stake(uint256 tokenId, uint64 amount) external;
 
     /**
      *  @notice Withdraw staked tokens.
@@ -79,7 +79,7 @@ interface IStaking1155 {
      *  @param tokenId   ERC1155 token-id to withdraw.
      *  @param amount    Amount to withdraw.
      */
-    function withdraw(uint256 tokenId, uint256 amount) external;
+    function withdraw(uint256 tokenId, uint64 amount) external;
 
     /**
      *  @notice Claim accumulated rewards.
