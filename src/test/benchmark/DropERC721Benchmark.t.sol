@@ -170,6 +170,7 @@ contract DropERC721BenchmarkTest is BaseTest {
         drop.lazyMint(amountToLazyMint, placeholderURI, abi.encode(encryptedURI, provenanceHash));
 
         vm.prank(deployer);
+        vm.resumeGasMetering();
         drop.reveal(0, key);
     }
 
