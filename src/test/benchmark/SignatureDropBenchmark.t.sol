@@ -58,81 +58,6 @@ contract SignatureDropBenchmarkTest is BaseTest {
                         SignatureDrop benchmark
     //////////////////////////////////////////////////////////////*/
 
-    function test_bechmark_signatureDrop_claim_one_token() public {
-        vm.pauseGasMetering();
-        vm.warp(1);
-
-        address receiver = getActor(0);
-        bytes32[] memory proofs = new bytes32[](0);
-
-        SignatureDrop.AllowlistProof memory alp;
-        alp.proof = proofs;
-
-        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
-        conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerWallet = 100;
-
-        vm.prank(deployerSigner);
-        sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
-
-        vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false);
-
-        vm.prank(getActor(5), getActor(5));
-        vm.resumeGasMetering();
-        sigdrop.claim(receiver, 1, address(0), 0, alp, "");
-    }
-
-    function test_bechmark_signatureDrop_claim_two_tokens() public {
-        vm.pauseGasMetering();
-        vm.warp(1);
-
-        address receiver = getActor(0);
-        bytes32[] memory proofs = new bytes32[](0);
-
-        SignatureDrop.AllowlistProof memory alp;
-        alp.proof = proofs;
-
-        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
-        conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerWallet = 100;
-
-        vm.prank(deployerSigner);
-        sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
-
-        vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false);
-
-        vm.prank(getActor(5), getActor(5));
-        vm.resumeGasMetering();
-        sigdrop.claim(receiver, 2, address(0), 0, alp, "");
-    }
-
-    function test_bechmark_signatureDrop_claim_three_tokens() public {
-        vm.pauseGasMetering();
-        vm.warp(1);
-
-        address receiver = getActor(0);
-        bytes32[] memory proofs = new bytes32[](0);
-
-        SignatureDrop.AllowlistProof memory alp;
-        alp.proof = proofs;
-
-        SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
-        conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerWallet = 100;
-
-        vm.prank(deployerSigner);
-        sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
-
-        vm.prank(deployerSigner);
-        sigdrop.setClaimConditions(conditions[0], false);
-
-        vm.prank(getActor(5), getActor(5));
-        vm.resumeGasMetering();
-        sigdrop.claim(receiver, 3, address(0), 0, alp, "");
-    }
-
     function test_bechmark_signatureDrop_claim_five_tokens() public {
         vm.pauseGasMetering();
         vm.warp(1);
@@ -161,8 +86,6 @@ contract SignatureDropBenchmarkTest is BaseTest {
     function test_bechmark_signatureDrop_setClaimConditions() public {
         vm.pauseGasMetering();
         vm.warp(1);
-
-        address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
         SignatureDrop.AllowlistProof memory alp;
@@ -215,4 +138,79 @@ contract SignatureDropBenchmarkTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.reveal(0, key);
     }
+
+    // function test_bechmark_signatureDrop_claim_one_token() public {
+    //     vm.pauseGasMetering();
+    //     vm.warp(1);
+
+    //     address receiver = getActor(0);
+    //     bytes32[] memory proofs = new bytes32[](0);
+
+    //     SignatureDrop.AllowlistProof memory alp;
+    //     alp.proof = proofs;
+
+    //     SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+    //     conditions[0].maxClaimableSupply = 100;
+    //     conditions[0].quantityLimitPerWallet = 100;
+
+    //     vm.prank(deployerSigner);
+    //     sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+    //     vm.prank(deployerSigner);
+    //     sigdrop.setClaimConditions(conditions[0], false);
+
+    //     vm.prank(getActor(5), getActor(5));
+    //     vm.resumeGasMetering();
+    //     sigdrop.claim(receiver, 1, address(0), 0, alp, "");
+    // }
+
+    // function test_bechmark_signatureDrop_claim_two_tokens() public {
+    //     vm.pauseGasMetering();
+    //     vm.warp(1);
+
+    //     address receiver = getActor(0);
+    //     bytes32[] memory proofs = new bytes32[](0);
+
+    //     SignatureDrop.AllowlistProof memory alp;
+    //     alp.proof = proofs;
+
+    //     SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+    //     conditions[0].maxClaimableSupply = 100;
+    //     conditions[0].quantityLimitPerWallet = 100;
+
+    //     vm.prank(deployerSigner);
+    //     sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+    //     vm.prank(deployerSigner);
+    //     sigdrop.setClaimConditions(conditions[0], false);
+
+    //     vm.prank(getActor(5), getActor(5));
+    //     vm.resumeGasMetering();
+    //     sigdrop.claim(receiver, 2, address(0), 0, alp, "");
+    // }
+
+    // function test_bechmark_signatureDrop_claim_three_tokens() public {
+    //     vm.pauseGasMetering();
+    //     vm.warp(1);
+
+    //     address receiver = getActor(0);
+    //     bytes32[] memory proofs = new bytes32[](0);
+
+    //     SignatureDrop.AllowlistProof memory alp;
+    //     alp.proof = proofs;
+
+    //     SignatureDrop.ClaimCondition[] memory conditions = new SignatureDrop.ClaimCondition[](1);
+    //     conditions[0].maxClaimableSupply = 100;
+    //     conditions[0].quantityLimitPerWallet = 100;
+
+    //     vm.prank(deployerSigner);
+    //     sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+
+    //     vm.prank(deployerSigner);
+    //     sigdrop.setClaimConditions(conditions[0], false);
+
+    //     vm.prank(getActor(5), getActor(5));
+    //     vm.resumeGasMetering();
+    //     sigdrop.claim(receiver, 3, address(0), 0, alp, "");
+    // }
 }

@@ -146,6 +146,7 @@ contract DropERC721Test is BaseTest {
         drop.grantRole(role, address(4));
 
         roleMemberCount = drop.getRoleMemberCount(role);
+        assertEq(roleMemberCount, 5);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(drop.getRoleMember(role, i));
@@ -154,6 +155,7 @@ contract DropERC721Test is BaseTest {
 
         drop.revokeRole(role, address(2));
         roleMemberCount = drop.getRoleMemberCount(role);
+        assertEq(roleMemberCount, 4);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(drop.getRoleMember(role, i));
@@ -162,6 +164,7 @@ contract DropERC721Test is BaseTest {
 
         drop.revokeRole(role, address(0));
         roleMemberCount = drop.getRoleMemberCount(role);
+        assertEq(roleMemberCount, 3);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(drop.getRoleMember(role, i));
@@ -170,6 +173,7 @@ contract DropERC721Test is BaseTest {
 
         drop.grantRole(role, address(5));
         roleMemberCount = drop.getRoleMemberCount(role);
+        assertEq(roleMemberCount, 4);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(drop.getRoleMember(role, i));
@@ -178,6 +182,7 @@ contract DropERC721Test is BaseTest {
 
         drop.grantRole(role, address(0));
         roleMemberCount = drop.getRoleMemberCount(role);
+        assertEq(roleMemberCount, 5);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(drop.getRoleMember(role, i));
@@ -186,6 +191,25 @@ contract DropERC721Test is BaseTest {
 
         drop.grantRole(role, address(6));
         roleMemberCount = drop.getRoleMemberCount(role);
+        assertEq(roleMemberCount, 6);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(drop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        drop.revokeRole(role, address(0));
+        roleMemberCount = drop.getRoleMemberCount(role);
+        assertEq(roleMemberCount, 5);
+        console.log(roleMemberCount);
+        for (uint256 i = 0; i < roleMemberCount; i++) {
+            console.log(drop.getRoleMember(role, i));
+        }
+        console.log("");
+
+        drop.revokeRole(role, address(4));
+        roleMemberCount = drop.getRoleMemberCount(role);
+        assertEq(roleMemberCount, 4);
         console.log(roleMemberCount);
         for (uint256 i = 0; i < roleMemberCount; i++) {
             console.log(drop.getRoleMember(role, i));

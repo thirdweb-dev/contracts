@@ -15,7 +15,7 @@
     "@openzeppelin/contracts": "4.7.3",
     "@openzeppelin/contracts-upgradeable": "4.7.3",
     "@primitivefi/hardhat-dodoc": "^0.2.0",
-    "@thirdweb-dev/sdk": "3.10.20",
+    "@thirdweb-dev/sdk": "3.10.33",
     "@typechain/ethers-v5": "^10.0.0",
     "@typechain/hardhat": "^4.0.0",
     "@types/fs-extra": "^9.0.13",
@@ -54,19 +54,20 @@
     "typescript": "^4.4.4"
   },
   "scripts": {
-    "clean": "hardhat clean && rm -rf abi/ && rm -rf artifacts/ && rm -rf dist/ && rm -rf typechain/",
-    "compile": "hardhat compile",
+    "clean": "forge clean && rm -rf abi/ && rm -rf artifacts_forge/ && rm -rf dist/ && rm -rf typechain/",
+    "compile": "forge build",
     "lint": "solhint \"contracts/**/*.sol\"",
     "prettier": "prettier --config .prettierrc --write \"{contracts,src}/**/*.{js,json,sol,ts}\"",
     "prettier:list-different": "prettier --config .prettierrc --list-different \"**/*.{js,json,sol,ts}\"",
     "prettier:contracts": "prettier --config .prettierrc --list-different \"{contracts,src}/**/*.sol\"",
-    "test": "hardhat test",
-    "typechain": "hardhat typechain",
+    "test": "forge test",
+    "typechain": "typechain --target ethers-v5 --out-dir ./typechain artifacts_forge/**/*.json",
     "build": "yarn clean && yarn compile",
     "forge:build": "forge build --hardhat",
     "forge:test": "forge test --hardhat",
     "export-abi": "hardhat export-abi",
     "gas": "forge test --mc Benchmark --gas-report > gasreport.txt",
     "forge:snapshot": "forge snapshot --check"
-  }
+  },
+  "dependencies": {}
 }

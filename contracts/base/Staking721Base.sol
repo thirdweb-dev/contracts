@@ -55,13 +55,14 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC
     uint256 private rewardTokenBalance;
 
     constructor(
+        address _defaultAdmin,
         uint256 _timeUnit,
         uint256 _rewardsPerUnitTime,
         address _stakingToken,
         address _rewardToken,
         address _nativeTokenWrapper
     ) Staking721(_stakingToken) {
-        _setupOwner(msg.sender);
+        _setupOwner(_defaultAdmin);
         _setStakingCondition(_timeUnit, _rewardsPerUnitTime);
 
         rewardToken = _rewardToken;
