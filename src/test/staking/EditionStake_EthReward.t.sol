@@ -147,7 +147,7 @@ contract EditionStakeEthRewardTest is BaseTest {
     function test_revert_stake_notBalanceOrApproved() public {
         // stake unowned tokens
         vm.prank(stakerOne);
-        vm.expectRevert("Not balance or approved");
+        vm.expectRevert("ERC1155: insufficient balance for transfer");
         stakeContract.stake(2, 10);
     }
 
@@ -604,7 +604,7 @@ contract EditionStakeEthRewardTest is BaseTest {
 
     function test_state_setTimeUnit_token0() public {
         // set value and check
-        uint256 timeUnit = 100;
+        uint80 timeUnit = 100;
         vm.prank(deployer);
         stakeContract.setTimeUnit(0, timeUnit);
         assertEq(timeUnit, stakeContract.getTimeUnit(0));
@@ -688,7 +688,7 @@ contract EditionStakeEthRewardTest is BaseTest {
 
     function test_state_setTimeUnit_bothTokens() public {
         // set value and check
-        uint256 timeUnit = 100;
+        uint80 timeUnit = 100;
         vm.prank(deployer);
         stakeContract.setTimeUnit(0, timeUnit);
         assertEq(timeUnit, stakeContract.getTimeUnit(0));
@@ -1027,7 +1027,7 @@ contract EditionStakeEthRewardTest is BaseTest {
         stakeContract.stake(0, 50);
 
         // set default timeUnit to zero
-        uint256 newTimeUnit = 0;
+        uint80 newTimeUnit = 0;
         vm.prank(deployer);
         vm.expectRevert("time-unit can't be 0");
         stakeContract.setDefaultTimeUnit(newTimeUnit);

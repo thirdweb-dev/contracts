@@ -86,8 +86,6 @@ contract SignatureDropBenchmarkTest is BaseTest {
     function test_bechmark_signatureDrop_setClaimConditions() public {
         vm.pauseGasMetering();
         vm.warp(1);
-
-        address receiver = getActor(0);
         bytes32[] memory proofs = new bytes32[](0);
 
         SignatureDrop.AllowlistProof memory alp;
@@ -138,6 +136,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         sigdrop.lazyMint(amountToLazyMint, placeholderURI, abi.encode(encryptedURI, provenanceHash));
 
         vm.prank(deployerSigner);
+        vm.resumeGasMetering();
         sigdrop.reveal(0, key);
     }
 

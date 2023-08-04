@@ -22,7 +22,7 @@ contract MockRoyaltyEngineV1 is ERC165, IRoyaltyEngineV1 {
         address tokenAddress,
         uint256 tokenId,
         uint256 value
-    ) public override returns (address payable[] memory recipients, uint256[] memory amounts) {
+    ) public view override returns (address payable[] memory recipients, uint256[] memory amounts) {
         try IERC2981(tokenAddress).royaltyInfo(tokenId, value) returns (address recipient, uint256 amount) {
             // Supports EIP2981.  Return amounts
             recipients = new address payable[](1);

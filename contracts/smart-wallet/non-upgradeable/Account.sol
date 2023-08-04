@@ -107,42 +107,52 @@ contract Account is
         // First, check if the signer is an admin.
         if (data.isAdmin[_signer]) {
             return true;
-        } else {
-            SignerPermissionsStatic memory permissions = data.signerPermissions[_signer];
-
-            // If not an admin, check if the signer is active.
-            require(
-                permissions.startTimestamp <= block.timestamp &&
-                    block.timestamp < permissions.endTimestamp &&
-                    data.approvedTargets[_signer].length() > 0,
-                "Account: no active permissions."
-            );
-
-            // Extract the function signature from the userOp calldata and check whether the signer is attempting to call `execute` or `executeBatch`.
-            bytes4 sig = getFunctionSignature(_userOp.callData);
-
-            if (sig == this.execute.selector) {
-                // Extract the `target` and `value` arguments from the calldata for `execute`.
-                (address target, uint256 value) = decodeExecuteCalldata(_userOp.callData);
-
-                // Check if the value is within the allowed range and if the target is approved.
-                require(permissions.nativeTokenLimitPerTransaction >= value, "Account: value too high.");
-                require(data.approvedTargets[_signer].contains(target), "Account: target not approved.");
-            } else if (sig == this.executeBatch.selector) {
-                // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
-                (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
-
-                // For each target+value pair, check if the value is within the allowed range and if the target is approved.
-                for (uint256 i = 0; i < targets.length; i++) {
-                    require(permissions.nativeTokenLimitPerTransaction >= values[i], "Account: value too high.");
-                    require(data.approvedTargets[_signer].contains(targets[i]), "Account: target not approved.");
-                }
-            } else {
-                revert("Account: calling invalid fn.");
-            }
-
-            return true;
         }
+
+        SignerPermissionsStatic memory permissions = data.signerPermissions[_signer];
+
+        // If not an admin, check if the signer is active.
+        if (
+            permissions.startTimestamp > block.timestamp ||
+            block.timestamp >= permissions.endTimestamp ||
+            data.approvedTargets[_signer].length() == 0
+        ) {
+            // Account: no active permissions.
+            return false;
+        }
+
+        // Extract the function signature from the userOp calldata and check whether the signer is attempting to call `execute` or `executeBatch`.
+        bytes4 sig = getFunctionSignature(_userOp.callData);
+
+        if (sig == this.execute.selector) {
+            // Extract the `target` and `value` arguments from the calldata for `execute`.
+            (address target, uint256 value) = decodeExecuteCalldata(_userOp.callData);
+
+            // Check if the value is within the allowed range and if the target is approved.
+            if (permissions.nativeTokenLimitPerTransaction < value || !data.approvedTargets[_signer].contains(target)) {
+                // Account: value too high OR Account: target not approved.
+                return false;
+            }
+        } else if (sig == this.executeBatch.selector) {
+            // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
+            (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
+
+            // For each target+value pair, check if the value is within the allowed range and if the target is approved.
+            for (uint256 i = 0; i < targets.length; i++) {
+                if (
+                    permissions.nativeTokenLimitPerTransaction < values[i] ||
+                    !data.approvedTargets[_signer].contains(targets[i])
+                ) {
+                    // Account: value too high OR Account: target not approved.
+                    return false;
+                }
+            }
+        } else {
+            // Account: calling invalid fn.
+            return false;
+        }
+
+        return true;
     }
 
     /// @notice See EIP-1271

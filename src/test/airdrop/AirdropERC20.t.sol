@@ -150,25 +150,38 @@ contract AirdropERC20GasTest is BaseTest {
 
     function test_transferNativeToken_toEOA() public {
         vm.prank(address(tokenOwner));
-        address(0x123).call{ value: 1 ether }("");
+        (bool success, bytes memory data) = address(0x123).call{ value: 1 ether }("");
+
+        // Silence warning: Return value of low-level calls not used.
+        (success, data) = (success, data);
     }
 
     function test_transferNativeToken_toContract() public {
         vm.prank(address(tokenOwner));
-        address(this).call{ value: 1 ether }("");
+        (bool success, bytes memory data) = address(this).call{ value: 1 ether }("");
+
+        // Silence warning: Return value of low-level calls not used.
+        (success, data) = (success, data);
     }
 
     function test_transferNativeToken_toEOA_gasOverride() public {
         vm.prank(address(tokenOwner));
         console.log(gasleft());
-        address(0x123).call{ value: 1 ether, gas: 100_000 }("");
+        (bool success, bytes memory data) = address(0x123).call{ value: 1 ether, gas: 100_000 }("");
+
+        // Silence warning: Return value of low-level calls not used.
+        (success, data) = (success, data);
+
         console.log(gasleft());
     }
 
     function test_transferNativeToken_toContract_gasOverride() public {
         vm.prank(address(tokenOwner));
         console.log(gasleft());
-        address(this).call{ value: 1 ether, gas: 100_000 }("");
+        (bool success, bytes memory data) = address(this).call{ value: 1 ether, gas: 100_000 }("");
         console.log(gasleft());
+
+        // Silence warning: Return value of low-level calls not used.
+        (success, data) = (success, data);
     }
 }

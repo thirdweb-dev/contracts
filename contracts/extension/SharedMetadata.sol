@@ -5,8 +5,9 @@ pragma solidity ^0.8.10;
 
 import "../lib/NFTMetadataRendererLib.sol";
 import "./interface/ISharedMetadata.sol";
+import "../eip/interface/IERC4906.sol";
 
-abstract contract SharedMetadata is ISharedMetadata {
+abstract contract SharedMetadata is ISharedMetadata, IERC4906 {
     /// @notice Token metadata information
     SharedMetadataInfo public sharedMetadata;
 
@@ -29,6 +30,8 @@ abstract contract SharedMetadata is ISharedMetadata {
             imageURI: _metadata.imageURI,
             animationURI: _metadata.animationURI
         });
+
+        emit BatchMetadataUpdate(0, type(uint256).max);
 
         emit SharedMetadataUpdated({
             name: _metadata.name,

@@ -116,7 +116,7 @@ contract AirdropERC721GasTest is BaseTest {
         address,
         uint256,
         bytes calldata
-    ) external view returns (bytes4) {
+    ) external pure returns (bytes4) {
         return this.onERC721Received.selector;
     }
 }

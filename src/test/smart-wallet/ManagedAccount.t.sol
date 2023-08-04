@@ -531,9 +531,12 @@ contract ManagedAccountTest is BaseTest {
 
         vm.prank(accountAdmin);
         // solhint-disable-next-line avoid-low-level-calls
-        payable(account).call{ value: 1000 }("");
+        (bool success, bytes memory ret) = payable(account).call{ value: 1000 }("");
 
         assertEq(address(account).balance, 1000);
+
+        // Silence warning: Return value of low-level calls not used.
+        (success, ret) = (success, ret);
     }
 
     /// @dev Transfer native tokens out of an account.
@@ -545,8 +548,11 @@ contract ManagedAccountTest is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         vm.prank(accountAdmin);
         // solhint-disable-next-line avoid-low-level-calls
-        payable(account).call{ value: value }("");
+        (bool success, bytes memory ret) = payable(account).call{ value: value }("");
         assertEq(address(account).balance, value);
+
+        // Silence warning: Return value of low-level calls not used.
+        (success, ret) = (success, ret);
 
         address recipient = address(0x3456);
 
