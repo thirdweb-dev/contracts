@@ -138,7 +138,7 @@ contract EditionStakeTest is BaseTest {
     function test_revert_stake_notBalanceOrApproved() public {
         // stake unowned tokens
         vm.prank(stakerOne);
-        vm.expectRevert("Not balance or approved");
+        vm.expectRevert("ERC1155: insufficient balance for transfer");
         stakeContract.stake(2, 10);
     }
 
