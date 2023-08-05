@@ -21,13 +21,13 @@ import "../dynamic-contracts/init/PrimarySaleInit.sol";
 import "../dynamic-contracts/init/OwnableInit.sol";
 import "../dynamic-contracts/init/PermissionsInit.sol";
 import "../dynamic-contracts/init/ERC2771ContextInit.sol";
-import "../dynamic-contracts/init/ERC721AInit.sol";
+import "../dynamic-contracts/init/ERC721AQueryableInit.sol";
 import "../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
 
 contract EvolvingNFT is
     Initializable,
     BaseRouter,
-    ERC721AInit,
+    ERC721AQueryableInit,
     ERC2771ContextInit,
     ContractMetadataInit,
     RoyaltyInit,
@@ -51,9 +51,8 @@ contract EvolvingNFT is
         address _saleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps
-    ) external initializer {
+    ) external initializer initializerERC721A {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
-        bytes32 _minterRole = keccak256("MINTER_ROLE");
 
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
@@ -63,8 +62,8 @@ contract EvolvingNFT is
         _setupOwner(_defaultAdmin);
         _setupOperatorFilterer();
 
-        _setupRole(0x00, _defaultAdmin); // DEFAULT_ADMIN_ROLE
-        _setupRole(_minterRole, _defaultAdmin);
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(keccak256("MINTER_ROLE"), _defaultAdmin);
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
 
@@ -75,6 +74,11 @@ contract EvolvingNFT is
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev The start token ID for the contract.
+    function _startTokenId() internal pure override returns (uint256) {
+        return 1;
+    }
 
     /// @dev Returns whether a extension can be set in the given execution context.
     function _canSetExtension() internal view virtual override returns (bool) {
