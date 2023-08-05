@@ -10,7 +10,7 @@ import { IDrop } from "contracts/extension/interface/IDrop.sol";
 import { Drop } from "contracts/dynamic-contracts/extension/Drop.sol";
 import { SharedMetadataBatch } from "contracts/dynamic-contracts/extension/SharedMetadataBatch.sol";
 import { ISharedMetadataBatch } from "contracts/extension/interface/ISharedMetadataBatch.sol";
-import { RulesEngine } from "contracts/dynamic-contracts/extension/RulesEngine.sol";
+import { RulesEngine, IRulesEngine } from "contracts/dynamic-contracts/extension/RulesEngine.sol";
 import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRendererLib.sol";
 import { TWProxy } from "contracts/TWProxy.sol";
 import { PermissionsEnumerable as DynamicPermissionsEnumerable } from "contracts/dynamic-contracts/extension/PermissionsEnumerable.sol";
@@ -153,6 +153,13 @@ contract EvolvingNFTTest is BaseTest {
 
         assertEq(Permissions(evolvingNFT).hasRole(0x00, deployer), true);
 
+        sharedMetadataBatch[0] = ISharedMetadataBatch.SharedMetadataInfo({
+            name: "Default",
+            description: "Default metadata",
+            imageURI: "https://default.com/1",
+            animationURI: "https://default.com/1"
+        });
+
         sharedMetadataBatch[score1] = ISharedMetadataBatch.SharedMetadataInfo({
             name: "Test 1",
             description: "Test 1",
@@ -175,6 +182,172 @@ contract EvolvingNFTTest is BaseTest {
         });
 
         vm.deal(deployer, 1_000 ether);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Rules test
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_evolvingNFT() public {
+        /**
+         *  Set shared metadata for the following scores:
+         *
+         *  default: `0`
+         *      NFT owner owns no relevant tokens.
+         *  score_1: `10`
+         *      NFT owner owns 10 `MockERC20` tokens.
+         *  score_1 + score_2: `50`
+         *      NFT owner additionally owns 1 `MockERC721` NFT.
+         *  score_1 + score_2 + score_3: `150`
+         *      NFT owner addtionally owns 5 `MockERC1155` NFTs of tokenID 3.
+         */
+
+        // Set shared metadata
+        vm.startPrank(deployer);
+        SharedMetadataBatch(evolvingNFT).setSharedMetadata(sharedMetadataBatch[0], bytes32(0));
+        SharedMetadataBatch(evolvingNFT).setSharedMetadata(sharedMetadataBatch[score1], bytes32(score1));
+        SharedMetadataBatch(evolvingNFT).setSharedMetadata(
+            sharedMetadataBatch[score1 + score2],
+            bytes32(score1 + score2)
+        );
+        SharedMetadataBatch(evolvingNFT).setSharedMetadata(
+            sharedMetadataBatch[score1 + score2 + score3],
+            bytes32(score1 + score2 + score3)
+        );
+        vm.stopPrank();
+
+        // Set rules
+        vm.prank(deployer);
+        RulesEngine(evolvingNFT).createRule(
+            IRulesEngine.Rule({
+                token: address(erc20),
+                tokenType: IRulesEngine.TokenType.ERC20,
+                tokenId: 0,
+                balance: 10 ether,
+                score: score1
+            })
+        );
+        vm.prank(deployer);
+        RulesEngine(evolvingNFT).createRule(
+            IRulesEngine.Rule({
+                token: address(erc721),
+                tokenType: IRulesEngine.TokenType.ERC721,
+                tokenId: 0,
+                balance: 1,
+                score: score2
+            })
+        );
+        vm.prank(deployer);
+        RulesEngine(evolvingNFT).createRule(
+            IRulesEngine.Rule({
+                token: address(erc1155),
+                tokenType: IRulesEngine.TokenType.ERC1155,
+                tokenId: 3,
+                balance: 5,
+                score: score3
+            })
+        );
+
+        // `Receiver` mints token
+        string[] memory inputs = new string[](5);
+
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRoot.ts";
+        inputs[2] = "300";
+        inputs[3] = "0";
+        inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
+
+        bytes memory result = vm.ffi(inputs);
+        // revert();
+        bytes32 root = abi.decode(result, (bytes32));
+
+        inputs[1] = "src/test/scripts/getProof.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+        IDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+        alp.quantityLimitPerWallet = 300;
+        alp.pricePerToken = 0;
+        alp.currency = address(erc20);
+
+        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+
+        IDrop.ClaimCondition[] memory conditions = new IDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 500;
+        conditions[0].quantityLimitPerWallet = 10;
+        conditions[0].merkleRoot = root;
+        conditions[0].pricePerToken = 0;
+        conditions[0].currency = address(erc20);
+        vm.prank(deployer);
+        IDrop(evolvingNFT).setClaimConditions(conditions, false);
+
+        vm.prank(receiver, receiver);
+        IDrop(evolvingNFT).claim(receiver, 1, address(erc20), 0, alp, ""); // claims for free, because allowlist price is 0
+
+        // NFT should return default metadata.
+        string memory uri0 = EvolvingNFTLogic(evolvingNFT).tokenURI(1);
+        assertEq(
+            uri0,
+            NFTMetadataRenderer.createMetadataEdition({
+                name: sharedMetadataBatch[0].name,
+                description: sharedMetadataBatch[0].description,
+                imageURI: sharedMetadataBatch[0].imageURI,
+                animationURI: sharedMetadataBatch[0].animationURI,
+                tokenOfEdition: 1
+            })
+        );
+
+        // NFT should return 1st tier of metadata.
+        vm.prank(deployer);
+        erc20.mint(receiver, 10 ether);
+        assertEq(RulesEngine(evolvingNFT).getScore(receiver), uint256(bytes32(score1)));
+
+        string memory uri1 = EvolvingNFTLogic(evolvingNFT).tokenURI(1);
+        assertEq(
+            uri1,
+            NFTMetadataRenderer.createMetadataEdition({
+                name: sharedMetadataBatch[score1].name,
+                description: sharedMetadataBatch[score1].description,
+                imageURI: sharedMetadataBatch[score1].imageURI,
+                animationURI: sharedMetadataBatch[score1].animationURI,
+                tokenOfEdition: 1
+            })
+        );
+
+        // NFT should return 2nd tier of metadata.
+        vm.prank(deployer);
+        erc721.mint(receiver, 1);
+        assertEq(RulesEngine(evolvingNFT).getScore(receiver), uint256(bytes32(score1 + score2)));
+
+        string memory uri2 = EvolvingNFTLogic(evolvingNFT).tokenURI(1);
+        assertEq(
+            uri2,
+            NFTMetadataRenderer.createMetadataEdition({
+                name: sharedMetadataBatch[score1 + score2].name,
+                description: sharedMetadataBatch[score1 + score2].description,
+                imageURI: sharedMetadataBatch[score1 + score2].imageURI,
+                animationURI: sharedMetadataBatch[score1 + score2].animationURI,
+                tokenOfEdition: 1
+            })
+        );
+
+        // NFT should return 3rd tier of metadata.
+        vm.prank(deployer);
+        erc1155.mint(receiver, 3, 5, "");
+        assertEq(RulesEngine(evolvingNFT).getScore(receiver), uint256(bytes32(score1 + score2 + score3)));
+
+        string memory uri3 = EvolvingNFTLogic(evolvingNFT).tokenURI(1);
+        assertEq(
+            uri3,
+            NFTMetadataRenderer.createMetadataEdition({
+                name: sharedMetadataBatch[score1 + score2 + score3].name,
+                description: sharedMetadataBatch[score1 + score2 + score3].description,
+                imageURI: sharedMetadataBatch[score1 + score2 + score3].imageURI,
+                animationURI: sharedMetadataBatch[score1 + score2 + score3].animationURI,
+                tokenOfEdition: 1
+            })
+        );
     }
 
     /*///////////////////////////////////////////////////////////////
