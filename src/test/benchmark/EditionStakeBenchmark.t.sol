@@ -70,13 +70,11 @@ contract EditionStakeBenchmarkTest is BaseTest {
         // stake 50 tokens with token-id 0
         vm.prank(stakerOne);
         stakeContract.stake(0, 50);
-        uint256 timeOfLastUpdate_one = block.timestamp;
 
         //=================== warp timestamp to claim rewards
         vm.roll(100);
         vm.warp(1000);
 
-        uint256 rewardBalanceBefore = stakeContract.getRewardTokenBalance();
         vm.prank(stakerOne);
         vm.resumeGasMetering();
         stakeContract.claimRewards(0);
@@ -91,8 +89,6 @@ contract EditionStakeBenchmarkTest is BaseTest {
 
         vm.prank(stakerTwo);
         stakeContract.stake(1, 20);
-
-        uint256 timeOfLastUpdate = block.timestamp;
 
         //========== warp timestamp before withdraw
         vm.roll(100);

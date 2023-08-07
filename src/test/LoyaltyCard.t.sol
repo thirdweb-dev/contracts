@@ -313,8 +313,6 @@ contract LoyaltyCardTest is BaseTest {
         _mintrequest.currency = address(erc20);
         _signature = signMintRequest(_mintrequest, privateKey);
 
-        uint256 erc20BalanceOfSeller = erc20.balanceOf(address(saleRecipient));
-
         vm.prank(recipient);
         erc20.approve(address(loyaltyCard), 5);
 

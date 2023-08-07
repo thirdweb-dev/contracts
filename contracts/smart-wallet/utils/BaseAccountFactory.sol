@@ -34,7 +34,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     EnumerableSet.AddressSet private allAccounts;
     mapping(address => EnumerableSet.AddressSet) internal accountsOfSigner;
-    mapping(address => EnumerableSet.AddressSet) internal signersOfAccount;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
@@ -84,25 +83,11 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         address account = msg.sender;
         require(_isAccountOfFactory(account), "AccountFactory: not an account.");
 
-        bool isAdmin = IAccountPermissions(account).isAdmin(_signer);
+        bool isNewSigner = accountsOfSigner[_signer].add(account);
 
-        if (!isAdmin) {
-            IAccountPermissions.RoleRestrictions memory restrictions = IAccountPermissions(account)
-                .getRoleRestrictionsForAccount(_signer);
-            require(
-                restrictions.startTimestamp <= block.timestamp && block.timestamp < restrictions.endTimestamp,
-                "AccountFactory: invalid signer."
-            );
+        if (isNewSigner) {
+            emit SignerAdded(account, _signer);
         }
-
-        bool isNewAccount = accountsOfSigner[_signer].add(account);
-        bool isNewSigner = signersOfAccount[account].add(_signer);
-
-        if (!isNewAccount || !isNewSigner) {
-            revert("AccountFactory: signer already added");
-        }
-
-        emit SignerAdded(account, _signer);
     }
 
     /// @notice Callback function for an Account to un-register its signers.
@@ -111,13 +96,10 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         require(_isAccountOfFactory(account), "AccountFactory: not an account.");
 
         bool isAccount = accountsOfSigner[_signer].remove(account);
-        bool isSigner = signersOfAccount[account].remove(_signer);
 
-        if (!isAccount || !isSigner) {
-            revert("AccountFactory: signer not found");
+        if (isAccount) {
+            emit SignerRemoved(account, _signer);
         }
-
-        emit SignerRemoved(account, _signer);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -138,11 +120,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     function getAddress(address _adminSigner, bytes calldata _data) public view returns (address) {
         bytes32 salt = _generateSalt(_adminSigner, _data);
         return Clones.predictDeterministicAddress(accountImplementation, salt);
-    }
-
-    /// @notice Returns all signers of an account.
-    function getSignersOfAccount(address account) external view returns (address[] memory signers) {
-        return signersOfAccount[account].values();
     }
 
     /// @notice Returns all accounts that the given address is a signer of.

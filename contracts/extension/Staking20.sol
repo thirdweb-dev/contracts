@@ -19,22 +19,22 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     address internal immutable nativeTokenWrapper;
 
     ///@dev Address of ERC20 contract -- staked tokens belong to this contract.
-    address public stakingToken;
+    address public immutable stakingToken;
 
     /// @dev Decimals of staking token.
-    uint256 public stakingTokenDecimals;
+    uint16 public immutable stakingTokenDecimals;
 
     /// @dev Decimals of reward token.
-    uint256 public rewardTokenDecimals;
+    uint16 public immutable rewardTokenDecimals;
 
-    /// @dev List of accounts that have staked that token-id.
-    address[] public stakersArray;
+    ///@dev Next staking condition Id. Tracks number of conditon updates so far.
+    uint64 private nextConditionId;
 
     /// @dev Total amount of tokens staked in the contract.
     uint256 public stakingTokenBalance;
 
-    ///@dev Next staking condition Id. Tracks number of conditon updates so far.
-    uint256 private nextConditionId;
+    /// @dev List of accounts that have staked that token-id.
+    address[] public stakersArray;
 
     ///@dev Mapping staker address to Staker struct. See {struct IStaking20.Staker}.
     mapping(address => Staker) public stakers;
@@ -45,8 +45,8 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     constructor(
         address _nativeTokenWrapper,
         address _stakingToken,
-        uint256 _stakingTokenDecimals,
-        uint256 _rewardTokenDecimals
+        uint16 _stakingTokenDecimals,
+        uint16 _rewardTokenDecimals
     ) ReentrancyGuard() {
         require(_stakingToken != address(0) && _nativeTokenWrapper != address(0), "address 0");
         require(_stakingTokenDecimals != 0 && _rewardTokenDecimals != 0, "decimals 0");
@@ -101,7 +101,7 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
      *
      *  @param _timeUnit    New time unit.
      */
-    function setTimeUnit(uint256 _timeUnit) external virtual {
+    function setTimeUnit(uint80 _timeUnit) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
@@ -186,7 +186,7 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
             _updateUnclaimedRewardsForStaker(_stakeMsgSender());
         } else {
             stakersArray.push(_stakeMsgSender());
-            stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+            stakers[_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
 
@@ -244,7 +244,7 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
 
         require(rewards != 0, "No rewards");
 
-        stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+        stakers[_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
         stakers[_stakeMsgSender()].unclaimedRewards = 0;
         stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
 
@@ -266,13 +266,13 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     function _updateUnclaimedRewardsForStaker(address _staker) internal virtual {
         uint256 rewards = _calculateRewards(_staker);
         stakers[_staker].unclaimedRewards += rewards;
-        stakers[_staker].timeOfLastUpdate = block.timestamp;
+        stakers[_staker].timeOfLastUpdate = uint80(block.timestamp);
         stakers[_staker].conditionIdOflastUpdate = nextConditionId - 1;
     }
 
     /// @dev Set staking conditions.
     function _setStakingCondition(
-        uint256 _timeUnit,
+        uint80 _timeUnit,
         uint256 _numerator,
         uint256 _denominator
     ) internal virtual {
@@ -285,12 +285,12 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
             timeUnit: _timeUnit,
             rewardRatioNumerator: _numerator,
             rewardRatioDenominator: _denominator,
-            startTimestamp: block.timestamp,
+            startTimestamp: uint80(block.timestamp),
             endTimestamp: 0
         });
 
         if (conditionId > 0) {
-            stakingConditions[conditionId - 1].endTimestamp = block.timestamp;
+            stakingConditions[conditionId - 1].endTimestamp = uint80(block.timestamp);
         }
     }
 

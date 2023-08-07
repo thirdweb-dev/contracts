@@ -21,6 +21,7 @@ import "../../extension/interface/IPlatformFee.sol";
 
 import "../../extension/plugin/ReentrancyGuardLogic.sol";
 import "../../extension/plugin/PermissionsEnumerableLogic.sol";
+import { RoyaltyPaymentsLogic } from "../../extension/plugin/RoyaltyPayments.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 /**
@@ -141,7 +142,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         _handleBid(_targetAuction, newBid);
     }
 
-    function collectAuctionPayout(uint256 _auctionId) external nonReentrant onlyAuctionCreator(_auctionId) {
+    function collectAuctionPayout(uint256 _auctionId) external nonReentrant {
         EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
 
         require(!data.payoutStatus[_auctionId].paidOutBidAmount, "Marketplace: payout already completed.");
@@ -278,7 +279,6 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
     function getWinningBid(uint256 _auctionId)
         external
         view
-        onlyExistingAuction(_auctionId)
         returns (
             address _bidder,
             address _currency,
@@ -482,46 +482,68 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         uint256 _totalPayoutAmount,
         Auction memory _targetAuction
     ) internal {
-        (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
-        uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
+        address _nativeTokenWrapper = nativeTokenWrapper;
+        uint256 amountRemaining;
 
-        uint256 royaltyCut;
-        address royaltyRecipient;
+        // Payout platform fee
+        {
+            (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
+            uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
-        // Distribute royalties. See Sushiswap's https://github.com/sushiswap/shoyu/blob/master/contracts/base/BaseExchange.sol#L296
-        try IERC2981(_targetAuction.assetContract).royaltyInfo(_targetAuction.tokenId, _totalPayoutAmount) returns (
-            address royaltyFeeRecipient,
-            uint256 royaltyFeeAmount
-        ) {
-            if (royaltyFeeRecipient != address(0) && royaltyFeeAmount > 0) {
-                require(royaltyFeeAmount + platformFeeCut <= _totalPayoutAmount, "fees exceed the price");
-                royaltyRecipient = royaltyFeeRecipient;
-                royaltyCut = royaltyFeeAmount;
+            // Transfer platform fee
+            CurrencyTransferLib.transferCurrencyWithWrapper(
+                _currencyToUse,
+                _payer,
+                platformFeeRecipient,
+                platformFeeCut,
+                _nativeTokenWrapper
+            );
+
+            amountRemaining = _totalPayoutAmount - platformFeeCut;
+        }
+
+        // Payout royalties
+        {
+            // Get royalty recipients and amounts
+            (address payable[] memory recipients, uint256[] memory amounts) = RoyaltyPaymentsLogic(address(this))
+                .getRoyalty(_targetAuction.assetContract, _targetAuction.tokenId, _totalPayoutAmount);
+
+            uint256 royaltyRecipientCount = recipients.length;
+
+            if (royaltyRecipientCount != 0) {
+                uint256 royaltyCut;
+                address royaltyRecipient;
+
+                for (uint256 i = 0; i < royaltyRecipientCount; ) {
+                    royaltyRecipient = recipients[i];
+                    royaltyCut = amounts[i];
+
+                    // Check payout amount remaining is enough to cover royalty payment
+                    require(amountRemaining >= royaltyCut, "fees exceed the price");
+
+                    // Transfer royalty
+                    CurrencyTransferLib.transferCurrencyWithWrapper(
+                        _currencyToUse,
+                        _payer,
+                        royaltyRecipient,
+                        royaltyCut,
+                        _nativeTokenWrapper
+                    );
+
+                    unchecked {
+                        amountRemaining -= royaltyCut;
+                        ++i;
+                    }
+                }
             }
-        } catch {}
+        }
 
         // Distribute price to token owner
-        address _nativeTokenWrapper = nativeTokenWrapper;
-
-        CurrencyTransferLib.transferCurrencyWithWrapper(
-            _currencyToUse,
-            _payer,
-            platformFeeRecipient,
-            platformFeeCut,
-            _nativeTokenWrapper
-        );
-        CurrencyTransferLib.transferCurrencyWithWrapper(
-            _currencyToUse,
-            _payer,
-            royaltyRecipient,
-            royaltyCut,
-            _nativeTokenWrapper
-        );
         CurrencyTransferLib.transferCurrencyWithWrapper(
             _currencyToUse,
             _payer,
             _payee,
-            _totalPayoutAmount - (platformFeeCut + royaltyCut),
+            amountRemaining,
             _nativeTokenWrapper
         );
     }

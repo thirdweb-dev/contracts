@@ -18,6 +18,8 @@ export const chainIdToName: Record<number, string> = {
   [ChainId.AvalancheFujiTestnet]: "avalanche-testnet",
   [ChainId.BinanceSmartChainMainnet]: "binance",
   [ChainId.BinanceSmartChainTestnet]: "binance-testnet",
+  [84531]: "base-goerli",
+  [8453]: "base",
 };
 
 export const chainIdApiKey: Record<number, string | undefined> = {
@@ -35,6 +37,8 @@ export const chainIdApiKey: Record<number, string | undefined> = {
   [ChainId.AvalancheFujiTestnet]: process.env.SNOWTRACE_API_KEY || process.env.SCAN_API_KEY,
   [ChainId.BinanceSmartChainMainnet]: process.env.BINANCE_SCAN_API_KEY || process.env.SCAN_API_KEY,
   [ChainId.BinanceSmartChainTestnet]: process.env.BINANCE_SCAN_API_KEY || process.env.SCAN_API_KEY,
+  [84531]: "" as string,
+  [8453]: process.env.BASE_SCAN_API_KEY || process.env.SCAN_API_KEY,
 };
 
 export const apiMap: Record<number, string> = {
@@ -52,4 +56,31 @@ export const apiMap: Record<number, string> = {
   43114: "https://api.snowtrace.io/api",
   421613: "https://api-goerli.arbiscan.io/api",
   80001: "https://api-testnet.polygonscan.com/api",
+  84531: "https://api-goerli.basescan.org/api",
+  8453: "https://api.basescan.org/api",
 };
+
+export const contractsToDeploy = [
+  "OpenEditionERC721",
+  "DropERC721",
+  "DropERC1155",
+  "DropERC20",
+  "TokenERC20",
+  "TokenERC721",
+  "TokenERC1155",
+  "Split",
+  "VoteERC20",
+  "NFTStake",
+  "TokenStake",
+  "EditionStake",
+  "AirdropERC20",
+  "AirdropERC721",
+  "AirdropERC1155",
+  "DirectListingsLogic",
+  "EnglishAuctionsLogic",
+  "OffersLogic",
+  "MarketplaceV3",
+  // "Forwarder",
+  // "TWCloneFactory",
+  // "PluginMap",
+];

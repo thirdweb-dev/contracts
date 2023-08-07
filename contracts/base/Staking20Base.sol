@@ -51,7 +51,8 @@ contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
     uint256 private rewardTokenBalance;
 
     constructor(
-        uint256 _timeUnit,
+        uint80 _timeUnit,
+        address _defaultAdmin,
         uint256 _rewardRatioNumerator,
         uint256 _rewardRatioDenominator,
         address _stakingToken,
@@ -65,7 +66,7 @@ contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
             IERC20Metadata(_rewardToken).decimals()
         )
     {
-        _setupOwner(msg.sender);
+        _setupOwner(_defaultAdmin);
         _setStakingCondition(_timeUnit, _rewardRatioNumerator, _rewardRatioDenominator);
 
         require(_rewardToken != _stakingToken, "Reward Token and Staking Token can't be same.");

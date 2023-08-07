@@ -27,7 +27,7 @@ contract ERC1155LazyMintTest is DSTest, Test {
         nftHolder = address(0x456);
 
         vm.prank(admin);
-        base = new ERC1155LazyMint("name", "symbol", admin, 0);
+        base = new ERC1155LazyMint(admin, "name", "symbol", admin, 0);
 
         // Lazy mint tokens
         vm.prank(admin);
