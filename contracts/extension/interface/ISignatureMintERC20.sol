@@ -27,7 +27,7 @@ interface ISignatureMintERC20 {
         address to;
         address primarySaleRecipient;
         uint256 quantity;
-        uint256 pricePerToken;
+        uint256 price;
         address currency;
         uint128 validityStartTimestamp;
         uint128 validityEndTimestamp;

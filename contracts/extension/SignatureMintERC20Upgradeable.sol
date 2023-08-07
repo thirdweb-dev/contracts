@@ -13,17 +13,18 @@ abstract contract SignatureMintERC20Upgradeable is Initializable, EIP712Upgradea
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
-    function __SignatureMintERC20_init() internal onlyInitializing {
-        __EIP712_init("SignatureMintERC20", "1");
+    function __SignatureMintERC20_init(string memory _name) internal onlyInitializing {
+        __EIP712_init(_name, "1");
+        __SignatureMintERC20_init_unchained(_name);
     }
 
-    function __SignatureMintERC20_init_unchained() internal onlyInitializing {}
+    function __SignatureMintERC20_init_unchained(string memory) internal onlyInitializing {}
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
     function verify(MintRequest calldata _req, bytes calldata _signature)
@@ -50,7 +51,7 @@ abstract contract SignatureMintERC20Upgradeable is Initializable, EIP712Upgradea
             "Request expired"
         );
         require(_req.to != address(0), "recipient undefined");
-        require(_req.quantity > 0, "0 qty");
+        require(_req.quantity > 0, "Minting zero qty");
 
         minted[_req.uid] = true;
     }
@@ -68,7 +69,7 @@ abstract contract SignatureMintERC20Upgradeable is Initializable, EIP712Upgradea
                 _req.to,
                 _req.primarySaleRecipient,
                 _req.quantity,
-                _req.pricePerToken,
+                _req.price,
                 _req.currency,
                 _req.validityStartTimestamp,
                 _req.validityEndTimestamp,
