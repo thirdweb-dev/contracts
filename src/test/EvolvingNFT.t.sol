@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 import { IExtension } from "lib/dynamic-contracts/src/interface/IExtension.sol";
 
-import { EvolvingNFT } from "contracts/evolving-nfts/EvolvingNFT.sol";
-import { EvolvingNFTLogic } from "contracts/evolving-nfts/EvolvingNFTLogic.sol";
+import { EvolvingNFT } from "contracts/unaudited/evolving-nfts/EvolvingNFT.sol";
+import { EvolvingNFTLogic } from "contracts/unaudited/evolving-nfts/EvolvingNFTLogic.sol";
 
 import { IDrop } from "contracts/extension/interface/IDrop.sol";
 import { Drop } from "contracts/dynamic-contracts/extension/Drop.sol";
