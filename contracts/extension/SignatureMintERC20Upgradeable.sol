@@ -51,7 +51,7 @@ abstract contract SignatureMintERC20Upgradeable is Initializable, EIP712Upgradea
             "Request expired"
         );
         require(_req.to != address(0), "recipient undefined");
-        require(_req.quantity > 0, "0 qty");
+        require(_req.quantity > 0, "Minting zero qty");
 
         minted[_req.uid] = true;
     }

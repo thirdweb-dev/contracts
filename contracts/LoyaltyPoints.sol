@@ -178,7 +178,7 @@ contract LoyaltyPoints is
         } else {
             validMsgValue = msg.value == 0;
         }
-        require(validMsgValue, "!V");
+        require(validMsgValue, "Invalid msg value");
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
