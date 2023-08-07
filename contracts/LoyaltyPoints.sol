@@ -126,7 +126,7 @@ contract LoyaltyPoints is
         signer = _processRequest(_req, _signature);
         address receiver = _req.to;
 
-        _collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.price);
+        _collectPriceOnClaim(_req.primarySaleRecipient, _req.currency, _req.price);
         _mintTo(receiver, _req.quantity);
 
         emit TokensMintedWithSignature(signer, receiver, _req);
@@ -165,7 +165,6 @@ contract LoyaltyPoints is
     /// @dev Collects and distributes the primary sale value of tokens being minted.
     function _collectPriceOnClaim(
         address _primarySaleRecipient,
-        uint256 _quantityToClaim,
         address _currency,
         uint256 _price
     ) internal {

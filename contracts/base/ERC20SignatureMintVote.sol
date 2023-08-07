@@ -68,7 +68,7 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        _collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.price);
+        _collectPriceOnClaim(_req.primarySaleRecipient, _req.currency, _req.price);
 
         // Mint tokens.
         _mint(receiver, _req.quantity);
@@ -93,7 +93,6 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function _collectPriceOnClaim(
         address _primarySaleRecipient,
-        uint256 _quantityToClaim,
         address _currency,
         uint256 _price
     ) internal virtual {
