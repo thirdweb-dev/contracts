@@ -6,7 +6,7 @@ import "@ds-test/test.sol";
 
 import "./utils/BaseTest.sol";
 import "contracts/TWProxy.sol";
-import { LoyaltyPoints } from "contracts/LoyaltyPoints.sol";
+import { LoyaltyPoints } from "contracts/unaudited/LoyaltyPoints.sol";
 
 contract LoyaltyPointsTest is BaseTest {
     LoyaltyPoints internal loyaltyPoints;

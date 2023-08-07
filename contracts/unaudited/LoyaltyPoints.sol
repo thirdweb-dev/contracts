@@ -13,22 +13,22 @@ pragma solidity ^0.8.11;
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 // Interface
-import "./interfaces/ILoyaltyPoints.sol";
+import "../interfaces/ILoyaltyPoints.sol";
 
 // Base
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
 
 // Lib
-import "./lib/CurrencyTransferLib.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 // Extensions
-import "./extension/SignatureMintERC20Upgradeable.sol";
-import "./extension/ContractMetadata.sol";
-import "./extension/PrimarySale.sol";
-import "./extension/PrimarySale.sol";
-import "./extension/PlatformFee.sol";
-import "./extension/PermissionsEnumerable.sol";
-import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../extension/SignatureMintERC20Upgradeable.sol";
+import "../extension/ContractMetadata.sol";
+import "../extension/PrimarySale.sol";
+import "../extension/PrimarySale.sol";
+import "../extension/PlatformFee.sol";
+import "../extension/PermissionsEnumerable.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 /**
