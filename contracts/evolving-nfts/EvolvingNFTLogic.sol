@@ -191,7 +191,7 @@ contract EvolvingNFTLogic is
     }
 
     /// @dev Returns whether the rules of the contract can be set in the given execution context.
-    function _canSetMetadataRules() internal view virtual override returns (bool) {
+    function _canSetRules() internal view virtual override returns (bool) {
         return _hasRole(MINTER_ROLE, _msgSender());
     }
 

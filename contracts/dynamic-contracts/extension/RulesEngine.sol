@@ -12,7 +12,7 @@ library RulesEngineStorage {
 
     struct Data {
         uint256 nextRuleId;
-        mapping(uint256 => IRulesEngine.Rule) rules;
+        mapping(uint256 => IRulesEngine.RuleWithId) rules;
     }
 
     function rulesEngineStorage() internal pure returns (Data storage rulesEngineData) {
@@ -25,14 +25,14 @@ library RulesEngineStorage {
 
 abstract contract RulesEngine is IRulesEngine {
     /*///////////////////////////////////////////////////////////////
-                            External functions
+                            View functions
     //////////////////////////////////////////////////////////////*/
 
     function getScore(address _tokenOwner) public view returns (uint256 score) {
         uint256 len = _rulesEngineStorage().nextRuleId;
 
         for (uint256 i = 0; i < len; i += 1) {
-            Rule memory rule = _rulesEngineStorage().rules[i];
+            Rule memory rule = _rulesEngineStorage().rules[i].rule;
 
             if (rule.tokenType == TokenType.ERC20) {
                 if (IERC20(rule.token).balanceOf(_tokenOwner) >= rule.balance) {
@@ -50,13 +50,36 @@ abstract contract RulesEngine is IRulesEngine {
         }
     }
 
+    function getAllRules() external view returns (RuleWithId[] memory rules) {
+        uint256 len = _rulesEngineStorage().nextRuleId;
+        uint256 count = 0;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            if (_rulesEngineStorage().rules[i].rule.token != address(0)) {
+                count++;
+            }
+        }
+
+        rules = new RuleWithId[](count);
+        uint256 idx = 0;
+        for (uint256 j = 0; j < len; j += 1) {
+            if (_rulesEngineStorage().rules[j].rule.token != address(0)) {
+                rules[idx++] = _rulesEngineStorage().rules[j];
+            }
+        }
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            External functions
+    //////////////////////////////////////////////////////////////*/
+
     function createRule(Rule memory rule) external returns (uint256 ruleId) {
-        require(_canSetMetadataRules(), "RulesEngine: cannot set rules");
+        require(_canSetRules(), "RulesEngine: cannot set rules");
         ruleId = _createRule(rule);
     }
 
     function deleteRule(uint256 _ruleId) external {
-        require(_canSetMetadataRules(), "RulesEngine: cannot set rules");
+        require(_canSetRules(), "RulesEngine: cannot set rules");
         _deleteRule(_ruleId);
     }
 
@@ -65,21 +88,19 @@ abstract contract RulesEngine is IRulesEngine {
     //////////////////////////////////////////////////////////////*/
 
     function _createRule(Rule memory _rule) internal returns (uint256 ruleId) {
-        RulesEngineStorage.Data storage data = _rulesEngineStorage();
-        ruleId = data.nextRuleId++;
-        data.rules[ruleId] = _rule;
+        ruleId = _rulesEngineStorage().nextRuleId++;
+        _rulesEngineStorage().rules[ruleId] = RuleWithId(ruleId, _rule);
 
         emit RuleCreated(ruleId, _rule);
     }
 
     function _deleteRule(uint256 _ruleId) internal {
-        RulesEngineStorage.Data storage data = _rulesEngineStorage();
-        delete data.rules[_ruleId];
+        delete _rulesEngineStorage().rules[_ruleId];
     }
 
     function _rulesEngineStorage() internal pure returns (RulesEngineStorage.Data storage data) {
         data = RulesEngineStorage.rulesEngineStorage();
     }
 
-    function _canSetMetadataRules() internal view virtual returns (bool);
+    function _canSetRules() internal view virtual returns (bool);
 }
