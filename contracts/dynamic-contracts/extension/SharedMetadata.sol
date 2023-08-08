@@ -4,7 +4,7 @@ pragma solidity ^0.8.10;
 /// @author thirdweb
 
 import "../../lib/NFTMetadataRendererLib.sol";
-import "./../interface/ISharedMetadata.sol";
+import "../../extension/interface/ISharedMetadata.sol";
 import "../../eip/interface/IERC4906.sol";
 
 /**
@@ -41,7 +41,7 @@ abstract contract SharedMetadata is ISharedMetadata, IERC4906 {
      *  @param _metadata common metadata for all tokens
      */
     function _setSharedMetadata(SharedMetadataInfo calldata _metadata) internal {
-        SharedMetadataStorage.sharedMetadataStorage().shasharedMetadata = SharedMetadataInfo({
+        SharedMetadataStorage.sharedMetadataStorage().sharedMetadata = SharedMetadataInfo({
             name: _metadata.name,
             description: _metadata.description,
             imageURI: _metadata.imageURI,

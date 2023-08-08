@@ -17,32 +17,34 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-import "../../eip/queryable/ERC721AQueryableUpgradeable.sol";
+import "../eip/queryable/ERC721AQueryableUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-import "../../lib/CurrencyTransferLib.sol";
+import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../openzeppelin-presets/utils/structs/EnumerableSet.sol";
+import "../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
-import "../../extension/Multicall.sol";
-import "../../dynamic-contracts/extension/ContractMetadata.sol";
-import "../../dynamic-contracts/extension/Royalty.sol";
-import "../../dynamic-contracts/extension/PrimarySale.sol";
-import "../../dynamic-contracts/extension/PlatformFee.sol";
-import "../../dynamic-contracts/extension/Ownable.sol";
-import "../../dynamic-contracts/extension/Permissions.sol";
-import "../../dynamic-contracts/extension/Drop.sol";
-import "../../dynamic-contracts/extension/SharedMetadata.sol";
-import "../../dynamic-contracts/extension/RulesEngine.sol";
+import "../extension/Multicall.sol";
+import "../dynamic-contracts/extension/ContractMetadata.sol";
+import "../dynamic-contracts/extension/Royalty.sol";
+import "../dynamic-contracts/extension/PrimarySale.sol";
+import "../dynamic-contracts/extension/PlatformFee.sol";
+import "../dynamic-contracts/extension/Ownable.sol";
+import "../dynamic-contracts/extension/PermissionsEnumerable.sol";
+import "../dynamic-contracts/extension/Drop.sol";
+import "../dynamic-contracts/extension/SharedMetadata.sol";
+import "../dynamic-contracts/extension/RulesEngine.sol";
 
 // OpenSea operator filter
-import "../../extension/DefaultOperatorFiltererUpgradeable.sol";
+import "../extension/DefaultOperatorFiltererUpgradeable.sol";
 
 contract OpenEditionLogic is
     ContractMetadata,
     Royalty,
+    PlatformFee,
     PrimarySale,
     Ownable,
     SharedMetadata,
@@ -59,8 +61,6 @@ contract OpenEditionLogic is
                             State variables
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Default admin role for all roles. Only accounts with this role can grant/revoke other roles.
-    bytes32 private constant DEFAULT_ADMIN_ROLE = 0x00;
     /// @dev Only TRANSFER_ROLE holders can have tokens transferred from or to them, during restricted transfers.
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
@@ -122,9 +122,11 @@ contract OpenEditionLogic is
             return;
         }
 
-        uint256 totalPrice = _pricePerToken * _quantity;
-        uint256 platformFees = platformFeeType == PlatformFeeType.Flat
-            ? flatPlatformFee
+        uint256 totalPrice = _pricePerToken * _quantityToClaim;
+        (address platformFeeRecipient, uint256 platformFeeBps) = getPlatformFeeInfo();
+
+        uint256 platformFees = getPlatformFeeType() == PlatformFeeType.Flat
+            ? platformFeeBps
             : ((totalPrice * platformFeeBps) / MAX_BPS);
         require(totalPrice >= platformFees, "price less than platform fee");
 
@@ -134,7 +136,7 @@ contract OpenEditionLogic is
             require(msg.value == 0, "msg value not zero");
         }
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
@@ -177,11 +179,6 @@ contract OpenEditionLogic is
 
     /// @dev Returns whether shared metadata can be set in the given execution context.
     function _canSetSharedMetadata() internal view virtual override returns (bool) {
-        return _hasRole(MINTER_ROLE, _msgSender());
-    }
-
-    /// @dev Returns whether the rules of the contract can be set in the given execution context.
-    function _canSetRules() internal view virtual override returns (bool) {
         return _hasRole(MINTER_ROLE, _msgSender());
     }
 
@@ -298,11 +295,23 @@ contract OpenEditionLogic is
         return _msgSender();
     }
 
-    function _msgSender() internal view virtual override returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Permissions)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view virtual override returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Permissions)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

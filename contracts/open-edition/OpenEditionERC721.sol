@@ -14,17 +14,17 @@ pragma solidity ^0.8.11;
 
 import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 
-import "../../dynamic-contracts/extension/Initializable.sol";
-import "../../extension/Multicall.sol";
-import "../../dynamic-contracts/init/ContractMetadataInit.sol";
-import "../../dynamic-contracts/init/RoyaltyInit.sol";
-import "../../dynamic-contracts/init/PrimarySaleInit.sol";
-import "../../dynamic-contracts/init/OwnableInit.sol";
-import "../../dynamic-contracts/init/PermissionsInit.sol";
-import "../../dynamic-contracts/init/PlatformFeeInit.sol";
-import "../../dynamic-contracts/init/ERC2771ContextInit.sol";
-import "../../dynamic-contracts/init/ERC721AQueryableInit.sol";
-import "../../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
+import "../dynamic-contracts/extension/Initializable.sol";
+import "../extension/Multicall.sol";
+import "../dynamic-contracts/init/ContractMetadataInit.sol";
+import "../dynamic-contracts/init/RoyaltyInit.sol";
+import "../dynamic-contracts/init/PrimarySaleInit.sol";
+import "../dynamic-contracts/init/OwnableInit.sol";
+import "../dynamic-contracts/init/PermissionsInit.sol";
+import "../dynamic-contracts/init/PlatformFeeInit.sol";
+import "../dynamic-contracts/init/ERC2771ContextInit.sol";
+import "../dynamic-contracts/init/ERC721AQueryableInit.sol";
+import "../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
 
 contract OpenEditionERC721 is
     Initializable,
@@ -58,8 +58,6 @@ contract OpenEditionERC721 is
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer initializerERC721A {
-        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
-
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);
@@ -68,14 +66,16 @@ contract OpenEditionERC721 is
         _setupOwner(_defaultAdmin);
         _setupOperatorFilterer();
 
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(keccak256("MINTER_ROLE"), _defaultAdmin);
-        _setupRole(_transferRole, _defaultAdmin);
-        _setupRole(_transferRole, address(0));
-
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+    }
+
+    function _setupRoles(address _defaultAdmin) internal {
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(keccak256("MINTER_ROLE"), _defaultAdmin);
+        _setupRole(keccak256("TRANSFER_ROLE"), _defaultAdmin);
+        _setupRole(keccak256("TRANSFER_ROLE"), address(0));
     }
 
     /*///////////////////////////////////////////////////////////////
