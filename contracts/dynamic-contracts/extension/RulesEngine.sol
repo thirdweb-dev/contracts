@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+/// @author thirdweb
+
 import "../../extension/interface/IRulesEngine.sol";
 
 import "../../eip/interface/IERC20.sol";
