@@ -5,6 +5,7 @@ import { IExtension } from "lib/dynamic-contracts/src/interface/IExtension.sol";
 
 import { EvolvingNFT } from "contracts/unaudited/evolving-nfts/EvolvingNFT.sol";
 import { EvolvingNFTLogic } from "contracts/unaudited/evolving-nfts/EvolvingNFTLogic.sol";
+import { RulesEngineExtension } from "contracts/unaudited/evolving-nfts/extension/RulesEngineExtension.sol";
 
 import { IDrop } from "contracts/extension/interface/IDrop.sol";
 import { Drop } from "contracts/dynamic-contracts/extension/Drop.sol";
@@ -53,6 +54,7 @@ contract EvolvingNFTTest is BaseTest {
         // Setting up default extension.
         IExtension.Extension memory evolvingNftExtension;
         IExtension.Extension memory permissionsExtension;
+        IExtension.Extension memory rulesEngineExtension;
 
         evolvingNftExtension.metadata = IExtension.ExtensionMetadata({
             name: "EvolvingNFTLogic",
@@ -64,56 +66,66 @@ contract EvolvingNFTTest is BaseTest {
             metadataURI: "ipfs://Permissions",
             implementation: address(new DynamicPermissionsEnumerable())
         });
+        rulesEngineExtension.metadata = IExtension.ExtensionMetadata({
+            name: "RulesEngine",
+            metadataURI: "ipfs://RulesEngine",
+            implementation: address(new RulesEngineExtension())
+        });
 
-        evolvingNftExtension.functions = new IExtension.ExtensionFunction[](13);
+        evolvingNftExtension.functions = new IExtension.ExtensionFunction[](10);
+        rulesEngineExtension.functions = new IExtension.ExtensionFunction[](4);
         permissionsExtension.functions = new IExtension.ExtensionFunction[](4);
 
-        evolvingNftExtension.functions[0] = IExtension.ExtensionFunction(
-            SharedMetadataBatch.setSharedMetadata.selector,
-            "setSharedMetadata((string,string,string,string),bytes32)"
-        );
-        evolvingNftExtension.functions[1] = IExtension.ExtensionFunction(
+        rulesEngineExtension.functions[0] = IExtension.ExtensionFunction(
             RulesEngine.getScore.selector,
             "getScore(address)"
         );
-        evolvingNftExtension.functions[2] = IExtension.ExtensionFunction(
-            RulesEngine.createRule.selector,
-            "createRule((address,uint8,uint256,uint256,uint256))"
+        rulesEngineExtension.functions[1] = IExtension.ExtensionFunction(
+            RulesEngine.createRuleThreshold.selector,
+            "createRuleThreshold((address,uint8,uint256,uint256,uint256))"
         );
-        evolvingNftExtension.functions[3] = IExtension.ExtensionFunction(
+        rulesEngineExtension.functions[2] = IExtension.ExtensionFunction(
             RulesEngine.deleteRule.selector,
-            "deleteRule(uint256)"
+            "deleteRule(bytes32)"
         );
-        evolvingNftExtension.functions[4] = IExtension.ExtensionFunction(
+        rulesEngineExtension.functions[3] = IExtension.ExtensionFunction(
+            RulesEngine.getRulesEngineOverride.selector,
+            "getRulesEngineOverride()"
+        );
+        evolvingNftExtension.functions[0] = IExtension.ExtensionFunction(
             IDrop.claim.selector,
             "claim(address,uint256,address,uint256,(bytes32[],uint256,uint256,address),bytes)"
         );
-        evolvingNftExtension.functions[5] = IExtension.ExtensionFunction(
+        evolvingNftExtension.functions[1] = IExtension.ExtensionFunction(
+            SharedMetadataBatch.setSharedMetadata.selector,
+            "setSharedMetadata((string,string,string,string),bytes32)"
+        );
+        evolvingNftExtension.functions[2] = IExtension.ExtensionFunction(
             IDrop.setClaimConditions.selector,
             "setClaimConditions((uint256,uint256,uint256,uint256,bytes32,uint256,address,string)[],bool)"
         );
-        evolvingNftExtension.functions[6] = IExtension.ExtensionFunction(
+        evolvingNftExtension.functions[3] = IExtension.ExtensionFunction(
             EvolvingNFTLogic.tokenURI.selector,
             "tokenURI(uint256)"
         );
-        evolvingNftExtension.functions[7] = IExtension.ExtensionFunction(
+        evolvingNftExtension.functions[4] = IExtension.ExtensionFunction(
             EvolvingNFTLogic.transferFrom.selector,
             "transferFrom(address,address,uint256)"
         );
-        evolvingNftExtension.functions[8] = IExtension.ExtensionFunction(IERC721.ownerOf.selector, "ownerOf(uint256)");
-        evolvingNftExtension.functions[9] = IExtension.ExtensionFunction(
+        evolvingNftExtension.functions[5] = IExtension.ExtensionFunction(IERC721.ownerOf.selector, "ownerOf(uint256)");
+        evolvingNftExtension.functions[6] = IExtension.ExtensionFunction(
             Drop.getSupplyClaimedByWallet.selector,
             "getSupplyClaimedByWallet(uint256,address)"
         );
-        evolvingNftExtension.functions[10] = IExtension.ExtensionFunction(
+        evolvingNftExtension.functions[7] = IExtension.ExtensionFunction(
             Drop.getActiveClaimConditionId.selector,
             "getActiveClaimConditionId()"
         );
-        evolvingNftExtension.functions[11] = IExtension.ExtensionFunction(
+        evolvingNftExtension.functions[8] = IExtension.ExtensionFunction(
             Drop.getClaimConditionById.selector,
             "getClaimConditionById(uint256)"
         );
-        evolvingNftExtension.functions[12] = IExtension.ExtensionFunction(
+        evolvingNftExtension.functions[9] = IExtension.ExtensionFunction(
             Drop.claimCondition.selector,
             "claimCondition()"
         );
@@ -134,9 +146,10 @@ contract EvolvingNFTTest is BaseTest {
             "hasRole(bytes32,address)"
         );
 
-        IExtension.Extension[] memory extensions = new IExtension.Extension[](2);
+        IExtension.Extension[] memory extensions = new IExtension.Extension[](3);
         extensions[0] = evolvingNftExtension;
         extensions[1] = permissionsExtension;
+        extensions[2] = rulesEngineExtension;
 
         address evolvingNftImpl = address(new EvolvingNFT(extensions));
 
@@ -218,8 +231,8 @@ contract EvolvingNFTTest is BaseTest {
 
         // Set rules
         vm.prank(deployer);
-        RulesEngine(evolvingNFT).createRule(
-            IRulesEngine.Rule({
+        RulesEngine(evolvingNFT).createRuleThreshold(
+            IRulesEngine.RuleTypeThreshold({
                 token: address(erc20),
                 tokenType: IRulesEngine.TokenType.ERC20,
                 tokenId: 0,
@@ -228,8 +241,8 @@ contract EvolvingNFTTest is BaseTest {
             })
         );
         vm.prank(deployer);
-        RulesEngine(evolvingNFT).createRule(
-            IRulesEngine.Rule({
+        RulesEngine(evolvingNFT).createRuleThreshold(
+            IRulesEngine.RuleTypeThreshold({
                 token: address(erc721),
                 tokenType: IRulesEngine.TokenType.ERC721,
                 tokenId: 0,
@@ -238,8 +251,8 @@ contract EvolvingNFTTest is BaseTest {
             })
         );
         vm.prank(deployer);
-        RulesEngine(evolvingNFT).createRule(
-            IRulesEngine.Rule({
+        RulesEngine(evolvingNFT).createRuleThreshold(
+            IRulesEngine.RuleTypeThreshold({
                 token: address(erc1155),
                 tokenType: IRulesEngine.TokenType.ERC1155,
                 tokenId: 3,

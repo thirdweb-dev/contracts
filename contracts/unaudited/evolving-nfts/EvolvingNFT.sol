@@ -14,6 +14,7 @@ pragma solidity ^0.8.11;
 
 import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 
+import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
 import "../../dynamic-contracts/init/ContractMetadataInit.sol";
 import "../../dynamic-contracts/init/RoyaltyInit.sol";
@@ -27,6 +28,7 @@ import "../../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
 contract EvolvingNFT is
     Initializable,
     BaseRouter,
+    Multicall,
     ERC721AQueryableInit,
     ERC2771ContextInit,
     ContractMetadataInit,

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
+/// @author thirdweb
+
 import "../../lib/NFTMetadataRendererLib.sol";
 import "../../extension/interface/ISharedMetadataBatch.sol";
 import "../../openzeppelin-presets/utils/EnumerableSet.sol";

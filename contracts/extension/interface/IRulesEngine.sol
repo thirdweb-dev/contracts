@@ -8,7 +8,12 @@ interface IRulesEngine {
         ERC1155
     }
 
-    struct Rule {
+    enum RuleType {
+        Threshold,
+        Multiplicative
+    }
+
+    struct RuleTypeThreshold {
         address token;
         TokenType tokenType;
         uint256 tokenId;
@@ -16,19 +21,38 @@ interface IRulesEngine {
         uint256 score;
     }
 
-    struct RuleWithId {
-        uint256 ruleId;
-        Rule rule;
+    struct RuleTypeMultiplicative {
+        address token;
+        TokenType tokenType;
+        uint256 tokenId;
+        uint256 scorePerOwnedToken;
     }
 
-    event RuleCreated(uint256 indexed ruleId, Rule rule);
-    event RuleDeleted(uint256 indexed ruleId, Rule rule);
+    struct RuleWithId {
+        bytes32 ruleId;
+        address token;
+        TokenType tokenType;
+        uint256 tokenId;
+        uint256 balance;
+        uint256 score;
+        RuleType ruleType;
+    }
+
+    event RuleCreated(bytes32 indexed ruleId, RuleWithId rule);
+    event RuleDeleted(bytes32 indexed ruleId);
+    event RulesEngineOverriden(address indexed newRulesEngine);
 
     function getScore(address _tokenOwner) external view returns (uint256 score);
 
     function getAllRules() external view returns (RuleWithId[] memory rules);
 
-    function createRule(Rule memory rule) external returns (uint256 ruleId);
+    function getRulesEngineOverride() external view returns (address rulesEngineAddress);
 
-    function deleteRule(uint256 ruleId) external;
+    function createRuleMulitiplicative(RuleTypeMultiplicative memory rule) external returns (bytes32 ruleId);
+
+    function createRuleThreshold(RuleTypeThreshold memory rule) external returns (bytes32 ruleId);
+
+    function deleteRule(bytes32 ruleId) external;
+
+    function setRulesEngineOverride(address _rulesEngineAddress) external;
 }
