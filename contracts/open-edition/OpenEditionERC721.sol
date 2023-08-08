@@ -69,6 +69,8 @@ contract OpenEditionERC721 is
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
+
+        _setupRoles(_defaultAdmin);
     }
 
     function _setupRoles(address _defaultAdmin) internal {
