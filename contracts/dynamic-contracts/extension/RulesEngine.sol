@@ -15,6 +15,7 @@ library RulesEngineStorage {
     bytes32 public constant RULES_ENGINE_STORAGE_POSITION = keccak256("rules.engine.storage");
 
     struct Data {
+        address rulesEngineOverride;
         EnumerableSet.Bytes32Set ids;
         mapping(bytes32 => IRulesEngine.RuleWithId) rules;
     }
@@ -35,6 +36,11 @@ abstract contract RulesEngine is IRulesEngine {
     //////////////////////////////////////////////////////////////*/
 
     function getScore(address _tokenOwner) public view returns (uint256 score) {
+        address engineOverride = getRulesEngineOverride();
+        if (engineOverride != address(0)) {
+            return IRulesEngine(engineOverride).getScore(_tokenOwner);
+        }
+
         bytes32[] memory ids = _rulesEngineStorage().ids.values();
         uint256 len = ids.length;
 
@@ -53,6 +59,10 @@ abstract contract RulesEngine is IRulesEngine {
         for (uint256 i = 0; i < len; i += 1) {
             rules[i] = _rulesEngineStorage().rules[ids[i]];
         }
+    }
+
+    function getRulesEngineOverride() public view returns (address rulesEngineAddress) {
+        rulesEngineAddress = _rulesEngineStorage().rulesEngineOverride;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -130,9 +140,18 @@ abstract contract RulesEngine is IRulesEngine {
         emit RuleDeleted(_ruleId);
     }
 
+    function setRulesEngineOverride(address _rulesEngineAddress) external {
+        require(_canOverrieRulesEngine(), "RulesEngine: cannot override rules engine");
+        _rulesEngineStorage().rulesEngineOverride = _rulesEngineAddress;
+
+        emit RulesEngineOverriden(_rulesEngineAddress);
+    }
+
     function _rulesEngineStorage() internal pure returns (RulesEngineStorage.Data storage data) {
         data = RulesEngineStorage.rulesEngineStorage();
     }
 
     function _canSetRules() internal view virtual returns (bool);
+
+    function _canOverrieRulesEngine() internal view virtual returns (bool);
 }

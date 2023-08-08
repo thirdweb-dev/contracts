@@ -40,14 +40,19 @@ interface IRulesEngine {
 
     event RuleCreated(bytes32 indexed ruleId, RuleWithId rule);
     event RuleDeleted(bytes32 indexed ruleId);
+    event RulesEngineOverriden(address indexed newRulesEngine);
 
     function getScore(address _tokenOwner) external view returns (uint256 score);
 
     function getAllRules() external view returns (RuleWithId[] memory rules);
+
+    function getRulesEngineOverride() external view returns (address rulesEngineAddress);
 
     function createRuleMulitiplicative(RuleTypeMultiplicative memory rule) external returns (bytes32 ruleId);
 
     function createRuleThreshold(RuleTypeThreshold memory rule) external returns (bytes32 ruleId);
 
     function deleteRule(bytes32 ruleId) external;
+
+    function setRulesEngineOverride(address _rulesEngineAddress) external;
 }

@@ -195,6 +195,11 @@ contract EvolvingNFTLogic is
         return _hasRole(MINTER_ROLE, _msgSender());
     }
 
+    /// @dev Returns whether the rules engine used by the contract can be overriden in the given execution context.
+    function _canOverrieRulesEngine() internal view virtual override returns (bool) {
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
     /// @dev Returns whether operator restriction can be set in the given execution context.
     function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
