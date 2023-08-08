@@ -45,7 +45,6 @@ contract EvolvingNFTLogic is
     PrimarySale,
     Ownable,
     SharedMetadataBatch,
-    RulesEngine,
     Drop,
     ERC2771ContextUpgradeable,
     DefaultOperatorFiltererUpgradeable,
@@ -84,7 +83,15 @@ contract EvolvingNFTLogic is
         }
 
         // Get score
-        uint256 score = getScore(ownerOf(_tokenId));
+        address owner = ownerOf(_tokenId);
+        uint256 score = 0;
+
+        address engine = RulesEngine(address(this)).getRulesEngineOverride();
+        if (engine != address(0)) {
+            score = RulesEngine(engine).getScore(owner);
+        } else {
+            score = RulesEngine(address(this)).getScore(owner);
+        }
 
         // Get the target ID i.e. `start` of the range that the score falls into.
         bytes32[] memory ids = _sharedMetadataBatchStorage().ids.values();
@@ -188,16 +195,6 @@ contract EvolvingNFTLogic is
     /// @dev Returns whether shared metadata can be set in the given execution context.
     function _canSetSharedMetadata() internal view virtual override returns (bool) {
         return _hasRole(MINTER_ROLE, _msgSender());
-    }
-
-    /// @dev Returns whether the rules of the contract can be set in the given execution context.
-    function _canSetRules() internal view virtual override returns (bool) {
-        return _hasRole(MINTER_ROLE, _msgSender());
-    }
-
-    /// @dev Returns whether the rules engine used by the contract can be overriden in the given execution context.
-    function _canOverrieRulesEngine() internal view virtual override returns (bool) {
-        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Returns whether operator restriction can be set in the given execution context.
