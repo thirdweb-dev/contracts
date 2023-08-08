@@ -34,7 +34,7 @@ import "../../dynamic-contracts/extension/Ownable.sol";
 import "../../dynamic-contracts/extension/Permissions.sol";
 import "../../dynamic-contracts/extension/Drop.sol";
 import "../../dynamic-contracts/extension/SharedMetadataBatch.sol";
-import "../../dynamic-contracts/extension/RulesEngine.sol";
+import { RulesEngine } from "../../dynamic-contracts/extension/RulesEngine.sol";
 
 // OpenSea operator filter
 import "../../extension/DefaultOperatorFiltererUpgradeable.sol";

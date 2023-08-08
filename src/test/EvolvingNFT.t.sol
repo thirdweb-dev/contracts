@@ -77,12 +77,12 @@ contract EvolvingNFTTest is BaseTest {
             "getScore(address)"
         );
         evolvingNftExtension.functions[2] = IExtension.ExtensionFunction(
-            RulesEngine.createRule.selector,
-            "createRule((address,uint8,uint256,uint256,uint256))"
+            RulesEngine.createRuleThreshold.selector,
+            "createRuleThreshold((address,uint8,uint256,uint256,uint256))"
         );
         evolvingNftExtension.functions[3] = IExtension.ExtensionFunction(
             RulesEngine.deleteRule.selector,
-            "deleteRule(uint256)"
+            "deleteRule(bytes32)"
         );
         evolvingNftExtension.functions[4] = IExtension.ExtensionFunction(
             IDrop.claim.selector,
@@ -218,8 +218,8 @@ contract EvolvingNFTTest is BaseTest {
 
         // Set rules
         vm.prank(deployer);
-        RulesEngine(evolvingNFT).createRule(
-            IRulesEngine.Rule({
+        RulesEngine(evolvingNFT).createRuleThreshold(
+            IRulesEngine.RuleTypeThreshold({
                 token: address(erc20),
                 tokenType: IRulesEngine.TokenType.ERC20,
                 tokenId: 0,
@@ -228,8 +228,8 @@ contract EvolvingNFTTest is BaseTest {
             })
         );
         vm.prank(deployer);
-        RulesEngine(evolvingNFT).createRule(
-            IRulesEngine.Rule({
+        RulesEngine(evolvingNFT).createRuleThreshold(
+            IRulesEngine.RuleTypeThreshold({
                 token: address(erc721),
                 tokenType: IRulesEngine.TokenType.ERC721,
                 tokenId: 0,
@@ -238,8 +238,8 @@ contract EvolvingNFTTest is BaseTest {
             })
         );
         vm.prank(deployer);
-        RulesEngine(evolvingNFT).createRule(
-            IRulesEngine.Rule({
+        RulesEngine(evolvingNFT).createRuleThreshold(
+            IRulesEngine.RuleTypeThreshold({
                 token: address(erc1155),
                 tokenType: IRulesEngine.TokenType.ERC1155,
                 tokenId: 3,
