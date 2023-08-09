@@ -28,6 +28,11 @@ library SharedMetadataStorage {
 }
 
 abstract contract SharedMetadata is ISharedMetadata, IERC4906 {
+    /// @notice Returns the shared metadata.
+    function sharedMetadata() external view virtual returns (SharedMetadataInfo memory) {
+        return SharedMetadataStorage.sharedMetadataStorage().sharedMetadata;
+    }
+
     /// @notice Set shared metadata for NFTs
     function setSharedMetadata(SharedMetadataInfo calldata _metadata) external virtual {
         if (!_canSetSharedMetadata()) {
