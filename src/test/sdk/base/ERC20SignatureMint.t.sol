@@ -25,14 +25,14 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
     function setUp() public override {
         super.setUp();
         vm.prank(signer);
-        base = new ERC20SignatureMint(NAME, SYMBOL, saleRecipient);
+        base = new ERC20SignatureMint(signer, NAME, SYMBOL, saleRecipient);
 
         recipient = address(0x123);
         erc20.mint(recipient, 1_000_000 ether);
         vm.deal(recipient, 1_000_000 ether);
 
         typehashMintRequest = keccak256(
-            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
         nameHash = keccak256(bytes("SignatureMintERC20"));
         versionHash = keccak256(bytes("1"));
@@ -44,7 +44,7 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
         _mintrequest.to = recipient;
         _mintrequest.primarySaleRecipient = saleRecipient;
         _mintrequest.quantity = 100 ether;
-        _mintrequest.pricePerToken = 0;
+        _mintrequest.price = 0;
         _mintrequest.currency = address(0);
         _mintrequest.validityStartTimestamp = 1000;
         _mintrequest.validityEndTimestamp = 2000;
@@ -63,7 +63,7 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
             _request.to,
             _request.primarySaleRecipient,
             _request.quantity,
-            _request.pricePerToken,
+            _request.price,
             _request.currency,
             _request.validityStartTimestamp,
             _request.validityEndTimestamp,
@@ -98,19 +98,19 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
     function test_state_mintWithSignature_NonZeroPrice_ERC20() public {
         vm.warp(1000);
 
-        _mintrequest.pricePerToken = 1;
+        _mintrequest.price = 1;
         _mintrequest.currency = address(erc20);
         _signature = signMintRequest(_mintrequest, privateKey);
 
         vm.prank(recipient);
-        erc20.approve(address(base), _mintrequest.quantity * _mintrequest.pricePerToken);
+        erc20.approve(address(base), _mintrequest.price);
 
         uint256 currentTotalSupply = base.totalSupply();
         uint256 currentBalanceOfRecipient = base.balanceOf(recipient);
         uint256 erc20BalanceOfRecipient = erc20.balanceOf(recipient);
         uint256 erc20BalanceOfSeller = erc20.balanceOf(saleRecipient);
 
-        uint256 totalPrice = (_mintrequest.quantity * _mintrequest.pricePerToken) / 1 ether;
+        uint256 totalPrice = _mintrequest.price;
 
         vm.prank(recipient);
         base.mintWithSignature(_mintrequest, _signature);
@@ -127,7 +127,7 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
     function test_state_mintWithSignature_NonZeroPrice_NativeToken() public {
         vm.warp(1000);
 
-        _mintrequest.pricePerToken = 1 ether;
+        _mintrequest.price = 1 ether;
         _mintrequest.currency = address(NATIVE_TOKEN);
         _signature = signMintRequest(_mintrequest, privateKey);
 
@@ -136,7 +136,7 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
         uint256 etherBalanceOfRecipient = recipient.balance;
         uint256 etherBalanceOfSeller = saleRecipient.balance;
 
-        uint256 totalPrice = (_mintrequest.quantity * _mintrequest.pricePerToken) / 1 ether;
+        uint256 totalPrice = _mintrequest.price;
 
         vm.prank(recipient);
         base.mintWithSignature{ value: totalPrice }(_mintrequest, _signature);
@@ -152,7 +152,7 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
     function test_revert_mintWithSignature_MustSendTotalPrice() public {
         vm.warp(1000);
 
-        _mintrequest.pricePerToken = 1;
+        _mintrequest.price = 1;
         _mintrequest.currency = address(NATIVE_TOKEN);
         _signature = signMintRequest(_mintrequest, privateKey);
 
@@ -168,17 +168,6 @@ contract BaseERC20SignatureMintTest is BaseUtilTest {
         _signature = signMintRequest(_mintrequest, privateKey);
 
         vm.expectRevert("Minting zero tokens.");
-        base.mintWithSignature(_mintrequest, _signature);
-    }
-
-    function test_revert_mintWithSignature_QuantityTooLow() public {
-        vm.warp(1000);
-
-        _mintrequest.quantity = 100;
-        _mintrequest.pricePerToken = 1;
-        _signature = signMintRequest(_mintrequest, privateKey);
-
-        vm.expectRevert("quantity too low");
         base.mintWithSignature(_mintrequest, _signature);
     }
 }

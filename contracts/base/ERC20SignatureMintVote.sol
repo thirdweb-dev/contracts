@@ -29,10 +29,11 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
     //////////////////////////////////////////////////////////////*/
 
     constructor(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         address _primarySaleRecipient
-    ) ERC20Vote(_name, _symbol) {
+    ) ERC20Vote(_defaultAdmin, _name, _symbol) {
         _setupPrimarySaleRecipient(_primarySaleRecipient);
     }
 
@@ -67,7 +68,7 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
         address receiver = _req.to == address(0) ? msg.sender : _req.to;
 
         // Collect price
-        _collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
+        _collectPriceOnClaim(_req.primarySaleRecipient, _req.currency, _req.price);
 
         // Mint tokens.
         _mint(receiver, _req.quantity);
@@ -92,22 +93,20 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function _collectPriceOnClaim(
         address _primarySaleRecipient,
-        uint256 _quantityToClaim,
         address _currency,
-        uint256 _pricePerToken
+        uint256 _price
     ) internal virtual {
-        if (_pricePerToken == 0) {
+        if (_price == 0) {
             return;
         }
 
-        uint256 totalPrice = (_quantityToClaim * _pricePerToken) / 1 ether;
-        require(totalPrice > 0, "quantity too low");
-
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == totalPrice, "Must send total price.");
+            require(msg.value == _price, "Must send total price.");
+        } else {
+            require(msg.value == 0, "msg value not zero");
         }
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
-        CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
+        CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, _price);
     }
 }

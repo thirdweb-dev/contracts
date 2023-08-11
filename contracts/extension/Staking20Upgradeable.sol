@@ -22,19 +22,19 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     address public stakingToken;
 
     /// @dev Decimals of staking token.
-    uint256 public stakingTokenDecimals;
+    uint16 public stakingTokenDecimals;
 
     /// @dev Decimals of reward token.
-    uint256 public rewardTokenDecimals;
+    uint16 public rewardTokenDecimals;
 
-    /// @dev List of accounts that have staked that token-id.
-    address[] public stakersArray;
+    ///@dev Next staking condition Id. Tracks number of conditon updates so far.
+    uint64 private nextConditionId;
 
     /// @dev Total amount of tokens staked in the contract.
     uint256 public stakingTokenBalance;
 
-    ///@dev Next staking condition Id. Tracks number of conditon updates so far.
-    uint256 private nextConditionId;
+    /// @dev List of accounts that have staked that token-id.
+    address[] public stakersArray;
 
     ///@dev Mapping staker address to Staker struct. See {struct IStaking20.Staker}.
     mapping(address => Staker) public stakers;
@@ -50,8 +50,8 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
 
     function __Staking20_init(
         address _stakingToken,
-        uint256 _stakingTokenDecimals,
-        uint256 _rewardTokenDecimals
+        uint16 _stakingTokenDecimals,
+        uint16 _rewardTokenDecimals
     ) internal onlyInitializing {
         __ReentrancyGuard_init();
 
@@ -107,7 +107,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
      *
      *  @param _timeUnit    New time unit.
      */
-    function setTimeUnit(uint256 _timeUnit) external virtual {
+    function setTimeUnit(uint80 _timeUnit) external virtual {
         if (!_canSetStakeConditions()) {
             revert("Not authorized");
         }
@@ -163,7 +163,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         _rewards = _availableRewards(_staker);
     }
 
-    function getTimeUnit() public view returns (uint256 _timeUnit) {
+    function getTimeUnit() public view returns (uint80 _timeUnit) {
         _timeUnit = stakingConditions[nextConditionId - 1].timeUnit;
     }
 
@@ -192,7 +192,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
             _updateUnclaimedRewardsForStaker(_stakeMsgSender());
         } else {
             stakersArray.push(_stakeMsgSender());
-            stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+            stakers[_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
             stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
         }
 
@@ -230,6 +230,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
                 }
             }
         }
+
         stakers[_stakeMsgSender()].amountStaked -= _amount;
         stakingTokenBalance -= _amount;
 
@@ -250,7 +251,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
 
         require(rewards != 0, "No rewards");
 
-        stakers[_stakeMsgSender()].timeOfLastUpdate = block.timestamp;
+        stakers[_stakeMsgSender()].timeOfLastUpdate = uint80(block.timestamp);
         stakers[_stakeMsgSender()].unclaimedRewards = 0;
         stakers[_stakeMsgSender()].conditionIdOflastUpdate = nextConditionId - 1;
 
@@ -272,13 +273,13 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     function _updateUnclaimedRewardsForStaker(address _staker) internal virtual {
         uint256 rewards = _calculateRewards(_staker);
         stakers[_staker].unclaimedRewards += rewards;
-        stakers[_staker].timeOfLastUpdate = block.timestamp;
+        stakers[_staker].timeOfLastUpdate = uint80(block.timestamp);
         stakers[_staker].conditionIdOflastUpdate = nextConditionId - 1;
     }
 
     /// @dev Set staking conditions.
     function _setStakingCondition(
-        uint256 _timeUnit,
+        uint80 _timeUnit,
         uint256 _numerator,
         uint256 _denominator
     ) internal virtual {
@@ -291,12 +292,12 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
             timeUnit: _timeUnit,
             rewardRatioNumerator: _numerator,
             rewardRatioDenominator: _denominator,
-            startTimestamp: block.timestamp,
+            startTimestamp: uint80(block.timestamp),
             endTimestamp: 0
         });
 
         if (conditionId > 0) {
-            stakingConditions[conditionId - 1].endTimestamp = block.timestamp;
+            stakingConditions[conditionId - 1].endTimestamp = uint80(block.timestamp);
         }
     }
 

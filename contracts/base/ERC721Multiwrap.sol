@@ -82,19 +82,20 @@ contract ERC721Multiwrap is
     //////////////////////////////////////////////////////////////*/
 
     constructor(
+        address _defaultAdmin,
         string memory _name,
         string memory _symbol,
         address _royaltyRecipient,
         uint128 _royaltyBps,
         address _nativeTokenWrapper
     ) ERC721A(_name, _symbol) TokenStore(_nativeTokenWrapper) {
-        _setupOwner(msg.sender);
+        _setupOwner(_defaultAdmin);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setOperatorRestriction(true);
 
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
-        _setupRole(MINTER_ROLE, msg.sender);
-        _setupRole(TRANSFER_ROLE, msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(MINTER_ROLE, _defaultAdmin);
+        _setupRole(TRANSFER_ROLE, _defaultAdmin);
 
         _setupRole(ASSET_ROLE, address(0));
         _setupRole(UNWRAP_ROLE, address(0));

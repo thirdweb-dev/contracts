@@ -208,11 +208,7 @@ contract MarketplaceOffersTest is BaseTest {
     }
 
     function test_royaltyEngine_tokenWithERC2981() public {
-        (
-            MockRoyaltyEngineV1 royaltyEngine,
-            address payable[] memory customRoyaltyRecipients,
-            uint256[] memory customRoyaltyAmounts
-        ) = _setupRoyaltyEngine();
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
 
         // Add RoyaltyEngine to marketplace
         vm.prank(marketplaceDeployer);
@@ -223,8 +219,9 @@ contract MarketplaceOffersTest is BaseTest {
         // create token with ERC2981
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
-        ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
         // Mint the ERC721 tokens to seller. These tokens will be sold.
+        vm.prank(address(0x12345));
         nft2981.mintTo(seller, "");
 
         vm.prank(marketplaceDeployer);
@@ -254,7 +251,8 @@ contract MarketplaceOffersTest is BaseTest {
         // create token with ERC2981
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
-        ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        vm.prank(address(0x12345));
         nft2981.mintTo(seller, "");
 
         vm.prank(marketplaceDeployer);
@@ -330,11 +328,7 @@ contract MarketplaceOffersTest is BaseTest {
     }
 
     function test_revert_feesExceedTotalPrice() public {
-        (
-            MockRoyaltyEngineV1 royaltyEngine,
-            address payable[] memory customRoyaltyRecipients,
-            uint256[] memory customRoyaltyAmounts
-        ) = _setupRoyaltyEngine();
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
 
         // Add RoyaltyEngine to marketplace
         vm.prank(marketplaceDeployer);
@@ -358,8 +352,6 @@ contract MarketplaceOffersTest is BaseTest {
         erc721.mint(seller, 1);
 
         IOffers.Offer memory offer = OffersLogic(marketplace).getOffer(offerId);
-
-        uint256 totalPrice = offer.totalPrice;
 
         // Approve Marketplace to transfer token.
         vm.prank(seller);

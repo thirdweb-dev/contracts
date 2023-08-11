@@ -169,7 +169,6 @@ contract TokenERC1155BenchmarkTest is BaseTest {
         uint256 _amount = 100;
 
         uint256 nextTokenId = tokenContract.nextTokenIdToMint();
-        uint256 currentBalanceOfRecipient = tokenContract.balanceOf(recipient, nextTokenId);
 
         vm.prank(deployerSigner);
         tokenContract.mintTo(recipient, type(uint256).max, _tokenURI, _amount);

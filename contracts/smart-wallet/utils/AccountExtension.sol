@@ -124,5 +124,5 @@ contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder,
         return isAdmin(msg.sender);
     }
 
-    function _afterChangeRole(RoleRequest calldata) internal virtual override {}
+    function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {}
 }

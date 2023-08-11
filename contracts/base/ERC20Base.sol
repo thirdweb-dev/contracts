@@ -31,8 +31,12 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit, IMintab
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(string memory _name, string memory _symbol) ERC20Permit(_name, _symbol) {
-        _setupOwner(msg.sender);
+    constructor(
+        address _defaultAdmin,
+        string memory _name,
+        string memory _symbol
+    ) ERC20Permit(_name, _symbol) {
+        _setupOwner(_defaultAdmin);
     }
 
     /*//////////////////////////////////////////////////////////////

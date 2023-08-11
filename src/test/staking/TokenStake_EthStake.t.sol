@@ -301,7 +301,7 @@ contract TokenStakeEthStakeTest is BaseTest {
 
     function test_state_setTimeUnit() public {
         // set value and check
-        uint256 timeUnitToSet = 100;
+        uint80 timeUnitToSet = 100;
         vm.prank(deployer);
         stakeContract.setTimeUnit(timeUnitToSet);
         assertEq(timeUnitToSet, stakeContract.getTimeUnit());
@@ -507,7 +507,7 @@ contract TokenStakeEthStakeTest is BaseTest {
         stakeContract.stake{ value: 400 }(400);
 
         // set timeUnit to zero
-        uint256 newTimeUnit = 0;
+        uint80 newTimeUnit = 0;
         vm.prank(deployer);
         vm.expectRevert("time-unit can't be 0");
         stakeContract.setTimeUnit(newTimeUnit);

@@ -13,7 +13,7 @@ contract TokenStakeTest is BaseTest {
     address internal stakerOne;
     address internal stakerTwo;
 
-    uint256 internal timeUnit;
+    uint80 internal timeUnit;
     uint256 internal rewardRatioNumerator;
     uint256 internal rewardRatioDenominator;
 
@@ -298,7 +298,7 @@ contract TokenStakeTest is BaseTest {
 
     function test_state_setTimeUnit() public {
         // set value and check
-        uint256 timeUnitToSet = 100;
+        uint80 timeUnitToSet = 100;
         vm.prank(deployer);
         stakeContract.setTimeUnit(timeUnitToSet);
         assertEq(timeUnitToSet, stakeContract.getTimeUnit());
@@ -504,7 +504,7 @@ contract TokenStakeTest is BaseTest {
         stakeContract.stake(400);
 
         // set timeUnit to zero
-        uint256 newTimeUnit = 0;
+        uint80 newTimeUnit = 0;
         vm.prank(deployer);
         vm.expectRevert("time-unit can't be 0");
         stakeContract.setTimeUnit(newTimeUnit);
@@ -537,7 +537,7 @@ contract Macro_TokenStake_Rewards6_Staking18_Test is BaseTest {
 
     address internal stakerOne;
 
-    uint256 internal timeUnit;
+    uint80 internal timeUnit;
     uint256 internal rewardRatioNumerator;
     uint256 internal rewardRatioDenominator;
 
@@ -631,7 +631,7 @@ contract Macro_TokenStake_Rewards18_Staking6_Test is BaseTest {
 
     address internal stakerOne;
 
-    uint256 internal timeUnit;
+    uint80 internal timeUnit;
     uint256 internal rewardRatioNumerator;
     uint256 internal rewardRatioDenominator;
 
@@ -719,7 +719,7 @@ contract Macro_TokenStake_Rewards18_Staking6_Test is BaseTest {
 contract Macro_TokenStakeTest is BaseTest {
     TokenStake internal stakeContract;
 
-    uint256 internal timeUnit;
+    uint80 internal timeUnit;
     uint256 internal rewardsPerUnitTime;
     uint256 internal rewardRatioNumerator;
     uint256 internal rewardRatioDenominator;
@@ -767,7 +767,7 @@ contract Macro_TokenStakeTest is BaseTest {
         stakeContract.stake(tokenAmount);
 
         // set timeUnit to zero
-        uint256 newTimeUnit = 0;
+        uint80 newTimeUnit = 0;
         vm.prank(deployer);
         vm.expectRevert("time-unit can't be 0");
         stakeContract.setTimeUnit(newTimeUnit);

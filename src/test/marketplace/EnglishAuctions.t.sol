@@ -268,11 +268,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     }
 
     function test_royaltyEngine_tokenWithERC2981() public {
-        (
-            MockRoyaltyEngineV1 royaltyEngine,
-            address payable[] memory customRoyaltyRecipients,
-            uint256[] memory customRoyaltyAmounts
-        ) = _setupRoyaltyEngine();
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
 
         // Add RoyaltyEngine to marketplace
         vm.prank(marketplaceDeployer);
@@ -283,8 +279,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         // create token with ERC2981
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
-        ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
         // Mint the ERC721 tokens to seller. These tokens will be listed.
+        vm.prank(address(0x12345));
         nft2981.mintTo(seller, "");
 
         vm.prank(marketplaceDeployer);
@@ -319,7 +316,8 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
         // create token with ERC2981
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
-        ERC721Base nft2981 = new ERC721Base("NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
+        vm.prank(address(0x12345));
         nft2981.mintTo(seller, "");
 
         vm.prank(marketplaceDeployer);
@@ -405,11 +403,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     }
 
     function test_revert_feesExceedTotalPrice() public {
-        (
-            MockRoyaltyEngineV1 royaltyEngine,
-            address payable[] memory customRoyaltyRecipients,
-            uint256[] memory customRoyaltyAmounts
-        ) = _setupRoyaltyEngine();
+        (MockRoyaltyEngineV1 royaltyEngine, , ) = _setupRoyaltyEngine();
 
         // Add RoyaltyEngine to marketplace
         vm.prank(marketplaceDeployer);
@@ -2251,7 +2245,6 @@ contract BreitwieserTheBidder is BaseTest {
 
         // Condition: multiple copies in circulation and attacker has at least 1.
         uint256 tokenId = 999;
-        uint256 quantity = 2;
         // Victim.
         erc1155.mint(seller, tokenId, 1);
         erc1155.mint(attacker, tokenId, 1);
@@ -2264,7 +2257,7 @@ contract BreitwieserTheBidder is BaseTest {
             address currency = address(erc20);
             uint256 minimumBidAmount = 1 ether;
             uint256 buyoutBidAmount = 10 ether;
-            uint256 quantity = 1;
+            uint256 qty = 1;
             uint64 timeBufferInSeconds = 10 seconds;
             uint64 bidBufferBps = 1000;
             uint64 startTimestamp = 0;
@@ -2272,7 +2265,7 @@ contract BreitwieserTheBidder is BaseTest {
             auctionParams1 = IEnglishAuctions.AuctionParameters(
                 assetContract,
                 tokenId,
-                quantity,
+                qty,
                 currency,
                 minimumBidAmount,
                 buyoutBidAmount,

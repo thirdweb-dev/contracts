@@ -17,7 +17,7 @@ contract BaseERC721LazyMintTest is BaseUtilTest {
 
     function setUp() public override {
         vm.prank(deployer);
-        base = new ERC721LazyMint(NAME, SYMBOL, royaltyRecipient, royaltyBps);
+        base = new ERC721LazyMint(deployer, NAME, SYMBOL, royaltyRecipient, royaltyBps);
 
         _amount = 10;
         _baseURIForTokens = "baseURI/";

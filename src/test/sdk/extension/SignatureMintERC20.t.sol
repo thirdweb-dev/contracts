@@ -51,7 +51,7 @@ contract ExtensionSignatureMintERC20 is DSTest, Test {
         signer = vm.addr(privateKey);
 
         typehashMintRequest = keccak256(
-            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
+            "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
         );
         nameHash = keccak256(bytes("SignatureMintERC20"));
         versionHash = keccak256(bytes("1"));
@@ -63,7 +63,7 @@ contract ExtensionSignatureMintERC20 is DSTest, Test {
         _mintrequest.to = address(1);
         _mintrequest.primarySaleRecipient = address(2);
         _mintrequest.quantity = 1;
-        _mintrequest.pricePerToken = 1;
+        _mintrequest.price = 1;
         _mintrequest.currency = address(0x111);
         _mintrequest.validityStartTimestamp = 1000;
         _mintrequest.validityEndTimestamp = 2000;
@@ -82,7 +82,7 @@ contract ExtensionSignatureMintERC20 is DSTest, Test {
             _request.to,
             _request.primarySaleRecipient,
             _request.quantity,
-            _request.pricePerToken,
+            _request.price,
             _request.currency,
             _request.validityStartTimestamp,
             _request.validityEndTimestamp,
