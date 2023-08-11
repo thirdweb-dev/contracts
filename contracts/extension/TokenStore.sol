@@ -48,8 +48,9 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
         uint256 count = getTokenCountOfBundle(_idForContent);
         Token[] memory tokensToRelease = new Token[](count);
 
-        for (uint256 i = 0; i < count; i += 1) {
+        for (uint256 i; i < count; ) {
             tokensToRelease[i] = getTokenOfBundle(_idForContent, i);
+            unchecked { ++i; }
         }
 
         _deleteBundle(_idForContent);
@@ -85,12 +86,15 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
         Token[] memory _tokens
     ) internal {
         uint256 nativeTokenValue;
-        for (uint256 i = 0; i < _tokens.length; i += 1) {
-            if (_tokens[i].assetContract == CurrencyTransferLib.NATIVE_TOKEN && _to == address(this)) {
-                nativeTokenValue += _tokens[i].totalAmount;
+        uint256 length = _tokens.length;
+        for (uint256 i; i < length; ) {
+            Token memory _token = _tokens[i];
+            if (_token.assetContract == CurrencyTransferLib.NATIVE_TOKEN && _to == address(this)) {
+                nativeTokenValue += _token.totalAmount;
             } else {
-                _transferToken(_from, _to, _tokens[i]);
+                _transferToken(_from, _to, _token);
             }
+            unchecked { ++i; }
         }
         if (nativeTokenValue != 0) {
             Token memory _nativeToken = Token({
