@@ -54,14 +54,14 @@
     "typescript": "^4.4.4"
   },
   "scripts": {
-    "clean": "forge clean && rm -rf abi/ && rm -rf artifacts_forge/ && rm -rf dist/ && rm -rf typechain/",
-    "compile": "forge build",
+    "clean": "hardhat clean && rm -rf abi/ && rm -rf artifacts/ && rm -rf dist/ && rm -rf typechain/",
+    "compile": "hardhat compile",
     "lint": "solhint \"contracts/**/*.sol\"",
     "prettier": "prettier --config .prettierrc --write \"{contracts,src}/**/*.{js,json,sol,ts}\"",
     "prettier:list-different": "prettier --config .prettierrc --list-different \"**/*.{js,json,sol,ts}\"",
     "prettier:contracts": "prettier --config .prettierrc --list-different \"{contracts,src}/**/*.sol\"",
-    "test": "forge test",
-    "typechain": "typechain --target ethers-v5 --out-dir ./typechain artifacts_forge/**/*.json",
+    "test": "hardhat test",
+    "typechain": "hardhat typechain",
     "build": "yarn clean && yarn compile",
     "forge:build": "forge build --hardhat",
     "forge:test": "forge test --hardhat",

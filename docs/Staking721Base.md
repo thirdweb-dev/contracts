@@ -375,7 +375,7 @@ function stakerAddress(uint256) external view returns (address)
 ### stakers
 
 ```solidity
-function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards, uint256 conditionIdOflastUpdate)
+function stakers(address) external view returns (uint64 amountStaked, uint64 conditionIdOflastUpdate, uint128 timeOfLastUpdate, uint256 unclaimedRewards)
 ```
 
 
@@ -392,10 +392,10 @@ function stakers(address) external view returns (uint256 amountStaked, uint256 t
 
 | Name | Type | Description |
 |---|---|---|
-| amountStaked | uint256 | undefined |
-| timeOfLastUpdate | uint256 | undefined |
+| amountStaked | uint64 | undefined |
+| conditionIdOflastUpdate | uint64 | undefined |
+| timeOfLastUpdate | uint128 | undefined |
 | unclaimedRewards | uint256 | undefined |
-| conditionIdOflastUpdate | uint256 | undefined |
 
 ### stakersArray
 
