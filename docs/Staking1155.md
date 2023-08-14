@@ -232,7 +232,7 @@ Set rewards per unit of time.           Interpreted as x rewards per second/per 
 ### setDefaultTimeUnit
 
 ```solidity
-function setDefaultTimeUnit(uint256 _defaultTimeUnit) external nonpayable
+function setDefaultTimeUnit(uint80 _defaultTimeUnit) external nonpayable
 ```
 
 Set time unit. Set as a number of seconds.           Could be specified as -- x * 1 hours, x * 1 days, etc.
@@ -243,7 +243,7 @@ Set time unit. Set as a number of seconds.           Could be specified as -- x 
 
 | Name | Type | Description |
 |---|---|---|
-| _defaultTimeUnit | uint256 | New time unit. |
+| _defaultTimeUnit | uint80 | New time unit. |
 
 ### setRewardsPerUnitTime
 
@@ -265,7 +265,7 @@ Set rewards per unit of time.           Interpreted as x rewards per second/per 
 ### setTimeUnit
 
 ```solidity
-function setTimeUnit(uint256 _tokenId, uint256 _timeUnit) external nonpayable
+function setTimeUnit(uint256 _tokenId, uint80 _timeUnit) external nonpayable
 ```
 
 Set time unit. Set as a number of seconds.           Could be specified as -- x * 1 hours, x * 1 days, etc.
@@ -277,12 +277,12 @@ Set time unit. Set as a number of seconds.           Could be specified as -- x 
 | Name | Type | Description |
 |---|---|---|
 | _tokenId | uint256 | ERC1155 token Id. |
-| _timeUnit | uint256 | New time unit. |
+| _timeUnit | uint80 | New time unit. |
 
 ### stake
 
 ```solidity
-function stake(uint256 _tokenId, uint256 _amount) external nonpayable
+function stake(uint256 _tokenId, uint64 _amount) external nonpayable
 ```
 
 Stake ERC721 Tokens.
@@ -294,12 +294,12 @@ Stake ERC721 Tokens.
 | Name | Type | Description |
 |---|---|---|
 | _tokenId | uint256 | ERC1155 token-id to stake. |
-| _amount | uint256 | Amount to stake. |
+| _amount | uint64 | Amount to stake. |
 
 ### stakers
 
 ```solidity
-function stakers(uint256, address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards, uint256 conditionIdOflastUpdate)
+function stakers(uint256, address) external view returns (uint64 conditionIdOflastUpdate, uint64 amountStaked, uint128 timeOfLastUpdate, uint256 unclaimedRewards)
 ```
 
 
@@ -317,10 +317,10 @@ function stakers(uint256, address) external view returns (uint256 amountStaked, 
 
 | Name | Type | Description |
 |---|---|---|
-| amountStaked | uint256 | undefined |
-| timeOfLastUpdate | uint256 | undefined |
+| conditionIdOflastUpdate | uint64 | undefined |
+| amountStaked | uint64 | undefined |
+| timeOfLastUpdate | uint128 | undefined |
 | unclaimedRewards | uint256 | undefined |
-| conditionIdOflastUpdate | uint256 | undefined |
 
 ### stakersArray
 
@@ -365,7 +365,7 @@ function stakingToken() external view returns (address)
 ### withdraw
 
 ```solidity
-function withdraw(uint256 _tokenId, uint256 _amount) external nonpayable
+function withdraw(uint256 _tokenId, uint64 _amount) external nonpayable
 ```
 
 Withdraw staked tokens.
@@ -377,7 +377,7 @@ Withdraw staked tokens.
 | Name | Type | Description |
 |---|---|---|
 | _tokenId | uint256 | ERC1155 token-id to withdraw. |
-| _amount | uint256 | Amount to withdraw. |
+| _amount | uint64 | Amount to withdraw. |
 
 
 
