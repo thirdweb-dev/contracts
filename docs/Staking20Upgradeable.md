@@ -82,7 +82,7 @@ View amount staked and rewards for a user.
 ### getTimeUnit
 
 ```solidity
-function getTimeUnit() external view returns (uint256 _timeUnit)
+function getTimeUnit() external view returns (uint80 _timeUnit)
 ```
 
 
@@ -94,12 +94,12 @@ function getTimeUnit() external view returns (uint256 _timeUnit)
 
 | Name | Type | Description |
 |---|---|---|
-| _timeUnit | uint256 | undefined |
+| _timeUnit | uint80 | undefined |
 
 ### rewardTokenDecimals
 
 ```solidity
-function rewardTokenDecimals() external view returns (uint256)
+function rewardTokenDecimals() external view returns (uint16)
 ```
 
 
@@ -111,7 +111,7 @@ function rewardTokenDecimals() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| _0 | uint16 | undefined |
 
 ### setRewardRatio
 
@@ -133,7 +133,7 @@ Set rewards per unit of time.           Interpreted as (numerator/denominator) r
 ### setTimeUnit
 
 ```solidity
-function setTimeUnit(uint256 _timeUnit) external nonpayable
+function setTimeUnit(uint80 _timeUnit) external nonpayable
 ```
 
 Set time unit. Set as a number of seconds.           Could be specified as -- x * 1 hours, x * 1 days, etc.
@@ -144,7 +144,7 @@ Set time unit. Set as a number of seconds.           Could be specified as -- x 
 
 | Name | Type | Description |
 |---|---|---|
-| _timeUnit | uint256 | New time unit. |
+| _timeUnit | uint80 | New time unit. |
 
 ### stake
 
@@ -165,7 +165,7 @@ Stake ERC20 Tokens.
 ### stakers
 
 ```solidity
-function stakers(address) external view returns (uint256 amountStaked, uint256 timeOfLastUpdate, uint256 unclaimedRewards, uint256 conditionIdOflastUpdate)
+function stakers(address) external view returns (uint128 timeOfLastUpdate, uint64 conditionIdOflastUpdate, uint256 amountStaked, uint256 unclaimedRewards)
 ```
 
 
@@ -182,10 +182,10 @@ function stakers(address) external view returns (uint256 amountStaked, uint256 t
 
 | Name | Type | Description |
 |---|---|---|
+| timeOfLastUpdate | uint128 | undefined |
+| conditionIdOflastUpdate | uint64 | undefined |
 | amountStaked | uint256 | undefined |
-| timeOfLastUpdate | uint256 | undefined |
 | unclaimedRewards | uint256 | undefined |
-| conditionIdOflastUpdate | uint256 | undefined |
 
 ### stakersArray
 
@@ -246,7 +246,7 @@ function stakingTokenBalance() external view returns (uint256)
 ### stakingTokenDecimals
 
 ```solidity
-function stakingTokenDecimals() external view returns (uint256)
+function stakingTokenDecimals() external view returns (uint16)
 ```
 
 
@@ -258,7 +258,7 @@ function stakingTokenDecimals() external view returns (uint256)
 
 | Name | Type | Description |
 |---|---|---|
-| _0 | uint256 | undefined |
+| _0 | uint16 | undefined |
 
 ### withdraw
 

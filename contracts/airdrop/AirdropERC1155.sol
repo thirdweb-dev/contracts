@@ -100,7 +100,7 @@ contract AirdropERC1155 is
 
         for (uint256 i = 0; i < len; ) {
             try
-                IERC1155(_tokenAddress).safeTransferFrom{ gas: 80_000 }(
+                IERC1155(_tokenAddress).safeTransferFrom(
                     _tokenOwner,
                     _contents[i].recipient,
                     _contents[i].tokenId,

@@ -77,7 +77,7 @@ View amount staked and total rewards for a user.
 ### stake
 
 ```solidity
-function stake(uint256 tokenId, uint256 amount) external nonpayable
+function stake(uint256 tokenId, uint64 amount) external nonpayable
 ```
 
 Stake ERC721 Tokens.
@@ -89,12 +89,12 @@ Stake ERC721 Tokens.
 | Name | Type | Description |
 |---|---|---|
 | tokenId | uint256 | ERC1155 token-id to stake. |
-| amount | uint256 | Amount to stake. |
+| amount | uint64 | Amount to stake. |
 
 ### withdraw
 
 ```solidity
-function withdraw(uint256 tokenId, uint256 amount) external nonpayable
+function withdraw(uint256 tokenId, uint64 amount) external nonpayable
 ```
 
 Withdraw staked tokens.
@@ -106,7 +106,7 @@ Withdraw staked tokens.
 | Name | Type | Description |
 |---|---|---|
 | tokenId | uint256 | ERC1155 token-id to withdraw. |
-| amount | uint256 | Amount to withdraw. |
+| amount | uint64 | Amount to withdraw. |
 
 
 
