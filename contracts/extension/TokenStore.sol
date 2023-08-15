@@ -66,18 +66,19 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
         address _to,
         Token memory _token
     ) internal {
+        address _assetContract = _token.assetContract;
         if (_token.tokenType == TokenType.ERC20) {
             CurrencyTransferLib.transferCurrencyWithWrapper(
-                _token.assetContract,
+                _assetContract,
                 _from,
                 _to,
                 _token.totalAmount,
                 nativeTokenWrapper
             );
         } else if (_token.tokenType == TokenType.ERC721) {
-            IERC721(_token.assetContract).safeTransferFrom(_from, _to, _token.tokenId);
+            IERC721(_assetContract).safeTransferFrom(_from, _to, _token.tokenId);
         } else if (_token.tokenType == TokenType.ERC1155) {
-            IERC1155(_token.assetContract).safeTransferFrom(_from, _to, _token.tokenId, _token.totalAmount, "");
+            IERC1155(_assetContract).safeTransferFrom(_from, _to, _token.tokenId, _token.totalAmount, "");
         }
     }
 
