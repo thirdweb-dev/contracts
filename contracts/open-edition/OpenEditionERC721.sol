@@ -43,7 +43,9 @@ contract OpenEditionERC721 is
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
     bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
 
-    constructor(Extension[] memory _extensions) BaseRouter(_extensions) {}
+    constructor(Extension[] memory _extensions) BaseRouter(_extensions) {
+        _disableInitializers();
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
