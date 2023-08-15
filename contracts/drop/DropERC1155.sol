@@ -222,7 +222,7 @@ contract DropERC1155 is
         uint256 _pricePerToken
     ) internal override {
         if (_pricePerToken == 0) {
-            require(msg.value == 0, "!Value");
+            require(msg.value == 0, "!V");
             return;
         }
 
@@ -241,7 +241,7 @@ contract DropERC1155 is
         } else {
             validMsgValue = msg.value == 0;
         }
-        require(validMsgValue, "Invalid msg value");
+        require(validMsgValue, "!V");
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), _saleRecipient, totalPrice - platformFees);
