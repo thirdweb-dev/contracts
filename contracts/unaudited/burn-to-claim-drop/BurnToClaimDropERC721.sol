@@ -48,7 +48,9 @@ contract BurnToClaimDropERC721 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Extension[] memory _extensions) BaseRouter(_extensions) {}
+    constructor(Extension[] memory _extensions) BaseRouter(_extensions) {
+        _disableInitializers();
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
