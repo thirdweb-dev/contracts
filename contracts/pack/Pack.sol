@@ -344,35 +344,37 @@ contract Pack is
 
         (Token[] memory _token, ) = getPackContents(_packId);
         bool[] memory _isUpdated = new bool[](totalRewardKinds);
-        for (uint256 i = 0; i < numOfRewardUnitsToDistribute; i += 1) {
+        for (uint256 i; i < numOfRewardUnitsToDistribute; ) {
             uint256 randomVal = uint256(keccak256(abi.encode(random, i)));
             uint256 target = randomVal % totalRewardUnits;
             uint256 step;
-
-            for (uint256 j = 0; j < totalRewardKinds; j += 1) {
-                uint256 totalRewardUnitsOfKind = _token[j].totalAmount / pack.perUnitAmounts[j];
-
+            for (uint256 j; j < totalRewardKinds; ) {
+                uint256 perUnitAmount = pack.perUnitAmounts[j];
+                uint256 totalRewardUnitsOfKind = _token[j].totalAmount / perUnitAmount;
                 if (target < step + totalRewardUnitsOfKind) {
-                    _token[j].totalAmount -= pack.perUnitAmounts[j];
+                    _token[j].totalAmount -= perUnitAmount;
                     _isUpdated[j] = true;
-
-                    rewardUnits[i].assetContract = _token[j].assetContract;
-                    rewardUnits[i].tokenType = _token[j].tokenType;
-                    rewardUnits[i].tokenId = _token[j].tokenId;
-                    rewardUnits[i].totalAmount = pack.perUnitAmounts[j];
-
+                    rewardUnits[i] = _token[j];
+                    rewardUnits[i].totalAmount = perUnitAmount;
                     totalRewardUnits -= 1;
-
                     break;
                 } else {
                     step += totalRewardUnitsOfKind;
                 }
+                unchecked {
+                    ++j;
+                }
+            }
+            unchecked {
+                ++i;
             }
         }
-
-        for (uint256 i = 0; i < totalRewardKinds; i += 1) {
+        for (uint256 i; i < totalRewardKinds; ) {
             if (_isUpdated[i]) {
                 _updateTokenInBundle(_token[i], _packId, i);
+            }
+            unchecked {
+                ++i;
             }
         }
     }
@@ -392,8 +394,11 @@ contract Pack is
         contents = new Token[](total);
         perUnitAmounts = new uint256[](total);
 
-        for (uint256 i = 0; i < total; i += 1) {
+        for (uint256 i; i < total; ) {
             contents[i] = getTokenOfBundle(_packId, i);
+            unchecked {
+                ++i;
+            }
         }
         perUnitAmounts = pack.perUnitAmounts;
     }
