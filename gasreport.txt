@@ -1,96 +1,99 @@
-No files changed, compilation skipped
+Compiling 638 files with 0.8.12
+Solc 0.8.12 finished in 161.31s
+Compiler run [32msuccessful![0m
 
 Running 3 tests for src/test/benchmark/EditionStakeBenchmark.t.sol:EditionStakeBenchmarkTest
-[32m[PASS][0m test_benchmark_editionStake_claimRewards() (gas: 65580)
-[32m[PASS][0m test_benchmark_editionStake_stake() (gas: 185145)
-[32m[PASS][0m test_benchmark_editionStake_withdraw() (gas: 46326)
-Test result: [32mok[0m. 3 passed; 0 failed; finished in 468.09ms
-
-Running 5 tests for src/test/benchmark/SignatureDropBenchmark.t.sol:SignatureDropBenchmarkTest
-[32m[PASS][0m test_bechmark_signatureDrop_claim_five_tokens() (gas: 141456)
-[32m[PASS][0m test_bechmark_signatureDrop_setClaimConditions() (gas: 73774)
-[32m[PASS][0m test_benchmark_signatureDrop_lazyMint() (gas: 124639)
-[32m[PASS][0m test_benchmark_signatureDrop_lazyMint_for_delayed_reveal() (gas: 226228)
-[32m[PASS][0m test_benchmark_signatureDrop_reveal() (gas: 9183)
-Test result: [32mok[0m. 5 passed; 0 failed; finished in 468.49ms
-
-Running 3 tests for src/test/benchmark/NFTStakeBenchmark.t.sol:NFTStakeBenchmarkTest
-[32m[PASS][0m test_benchmark_nftStake_claimRewards() (gas: 68826)
-[32m[PASS][0m test_benchmark_nftStake_stake_five_tokens() (gas: 549421)
-[32m[PASS][0m test_benchmark_nftStake_withdraw() (gas: 39648)
-Test result: [32mok[0m. 3 passed; 0 failed; finished in 468.46ms
-
-Running 4 tests for src/test/benchmark/TokenERC1155Benchmark.t.sol:TokenERC1155BenchmarkTest
-[32m[PASS][0m test_benchmark_tokenERC1155_burn() (gas: 5744)
-[32m[PASS][0m test_benchmark_tokenERC1155_mintTo() (gas: 121028)
-[32m[PASS][0m test_benchmark_tokenERC1155_mintWithSignature_pay_with_ERC20() (gas: 263757)
-[32m[PASS][0m test_benchmark_tokenERC1155_mintWithSignature_pay_with_native_token() (gas: 292255)
-Test result: [32mok[0m. 4 passed; 0 failed; finished in 469.08ms
+[32m[PASS][0m test_benchmark_editionStake_claimRewards() (gas: 65558)
+[32m[PASS][0m test_benchmark_editionStake_stake() (gas: 185123)
+[32m[PASS][0m test_benchmark_editionStake_withdraw() (gas: 46304)
+Test result: [32mok[0m. 3 passed; 0 failed; 0 skipped; finished in 867.54ms
 
 Running 3 tests for src/test/benchmark/PackBenchmark.t.sol:PackBenchmarkTest
-[32m[PASS][0m test_benchmark_pack_addPackContents() (gas: 219449)
-[32m[PASS][0m test_benchmark_pack_createPack() (gas: 1425232)
-[32m[PASS][0m test_benchmark_pack_openPack() (gas: 170278)
-Test result: [32mok[0m. 3 passed; 0 failed; finished in 469.74ms
+[32m[PASS][0m test_benchmark_pack_addPackContents() (gas: 219427)
+[32m[PASS][0m test_benchmark_pack_createPack() (gas: 1425210)
+[32m[PASS][0m test_benchmark_pack_openPack() (gas: 154414)
+Test result: [32mok[0m. 3 passed; 0 failed; 0 skipped; finished in 871.94ms
+
+Running 5 tests for src/test/benchmark/SignatureDropBenchmark.t.sol:SignatureDropBenchmarkTest
+[32m[PASS][0m test_bechmark_signatureDrop_claim_five_tokens() (gas: 141434)
+[32m[PASS][0m test_bechmark_signatureDrop_setClaimConditions() (gas: 73752)
+[32m[PASS][0m test_benchmark_signatureDrop_lazyMint() (gas: 124617)
+[32m[PASS][0m test_benchmark_signatureDrop_lazyMint_for_delayed_reveal() (gas: 226206)
+[32m[PASS][0m test_benchmark_signatureDrop_reveal() (gas: 9165)
+Test result: [32mok[0m. 5 passed; 0 failed; 0 skipped; finished in 872.08ms
 
 Running 2 tests for src/test/benchmark/MultiwrapBenchmark.t.sol:MultiwrapBenchmarkTest
-[32m[PASS][0m test_benchmark_multiwrap_unwrap() (gas: 92404)
-[32m[PASS][0m test_benchmark_multiwrap_wrap() (gas: 475314)
-Test result: [32mok[0m. 2 passed; 0 failed; finished in 476.27ms
+[32m[PASS][0m test_benchmark_multiwrap_unwrap() (gas: 92386)
+[32m[PASS][0m test_benchmark_multiwrap_wrap() (gas: 475292)
+Test result: [32mok[0m. 2 passed; 0 failed; 0 skipped; finished in 873.82ms
 
 Running 1 test for src/test/benchmark/AirdropERC20Benchmark.t.sol:AirdropERC20BenchmarkTest
-[32m[PASS][0m test_benchmark_airdropERC20_airdrop() (gas: 32173710)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 491.93ms
+[32m[PASS][0m test_benchmark_airdropERC20_airdrop() (gas: 32173688)
+Test result: [32mok[0m. 1 passed; 0 failed; 0 skipped; finished in 886.88ms
 
 Running 1 test for src/test/benchmark/AirdropERC1155Benchmark.t.sol:AirdropERC1155BenchmarkTest
-[32m[PASS][0m test_benchmark_airdropERC1155_airdrop() (gas: 38084693)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 492.70ms
+[32m[PASS][0m test_benchmark_airdropERC1155_airdrop() (gas: 38078671)
+Test result: [32mok[0m. 1 passed; 0 failed; 0 skipped; finished in 891.33ms
+
+Running 4 tests for src/test/benchmark/TokenERC1155Benchmark.t.sol:TokenERC1155BenchmarkTest
+[32m[PASS][0m test_benchmark_tokenERC1155_burn() (gas: 5726)
+[32m[PASS][0m test_benchmark_tokenERC1155_mintTo() (gas: 121006)
+[32m[PASS][0m test_benchmark_tokenERC1155_mintWithSignature_pay_with_ERC20() (gas: 263735)
+[32m[PASS][0m test_benchmark_tokenERC1155_mintWithSignature_pay_with_native_token() (gas: 292233)
+Test result: [32mok[0m. 4 passed; 0 failed; 0 skipped; finished in 894.20ms
 
 Running 1 test for src/test/benchmark/AirdropERC721Benchmark.t.sol:AirdropERC721BenchmarkTest
-[32m[PASS][0m test_benchmark_airdropERC721_airdrop() (gas: 43898701)
-Test result: [32mok[0m. 1 passed; 0 failed; finished in 498.05ms
-
-Running 3 tests for src/test/benchmark/TokenERC20Benchmark.t.sol:TokenERC20BenchmarkTest
-[32m[PASS][0m test_benchmark_tokenERC20_mintTo() (gas: 118533)
-[32m[PASS][0m test_benchmark_tokenERC20_mintWithSignature_pay_with_ERC20() (gas: 181738)
-[32m[PASS][0m test_benchmark_tokenERC20_mintWithSignature_pay_with_native_token() (gas: 206150)
-Test result: [32mok[0m. 3 passed; 0 failed; finished in 145.19ms
-
-Running 3 tests for src/test/benchmark/TokenStakeBenchmark.t.sol:TokenStakeBenchmarkTest
-[32m[PASS][0m test_benchmark_tokenStake_claimRewards() (gas: 68065)
-[32m[PASS][0m test_benchmark_tokenStake_stake() (gas: 178011)
-[32m[PASS][0m test_benchmark_tokenStake_withdraw() (gas: 47890)
-Test result: [32mok[0m. 3 passed; 0 failed; finished in 147.70ms
+[32m[PASS][0m test_benchmark_airdropERC721_airdrop() (gas: 43892679)
+Test result: [32mok[0m. 1 passed; 0 failed; 0 skipped; finished in 902.28ms
 
 Running 3 tests for src/test/benchmark/PackVRFDirectBenchmark.t.sol:PackVRFDirectBenchmarkTest
-[32m[PASS][0m test_benchmark_packvrf_createPack() (gas: 1391866)
-[32m[PASS][0m test_benchmark_packvrf_openPack() (gas: 119981)
-[32m[PASS][0m test_benchmark_packvrf_openPackAndClaimRewards() (gas: 3621)
-Test result: [32mok[0m. 3 passed; 0 failed; finished in 153.05ms
+[32m[PASS][0m test_benchmark_packvrf_createPack() (gas: 1391844)
+[32m[PASS][0m test_benchmark_packvrf_openPack() (gas: 119959)
+[32m[PASS][0m test_benchmark_packvrf_openPackAndClaimRewards() (gas: 3599)
+Test result: [32mok[0m. 3 passed; 0 failed; 0 skipped; finished in 212.61ms
+
+Running 3 tests for src/test/benchmark/TokenStakeBenchmark.t.sol:TokenStakeBenchmarkTest
+[32m[PASS][0m test_benchmark_tokenStake_claimRewards() (gas: 68043)
+[32m[PASS][0m test_benchmark_tokenStake_stake() (gas: 177989)
+[32m[PASS][0m test_benchmark_tokenStake_withdraw() (gas: 47868)
+Test result: [32mok[0m. 3 passed; 0 failed; 0 skipped; finished in 205.79ms
+
+Running 3 tests for src/test/benchmark/NFTStakeBenchmark.t.sol:NFTStakeBenchmarkTest
+[32m[PASS][0m test_benchmark_nftStake_claimRewards() (gas: 68804)
+[32m[PASS][0m test_benchmark_nftStake_stake_five_tokens() (gas: 549399)
+[32m[PASS][0m test_benchmark_nftStake_withdraw() (gas: 39631)
+Test result: [32mok[0m. 3 passed; 0 failed; 0 skipped; finished in 207.68ms
 
 Running 4 tests for src/test/benchmark/TokenERC721Benchmark.t.sol:TokenERC721BenchmarkTest
-[32m[PASS][0m test_benchmark_tokenERC721_burn() (gas: 10411)
-[32m[PASS][0m test_benchmark_tokenERC721_mintTo() (gas: 149977)
-[32m[PASS][0m test_benchmark_tokenERC721_mintWithSignature_pay_with_ERC20() (gas: 259382)
-[32m[PASS][0m test_benchmark_tokenERC721_mintWithSignature_pay_with_native_token() (gas: 283724)
-Test result: [32mok[0m. 4 passed; 0 failed; finished in 160.72ms
+[32m[PASS][0m test_benchmark_tokenERC721_burn() (gas: 10393)
+[32m[PASS][0m test_benchmark_tokenERC721_mintTo() (gas: 149955)
+[32m[PASS][0m test_benchmark_tokenERC721_mintWithSignature_pay_with_ERC20() (gas: 259360)
+[32m[PASS][0m test_benchmark_tokenERC721_mintWithSignature_pay_with_native_token() (gas: 283702)
+Test result: [32mok[0m. 4 passed; 0 failed; 0 skipped; finished in 228.01ms
 
-Running 3 tests for src/test/benchmark/DropERC1155Benchmark.t.sol:DropERC1155BenchmarkTest
-[32m[PASS][0m test_bechmark_dropERC1155_claim() (gas: 186668)
-[32m[PASS][0m test_bechmark_dropERC1155_setClaimConditions_five_conditions() (gas: 492331)
-[32m[PASS][0m test_benchmark_dropERC1155_lazyMint() (gas: 123873)
-Test result: [32mok[0m. 3 passed; 0 failed; finished in 758.20ms
-
-Running 5 tests for src/test/benchmark/DropERC721Benchmark.t.sol:DropERC721BenchmarkTest
-[32m[PASS][0m test_bechmark_dropERC721_claim_five_tokens() (gas: 211967)
-[32m[PASS][0m test_bechmark_dropERC721_setClaimConditions_five_conditions() (gas: 500859)
-[32m[PASS][0m test_benchmark_dropERC721_lazyMint() (gas: 124544)
-[32m[PASS][0m test_benchmark_dropERC721_lazyMint_for_delayed_reveal() (gas: 226124)
-[32m[PASS][0m test_benchmark_dropERC721_reveal() (gas: 8800)
-Test result: [32mok[0m. 5 passed; 0 failed; finished in 366.44ms
+Running 3 tests for src/test/benchmark/TokenERC20Benchmark.t.sol:TokenERC20BenchmarkTest
+[32m[PASS][0m test_benchmark_tokenERC20_mintTo() (gas: 118511)
+[32m[PASS][0m test_benchmark_tokenERC20_mintWithSignature_pay_with_ERC20() (gas: 181716)
+[32m[PASS][0m test_benchmark_tokenERC20_mintWithSignature_pay_with_native_token() (gas: 206128)
+Test result: [32mok[0m. 3 passed; 0 failed; 0 skipped; finished in 215.25ms
 
 Running 2 tests for src/test/benchmark/DropERC20Benchmark.t.sol:DropERC20BenchmarkTest
-[32m[PASS][0m test_bechmark_dropERC20_claim() (gas: 230441)
-[32m[PASS][0m test_bechmark_dropERC20_setClaimConditions_five_conditions() (gas: 501045)
-Test result: [32mok[0m. 2 passed; 0 failed; finished in 373.94ms
+[32m[PASS][0m test_bechmark_dropERC20_claim() (gas: 230419)
+[32m[PASS][0m test_bechmark_dropERC20_setClaimConditions_five_conditions() (gas: 501023)
+Test result: [32mok[0m. 2 passed; 0 failed; 0 skipped; finished in 1.21s
 
+Running 3 tests for src/test/benchmark/DropERC1155Benchmark.t.sol:DropERC1155BenchmarkTest
+[32m[PASS][0m test_bechmark_dropERC1155_claim() (gas: 186646)
+[32m[PASS][0m test_bechmark_dropERC1155_setClaimConditions_five_conditions() (gas: 492309)
+[32m[PASS][0m test_benchmark_dropERC1155_lazyMint() (gas: 123851)
+Test result: [32mok[0m. 3 passed; 0 failed; 0 skipped; finished in 1.22s
+
+Running 5 tests for src/test/benchmark/DropERC721Benchmark.t.sol:DropERC721BenchmarkTest
+[32m[PASS][0m test_bechmark_dropERC721_claim_five_tokens() (gas: 211945)
+[32m[PASS][0m test_bechmark_dropERC721_setClaimConditions_five_conditions() (gas: 500837)
+[32m[PASS][0m test_benchmark_dropERC721_lazyMint() (gas: 124522)
+[32m[PASS][0m test_benchmark_dropERC721_lazyMint_for_delayed_reveal() (gas: 226102)
+[32m[PASS][0m test_benchmark_dropERC721_reveal() (gas: 8783)
+Test result: [32mok[0m. 5 passed; 0 failed; 0 skipped; finished in 636.48ms
+
+Ran 16 test suites: 46 tests passed, 0 failed, 0 skipped (46 total tests)
