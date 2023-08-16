@@ -51,7 +51,7 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
         vm.stopPrank();
     }
 
-    function test_interfaceId() public view {
+    function test_interfaceId() public pure {
         console2.logBytes4(type(IPluginMap).interfaceId);
     }
 

@@ -100,11 +100,7 @@ contract AirdropERC721 is
 
         for (uint256 i = 0; i < len; ) {
             try
-                IERC721(_tokenAddress).safeTransferFrom{ gas: 80_000 }(
-                    _tokenOwner,
-                    _contents[i].recipient,
-                    _contents[i].tokenId
-                )
+                IERC721(_tokenAddress).safeTransferFrom(_tokenOwner, _contents[i].recipient, _contents[i].tokenId)
             {} catch {
                 // revert if failure is due to unapproved tokens
                 require(

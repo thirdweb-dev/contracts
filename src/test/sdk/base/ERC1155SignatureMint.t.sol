@@ -190,7 +190,7 @@ contract ERC1155SignatureMintTest is DSTest, Test {
         uint256 totalPrice = req.pricePerToken * req.quantity;
         bytes memory signature = signMintRequest(req, adminPkey);
         vm.prank(nftHolder);
-        vm.expectRevert("Must send total price.");
+        vm.expectRevert("Invalid msg value");
         base.mintWithSignature{ value: totalPrice - 1 }(req, signature);
     }
 

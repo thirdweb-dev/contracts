@@ -1,4 +1,4 @@
-# OpenEditionERC721
+# EvolvingNFTLogic
 
 
 
@@ -9,23 +9,6 @@
 
 
 ## Methods
-
-### DEFAULT_ADMIN_ROLE
-
-```solidity
-function DEFAULT_ADMIN_ROLE() external view returns (bytes32)
-```
-
-
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
 
 ### approve
 
@@ -106,7 +89,7 @@ function claim(address _receiver, uint256 _quantity, address _currency, uint256 
 ### claimCondition
 
 ```solidity
-function claimCondition() external view returns (uint256 currentStartId, uint256 count)
+function claimCondition() external view returns (uint256, uint256)
 ```
 
 
@@ -118,8 +101,8 @@ function claimCondition() external view returns (uint256 currentStartId, uint256
 
 | Name | Type | Description |
 |---|---|---|
-| currentStartId | uint256 | undefined |
-| count | uint256 | undefined |
+| _0 | uint256 | undefined |
+| _1 | uint256 | undefined |
 
 ### contractURI
 
@@ -137,6 +120,22 @@ Returns the contract metadata URI.
 | Name | Type | Description |
 |---|---|---|
 | _0 | string | undefined |
+
+### deleteSharedMetadata
+
+```solidity
+function deleteSharedMetadata(bytes32 _id) external nonpayable
+```
+
+Delete shared metadata for NFTs
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| _id | bytes32 | undefined |
 
 ### explicitOwnershipOf
 
@@ -176,6 +175,23 @@ function getActiveClaimConditionId() external view returns (uint256)
 | Name | Type | Description |
 |---|---|---|
 | _0 | uint256 | undefined |
+
+### getAllSharedMetadata
+
+```solidity
+function getAllSharedMetadata() external view returns (struct ISharedMetadataBatch.SharedMetadataWithId[] metadata)
+```
+
+Get all shared metadata
+
+
+
+
+#### Returns
+
+| Name | Type | Description |
+|---|---|---|
+| metadata | ISharedMetadataBatch.SharedMetadataWithId[] | undefined |
 
 ### getApproved
 
@@ -239,73 +255,6 @@ Returns the defualt royalty recipient and BPS for this contract&#39;s NFTs.
 | _0 | address | undefined |
 | _1 | uint16 | undefined |
 
-### getRoleAdmin
-
-```solidity
-function getRoleAdmin(bytes32 role) external view returns (bytes32)
-```
-
-Returns the admin role that controls the specified role.
-
-*See {grantRole} and {revokeRole}.                  To change a role&#39;s admin, use {_setRoleAdmin}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bytes32 | undefined |
-
-### getRoleMember
-
-```solidity
-function getRoleMember(bytes32 role, uint256 index) external view returns (address member)
-```
-
-Returns the role-member from a list of members for a role,                  at a given index.
-
-*Returns `member` who has `role`, at `index` of role-members list.                  See struct {RoleMembers}, and mapping {roleMembers}*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| index | uint256 | Index in list of current members for the role. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| member | address |  Address of account that has `role` |
-
-### getRoleMemberCount
-
-```solidity
-function getRoleMemberCount(bytes32 role) external view returns (uint256 count)
-```
-
-Returns total number of accounts that have a role.
-
-*Returns `count` of accounts that have `role`.                  See struct {RoleMembers}, and mapping {roleMembers}*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| count | uint256 |   Total number of accounts that have `role` |
-
 ### getRoyaltyInfoForToken
 
 ```solidity
@@ -352,92 +301,6 @@ function getSupplyClaimedByWallet(uint256 _conditionId, address _claimer) extern
 |---|---|---|
 | supplyClaimedByWallet | uint256 | undefined |
 
-### grantRole
-
-```solidity
-function grantRole(bytes32 role, address account) external nonpayable
-```
-
-Grants a role to an account, if not previously granted.
-
-*Caller must have admin role for the `role`.                  Emits {RoleGranted Event}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account to which the role is being granted. |
-
-### hasRole
-
-```solidity
-function hasRole(bytes32 role, address account) external view returns (bool)
-```
-
-Checks whether an account has a particular role.
-
-*Returns `true` if `account` has been granted `role`.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account for which the role is being checked. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
-### hasRoleWithSwitch
-
-```solidity
-function hasRoleWithSwitch(bytes32 role, address account) external view returns (bool)
-```
-
-Checks whether an account has a particular role;                  role restrictions can be swtiched on and off.
-
-*Returns `true` if `account` has been granted `role`.                  Role restrictions can be swtiched on and off:                      - If address(0) has ROLE, then the ROLE restrictions                        don&#39;t apply.                      - If address(0) does not have ROLE, then the ROLE                        restrictions will apply.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account for which the role is being checked. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| _0 | bool | undefined |
-
-### initialize
-
-```solidity
-function initialize(address _defaultAdmin, string _name, string _symbol, string _contractURI, address[] _trustedForwarders, address _saleRecipient, address _royaltyRecipient, uint128 _royaltyBps) external nonpayable
-```
-
-
-
-*Initiliazes the contract, like a constructor.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _defaultAdmin | address | undefined |
-| _name | string | undefined |
-| _symbol | string | undefined |
-| _contractURI | string | undefined |
-| _trustedForwarders | address[] | undefined |
-| _saleRecipient | address | undefined |
-| _royaltyRecipient | address | undefined |
-| _royaltyBps | uint128 | undefined |
-
 ### isApprovedForAll
 
 ```solidity
@@ -482,28 +345,6 @@ function isTrustedForwarder(address forwarder) external view returns (bool)
 | Name | Type | Description |
 |---|---|---|
 | _0 | bool | undefined |
-
-### multicall
-
-```solidity
-function multicall(bytes[] data) external nonpayable returns (bytes[] results)
-```
-
-Receives and executes a batch of function calls on this contract.
-
-*Receives and executes a batch of function calls on this contract.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| data | bytes[] | The bytes data that makes up the batch of function calls to execute. |
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| results | bytes[] | The bytes data that makes up the result of the batch of function calls executed. |
 
 ### name
 
@@ -628,40 +469,6 @@ function primarySaleRecipient() external view returns (address)
 | Name | Type | Description |
 |---|---|---|
 | _0 | address | undefined |
-
-### renounceRole
-
-```solidity
-function renounceRole(bytes32 role, address account) external nonpayable
-```
-
-Revokes role from the account.
-
-*Caller must have the `role`, with caller being the same as `account`.                  Emits {RoleRevoked Event}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account from which the role is being revoked. |
-
-### revokeRole
-
-```solidity
-function revokeRole(bytes32 role, address account) external nonpayable
-```
-
-Revokes role from an account.
-
-*Caller must have admin role for the `role`.                  Emits {RoleRevoked Event}.*
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role | bytes32 | keccak256 hash of the role. e.g. keccak256(&quot;TRANSFER_ROLE&quot;) |
-| account | address | Address of the account from which the role is being revoked. |
 
 ### royaltyInfo
 
@@ -860,7 +667,7 @@ Updates default royalty recipient and bps for a particular token.
 ### setSharedMetadata
 
 ```solidity
-function setSharedMetadata(ISharedMetadata.SharedMetadataInfo _metadata) external nonpayable
+function setSharedMetadata(ISharedMetadataBatch.SharedMetadataInfo metadata, bytes32 _id) external nonpayable
 ```
 
 
@@ -871,27 +678,8 @@ function setSharedMetadata(ISharedMetadata.SharedMetadataInfo _metadata) externa
 
 | Name | Type | Description |
 |---|---|---|
-| _metadata | ISharedMetadata.SharedMetadataInfo | undefined |
-
-### sharedMetadata
-
-```solidity
-function sharedMetadata() external view returns (string name, string description, string imageURI, string animationURI)
-```
-
-Token metadata information
-
-
-
-
-#### Returns
-
-| Name | Type | Description |
-|---|---|---|
-| name | string | undefined |
-| description | string | undefined |
-| imageURI | string | undefined |
-| animationURI | string | undefined |
+| metadata | ISharedMetadataBatch.SharedMetadataInfo | undefined |
+| _id | bytes32 | undefined |
 
 ### startTokenId
 
@@ -1152,23 +940,6 @@ event ApprovalForAll(address indexed owner, address indexed operator, bool appro
 | operator `indexed` | address | undefined |
 | approved  | bool | undefined |
 
-### BatchMetadataUpdate
-
-```solidity
-event BatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _fromTokenId  | uint256 | undefined |
-| _toTokenId  | uint256 | undefined |
-
 ### ClaimConditionsUpdated
 
 ```solidity
@@ -1255,22 +1026,6 @@ event Initialized(uint8 version)
 |---|---|---|
 | version  | uint8 | undefined |
 
-### MetadataUpdate
-
-```solidity
-event MetadataUpdate(uint256 _tokenId)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| _tokenId  | uint256 | undefined |
-
 ### OperatorRestriction
 
 ```solidity
@@ -1320,60 +1075,6 @@ event PrimarySaleRecipientUpdated(address indexed recipient)
 |---|---|---|
 | recipient `indexed` | address | undefined |
 
-### RoleAdminChanged
-
-```solidity
-event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| previousAdminRole `indexed` | bytes32 | undefined |
-| newAdminRole `indexed` | bytes32 | undefined |
-
-### RoleGranted
-
-```solidity
-event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| account `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
-
-### RoleRevoked
-
-```solidity
-event RoleRevoked(bytes32 indexed role, address indexed account, address indexed sender)
-```
-
-
-
-
-
-#### Parameters
-
-| Name | Type | Description |
-|---|---|---|
-| role `indexed` | bytes32 | undefined |
-| account `indexed` | address | undefined |
-| sender `indexed` | address | undefined |
-
 ### RoyaltyForToken
 
 ```solidity
@@ -1392,10 +1093,26 @@ event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient,
 | royaltyRecipient `indexed` | address | undefined |
 | royaltyBps  | uint256 | undefined |
 
+### SharedMetadataDeleted
+
+```solidity
+event SharedMetadataDeleted(bytes32 indexed id)
+```
+
+Emitted when shared metadata is deleted.
+
+
+
+#### Parameters
+
+| Name | Type | Description |
+|---|---|---|
+| id `indexed` | bytes32 | undefined |
+
 ### SharedMetadataUpdated
 
 ```solidity
-event SharedMetadataUpdated(string name, string description, string imageURI, string animationURI)
+event SharedMetadataUpdated(bytes32 indexed id, string name, string description, string imageURI, string animationURI)
 ```
 
 Emitted when shared metadata is lazy minted.
@@ -1406,6 +1123,7 @@ Emitted when shared metadata is lazy minted.
 
 | Name | Type | Description |
 |---|---|---|
+| id `indexed` | bytes32 | undefined |
 | name  | string | undefined |
 | description  | string | undefined |
 | imageURI  | string | undefined |
