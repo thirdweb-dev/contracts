@@ -72,6 +72,9 @@ contract TokenBoundAccount is
         entrypointContract = _entrypoint;
     }
 
+    // solhint-disable-next-line no-empty-blocks
+    receive() external payable virtual {}
+
     /// @notice Initializes the smart contract wallet.
     function initialize(address _defaultAdmin, bytes calldata _data) public virtual initializer {
         emit TokenBoundAccountCreated(_defaultAdmin, _data);
@@ -209,6 +212,20 @@ contract TokenBoundAccount is
         if (!factoryContract.isRegistered(address(this))) {
             factoryContract.onRegister();
         }
+    }
+
+    /// @notice Validates the signature of a user operation.
+    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
+        internal
+        virtual
+        override
+        returns (uint256 validationData)
+    {
+        bytes32 hash = userOpHash.toEthSignedMessageHash();
+        address signer = hash.recover(userOp.signature);
+
+        if (!isValidSigner(signer, userOp)) return SIG_VALIDATION_FAILED;
+        return 0;
     }
 
     function getFunctionSignature(bytes calldata data) internal pure returns (bytes4 functionSelector) {
