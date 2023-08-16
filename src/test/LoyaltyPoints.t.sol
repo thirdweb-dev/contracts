@@ -5,8 +5,8 @@ import "@std/Test.sol";
 import "@ds-test/test.sol";
 
 import "./utils/BaseTest.sol";
-import "contracts/TWProxy.sol";
-import { LoyaltyPoints } from "contracts/unaudited/LoyaltyPoints.sol";
+import "contracts/infra/TWProxy.sol";
+import { LoyaltyPoints } from "contracts/prebuilts/unaudited/loyalty/LoyaltyPoints.sol";
 
 contract LoyaltyPointsTest is BaseTest {
     LoyaltyPoints internal loyaltyPoints;

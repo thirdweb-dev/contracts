@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { TokenERC721 } from "contracts/token/TokenERC721.sol";
+import { TokenERC721 } from "contracts/prebuilts/token/TokenERC721.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";

@@ -13,13 +13,13 @@ pragma solidity ^0.8.11;
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 // Interface
-import { ITokenERC721 } from "../interfaces/token/ITokenERC721.sol";
+import { ITokenERC721 } from "../interface/token/ITokenERC721.sol";
 
-import "../interfaces/IThirdwebContract.sol";
-import "../extension/interface/IPlatformFee.sol";
-import "../extension/interface/IPrimarySale.sol";
-import "../extension/interface/IRoyalty.sol";
-import "../extension/interface/IOwnable.sol";
+import "../interface/IThirdwebContract.sol";
+import "../../extension/interface/IPlatformFee.sol";
+import "../../extension/interface/IPrimarySale.sol";
+import "../../extension/interface/IRoyalty.sol";
+import "../../extension/interface/IOwnable.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -33,19 +33,19 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 // Meta transactions
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "../lib/CurrencyTransferLib.sol";
-import "../lib/FeeType.sol";
+import "../../lib/CurrencyTransferLib.sol";
+import "../../lib/FeeType.sol";
 
 // Helper interfaces
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 // OpenSea operator filter
-import "../extension/DefaultOperatorFiltererUpgradeable.sol";
+import "../../extension/DefaultOperatorFiltererUpgradeable.sol";
 
 contract TokenERC721 is
     Initializable,

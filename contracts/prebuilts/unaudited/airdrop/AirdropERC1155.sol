@@ -20,12 +20,12 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../interfaces/airdrop/IAirdropERC1155.sol";
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../interface/airdrop/IAirdropERC1155.sol";
+import "../../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
-import "../extension/PermissionsEnumerable.sol";
-import "../extension/ContractMetadata.sol";
+import "../../../extension/PermissionsEnumerable.sol";
+import "../../../extension/ContractMetadata.sol";
 
 contract AirdropERC1155 is
     Initializable,

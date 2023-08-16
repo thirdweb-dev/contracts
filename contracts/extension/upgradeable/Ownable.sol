@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../../extension/interface/IOwnable.sol";
+import "../interface/IOwnable.sol";
 
 /**
  *  @title   Ownable

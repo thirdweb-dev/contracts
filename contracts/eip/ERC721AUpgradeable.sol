@@ -9,7 +9,7 @@ pragma solidity ^0.8.4;
 import "../../eip/interface/IERC721A.sol";
 import "../../eip/interface/IERC721Receiver.sol";
 import "../../lib/TWAddress.sol";
-import "../../openzeppelin-presets/utils/Context.sol";
+import "../../external-deps/openzeppelin/utils/Context.sol";
 import "../../lib/TWStrings.sol";
 import "../../eip/ERC165.sol";
 import "../extension/Initializable.sol";

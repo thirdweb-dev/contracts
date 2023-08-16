@@ -13,7 +13,7 @@ pragma solidity ^0.8.11;
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 // Base
-import "../interfaces/IThirdwebContract.sol";
+import "../../infra/interface/IThirdwebContract.sol";
 
 // Governance
 import "@openzeppelin/contracts-upgradeable/governance/GovernorUpgradeable.sol";
@@ -24,7 +24,7 @@ import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesU
 import "@openzeppelin/contracts-upgradeable/governance/extensions/GovernorVotesQuorumFractionUpgradeable.sol";
 
 // Meta transactions
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 contract VoteERC20 is
     Initializable,

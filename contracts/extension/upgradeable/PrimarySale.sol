@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../../extension/interface/IPrimarySale.sol";
+import "../interface/IPrimarySale.sol";
 
 library PrimarySaleStorage {
     bytes32 public constant PRIMARY_SALE_STORAGE_POSITION = keccak256("primary.sale.storage");

@@ -14,26 +14,26 @@ pragma solidity ^0.8.11;
 
 import { BurnToClaimDrop721Storage } from "./BurnToClaimDrop721Storage.sol";
 
-import "../../../lib/TWStrings.sol";
-import "../../../lib/CurrencyTransferLib.sol";
+import "../../../../lib/TWStrings.sol";
+import "../../../../lib/CurrencyTransferLib.sol";
 
-import { IERC2981 } from "../../../eip/interface/IERC2981.sol";
-import { Context, ERC721AUpgradeable, ERC721AStorage } from "../../../dynamic-contracts/eip/ERC721AUpgradeable.sol";
+import { IERC2981 } from "../../../../eip/interface/IERC2981.sol";
+import { Context, ERC721AUpgradeable, ERC721AStorage } from "../../../../eip/ERC721AUpgradeable.sol";
 
-import { IERC2771Context } from "../../../extension/interface/IERC2771Context.sol";
+import { IERC2771Context } from "../../../../extension/interface/IERC2771Context.sol";
 
-import { ERC2771ContextUpgradeable } from "../../../dynamic-contracts/extension/ERC2771ContextUpgradeable.sol";
-import { DelayedReveal } from "../../../dynamic-contracts/extension/DelayedReveal.sol";
-import { PrimarySale } from "../../../dynamic-contracts/extension/PrimarySale.sol";
-import { PlatformFee } from "../../../dynamic-contracts/extension/PlatformFee.sol";
-import { Royalty, IERC165 } from "../../../dynamic-contracts/extension/Royalty.sol";
-import { LazyMint } from "../../../dynamic-contracts/extension/LazyMint.sol";
-import { Drop } from "../../../dynamic-contracts/extension/Drop.sol";
-import { ContractMetadata } from "../../../dynamic-contracts/extension/ContractMetadata.sol";
-import { Ownable } from "../../../dynamic-contracts/extension/Ownable.sol";
-import { DefaultOperatorFiltererUpgradeable } from "../../../dynamic-contracts/extension/DefaultOperatorFiltererUpgradeable.sol";
-import { PermissionsStorage } from "../../../dynamic-contracts/extension/Permissions.sol";
-import { BurnToClaim, BurnToClaimStorage } from "../../../dynamic-contracts/extension/BurnToClaim.sol";
+import { ERC2771ContextUpgradeable } from "../../../../extension/upgradeable//ERC2771ContextUpgradeable.sol";
+import { DelayedReveal } from "../../../../extension/upgradeable//DelayedReveal.sol";
+import { PrimarySale } from "../../../../extension/upgradeable//PrimarySale.sol";
+import { PlatformFee } from "../../../../extension/upgradeable//PlatformFee.sol";
+import { Royalty, IERC165 } from "../../../../extension/upgradeable//Royalty.sol";
+import { LazyMint } from "../../../../extension/upgradeable//LazyMint.sol";
+import { Drop } from "../../../../extension/upgradeable//Drop.sol";
+import { ContractMetadata } from "../../../../extension/upgradeable//ContractMetadata.sol";
+import { Ownable } from "../../../../extension/upgradeable//Ownable.sol";
+import { DefaultOperatorFiltererUpgradeable } from "../../../../extension/upgradeable//DefaultOperatorFiltererUpgradeable.sol";
+import { PermissionsStorage } from "../../../../extension/upgradeable//Permissions.sol";
+import { BurnToClaim, BurnToClaimStorage } from "../../../../extension/upgradeable//BurnToClaim.sol";
 
 contract BurnToClaimDrop721Logic is
     ContractMetadata,

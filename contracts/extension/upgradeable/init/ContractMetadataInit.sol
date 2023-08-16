@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { ContractMetadataStorage } from "../extension/ContractMetadata.sol";
+import { ContractMetadataStorage } from "../ContractMetadata.sol";
 
 contract ContractMetadataInit {
     event ContractURIUpdated(string prevURI, string newURI);

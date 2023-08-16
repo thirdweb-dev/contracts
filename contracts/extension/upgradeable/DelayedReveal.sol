@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../../extension/interface/IDelayedReveal.sol";
+import "../interface/IDelayedReveal.sol";
 
 library DelayedRevealStorage {
     bytes32 public constant DELAYED_REVEAL_STORAGE_POSITION = keccak256("delayed.reveal.storage");

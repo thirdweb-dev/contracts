@@ -13,12 +13,12 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../../extension/plugin/PlatformFeeLogic.sol";
-import "../../extension/plugin/ERC2771ContextConsumer.sol";
-import "../../extension/plugin/ReentrancyGuardLogic.sol";
-import "../../extension/plugin/PermissionsEnumerableLogic.sol";
-import { RoyaltyPaymentsLogic } from "../../extension/plugin/RoyaltyPayments.sol";
-import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
+import "../../../extension/plugin/PlatformFeeLogic.sol";
+import "../../../extension/plugin/ERC2771ContextConsumer.sol";
+import "../../../extension/plugin/ReentrancyGuardLogic.sol";
+import "../../../extension/plugin/PermissionsEnumerableLogic.sol";
+import { RoyaltyPaymentsLogic } from "../../../extension/plugin/RoyaltyPayments.sol";
+import { CurrencyTransferLib } from "../../../lib/CurrencyTransferLib.sol";
 
 /**
  * @author  thirdweb.com

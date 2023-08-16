@@ -6,8 +6,8 @@ import "../utils/BaseAccountFactory.sol";
 import "lib/dynamic-contracts/src/interface/IExtension.sol";
 
 // Extensions
-import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";
-import "../../dynamic-contracts/extension/ContractMetadata.sol";
+import "../../../extension/upgradeable//PermissionsEnumerable.sol";
+import "../../../extension/upgradeable//ContractMetadata.sol";
 
 // Smart wallet implementation
 import { DynamicAccount, IEntryPoint } from "./DynamicAccount.sol";

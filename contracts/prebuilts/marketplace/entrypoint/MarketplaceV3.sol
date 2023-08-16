@@ -18,14 +18,14 @@ import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 //  ==========  Internal imports    ==========
 import "./InitStorage.sol";
-import { RouterImmutable, Router } from "../../extension/plugin/RouterImmutable.sol";
+import { RouterImmutable, Router } from "../../../extension/plugin/RouterImmutable.sol";
 
-import "../../extension/plugin/ContractMetadataLogic.sol";
-import "../../extension/plugin/PlatformFeeLogic.sol";
-import "../../extension/plugin/PermissionsEnumerableLogic.sol";
-import "../../extension/plugin/ReentrancyGuardLogic.sol";
-import "../../extension/plugin/ERC2771ContextUpgradeableLogic.sol";
-import { RoyaltyPaymentsLogic } from "../../extension/plugin/RoyaltyPayments.sol";
+import "../../../extension/plugin/ContractMetadataLogic.sol";
+import "../../../extension/plugin/PlatformFeeLogic.sol";
+import "../../../extension/plugin/PermissionsEnumerableLogic.sol";
+import "../../../extension/plugin/ReentrancyGuardLogic.sol";
+import "../../../extension/plugin/ERC2771ContextUpgradeableLogic.sol";
+import { RoyaltyPaymentsLogic } from "../../../extension/plugin/RoyaltyPayments.sol";
 
 /**
  * @author  thirdweb.com

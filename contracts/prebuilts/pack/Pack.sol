@@ -25,16 +25,16 @@ import { IERC1155Receiver } from "@openzeppelin/contracts/interfaces/IERC1155Rec
 
 //  ==========  Internal imports    ==========
 
-import "../interfaces/IPack.sol";
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../interface/IPack.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
 
-import "../extension/ContractMetadata.sol";
-import "../extension/Royalty.sol";
-import "../extension/Ownable.sol";
-import "../extension/PermissionsEnumerable.sol";
-import { TokenStore, ERC1155Receiver } from "../extension/TokenStore.sol";
+import "../../extension/ContractMetadata.sol";
+import "../../extension/Royalty.sol";
+import "../../extension/Ownable.sol";
+import "../../extension/PermissionsEnumerable.sol";
+import { TokenStore, ERC1155Receiver } from "../../extension/TokenStore.sol";
 
 contract Pack is
     Initializable,

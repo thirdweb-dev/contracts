@@ -13,11 +13,11 @@ pragma solidity ^0.8.11;
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 //Interface
-import { ITokenERC20 } from "../interfaces/token/ITokenERC20.sol";
+import { ITokenERC20 } from "../interface/token/ITokenERC20.sol";
 
-import "../interfaces/IThirdwebContract.sol";
-import "../extension/interface/IPlatformFee.sol";
-import "../extension/interface/IPrimarySale.sol";
+import "../interface/IThirdwebContract.sol";
+import "../../extension/interface/IPlatformFee.sol";
+import "../../extension/interface/IPrimarySale.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
@@ -32,12 +32,12 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
 // Meta transactions
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "../lib/CurrencyTransferLib.sol";
-import "../lib/FeeType.sol";
+import "../../lib/CurrencyTransferLib.sol";
+import "../../lib/FeeType.sol";
 
 contract TokenERC20 is
     Initializable,

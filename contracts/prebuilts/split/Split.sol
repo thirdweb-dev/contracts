@@ -13,18 +13,18 @@ pragma solidity ^0.8.11;
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 // Base
-import "./openzeppelin-presets/finance/PaymentSplitterUpgradeable.sol";
-import "./interfaces/IThirdwebContract.sol";
+import "../../external-deps/openzeppelin/finance/PaymentSplitterUpgradeable.sol";
+import "../interface/IThirdwebContract.sol";
 
 // Meta-tx
-import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 // Access
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "./lib/FeeType.sol";
+import "../../lib/FeeType.sol";
 
 contract Split is
     IThirdwebContract,

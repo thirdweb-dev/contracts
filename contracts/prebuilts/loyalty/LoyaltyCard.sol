@@ -13,26 +13,26 @@ pragma solidity ^0.8.11;
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 // Interface
-import "./interfaces/ILoyaltyCard.sol";
+import "../interface/ILoyaltyCard.sol";
 
 // Base
-import "./eip/ERC721AVirtualApproveUpgradeable.sol";
+import "../../eip/ERC721AVirtualApproveUpgradeable.sol";
 
 // Lib
-import "./lib/CurrencyTransferLib.sol";
+import "../../lib/CurrencyTransferLib.sol";
 
 // Extensions
-import "./extension/NFTMetadata.sol";
-import "./extension/SignatureMintERC721Upgradeable.sol";
-import "./extension/ContractMetadata.sol";
-import "./extension/Ownable.sol";
-import "./extension/Royalty.sol";
-import "./extension/PrimarySale.sol";
-import "./extension/PlatformFee.sol";
-import "./extension/Multicall.sol";
-import "./extension/PermissionsEnumerable.sol";
-import "./extension/DefaultOperatorFiltererUpgradeable.sol";
-import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../extension/NFTMetadata.sol";
+import "../../extension/SignatureMintERC721Upgradeable.sol";
+import "../../extension/ContractMetadata.sol";
+import "../../extension/Ownable.sol";
+import "../../extension/Royalty.sol";
+import "../../extension/PrimarySale.sol";
+import "../../extension/PlatformFee.sol";
+import "../../extension/Multicall.sol";
+import "../../extension/PermissionsEnumerable.sol";
+import "../../extension/DefaultOperatorFiltererUpgradeable.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 /**

@@ -4,13 +4,13 @@ pragma solidity ^0.8.11;
 // Test imports
 import "./mocks/MockThirdwebContract.sol";
 import "./utils/BaseTest.sol";
-import "contracts/TWFee.sol";
+import "contracts/infra/TWFee.sol";
 
 // Helpers
 import "@openzeppelin/contracts/utils/Create2.sol";
-import "contracts/TWRegistry.sol";
-import "contracts/TWFactory.sol";
-import "contracts/TWProxy.sol";
+import "contracts/infra/TWRegistry.sol";
+import "contracts/infra/TWFactory.sol";
+import "contracts/infra/TWProxy.sol";
 
 contract TWFeeTest is BaseTest {
     // Target contract

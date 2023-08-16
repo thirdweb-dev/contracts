@@ -19,14 +19,14 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../interfaces/airdrop/IAirdropERC20.sol";
+import "../../interface/airdrop/IAirdropERC20.sol";
 import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
-import "../eip/interface/IERC20.sol";
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../../eip/interface/IERC20.sol";
+import "../../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
-import "../extension/PermissionsEnumerable.sol";
-import "../extension/ContractMetadata.sol";
+import "../../../extension/PermissionsEnumerable.sol";
+import "../../../extension/ContractMetadata.sol";
 
 contract AirdropERC20 is
     Initializable,

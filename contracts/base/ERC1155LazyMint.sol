@@ -15,7 +15,7 @@ import "../extension/interface/IClaimableERC1155.sol";
 import "../extension/DefaultOperatorFilterer.sol";
 
 import "../lib/TWStrings.sol";
-import "../openzeppelin-presets/security/ReentrancyGuard.sol";
+import "../external-deps/openzeppelin/security/ReentrancyGuard.sol";
 
 /**
  *      BASE:      ERC1155Base

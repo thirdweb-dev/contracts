@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "../extension/interface/INFTMetadata.sol";
-import "../extension/interface/ISignatureMintERC721.sol";
-import "../eip/interface/IERC721.sol";
+import "../../extension/interface/INFTMetadata.sol";
+import "../../extension/interface/ISignatureMintERC721.sol";
+import "../../eip/interface/IERC721.sol";
 
 interface ILoyaltyCard {
     /// @dev Emitted when an account with MINTER_ROLE mints an NFT.

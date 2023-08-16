@@ -9,7 +9,7 @@ import { ERC721Burnable } from "@openzeppelin/contracts/token/ERC721/extensions/
 import "../eip/interface/IERC1155.sol";
 import "../eip/interface/IERC721.sol";
 
-import "../openzeppelin-presets/utils/Context.sol";
+import "../external-deps/openzeppelin/utils/Context.sol";
 import "./interface/IBurnToClaim.sol";
 
 abstract contract BurnToClaim is IBurnToClaim {

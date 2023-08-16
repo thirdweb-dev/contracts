@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { RoyaltyStorage, IRoyalty } from "../extension/Royalty.sol";
+import { RoyaltyStorage, IRoyalty } from "../Royalty.sol";
 
 contract RoyaltyInit {
     event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);

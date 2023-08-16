@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { SignatureDrop, IDropSinglePhase, IDelayedReveal, ISignatureMintERC721, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/signature-drop/SignatureDrop.sol";
+import { SignatureDrop, IDropSinglePhase, IDelayedReveal, ISignatureMintERC721, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/signature-drop/SignatureDrop.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";

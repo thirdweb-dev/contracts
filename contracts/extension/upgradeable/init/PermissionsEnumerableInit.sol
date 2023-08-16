@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { PermissionsEnumerableStorage } from "../extension/PermissionsEnumerable.sol";
+import { PermissionsEnumerableStorage } from "../PermissionsEnumerable.sol";
 import "./PermissionsInit.sol";
 
 contract PermissionsEnumerableInit is PermissionsInit {

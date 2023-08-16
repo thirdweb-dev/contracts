@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../../extension/interface/IDrop.sol";
+import "../interface/IDrop.sol";
 import "../../lib/MerkleProof.sol";
 
 library DropStorage {

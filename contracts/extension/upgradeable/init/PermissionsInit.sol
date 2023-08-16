@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { PermissionsStorage } from "../extension/Permissions.sol";
+import { PermissionsStorage } from "../Permissions.sol";
 
 contract PermissionsInit {
     event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);

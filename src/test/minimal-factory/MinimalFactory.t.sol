@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/TWMinimalFactory.sol";
-import "contracts/TWProxy.sol";
+import "contracts/infra/TWMinimalFactory.sol";
+import "contracts/infra/TWProxy.sol";
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";

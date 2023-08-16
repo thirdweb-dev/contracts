@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
-import "../../extension/interface/IERC2771Context.sol";
+import "../interface/IERC2771Context.sol";
 import "./Initializable.sol";
 
 /**

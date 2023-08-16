@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { OwnableStorage } from "../extension/Ownable.sol";
+import { OwnableStorage } from "../Ownable.sol";
 
 contract OwnableInit {
     event OwnerUpdated(address indexed prevOwner, address indexed newOwner);

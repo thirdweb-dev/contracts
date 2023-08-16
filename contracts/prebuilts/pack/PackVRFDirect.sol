@@ -27,16 +27,16 @@ import "./VRFV2WrapperConsumerBase.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../interfaces/IPackVRFDirect.sol";
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../interface/IPackVRFDirect.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
 
-import "../extension/ContractMetadata.sol";
-import "../extension/Royalty.sol";
-import "../extension/Ownable.sol";
-import "../extension/PermissionsEnumerable.sol";
-import { TokenStore, ERC1155Receiver } from "../extension/TokenStore.sol";
+import "../../extension/ContractMetadata.sol";
+import "../../extension/Royalty.sol";
+import "../../extension/Ownable.sol";
+import "../../extension/PermissionsEnumerable.sol";
+import { TokenStore, ERC1155Receiver } from "../../extension/TokenStore.sol";
 
 /**
     NOTE: This contract is a work in progress.

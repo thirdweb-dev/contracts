@@ -10,16 +10,16 @@ import "./../utils/BaseAccount.sol";
 
 // Fixed Extensions
 import "../../extension/Multicall.sol";
-import "../../dynamic-contracts/extension/Initializable.sol";
+import "../../extension/upgradeable/Initializable.sol";
 import "../../eip/ERC1271.sol";
-import "../../dynamic-contracts/extension/AccountPermissions.sol";
+import "../../extension/upgradeable/AccountPermissions.sol";
 
 // Utils
 import "./BaseAccountFactory.sol";
 import { Account } from "../non-upgradeable/Account.sol";
-import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
+import "../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 
-import "../interfaces/IAccountCore.sol";
+import "../interface/IAccountCore.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |

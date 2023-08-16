@@ -10,15 +10,15 @@ import "../utils/BaseAccount.sol";
 
 // Extensions
 import "../../extension/Multicall.sol";
-import "../../dynamic-contracts/extension/Initializable.sol";
-import "../../dynamic-contracts/extension/AccountPermissions.sol";
-import "../../dynamic-contracts/extension/ContractMetadata.sol";
-import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
-import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
-import "../../eip/ERC1271.sol";
+import "../../../extension/upgradeable//Initializable.sol";
+import "../../../extension/upgradeable//AccountPermissions.sol";
+import "../../../extension/upgradeable//ContractMetadata.sol";
+import "../../../external-deps/openzeppelin/token/ERC721/utils/ERC721Holder.sol";
+import "../../../external-deps/openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
+import "../../../eip/ERC1271.sol";
 
 // Utils
-import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
+import "../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 import "../utils/BaseAccountFactory.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\

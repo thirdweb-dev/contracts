@@ -18,27 +18,27 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-import "../eip/ERC721AVirtualApproveUpgradeable.sol";
+import "../../eip/ERC721AVirtualApproveUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-import "../lib/CurrencyTransferLib.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
+import "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
-import "../extension/ContractMetadata.sol";
-import "../extension/PlatformFee.sol";
-import "../extension/Royalty.sol";
-import "../extension/PrimarySale.sol";
-import "../extension/Ownable.sol";
-import "../extension/DelayedReveal.sol";
-import "../extension/LazyMint.sol";
-import "../extension/PermissionsEnumerable.sol";
-import "../extension/Drop.sol";
+import "../../extension/ContractMetadata.sol";
+import "../../extension/PlatformFee.sol";
+import "../../extension/Royalty.sol";
+import "../../extension/PrimarySale.sol";
+import "../../extension/Ownable.sol";
+import "../../extension/DelayedReveal.sol";
+import "../../extension/LazyMint.sol";
+import "../../extension/PermissionsEnumerable.sol";
+import "../../extension/Drop.sol";
 
 // OpenSea operator filter
-import "../extension/DefaultOperatorFiltererUpgradeable.sol";
+import "../../extension/DefaultOperatorFiltererUpgradeable.sol";
 
 contract DropERC721 is
     Initializable,

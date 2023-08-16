@@ -14,10 +14,10 @@ pragma solidity ^0.8.0;
 
 //  ==========  Internal imports    ==========
 
-import "../../extension/plugin/PermissionsEnumerableLogic.sol";
-import "../../extension/plugin/ERC2771ContextLogic.sol";
-import "../../extension/Multicall.sol";
-import "../../extension/plugin/Router.sol";
+import "../../../extension/plugin/PermissionsEnumerableLogic.sol";
+import "../../../extension/plugin/ERC2771ContextLogic.sol";
+import "../../../extension/Multicall.sol";
+import "../../../extension/plugin/Router.sol";
 
 /**
  *

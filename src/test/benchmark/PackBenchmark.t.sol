@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { Pack, IERC2981Upgradeable, IERC721Receiver, IERC1155Upgradeable } from "contracts/pack/Pack.sol";
-import { IPack } from "contracts/interfaces/IPack.sol";
+import { Pack, IERC2981Upgradeable, IERC721Receiver, IERC1155Upgradeable } from "contracts/prebuilts/pack/Pack.sol";
+import { IPack } from "contracts/prebuilts/interface/IPack.sol";
 import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 // Test imports

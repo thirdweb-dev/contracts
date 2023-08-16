@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { TokenERC1155, IPlatformFee } from "contracts/token/TokenERC1155.sol";
+import { TokenERC1155, IPlatformFee } from "contracts/prebuilts/token/TokenERC1155.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";

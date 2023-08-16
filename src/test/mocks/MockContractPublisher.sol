@@ -3,7 +3,7 @@ pragma solidity ^0.8.11;
 
 /// @author thirdweb
 
-import "../interfaces/IContractPublisher.sol";
+import "contracts/infra/interface/IContractPublisher.sol";
 
 // solhint-disable const-name-snakecase
 contract MockContractPublisher is IContractPublisher {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { PlatformFeeStorage } from "../extension/PlatformFee.sol";
+import { PlatformFeeStorage } from "../PlatformFee.sol";
 
 contract PlatformFeeInit {
     event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);

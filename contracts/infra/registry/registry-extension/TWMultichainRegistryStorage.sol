@@ -5,7 +5,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-import "../../interfaces/ITWMultichainRegistry.sol";
+import "../../interface/ITWMultichainRegistry.sol";
 
 library TWMultichainRegistryStorage {
     bytes32 public constant MULTICHAIN_REGISTRY_STORAGE_POSITION = keccak256("multichain.registry.storage");

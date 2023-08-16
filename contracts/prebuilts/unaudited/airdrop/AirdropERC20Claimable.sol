@@ -20,13 +20,13 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../interfaces/airdrop/IAirdropERC20Claimable.sol";
+import "../../interface/airdrop/IAirdropERC20Claimable.sol";
 
 //  ==========  Features    ==========
-import "../extension/Ownable.sol";
+import "../../../extension/Ownable.sol";
 
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-import "../lib/MerkleProof.sol";
+import "../../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
+import "../../../lib/MerkleProof.sol";
 
 contract AirdropERC20Claimable is
     Initializable,

@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
-import "./interfaces/ITWMultichainRegistry.sol";
+import "./interface/ITWMultichainRegistry.sol";
 
 contract TWMultichainRegistry is ITWMultichainRegistry, Multicall, ERC2771Context, AccessControlEnumerable {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");

@@ -3,8 +3,8 @@ pragma solidity ^0.8.11;
 
 /// @author thirdweb
 
-import "../openzeppelin-presets/security/ReentrancyGuard.sol";
-import "../openzeppelin-presets/utils/math/SafeMath.sol";
+import "../external-deps/openzeppelin/security/ReentrancyGuard.sol";
+import "../external-deps/openzeppelin/utils/math/SafeMath.sol";
 import "../eip/interface/IERC721.sol";
 
 import "./interface/IStaking721.sol";

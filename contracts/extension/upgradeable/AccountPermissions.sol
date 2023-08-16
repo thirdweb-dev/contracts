@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../../extension/interface/IAccountPermissions.sol";
-import "../../openzeppelin-presets/utils/cryptography/EIP712.sol";
-import "../../openzeppelin-presets/utils/structs/EnumerableSet.sol";
+import "../interface/IAccountPermissions.sol";
+import "../../external-deps/openzeppelin/utils/cryptography/EIP712.sol";
+import "../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 
 library AccountPermissionsStorage {
     bytes32 public constant ACCOUNT_PERMISSIONS_STORAGE_POSITION = keccak256("account.permissions.storage");

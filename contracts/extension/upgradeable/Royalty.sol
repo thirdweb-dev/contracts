@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../../extension/interface/IRoyalty.sol";
+import "../interface/IRoyalty.sol";
 
 library RoyaltyStorage {
     bytes32 public constant ROYALTY_STORAGE_POSITION = keccak256("royalty.storage");

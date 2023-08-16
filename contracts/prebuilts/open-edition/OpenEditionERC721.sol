@@ -17,26 +17,26 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-import "./eip/queryable/ERC721AQueryableUpgradeable.sol";
+import "../../eip/queryable/ERC721AQueryableUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "./openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-import "./lib/CurrencyTransferLib.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
+import "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
-import "./extension/Multicall.sol";
-import "./extension/ContractMetadata.sol";
-import "./extension/Royalty.sol";
-import "./extension/PrimarySale.sol";
-import "./extension/Ownable.sol";
-import "./extension/SharedMetadata.sol";
-import "./extension/PermissionsEnumerable.sol";
-import "./extension/Drop.sol";
+import "../../extension/Multicall.sol";
+import "../../extension/ContractMetadata.sol";
+import "../../extension/Royalty.sol";
+import "../../extension/PrimarySale.sol";
+import "../../extension/Ownable.sol";
+import "../../extension/SharedMetadata.sol";
+import "../../extension/PermissionsEnumerable.sol";
+import "../../extension/Drop.sol";
 
 // OpenSea operator filter
-import "./extension/DefaultOperatorFiltererUpgradeable.sol";
+import "../../extension/DefaultOperatorFiltererUpgradeable.sol";
 
 contract OpenEditionERC721 is
     Initializable,

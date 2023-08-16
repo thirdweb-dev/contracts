@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../../extension/interface/IPlatformFee.sol";
+import "../interface/IPlatformFee.sol";
 
 /**
  *  @author  thirdweb.com

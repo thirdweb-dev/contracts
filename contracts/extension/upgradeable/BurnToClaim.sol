@@ -9,7 +9,7 @@ import { ERC721Burnable } from "@openzeppelin/contracts/token/ERC721/extensions/
 import "../../eip/interface/IERC1155.sol";
 import "../../eip/interface/IERC721.sol";
 
-import "../../extension/interface/IBurnToClaim.sol";
+import "../interface/IBurnToClaim.sol";
 
 library BurnToClaimStorage {
     bytes32 public constant BURN_TO_CLAIM_STORAGE_POSITION = keccak256("burn.to.claim.storage");

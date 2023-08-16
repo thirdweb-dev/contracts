@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { PrimarySaleStorage } from "../extension/PrimarySale.sol";
+import { PrimarySaleStorage } from "../PrimarySale.sol";
 
 contract PrimarySaleInit {
     /// @dev Emitted when a new sale recipient is set.

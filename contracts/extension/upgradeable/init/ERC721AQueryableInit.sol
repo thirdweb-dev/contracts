@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../../eip/queryable/ERC721AStorage.sol";
-import "../../eip/queryable/ERC721A__Initializable.sol";
+import "../../../eip/queryable/ERC721AStorage.sol";
+import "../../../eip/queryable/ERC721A__Initializable.sol";
 
 contract ERC721AQueryableInit is ERC721A__Initializable {
     function __ERC721A_init(string memory name_, string memory symbol_) internal onlyInitializingERC721A {

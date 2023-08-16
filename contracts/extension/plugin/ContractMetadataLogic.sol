@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 /// @author thirdweb
 
 import "./ContractMetadataStorage.sol";
-import "../../extension/interface/IContractMetadata.sol";
+import "../interface/IContractMetadata.sol";
 
 /**
  *  @author  thirdweb.com

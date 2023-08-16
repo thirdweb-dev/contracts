@@ -22,23 +22,23 @@ import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-import "../lib/CurrencyTransferLib.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
+import "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
-import "../extension/ContractMetadata.sol";
-import "../extension/PlatformFee.sol";
-import "../extension/Royalty.sol";
-import "../extension/PrimarySale.sol";
-import "../extension/Ownable.sol";
-import "../extension/DelayedReveal.sol";
-import "../extension/PermissionsEnumerable.sol";
+import "../../extension/ContractMetadata.sol";
+import "../../extension/PlatformFee.sol";
+import "../../extension/Royalty.sol";
+import "../../extension/PrimarySale.sol";
+import "../../extension/Ownable.sol";
+import "../../extension/DelayedReveal.sol";
+import "../../extension/PermissionsEnumerable.sol";
 
 //  ========== New Features    ==========
 
-import "../extension/LazyMintWithTier.sol";
-import "../extension/SignatureActionUpgradeable.sol";
+import "../../extension/LazyMintWithTier.sol";
+import "../../extension/SignatureActionUpgradeable.sol";
 
 contract TieredDrop is
     Initializable,

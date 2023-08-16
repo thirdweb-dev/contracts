@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../../extension/interface/IOperatorFilterToggle.sol";
+import "../interface/IOperatorFilterToggle.sol";
 
 library OperatorFilterToggleStorage {
     bytes32 public constant OPERATOR_FILTER_TOGGLE_STORAGE_POSITION = keccak256("operator.filter.toggle.storage");

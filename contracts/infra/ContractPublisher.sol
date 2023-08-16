@@ -19,7 +19,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
 
 //  ==========  Internal imports    ==========
-import { IContractPublisher } from "./interfaces/IContractPublisher.sol";
+import { IContractPublisher } from "./interface/IContractPublisher.sol";
 
 contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlEnumerable, Multicall {
     using EnumerableSet for EnumerableSet.Bytes32Set;

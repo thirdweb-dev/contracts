@@ -30,12 +30,12 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import { IMarketplace } from "../interfaces/marketplace/IMarketplace.sol";
+import { IMarketplace } from "../interface/marketplace/IMarketplace.sol";
 
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
-import "../lib/CurrencyTransferLib.sol";
-import "../lib/FeeType.sol";
+import "../../lib/CurrencyTransferLib.sol";
+import "../../lib/FeeType.sol";
 
 contract Marketplace is
     Initializable,

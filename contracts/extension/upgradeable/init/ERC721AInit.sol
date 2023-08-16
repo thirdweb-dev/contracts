@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { ERC721AStorage } from "../eip/ERC721AUpgradeable.sol";
-import "../extension/Initializable.sol";
+import "../Initializable.sol";
 
 contract ERC721AInit is Initializable {
     function __ERC721A_init(string memory name_, string memory symbol_) internal onlyInitializing {

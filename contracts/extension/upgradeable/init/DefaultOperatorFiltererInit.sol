@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "../../extension/interface/IOperatorFilterRegistry.sol";
-import { OperatorFilterToggleStorage } from "../extension/OperatorFilterToggle.sol";
+import "../../interface/IOperatorFilterRegistry.sol";
+import { OperatorFilterToggleStorage } from "../OperatorFilterToggle.sol";
 
 contract DefaultOperatorFiltererInit {
     event OperatorRestriction(bool restriction);

@@ -17,27 +17,27 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-import "../../eip/queryable/ERC721AQueryableUpgradeable.sol";
+import "../../../eip/queryable/ERC721AQueryableUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
-import "../../lib/CurrencyTransferLib.sol";
+import "../../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
+import "../../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
-import "../../extension/Multicall.sol";
-import "../../dynamic-contracts/extension/ContractMetadata.sol";
-import "../../dynamic-contracts/extension/Royalty.sol";
-import "../../dynamic-contracts/extension/PrimarySale.sol";
-import "../../dynamic-contracts/extension/Ownable.sol";
-import "../../dynamic-contracts/extension/Permissions.sol";
-import "../../dynamic-contracts/extension/Drop.sol";
-import "../../dynamic-contracts/extension/SharedMetadataBatch.sol";
-import { RulesEngine } from "../../dynamic-contracts/extension/RulesEngine.sol";
+import "../../../extension/Multicall.sol";
+import "../../../extension/upgradeable/ContractMetadata.sol";
+import "../../../extension/upgradeable/Royalty.sol";
+import "../../../extension/upgradeable/PrimarySale.sol";
+import "../../../extension/upgradeable/Ownable.sol";
+import "../../../extension/upgradeable/Permissions.sol";
+import "../../../extension/upgradeable/Drop.sol";
+import "../../../extension/upgradeable/SharedMetadataBatch.sol";
+import { RulesEngine } from "../../../extension/upgradeable/RulesEngine.sol";
 
 // OpenSea operator filter
-import "../../extension/DefaultOperatorFiltererUpgradeable.sol";
+import "../../../extension/DefaultOperatorFiltererUpgradeable.sol";
 
 contract EvolvingNFTLogic is
     ContractMetadata,

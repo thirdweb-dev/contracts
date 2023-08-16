@@ -2,9 +2,9 @@
 pragma solidity ^0.8.0;
 
 // Target contracts
-import { ContractPublisher } from "contracts/ContractPublisher.sol";
-import "contracts/interfaces/IContractPublisher.sol";
-import "contracts/TWRegistry.sol";
+import { ContractPublisher } from "contracts/infra/ContractPublisher.sol";
+import "contracts/infra/interface/IContractPublisher.sol";
+import "contracts/infra/TWRegistry.sol";
 
 // Test helpers
 import { BaseTest } from "./utils/BaseTest.sol";

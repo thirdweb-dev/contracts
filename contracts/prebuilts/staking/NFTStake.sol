@@ -18,18 +18,18 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeabl
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 
 // Meta transactions
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
-import "../lib/CurrencyTransferLib.sol";
+import "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
-import "../extension/ContractMetadata.sol";
-import "../extension/PermissionsEnumerable.sol";
-import { Staking721Upgradeable } from "../extension/Staking721Upgradeable.sol";
-import "../interfaces/staking/INFTStake.sol";
+import "../../extension/ContractMetadata.sol";
+import "../../extension/PermissionsEnumerable.sol";
+import { Staking721Upgradeable } from "../../extension/Staking721Upgradeable.sol";
+import "../interface/staking/INFTStake.sol";
 
 contract NFTStake is
     Initializable,

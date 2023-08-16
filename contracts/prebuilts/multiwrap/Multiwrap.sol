@@ -21,16 +21,16 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../interfaces/IMultiwrap.sol";
-import "../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../interface/IMultiwrap.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
 
-import "../extension/ContractMetadata.sol";
-import "../extension/Royalty.sol";
-import "../extension/Ownable.sol";
-import "../extension/PermissionsEnumerable.sol";
-import { TokenStore, ERC1155Receiver, IERC1155Receiver } from "../extension/TokenStore.sol";
+import "../../extension/ContractMetadata.sol";
+import "../../extension/Royalty.sol";
+import "../../extension/Ownable.sol";
+import "../../extension/PermissionsEnumerable.sol";
+import { TokenStore, ERC1155Receiver, IERC1155Receiver } from "../../extension/TokenStore.sol";
 
 contract Multiwrap is
     Initializable,

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { ReentrancyGuardStorage } from "../extension/ReentrancyGuard.sol";
-import "../extension/Initializable.sol";
+import { ReentrancyGuardStorage } from "../ReentrancyGuard.sol";
+import "../Initializable.sol";
 
 contract ReentrancyGuardInit is Initializable {
     uint256 private constant _NOT_ENTERED = 1;

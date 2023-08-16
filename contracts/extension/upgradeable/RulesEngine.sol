@@ -3,13 +3,13 @@ pragma solidity ^0.8.11;
 
 /// @author thirdweb
 
-import "../../extension/interface/IRulesEngine.sol";
+import "../interface/IRulesEngine.sol";
 
 import "../../eip/interface/IERC20.sol";
 import "../../eip/interface/IERC721.sol";
 import "../../eip/interface/IERC1155.sol";
 
-import "../../openzeppelin-presets/utils/structs/EnumerableSet.sol";
+import "../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 
 library RulesEngineStorage {
     bytes32 public constant RULES_ENGINE_STORAGE_POSITION = keccak256("rules.engine.storage");

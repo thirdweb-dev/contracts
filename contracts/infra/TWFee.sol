@@ -4,7 +4,7 @@ pragma solidity ^0.8.11;
 /// @author thirdweb
 
 import "./TWFactory.sol";
-import "./interfaces/ITWFee.sol";
+import "./interface/ITWFee.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Multicall.sol";
