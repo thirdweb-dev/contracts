@@ -221,7 +221,7 @@ contract DropERC721 is
         bytes memory
     ) internal view override {
         require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "!Tokens");
-        require(maxTotalSupply == 0 || _currentIndex + _quantity <= maxTotalSupply, "exceed max total supply.");
+        require(maxTotalSupply == 0 || _currentIndex + _quantity <= maxTotalSupply, "!Supply");
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
@@ -232,6 +232,7 @@ contract DropERC721 is
         uint256 _pricePerToken
     ) internal override {
         if (_pricePerToken == 0) {
+            require(msg.value == 0, "!V");
             return;
         }
 
@@ -242,11 +243,13 @@ contract DropERC721 is
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
+        bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
-                revert("!Price");
-            }
+            validMsgValue = msg.value == totalPrice;
+        } else {
+            validMsgValue = msg.value == 0;
         }
+        require(validMsgValue, "!V");
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);

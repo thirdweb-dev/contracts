@@ -159,7 +159,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
         _signature = signMintRequest(_mintrequest, privateKey);
 
         vm.prank(recipient);
-        vm.expectRevert("Must send total price.");
+        vm.expectRevert("Invalid msg value");
         base.mintWithSignature{ value: 0 }(_mintrequest, _signature);
     }
 

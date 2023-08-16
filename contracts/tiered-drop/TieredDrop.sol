@@ -298,16 +298,19 @@ contract TieredDrop is
         uint256 _totalPrice
     ) internal {
         if (_totalPrice == 0) {
+            require(msg.value == 0, "!Value");
             return;
         }
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
+        bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != _totalPrice) {
-                revert("!Price");
-            }
+            validMsgValue = msg.value == _totalPrice;
+        } else {
+            validMsgValue = msg.value == 0;
         }
+        require(validMsgValue, "Invalid msg value");
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, _totalPrice);
     }
