@@ -97,6 +97,7 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
         uint256 _price
     ) internal virtual {
         if (_price == 0) {
+            require(msg.value == 0, "!Value");
             return;
         }
 
