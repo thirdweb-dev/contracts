@@ -465,8 +465,8 @@ contract Pack is
         uint256 idsLength = ids.length;
         if (from == address(0)) {
             for (uint256 i; i < idsLength; ) {
-                totalSupply[ids[i]] += amounts[i];
                 unchecked {
+                    totalSupply[ids[i]] += amounts[i];
                     ++i;
                 }
             }
@@ -484,8 +484,8 @@ contract Pack is
 
         if (to == address(0)) {
             for (uint256 i; i < idsLength; ) {
-                totalSupply[ids[i]] -= amounts[i];
                 unchecked {
+                    totalSupply[ids[i]] -= amounts[i];
                     ++i;
                 }
             }
