@@ -80,9 +80,6 @@ contract TokenBoundAccount is
         emit TokenBoundAccountCreated(_defaultAdmin, _data);
     }
 
-    // solhint-disable-next-line no-empty-blocks
-    // receive() external payable virtual (IERC6551Account, Account) {}
-
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
     function isValidSigner(address _signer, UserOperation calldata) public view returns (bool) {
         return (owner() == _signer);
