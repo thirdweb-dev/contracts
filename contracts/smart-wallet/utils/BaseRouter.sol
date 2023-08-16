@@ -4,14 +4,14 @@
 pragma solidity ^0.8.0;
 
 // Interface
-import "lib/dynamic-contracts/src/interface/IBaseRouter.sol";
+import "@thirdweb-dev/dynamic-contracts/src/interface/IBaseRouter.sol";
 
 // Core
-import "lib/dynamic-contracts/src/core/Router.sol";
+import "@thirdweb-dev/dynamic-contracts/src/core/Router.sol";
 
 // Utils
-import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
-import "lib/dynamic-contracts/src/presets/utils/ExtensionState.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/utils/StringSet.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/utils/ExtensionState.sol";
 
 abstract contract BaseRouter is IBaseRouter, Router, ExtensionState {
     using StringSet for StringSet.Set;

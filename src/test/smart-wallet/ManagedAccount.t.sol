@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 // // Test utils
 // import "../utils/BaseTest.sol";
-// import "lib/dynamic-contracts/src/interface/IExtension.sol";
+// import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 // import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 // import { AccountPermissions } from "contracts/dynamic-contracts/extension/AccountPermissions.sol";
 // import { AccountExtension } from "contracts/smart-wallet/utils/AccountExtension.sol";

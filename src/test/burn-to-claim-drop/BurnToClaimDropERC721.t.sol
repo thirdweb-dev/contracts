@@ -9,7 +9,7 @@ import { Royalty } from "contracts/dynamic-contracts/extension/Royalty.sol";
 import { BatchMintMetadata } from "contracts/dynamic-contracts/extension/BatchMintMetadata.sol";
 import { IBurnToClaim } from "contracts/extension/interface/IBurnToClaim.sol";
 
-import "lib/dynamic-contracts/src/interface/IExtension.sol";
+import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 
 import { TWProxy } from "contracts/TWProxy.sol";
 
