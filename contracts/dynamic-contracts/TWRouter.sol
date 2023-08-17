@@ -9,10 +9,10 @@ import "./interface/IExtensionRegistry.sol";
 import "../extension/Multicall.sol";
 
 // Extension pattern imports
-import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
-import "lib/dynamic-contracts/src/core/Router.sol";
-import "lib/dynamic-contracts/src/presets/utils/DefaultExtensionSet.sol";
-import "lib/dynamic-contracts/src/presets/utils/ExtensionState.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/utils/StringSet.sol";
+import "@thirdweb-dev/dynamic-contracts/src/core/Router.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/utils/DefaultExtensionSet.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/utils/ExtensionState.sol";
 
 abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
     using StringSet for StringSet.Set;

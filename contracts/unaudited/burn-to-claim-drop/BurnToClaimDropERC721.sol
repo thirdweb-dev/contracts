@@ -12,7 +12,7 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "lib/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
 
 import "../../extension/Multicall.sol";
 

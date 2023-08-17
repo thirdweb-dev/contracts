@@ -1178,6 +1178,11 @@
   resolved "https://registry.yarnpkg.com/@thirdweb-dev/contracts/-/contracts-3.6.0.tgz#f85cf5468f387fa436fef826e07a6b6c7ea29279"
   integrity sha512-WPKyTb4Pqz8WZpQQ2RZEboIQIiki0YZruJBOvW20VfTZIt5rGUT2g9TkF6ca9O/SCdd1FM6ziQ7k0SV12QSxwg==
 
+"@thirdweb-dev/dynamic-contracts@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@thirdweb-dev/dynamic-contracts/-/dynamic-contracts-1.1.0.tgz#42bb992f4515b7d9baf8fa1d9b842fbe846eb3f3"
+  integrity sha512-Nr+vACp6dAfDA4QY3WWODQBOs+km5VKTqYdAD/kiHX8X4xBPjhg8ZOw4hjq+X+wzo+B3nDQaC54N65lmYB6aaw==
+
 "@thirdweb-dev/generated-abis@0.0.1":
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/@thirdweb-dev/generated-abis/-/generated-abis-0.0.1.tgz#0d788d6aff0ac08f11e9eeb9ae4c8321845272a8"

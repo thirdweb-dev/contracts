@@ -2,7 +2,7 @@
 pragma solidity ^0.8.12;
 
 // Utils
-import "lib/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
 import "../utils/BaseAccountFactory.sol";
 
 // Extensions

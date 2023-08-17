@@ -6,8 +6,8 @@ import "./interface/IExtensionRegistry.sol";
 
 // Extensions
 import "../extension/PermissionsEnumerable.sol";
-import "lib/dynamic-contracts/src/presets/utils/ExtensionState.sol";
-import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/utils/ExtensionState.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/utils/StringSet.sol";
 
 contract ExtensionRegistry is IExtensionRegistry, ExtensionState, PermissionsEnumerable {
     using StringSet for StringSet.Set;
