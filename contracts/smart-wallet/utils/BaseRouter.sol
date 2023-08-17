@@ -27,7 +27,7 @@ abstract contract BaseRouter is IBaseRouter, Router, ExtensionState {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev See {IERC165-supportsInterface}.
-    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return interfaceId == type(IBaseRouter).interfaceId;
     }
 
@@ -65,7 +65,7 @@ abstract contract BaseRouter is IBaseRouter, Router, ExtensionState {
      *          given precedence over default extensions in DefaultExtensionSet.
      */
     function getAllExtensions() external view returns (Extension[] memory allExtensions) {
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionStateStorage.Data storage data = _extensionStateStorage();
 
         string[] memory names = data.extensionNames.values();
         uint256 len = names.length;
@@ -79,7 +79,7 @@ abstract contract BaseRouter is IBaseRouter, Router, ExtensionState {
 
     /// @dev Returns the extension metadata and functions for a given extension.
     function getExtension(string memory _extensionName) public view returns (Extension memory) {
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionStateStorage.Data storage data = _extensionStateStorage();
         return data.extensions[_extensionName];
     }
 
@@ -99,7 +99,7 @@ abstract contract BaseRouter is IBaseRouter, Router, ExtensionState {
 
     /// @dev Returns the extension metadata for a given function.
     function getExtensionForFunction(bytes4 _functionSelector) public view returns (ExtensionMetadata memory) {
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionStateStorage.Data storage data = _extensionStateStorage();
         return data.extensionMetadata[_functionSelector];
     }
 

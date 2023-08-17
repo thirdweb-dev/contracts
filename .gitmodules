@@ -4,9 +4,6 @@
 [submodule "lib/ds-test"]
 	path = lib/ds-test
 	url = https://github.com/dapphub/ds-test
-[submodule "lib/dynamic-contracts"]
-	path = lib/dynamic-contracts
-	url = https://github.com/thirdweb-dev/dynamic-contracts
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
@@ -24,3 +21,6 @@
 	path = lib/ERC721A
 	url = https://github.com/chiru-labs/ERC721A
 	branch = v3.3.0
+[submodule "lib/dynamic-contracts"]
+	path = lib/dynamic-contracts
+	url = https://github.com/thirdweb-dev/dynamic-contracts
