@@ -98,23 +98,23 @@ contract AirdropERC721 is
 
         uint256 len = _contents.length;
 
-        for (uint256 i = 0; i < len; ) {
-            try
-                IERC721(_tokenAddress).safeTransferFrom(_tokenOwner, _contents[i].recipient, _contents[i].tokenId)
-            {} catch {
+        for (uint256 i; i < len; ) {
+            AirdropContent calldata airdropContent = _contents[i];
+            address recipient = airdropContent.recipient;
+            try IERC721(_tokenAddress).safeTransferFrom(_tokenOwner, recipient, airdropContent.tokenId) {} catch {
                 // revert if failure is due to unapproved tokens
                 require(
-                    (IERC721(_tokenAddress).ownerOf(_contents[i].tokenId) == _tokenOwner &&
-                        address(this) == IERC721(_tokenAddress).getApproved(_contents[i].tokenId)) ||
+                    (IERC721(_tokenAddress).ownerOf(airdropContent.tokenId) == _tokenOwner &&
+                        address(this) == IERC721(_tokenAddress).getApproved(airdropContent.tokenId)) ||
                         IERC721(_tokenAddress).isApprovedForAll(_tokenOwner, address(this)),
                     "Not owner or approved"
                 );
 
-                emit AirdropFailed(_tokenAddress, _tokenOwner, _contents[i].recipient, _contents[i].tokenId);
+                emit AirdropFailed(_tokenAddress, _tokenOwner, recipient, airdropContent.tokenId);
             }
 
             unchecked {
-                i += 1;
+                ++i;
             }
         }
     }
