@@ -18,7 +18,7 @@ import { apiMap, chainIdApiKey, chainIdToName } from "./constants";
 ////// To run this script: `npx ts-node scripts/deploy-prebuilt-deterministic/deploy-deterministic-std-chains.ts` //////
 ///// MAKE SURE TO PUT IN THE RIGHT CONTRACT NAME HERE AFTER PUBLISHING IT /////
 //// THE CONTRACT SHOULD BE PUBLISHED WITH THE NEW PUBLISH FLOW ////
-const publishedContractName = "OpenEditionERC721";
+const publishedContractName = "TokenERC20";
 const publisherKey: string = process.env.THIRDWEB_PUBLISHER_PRIVATE_KEY as string;
 const deployerKey: string = process.env.PRIVATE_KEY as string;
 
@@ -112,11 +112,14 @@ async function main() {
 
         console.log(`-- Deploying ${publishedContractName} at ${resolvedImplementationAddress}`);
         // send each transaction directly to Create2 factory
-        await Promise.all(
-          transactionsforDirectDeploy.map(tx => {
-            return deployContractDeterministic(signer, tx, {});
-          }),
-        );
+        // process txns one at a time
+        for (const tx of transactionsforDirectDeploy) {
+          try {
+            await deployContractDeterministic(signer, tx, {});
+          } catch (e) {
+            console.debug(`Error deploying contract at ${tx.predictedAddress}`, (e as any)?.message);
+          }
+        }
         console.log();
       } catch (e) {
         console.log("Error while deploying: ", e);

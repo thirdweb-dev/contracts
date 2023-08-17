@@ -7,7 +7,7 @@ export const chainIdToName: Record<number, string> = {
   [ChainId.Mumbai]: "mumbai",
   [ChainId.Goerli]: "goerli",
   [ChainId.Polygon]: "polygon",
-  [ChainId.Mainnet]: "mainnet",
+  // [ChainId.Mainnet]: "mainnet",
   [ChainId.Optimism]: "optimism",
   [ChainId.OptimismGoerli]: "optimism-goerli",
   [ChainId.Arbitrum]: "arbitrum",
