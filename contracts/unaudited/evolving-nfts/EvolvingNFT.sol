@@ -20,7 +20,7 @@ import "../../dynamic-contracts/init/ContractMetadataInit.sol";
 import "../../dynamic-contracts/init/RoyaltyInit.sol";
 import "../../dynamic-contracts/init/PrimarySaleInit.sol";
 import "../../dynamic-contracts/init/OwnableInit.sol";
-import "../../dynamic-contracts/init/PermissionsInit.sol";
+import "../../dynamic-contracts/init/PermissionsEnumerableInit.sol";
 import "../../dynamic-contracts/init/ERC2771ContextInit.sol";
 import "../../dynamic-contracts/init/ERC721AQueryableInit.sol";
 import "../../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
@@ -35,7 +35,7 @@ contract EvolvingNFT is
     RoyaltyInit,
     PrimarySaleInit,
     OwnableInit,
-    PermissionsInit,
+    PermissionsEnumerableInit,
     DefaultOperatorFiltererInit
 {
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
@@ -71,6 +71,9 @@ contract EvolvingNFT is
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
+
+        _setupRole(EXTENSION_ROLE, _defaultAdmin);
+        _setRoleAdmin(EXTENSION_ROLE, EXTENSION_ROLE);
     }
 
     /*///////////////////////////////////////////////////////////////
