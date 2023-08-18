@@ -32,7 +32,7 @@ import "../utils/BaseAccountFactory.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract Account is AccountCore, ContractMetadata, ERC721Holder, ERC1155Holder {
+contract Account is AccountCore, ERC1271, ContractMetadata, ERC721Holder, ERC1155Holder {
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -61,6 +61,29 @@ contract Account is AccountCore, ContractMetadata, ERC721Holder, ERC1155Holder {
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
             super.supportsInterface(interfaceId);
+    }
+
+    /// @notice See EIP-1271
+    function isValidSignature(bytes32 _hash, bytes memory _signature)
+        public
+        view
+        virtual
+        override
+        returns (bytes4 magicValue)
+    {
+        address signer = _hash.recover(_signature);
+
+        if (isAdmin(signer)) {
+            return MAGICVALUE;
+        }
+
+        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+        address caller = msg.sender;
+        require(data.approvedTargets[signer].contains(caller), "Account: caller not approved target.");
+
+        if (isActiveSigner(signer)) {
+            magicValue = MAGICVALUE;
+        }
     }
 
     /*///////////////////////////////////////////////////////////////

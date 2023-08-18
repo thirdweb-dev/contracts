@@ -10,9 +10,11 @@ import "../../dynamic-contracts/extension/AccountPermissions.sol";
 import "../../dynamic-contracts/extension/ContractMetadata.sol";
 import "../../openzeppelin-presets/token/ERC721/utils/ERC721Holder.sol";
 import "../../openzeppelin-presets/token/ERC1155/utils/ERC1155Holder.sol";
+import "../../eip/ERC1271.sol";
 
 // Utils
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
+import "../../openzeppelin-presets/utils/structs/EnumerableSet.sol";
 import "./BaseAccountFactory.sol";
 import "./AccountCore.sol";
 
@@ -25,8 +27,9 @@ import "./AccountCore.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder, ERC1155Holder {
+contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC721Holder, ERC1155Holder {
     using ECDSA for bytes32;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
@@ -56,6 +59,29 @@ contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder,
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
             super.supportsInterface(interfaceId);
+    }
+
+    /// @notice See EIP-1271
+    function isValidSignature(bytes32 _hash, bytes memory _signature)
+        public
+        view
+        virtual
+        override
+        returns (bytes4 magicValue)
+    {
+        address signer = _hash.recover(_signature);
+
+        if (isAdmin(signer)) {
+            return MAGICVALUE;
+        }
+
+        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+        address caller = msg.sender;
+        require(data.approvedTargets[signer].contains(caller), "Account: caller not approved target.");
+
+        if (isActiveSigner(signer)) {
+            magicValue = MAGICVALUE;
+        }
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -201,7 +201,7 @@ contract DynamicAccountTest is BaseTest {
             implementation: address(new AccountExtension(address(entrypoint)))
         });
 
-        defaultExtension.functions = new IExtension.ExtensionFunction[](6);
+        defaultExtension.functions = new IExtension.ExtensionFunction[](7);
 
         defaultExtension.functions[0] = IExtension.ExtensionFunction(
             AccountExtension.supportsInterface.selector,
@@ -226,6 +226,10 @@ contract DynamicAccountTest is BaseTest {
         defaultExtension.functions[5] = IExtension.ExtensionFunction(
             bytes4(0), // Selector for `receive()` function.
             "receive()"
+        );
+        defaultExtension.functions[6] = IExtension.ExtensionFunction(
+            AccountExtension.isValidSignature.selector,
+            "isValidSignature(bytes32,bytes)"
         );
 
         IExtension.Extension[] memory extensions = new IExtension.Extension[](1);
