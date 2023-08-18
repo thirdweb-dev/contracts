@@ -43,8 +43,6 @@ contract EvolvingNFT is
 
     constructor(Extension[] memory _extensions) BaseRouterWithDefaults(_extensions) {}
 
-    receive() external payable {}
-
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
@@ -67,6 +65,7 @@ contract EvolvingNFT is
         _setupOperatorFilterer();
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(EXTENSION_ROLE, _defaultAdmin);
         _setupRole(keccak256("MINTER_ROLE"), _defaultAdmin);
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
