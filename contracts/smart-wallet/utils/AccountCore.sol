@@ -16,6 +16,7 @@ import "../../dynamic-contracts/extension/AccountPermissions.sol";
 
 // Utils
 import "./AccountCoreStorage.sol";
+import "./Helpers.sol";
 import "./BaseAccountFactory.sol";
 import { Account } from "../non-upgradeable/Account.sol";
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
@@ -231,7 +232,12 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
         address signer = hash.recover(userOp.signature);
 
         if (!isValidSigner(signer, userOp)) return SIG_VALIDATION_FAILED;
-        return 0;
+
+        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+        uint48 validAfter = uint48(data.signerPermissions[signer].startTimestamp);
+        uint48 validUntil = uint48(data.signerPermissions[signer].endTimestamp);
+
+        return _packValidationData(ValidationData(address(0), validAfter, validUntil));
     }
 
     /// @notice Makes the given account an admin.
