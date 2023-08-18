@@ -15,6 +15,7 @@ import "../../eip/ERC1271.sol";
 import "../../dynamic-contracts/extension/AccountPermissions.sol";
 
 // Utils
+import "./AccountCoreStorage.sol";
 import "./BaseAccountFactory.sol";
 import { Account } from "../non-upgradeable/Account.sol";
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
@@ -63,11 +64,21 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
     }
 
     /*///////////////////////////////////////////////////////////////
+                                Events
+    //////////////////////////////////////////////////////////////*/
+
+    event EntrypointOverride(IEntryPoint entrypointOverride);
+
+    /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns the EIP 4337 entrypoint contract.
     function entryPoint() public view virtual override returns (IEntryPoint) {
+        address entrypointOverride = AccountCoreStorage.data().entrypointOverride;
+        if (address(entrypointOverride) != address(0)) {
+            return IEntryPoint(entrypointOverride);
+        }
         return entrypointContract;
     }
 
@@ -168,6 +179,12 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
     /// @notice Withdraw funds for this account from Entrypoint.
     function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public onlyAdmin {
         entryPoint().withdrawTo(withdrawAddress, amount);
+    }
+
+    /// @notice Overrides the Entrypoint contract being used.
+    function setEntrypointOverride(IEntryPoint _entrypointOverride) public virtual onlyAdmin {
+        AccountCoreStorage.data().entrypointOverride = address(_entrypointOverride);
+        emit EntrypointOverride(_entrypointOverride);
     }
 
     /*///////////////////////////////////////////////////////////////
