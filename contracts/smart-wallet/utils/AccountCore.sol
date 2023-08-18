@@ -16,9 +16,9 @@ import "../../dynamic-contracts/extension/AccountPermissions.sol";
 
 // Utils
 import "./AccountCoreStorage.sol";
+import "./AccountExtension.sol";
 import "./Helpers.sol";
 import "./BaseAccountFactory.sol";
-import { Account } from "../non-upgradeable/Account.sol";
 import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 
 import "../interfaces/IAccountCore.sol";
@@ -110,7 +110,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
         // Extract the function signature from the userOp calldata and check whether the signer is attempting to call `execute` or `executeBatch`.
         bytes4 sig = getFunctionSignature(_userOp.callData);
 
-        if (sig == Account.execute.selector) {
+        if (sig == AccountExtension.execute.selector) {
             // Extract the `target` and `value` arguments from the calldata for `execute`.
             (address target, uint256 value) = decodeExecuteCalldata(_userOp.callData);
 
@@ -119,7 +119,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
                 // Account: value too high OR Account: target not approved.
                 return false;
             }
-        } else if (sig == Account.executeBatch.selector) {
+        } else if (sig == AccountExtension.executeBatch.selector) {
             // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
             (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
 
