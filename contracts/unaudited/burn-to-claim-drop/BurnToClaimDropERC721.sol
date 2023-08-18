@@ -12,7 +12,7 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
 
 import "../../extension/Multicall.sol";
 
@@ -34,7 +34,7 @@ contract BurnToClaimDropERC721 is
     Initializable,
     Multicall,
     ERC2771ContextUpgradeable,
-    BaseRouter,
+    BaseRouterWithDefaults,
     DefaultOperatorFiltererInit,
     ContractMetadataInit,
     PlatformFeeInit,
@@ -48,7 +48,7 @@ contract BurnToClaimDropERC721 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Extension[] memory _extensions) BaseRouter(_extensions) {}
+    constructor(Extension[] memory _extensions) BaseRouterWithDefaults(_extensions) {}
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -128,7 +128,7 @@ contract BurnToClaimDropERC721 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether an extension can be set in the given execution context.
-    function _canSetExtension() internal view virtual override returns (bool) {
+    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
         return _hasRole(keccak256("EXTENSION_ROLE"), msg.sender);
     }
 
