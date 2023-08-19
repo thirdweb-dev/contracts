@@ -278,6 +278,13 @@ contract DynamicAccountTest is BaseTest {
         assertEq(allAccounts[0], sender);
     }
 
+    /// @dev Try registering with factory with a contract not deployed by factory.
+    function test_revert_onRegister_nonFactoryChildContract() public {
+        vm.prank(address(0x12345));
+        vm.expectRevert("AccountFactory: not an account.");
+        accountFactory.onRegister(accountAdmin, "");
+    }
+
     /*///////////////////////////////////////////////////////////////
                     Test: performing a contract call
     //////////////////////////////////////////////////////////////*/

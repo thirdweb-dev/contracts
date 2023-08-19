@@ -17,6 +17,7 @@ import "../../openzeppelin-presets/utils/cryptography/ECDSA.sol";
 import "../../openzeppelin-presets/utils/structs/EnumerableSet.sol";
 import "./BaseAccountFactory.sol";
 import "./AccountCore.sol";
+import "./AccountCoreStorage.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -120,7 +121,7 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         address factory = AccountCore(payable(address(this))).factory();
         BaseAccountFactory factoryContract = BaseAccountFactory(factory);
         if (!factoryContract.isRegistered(address(this))) {
-            factoryContract.onRegister();
+            factoryContract.onRegister(AccountCoreStorage.data().firstAdmin, "");
         }
     }
 
