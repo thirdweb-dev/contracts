@@ -13,7 +13,7 @@ pragma solidity ^0.8.11;
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 // Token
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "../eip/interface/IERC721.sol";
 import "@openzeppelin/contracts-upgradeable/utils/introspection/ERC165Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradeable.sol";
 
