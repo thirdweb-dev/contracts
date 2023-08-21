@@ -143,7 +143,15 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
     {
         address signer = _hash.recover(_signature);
 
-        if (isAdmin(signer) || isActiveSigner(signer)) {
+        if (isAdmin(signer)) {
+            return MAGICVALUE;
+        }
+
+        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+        address caller = msg.sender;
+        require(data.approvedTargets[signer].contains(caller), "Account: caller not approved target.");
+
+        if (isActiveSigner(signer)) {
             magicValue = MAGICVALUE;
         }
     }

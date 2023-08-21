@@ -9,10 +9,10 @@ import "./interface/IExtensionRegistry.sol";
 import "../extension/Multicall.sol";
 
 // Extension pattern imports
-import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
-import "lib/dynamic-contracts/src/core/Router.sol";
-import "lib/dynamic-contracts/src/presets/utils/DefaultExtensionSet.sol";
-import "lib/dynamic-contracts/src/presets/utils/ExtensionState.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/utils/StringSet.sol";
+import "@thirdweb-dev/dynamic-contracts/src/core/Router.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/utils/DefaultExtensionSet.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/utils/ExtensionState.sol";
 
 abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
     using StringSet for StringSet.Set;
@@ -86,7 +86,7 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
         Extension[] memory mapExtensions = IDefaultExtensionSet(defaultExtensionSet).getAllExtensions();
         uint256 mapExtensionsLen = mapExtensions.length;
 
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionStateStorage.Data storage data = _extensionStateStorage();
         string[] memory names = data.extensionNames.values();
         uint256 namesLen = names.length;
 
@@ -118,7 +118,7 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
 
     /// @dev Returns the extension metadata and functions for a given extension.
     function getExtension(string memory _extensionName) public view returns (Extension memory) {
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionStateStorage.Data storage data = _extensionStateStorage();
         bool isLocalExtension = data.extensionNames.contains(_extensionName);
 
         return
@@ -143,7 +143,7 @@ abstract contract TWRouter is ITWRouter, Multicall, ExtensionState, Router {
 
     /// @dev Returns the Extension metadata for a given function.
     function getExtensionForFunction(bytes4 _functionSelector) public view returns (ExtensionMetadata memory) {
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionStateStorage.Data storage data = _extensionStateStorage();
         ExtensionMetadata memory metadata = data.extensionMetadata[_functionSelector];
 
         bool isLocalExtension = metadata.implementation != address(0);

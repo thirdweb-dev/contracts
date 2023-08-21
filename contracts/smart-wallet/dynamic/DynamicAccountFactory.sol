@@ -3,7 +3,7 @@ pragma solidity ^0.8.12;
 
 // Utils
 import "../utils/BaseAccountFactory.sol";
-import "lib/dynamic-contracts/src/interface/IExtension.sol";
+import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 
 // Extensions
 import "../../dynamic-contracts/extension/PermissionsEnumerable.sol";

@@ -11,6 +11,7 @@
     "@chainlink/contracts": "^0.6.1",
     "@openzeppelin/contracts": "4.7.3",
     "@openzeppelin/contracts-upgradeable": "4.7.3",
+    "@thirdweb-dev/dynamic-contracts": "^1.1.2",
     "@thirdweb-dev/sdk": "3.10.33",
     "@typechain/ethers-v5": "^10.0.0",
     "@types/fs-extra": "^9.0.13",
