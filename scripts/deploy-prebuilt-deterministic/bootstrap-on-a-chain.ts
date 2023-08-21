@@ -123,11 +123,14 @@ async function main() {
 
         console.log(`-- Deploying ${publishedContractName} at ${resolvedImplementationAddress}`);
         // send each transaction directly to Create2 factory
-        await Promise.all(
-          transactionsforDirectDeploy.map(tx => {
-            return deployContractDeterministic(signer, tx, {});
-          }),
-        );
+        // process txns one at a time
+        for (const tx of transactionsforDirectDeploy) {
+          try {
+            await deployContractDeterministic(signer, tx, {});
+          } catch (e) {
+            console.debug(`Error deploying contract at ${tx.predictedAddress}`, (e as any)?.message);
+          }
+        }
         console.log();
       } catch (e) {
         console.log("Error while deploying: ", e);
