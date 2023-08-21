@@ -46,8 +46,8 @@
     "typescript": "^4.4.4"
   },
   "scripts": {
-    "clean": "forge clean && rm -rf abi/ && rm -rf artifacts_forge/ && rm -rf dist/ && rm -rf typechain/",
-    "compile": "forge build",
+    "clean": "forge clean && rm -rf abi/ && rm -rf artifacts_forge/ && rm -rf contract_artifacts && rm -rf dist/ && rm -rf typechain/",
+    "compile": "forge build && npx ts-node scripts/package-release.ts",
     "lint": "solhint \"contracts/**/*.sol\"",
     "prettier": "prettier --config .prettierrc --write \"{contracts,src}/**/*.{js,json,sol,ts}\"",
     "prettier:list-different": "prettier --config .prettierrc --list-different \"**/*.{js,json,sol,ts}\"",
