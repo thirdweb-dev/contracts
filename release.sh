@@ -35,12 +35,7 @@ echo "### Build finished. Copying abis."
 rm -rf contracts/abi
 mkdir -p contracts/abi
 # copy all abis to contracts/abi
-find artifacts_forge -type f -iname "*.json" \
-    ! -path "artifacts_forge/*.t.sol*" \
-    ! -path "artifacts_forge/*test*" \
-    ! -path "artifacts_forge/*mock*" \
-    -exec cp {} contracts/abi 2>/dev/null \;
- 
+find contract_artifacts ! -iregex ".*([a-zA-Z0-9_]).json" -exec cp {} contracts/abi 2>/dev/null \; 
 echo "### Copying README."
 # copy root README to contracts folder
 cp README.md contracts/README.md
