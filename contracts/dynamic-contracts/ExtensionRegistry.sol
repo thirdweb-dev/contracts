@@ -45,7 +45,7 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionState, PermissionsEnu
 
     /// @notice Returns all extensions stored.
     function getAllExtensions() external view returns (Extension[] memory allExtensions) {
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionStateStorage.Data storage data = _extensionStateStorage();
 
         string[] memory names = data.extensionNames.values();
         uint256 len = names.length;
@@ -59,7 +59,7 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionState, PermissionsEnu
 
     /// @notice Returns the extension metadata and functions for a given extension.
     function getExtension(string memory _extensionName) public view returns (Extension memory) {
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionStateStorage.Data storage data = _extensionStateStorage();
         require(data.extensionNames.contains(_extensionName), "ExtensionRegistry: extension does not exist.");
         return data.extensions[_extensionName];
     }
@@ -80,7 +80,7 @@ contract ExtensionRegistry is IExtensionRegistry, ExtensionState, PermissionsEnu
 
     /// @notice Returns the extension metadata for a given function.
     function getExtensionForFunction(bytes4 _functionSelector) external view returns (ExtensionMetadata memory) {
-        ExtensionStateStorage.Data storage data = ExtensionStateStorage.extensionStateStorage();
+        ExtensionStateStorage.Data storage data = _extensionStateStorage();
         ExtensionMetadata memory metadata = data.extensionMetadata[_functionSelector];
         require(metadata.implementation != address(0), "ExtensionRegistry: no extension for function.");
         return metadata;

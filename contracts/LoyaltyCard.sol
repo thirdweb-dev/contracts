@@ -256,6 +256,7 @@ contract LoyaltyCard is
         uint256 _pricePerToken
     ) internal {
         if (_pricePerToken == 0) {
+            require(msg.value == 0, "!Value");
             return;
         }
 

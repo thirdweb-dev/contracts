@@ -20,9 +20,6 @@ import "@thirdweb-dev/dynamic-contracts/src/core/Router.sol";
 contract ManagedAccount is AccountCore, Router {
     constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {}
 
-    // solhint-disable-next-line no-empty-blocks
-    receive() external payable virtual override(Router, AccountCore) {}
-
     /// @notice Returns the implementation contract address for a given function signature.
     function getImplementationForFunction(bytes4 _functionSelector) public view virtual override returns (address) {
         return Router(payable(factory)).getImplementationForFunction(_functionSelector);

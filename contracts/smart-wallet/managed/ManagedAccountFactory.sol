@@ -2,7 +2,7 @@
 pragma solidity ^0.8.12;
 
 // Utils
-import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
 import "../utils/BaseAccountFactory.sol";
 
 // Extensions
@@ -21,19 +21,19 @@ import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable, BaseRouter {
+contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable, BaseRouterWithDefaults {
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
-        BaseRouter(_defaultExtensions)
+        BaseRouterWithDefaults(_defaultExtensions)
         BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint, address(this)))), address(_entrypoint))
     {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    receive() external payable override {
+    receive() external payable {
         revert("Cannot accept ether.");
     }
 
@@ -51,7 +51,7 @@ contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
     }
 
     /// @dev Returns whether an extension can be set in the given execution context.
-    function _canSetExtension() internal view virtual override returns (bool) {
+    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
