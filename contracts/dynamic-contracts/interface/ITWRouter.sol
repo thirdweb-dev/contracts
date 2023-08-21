@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "lib/dynamic-contracts/src/interface/IDefaultExtensionSet.sol";
+import "@thirdweb-dev/dynamic-contracts/src/interface/IDefaultExtensionSet.sol";
 
 interface ITWRouter is IDefaultExtensionSet {
     /*///////////////////////////////////////////////////////////////

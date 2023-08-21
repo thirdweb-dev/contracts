@@ -12,7 +12,7 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
 
 import "../../extension/Multicall.sol";
 import "../../dynamic-contracts/extension/Initializable.sol";
@@ -27,7 +27,7 @@ import "../../dynamic-contracts/init/DefaultOperatorFiltererInit.sol";
 
 contract EvolvingNFT is
     Initializable,
-    BaseRouter,
+    BaseRouterWithDefaults,
     Multicall,
     ERC721AQueryableInit,
     ERC2771ContextInit,
@@ -41,7 +41,9 @@ contract EvolvingNFT is
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
     bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
 
-    constructor(Extension[] memory _extensions) BaseRouter(_extensions) {}
+    constructor(Extension[] memory _extensions) BaseRouterWithDefaults(_extensions) {
+        _disableInitializers();
+    }
 
     /// @dev Initiliazes the contract, like a constructor.
     function initialize(
@@ -65,6 +67,7 @@ contract EvolvingNFT is
         _setupOperatorFilterer();
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(EXTENSION_ROLE, _defaultAdmin);
         _setupRole(keccak256("MINTER_ROLE"), _defaultAdmin);
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
@@ -83,7 +86,7 @@ contract EvolvingNFT is
     }
 
     /// @dev Returns whether a extension can be set in the given execution context.
-    function _canSetExtension() internal view virtual override returns (bool) {
+    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
         return _hasRole(EXTENSION_ROLE, msg.sender);
     }
 

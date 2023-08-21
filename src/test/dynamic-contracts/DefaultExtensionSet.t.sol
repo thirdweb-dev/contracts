@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "lib/dynamic-contracts/src/interface/IExtension.sol";
-import "lib/dynamic-contracts/src/presets/utils/DefaultExtensionSet.sol";
+import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/utils/DefaultExtensionSet.sol";
 import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
