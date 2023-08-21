@@ -22,18 +22,18 @@ import { Context, ERC721AUpgradeable, ERC721AStorage } from "../../../../eip/ERC
 
 import { IERC2771Context } from "../../../../extension/interface/IERC2771Context.sol";
 
-import { ERC2771ContextUpgradeable } from "../../../../extension/upgradeable//ERC2771ContextUpgradeable.sol";
-import { DelayedReveal } from "../../../../extension/upgradeable//DelayedReveal.sol";
-import { PrimarySale } from "../../../../extension/upgradeable//PrimarySale.sol";
-import { PlatformFee } from "../../../../extension/upgradeable//PlatformFee.sol";
-import { Royalty, IERC165 } from "../../../../extension/upgradeable//Royalty.sol";
-import { LazyMint } from "../../../../extension/upgradeable//LazyMint.sol";
-import { Drop } from "../../../../extension/upgradeable//Drop.sol";
-import { ContractMetadata } from "../../../../extension/upgradeable//ContractMetadata.sol";
-import { Ownable } from "../../../../extension/upgradeable//Ownable.sol";
-import { DefaultOperatorFiltererUpgradeable } from "../../../../extension/upgradeable//DefaultOperatorFiltererUpgradeable.sol";
-import { PermissionsStorage } from "../../../../extension/upgradeable//Permissions.sol";
-import { BurnToClaim, BurnToClaimStorage } from "../../../../extension/upgradeable//BurnToClaim.sol";
+import { ERC2771ContextUpgradeable } from "../../../../extension/upgradeable/ERC2771ContextUpgradeable.sol";
+import { DelayedReveal } from "../../../../extension/upgradeable/DelayedReveal.sol";
+import { PrimarySale } from "../../../../extension/upgradeable/PrimarySale.sol";
+import { PlatformFee } from "../../../../extension/upgradeable/PlatformFee.sol";
+import { Royalty, IERC165 } from "../../../../extension/upgradeable/Royalty.sol";
+import { LazyMint } from "../../../../extension/upgradeable/LazyMint.sol";
+import { Drop } from "../../../../extension/upgradeable/Drop.sol";
+import { ContractMetadata } from "../../../../extension/upgradeable/ContractMetadata.sol";
+import { Ownable } from "../../../../extension/upgradeable/Ownable.sol";
+import { DefaultOperatorFiltererUpgradeable } from "../../../../extension/upgradeable/DefaultOperatorFiltererUpgradeable.sol";
+import { PermissionsStorage } from "../../../../extension/upgradeable/Permissions.sol";
+import { BurnToClaim, BurnToClaimStorage } from "../../../../extension/upgradeable/BurnToClaim.sol";
 
 contract BurnToClaimDrop721Logic is
     ContractMetadata,

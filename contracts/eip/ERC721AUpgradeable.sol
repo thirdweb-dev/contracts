@@ -12,7 +12,7 @@ import "../lib/TWAddress.sol";
 import "../external-deps/openzeppelin/utils/Context.sol";
 import "../lib/TWStrings.sol";
 import "./ERC165.sol";
-import "../extension/Initializable.sol";
+import "../extension/upgradeable/Initializable.sol";
 
 library ERC721AStorage {
     bytes32 public constant ERC721A_STORAGE_POSITION = keccak256("erc721.a.storage");
