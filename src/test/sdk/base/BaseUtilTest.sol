@@ -11,7 +11,7 @@ import "../../mocks/MockERC1155.sol";
 import "contracts/forwarder/Forwarder.sol";
 import "contracts/lib/TWStrings.sol";
 
-import "contracts/mock/Mock.sol";
+import { Mock } from "contracts/mock/Mock.sol";
 
 abstract contract BaseUtilTest is DSTest, Test {
     string public constant NAME = "NAME";
