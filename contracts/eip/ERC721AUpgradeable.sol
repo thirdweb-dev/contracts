@@ -6,12 +6,12 @@ pragma solidity ^0.8.4;
 
 ////////// CHANGELOG: turn `approve` to virtual //////////
 
-import "../../eip/interface/IERC721A.sol";
-import "../../eip/interface/IERC721Receiver.sol";
-import "../../lib/TWAddress.sol";
-import "../../external-deps/openzeppelin/utils/Context.sol";
-import "../../lib/TWStrings.sol";
-import "../../eip/ERC165.sol";
+import "./interface/IERC721A.sol";
+import "./interface/IERC721Receiver.sol";
+import "../lib/TWAddress.sol";
+import "../external-deps/openzeppelin/utils/Context.sol";
+import "../lib/TWStrings.sol";
+import "./ERC165.sol";
 import "../extension/Initializable.sol";
 
 library ERC721AStorage {

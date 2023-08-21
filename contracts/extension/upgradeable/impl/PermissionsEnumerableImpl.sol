@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../../extension/interface/IERC2771Context.sol";
-import "../extension/PermissionsEnumerable.sol";
+import "../../interface/IERC2771Context.sol";
+import "../PermissionsEnumerable.sol";
 
 contract PermissionsEnumerableImpl is PermissionsEnumerable {
     function _msgSender() internal view override returns (address sender) {

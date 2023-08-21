@@ -15,7 +15,7 @@ pragma solidity ^0.8.11;
 // Interface
 import { ITokenERC1155 } from "../interface/token/ITokenERC1155.sol";
 
-import "../interface/IThirdwebContract.sol";
+import "../../infra/interface/IThirdwebContract.sol";
 import "../../extension/interface/IPlatformFee.sol";
 import "../../extension/interface/IPrimarySale.sol";
 import "../../extension/interface/IRoyalty.sol";

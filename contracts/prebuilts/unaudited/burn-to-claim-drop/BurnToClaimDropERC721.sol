@@ -16,19 +16,19 @@ import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 
 import "../../../extension/Multicall.sol";
 
-import "../../../extension/upgradeable//extension/Initializable.sol";
-import "../../../extension/upgradeable//extension/Permissions.sol";
-import "../../../extension/upgradeable//extension/ERC2771ContextUpgradeable.sol";
+import "../../../extension/upgradeable/Initializable.sol";
+import "../../../extension/upgradeable/Permissions.sol";
+import "../../../extension/upgradeable/ERC2771ContextUpgradeable.sol";
 
-import "../../../extension/upgradeable//init/ContractMetadataInit.sol";
-import "../../../extension/upgradeable//init/PlatformFeeInit.sol";
-import "../../../extension/upgradeable//init/RoyaltyInit.sol";
-import "../../../extension/upgradeable//init/PrimarySaleInit.sol";
-import "../../../extension/upgradeable//init/OwnableInit.sol";
-import "../../../extension/upgradeable//init/ERC721AInit.sol";
-import "../../../extension/upgradeable//init/PermissionsEnumerableInit.sol";
-import "../../../extension/upgradeable//init/DefaultOperatorFiltererInit.sol";
-import "../../../extension/upgradeable//init/ReentrancyGuardInit.sol";
+import "../../../extension/upgradeable/init/ContractMetadataInit.sol";
+import "../../../extension/upgradeable/init/PlatformFeeInit.sol";
+import "../../../extension/upgradeable/init/RoyaltyInit.sol";
+import "../../../extension/upgradeable/init/PrimarySaleInit.sol";
+import "../../../extension/upgradeable/init/OwnableInit.sol";
+import "../../../extension/upgradeable/init/ERC721AInit.sol";
+import "../../../extension/upgradeable/init/PermissionsEnumerableInit.sol";
+import "../../../extension/upgradeable/init/DefaultOperatorFiltererInit.sol";
+import "../../../extension/upgradeable/init/ReentrancyGuardInit.sol";
 
 contract BurnToClaimDropERC721 is
     Initializable,

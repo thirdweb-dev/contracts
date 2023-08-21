@@ -9,15 +9,15 @@ pragma solidity ^0.8.11;
 import "./../utils/BaseAccount.sol";
 
 // Fixed Extensions
-import "../../extension/Multicall.sol";
-import "../../extension/upgradeable/Initializable.sol";
-import "../../eip/ERC1271.sol";
-import "../../extension/upgradeable/AccountPermissions.sol";
+import "../../../extension/Multicall.sol";
+import "../../../extension/upgradeable/Initializable.sol";
+import "../../../eip/ERC1271.sol";
+import "../../../extension/upgradeable/AccountPermissions.sol";
 
 // Utils
 import "./BaseAccountFactory.sol";
 import { Account } from "../non-upgradeable/Account.sol";
-import "../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
+import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 
 import "../interface/IAccountCore.sol";
 

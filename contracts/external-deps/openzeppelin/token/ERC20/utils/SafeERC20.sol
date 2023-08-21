@@ -3,8 +3,8 @@
 
 pragma solidity ^0.8.0;
 
-import "../../../../eip/interface/IERC20.sol";
-import "../../../../lib/TWAddress.sol";
+import "../../../../../eip/interface/IERC20.sol";
+import "../../../../../lib/TWAddress.sol";
 
 /**
  * @title SafeERC20

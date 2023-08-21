@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.2;
 
-import "../../../lib/TWAddress.sol";
+import "../../../../lib/TWAddress.sol";
 
 /**
  * @dev This is a base contract to aid in writing upgradeable contracts, or any kind of contract that will be deployed

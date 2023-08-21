@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "../IThirdwebContract.sol";
-import "../../extension/interface/IPlatformFee.sol";
+import "../../../infra/interface/IThirdwebContract.sol";
+import "../../../extension/interface/IPlatformFee.sol";
 
 interface IMarketplace is IThirdwebContract, IPlatformFee {
     /// @notice Type of the tokens that can be listed for sale.

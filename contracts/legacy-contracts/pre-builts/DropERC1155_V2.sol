@@ -18,7 +18,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 //  ==========  Internal imports    ==========
 
-import "../../interface/IThirdwebContract.sol";
+import "../../infra/interface/IThirdwebContract.sol";
 
 //  ==========  Features    ==========
 

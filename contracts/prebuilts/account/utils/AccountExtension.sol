@@ -6,13 +6,13 @@ pragma solidity ^0.8.11;
 /* solhint-disable reason-string */
 
 // Extensions
-import "../../extension/upgradeable/AccountPermissions.sol";
-import "../../extension/upgradeable/ContractMetadata.sol";
-import "../../external-deps/openzeppelin/token/ERC721/utils/ERC721Holder.sol";
-import "../../external-deps/openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
+import "../../../extension/upgradeable/AccountPermissions.sol";
+import "../../../extension/upgradeable/ContractMetadata.sol";
+import "../../../external-deps/openzeppelin/token/ERC721/utils/ERC721Holder.sol";
+import "../../../external-deps/openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 
 // Utils
-import "../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
+import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 import "./BaseAccountFactory.sol";
 import "./AccountCore.sol";
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { ERC721AStorage } from "../eip/ERC721AUpgradeable.sol";
+import { ERC721AStorage } from "../../../eip/ERC721AUpgradeable.sol";
 import "../Initializable.sol";
 
 contract ERC721AInit is Initializable {

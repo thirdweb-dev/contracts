@@ -14,7 +14,7 @@ pragma solidity ^0.8.11;
 
 // Base
 import "../../external-deps/openzeppelin/finance/PaymentSplitterUpgradeable.sol";
-import "../interface/IThirdwebContract.sol";
+import "../../infra/interface/IThirdwebContract.sol";
 
 // Meta-tx
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";

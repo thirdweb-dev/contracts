@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.0;
 
-import "../../../../eip/interface/IERC20Permit.sol";
+import "../../../../../eip/interface/IERC20Permit.sol";
 import "../ERC20.sol";
 import "../../../utils/cryptography/EIP712.sol";
 import "../../../utils/cryptography/ECDSA.sol";

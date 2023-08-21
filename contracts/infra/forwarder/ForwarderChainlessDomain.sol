@@ -13,7 +13,7 @@ pragma solidity ^0.8.0;
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "../external-deps/openzeppelin/cryptography/EIP712ChainlessDomain.sol";
+import "../../external-deps/openzeppelin/cryptography/EIP712ChainlessDomain.sol";
 
 /**
  * @dev Simple minimal forwarder to be used together with an ERC2771 compatible contract. See {ERC2771Context}.

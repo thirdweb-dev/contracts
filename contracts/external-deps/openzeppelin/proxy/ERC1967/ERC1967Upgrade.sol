@@ -5,8 +5,8 @@ pragma solidity ^0.8.2;
 
 import "../beacon/IBeacon.sol";
 import "../IERC1822Proxiable.sol";
-import "../../../lib/TWAddress.sol";
-import "../../../lib/TWStorageSlot.sol";
+import "../../../../lib/TWAddress.sol";
+import "../../../../lib/TWStorageSlot.sol";
 
 /**
  * @dev This abstract contract provides getters and event emitting update functions for

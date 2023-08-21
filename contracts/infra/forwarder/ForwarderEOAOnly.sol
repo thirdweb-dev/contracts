@@ -12,7 +12,7 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "../external-deps/openzeppelin/metatx/MinimalForwarderEOAOnly.sol";
+import "../../external-deps/openzeppelin/metatx/MinimalForwarderEOAOnly.sol";
 
 /*
  * @dev Minimal forwarder for GSNv2

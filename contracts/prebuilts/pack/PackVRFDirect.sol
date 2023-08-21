@@ -23,7 +23,7 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
 import { IERC1155Receiver } from "@openzeppelin/contracts/interfaces/IERC1155Receiver.sol";
 
-import "./VRFV2WrapperConsumerBase.sol";
+import "../../external-deps/chainlink/VRFV2WrapperConsumerBase.sol";
 
 //  ==========  Internal imports    ==========
 

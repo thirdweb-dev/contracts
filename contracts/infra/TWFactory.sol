@@ -14,7 +14,7 @@ pragma solidity ^0.8.11;
 
 import "./TWRegistry.sol";
 import "./interface/IThirdwebContract.sol";
-import "./extension/interface/IContractFactory.sol";
+import "../extension/interface/IContractFactory.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";

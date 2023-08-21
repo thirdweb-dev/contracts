@@ -16,7 +16,7 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../../interface/IThirdwebContract.sol";
+import "../../infra/interface/IThirdwebContract.sol";
 
 //  ==========  Features    ==========
 
