@@ -209,7 +209,7 @@ contract PackTest is BaseTest {
                         Unit tests: `createPack`
     //////////////////////////////////////////////////////////////*/
 
-    function test_interface() public view {
+    function test_interface() public pure {
         console2.logBytes4(type(IERC20).interfaceId);
         console2.logBytes4(type(IERC721).interfaceId);
         console2.logBytes4(type(IERC1155).interfaceId);

@@ -261,16 +261,19 @@ contract ERC721Drop is
         uint256 _pricePerToken
     ) internal virtual override {
         if (_pricePerToken == 0) {
+            require(msg.value == 0, "!Value");
             return;
         }
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
 
+        bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
-                revert("Must send total price");
-            }
+            validMsgValue = msg.value == totalPrice;
+        } else {
+            validMsgValue = msg.value == 0;
         }
+        require(validMsgValue, "Invalid msg value");
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
