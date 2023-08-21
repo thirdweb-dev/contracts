@@ -23,6 +23,7 @@
     "erc721a-upgradeable": "^3.3.0",
     "eslint": "^8.10.0",
     "eslint-config-prettier": "^8.5.0",
+    "ethers": "^5.0.0",
     "fs-extra": "^10.0.1",
     "keccak256": "^1.0.6",
     "merkletreejs": "^0.2.31",
