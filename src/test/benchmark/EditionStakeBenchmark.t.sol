@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { EditionStake } from "contracts/staking/EditionStake.sol";
+import { EditionStake } from "contracts/prebuilts/staking/EditionStake.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";

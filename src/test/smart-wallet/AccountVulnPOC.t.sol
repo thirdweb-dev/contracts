@@ -4,12 +4,12 @@ pragma solidity ^0.8.0;
 // Test utils
 import "../utils/BaseTest.sol";
 // Account Abstraction setup for smart wallets.
-import { EntryPoint, IEntryPoint } from "contracts/smart-wallet/utils/Entrypoint.sol";
-import { UserOperation } from "contracts/smart-wallet/utils/UserOperation.sol";
+import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
+import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.sol";
 
 // Target
 import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
-import { AccountFactory, Account } from "contracts/smart-wallet/non-upgradeable/AccountFactory.sol";
+import { AccountFactory, Account } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
 
 library GPv2EIP1271 {
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;

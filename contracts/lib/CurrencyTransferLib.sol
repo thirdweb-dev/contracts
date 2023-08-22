@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 /// @author thirdweb
 
 // Helper interfaces
-import { IWETH } from "../interfaces/IWETH.sol";
+import { IWETH } from "../infra/interface/IWETH.sol";
 
-import "../openzeppelin-presets/token/ERC20/utils/SafeERC20.sol";
+import "../external-deps/openzeppelin/token/ERC20/utils/SafeERC20.sol";
 
 library CurrencyTransferLib {
     using SafeERC20 for IERC20;

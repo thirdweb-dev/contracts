@@ -8,10 +8,8 @@ import "../../mocks/WETH9.sol";
 import "../../mocks/MockERC20.sol";
 import "../../mocks/MockERC721.sol";
 import "../../mocks/MockERC1155.sol";
-import "contracts/forwarder/Forwarder.sol";
+import "contracts/infra/forwarder/Forwarder.sol";
 import "contracts/lib/TWStrings.sol";
-
-import { Mock } from "contracts/mock/Mock.sol";
 
 abstract contract BaseUtilTest is DSTest, Test {
     string public constant NAME = "NAME";

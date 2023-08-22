@@ -16,16 +16,16 @@ import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../../interfaces/IThirdwebContract.sol";
+import "../../infra/interface/IThirdwebContract.sol";
 
 //  ==========  Features    ==========
 
 import "../../extension/interface/IPlatformFee.sol";
 import "../../extension/interface/IPrimarySale.sol";
 
-import { IDropERC20_V2 } from "../interfaces/drop/IDropERC20_V2.sol";
+import { IDropERC20_V2 } from "../interface/drop/IDropERC20_V2.sol";
 
-import "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 import "../../lib/MerkleProof.sol";
 import "../../lib/CurrencyTransferLib.sol";

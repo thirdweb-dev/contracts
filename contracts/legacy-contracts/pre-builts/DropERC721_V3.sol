@@ -17,8 +17,8 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import { IDropERC721_V3 } from "../interfaces/drop/IDropERC721_V3.sol";
-import "../../interfaces/IThirdwebContract.sol";
+import { IDropERC721_V3 } from "../interface/drop/IDropERC721_V3.sol";
+import "../../infra/interface/IThirdwebContract.sol";
 
 //  ==========  Features    ==========
 
@@ -27,7 +27,7 @@ import "../../extension/interface/IPrimarySale.sol";
 import "../../extension/interface/IRoyalty.sol";
 import "../../extension/interface/IOwnable.sol";
 
-import "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 import "../../lib/CurrencyTransferLib.sol";
 import "../../lib/FeeType.sol";

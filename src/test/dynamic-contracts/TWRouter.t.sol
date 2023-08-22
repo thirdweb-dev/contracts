@@ -2,11 +2,11 @@
 pragma solidity ^0.8.0;
 
 import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
-import "contracts/dynamic-contracts/ExtensionRegistry.sol";
-import "contracts/dynamic-contracts/TWRouter.sol";
+import "contracts/infra/ExtensionRegistry.sol";
+import "contracts/infra/TWRouter.sol";
 
 import { BaseTest } from "../utils/BaseTest.sol";
-import { TWProxy } from "contracts/TWProxy.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 contract TWRouterImplementation is TWRouter {
     constructor(address _extensionRegistry, string[] memory _extensionNames)

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC20 } from "contracts/drop/DropERC20.sol";
+import { DropERC20 } from "contracts/prebuilts/drop/DropERC20.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";

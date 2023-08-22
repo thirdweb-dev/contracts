@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { Marketplace, IMarketplace } from "contracts/old-marketplace/Marketplace.sol";
+import { Marketplace, IMarketplace } from "contracts/prebuilts/marketplace-legacy/Marketplace.sol";
 
 // Test imports
 import "./utils/BaseTest.sol";

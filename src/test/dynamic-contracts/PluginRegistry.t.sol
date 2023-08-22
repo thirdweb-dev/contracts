@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
-import "contracts/dynamic-contracts/ExtensionRegistry.sol";
+import "contracts/infra/ExtensionRegistry.sol";
 import { BaseTest } from "../utils/BaseTest.sol";
 
 import "../mocks/MockERC20.sol";

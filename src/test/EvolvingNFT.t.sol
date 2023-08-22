@@ -3,18 +3,18 @@ pragma solidity ^0.8.0;
 
 import { IExtension } from "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 
-import { EvolvingNFT } from "contracts/unaudited/evolving-nfts/EvolvingNFT.sol";
-import { EvolvingNFTLogic } from "contracts/unaudited/evolving-nfts/EvolvingNFTLogic.sol";
-import { RulesEngineExtension } from "contracts/unaudited/evolving-nfts/extension/RulesEngineExtension.sol";
+import { EvolvingNFT } from "contracts/prebuilts/unaudited/evolving-nfts/EvolvingNFT.sol";
+import { EvolvingNFTLogic } from "contracts/prebuilts/unaudited/evolving-nfts/EvolvingNFTLogic.sol";
+import { RulesEngineExtension } from "contracts/prebuilts/unaudited/evolving-nfts/extension/RulesEngineExtension.sol";
 
 import { IDrop } from "contracts/extension/interface/IDrop.sol";
-import { Drop } from "contracts/dynamic-contracts/extension/Drop.sol";
-import { SharedMetadataBatch } from "contracts/dynamic-contracts/extension/SharedMetadataBatch.sol";
+import { Drop } from "contracts/extension/upgradeable/Drop.sol";
+import { SharedMetadataBatch } from "contracts/extension/upgradeable/SharedMetadataBatch.sol";
 import { ISharedMetadataBatch } from "contracts/extension/interface/ISharedMetadataBatch.sol";
-import { RulesEngine, IRulesEngine } from "contracts/dynamic-contracts/extension/RulesEngine.sol";
+import { RulesEngine, IRulesEngine } from "contracts/extension/upgradeable/RulesEngine.sol";
 import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRendererLib.sol";
-import { TWProxy } from "contracts/TWProxy.sol";
-import { PermissionsEnumerable as DynamicPermissionsEnumerable } from "contracts/dynamic-contracts/extension/PermissionsEnumerable.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
+import { PermissionsEnumerable as DynamicPermissionsEnumerable } from "contracts/extension/upgradeable/PermissionsEnumerable.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";

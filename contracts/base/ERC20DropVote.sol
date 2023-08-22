@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../openzeppelin-presets/token/ERC20/extensions/ERC20Votes.sol";
+import "../external-deps/openzeppelin/token/ERC20/extensions/ERC20Votes.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/Multicall.sol";
