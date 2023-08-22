@@ -369,6 +369,7 @@ contract TokenERC721 is
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
     function collectPrice(MintRequest calldata _req) internal {
         if (_req.price == 0) {
+            require(msg.value == 0, "!Value");
             return;
         }
 

@@ -7,7 +7,7 @@ pragma solidity ^0.8.11;
 
 import "../utils/AccountCore.sol";
 
-import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -18,16 +18,14 @@ import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract DynamicAccount is AccountCore, BaseRouter {
+contract DynamicAccount is AccountCore, BaseRouterWithDefaults {
     /*///////////////////////////////////////////////////////////////
                                 Constructor
     //////////////////////////////////////////////////////////////*/
 
-    receive() external payable override(Router, AccountCore) {}
-
     constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
         AccountCore(_entrypoint, msg.sender)
-        BaseRouter(_defaultExtensions)
+        BaseRouterWithDefaults(_defaultExtensions)
     {
         _disableInitializers();
     }
@@ -37,7 +35,7 @@ contract DynamicAccount is AccountCore, BaseRouter {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether a extension can be set in the given execution context.
-    function _canSetExtension() internal view virtual override returns (bool) {
+    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
         return isAdmin(msg.sender);
     }
 }

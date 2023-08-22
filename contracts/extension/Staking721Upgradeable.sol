@@ -5,7 +5,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "../external-deps/openzeppelin/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "../eip/interface/IERC721.sol";
 
 import "./interface/IStaking721.sol";
 

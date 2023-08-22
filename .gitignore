@@ -19,6 +19,7 @@ contracts/abi/
 contracts/README.md
 artifacts/
 artifacts_forge/
+contract_artifacts/
 
 # files
 *.env

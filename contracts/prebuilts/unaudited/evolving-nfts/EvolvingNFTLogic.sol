@@ -139,6 +139,7 @@ contract EvolvingNFTLogic is
         uint256 _pricePerToken
     ) internal override {
         if (_pricePerToken == 0) {
+            require(msg.value == 0, "!Value");
             return;
         }
 

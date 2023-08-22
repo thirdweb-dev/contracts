@@ -90,6 +90,7 @@ contract ERC20SignatureMint is ERC20Base, PrimarySale, SignatureMintERC20 {
         uint256 _price
     ) internal virtual {
         if (_price == 0) {
+            require(msg.value == 0, "!Value");
             return;
         }
 

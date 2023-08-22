@@ -169,6 +169,7 @@ contract LoyaltyPoints is
         uint256 _price
     ) internal {
         if (_price == 0) {
+            require(msg.value == 0, "!Value");
             return;
         }
 

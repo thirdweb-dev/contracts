@@ -9,7 +9,7 @@ import { Royalty } from "contracts/extension/upgradeable/Royalty.sol";
 import { BatchMintMetadata } from "contracts/extension/upgradeable/BatchMintMetadata.sol";
 import { IBurnToClaim } from "contracts/extension/interface/IBurnToClaim.sol";
 
-import "lib/dynamic-contracts/src/interface/IExtension.sol";
+import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
@@ -1756,7 +1756,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         BurnToClaimDropERC721 dropRouter = BurnToClaimDropERC721(payable(address(drop)));
 
         vm.prank(address(0x123));
-        vm.expectRevert("BaseRouter: caller not authorized.");
+        vm.expectRevert("BaseRouter: not authorized.");
         dropRouter.addExtension(extension_permissions_new);
     }
 
@@ -1770,7 +1770,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         Permissions(address(drop)).renounceRole(keccak256("EXTENSION_ROLE"), deployer);
 
         vm.prank(deployer);
-        vm.expectRevert("BaseRouter: caller not authorized.");
+        vm.expectRevert("BaseRouter: not authorized.");
         dropRouter.addExtension(extension_permissions_new);
 
         vm.startPrank(deployer);

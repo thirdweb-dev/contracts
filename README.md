@@ -25,7 +25,7 @@ npm i @thirdweb-dev/contracts
 2. `forge install`: install tests dependencies
 3. `forge test`: run the tests
 
-This repository is a hybrid [hardhat](https://hardhat.org/) and [forge](https://github.com/foundry-rs/foundry/tree/master/forge) project.
+This repository is a [forge](https://github.com/foundry-rs/foundry/tree/master/forge) project.
 
 First install the relevant dependencies of the project:
 
@@ -41,28 +41,10 @@ To compile contracts, run:
 forge build
 ```
 
-Or, if you prefer hardhat, you can run:
-
-```bash
-npx hardhat compile
-```
-
 To run tests:
 
 ```bash
 forge test
-```
-
-To export the ABIs of the contracts in the `/contracts` directory, run:
-
-```
-npx hardhat export-abi
-```
-
-To run any scripts in the `/scripts` directory, run:
-
-```
-npx hardhat run scripts/{path to the script}
 ```
 
 ## Pre-built Contracts

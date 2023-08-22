@@ -379,7 +379,7 @@ contract ERC1155DropTest is DSTest, Test {
         uint256 totalPrice = quantityToClaim * condition.pricePerToken;
 
         vm.prank(nftHolder, nftHolder);
-        vm.expectRevert("Must send total price.");
+        vm.expectRevert("Invalid msg value");
         base.claim{ value: totalPrice - 1 }(
             nftHolder,
             targetTokenId,

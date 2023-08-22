@@ -29,8 +29,8 @@ import { VoteERC20 } from "contracts/prebuilts/vote/VoteERC20.sol";
 import { SignatureDrop } from "contracts/prebuilts/signature-drop/SignatureDrop.sol";
 import { ContractPublisher } from "contracts/infra/ContractPublisher.sol";
 import { IContractPublisher } from "contracts/infra/interface/IContractPublisher.sol";
-import "contracts/prebuilts/unaudited/airdrop/AirdropERC721.sol";
-import "contracts/prebuilts/unaudited/airdrop/AirdropERC721Claimable.sol";
+import { AirdropERC721 } from "contracts/prebuilts/unaudited/airdrop/AirdropERC721.sol";
+import { AirdropERC721Claimable } from "contracts/prebuilts/unaudited/airdrop/AirdropERC721Claimable.sol";
 import { AirdropERC20 } from "contracts/prebuilts/unaudited/airdrop/AirdropERC20.sol";
 import "contracts/prebuilts/unaudited/airdrop/AirdropERC20Claimable.sol";
 import "contracts/prebuilts/unaudited/airdrop/AirdropERC1155.sol";
@@ -38,7 +38,7 @@ import "contracts/prebuilts/unaudited/airdrop/AirdropERC1155Claimable.sol";
 import { NFTStake } from "contracts/prebuilts/staking/NFTStake.sol";
 import { EditionStake } from "contracts/prebuilts/staking/EditionStake.sol";
 import { TokenStake } from "contracts/prebuilts/staking/TokenStake.sol";
-import "../mocks/Mock.sol";
+import { Mock, MockContract } from "../mocks/Mock.sol";
 import "../mocks/MockContractPublisher.sol";
 
 abstract contract BaseTest is DSTest, Test {

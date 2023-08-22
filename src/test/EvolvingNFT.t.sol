@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { IExtension } from "lib/dynamic-contracts/src/interface/IExtension.sol";
+import { IExtension } from "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 
 import { EvolvingNFT } from "contracts/prebuilts/unaudited/evolving-nfts/EvolvingNFT.sol";
 import { EvolvingNFTLogic } from "contracts/prebuilts/unaudited/evolving-nfts/EvolvingNFTLogic.sol";

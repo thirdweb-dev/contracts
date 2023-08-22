@@ -8,7 +8,6 @@ import "../../mocks/WETH9.sol";
 import "../../mocks/MockERC20.sol";
 import "../../mocks/MockERC721.sol";
 import "../../mocks/MockERC1155.sol";
-import "../../mocks/Mock.sol";
 import "contracts/infra/forwarder/Forwarder.sol";
 import "contracts/lib/TWStrings.sol";
 

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "lib/dynamic-contracts/src/interface/IExtension.sol";
+import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 import "contracts/infra/ExtensionRegistry.sol";
 import "contracts/infra/TWRouter.sol";
 

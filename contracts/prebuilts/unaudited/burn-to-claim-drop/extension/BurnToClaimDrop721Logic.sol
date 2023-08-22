@@ -215,6 +215,7 @@ contract BurnToClaimDrop721Logic is
         uint256 _pricePerToken
     ) internal override {
         if (_pricePerToken == 0) {
+            require(msg.value == 0, "!Value");
             return;
         }
 
@@ -225,11 +226,13 @@ contract BurnToClaimDrop721Logic is
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
+        bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            if (msg.value != totalPrice) {
-                revert("!Price");
-            }
+            validMsgValue = msg.value == totalPrice;
+        } else {
+            validMsgValue = msg.value == 0;
         }
+        require(validMsgValue, "Invalid msg value");
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
