@@ -58,8 +58,7 @@
     "forge:build": "forge build",
     "forge:test": "forge test",
     "gas": "forge test --mc Benchmark --gas-report > gasreport.txt",
-    "forge:snapshot": "forge snapshot --check",
-    "release": "yarn exec ./release.sh"
+    "forge:snapshot": "forge snapshot --check"
   },
   "dependencies": {}
 }
