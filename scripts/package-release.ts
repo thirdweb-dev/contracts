@@ -6,6 +6,8 @@ const artifactsForgeDir = path.join(__dirname, "..", "artifacts_forge");
 const contractsDir = path.join(__dirname, "..", "contracts");
 const contractArtifactsDir = path.join(__dirname, "..", "contract_artifacts");
 
+const specialCases: string[] = ["BaseRouter.sol"];
+
 async function getAllSolidityFiles(dir: string): Promise<string[]> {
   const dirents = await fs.readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
@@ -37,7 +39,7 @@ async function main() {
     // Removing the .sol extension from the directory name to match with file names
     const artifactName = path.basename(artifactDir, ".sol");
 
-    if (validContractFiles.includes(artifactName + ".sol")) {
+    if (validContractFiles.includes(artifactName + ".sol") || specialCases.includes(artifactName + ".sol")) {
       const sourcePath = path.join(artifactsForgeDir, artifactDir);
       const destinationPath = path.join(contractArtifactsDir, artifactDir);
       await fs.copy(sourcePath, destinationPath);
