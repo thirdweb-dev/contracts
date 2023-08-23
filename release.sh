@@ -50,9 +50,9 @@ fi
 # delete copied README
 rm README.md
 # delete copied README
-rm node_modules
+rm -rf node_modules
 # delete copied README
-rm abi
+rm -rf abi
 # back to root folder
 cd -
 echo "### Done."
