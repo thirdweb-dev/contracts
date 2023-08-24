@@ -38,7 +38,7 @@ contract EvolvingNFT is
     PermissionsEnumerableInit,
     DefaultOperatorFiltererInit
 {
-    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
+    /// @dev Only EXTENSION_ROLE holders can update the contract's extensions.
     bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
 
     constructor(Extension[] memory _extensions) BaseRouterWithDefaults(_extensions) {
