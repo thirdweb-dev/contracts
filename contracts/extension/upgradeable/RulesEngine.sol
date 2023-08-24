@@ -6,6 +6,7 @@ pragma solidity ^0.8.11;
 import "../interface/IRulesEngine.sol";
 
 import "../../eip/interface/IERC20.sol";
+import "../../eip/interface/IERC20Metadata.sol";
 import "../../eip/interface/IERC721.sol";
 import "../../eip/interface/IERC1155.sol";
 
@@ -112,7 +113,18 @@ abstract contract RulesEngine is IRulesEngine {
         uint256 balance = 0;
 
         if (_rule.tokenType == TokenType.ERC20) {
-            balance = IERC20(_rule.token).balanceOf(_tokenOwner);
+            // NOTE: We are rounding down the ERC20 balance to the nearest full unit.
+
+            uint256 rawBalance = balance = IERC20(_rule.token).balanceOf(_tokenOwner);
+            uint256 unit = 10**IERC20Metadata(_rule.token).decimals();
+
+            uint256 remainder = rawBalance % unit;
+
+            if (rawBalance < unit) {
+                balance = 0;
+            } else if (remainder > 0) {
+                balance = rawBalance - remainder;
+            }
         } else if (_rule.tokenType == TokenType.ERC721) {
             balance = IERC721(_rule.token).balanceOf(_tokenOwner);
         } else if (_rule.tokenType == TokenType.ERC1155) {
