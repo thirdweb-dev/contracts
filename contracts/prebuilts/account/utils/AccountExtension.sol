@@ -29,28 +29,22 @@ contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder,
     using ECDSA for bytes32;
 
     /*///////////////////////////////////////////////////////////////
-                                State
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice EIP 4337 Entrypoint contract.
-    address private immutable entrypointContract;
-
-    /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
-        require(msg.sender == address(entrypointContract) || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
+        require(
+            msg.sender == address(AccountCore(payable(address(this))).entryPoint()) || isAdmin(msg.sender),
+            "Account: not admin or EntryPoint."
+        );
         _;
     }
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
-    constructor(address _entrypoint) EIP712("Account", "1") {
-        entrypointContract = _entrypoint;
-    }
+    constructor() EIP712("Account", "1") {}
 
     /*///////////////////////////////////////////////////////////////
                             View functions

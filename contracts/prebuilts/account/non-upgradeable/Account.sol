@@ -53,6 +53,9 @@ contract Account is
     /// @notice EIP 4337 Entrypoint contract.
     IEntryPoint private immutable entrypointContract;
 
+    /// @notice EIP 4337 Entrypoint contract override.
+    IEntryPoint public entrypointOverride;
+
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
@@ -73,9 +76,15 @@ contract Account is
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
-        require(msg.sender == address(entrypointContract) || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
+        require(msg.sender == address(entryPoint()) || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
         _;
     }
+
+    /*///////////////////////////////////////////////////////////////
+                                Events
+    //////////////////////////////////////////////////////////////*/
+
+    event EntrypointOverride(IEntryPoint entrypointOverride);
 
     /*///////////////////////////////////////////////////////////////
                             View functions
@@ -91,6 +100,9 @@ contract Account is
 
     /// @notice Returns the EIP 4337 entrypoint contract.
     function entryPoint() public view virtual override returns (IEntryPoint) {
+        if (address(entrypointOverride) != address(0)) {
+            return entrypointOverride;
+        }
         return entrypointContract;
     }
 
@@ -214,6 +226,12 @@ contract Account is
     /// @notice Withdraw funds for this account from Entrypoint.
     function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public virtual onlyAdmin {
         entryPoint().withdrawTo(withdrawAddress, amount);
+    }
+
+    /// @notice Overrides the Entrypoint contract being used.
+    function setEntrypointOverride(IEntryPoint _entrypointOverride) public virtual onlyAdmin {
+        entrypointOverride = _entrypointOverride;
+        emit EntrypointOverride(_entrypointOverride);
     }
 
     /*///////////////////////////////////////////////////////////////
