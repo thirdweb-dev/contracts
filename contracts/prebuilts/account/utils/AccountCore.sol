@@ -57,6 +57,8 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
 
     /// @notice Initializes the smart contract wallet.
     function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
+        // This is passed as data in the `_registerOnFactory()` call in `AccountExtension` / `Account`.
+        AccountCoreStorage.data().firstAdmin = _defaultAdmin;
         _setAdmin(_defaultAdmin, true);
     }
 
@@ -218,9 +220,9 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         super._setAdmin(_account, _isAdmin);
         if (factory.code.length > 0) {
             if (_isAdmin) {
-                BaseAccountFactory(factory).onSignerAdded(_account);
+                BaseAccountFactory(factory).onSignerAdded(_account, AccountCoreStorage.data().firstAdmin, "");
             } else {
-                BaseAccountFactory(factory).onSignerRemoved(_account);
+                BaseAccountFactory(factory).onSignerRemoved(_account, AccountCoreStorage.data().firstAdmin, "");
             }
         }
     }
@@ -228,7 +230,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     /// @notice Runs after every `changeRole` run.
     function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {
         if (factory.code.length > 0) {
-            BaseAccountFactory(factory).onSignerAdded(_req.signer);
+            BaseAccountFactory(factory).onSignerAdded(_req.signer, AccountCoreStorage.data().firstAdmin, "");
         }
     }
 }

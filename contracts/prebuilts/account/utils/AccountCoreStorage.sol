@@ -6,6 +6,7 @@ library AccountCoreStorage {
 
     struct Data {
         address entrypointOverride;
+        address firstAdmin;
     }
 
     function data() internal pure returns (Data storage acountCoreData) {

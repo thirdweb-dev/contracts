@@ -198,7 +198,7 @@ contract DynamicAccountTest is BaseTest {
         defaultExtension.metadata = IExtension.ExtensionMetadata({
             name: "AccountExtension",
             metadataURI: "ipfs://AccountExtension",
-            implementation: address(new AccountExtension(address(entrypoint)))
+            implementation: address(new AccountExtension())
         });
 
         defaultExtension.functions = new IExtension.ExtensionFunction[](7);

@@ -23,10 +23,18 @@ interface IAccountFactory {
     function createAccount(address admin, bytes calldata _data) external returns (address account);
 
     /// @notice Callback function for an Account to register its signers.
-    function onSignerAdded(address signer) external;
+    function onSignerAdded(
+        address signer,
+        address creatorAdmin,
+        bytes memory data
+    ) external;
 
     /// @notice Callback function for an Account to un-register its signers.
-    function onSignerRemoved(address signer) external;
+    function onSignerRemoved(
+        address signer,
+        address creatorAdmin,
+        bytes memory data
+    ) external;
 
     /*///////////////////////////////////////////////////////////////
                             View Functions

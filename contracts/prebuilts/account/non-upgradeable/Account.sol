@@ -38,11 +38,6 @@ contract Account is AccountCore, ContractMetadata, ERC721Holder, ERC1155Holder {
 
     constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {}
 
-    /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
-        _setAdmin(_defaultAdmin, true);
-    }
-
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
         require(msg.sender == address(entryPoint()) || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
@@ -97,7 +92,7 @@ contract Account is AccountCore, ContractMetadata, ERC721Holder, ERC1155Holder {
     function _registerOnFactory() internal virtual {
         BaseAccountFactory factoryContract = BaseAccountFactory(factory);
         if (!factoryContract.isRegistered(address(this))) {
-            factoryContract.onRegister();
+            factoryContract.onRegister(AccountCoreStorage.data().firstAdmin, "");
         }
     }
 
