@@ -115,7 +115,7 @@ contract LoyaltyPoints is
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Mints tokens to a recipeint using a signature from an authorized party.
+    /// @notice Mints tokens to a recipient using a signature from an authorized party.
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
