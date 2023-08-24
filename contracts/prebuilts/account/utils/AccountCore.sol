@@ -89,7 +89,6 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
     function isValidSigner(address _signer, UserOperation calldata _userOp) public view virtual returns (bool) {
         // We use the underlying storage instead of high level view functions to save gas.
-        // We use the underlying storage instead of high level view functions to save gas.
         AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
 
         // First, check if the signer is an admin.
