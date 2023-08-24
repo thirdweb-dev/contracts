@@ -63,8 +63,6 @@ contract EvolvingNFTLogic is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    /// @dev Max bps in the thirdweb system.
-    uint256 private constant MAX_BPS = 10_000;
 
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 2981 logic
