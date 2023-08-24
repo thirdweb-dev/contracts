@@ -50,9 +50,6 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    // solhint-disable-next-line no-empty-blocks
-    receive() external payable virtual {}
-
     constructor(IEntryPoint _entrypoint, address _factory) EIP712("Account", "1") {
         _disableInitializers();
         factory = _factory;
