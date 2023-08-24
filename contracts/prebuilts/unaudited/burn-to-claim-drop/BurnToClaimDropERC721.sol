@@ -52,7 +52,7 @@ contract BurnToClaimDropERC721 is
         _disableInitializers();
     }
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,

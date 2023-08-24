@@ -60,7 +60,7 @@ contract VoteERC20 is
     // solhint-disable-next-line no-empty-blocks
     constructor() initializer {}
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         string memory _name,
         string memory _contractURI,

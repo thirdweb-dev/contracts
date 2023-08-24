@@ -74,7 +74,7 @@ contract AirdropERC20Claimable is
 
     constructor() initializer {}
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         address[] memory _trustedForwarders,

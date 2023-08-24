@@ -119,7 +119,7 @@ contract PackVRFDirect is
         forwarder = _trustedForwarder;
     }
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,
