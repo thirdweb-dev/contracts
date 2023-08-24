@@ -90,9 +90,7 @@ abstract contract PlatformFee is IPlatformFee {
         if (!_canSetPlatformFeeInfo()) {
             revert("Not authorized");
         }
-        platformFeeType = _feeType;
-
-        emit PlatformFeeTypeUpdated(_feeType);
+        _setupPlatformFeeType(_feeType)
     }
 
     /// @dev Sets platform fee type.
