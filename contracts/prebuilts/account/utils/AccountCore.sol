@@ -11,7 +11,6 @@ import "./../utils/BaseAccount.sol";
 // Fixed Extensions
 import "../../../extension/Multicall.sol";
 import "../../../extension/upgradeable/Initializable.sol";
-import "../../../eip/ERC1271.sol";
 import "../../../extension/upgradeable/AccountPermissions.sol";
 
 // Utils
@@ -32,7 +31,7 @@ import "../interface/IAccountCore.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC1271, AccountPermissions {
+contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, AccountPermissions {
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -140,29 +139,6 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
         }
 
         return true;
-    }
-
-    /// @notice See EIP-1271
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
-        public
-        view
-        virtual
-        override
-        returns (bytes4 magicValue)
-    {
-        address signer = _hash.recover(_signature);
-
-        if (isAdmin(signer)) {
-            return MAGICVALUE;
-        }
-
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        address caller = msg.sender;
-        require(data.approvedTargets[signer].contains(caller), "Account: caller not approved target.");
-
-        if (isActiveSigner(signer)) {
-            magicValue = MAGICVALUE;
-        }
     }
 
     /*///////////////////////////////////////////////////////////////
