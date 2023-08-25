@@ -34,7 +34,7 @@ contract CoreRouter is BaseRouter, ContractMetadata, Ownable {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether a extension can be set in the given execution context.
-    function _canSetExtension(Extension memory _extension) internal view virtual override returns (bool) {
+    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
