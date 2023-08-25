@@ -35,7 +35,7 @@ abstract contract RulesEngine is IRulesEngine {
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    function getScore(address _tokenOwner) public view returns (uint256 score) {
+    function getScore(address _tokenOwner) public view virtual returns (uint256 score) {
         address engineOverride = getRulesEngineOverride();
         if (engineOverride != address(0)) {
             return IRulesEngine(engineOverride).getScore(_tokenOwner);
@@ -46,6 +46,20 @@ abstract contract RulesEngine is IRulesEngine {
 
         for (uint256 i = 0; i < len; i += 1) {
             RuleWithId memory rule = _rulesEngineStorage().rules[ids[i]];
+            score += _getScoreForRule(_tokenOwner, rule);
+        }
+    }
+
+    function getScoreForRules(address _tokenOwner, bytes32[] memory _ids) public view virtual returns (uint256 score) {
+        address engineOverride = getRulesEngineOverride();
+        if (engineOverride != address(0)) {
+            return IRulesEngine(engineOverride).getScoreForRules(_tokenOwner, _ids);
+        }
+
+        uint256 len = _ids.length;
+
+        for (uint256 i = 0; i < len; i += 1) {
+            RuleWithId memory rule = _rulesEngineStorage().rules[_ids[i]];
             score += _getScoreForRule(_tokenOwner, rule);
         }
     }

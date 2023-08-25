@@ -44,6 +44,8 @@ interface IRulesEngine {
 
     function getScore(address _tokenOwner) external view returns (uint256 score);
 
+    function getScoreForRules(address _tokenOwner, bytes32[] calldata _rules) external view returns (uint256 score);
+
     function getAllRules() external view returns (RuleWithId[] memory rules);
 
     function getRulesEngineOverride() external view returns (address rulesEngineAddress);
