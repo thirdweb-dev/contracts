@@ -22,5 +22,5 @@ interface IPlayer {
 
     function updatePlayerInfoWithSignature(IGameSignature.GameRequest calldata req, bytes calldata signature) external;
 
-    function getPlayerInfo(address player) external view returns (PlayerInfo memory);
+    function getPlayerInfo(address player) external view returns (PlayerInfo memory playerInfo);
 }

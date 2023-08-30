@@ -25,23 +25,26 @@ contract Leaderboard is ILeaderboard, GameLibrary, RulesEngine {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Create a leaderboard and set leaderboard info.
-    function createLeaderboard(uint256 leaderboard, LeaderboardInfo calldata leaderboardInfo) external onlyManager {
-        _createLeaderboard(leaderboard, leaderboardInfo);
+    function createLeaderboard(LeaderboardInfo calldata leaderboardInfo) external onlyManager {
+        _createLeaderboard(leaderboardInfo);
     }
 
     /// @dev Update leaderboard info.
-    function updateLeaderboardInfo(uint256 leaderboard, LeaderboardInfo calldata leaderboardInfo) external onlyManager {
-        _updateLeaderboardInfo(leaderboard, leaderboardInfo);
+    function updateLeaderboardInfo(uint256 leaderboardIndex, LeaderboardInfo calldata leaderboardInfo)
+        external
+        onlyManager
+    {
+        _updateLeaderboardInfo(leaderboardIndex, leaderboardInfo);
     }
 
     /// @dev Add player to leaderboard.
-    function addPlayerToLeaderboard(uint256 leaderboard, address player) external onlyManager {
-        _addPlayerToLeaderboard(leaderboard, player);
+    function addPlayerToLeaderboard(uint256 leaderboardIndex, address player) external onlyManager {
+        _addPlayerToLeaderboard(leaderboardIndex, player);
     }
 
     /// @dev Remove player from leaderboard.
-    function removePlayerFromLeaderboard(uint256 leaderboard, address player) external onlyManager {
-        _removePlayerFromLeaderboard(leaderboard, player);
+    function removePlayerFromLeaderboard(uint256 leaderboardIndex, address player) external onlyManager {
+        _removePlayerFromLeaderboard(leaderboardIndex, player);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -53,11 +56,8 @@ contract Leaderboard is ILeaderboard, GameLibrary, RulesEngine {
         external
         onlyManagerApproved(req, signature)
     {
-        (uint256 leaderboard, LeaderboardInfo memory leaderboardInfo) = abi.decode(
-            req.data,
-            (uint256, LeaderboardInfo)
-        );
-        _createLeaderboard(leaderboard, leaderboardInfo);
+        LeaderboardInfo memory leaderboardInfo = abi.decode(req.data, (LeaderboardInfo));
+        _createLeaderboard(leaderboardInfo);
     }
 
     /// @dev Update leaderboard info with signature.
@@ -65,11 +65,11 @@ contract Leaderboard is ILeaderboard, GameLibrary, RulesEngine {
         external
         onlyManagerApproved(req, signature)
     {
-        (uint256 leaderboard, LeaderboardInfo memory leaderboardInfo) = abi.decode(
+        (uint256 leaderboardIndex, LeaderboardInfo memory leaderboardInfo) = abi.decode(
             req.data,
             (uint256, LeaderboardInfo)
         );
-        _updateLeaderboardInfo(leaderboard, leaderboardInfo);
+        _updateLeaderboardInfo(leaderboardIndex, leaderboardInfo);
     }
 
     /// @dev Add player to leaderboard with signature.
@@ -77,8 +77,8 @@ contract Leaderboard is ILeaderboard, GameLibrary, RulesEngine {
         external
         onlyManagerApproved(req, signature)
     {
-        (uint256 leaderboard, address player) = abi.decode(req.data, (uint256, address));
-        _addPlayerToLeaderboard(leaderboard, player);
+        (uint256 leaderboardIndex, address player) = abi.decode(req.data, (uint256, address));
+        _addPlayerToLeaderboard(leaderboardIndex, player);
     }
 
     /// @dev Remove player from leaderboard with signature.
@@ -86,65 +86,98 @@ contract Leaderboard is ILeaderboard, GameLibrary, RulesEngine {
         external
         onlyManagerApproved(req, signature)
     {
-        (uint256 leaderboard, address player) = abi.decode(req.data, (uint256, address));
-        _removePlayerFromLeaderboard(leaderboard, player);
+        (uint256 leaderboardIndex, address player) = abi.decode(req.data, (uint256, address));
+        _removePlayerFromLeaderboard(leaderboardIndex, player);
     }
 
     /*///////////////////////////////////////////////////////////////
                         View functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Get leaderboard count.
+    function getLeaderboardCount() public view returns (uint256 leaderboardCount) {
+        return LeaderboardStorage.leaderboardStorage().leaderboardCount;
+    }
+
     /// @dev Get leaderboard info.
-    function getLeaderboardInfo(uint256 leaderboard) public view returns (LeaderboardInfo memory) {
-        return LeaderboardStorage.leaderboardStorage().leaderboardInfo[leaderboard];
+    function getLeaderboardInfo(uint256 leaderboardIndex) public view returns (LeaderboardInfo memory leaderboardInfo) {
+        return LeaderboardStorage.leaderboardStorage().leaderboardInfo[leaderboardIndex];
     }
 
     /// @dev Get score for a player.
-    function getPlayerScore(uint256 leaderboard, address player) public view returns (uint256 score) {
-        LeaderboardInfo memory leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[leaderboard];
+    function getPlayerScore(uint256 leaderboardIndex, address player) public view returns (uint256 score) {
+        LeaderboardInfo memory leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[
+            leaderboardIndex
+        ];
         return getScoreForRules(player, leaderboardInfo.rules);
     }
 
-    /// @dev Get player rank for a leaderboard. Should be used from the frontend.
-    function getPlayerRank(uint256 leaderboard, address player) public view returns (uint256 rank) {
-        LeaderboardInfo memory leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[leaderboard];
+    /// @dev Get player rank for a leaderboard.
+    function getPlayerRank(uint256 leaderboardIndex, address player) public view returns (uint256 rank) {
+        LeaderboardInfo memory leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[
+            leaderboardIndex
+        ];
         uint256 len = leaderboardInfo.players.length;
         uint256 playerScore = getScoreForRules(player, leaderboardInfo.rules);
-        LeaderboardScore[] memory scores = getLeaderboardScores(leaderboard);
+        LeaderboardScore[] memory scores = getLeaderboardScores(leaderboardIndex, SortOrder.None);
+        rank = scores.length;
         for (uint256 i = 0; i < len; i += 1) {
             if (playerScore > scores[i].score) {
-                rank += 1;
+                rank -= 1;
             }
         }
-        return rank;
     }
 
-    /// @dev Get all scores for a leaderboard. Should be used from the frontend.
-    function getLeaderboardScores(uint256 leaderboard) public view returns (LeaderboardScore[] memory scores) {
-        LeaderboardInfo memory leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[leaderboard];
+    // @dev Get all scores for a leaderboard with optional sorting.
+    function getLeaderboardScores(uint256 leaderboardIndex, SortOrder sortOrder)
+        public
+        view
+        returns (LeaderboardScore[] memory scores)
+    {
+        LeaderboardInfo memory leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[
+            leaderboardIndex
+        ];
         uint256 len = leaderboardInfo.players.length;
         scores = new LeaderboardScore[](len);
+
         for (uint256 i = 0; i < len; i += 1) {
             scores[i] = LeaderboardScore({
                 player: leaderboardInfo.players[i],
                 score: getScoreForRules(leaderboardInfo.players[i], leaderboardInfo.rules)
             });
         }
+
+        if (sortOrder == SortOrder.Ascending) {
+            _sortAscending(scores);
+        } else if (sortOrder == SortOrder.Descending) {
+            _sortDescending(scores);
+        }
     }
 
-    /// @dev Get all scores for a leaderboard within a range. Should be used from the frontend.
+    /// @dev Get all scores for a leaderboard within an unsorted range with optional sorting at the end.
     function getLeaderboardScoresInRange(
-        uint256 leaderboard,
+        uint256 leaderboardIndex,
         uint256 start,
-        uint256 end
+        uint256 end,
+        SortOrder sortOrder
     ) public view returns (LeaderboardScore[] memory scores) {
-        LeaderboardInfo memory leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[leaderboard];
-        scores = new LeaderboardScore[](end - start);
-        for (uint256 i = start; i < end; i += 1) {
+        LeaderboardInfo memory leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[
+            leaderboardIndex
+        ];
+        uint256 len = end - start;
+        scores = new LeaderboardScore[](len);
+
+        for (uint256 i = 0; i < len; i++) {
             scores[i] = LeaderboardScore({
-                player: leaderboardInfo.players[i],
-                score: getScoreForRules(leaderboardInfo.players[i], leaderboardInfo.rules)
+                player: leaderboardInfo.players[start + i],
+                score: getScoreForRules(leaderboardInfo.players[start + i], leaderboardInfo.rules)
             });
+        }
+
+        if (sortOrder == SortOrder.Ascending) {
+            _sortAscending(scores);
+        } else if (sortOrder == SortOrder.Descending) {
+            _sortDescending(scores);
         }
     }
 
@@ -153,27 +186,34 @@ contract Leaderboard is ILeaderboard, GameLibrary, RulesEngine {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Create a leaderboard and set leaderboard info.
-    function _createLeaderboard(uint256 leaderboard, LeaderboardInfo memory leaderboardInfo) internal {
-        _updateLeaderboardInfo(leaderboard, leaderboardInfo);
-        emit CreateLeaderboard(leaderboard, leaderboardInfo);
+    function _createLeaderboard(LeaderboardInfo memory leaderboardInfo) internal {
+        LeaderboardStorage.Data storage leaderboardData = LeaderboardStorage.leaderboardStorage();
+        uint256 leaderboardIndex = leaderboardData.leaderboardCount;
+        ++leaderboardData.leaderboardCount;
+        _updateLeaderboardInfo(leaderboardIndex, leaderboardInfo);
+        emit CreateLeaderboard(leaderboardIndex, leaderboardInfo);
     }
 
     /// @dev Update leaderboard info.
-    function _updateLeaderboardInfo(uint256 leaderboard, LeaderboardInfo memory leaderboardInfo) internal {
-        LeaderboardStorage.leaderboardStorage().leaderboardInfo[leaderboard] = leaderboardInfo;
-        emit UpdateLeaderboardInfo(leaderboard, leaderboardInfo);
+    function _updateLeaderboardInfo(uint256 leaderboardIndex, LeaderboardInfo memory leaderboardInfo) internal {
+        LeaderboardStorage.leaderboardStorage().leaderboardInfo[leaderboardIndex] = leaderboardInfo;
+        emit UpdateLeaderboardInfo(leaderboardIndex, leaderboardInfo);
     }
 
     /// @dev Add player to leaderboard.
-    function _addPlayerToLeaderboard(uint256 leaderboard, address player) internal {
-        LeaderboardInfo storage leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[leaderboard];
+    function _addPlayerToLeaderboard(uint256 leaderboardIndex, address player) internal {
+        LeaderboardInfo storage leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[
+            leaderboardIndex
+        ];
         leaderboardInfo.players.push(player);
-        emit AddPlayerToLeaderboard(leaderboard, player);
+        emit AddPlayerToLeaderboard(leaderboardIndex, player);
     }
 
     /// @dev Remove player from leaderboard.
-    function _removePlayerFromLeaderboard(uint256 leaderboard, address player) internal {
-        LeaderboardInfo storage leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[leaderboard];
+    function _removePlayerFromLeaderboard(uint256 leaderboardIndex, address player) internal {
+        LeaderboardInfo storage leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[
+            leaderboardIndex
+        ];
         uint256 len = leaderboardInfo.players.length;
         for (uint256 i = 0; i < len; i += 1) {
             if (leaderboardInfo.players[i] == player) {
@@ -182,7 +222,35 @@ contract Leaderboard is ILeaderboard, GameLibrary, RulesEngine {
                 break;
             }
         }
-        emit RemovePlayerFromLeaderboard(leaderboard, player);
+        emit RemovePlayerFromLeaderboard(leaderboardIndex, player);
+    }
+
+    /// @dev Sort leaderboard scores in ascending order.
+    function _sortAscending(LeaderboardScore[] memory arr) internal pure {
+        uint256 len = arr.length;
+        for (uint256 i = 0; i < len - 1; i++) {
+            for (uint256 j = 0; j < len - i - 1; j++) {
+                if (arr[j].score > arr[j + 1].score) {
+                    LeaderboardScore memory temp = arr[j];
+                    arr[j] = arr[j + 1];
+                    arr[j + 1] = temp;
+                }
+            }
+        }
+    }
+
+    /// @dev Sort leaderboard scores in descending order.
+    function _sortDescending(LeaderboardScore[] memory arr) internal pure {
+        uint256 len = arr.length;
+        for (uint256 i = 0; i < len - 1; i++) {
+            for (uint256 j = 0; j < len - i - 1; j++) {
+                if (arr[j].score < arr[j + 1].score) {
+                    LeaderboardScore memory temp = arr[j];
+                    arr[j] = arr[j + 1];
+                    arr[j + 1] = temp;
+                }
+            }
+        }
     }
 
     /*///////////////////////////////////////////////////////////////

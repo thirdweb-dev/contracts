@@ -60,7 +60,7 @@ contract Player is IPlayer, GameLibrary {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Get player info.
-    function getPlayerInfo(address player) public view returns (PlayerInfo memory) {
+    function getPlayerInfo(address player) public view returns (PlayerInfo memory playerInfo) {
         return PlayerStorage.playerStorage().playerInfo[player];
     }
 

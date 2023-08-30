@@ -8,6 +8,7 @@ library LeaderboardStorage {
 
     struct Data {
         mapping(uint256 => ILeaderboard.LeaderboardInfo) leaderboardInfo;
+        uint256 leaderboardCount;
     }
 
     function leaderboardStorage() internal pure returns (Data storage leaderboardData) {
