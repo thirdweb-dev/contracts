@@ -47,14 +47,14 @@ contract Game is IGame, GameLibrary, BaseRouter {
 
     /// @dev Adds a manager.
     function addManager(address manager) external onlyAdmin {
-        require(gs.managers[manager], "GameRouter: Manager already exists.");
+        require(!gs.managers[manager], "GameRouter: Manager already exists.");
         gs.managers[manager] = true;
         emit AddManager(manager);
     }
 
     /// @dev Removes a manager.
     function removeManager(address manager) external onlyAdmin {
-        require(!gs.managers[manager], "GameRouter: Manager does not exist.");
+        require(gs.managers[manager], "GameRouter: Manager does not exist.");
         gs.managers[manager] = false;
         emit RemoveManager(manager);
     }
@@ -71,14 +71,14 @@ contract Game is IGame, GameLibrary, BaseRouter {
 
     /// @dev Adds a player.
     function addPlayer(address player) external onlyManager {
-        require(gs.players[player], "GameRouter: Player already exists.");
+        require(!gs.players[player], "GameRouter: Player already exists.");
         gs.players[player] = true;
         emit AddPlayer(player);
     }
 
     /// @dev Removes a player.
     function removePlayer(address player) external onlyManager {
-        require(!gs.players[player], "GameRouter: Player does not exist.");
+        require(gs.players[player], "GameRouter: Player does not exist.");
         gs.players[player] = false;
         emit RemovePlayer(player);
     }
