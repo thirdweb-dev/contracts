@@ -6,10 +6,10 @@ import "@ds-test/test.sol";
 
 import { Staking721 } from "contracts/extension/Staking721.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "contracts/eip/interface/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-import "../../mocks/MockERC721.sol";
+import { MockERC721 } from "../../mocks/MockERC721.sol";
 
 contract MyStakingContract is ERC20, Staking721, IERC721Receiver {
     bool condition;

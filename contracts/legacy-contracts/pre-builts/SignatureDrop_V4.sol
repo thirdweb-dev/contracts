@@ -13,7 +13,7 @@ import "erc721a-upgradeable/contracts/ERC721AUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../../openzeppelin-presets/metatx/ERC2771ContextUpgradeable.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 import "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========

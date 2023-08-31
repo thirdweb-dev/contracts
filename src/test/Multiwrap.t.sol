@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { Multiwrap } from "contracts/multiwrap/Multiwrap.sol";
+import { Multiwrap } from "contracts/prebuilts/multiwrap/Multiwrap.sol";
 import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 // Test imports

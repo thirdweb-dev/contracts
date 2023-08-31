@@ -2,16 +2,16 @@
 pragma solidity ^0.8.0;
 
 import "../utils/BaseTest.sol";
-import { BurnToClaimDropERC721 } from "contracts/unaudited/burn-to-claim-drop/BurnToClaimDropERC721.sol";
-import { BurnToClaimDrop721Logic, ERC721AUpgradeable, DelayedReveal, LazyMint, Drop, BurnToClaim } from "contracts/unaudited/burn-to-claim-drop/extension/BurnToClaimDrop721Logic.sol";
-import { PermissionsEnumerableImpl } from "contracts/dynamic-contracts/impl/PermissionsEnumerableImpl.sol";
-import { Royalty } from "contracts/dynamic-contracts/extension/Royalty.sol";
-import { BatchMintMetadata } from "contracts/dynamic-contracts/extension/BatchMintMetadata.sol";
+import { BurnToClaimDropERC721 } from "contracts/prebuilts/unaudited/burn-to-claim-drop/BurnToClaimDropERC721.sol";
+import { BurnToClaimDrop721Logic, ERC721AUpgradeable, DelayedReveal, LazyMint, Drop, BurnToClaim } from "contracts/prebuilts/unaudited/burn-to-claim-drop/extension/BurnToClaimDrop721Logic.sol";
+import { PermissionsEnumerableImpl } from "contracts/extension/upgradeable/impl/PermissionsEnumerableImpl.sol";
+import { Royalty } from "contracts/extension/upgradeable/Royalty.sol";
+import { BatchMintMetadata } from "contracts/extension/upgradeable/BatchMintMetadata.sol";
 import { IBurnToClaim } from "contracts/extension/interface/IBurnToClaim.sol";
 
-import "lib/dynamic-contracts/src/interface/IExtension.sol";
+import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 
-import { TWProxy } from "contracts/TWProxy.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
@@ -1756,7 +1756,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         BurnToClaimDropERC721 dropRouter = BurnToClaimDropERC721(payable(address(drop)));
 
         vm.prank(address(0x123));
-        vm.expectRevert("BaseRouter: caller not authorized.");
+        vm.expectRevert("BaseRouter: not authorized.");
         dropRouter.addExtension(extension_permissions_new);
     }
 
@@ -1770,7 +1770,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         Permissions(address(drop)).renounceRole(keccak256("EXTENSION_ROLE"), deployer);
 
         vm.prank(deployer);
-        vm.expectRevert("BaseRouter: caller not authorized.");
+        vm.expectRevert("BaseRouter: not authorized.");
         dropRouter.addExtension(extension_permissions_new);
 
         vm.startPrank(deployer);

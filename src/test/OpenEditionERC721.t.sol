@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { ERC721AUpgradeable, OpenEditionERC721, ISharedMetadata } from "contracts/OpenEditionERC721.sol";
+import { ERC721AUpgradeable, OpenEditionERC721, ISharedMetadata } from "contracts/prebuilts/open-edition/OpenEditionERC721.sol";
 import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRendererLib.sol";
-import { TWProxy } from "contracts/TWProxy.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";

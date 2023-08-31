@@ -7,7 +7,7 @@ pragma solidity ^0.8.10;
 /// credits: Zora
 
 import "./TWStrings.sol";
-import "../openzeppelin-presets/utils/Base64.sol";
+import "../external-deps/openzeppelin/utils/Base64.sol";
 
 /// NFT metadata library for rendering metadata associated with editions
 library NFTMetadataRenderer {

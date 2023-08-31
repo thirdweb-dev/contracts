@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "contracts/interfaces/IThirdwebContract.sol";
+import "contracts/infra/interface/IThirdwebContract.sol";
 
 // solhint-disable const-name-snakecase
 contract MockThirdwebContract is IThirdwebContract {

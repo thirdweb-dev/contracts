@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { Pack, IERC2981Upgradeable, IERC721Receiver, IERC1155Upgradeable } from "contracts/pack/Pack.sol";
-import { IPack } from "contracts/interfaces/IPack.sol";
+import { Pack, IERC2981Upgradeable, IERC721Receiver, IERC1155Upgradeable } from "contracts/prebuilts/pack/Pack.sol";
+import { IPack } from "contracts/prebuilts/interface/IPack.sol";
 import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 // Test imports
@@ -809,6 +809,114 @@ contract PackTest is BaseTest {
 
         (ITokenBundle.Token[] memory packed, ) = pack.getPackContents(packId);
         assertEq(packed.length, packContents.length);
+    }
+
+    /**
+     *  note: Total amount should get updated correctly -- reduce perUnitAmount from totalAmount of the token content, for each reward
+     */
+    function test_state_openPack_totalAmounts_ERC721() public {
+        vm.warp(1000);
+        uint256 packId = pack.nextTokenIdToMint();
+        uint256 packsToOpen = 1;
+        address recipient = address(1);
+
+        erc721.mint(address(tokenOwner), 6);
+
+        ITokenBundle.Token[] memory tempContents = new ITokenBundle.Token[](1);
+        uint256[] memory tempNumRewardUnits = new uint256[](1);
+
+        tempContents[0] = ITokenBundle.Token({
+            assetContract: address(erc721),
+            tokenType: ITokenBundle.TokenType.ERC721,
+            tokenId: 0,
+            totalAmount: 1
+        });
+        tempNumRewardUnits[0] = 1;
+
+        vm.prank(address(tokenOwner));
+        (, uint256 totalSupply) = pack.createPack(tempContents, tempNumRewardUnits, packUri, 0, 1, recipient);
+
+        vm.prank(recipient, recipient);
+        ITokenBundle.Token[] memory rewardUnits = pack.openPack(packId, packsToOpen);
+
+        assertEq(packUri, pack.uri(packId));
+        assertEq(pack.totalSupply(packId), totalSupply - packsToOpen);
+
+        (ITokenBundle.Token[] memory packed, ) = pack.getPackContents(packId);
+        assertEq(packed.length, tempContents.length);
+        assertEq(packed[0].totalAmount, tempContents[0].totalAmount - rewardUnits[0].totalAmount);
+    }
+
+    /**
+     *  note: Total amount should get updated correctly -- reduce perUnitAmount from totalAmount of the token content, for each reward
+     */
+    function test_state_openPack_totalAmounts_ERC1155() public {
+        vm.warp(1000);
+        uint256 packId = pack.nextTokenIdToMint();
+        uint256 packsToOpen = 1;
+        address recipient = address(1);
+
+        erc1155.mint(address(tokenOwner), 0, 100);
+
+        ITokenBundle.Token[] memory tempContents = new ITokenBundle.Token[](1);
+        uint256[] memory tempNumRewardUnits = new uint256[](1);
+
+        tempContents[0] = ITokenBundle.Token({
+            assetContract: address(erc1155),
+            tokenType: ITokenBundle.TokenType.ERC1155,
+            tokenId: 0,
+            totalAmount: 100
+        });
+        tempNumRewardUnits[0] = 10;
+
+        vm.prank(address(tokenOwner));
+        (, uint256 totalSupply) = pack.createPack(tempContents, tempNumRewardUnits, packUri, 0, 1, recipient);
+
+        vm.prank(recipient, recipient);
+        ITokenBundle.Token[] memory rewardUnits = pack.openPack(packId, packsToOpen);
+
+        assertEq(packUri, pack.uri(packId));
+        assertEq(pack.totalSupply(packId), totalSupply - packsToOpen);
+
+        (ITokenBundle.Token[] memory packed, ) = pack.getPackContents(packId);
+        assertEq(packed.length, tempContents.length);
+        assertEq(packed[0].totalAmount, tempContents[0].totalAmount - rewardUnits[0].totalAmount);
+    }
+
+    /**
+     *  note: Total amount should get updated correctly -- reduce perUnitAmount from totalAmount of the token content, for each reward
+     */
+    function test_state_openPack_totalAmounts_ERC20() public {
+        vm.warp(1000);
+        uint256 packId = pack.nextTokenIdToMint();
+        uint256 packsToOpen = 1;
+        address recipient = address(1);
+
+        erc20.mint(address(tokenOwner), 2000 ether);
+
+        ITokenBundle.Token[] memory tempContents = new ITokenBundle.Token[](1);
+        uint256[] memory tempNumRewardUnits = new uint256[](1);
+
+        tempContents[0] = ITokenBundle.Token({
+            assetContract: address(erc20),
+            tokenType: ITokenBundle.TokenType.ERC20,
+            tokenId: 0,
+            totalAmount: 1000 ether
+        });
+        tempNumRewardUnits[0] = 50;
+
+        vm.prank(address(tokenOwner));
+        (, uint256 totalSupply) = pack.createPack(tempContents, tempNumRewardUnits, packUri, 0, 1, recipient);
+
+        vm.prank(recipient, recipient);
+        ITokenBundle.Token[] memory rewardUnits = pack.openPack(packId, packsToOpen);
+
+        assertEq(packUri, pack.uri(packId));
+        assertEq(pack.totalSupply(packId), totalSupply - packsToOpen);
+
+        (ITokenBundle.Token[] memory packed, ) = pack.getPackContents(packId);
+        assertEq(packed.length, tempContents.length);
+        assertEq(packed[0].totalAmount, tempContents[0].totalAmount - rewardUnits[0].totalAmount);
     }
 
     /**

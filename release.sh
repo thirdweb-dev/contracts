@@ -35,7 +35,7 @@ echo "### Build finished. Copying abis."
 rm -rf contracts/abi
 mkdir -p contracts/abi
 # copy all abis to contracts/abi
-find artifacts_forge ! -iregex ".*([a-zA-Z0-9_]).json" -exec cp {} contracts/abi 2>/dev/null \; 
+find contract_artifacts ! -iregex ".*([a-zA-Z0-9_]).json" -exec cp {} contracts/abi 2>/dev/null \; 
 echo "### Copying README."
 # copy root README to contracts folder
 cp README.md contracts/README.md
@@ -49,6 +49,10 @@ np --any-branch --no-tests
 fi
 # delete copied README
 rm README.md
+# delete copied README
+rm -rf node_modules
+# delete copied README
+rm -rf abi
 # back to root folder
 cd -
 echo "### Done."

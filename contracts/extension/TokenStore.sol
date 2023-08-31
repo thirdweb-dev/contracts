@@ -8,8 +8,8 @@ pragma solidity ^0.8.0;
 import "../eip/interface/IERC1155.sol";
 import "../eip/interface/IERC721.sol";
 
-import "../openzeppelin-presets/utils/ERC1155/ERC1155Holder.sol";
-import "../openzeppelin-presets/utils/ERC721/ERC721Holder.sol";
+import "../external-deps/openzeppelin/utils/ERC1155/ERC1155Holder.sol";
+import "../external-deps/openzeppelin/utils/ERC721/ERC721Holder.sol";
 
 //  ==========  Internal imports    ==========
 

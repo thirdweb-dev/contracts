@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 /// @author thirdweb
 
 import "./interface/ISignatureMintERC1155.sol";
-import "../openzeppelin-presets/utils/cryptography/EIP712.sol";
+import "../external-deps/openzeppelin/utils/cryptography/EIP712.sol";
 
 abstract contract SignatureMintERC1155 is EIP712, ISignatureMintERC1155 {
     using ECDSA for bytes32;

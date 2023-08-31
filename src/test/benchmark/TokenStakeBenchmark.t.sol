@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { TokenStake } from "contracts/staking/TokenStake.sol";
+import { TokenStake } from "contracts/prebuilts/staking/TokenStake.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";

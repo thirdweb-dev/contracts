@@ -7,13 +7,13 @@ import "../utils/BaseTest.sol";
 // Test contracts and interfaces
 import { PluginMap, IPluginMap } from "contracts/extension/plugin/PluginMap.sol";
 import { RoyaltyPaymentsLogic } from "contracts/extension/plugin/RoyaltyPayments.sol";
-import { MarketplaceV3, IPlatformFee } from "contracts/marketplace/entrypoint/MarketplaceV3.sol";
-import { DirectListingsLogic } from "contracts/marketplace/direct-listings/DirectListingsLogic.sol";
-import { TWProxy } from "contracts/TWProxy.sol";
+import { MarketplaceV3, IPlatformFee } from "contracts/prebuilts/marketplace/entrypoint/MarketplaceV3.sol";
+import { DirectListingsLogic } from "contracts/prebuilts/marketplace/direct-listings/DirectListingsLogic.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 import { ERC721Base } from "contracts/base/ERC721Base.sol";
 import { MockRoyaltyEngineV1 } from "../mocks/MockRoyaltyEngineV1.sol";
 
-import { IDirectListings } from "contracts/marketplace/IMarketplace.sol";
+import { IDirectListings } from "contracts/prebuilts/marketplace/IMarketplace.sol";
 
 contract MarketplaceDirectListingsTest is BaseTest {
     // Target contract

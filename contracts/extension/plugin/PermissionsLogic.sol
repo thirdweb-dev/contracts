@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../../extension/interface/IPermissions.sol";
+import "../interface/IPermissions.sol";
 import "./PermissionsStorage.sol";
 import "../../lib/TWStrings.sol";
 

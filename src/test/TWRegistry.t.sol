@@ -3,7 +3,7 @@ pragma solidity ^0.8.11;
 
 // Test imports
 import "./utils/BaseTest.sol";
-import "contracts/TWRegistry.sol";
+import "contracts/infra/TWRegistry.sol";
 
 interface ITWRegistryData {
     event Added(address indexed deployer, address indexed moduleAddress);

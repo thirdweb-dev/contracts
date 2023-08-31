@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { AirdropERC20, IAirdropERC20 } from "contracts/airdrop/AirdropERC20.sol";
+import { AirdropERC20, IAirdropERC20 } from "contracts/prebuilts/unaudited/airdrop/AirdropERC20.sol";
 import { CurrencyTransferLib } from "contracts/lib/CurrencyTransferLib.sol";
 
 // Test imports
