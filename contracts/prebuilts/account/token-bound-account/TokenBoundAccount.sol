@@ -91,7 +91,6 @@ contract TokenBoundAccount is
         if (_isValidSigner(signer)) {
             return IERC6551Account.isValidSigner.selector;
         }
-
         return bytes4(0);
     }
 
