@@ -49,6 +49,10 @@ np --any-branch --no-tests
 fi
 # delete copied README
 rm README.md
+# delete copied README
+rm -rf node_modules
+# delete copied README
+rm -rf abi
 # back to root folder
 cd -
 echo "### Done."
