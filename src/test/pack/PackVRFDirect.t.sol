@@ -545,7 +545,6 @@ contract PackVRFDirectTest is BaseTest {
 
         ITokenBundle.Token[] memory emptyRewardUnitsForTestingEvent;
 
-        // emit
         vm.expectEmit(true, true, false, false);
         emit PackOpened(packId, recipient, 1, emptyRewardUnitsForTestingEvent);
 
