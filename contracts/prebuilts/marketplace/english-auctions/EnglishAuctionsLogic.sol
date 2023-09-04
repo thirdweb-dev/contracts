@@ -15,19 +15,17 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../../../extension/plugin/ERC2771ContextConsumer.sol";
-
 import "../../../extension/interface/IPlatformFee.sol";
-
-import "../../../extension/plugin/ReentrancyGuardLogic.sol";
-import "../../../extension/plugin/PermissionsEnumerableLogic.sol";
-import { RoyaltyPaymentsLogic } from "../../../extension/plugin/RoyaltyPayments.sol";
+import "../../../extension/upgradeable/ERC2771ContextConsumer.sol";
+import "../../../extension/upgradeable/ReentrancyGuard.sol";
+import "../../../extension/upgradeable/PermissionsEnumerable.sol";
+import { RoyaltyPaymentsLogic } from "../../../extension/upgradeable/RoyaltyPayments.sol";
 import { CurrencyTransferLib } from "../../../lib/CurrencyTransferLib.sol";
 
 /**
  * @author  thirdweb.com
  */
-contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771ContextConsumer {
+contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771ContextConsumer {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -48,12 +46,12 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyListerRole() {
-        require(PermissionsLogic(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
         _;
     }
 
     modifier onlyAssetRole(address _asset) {
-        require(PermissionsLogic(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 
