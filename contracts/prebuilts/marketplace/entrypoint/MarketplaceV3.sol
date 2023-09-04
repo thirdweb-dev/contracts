@@ -70,7 +70,7 @@ contract MarketplaceV3 is
         address[] memory _trustedForwarders,
         address _platformFeeRecipient,
         uint16 _platformFeeBps
-    ) external {
+    ) external initializer {
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
