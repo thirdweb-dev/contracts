@@ -13,17 +13,17 @@ import "../interface/IOwnable.sol";
  */
 
 library OwnableStorage {
-    bytes32 public constant OWNABLE_STORAGE_POSITION = keccak256("ownable.storage");
+    bytes32 public constant OWNABLE_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("ownable.storage")) - 1));
 
     struct Data {
         /// @dev Owner of the contract (purpose: OpenSea compatibility)
         address _owner;
     }
 
-    function ownableStorage() internal pure returns (Data storage ownableData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = OWNABLE_STORAGE_POSITION;
         assembly {
-            ownableData.slot := position
+            data_.slot := position
         }
     }
 }
@@ -31,8 +31,7 @@ library OwnableStorage {
 abstract contract Ownable is IOwnable {
     /// @dev Reverts if caller is not the owner.
     modifier onlyOwner() {
-        OwnableStorage.Data storage data = OwnableStorage.ownableStorage();
-        if (msg.sender != data._owner) {
+        if (msg.sender != _ownableStorage()._owner) {
             revert("Not authorized");
         }
         _;
@@ -42,8 +41,7 @@ abstract contract Ownable is IOwnable {
      *  @notice Returns the owner of the contract.
      */
     function owner() public view override returns (address) {
-        OwnableStorage.Data storage data = OwnableStorage.ownableStorage();
-        return data._owner;
+        return _ownableStorage()._owner;
     }
 
     /**
@@ -59,12 +57,15 @@ abstract contract Ownable is IOwnable {
 
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
     function _setupOwner(address _newOwner) internal {
-        OwnableStorage.Data storage data = OwnableStorage.ownableStorage();
-
-        address _prevOwner = data._owner;
-        data._owner = _newOwner;
+        address _prevOwner = _ownableStorage()._owner;
+        _ownableStorage()._owner = _newOwner;
 
         emit OwnerUpdated(_prevOwner, _newOwner);
+    }
+
+    /// @dev Returns the Ownable storage.
+    function _ownableStorage() internal pure returns (OwnableStorage.Data storage data) {
+        data = OwnableStorage.data();
     }
 
     /// @dev Returns whether owner can be set in the given execution context.
