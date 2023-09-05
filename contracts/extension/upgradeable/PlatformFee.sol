@@ -9,7 +9,8 @@ import "../interface/IPlatformFee.sol";
  *  @author  thirdweb.com
  */
 library PlatformFeeStorage {
-    bytes32 public constant PLATFORM_FEE_STORAGE_POSITION = keccak256("platform.fee.storage");
+    bytes32 public constant PLATFORM_FEE_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("platform.fee.storage")) - 1));
 
     struct Data {
         /// @dev The address that receives all platform fees from all sales.
@@ -18,10 +19,10 @@ library PlatformFeeStorage {
         uint16 platformFeeBps;
     }
 
-    function platformFeeStorage() internal pure returns (Data storage platformFeeData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = PLATFORM_FEE_STORAGE_POSITION;
         assembly {
-            platformFeeData.slot := position
+            data_.slot := position
         }
     }
 }
@@ -38,8 +39,7 @@ library PlatformFeeStorage {
 abstract contract PlatformFee is IPlatformFee {
     /// @dev Returns the platform fee recipient and bps.
     function getPlatformFeeInfo() public view override returns (address, uint16) {
-        PlatformFeeStorage.Data storage data = PlatformFeeStorage.platformFeeStorage();
-        return (data.platformFeeRecipient, uint16(data.platformFeeBps));
+        return (_platformFeeStorage().platformFeeRecipient, uint16(_platformFeeStorage().platformFeeBps));
     }
 
     /**
@@ -60,15 +60,19 @@ abstract contract PlatformFee is IPlatformFee {
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
     function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
-        PlatformFeeStorage.Data storage data = PlatformFeeStorage.platformFeeStorage();
         if (_platformFeeBps > 10_000) {
             revert("Exceeds max bps");
         }
 
-        data.platformFeeBps = uint16(_platformFeeBps);
-        data.platformFeeRecipient = _platformFeeRecipient;
+        _platformFeeStorage().platformFeeBps = uint16(_platformFeeBps);
+        _platformFeeStorage().platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
+    }
+
+    /// @dev Returns the PlatformFee storage.
+    function _platformFeeStorage() internal pure returns (PlatformFeeStorage.Data storage data) {
+        data = PlatformFeeStorage.data();
     }
 
     /// @dev Returns whether platform fee info can be set in the given execution context.
