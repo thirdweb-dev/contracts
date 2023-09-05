@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 import "../interface/IRoyalty.sol";
 
 library RoyaltyStorage {
-    bytes32 public constant ROYALTY_STORAGE_POSITION = keccak256("royalty.storage");
+    bytes32 public constant ROYALTY_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("royalty.storage")) - 1));
 
     struct Data {
         /// @dev The (default) address that receives all royalty value.
@@ -17,10 +17,10 @@ library RoyaltyStorage {
         mapping(uint256 => IRoyalty.RoyaltyInfo) royaltyInfoForToken;
     }
 
-    function royaltyStorage() internal pure returns (Data storage royaltyData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = ROYALTY_STORAGE_POSITION;
         assembly {
-            royaltyData.slot := position
+            data_.slot := position
         }
     }
 }
@@ -62,13 +62,11 @@ abstract contract Royalty is IRoyalty {
      *  @param _tokenId  The tokenID of the NFT for which to query royalty info.
      */
     function getRoyaltyInfoForToken(uint256 _tokenId) public view override returns (address, uint16) {
-        RoyaltyStorage.Data storage data = RoyaltyStorage.royaltyStorage();
-
-        RoyaltyInfo memory royaltyForToken = data.royaltyInfoForToken[_tokenId];
+        RoyaltyInfo memory royaltyForToken = _royaltyStorage().royaltyInfoForToken[_tokenId];
 
         return
             royaltyForToken.recipient == address(0)
-                ? (data.royaltyRecipient, uint16(data.royaltyBps))
+                ? (_royaltyStorage().royaltyRecipient, uint16(_royaltyStorage().royaltyBps))
                 : (royaltyForToken.recipient, uint16(royaltyForToken.bps));
     }
 
@@ -76,8 +74,7 @@ abstract contract Royalty is IRoyalty {
      *  @notice Returns the defualt royalty recipient and BPS for this contract's NFTs.
      */
     function getDefaultRoyaltyInfo() external view override returns (address, uint16) {
-        RoyaltyStorage.Data storage data = RoyaltyStorage.royaltyStorage();
-        return (data.royaltyRecipient, uint16(data.royaltyBps));
+        return (_royaltyStorage().royaltyRecipient, uint16(_royaltyStorage().royaltyBps));
     }
 
     /**
@@ -103,10 +100,8 @@ abstract contract Royalty is IRoyalty {
             revert("Exceeds max bps");
         }
 
-        RoyaltyStorage.Data storage data = RoyaltyStorage.royaltyStorage();
-
-        data.royaltyRecipient = _royaltyRecipient;
-        data.royaltyBps = uint16(_royaltyBps);
+        _royaltyStorage().royaltyRecipient = _royaltyRecipient;
+        _royaltyStorage().royaltyBps = uint16(_royaltyBps);
 
         emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
@@ -142,11 +137,14 @@ abstract contract Royalty is IRoyalty {
             revert("Exceeds max bps");
         }
 
-        RoyaltyStorage.Data storage data = RoyaltyStorage.royaltyStorage();
-
-        data.royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
+        _royaltyStorage().royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
 
         emit RoyaltyForToken(_tokenId, _recipient, _bps);
+    }
+
+    /// @dev Returns the Royalty storage.
+    function _royaltyStorage() internal pure returns (RoyaltyStorage.Data storage data) {
+        data = RoyaltyStorage.data();
     }
 
     /// @dev Returns whether royalty info can be set in the given execution context.
