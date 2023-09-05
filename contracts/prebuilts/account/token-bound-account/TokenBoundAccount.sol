@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
 /* solhint-disable avoid-low-level-calls */
@@ -25,6 +25,15 @@ import "./erc6551-utils/IERC6551Account.sol";
 
 import "../../../eip/interface/IERC721.sol";
 import "../non-upgradeable/Account.sol";
+
+//   $$\     $$\       $$\                 $$\                         $$\
+//   $$ |    $$ |      \__|                $$ |                        $$ |
+// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
+// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
+//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
+//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
+//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
+//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract TokenBoundAccount is
     Initializable,
