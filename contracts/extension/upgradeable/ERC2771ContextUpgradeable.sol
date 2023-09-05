@@ -9,6 +9,7 @@ import "./Initializable.sol";
  */
 
 library ERC2771ContextStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant ERC2771_CONTEXT_STORAGE_POSITION =
         keccak256(abi.encode(uint256(keccak256("erc2771.context.storage")) - 1));
 

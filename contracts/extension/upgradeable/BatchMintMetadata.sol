@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 library BatchMintMetadataStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant BATCH_MINT_METADATA_STORAGE_POSITION =
         keccak256(abi.encode(uint256(keccak256("batch.mint.metadata.storage")) - 1));
 

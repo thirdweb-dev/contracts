@@ -7,6 +7,7 @@ import "../interface/IDrop.sol";
 import "../../lib/MerkleProof.sol";
 
 library DropStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant DROP_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("drop.storage")) - 1));
 
     struct Data {

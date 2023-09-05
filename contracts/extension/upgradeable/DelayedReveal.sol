@@ -6,6 +6,7 @@ pragma solidity ^0.8.0;
 import "../interface/IDelayedReveal.sol";
 
 library DelayedRevealStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant DELAYED_REVEAL_STORAGE_POSITION =
         keccak256(abi.encode(uint256(keccak256("delayed.reveal.storage")) - 1));
 

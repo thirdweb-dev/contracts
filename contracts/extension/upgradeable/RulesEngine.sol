@@ -12,6 +12,7 @@ import "../../eip/interface/IERC1155.sol";
 import "../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 
 library RulesEngineStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant RULES_ENGINE_STORAGE_POSITION =
         keccak256(abi.encode(uint256(keccak256("rules.engine.storage")) - 1));
 

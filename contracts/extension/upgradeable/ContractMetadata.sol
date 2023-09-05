@@ -15,6 +15,7 @@ import "../interface/IContractMetadata.sol";
  */
 
 library ContractMetadataStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant CONTRACT_METADATA_STORAGE_POSITION =
         keccak256(abi.encode(uint256(keccak256("contract.metadata.storage")) - 1));
 

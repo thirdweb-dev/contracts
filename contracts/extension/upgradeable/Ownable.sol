@@ -13,6 +13,7 @@ import "../interface/IOwnable.sol";
  */
 
 library OwnableStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant OWNABLE_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("ownable.storage")) - 1));
 
     struct Data {

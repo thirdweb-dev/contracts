@@ -6,6 +6,7 @@ pragma solidity ^0.8.0;
 import "../interface/IRoyalty.sol";
 
 library RoyaltyStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant ROYALTY_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("royalty.storage")) - 1));
 
     struct Data {

@@ -6,6 +6,7 @@ pragma solidity ^0.8.0;
 import "../interface/IPrimarySale.sol";
 
 library PrimarySaleStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant PRIMARY_SALE_STORAGE_POSITION =
         keccak256(abi.encode(uint256(keccak256("primary.sale.storage")) - 1));
 

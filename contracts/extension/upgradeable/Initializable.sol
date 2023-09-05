@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import "../../lib/TWAddress.sol";
 
 library InitStorage {
-    /// @dev The location of the storage of the entrypoint contract's data.
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 constant INIT_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("init.storage")) - 1));
 
     /// @dev Layout of the entrypoint contract's storage.

@@ -9,6 +9,7 @@ import "../interface/IPlatformFee.sol";
  *  @author  thirdweb.com
  */
 library PlatformFeeStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant PLATFORM_FEE_STORAGE_POSITION =
         keccak256(abi.encode(uint256(keccak256("platform.fee.storage")) - 1));
 

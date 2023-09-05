@@ -12,6 +12,7 @@ import "../../lib/TWStrings.sol";
  */
 
 library PermissionsStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant PERMISSIONS_STORAGE_POSITION =
         keccak256(abi.encode(uint256(keccak256("permissions.storage")) - 1));
 

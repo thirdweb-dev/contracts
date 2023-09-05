@@ -7,6 +7,7 @@ import "../interface/ILazyMint.sol";
 import "./BatchMintMetadata.sol";
 
 library LazyMintStorage {
+    /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant LAZY_MINT_STORAGE_POSITION =
         keccak256(abi.encode(uint256(keccak256("lazy.mint.storage")) - 1));
 
