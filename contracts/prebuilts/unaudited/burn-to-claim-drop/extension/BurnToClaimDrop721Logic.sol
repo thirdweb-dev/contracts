@@ -151,19 +151,23 @@ contract BurnToClaimDrop721Logic is
         _burnTokensOnOrigin(_tokenOwner, _burnTokenId, _quantity);
 
         // Collect price
-        BurnToClaimStorage.Data storage data = BurnToClaimStorage.burnToClaimStorage();
         _collectPriceOnClaim(
             address(0),
             _quantity,
-            data.burnToClaimInfo.currency,
-            data.burnToClaimInfo.mintPriceForNewToken
+            _burnToClaimStorage().burnToClaimInfo.currency,
+            _burnToClaimStorage().burnToClaimInfo.mintPriceForNewToken
         );
 
         // Mint tokens.
         _safeMint(_tokenOwner, _quantity);
 
         // emit event
-        emit TokensBurnedAndClaimed(data.burnToClaimInfo.originContractAddress, _tokenOwner, _burnTokenId, _quantity);
+        emit TokensBurnedAndClaimed(
+            _burnToClaimStorage().burnToClaimInfo.originContractAddress,
+            _tokenOwner,
+            _burnTokenId,
+            _quantity
+        );
     }
 
     /*///////////////////////////////////////////////////////////////
