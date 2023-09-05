@@ -1756,7 +1756,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         BurnToClaimDropERC721 dropRouter = BurnToClaimDropERC721(payable(address(drop)));
 
         vm.prank(address(0x123));
-        vm.expectRevert("BaseRouter: not authorized.");
+        vm.expectRevert("ExtensionManager: unauthorized.");
         dropRouter.addExtension(extension_permissions_new);
     }
 
@@ -1770,7 +1770,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         Permissions(address(drop)).renounceRole(keccak256("EXTENSION_ROLE"), deployer);
 
         vm.prank(deployer);
-        vm.expectRevert("BaseRouter: not authorized.");
+        vm.expectRevert("ExtensionManager: unauthorized.");
         dropRouter.addExtension(extension_permissions_new);
 
         vm.startPrank(deployer);
