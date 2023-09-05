@@ -12,17 +12,18 @@ import "../../external-deps/openzeppelin/utils/EnumerableSet.sol";
  *  @notice  Store a batch of shared metadata for NFTs
  */
 library SharedMetadataBatchStorage {
-    bytes32 public constant SHARED_METADATA_BATCH_STORAGE_POSITION = keccak256("shared.metadata.batch.storage");
+    bytes32 public constant SHARED_METADATA_BATCH_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("shared.metadata.batch.storage")) - 1));
 
     struct Data {
         EnumerableSet.Bytes32Set ids;
         mapping(bytes32 => ISharedMetadataBatch.SharedMetadataWithId) metadata;
     }
 
-    function sharedMetadataBatchStorage() internal pure returns (Data storage sharedMetadataBatchData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = SHARED_METADATA_BATCH_STORAGE_POSITION;
         assembly {
-            sharedMetadataBatchData.slot := position
+            data_.slot := position
         }
     }
 }
@@ -87,7 +88,7 @@ abstract contract SharedMetadataBatch is ISharedMetadataBatch {
 
     /// @dev Get contract storage
     function _sharedMetadataBatchStorage() internal pure returns (SharedMetadataBatchStorage.Data storage data) {
-        data = SharedMetadataBatchStorage.sharedMetadataBatchStorage();
+        data = SharedMetadataBatchStorage.data();
     }
 
     /// @dev Returns whether shared metadata can be set in the given execution context.
