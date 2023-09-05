@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
 /* solhint-disable avoid-low-level-calls */
@@ -25,6 +25,15 @@ import "./erc6551-utils/IERC6551Account.sol";
 
 import "../../../eip/interface/IERC721.sol";
 import "../non-upgradeable/Account.sol";
+
+//   $$\     $$\       $$\                 $$\                         $$\
+//   $$ |    $$ |      \__|                $$ |                        $$ |
+// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
+// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
+//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
+//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
+//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
+//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract TokenBoundAccount is
     Initializable,
@@ -54,6 +63,8 @@ contract TokenBoundAccount is
 
     /// @notice EIP 4337 Entrypoint contract.
     IEntryPoint private immutable entrypointContract;
+
+    uint256 public state;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
@@ -85,6 +96,17 @@ contract TokenBoundAccount is
         return (owner() == _signer);
     }
 
+    function isValidSigner(address signer, bytes calldata) external view returns (bytes4) {
+        if (_isValidSigner(signer)) {
+            return IERC6551Account.isValidSigner.selector;
+        }
+        return bytes4(0);
+    }
+
+    function _isValidSigner(address signer) internal view returns (bool) {
+        return signer == owner();
+    }
+
     /// @notice See EIP-1271
     function isValidSignature(bytes32 _hash, bytes memory _signature)
         public
@@ -108,14 +130,6 @@ contract TokenBoundAccount is
         return IERC721(tokenContract).ownerOf(tokenId);
     }
 
-    function executeCall(
-        address to,
-        uint256 value,
-        bytes calldata data
-    ) external payable onlyAdminOrEntrypoint returns (bytes memory result) {
-        return _call(to, value, data);
-    }
-
     /// @notice Withdraw funds for this account from Entrypoint.
     function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public virtual {
         require(owner() == msg.sender, "Account: not NFT owner");
@@ -132,10 +146,6 @@ contract TokenBoundAccount is
         )
     {
         return ERC6551AccountLib.token();
-    }
-
-    function nonce() external view returns (uint256) {
-        return getNonce();
     }
 
     /// @notice See {IERC165-supportsInterface}.
@@ -191,6 +201,7 @@ contract TokenBoundAccount is
         uint256 value,
         bytes memory _calldata
     ) internal virtual returns (bytes memory result) {
+        ++state;
         bool success;
         (success, result) = _target.call{ value: value }(_calldata);
         if (!success) {
