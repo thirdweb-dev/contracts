@@ -8,7 +8,7 @@ contract OwnableInit {
 
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
     function _setupOwner(address _newOwner) internal {
-        OwnableStorage.Data storage data = OwnableStorage.ownableStorage();
+        OwnableStorage.Data storage data = OwnableStorage.data();
 
         address _prevOwner = data._owner;
         data._owner = _newOwner;
