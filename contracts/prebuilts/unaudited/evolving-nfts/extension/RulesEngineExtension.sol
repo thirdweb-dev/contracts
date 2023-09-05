@@ -20,7 +20,7 @@ contract RulesEngineExtension is RulesEngine {
 
     /// @dev Checks whether an account has a particular role.
     function _hasRole(bytes32 _role, address _account) internal view returns (bool) {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsStorage.Data storage data = PermissionsStorage.data();
         return data._hasRole[_role][_account];
     }
 }

@@ -136,7 +136,7 @@ contract BurnToClaimDropERC721 is
 
     /// @dev Checks whether an account holds the given role.
     function _hasRole(bytes32 role, address addr) internal view returns (bool) {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsStorage.Data storage data = PermissionsStorage.data();
         return data._hasRole[role][addr];
     }
 }

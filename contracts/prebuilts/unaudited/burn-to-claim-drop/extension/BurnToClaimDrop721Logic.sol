@@ -391,7 +391,7 @@ contract BurnToClaimDrop721Logic is
     }
 
     function _hasRole(bytes32 role, address addr) internal view returns (bool) {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsStorage.Data storage data = PermissionsStorage.data();
         return data._hasRole[role][addr];
     }
 
