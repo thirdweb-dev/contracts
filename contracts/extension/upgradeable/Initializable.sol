@@ -5,7 +5,7 @@ import "../../lib/TWAddress.sol";
 
 library InitStorage {
     /// @dev The location of the storage of the entrypoint contract's data.
-    bytes32 constant INIT_STORAGE_POSITION = keccak256("init.storage");
+    bytes32 constant INIT_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("init.storage")) - 1));
 
     /// @dev Layout of the entrypoint contract's storage.
     struct Data {
@@ -14,10 +14,10 @@ library InitStorage {
     }
 
     /// @dev Returns the entrypoint contract's data at the relevant storage location.
-    function initStorage() internal pure returns (Data storage initData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = INIT_STORAGE_POSITION;
         assembly {
-            initData.slot := position
+            data_.slot := position
         }
     }
 }
@@ -33,22 +33,21 @@ abstract contract Initializable {
      * `onlyInitializing` functions can be used to initialize parent contracts. Equivalent to `reinitializer(1)`.
      */
     modifier initializer() {
-        InitStorage.Data storage data = InitStorage.initStorage();
-        uint8 _initialized = data.initialized;
-        bool _initializing = data.initializing;
+        uint8 _initialized = _initStorage().initialized;
+        bool _initializing = _initStorage().initializing;
 
         bool isTopLevelCall = !_initializing;
         require(
             (isTopLevelCall && _initialized < 1) || (!TWAddress.isContract(address(this)) && _initialized == 1),
             "Initializable: contract is already initialized"
         );
-        data.initialized = 1;
+        _initStorage().initialized = 1;
         if (isTopLevelCall) {
-            data.initializing = true;
+            _initStorage().initializing = true;
         }
         _;
         if (isTopLevelCall) {
-            data.initializing = false;
+            _initStorage().initializing = false;
             emit Initialized(1);
         }
     }
@@ -66,15 +65,14 @@ abstract contract Initializable {
      * a contract, executing them in the right order is up to the developer or operator.
      */
     modifier reinitializer(uint8 version) {
-        InitStorage.Data storage data = InitStorage.initStorage();
-        uint8 _initialized = data.initialized;
-        bool _initializing = data.initializing;
+        uint8 _initialized = _initStorage().initialized;
+        bool _initializing = _initStorage().initializing;
 
         require(!_initializing && _initialized < version, "Initializable: contract is already initialized");
-        data.initialized = version;
-        data.initializing = true;
+        _initStorage().initialized = version;
+        _initStorage().initializing = true;
         _;
-        data.initializing = false;
+        _initStorage().initializing = false;
         emit Initialized(version);
     }
 
@@ -83,8 +81,7 @@ abstract contract Initializable {
      * {initializer} and {reinitializer} modifiers, directly or indirectly.
      */
     modifier onlyInitializing() {
-        InitStorage.Data storage data = InitStorage.initStorage();
-        require(data.initializing, "Initializable: contract is not initializing");
+        require(_initStorage().initializing, "Initializable: contract is not initializing");
         _;
     }
 
@@ -95,14 +92,18 @@ abstract contract Initializable {
      * through proxies.
      */
     function _disableInitializers() internal virtual {
-        InitStorage.Data storage data = InitStorage.initStorage();
-        uint8 _initialized = data.initialized;
-        bool _initializing = data.initializing;
+        uint8 _initialized = _initStorage().initialized;
+        bool _initializing = _initStorage().initializing;
 
         require(!_initializing, "Initializable: contract is initializing");
         if (_initialized < type(uint8).max) {
-            data.initialized = type(uint8).max;
+            _initStorage().initialized = type(uint8).max;
             emit Initialized(type(uint8).max);
         }
+    }
+
+    /// @dev Returns the InitStorage storage.
+    function _initStorage() internal pure returns (InitStorage.Data storage data) {
+        data = InitStorage.data();
     }
 }
