@@ -78,22 +78,18 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
 
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
     function isValidSigner(address _signer, UserOperation calldata _userOp) public view virtual returns (bool) {
-        // We use the underlying storage instead of high level view functions to save gas.
-        // We use the underlying storage instead of high level view functions to save gas.
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-
         // First, check if the signer is an admin.
-        if (data.isAdmin[_signer]) {
+        if (_accountPermissionsStorage().isAdmin[_signer]) {
             return true;
         }
 
-        SignerPermissionsStatic memory permissions = data.signerPermissions[_signer];
+        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[_signer];
 
         // If not an admin, check if the signer is active.
         if (
             permissions.startTimestamp > block.timestamp ||
             block.timestamp >= permissions.endTimestamp ||
-            data.approvedTargets[_signer].length() == 0
+            _accountPermissionsStorage().approvedTargets[_signer].length() == 0
         ) {
             // Account: no active permissions.
             return false;
@@ -107,7 +103,10 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
             (address target, uint256 value) = decodeExecuteCalldata(_userOp.callData);
 
             // Check if the value is within the allowed range and if the target is approved.
-            if (permissions.nativeTokenLimitPerTransaction < value || !data.approvedTargets[_signer].contains(target)) {
+            if (
+                permissions.nativeTokenLimitPerTransaction < value ||
+                !_accountPermissionsStorage().approvedTargets[_signer].contains(target)
+            ) {
                 // Account: value too high OR Account: target not approved.
                 return false;
             }
@@ -119,7 +118,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
             for (uint256 i = 0; i < targets.length; i++) {
                 if (
                     permissions.nativeTokenLimitPerTransaction < values[i] ||
-                    !data.approvedTargets[_signer].contains(targets[i])
+                    !_accountPermissionsStorage().approvedTargets[_signer].contains(targets[i])
                 ) {
                     // Account: value too high OR Account: target not approved.
                     return false;
@@ -147,9 +146,11 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
             return MAGICVALUE;
         }
 
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
         address caller = msg.sender;
-        require(data.approvedTargets[signer].contains(caller), "Account: caller not approved target.");
+        require(
+            _accountPermissionsStorage().approvedTargets[signer].contains(caller),
+            "Account: caller not approved target."
+        );
 
         if (isActiveSigner(signer)) {
             magicValue = MAGICVALUE;
