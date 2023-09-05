@@ -3,37 +3,22 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
+
 import "../extension/upgradeable/ContractMetadata.sol";
 import "../extension/upgradeable/Ownable.sol";
+import "../extension/upgradeable/Initializable.sol";
 import "../extension/upgradeable/ERC2771ContextConsumer.sol";
 
-contract CoreRouter is ContractMetadata, Ownable, ERC2771ContextConsumer, BaseRouter {
-    /*///////////////////////////////////////////////////////////////
-                                Constructor
-    //////////////////////////////////////////////////////////////*/
-
-    // Default extensions: none.
-    constructor(address _defaultOwner) {
-        _setupOwner(_defaultOwner);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Override: Internal functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns whether a extension can be set in the given execution context.
-    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
-        return _msgSender() == owner();
-    }
-
-    /// @dev Returns whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal view virtual override returns (bool) {
-        return _msgSender() == owner();
-    }
-
-    /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal view virtual override returns (bool) {
-        return _msgSender() == owner();
+abstract contract CoreRouter is
+    Initializable,
+    ContractMetadata,
+    Ownable,
+    ERC2771ContextConsumer,
+    BaseRouterWithDefaults
+{
+    // Default extensions: enabled.
+    constructor(Extension[] memory _defaultExtensions) BaseRouterWithDefaults(_defaultExtensions) {
+        _disableInitializers();
     }
 }
