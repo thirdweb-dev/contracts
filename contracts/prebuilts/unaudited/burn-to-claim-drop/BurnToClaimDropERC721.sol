@@ -99,21 +99,6 @@ contract BurnToClaimDropERC721 is
     }
 
     /*///////////////////////////////////////////////////////////////
-                        ERC 165 / 721 / 2981 logic
-    //////////////////////////////////////////////////////////////*/
-
-    // /// @dev See ERC 165
-    // function supportsInterface(bytes4 interfaceId)
-    //     public
-    //     view
-    //     virtual
-    //     override(ERC721AUpgradeable, IERC165)
-    //     returns (bool)
-    // {
-    //     return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
-    // }
-
-    /*///////////////////////////////////////////////////////////////
                         Contract identifiers
     //////////////////////////////////////////////////////////////*/
 
