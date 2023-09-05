@@ -187,7 +187,7 @@ contract Pack is
         public
         view
         virtual
-        override(ERC1155Receiver, ERC1155Upgradeable, IERC165)
+        override(ERC1155Receiver, ERC1155Upgradeable)
         returns (bool)
     {
         return

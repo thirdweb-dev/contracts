@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
-import "./IERC165.sol";
+// import "./IERC165.sol";
 
 /**
  * @dev Interface for the NFT Royalty Standard.
@@ -11,7 +11,7 @@ import "./IERC165.sol";
  *
  * _Available since v4.5._
  */
-interface IERC2981 is IERC165 {
+interface IERC2981 {
     /**
      * @dev Returns how much royalty is owed and to whom, based on a sale price that may be denominated in any unit of
      * exchange. The royalty amount is denominated and should be payed in that same unit of exchange.

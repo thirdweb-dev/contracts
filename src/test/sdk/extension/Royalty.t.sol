@@ -17,7 +17,7 @@ contract MyRoyalty is Royalty {
         return condition;
     }
 
-    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual returns (bool) {
         return interfaceId == 0x01ffc9a7;
     }
 }

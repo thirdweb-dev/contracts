@@ -146,7 +146,7 @@ contract Multiwrap is
         public
         view
         virtual
-        override(ERC1155Receiver, ERC721EnumerableUpgradeable, IERC165)
+        override(ERC1155Receiver, ERC721EnumerableUpgradeable)
         returns (bool)
     {
         return

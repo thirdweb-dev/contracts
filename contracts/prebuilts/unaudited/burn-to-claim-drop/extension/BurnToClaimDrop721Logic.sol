@@ -26,7 +26,7 @@ import { ERC2771ContextUpgradeable } from "../../../../extension/upgradeable/ERC
 import { DelayedReveal } from "../../../../extension/upgradeable/DelayedReveal.sol";
 import { PrimarySale } from "../../../../extension/upgradeable/PrimarySale.sol";
 import { PlatformFee } from "../../../../extension/upgradeable/PlatformFee.sol";
-import { Royalty, IERC165 } from "../../../../extension/upgradeable/Royalty.sol";
+import { Royalty } from "../../../../extension/upgradeable/Royalty.sol";
 import { LazyMint } from "../../../../extension/upgradeable/LazyMint.sol";
 import { Drop } from "../../../../extension/upgradeable/Drop.sol";
 import { ContractMetadata } from "../../../../extension/upgradeable/ContractMetadata.sol";
@@ -91,13 +91,7 @@ contract BurnToClaimDrop721Logic is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 

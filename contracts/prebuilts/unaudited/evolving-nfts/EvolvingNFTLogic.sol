@@ -112,7 +112,7 @@ contract EvolvingNFTLogic is
         public
         view
         virtual
-        override(ERC721AUpgradeable, IERC721AUpgradeable, IERC165)
+        override(ERC721AUpgradeable, IERC721AUpgradeable)
         returns (bool)
     {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;

@@ -80,7 +80,7 @@ contract ERC721Drop is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
             interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721

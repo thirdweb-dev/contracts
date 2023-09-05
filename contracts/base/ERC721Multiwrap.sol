@@ -112,7 +112,7 @@ contract ERC721Multiwrap is
         public
         view
         virtual
-        override(ERC1155Receiver, ERC721A, IERC165)
+        override(ERC1155Receiver, ERC721A)
         returns (bool)
     {
         return
