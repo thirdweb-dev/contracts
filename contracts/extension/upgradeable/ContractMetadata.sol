@@ -15,17 +15,18 @@ import "../interface/IContractMetadata.sol";
  */
 
 library ContractMetadataStorage {
-    bytes32 public constant CONTRACT_METADATA_STORAGE_POSITION = keccak256("contract.metadata.storage");
+    bytes32 public constant CONTRACT_METADATA_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("contract.metadata.storage")) - 1));
 
     struct Data {
         /// @notice Returns the contract metadata URI.
         string contractURI;
     }
 
-    function contractMetadataStorage() internal pure returns (Data storage contractMetadataData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = CONTRACT_METADATA_STORAGE_POSITION;
         assembly {
-            contractMetadataData.slot := position
+            data_.slot := position
         }
     }
 }
@@ -49,17 +50,20 @@ abstract contract ContractMetadata is IContractMetadata {
 
     /// @dev Lets a contract admin set the URI for contract-level metadata.
     function _setupContractURI(string memory _uri) internal {
-        ContractMetadataStorage.Data storage data = ContractMetadataStorage.contractMetadataStorage();
-        string memory prevURI = data.contractURI;
-        data.contractURI = _uri;
+        string memory prevURI = _contractMetadataStorage().contractURI;
+        _contractMetadataStorage().contractURI = _uri;
 
         emit ContractURIUpdated(prevURI, _uri);
     }
 
     /// @notice Returns the contract metadata URI.
     function contractURI() public view virtual override returns (string memory) {
-        ContractMetadataStorage.Data storage data = ContractMetadataStorage.contractMetadataStorage();
-        return data.contractURI;
+        return _contractMetadataStorage().contractURI;
+    }
+
+    /// @dev Returns the AccountPermissions storage.
+    function _contractMetadataStorage() internal pure returns (ContractMetadataStorage.Data storage data) {
+        data = ContractMetadataStorage.data();
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
