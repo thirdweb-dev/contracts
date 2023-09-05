@@ -19,7 +19,7 @@ contract DefaultOperatorFiltererInit {
     function __DefaultOperatorFilterer_init() private {
         __OperatorFilterer_init(DEFAULT_SUBSCRIPTION, true);
 
-        OperatorFilterToggleStorage.Data storage data = OperatorFilterToggleStorage.operatorFilterToggleStorage();
+        OperatorFilterToggleStorage.Data storage data = OperatorFilterToggleStorage.data();
         data.operatorRestriction = true;
 
         emit OperatorRestriction(true);

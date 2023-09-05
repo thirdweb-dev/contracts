@@ -6,24 +6,24 @@ pragma solidity ^0.8.0;
 import "../interface/IOperatorFilterToggle.sol";
 
 library OperatorFilterToggleStorage {
-    bytes32 public constant OPERATOR_FILTER_TOGGLE_STORAGE_POSITION = keccak256("operator.filter.toggle.storage");
+    bytes32 public constant OPERATOR_FILTER_TOGGLE_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("operator.filter.toggle.storage")) - 1));
 
     struct Data {
         bool operatorRestriction;
     }
 
-    function operatorFilterToggleStorage() internal pure returns (Data storage operatorFilterToggleData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = OPERATOR_FILTER_TOGGLE_STORAGE_POSITION;
         assembly {
-            operatorFilterToggleData.slot := position
+            data_.slot := position
         }
     }
 }
 
 abstract contract OperatorFilterToggle is IOperatorFilterToggle {
     function operatorRestriction() external view override returns (bool) {
-        OperatorFilterToggleStorage.Data storage data = OperatorFilterToggleStorage.operatorFilterToggleStorage();
-        return data.operatorRestriction;
+        return _operatorFilterToggleStorage().operatorRestriction;
     }
 
     function setOperatorRestriction(bool _restriction) external {
@@ -32,10 +32,13 @@ abstract contract OperatorFilterToggle is IOperatorFilterToggle {
     }
 
     function _setOperatorRestriction(bool _restriction) internal {
-        OperatorFilterToggleStorage.Data storage data = OperatorFilterToggleStorage.operatorFilterToggleStorage();
-
-        data.operatorRestriction = _restriction;
+        _operatorFilterToggleStorage().operatorRestriction = _restriction;
         emit OperatorRestriction(_restriction);
+    }
+
+    /// @dev Returns the OperatorFilterToggle storage.
+    function _operatorFilterToggleStorage() internal pure returns (OperatorFilterToggleStorage.Data storage data) {
+        data = OperatorFilterToggleStorage.data();
     }
 
     function _canSetOperatorRestriction() internal virtual returns (bool);
