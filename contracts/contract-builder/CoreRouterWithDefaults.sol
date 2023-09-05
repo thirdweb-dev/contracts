@@ -3,18 +3,20 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
 import "../extension/upgradeable/ContractMetadata.sol";
 import "../extension/upgradeable/Ownable.sol";
 import "../extension/upgradeable/ERC2771ContextConsumer.sol";
 
-contract CoreRouter is ContractMetadata, Ownable, ERC2771ContextConsumer, BaseRouter {
+contract CoreRouterWithDefaults is ContractMetadata, Ownable, ERC2771ContextConsumer, BaseRouterWithDefaults {
     /*///////////////////////////////////////////////////////////////
                                 Constructor
     //////////////////////////////////////////////////////////////*/
 
-    // Default extensions: none.
-    constructor(address _defaultOwner) {
+    // Default extensions: enabled.
+    constructor(address _defaultOwner, Extension[] memory _defaultExtensions)
+        BaseRouterWithDefaults(_defaultExtensions)
+    {
         _setupOwner(_defaultOwner);
     }
 
