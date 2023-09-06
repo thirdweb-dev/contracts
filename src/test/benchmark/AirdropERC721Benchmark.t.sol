@@ -48,6 +48,6 @@ contract AirdropERC721BenchmarkTest is BaseTest {
         vm.pauseGasMetering();
         vm.prank(deployer);
         vm.resumeGasMetering();
-        drop.airdrop(address(erc721), address(tokenOwner), _contentsOne);
+        drop.airdropERC721(address(erc721), address(tokenOwner), _contentsOne);
     }
 }

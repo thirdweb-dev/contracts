@@ -57,6 +57,6 @@ contract AirdropERC1155BenchmarkTest is BaseTest {
         vm.pauseGasMetering();
         vm.prank(deployer);
         vm.resumeGasMetering();
-        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
+        drop.airdropERC1155(address(erc1155), address(tokenOwner), _contentsOne);
     }
 }
