@@ -6,16 +6,18 @@ pragma solidity ^0.8.0;
 import "../interface/IPrimarySale.sol";
 
 library PrimarySaleStorage {
-    bytes32 public constant PRIMARY_SALE_STORAGE_POSITION = keccak256("primary.sale.storage");
+    /// @custom:storage-location erc7201:extension.manager.storage
+    bytes32 public constant PRIMARY_SALE_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("primary.sale.storage")) - 1));
 
     struct Data {
         address recipient;
     }
 
-    function primarySaleStorage() internal pure returns (Data storage primarySaleData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = PRIMARY_SALE_STORAGE_POSITION;
         assembly {
-            primarySaleData.slot := position
+            data_.slot := position
         }
     }
 }
@@ -30,8 +32,7 @@ library PrimarySaleStorage {
 abstract contract PrimarySale is IPrimarySale {
     /// @dev Returns primary sale recipient address.
     function primarySaleRecipient() public view override returns (address) {
-        PrimarySaleStorage.Data storage data = PrimarySaleStorage.primarySaleStorage();
-        return data.recipient;
+        return _primarySaleStorage().recipient;
     }
 
     /**
@@ -51,9 +52,13 @@ abstract contract PrimarySale is IPrimarySale {
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
     function _setupPrimarySaleRecipient(address _saleRecipient) internal {
-        PrimarySaleStorage.Data storage data = PrimarySaleStorage.primarySaleStorage();
-        data.recipient = _saleRecipient;
+        _primarySaleStorage().recipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
+    }
+
+    /// @dev Returns the PrimarySale storage.
+    function _primarySaleStorage() internal pure returns (PrimarySaleStorage.Data storage data) {
+        data = PrimarySaleStorage.data();
     }
 
     /// @dev Returns whether primary sale recipient can be set in the given execution context.

@@ -7,17 +7,19 @@ import "../interface/ILazyMint.sol";
 import "./BatchMintMetadata.sol";
 
 library LazyMintStorage {
-    bytes32 public constant LAZY_MINT_STORAGE_POSITION = keccak256("lazy.mint.storage");
+    /// @custom:storage-location erc7201:extension.manager.storage
+    bytes32 public constant LAZY_MINT_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("lazy.mint.storage")) - 1));
 
     struct Data {
         /// @notice The tokenId assigned to the next new NFT to be lazy minted.
         uint256 nextTokenIdToLazyMint;
     }
 
-    function lazyMintStorage() internal pure returns (Data storage lazyMintData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = LAZY_MINT_STORAGE_POSITION;
         assembly {
-            lazyMintData.slot := position
+            data_.slot := position
         }
     }
 }
@@ -30,8 +32,7 @@ library LazyMintStorage {
 
 abstract contract LazyMint is ILazyMint, BatchMintMetadata {
     function nextTokenIdToLazyMint() internal view returns (uint256) {
-        LazyMintStorage.Data storage data = LazyMintStorage.lazyMintStorage();
-        return data.nextTokenIdToLazyMint;
+        return _lazyMintStorage().nextTokenIdToLazyMint;
     }
 
     /**
@@ -56,14 +57,18 @@ abstract contract LazyMint is ILazyMint, BatchMintMetadata {
             revert("0 amt");
         }
 
-        LazyMintStorage.Data storage data = LazyMintStorage.lazyMintStorage();
-        uint256 startId = data.nextTokenIdToLazyMint;
+        uint256 startId = _lazyMintStorage().nextTokenIdToLazyMint;
 
-        (data.nextTokenIdToLazyMint, batchId) = _batchMintMetadata(startId, _amount, _baseURIForTokens);
+        (_lazyMintStorage().nextTokenIdToLazyMint, batchId) = _batchMintMetadata(startId, _amount, _baseURIForTokens);
 
         emit TokensLazyMinted(startId, startId + _amount - 1, _baseURIForTokens, _data);
 
         return batchId;
+    }
+
+    /// @dev Returns the LazyMintStorage storage.
+    function _lazyMintStorage() internal pure returns (LazyMintStorage.Data storage data) {
+        data = LazyMintStorage.data();
     }
 
     /// @dev Returns whether lazy minting can be performed in the given execution context.
