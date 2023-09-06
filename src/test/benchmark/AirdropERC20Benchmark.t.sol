@@ -50,6 +50,6 @@ contract AirdropERC20BenchmarkTest is BaseTest {
         vm.pauseGasMetering();
         vm.prank(deployer);
         vm.resumeGasMetering();
-        drop.airdrop(address(erc20), address(tokenOwner), _contentsOne);
+        drop.airdropERC20(address(erc20), address(tokenOwner), _contentsOne);
     }
 }

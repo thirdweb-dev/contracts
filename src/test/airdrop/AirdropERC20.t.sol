@@ -49,7 +49,7 @@ contract AirdropERC20Test is BaseTest {
 
     function test_state_airdrop() public {
         vm.prank(deployer);
-        drop.airdrop(address(erc20), address(tokenOwner), _contentsOne);
+        drop.airdropERC20(address(erc20), address(tokenOwner), _contentsOne);
 
         for (uint256 i = 0; i < countOne; i++) {
             assertEq(erc20.balanceOf(_contentsOne[i].recipient), _contentsOne[i].amount);
@@ -60,13 +60,13 @@ contract AirdropERC20Test is BaseTest {
     function test_revert_airdrop_insufficientValue() public {
         vm.prank(deployer);
         vm.expectRevert("Insufficient native token amount");
-        drop.airdrop(CurrencyTransferLib.NATIVE_TOKEN, address(tokenOwner), _contentsOne);
+        drop.airdropERC20(CurrencyTransferLib.NATIVE_TOKEN, address(tokenOwner), _contentsOne);
     }
 
     function test_revert_airdrop_notOwner() public {
         vm.startPrank(address(25));
         vm.expectRevert("Not authorized.");
-        drop.airdrop(address(erc20), address(tokenOwner), _contentsOne);
+        drop.airdropERC20(address(erc20), address(tokenOwner), _contentsOne);
         vm.stopPrank();
     }
 
@@ -75,7 +75,7 @@ contract AirdropERC20Test is BaseTest {
 
         vm.startPrank(deployer);
         vm.expectRevert("Not balance or allowance");
-        drop.airdrop(address(erc20), address(tokenOwner), _contentsOne);
+        drop.airdropERC20(address(erc20), address(tokenOwner), _contentsOne);
         vm.stopPrank();
     }
 }
@@ -118,7 +118,7 @@ contract AirdropERC20AuditTest is BaseTest {
 
     function test_process_payments_with_non_compliant_token() public {
         vm.prank(deployer);
-        drop.airdrop(address(erc20_nonCompliant), address(tokenOwner), _contentsOne);
+        drop.airdropERC20(address(erc20_nonCompliant), address(tokenOwner), _contentsOne);
 
         // check balances after airdrop
         for (uint256 i = 0; i < countOne; i++) {
