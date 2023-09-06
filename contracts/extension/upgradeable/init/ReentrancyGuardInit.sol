@@ -12,7 +12,7 @@ contract ReentrancyGuardInit is Initializable {
     }
 
     function __ReentrancyGuard_init_unchained() internal onlyInitializing {
-        ReentrancyGuardStorage.Data storage data = ReentrancyGuardStorage.reentrancyGuardStorage();
+        ReentrancyGuardStorage.Data storage data = ReentrancyGuardStorage.data();
         data._status = _NOT_ENTERED;
     }
 }
