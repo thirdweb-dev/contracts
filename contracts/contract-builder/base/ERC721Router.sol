@@ -7,10 +7,11 @@ import "../CoreRouter.sol";
 
 import "../../extension/upgradeable/init/PermissionsEnumerableInit.sol";
 import "../../extension/upgradeable/init/ERC721AQueryableInit.sol";
+import "../../extension/upgradeable/init/ERC2771ContextInit.sol";
 
 import "../../extension/interface/IPermissions.sol";
 
-contract ERC721Router is CoreRouter, ERC721AQueryableInit, PermissionsEnumerableInit {
+contract ERC721Router is CoreRouter, ERC721AQueryableInit, PermissionsEnumerableInit, ERC2771ContextInit {
     /*///////////////////////////////////////////////////////////////
                                 Constructor
     //////////////////////////////////////////////////////////////*/
@@ -26,8 +27,12 @@ contract ERC721Router is CoreRouter, ERC721AQueryableInit, PermissionsEnumerable
         address _defaultAdmin,
         string memory _name,
         string memory _symbol,
-        string memory _contractURI
+        string memory _contractURI,
+        address[] memory _trustedForwarder
     ) external initializer initializerERC721A {
+        // Initialize ERC2771Context
+        __ERC2771Context_init(_trustedForwarder);
+
         // Initialize ERC721A
         __ERC721A_init(_name, _symbol);
 
