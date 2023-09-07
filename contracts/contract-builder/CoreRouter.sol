@@ -9,9 +9,11 @@ import "../extension/upgradeable/ContractMetadata.sol";
 import "../extension/upgradeable/Ownable.sol";
 import "../extension/upgradeable/Initializable.sol";
 import "../extension/upgradeable/ERC2771ContextConsumer.sol";
+import "../extension/Multicall.sol";
 
 abstract contract CoreRouter is
     Initializable,
+    Multicall,
     ContractMetadata,
     Ownable,
     ERC2771ContextConsumer,
