@@ -50,8 +50,8 @@ contract ERC721Router is CoreRouter, ERC721AQueryableInit, PermissionsEnumerable
                         Override: Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns whether a extension can be set in the given execution context.
-    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
+    /// @dev Returns whether a extension can be added/replaced/removed in the given execution context.
+    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
         // Check: extension role
         try IPermissions(address(this)).hasRole(keccak256("EXTENSION_ROLE"), _msgSender()) returns (bool success) {
             return success;
