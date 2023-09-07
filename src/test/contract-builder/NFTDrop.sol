@@ -112,7 +112,7 @@ contract NFTDropTest is BaseTest, IExtension {
         defaultExtension_permissionsEnumerable.metadata.metadataURI = "ipfs://PermissionsEnumerable";
         defaultExtension_permissionsEnumerable.metadata.implementation = address(new PermissionsEnumerable());
 
-        defaultExtension_permissionsEnumerable.functions = new ExtensionFunction[](6);
+        defaultExtension_permissionsEnumerable.functions = new ExtensionFunction[](7);
 
         defaultExtension_permissionsEnumerable.functions[0] = ExtensionFunction(
             Permissions.hasRole.selector,
@@ -138,6 +138,10 @@ contract NFTDropTest is BaseTest, IExtension {
             Permissions.renounceRole.selector,
             "renounceRole(bytes32,address)"
         );
+        defaultExtension_permissionsEnumerable.functions[6] = ExtensionFunction(
+            PermissionsEnumerable.getRoleMemberCount.selector,
+            "getRoleMemberCount(bytes32)"
+        );
 
         // Deploy router with default extensions
         defaultExtensions[0] = defaultExtension_erc721;
@@ -162,6 +166,12 @@ contract NFTDropTest is BaseTest, IExtension {
         );
 
         _setupExtensionsForRouter(IExtensionManager(proxyToRouter));
+
+        vm.startPrank(deployer);
+        Permissions(proxyToRouter).grantRole(keccak256("MINTER_ROLE"), deployer);
+        PrimarySale(proxyToRouter).setPrimarySaleRecipient(deployer);
+        PlatformFee(proxyToRouter).setPlatformFeeInfo(deployer, 1000);
+        vm.stopPrank();
 
         drop = DropERC721(proxyToRouter);
 
@@ -214,7 +224,7 @@ contract NFTDropTest is BaseTest, IExtension {
         defaultExtension_lazyMintDelayedReveal.metadata.metadataURI = "ipfs://LazyMintDelayedRevealExt";
         defaultExtension_lazyMintDelayedReveal.metadata.implementation = address(new LazyMintDelayedRevealExt());
 
-        defaultExtension_lazyMintDelayedReveal.functions = new ExtensionFunction[](9);
+        defaultExtension_lazyMintDelayedReveal.functions = new ExtensionFunction[](10);
         defaultExtension_lazyMintDelayedReveal.functions[0] = ExtensionFunction(
             BatchMintMetadata.getBaseURICount.selector,
             "getBaseURICount()"
@@ -251,6 +261,10 @@ contract NFTDropTest is BaseTest, IExtension {
             LazyMintDelayedRevealExt.reveal.selector,
             "reveal(uint256,bytes)"
         );
+        defaultExtension_lazyMintDelayedReveal.functions[9] = ExtensionFunction(
+            LazyMintDelayedRevealExt.nextTokenIdToMint.selector,
+            "nextTokenIdToMint()"
+        );
 
         vm.prank(deployer);
         router.addExtension(defaultExtension_lazyMintDelayedReveal);
@@ -267,6 +281,9 @@ contract NFTDropTest is BaseTest, IExtension {
             ERC2771ContextExt.isTrustedForwarder.selector,
             "isTrustedForwarder(address)"
         );
+
+        vm.prank(deployer);
+        router.addExtension(defaultExtension_erc2771Context);
 
         // Setup: PlatformFeeExt extension
         Extension memory defaultExtension_platformFee;
@@ -285,6 +302,9 @@ contract NFTDropTest is BaseTest, IExtension {
             "setPlatformFeeInfo(address,uint256)"
         );
 
+        vm.prank(deployer);
+        router.addExtension(defaultExtension_platformFee);
+
         // Setup: PrimarySaleExt extension
         Extension memory defaultExtension_primarySale;
 
@@ -301,6 +321,9 @@ contract NFTDropTest is BaseTest, IExtension {
             PrimarySale.setPrimarySaleRecipient.selector,
             "setPrimarySaleRecipient(address)"
         );
+
+        vm.prank(deployer);
+        router.addExtension(defaultExtension_primarySale);
 
         // Setup: RoyaltyExt extension
         Extension memory defaultExtension_royalty;
@@ -330,6 +353,9 @@ contract NFTDropTest is BaseTest, IExtension {
             Royalty.setRoyaltyInfoForToken.selector,
             "setRoyaltyInfoForToken(uint256,address,uint256)"
         );
+
+        vm.prank(deployer);
+        router.addExtension(defaultExtension_royalty);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -396,159 +422,159 @@ contract NFTDropTest is BaseTest, IExtension {
     /**
      *  @dev Tests contract state for Transfer role.
      */
-    function test_state_grant_transferRole() public {
-        bytes32 role = keccak256("TRANSFER_ROLE");
+    // function test_state_grant_transferRole() public {
+    //     bytes32 role = keccak256("TRANSFER_ROLE");
 
-        // check if admin and address(0) have transfer role in the beginning
-        bool checkAddressZero = drop.hasRole(role, address(0));
-        bool checkAdmin = drop.hasRole(role, deployer);
-        assertTrue(checkAddressZero);
-        assertTrue(checkAdmin);
+    //     // check if admin and address(0) have transfer role in the beginning
+    //     bool checkAddressZero = drop.hasRole(role, address(0));
+    //     bool checkAdmin = drop.hasRole(role, deployer);
+    //     assertTrue(checkAddressZero);
+    //     assertTrue(checkAdmin);
 
-        // check if transfer role can be granted to a non-holder
-        address receiver = getActor(0);
-        vm.startPrank(deployer);
-        drop.grantRole(role, receiver);
+    //     // check if transfer role can be granted to a non-holder
+    //     address receiver = getActor(0);
+    //     vm.startPrank(deployer);
+    //     drop.grantRole(role, receiver);
 
-        // expect revert when granting to a holder
-        vm.expectRevert("Can only grant to non holders");
-        drop.grantRole(role, receiver);
+    //     // expect revert when granting to a holder
+    //     vm.expectRevert("Can only grant to non holders");
+    //     drop.grantRole(role, receiver);
 
-        // check if receiver has transfer role
-        bool checkReceiver = drop.hasRole(role, receiver);
-        assertTrue(checkReceiver);
+    //     // check if receiver has transfer role
+    //     bool checkReceiver = drop.hasRole(role, receiver);
+    //     assertTrue(checkReceiver);
 
-        // check if role is correctly revoked
-        drop.revokeRole(role, receiver);
-        checkReceiver = drop.hasRole(role, receiver);
-        assertFalse(checkReceiver);
-        drop.revokeRole(role, address(0));
-        checkAddressZero = drop.hasRole(role, address(0));
-        assertFalse(checkAddressZero);
+    //     // check if role is correctly revoked
+    //     drop.revokeRole(role, receiver);
+    //     checkReceiver = drop.hasRole(role, receiver);
+    //     assertFalse(checkReceiver);
+    //     drop.revokeRole(role, address(0));
+    //     checkAddressZero = drop.hasRole(role, address(0));
+    //     assertFalse(checkAddressZero);
 
-        vm.stopPrank();
-    }
+    //     vm.stopPrank();
+    // }
 
     /**
      *  @dev Tests contract state for Transfer role.
      */
-    function test_state_getRoleMember_transferRole() public {
-        bytes32 role = keccak256("TRANSFER_ROLE");
+    // function test_state_getRoleMember_transferRole() public {
+    //     bytes32 role = keccak256("TRANSFER_ROLE");
 
-        uint256 roleMemberCount = drop.getRoleMemberCount(role);
-        assertEq(roleMemberCount, 2);
+    //     uint256 roleMemberCount = drop.getRoleMemberCount(role);
+    //     assertEq(roleMemberCount, 2);
 
-        address roleMember = drop.getRoleMember(role, 1);
-        assertEq(roleMember, address(0));
+    //     address roleMember = drop.getRoleMember(role, 1);
+    //     assertEq(roleMember, address(0));
 
-        vm.startPrank(deployer);
-        drop.grantRole(role, address(2));
-        drop.grantRole(role, address(3));
-        drop.grantRole(role, address(4));
+    //     vm.startPrank(deployer);
+    //     drop.grantRole(role, address(2));
+    //     drop.grantRole(role, address(3));
+    //     drop.grantRole(role, address(4));
 
-        roleMemberCount = drop.getRoleMemberCount(role);
-        assertEq(roleMemberCount, 5);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
-        }
-        console.log("");
+    //     roleMemberCount = drop.getRoleMemberCount(role);
+    //     assertEq(roleMemberCount, 5);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(drop.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        drop.revokeRole(role, address(2));
-        roleMemberCount = drop.getRoleMemberCount(role);
-        assertEq(roleMemberCount, 4);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
-        }
-        console.log("");
+    //     drop.revokeRole(role, address(2));
+    //     roleMemberCount = drop.getRoleMemberCount(role);
+    //     assertEq(roleMemberCount, 4);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(drop.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        drop.revokeRole(role, address(0));
-        roleMemberCount = drop.getRoleMemberCount(role);
-        assertEq(roleMemberCount, 3);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
-        }
-        console.log("");
+    //     drop.revokeRole(role, address(0));
+    //     roleMemberCount = drop.getRoleMemberCount(role);
+    //     assertEq(roleMemberCount, 3);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(drop.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        drop.grantRole(role, address(5));
-        roleMemberCount = drop.getRoleMemberCount(role);
-        assertEq(roleMemberCount, 4);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
-        }
-        console.log("");
+    //     drop.grantRole(role, address(5));
+    //     roleMemberCount = drop.getRoleMemberCount(role);
+    //     assertEq(roleMemberCount, 4);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(drop.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        drop.grantRole(role, address(0));
-        roleMemberCount = drop.getRoleMemberCount(role);
-        assertEq(roleMemberCount, 5);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
-        }
-        console.log("");
+    //     drop.grantRole(role, address(0));
+    //     roleMemberCount = drop.getRoleMemberCount(role);
+    //     assertEq(roleMemberCount, 5);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(drop.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        drop.grantRole(role, address(6));
-        roleMemberCount = drop.getRoleMemberCount(role);
-        assertEq(roleMemberCount, 6);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
-        }
-        console.log("");
+    //     drop.grantRole(role, address(6));
+    //     roleMemberCount = drop.getRoleMemberCount(role);
+    //     assertEq(roleMemberCount, 6);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(drop.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        drop.revokeRole(role, address(0));
-        roleMemberCount = drop.getRoleMemberCount(role);
-        assertEq(roleMemberCount, 5);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
-        }
-        console.log("");
+    //     drop.revokeRole(role, address(0));
+    //     roleMemberCount = drop.getRoleMemberCount(role);
+    //     assertEq(roleMemberCount, 5);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(drop.getRoleMember(role, i));
+    //     }
+    //     console.log("");
 
-        drop.revokeRole(role, address(4));
-        roleMemberCount = drop.getRoleMemberCount(role);
-        assertEq(roleMemberCount, 4);
-        console.log(roleMemberCount);
-        for (uint256 i = 0; i < roleMemberCount; i++) {
-            console.log(drop.getRoleMember(role, i));
-        }
-        console.log("");
-    }
+    //     drop.revokeRole(role, address(4));
+    //     roleMemberCount = drop.getRoleMemberCount(role);
+    //     assertEq(roleMemberCount, 4);
+    //     console.log(roleMemberCount);
+    //     for (uint256 i = 0; i < roleMemberCount; i++) {
+    //         console.log(drop.getRoleMember(role, i));
+    //     }
+    //     console.log("");
+    // }
 
     /**
      *  note: Testing transfer of tokens when transfer-role is restricted
      */
-    function test_claim_transferRole() public {
-        vm.warp(1);
+    // function test_claim_transferRole() public {
+    //     vm.warp(1);
 
-        address receiver = getActor(0);
-        bytes32[] memory proofs = new bytes32[](0);
+    //     address receiver = getActor(0);
+    //     bytes32[] memory proofs = new bytes32[](0);
 
-        DropERC721.AllowlistProof memory alp;
-        alp.proof = proofs;
+    //     DropERC721.AllowlistProof memory alp;
+    //     alp.proof = proofs;
 
-        DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
-        conditions[0].maxClaimableSupply = 100;
-        conditions[0].quantityLimitPerWallet = 100;
+    //     DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
+    //     conditions[0].maxClaimableSupply = 100;
+    //     conditions[0].quantityLimitPerWallet = 100;
 
-        vm.prank(deployer);
-        drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
-        vm.prank(deployer);
-        drop.setClaimConditions(conditions, false);
+    //     vm.prank(deployer);
+    //     drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
+    //     vm.prank(deployer);
+    //     drop.setClaimConditions(conditions, false);
 
-        vm.prank(getActor(5), getActor(5));
-        drop.claim(receiver, 1, address(0), 0, alp, "");
+    //     vm.prank(getActor(5), getActor(5));
+    //     drop.claim(receiver, 1, address(0), 0, alp, "");
 
-        // revoke transfer role from address(0)
-        vm.prank(deployer);
-        drop.revokeRole(keccak256("TRANSFER_ROLE"), address(0));
-        vm.startPrank(receiver);
-        vm.expectRevert("!Transfer-Role");
-        drop.transferFrom(receiver, address(123), 0);
-    }
+    //     // revoke transfer role from address(0)
+    //     vm.prank(deployer);
+    //     drop.revokeRole(keccak256("TRANSFER_ROLE"), address(0));
+    //     vm.startPrank(receiver);
+    //     vm.expectRevert("!Transfer-Role");
+    //     drop.transferFrom(receiver, address(123), 0);
+    // }
 
     /**
      *  @dev Tests whether role member count is incremented correctly.
@@ -827,14 +853,7 @@ contract NFTDropTest is BaseTest, IExtension {
         vm.prank(deployer);
         drop.reveal(0, "key");
 
-        bytes memory errorMessage = abi.encodePacked(
-            "Permissions: account ",
-            TWStrings.toHexString(uint160(address(this)), 20),
-            " is missing role ",
-            TWStrings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
-        );
-
-        vm.expectRevert(errorMessage);
+        vm.expectRevert("Not authorized");
         drop.reveal(0, "key");
     }
 

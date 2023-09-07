@@ -29,9 +29,29 @@ contract LazyMintDelayedRevealExt is LazyMint, DelayedReveal, ERC2771ContextCons
         }
     }
 
+    function nextTokenIdToMint() external view returns (uint256) {
+        return nextTokenIdToLazyMint();
+    }
+
     /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs (optionally delayed reveal).
+    function lazyMint(
+        uint256 _amount,
+        string calldata _baseURIForTokens,
+        bytes calldata _data
+    ) public override returns (uint256 batchId) {
+        if (_data.length > 0) {
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
+            if (encryptedURI.length != 0 && provenanceHash != "") {
+                _setEncryptedData(nextTokenIdToLazyMint() + _amount, _data);
+            }
+        }
+
+        return super.lazyMint(_amount, _baseURIForTokens, _data);
+    }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
     function reveal(uint256 _index, bytes calldata _key) external returns (string memory revealedURI) {

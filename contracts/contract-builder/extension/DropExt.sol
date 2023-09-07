@@ -13,9 +13,27 @@ import "../../extension/interface/IPlatformFee.sol";
 import "../../extension/interface/IPrimarySale.sol";
 
 import "./ERC721AMintExt.sol";
+import "./LazyMintDelayedRevealExt.sol";
 
 contract DropExt is Drop, ERC2771ContextConsumer {
     uint256 private constant MAX_BPS = 10000;
+
+    /// @dev Runs before every `claim` function call.
+    function _beforeClaim(
+        address,
+        uint256 _quantity,
+        address,
+        uint256,
+        AllowlistProof calldata,
+        bytes memory
+    ) internal view override {
+        require(
+            ERC721AMintExt(address(this)).currentIndex() + _quantity <=
+                LazyMintDelayedRevealExt(address(this)).nextTokenIdToMint(),
+            "!Tokens"
+        );
+        // require(maxTotalSupply == 0 || _currentIndex + _quantity <= maxTotalSupply, "!Supply");
+    }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
     function _collectPriceOnClaim(
