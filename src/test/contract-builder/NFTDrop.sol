@@ -1,28 +1,31 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
-import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
-import "../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
+import { BaseTest, stdStorage, StdStorage, console } from "../utils/BaseTest.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
+
+import { TWStrings } from "contracts/lib/TWStrings.sol";
+import { IExtension } from "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
+import { IExtensionManager } from "@thirdweb-dev/dynamic-contracts/src/interface/IExtensionManager.sol";
 
 // Contract builder
-// import "contracts/contract-builder/base/ERC721Router.sol";
-// import "contracts/contract-builder/extension/DropExt.sol";
-// import "contracts/contract-builder/extension/ERC721AMint.sol";
-// import "contracts/contract-builder/extension/ERC2771ContextExt.sol";
-// import "contracts/contract-builder/extension/LazyMintDelayedRevealExt.sol";
-// import "contracts/contract-builder/extension/PlatformFeeExt.sol";
-// import "contracts/contract-builder/extension/PrimarySaleExt.sol";
-// import "contracts/contract-builder/extension/RoyaltyExt.sol";
+import { ERC721Router } from "contracts/contract-builder/base/ERC721Router.sol";
+import { DropExt, Drop } from "contracts/contract-builder/extension/DropExt.sol";
+import { ERC721AMintExt } from "contracts/contract-builder/extension/ERC721AMintExt.sol";
+import { ERC2771ContextExt } from "contracts/contract-builder/extension/ERC2771ContextExt.sol";
+import { LazyMintDelayedRevealExt, BatchMintMetadata, LazyMint, DelayedReveal } from "contracts/contract-builder/extension/LazyMintDelayedRevealExt.sol";
+import { PlatformFeeExt, PlatformFee } from "contracts/contract-builder/extension/PlatformFeeExt.sol";
+import { PrimarySaleExt, PrimarySale } from "contracts/contract-builder/extension/PrimarySaleExt.sol";
+import { RoyaltyExt, Royalty } from "contracts/contract-builder/extension/RoyaltyExt.sol";
+import { Permissions, PermissionsEnumerable } from "contracts/extension/upgradeable/PermissionsEnumerable.sol";
+import { ERC721AUpgradeable } from "contracts/eip/ERC721AUpgradeable.sol";
 
-contract DropERC721Test is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+contract NFTDropTest is BaseTest, IExtension {
+    using TWStrings for uint256;
+    using TWStrings for address;
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
@@ -35,10 +38,298 @@ contract DropERC721Test is BaseTest {
 
     function setUp() public override {
         super.setUp();
-        drop = DropERC721(getContract("DropERC721"));
+
+        Extension[] memory defaultExtensions = new Extension[](2);
+
+        // Setup: ERC721AMint default extension
+        Extension memory defaultExtension_erc721;
+
+        defaultExtension_erc721.metadata.name = "ERC721AMintExt";
+        defaultExtension_erc721.metadata.metadataURI = "ipfs://ERC721AMintExt";
+        defaultExtension_erc721.metadata.implementation = address(new ERC721AMintExt());
+
+        defaultExtension_erc721.functions = new ExtensionFunction[](15);
+
+        defaultExtension_erc721.functions[0] = ExtensionFunction(
+            ERC721AUpgradeable.totalSupply.selector,
+            "totalSupply()"
+        );
+        defaultExtension_erc721.functions[1] = ExtensionFunction(
+            ERC721AUpgradeable.balanceOf.selector,
+            "balanceOf(address)"
+        );
+        defaultExtension_erc721.functions[2] = ExtensionFunction(
+            ERC721AUpgradeable.ownerOf.selector,
+            "ownerOf(uint256)"
+        );
+        defaultExtension_erc721.functions[3] = ExtensionFunction(ERC721AUpgradeable.name.selector, "name()");
+        defaultExtension_erc721.functions[4] = ExtensionFunction(ERC721AUpgradeable.symbol.selector, "symbol()");
+        defaultExtension_erc721.functions[5] = ExtensionFunction(
+            ERC721AUpgradeable.approve.selector,
+            "approve(address,uint256)"
+        );
+        defaultExtension_erc721.functions[6] = ExtensionFunction(
+            ERC721AUpgradeable.getApproved.selector,
+            "getApproved(uint256)"
+        );
+        defaultExtension_erc721.functions[7] = ExtensionFunction(
+            ERC721AUpgradeable.setApprovalForAll.selector,
+            "setApprovalForAll(address,bool)"
+        );
+        defaultExtension_erc721.functions[8] = ExtensionFunction(
+            ERC721AUpgradeable.isApprovedForAll.selector,
+            "isApprovedForAll(address,address)"
+        );
+        defaultExtension_erc721.functions[9] = ExtensionFunction(
+            ERC721AUpgradeable.transferFrom.selector,
+            "transferFrom(address,address,uint256)"
+        );
+        defaultExtension_erc721.functions[10] = ExtensionFunction(
+            bytes4(keccak256(abi.encodePacked("safeTransferFrom(address,address,uint256)"))),
+            "safeTransferFrom(address,address,uint256)"
+        );
+        defaultExtension_erc721.functions[11] = ExtensionFunction(
+            bytes4(keccak256(abi.encodePacked("safeTransferFrom(address,address,uint256,bytes)"))),
+            "safeTransferFrom(address,address,uint256,bytes)"
+        );
+        defaultExtension_erc721.functions[12] = ExtensionFunction(
+            ERC721AMintExt.currentIndex.selector,
+            "currentIndex()"
+        );
+        defaultExtension_erc721.functions[13] = ExtensionFunction(
+            ERC721AMintExt.startTokenId.selector,
+            "startTokenId()"
+        );
+        defaultExtension_erc721.functions[14] = ExtensionFunction(
+            ERC721AMintExt.safeMint.selector,
+            "safeMint(address,uint256)"
+        );
+
+        // Setup: PermissionsEnumerable default extension
+        Extension memory defaultExtension_permissionsEnumerable;
+
+        defaultExtension_permissionsEnumerable.metadata.name = "PermissionsEnumerable";
+        defaultExtension_permissionsEnumerable.metadata.metadataURI = "ipfs://PermissionsEnumerable";
+        defaultExtension_permissionsEnumerable.metadata.implementation = address(new PermissionsEnumerable());
+
+        defaultExtension_permissionsEnumerable.functions = new ExtensionFunction[](6);
+
+        defaultExtension_permissionsEnumerable.functions[0] = ExtensionFunction(
+            Permissions.hasRole.selector,
+            "hasRole(bytes32,address)"
+        );
+        defaultExtension_permissionsEnumerable.functions[1] = ExtensionFunction(
+            Permissions.hasRoleWithSwitch.selector,
+            "hasRoleWithSwitch(bytes32,address)"
+        );
+        defaultExtension_permissionsEnumerable.functions[2] = ExtensionFunction(
+            Permissions.grantRole.selector,
+            "grantRole(bytes32,address)"
+        );
+        defaultExtension_permissionsEnumerable.functions[3] = ExtensionFunction(
+            Permissions.revokeRole.selector,
+            "revokeRole(bytes32,address)"
+        );
+        defaultExtension_permissionsEnumerable.functions[4] = ExtensionFunction(
+            Permissions.getRoleAdmin.selector,
+            "getRoleAdmin(bytes32)"
+        );
+        defaultExtension_permissionsEnumerable.functions[5] = ExtensionFunction(
+            Permissions.renounceRole.selector,
+            "renounceRole(bytes32,address)"
+        );
+
+        // Deploy router with default extensions
+        defaultExtensions[0] = defaultExtension_erc721;
+        defaultExtensions[1] = defaultExtension_permissionsEnumerable;
+
+        vm.prank(deployer);
+        address router = address(new ERC721Router(defaultExtensions));
+
+        vm.prank(deployer);
+        address proxyToRouter = address(
+            new TWProxy(
+                router,
+                abi.encodeWithSelector(
+                    ERC721Router.initialize.selector,
+                    deployer,
+                    "name",
+                    "SYMBOL",
+                    "ipfs://contractURI",
+                    new address[](0)
+                )
+            )
+        );
+
+        _setupExtensionsForRouter(IExtensionManager(proxyToRouter));
+
+        drop = DropERC721(proxyToRouter);
 
         erc20.mint(deployer, 1_000 ether);
         vm.deal(deployer, 1_000 ether);
+    }
+
+    function _setupExtensionsForRouter(IExtensionManager router) internal {
+        // Setup: DropExt default extension
+        Extension memory defaultExtension_drop;
+
+        defaultExtension_drop.metadata.name = "DropExt";
+        defaultExtension_drop.metadata.metadataURI = "ipfs://DropExt";
+        defaultExtension_drop.metadata.implementation = address(new DropExt());
+
+        defaultExtension_drop.functions = new ExtensionFunction[](7);
+        defaultExtension_drop.functions[0] = ExtensionFunction(Drop.claimCondition.selector, "claimCondition()");
+        defaultExtension_drop.functions[1] = ExtensionFunction(
+            Drop.claim.selector,
+            "claim(address,uint256,address,uint256,(bytes32[],uint256,uint256,address),bytes)"
+        );
+        defaultExtension_drop.functions[2] = ExtensionFunction(
+            Drop.setClaimConditions.selector,
+            "setClaimConditions((uint256,uint256,uint256,uint256,bytes32,uint256,address,string)[],bool)"
+        );
+        defaultExtension_drop.functions[3] = ExtensionFunction(
+            Drop.verifyClaim.selector,
+            "verifyClaim(uint256,address,uint256,address,uint256,(bytes32[],uint256,uint256,address))"
+        );
+        defaultExtension_drop.functions[4] = ExtensionFunction(
+            Drop.getActiveClaimConditionId.selector,
+            "getActiveClaimConditionId()"
+        );
+        defaultExtension_drop.functions[5] = ExtensionFunction(
+            Drop.getClaimConditionById.selector,
+            "getClaimConditionById(uint256)"
+        );
+        defaultExtension_drop.functions[6] = ExtensionFunction(
+            Drop.getSupplyClaimedByWallet.selector,
+            "getSupplyClaimedByWallet(uint256,address)"
+        );
+
+        vm.prank(deployer);
+        router.addExtension(defaultExtension_drop);
+
+        // Setup: LazyMintDelayedRevealExt extension
+        Extension memory defaultExtension_lazyMintDelayedReveal;
+
+        defaultExtension_lazyMintDelayedReveal.metadata.name = "LazyMintDelayedRevealExt";
+        defaultExtension_lazyMintDelayedReveal.metadata.metadataURI = "ipfs://LazyMintDelayedRevealExt";
+        defaultExtension_lazyMintDelayedReveal.metadata.implementation = address(new LazyMintDelayedRevealExt());
+
+        defaultExtension_lazyMintDelayedReveal.functions = new ExtensionFunction[](9);
+        defaultExtension_lazyMintDelayedReveal.functions[0] = ExtensionFunction(
+            BatchMintMetadata.getBaseURICount.selector,
+            "getBaseURICount()"
+        );
+        defaultExtension_lazyMintDelayedReveal.functions[1] = ExtensionFunction(
+            BatchMintMetadata.getBatchIdAtIndex.selector,
+            "getBatchIdAtIndex(uint256)"
+        );
+        defaultExtension_lazyMintDelayedReveal.functions[2] = ExtensionFunction(
+            LazyMint.lazyMint.selector,
+            "lazyMint(uint256,string,bytes)"
+        );
+        defaultExtension_lazyMintDelayedReveal.functions[3] = ExtensionFunction(
+            LazyMintDelayedRevealExt.tokenURI.selector,
+            "tokenURI(uint256)"
+        );
+        defaultExtension_lazyMintDelayedReveal.functions[4] = ExtensionFunction(
+            DelayedReveal.encryptedData.selector,
+            "encryptedData(uint256)"
+        );
+        defaultExtension_lazyMintDelayedReveal.functions[5] = ExtensionFunction(
+            DelayedReveal.getRevealURI.selector,
+            "getRevealURI(uint256,bytes)"
+        );
+        defaultExtension_lazyMintDelayedReveal.functions[6] = ExtensionFunction(
+            DelayedReveal.encryptDecrypt.selector,
+            "encryptDecrypt(bytes,bytes)"
+        );
+        defaultExtension_lazyMintDelayedReveal.functions[7] = ExtensionFunction(
+            DelayedReveal.isEncryptedBatch.selector,
+            "isEncryptedBatch(uint256)"
+        );
+        defaultExtension_lazyMintDelayedReveal.functions[8] = ExtensionFunction(
+            LazyMintDelayedRevealExt.reveal.selector,
+            "reveal(uint256,bytes)"
+        );
+
+        vm.prank(deployer);
+        router.addExtension(defaultExtension_lazyMintDelayedReveal);
+
+        // Setup: ERC2771ContextExt extension
+        Extension memory defaultExtension_erc2771Context;
+
+        defaultExtension_erc2771Context.metadata.name = "ERC2771ContextExt";
+        defaultExtension_erc2771Context.metadata.metadataURI = "ipfs://ERC2771ContextExt";
+        defaultExtension_erc2771Context.metadata.implementation = address(new ERC2771ContextExt());
+
+        defaultExtension_erc2771Context.functions = new ExtensionFunction[](1);
+        defaultExtension_erc2771Context.functions[0] = ExtensionFunction(
+            ERC2771ContextExt.isTrustedForwarder.selector,
+            "isTrustedForwarder(address)"
+        );
+
+        // Setup: PlatformFeeExt extension
+        Extension memory defaultExtension_platformFee;
+
+        defaultExtension_platformFee.metadata.name = "PlatformFeeExt";
+        defaultExtension_platformFee.metadata.metadataURI = "ipfs://PlatformFeeExt";
+        defaultExtension_platformFee.metadata.implementation = address(new PlatformFeeExt());
+
+        defaultExtension_platformFee.functions = new ExtensionFunction[](2);
+        defaultExtension_platformFee.functions[0] = ExtensionFunction(
+            PlatformFee.getPlatformFeeInfo.selector,
+            "getPlatformFeeInfo()"
+        );
+        defaultExtension_platformFee.functions[1] = ExtensionFunction(
+            PlatformFee.setPlatformFeeInfo.selector,
+            "setPlatformFeeInfo(address,uint256)"
+        );
+
+        // Setup: PrimarySaleExt extension
+        Extension memory defaultExtension_primarySale;
+
+        defaultExtension_primarySale.metadata.name = "PrimarySaleExt";
+        defaultExtension_primarySale.metadata.metadataURI = "ipfs://PrimarySaleExt";
+        defaultExtension_primarySale.metadata.implementation = address(new PrimarySaleExt());
+
+        defaultExtension_primarySale.functions = new ExtensionFunction[](2);
+        defaultExtension_primarySale.functions[0] = ExtensionFunction(
+            PrimarySale.primarySaleRecipient.selector,
+            "primarySaleRecipient()"
+        );
+        defaultExtension_primarySale.functions[1] = ExtensionFunction(
+            PrimarySale.setPrimarySaleRecipient.selector,
+            "setPrimarySaleRecipient(address)"
+        );
+
+        // Setup: RoyaltyExt extension
+        Extension memory defaultExtension_royalty;
+
+        defaultExtension_royalty.metadata.name = "RoyaltyExt";
+        defaultExtension_royalty.metadata.metadataURI = "ipfs://RoyaltyExt";
+        defaultExtension_royalty.metadata.implementation = address(new RoyaltyExt());
+
+        defaultExtension_royalty.functions = new ExtensionFunction[](5);
+        defaultExtension_royalty.functions[0] = ExtensionFunction(
+            Royalty.royaltyInfo.selector,
+            "royaltyInfo(uint256,uint256)"
+        );
+        defaultExtension_royalty.functions[1] = ExtensionFunction(
+            Royalty.getRoyaltyInfoForToken.selector,
+            "getRoyaltyInfoForToken(uint256)"
+        );
+        defaultExtension_royalty.functions[2] = ExtensionFunction(
+            Royalty.getDefaultRoyaltyInfo.selector,
+            "getDefaultRoyaltyInfo()"
+        );
+        defaultExtension_royalty.functions[3] = ExtensionFunction(
+            Royalty.setDefaultRoyaltyInfo.selector,
+            "setDefaultRoyaltyInfo(address,uint256)"
+        );
+        defaultExtension_royalty.functions[4] = ExtensionFunction(
+            Royalty.setRoyaltyInfoForToken.selector,
+            "setRoyaltyInfoForToken(uint256,address,uint256)"
+        );
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -734,7 +1025,7 @@ contract DropERC721Test is BaseTest {
         inputs[1] = "src/test/scripts/generateRoot.ts";
         inputs[2] = "300";
         inputs[3] = "0";
-        inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
+        inputs[4] = TWStrings.toHexString(uint160(address(erc20))); // address of erc20
 
         bytes memory result = vm.ffi(inputs);
         // revert();
@@ -784,7 +1075,7 @@ contract DropERC721Test is BaseTest {
         inputs[1] = "src/test/scripts/generateRoot.ts";
         inputs[2] = "300";
         inputs[3] = "5";
-        inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
+        inputs[4] = TWStrings.toHexString(uint160(address(erc20))); // address of erc20
 
         bytes memory result = vm.ffi(inputs);
         // revert();
@@ -842,7 +1133,7 @@ contract DropERC721Test is BaseTest {
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
         inputs[2] = "300";
-        inputs[3] = Strings.toString(type(uint256).max); // this implies that general price is applicable
+        inputs[3] = TWStrings.toString(type(uint256).max); // this implies that general price is applicable
         inputs[4] = "0x0000000000000000000000000000000000000000";
 
         bytes memory result = vm.ffi(inputs);
@@ -952,7 +1243,7 @@ contract DropERC721Test is BaseTest {
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(x);
+        inputs[2] = TWStrings.toString(x);
         inputs[3] = "0";
         inputs[4] = "0x0000000000000000000000000000000000000000";
 
