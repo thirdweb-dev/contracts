@@ -12,32 +12,31 @@ import "../../eip/interface/IERC721.sol";
 import "../interface/IBurnToClaim.sol";
 
 library BurnToClaimStorage {
-    bytes32 public constant BURN_TO_CLAIM_STORAGE_POSITION = keccak256("burn.to.claim.storage");
+    /// @custom:storage-location erc7201:extension.manager.storage
+    bytes32 public constant BURN_TO_CLAIM_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("burn.to.claim.storage")) - 1));
 
     struct Data {
         IBurnToClaim.BurnToClaimInfo burnToClaimInfo;
     }
 
-    function burnToClaimStorage() internal pure returns (Data storage burnToClaimData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = BURN_TO_CLAIM_STORAGE_POSITION;
         assembly {
-            burnToClaimData.slot := position
+            data_.slot := position
         }
     }
 }
 
 abstract contract BurnToClaim is IBurnToClaim {
     function getBurnToClaimInfo() public view returns (BurnToClaimInfo memory) {
-        BurnToClaimStorage.Data storage data = BurnToClaimStorage.burnToClaimStorage();
-
-        return data.burnToClaimInfo;
+        return _burnToClaimStorage().burnToClaimInfo;
     }
 
     function setBurnToClaimInfo(BurnToClaimInfo calldata _burnToClaimInfo) external virtual {
         require(_canSetBurnToClaim(), "Not authorized.");
 
-        BurnToClaimStorage.Data storage data = BurnToClaimStorage.burnToClaimStorage();
-        data.burnToClaimInfo = _burnToClaimInfo;
+        _burnToClaimStorage().burnToClaimInfo = _burnToClaimInfo;
     }
 
     function verifyBurnToClaim(
@@ -74,6 +73,11 @@ abstract contract BurnToClaim is IBurnToClaim {
         } else if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC1155) {
             ERC1155Burnable(_burnToClaimInfo.originContractAddress).burn(_tokenOwner, _tokenId, _quantity);
         }
+    }
+
+    /// @dev Returns the BurnToClaimStorage storage.
+    function _burnToClaimStorage() internal pure returns (BurnToClaimStorage.Data storage data) {
+        data = BurnToClaimStorage.data();
     }
 
     function _canSetBurnToClaim() internal view virtual returns (bool);

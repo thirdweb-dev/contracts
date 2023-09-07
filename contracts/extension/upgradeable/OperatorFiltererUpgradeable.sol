@@ -30,10 +30,8 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
     }
 
     modifier onlyAllowedOperator(address from) virtual {
-        OperatorFilterToggleStorage.Data storage data = OperatorFilterToggleStorage.operatorFilterToggleStorage();
-
         // Check registry code length to facilitate testing in environments without a deployed registry.
-        if (data.operatorRestriction) {
+        if (_operatorFilterToggleStorage().operatorRestriction) {
             if (address(OPERATOR_FILTER_REGISTRY).code.length > 0) {
                 // Allow spending tokens from addresses with balance
                 // Note that this still allows listings and marketplaces with escrow to transfer tokens if transferred
@@ -49,10 +47,8 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
     }
 
     modifier onlyAllowedOperatorApproval(address operator) virtual {
-        OperatorFilterToggleStorage.Data storage data = OperatorFilterToggleStorage.operatorFilterToggleStorage();
-
         // Check registry code length to facilitate testing in environments without a deployed registry.
-        if (data.operatorRestriction) {
+        if (_operatorFilterToggleStorage().operatorRestriction) {
             if (address(OPERATOR_FILTER_REGISTRY).code.length > 0) {
                 OPERATOR_FILTER_REGISTRY.isOperatorAllowed(address(this), msg.sender);
             }
