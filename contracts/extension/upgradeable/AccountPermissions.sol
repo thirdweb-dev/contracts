@@ -8,7 +8,9 @@ import "../../external-deps/openzeppelin/utils/cryptography/EIP712.sol";
 import "../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 
 library AccountPermissionsStorage {
-    bytes32 public constant ACCOUNT_PERMISSIONS_STORAGE_POSITION = keccak256("account.permissions.storage");
+    /// @custom:storage-location erc7201:extension.manager.storage
+    bytes32 public constant ACCOUNT_PERMISSIONS_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("account.permissions.storage")) - 1));
 
     struct Data {
         /// @dev The set of all admins of the wallet.
@@ -25,10 +27,10 @@ library AccountPermissionsStorage {
         mapping(bytes32 => bool) executed;
     }
 
-    function accountPermissionsStorage() internal pure returns (Data storage accountPermissionsData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = ACCOUNT_PERMISSIONS_STORAGE_POSITION;
         assembly {
-            accountPermissionsData.slot := position
+            data_.slot := position
         }
     }
 }
@@ -69,27 +71,25 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         (bool success, address signer) = verifySignerPermissionRequest(_req, _signature);
         require(success, "AccountPermissions: invalid signature");
 
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
+        _accountPermissionsStorage().allSigners.add(targetSigner);
+        _accountPermissionsStorage().executed[_req.uid] = true;
 
-        data.allSigners.add(targetSigner);
-        data.executed[_req.uid] = true;
-
-        data.signerPermissions[targetSigner] = SignerPermissionsStatic(
+        _accountPermissionsStorage().signerPermissions[targetSigner] = SignerPermissionsStatic(
             _req.nativeTokenLimitPerTransaction,
             _req.permissionStartTimestamp,
             _req.permissionEndTimestamp
         );
 
-        address[] memory currentTargets = data.approvedTargets[targetSigner].values();
+        address[] memory currentTargets = _accountPermissionsStorage().approvedTargets[targetSigner].values();
         uint256 currentLen = currentTargets.length;
 
         for (uint256 i = 0; i < currentLen; i += 1) {
-            data.approvedTargets[targetSigner].remove(currentTargets[i]);
+            _accountPermissionsStorage().approvedTargets[targetSigner].remove(currentTargets[i]);
         }
 
         uint256 len = _req.approvedTargets.length;
         for (uint256 i = 0; i < len; i += 1) {
-            data.approvedTargets[targetSigner].add(_req.approvedTargets[i]);
+            _accountPermissionsStorage().approvedTargets[targetSigner].add(_req.approvedTargets[i]);
         }
 
         _afterSignerPermissionsUpdate(_req);
@@ -103,30 +103,27 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
     /// @notice Returns whether the given account is an admin.
     function isAdmin(address _account) public view virtual returns (bool) {
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        return data.isAdmin[_account];
+        return _accountPermissionsStorage().isAdmin[_account];
     }
 
     /// @notice Returns whether the given account is an active signer on the account.
     function isActiveSigner(address signer) public view returns (bool) {
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        SignerPermissionsStatic memory permissions = data.signerPermissions[signer];
+        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
 
         return
             permissions.startTimestamp <= block.timestamp &&
             block.timestamp < permissions.endTimestamp &&
-            data.approvedTargets[signer].length() > 0;
+            _accountPermissionsStorage().approvedTargets[signer].length() > 0;
     }
 
     /// @notice Returns the restrictions under which a signer can use the smart wallet.
     function getPermissionsForSigner(address signer) external view returns (SignerPermissions memory) {
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        SignerPermissionsStatic memory permissions = data.signerPermissions[signer];
+        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
 
         return
             SignerPermissions(
                 signer,
-                data.approvedTargets[signer].values(),
+                _accountPermissionsStorage().approvedTargets[signer].values(),
                 permissions.nativeTokenLimitPerTransaction,
                 permissions.startTimestamp,
                 permissions.endTimestamp
@@ -140,25 +137,23 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         virtual
         returns (bool success, address signer)
     {
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
         signer = _recoverAddress(req, signature);
-        success = !data.executed[req.uid] && isAdmin(signer);
+        success = !_accountPermissionsStorage().executed[req.uid] && isAdmin(signer);
     }
 
     /// @notice Returns all active and inactive signers of the account.
     function getAllSigners() external view returns (SignerPermissions[] memory signers) {
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        address[] memory allSigners = data.allSigners.values();
+        address[] memory allSigners = _accountPermissionsStorage().allSigners.values();
 
         uint256 len = allSigners.length;
         signers = new SignerPermissions[](len);
         for (uint256 i = 0; i < len; i += 1) {
             address signer = allSigners[i];
-            SignerPermissionsStatic memory permissions = data.signerPermissions[signer];
+            SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
 
             signers[i] = SignerPermissions(
                 signer,
-                data.approvedTargets[signer].values(),
+                _accountPermissionsStorage().approvedTargets[signer].values(),
                 permissions.nativeTokenLimitPerTransaction,
                 permissions.startTimestamp,
                 permissions.endTimestamp
@@ -168,8 +163,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
     /// @notice Returns all signers with active permissions to use the account.
     function getAllActiveSigners() external view returns (SignerPermissions[] memory signers) {
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        address[] memory allSigners = data.allSigners.values();
+        address[] memory allSigners = _accountPermissionsStorage().allSigners.values();
 
         uint256 len = allSigners.length;
         uint256 numOfActiveSigners = 0;
@@ -192,11 +186,11 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
                 continue;
             }
             address signer = allSigners[i];
-            SignerPermissionsStatic memory permissions = data.signerPermissions[signer];
+            SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
 
             signers[index++] = SignerPermissions(
                 signer,
-                data.approvedTargets[signer].values(),
+                _accountPermissionsStorage().approvedTargets[signer].values(),
                 permissions.nativeTokenLimitPerTransaction,
                 permissions.startTimestamp,
                 permissions.endTimestamp
@@ -206,8 +200,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
     /// @notice Returns all admins of the account.
     function getAllAdmins() external view returns (address[] memory) {
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        return data.allAdmins.values();
+        return _accountPermissionsStorage().allAdmins.values();
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -219,13 +212,12 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
     /// @notice Makes the given account an admin.
     function _setAdmin(address _account, bool _isAdmin) internal virtual {
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        data.isAdmin[_account] = _isAdmin;
+        _accountPermissionsStorage().isAdmin[_account] = _isAdmin;
 
         if (_isAdmin) {
-            data.allAdmins.add(_account);
+            _accountPermissionsStorage().allAdmins.add(_account);
         } else {
-            data.allAdmins.remove(_account);
+            _accountPermissionsStorage().allAdmins.remove(_account);
         }
 
         emit AdminUpdated(_account, _isAdmin);
@@ -255,5 +247,10 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
                 _req.reqValidityEndTimestamp,
                 _req.uid
             );
+    }
+
+    /// @dev Returns the AccountPermissions storage.
+    function _accountPermissionsStorage() internal pure returns (AccountPermissionsStorage.Data storage data) {
+        data = AccountPermissionsStorage.data();
     }
 }

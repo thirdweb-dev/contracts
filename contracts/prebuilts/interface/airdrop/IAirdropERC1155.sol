@@ -41,7 +41,7 @@ interface IAirdropERC1155 {
      *  @param tokenOwner      The owner of the the tokens to transfer.
      *  @param contents        List containing recipient, tokenId to airdrop.
      */
-    function airdrop(
+    function airdropERC1155(
         address tokenAddress,
         address tokenOwner,
         AirdropContent[] calldata contents

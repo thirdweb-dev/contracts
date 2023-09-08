@@ -50,8 +50,8 @@ contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
         ManagedAccount(payable(_account)).initialize(_admin, _data);
     }
 
-    /// @dev Returns whether an extension can be set in the given execution context.
-    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
+    /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
+    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 

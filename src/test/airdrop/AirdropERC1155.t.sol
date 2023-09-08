@@ -55,7 +55,7 @@ contract AirdropERC1155Test is BaseTest {
 
     function test_state_airdrop() public {
         vm.prank(deployer);
-        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
+        drop.airdropERC1155(address(erc1155), address(tokenOwner), _contentsOne);
 
         for (uint256 i = 0; i < countOne; i++) {
             assertEq(erc1155.balanceOf(_contentsOne[i].recipient, i % 5), 5);
@@ -71,7 +71,7 @@ contract AirdropERC1155Test is BaseTest {
     function test_revert_airdrop_notOwner() public {
         vm.prank(address(25));
         vm.expectRevert("Not authorized.");
-        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
+        drop.airdropERC1155(address(erc1155), address(tokenOwner), _contentsOne);
     }
 
     function test_revert_airdrop_notApproved() public {
@@ -79,7 +79,7 @@ contract AirdropERC1155Test is BaseTest {
 
         vm.startPrank(deployer);
         vm.expectRevert("Not balance or approved");
-        drop.airdrop(address(erc1155), address(tokenOwner), _contentsOne);
+        drop.airdropERC1155(address(erc1155), address(tokenOwner), _contentsOne);
         vm.stopPrank();
     }
 }
