@@ -45,6 +45,9 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         _;
     }
 
+    /// @notice Lets the account receive native tokens.
+    receive() external payable {}
+
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
