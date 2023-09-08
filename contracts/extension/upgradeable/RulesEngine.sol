@@ -13,7 +13,9 @@ import "../../eip/interface/IERC1155.sol";
 import "../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 
 library RulesEngineStorage {
-    bytes32 public constant RULES_ENGINE_STORAGE_POSITION = keccak256("rules.engine.storage");
+    /// @custom:storage-location erc7201:extension.manager.storage
+    bytes32 public constant RULES_ENGINE_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("rules.engine.storage")) - 1));
 
     struct Data {
         address rulesEngineOverride;
@@ -21,10 +23,10 @@ library RulesEngineStorage {
         mapping(bytes32 => IRulesEngine.RuleWithId) rules;
     }
 
-    function rulesEngineStorage() internal pure returns (Data storage rulesEngineData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = RULES_ENGINE_STORAGE_POSITION;
         assembly {
-            rulesEngineData.slot := position
+            data_.slot := position
         }
     }
 }
@@ -151,7 +153,7 @@ abstract contract RulesEngine is IRulesEngine {
     }
 
     function _rulesEngineStorage() internal pure returns (RulesEngineStorage.Data storage data) {
-        data = RulesEngineStorage.rulesEngineStorage();
+        data = RulesEngineStorage.data();
     }
 
     function _canSetRules() internal view virtual returns (bool);

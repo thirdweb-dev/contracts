@@ -8,7 +8,7 @@ contract ContractMetadataInit {
 
     /// @dev Lets a contract admin set the URI for contract-level metadata.
     function _setupContractURI(string memory _uri) internal {
-        ContractMetadataStorage.Data storage data = ContractMetadataStorage.contractMetadataStorage();
+        ContractMetadataStorage.Data storage data = ContractMetadataStorage.data();
         string memory prevURI = data.contractURI;
         data.contractURI = _uri;
 

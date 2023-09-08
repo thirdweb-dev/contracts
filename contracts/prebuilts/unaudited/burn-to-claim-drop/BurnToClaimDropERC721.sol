@@ -99,21 +99,6 @@ contract BurnToClaimDropERC721 is
     }
 
     /*///////////////////////////////////////////////////////////////
-                        ERC 165 / 721 / 2981 logic
-    //////////////////////////////////////////////////////////////*/
-
-    // /// @dev See ERC 165
-    // function supportsInterface(bytes4 interfaceId)
-    //     public
-    //     view
-    //     virtual
-    //     override(ERC721AUpgradeable, IERC165)
-    //     returns (bool)
-    // {
-    //     return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
-    // }
-
-    /*///////////////////////////////////////////////////////////////
                         Contract identifiers
     //////////////////////////////////////////////////////////////*/
 
@@ -129,14 +114,14 @@ contract BurnToClaimDropERC721 is
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns whether an extension can be set in the given execution context.
-    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
+    /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
+    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
         return _hasRole(keccak256("EXTENSION_ROLE"), msg.sender);
     }
 
     /// @dev Checks whether an account holds the given role.
     function _hasRole(bytes32 role, address addr) internal view returns (bool) {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsStorage.Data storage data = PermissionsStorage.data();
         return data._hasRole[role][addr];
     }
 }
