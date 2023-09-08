@@ -33,10 +33,6 @@ contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
-    receive() external payable {
-        revert("Cannot accept ether.");
-    }
-
     /*///////////////////////////////////////////////////////////////
                             Internal functions
     //////////////////////////////////////////////////////////////*/
