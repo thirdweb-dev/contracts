@@ -17,7 +17,8 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 //  ==========  Internal imports    ==========
-import { BaseRouterWithDefaults } from "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
+import { BaseRouterWithDefaults, IRouter, IRouterState } from "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
+import { ERC165 } from "../../../eip/ERC165.sol";
 
 import "../../../extension/Multicall.sol";
 import "../../../extension/upgradeable/Initializable.sol";
@@ -42,7 +43,8 @@ contract MarketplaceV3 is
     ERC2771ContextUpgradeable,
     RoyaltyPaymentsLogic,
     IERC721Receiver,
-    IERC1155Receiver
+    IERC1155Receiver,
+    ERC165
 {
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
     bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
@@ -132,16 +134,12 @@ contract MarketplaceV3 is
         return this.onERC721Received.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(BaseRouterWithDefaults, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
+            interfaceId == type(IRouter).interfaceId ||
+            interfaceId == type(IRouterState).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
@@ -164,15 +162,15 @@ contract MarketplaceV3 is
         return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    /// @dev Returns whether a extension can be set in the given execution context.
-    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
-        return _hasRole(EXTENSION_ROLE, _msgSender());
-    }
-
     /// @dev Checks whether an account has a particular role.
     function _hasRole(bytes32 _role, address _account) internal view returns (bool) {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsStorage.Data storage data = PermissionsStorage.data();
         return data._hasRole[_role][_account];
+    }
+
+    /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
+    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
+        return _hasRole(EXTENSION_ROLE, msg.sender);
     }
 
     function _msgSender() internal view override(ERC2771ContextUpgradeable, Permissions) returns (address sender) {
