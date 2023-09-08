@@ -240,7 +240,7 @@ contract EvolvingNFTTest is BaseTest {
                 token: address(erc20),
                 tokenType: IRulesEngine.TokenType.ERC20,
                 tokenId: 0,
-                balance: 10 ether,
+                balance: 10,
                 score: score1
             })
         );
@@ -1148,7 +1148,7 @@ contract EvolvingNFTTest is BaseTest {
                 token: address(erc20),
                 tokenType: IRulesEngine.TokenType.ERC20,
                 tokenId: 0,
-                balance: 10 ether,
+                balance: 10,
                 score: score1 + score2 + score3
             })
         );
