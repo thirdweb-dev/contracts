@@ -76,9 +76,11 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
             return MAGICVALUE;
         }
 
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
         address caller = msg.sender;
-        require(data.approvedTargets[signer].contains(caller), "Account: caller not approved target.");
+        require(
+            _accountPermissionsStorage().approvedTargets[signer].contains(caller),
+            "Account: caller not approved target."
+        );
 
         if (isActiveSigner(signer)) {
             magicValue = MAGICVALUE;

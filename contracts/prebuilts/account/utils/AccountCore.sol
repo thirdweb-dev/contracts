@@ -207,9 +207,8 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
 
         if (!isValidSigner(signer, userOp)) return SIG_VALIDATION_FAILED;
 
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        uint48 validAfter = uint48(data.signerPermissions[signer].startTimestamp);
-        uint48 validUntil = uint48(data.signerPermissions[signer].endTimestamp);
+        uint48 validAfter = uint48(_accountPermissionsStorage().signerPermissions[signer].startTimestamp);
+        uint48 validUntil = uint48(_accountPermissionsStorage().signerPermissions[signer].endTimestamp);
 
         return _packValidationData(ValidationData(address(0), validAfter, validUntil));
     }
