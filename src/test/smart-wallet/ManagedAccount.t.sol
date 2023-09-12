@@ -663,6 +663,9 @@ contract ManagedAccountTest is BaseTest {
         );
 
         vm.prank(factoryDeployer);
+        accountFactory.disableFunctionInExtension("AccountExtension", NFTRejector.onERC721Received.selector);
+
+        vm.prank(factoryDeployer);
         accountFactory.addExtension(extension);
 
         // Transfer NFTs to the account

@@ -118,9 +118,9 @@ contract DynamicAccountTest is BaseTest {
             nonce: nonce,
             initCode: _initCode,
             callData: _callDataForEntrypoint,
-            callGasLimit: 500_000,
-            verificationGasLimit: 500_000,
-            preVerificationGas: 500_000,
+            callGasLimit: 5_000_000,
+            verificationGasLimit: 5_000_000,
+            preVerificationGas: 5_000_000,
             maxFeePerGas: 0,
             maxPriorityFeePerGas: 0,
             paymasterAndData: bytes(""),
@@ -657,6 +657,12 @@ contract DynamicAccountTest is BaseTest {
         extension.functions[0] = IExtension.ExtensionFunction(
             NFTRejector.onERC721Received.selector,
             "onERC721Received(address,address,uint256,bytes)"
+        );
+
+        vm.prank(accountAdmin);
+        DynamicAccount(payable(account)).disableFunctionInExtension(
+            "AccountExtension",
+            NFTRejector.onERC721Received.selector
         );
 
         vm.prank(accountAdmin);
