@@ -12,7 +12,7 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
 
 import "../../../extension/Multicall.sol";
 import "../../../extension/upgradeable/Initializable.sol";
@@ -27,7 +27,7 @@ import "../../../extension/upgradeable/init/DefaultOperatorFiltererInit.sol";
 
 contract EvolvingNFT is
     Initializable,
-    BaseRouterWithDefaults,
+    BaseRouter,
     Multicall,
     ERC721AQueryableInit,
     ERC2771ContextInit,
@@ -41,7 +41,7 @@ contract EvolvingNFT is
     /// @dev Only EXTENSION_ROLE holders can update the contract's extensions.
     bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
 
-    constructor(Extension[] memory _extensions) BaseRouterWithDefaults(_extensions) {
+    constructor(Extension[] memory _extensions) BaseRouter(_extensions) {
         _disableInitializers();
     }
 
@@ -57,6 +57,9 @@ contract EvolvingNFT is
         uint128 _royaltyBps
     ) external initializer initializerERC721A {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
+
+        // Initialize extensions
+        __BaseRouter_init();
 
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
