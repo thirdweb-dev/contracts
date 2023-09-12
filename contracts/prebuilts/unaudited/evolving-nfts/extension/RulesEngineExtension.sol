@@ -13,7 +13,7 @@ contract RulesEngineExtension is RulesEngine {
     }
 
     /// @dev Returns whether the rules engine used by the contract can be overriden in the given execution context.
-    function _canOverrieRulesEngine() internal view virtual override returns (bool) {
+    function _canOverrideRulesEngine() internal view virtual override returns (bool) {
         // DEFAULT_ADMIN_ROLE
         return _hasRole(0x00, msg.sender);
     }

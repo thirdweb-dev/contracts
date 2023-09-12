@@ -12,9 +12,12 @@ import "../../../external-deps/openzeppelin/token/ERC721/utils/ERC721Holder.sol"
 import "../../../external-deps/openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
 
 // Utils
+import "../../../eip/ERC1271.sol";
 import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
+import "../../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 import "./BaseAccountFactory.sol";
 import "./AccountCore.sol";
+import "./AccountCoreStorage.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -25,15 +28,9 @@ import "./AccountCore.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder, ERC1155Holder {
+contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC721Holder, ERC1155Holder {
     using ECDSA for bytes32;
-
-    /*///////////////////////////////////////////////////////////////
-                                State
-    //////////////////////////////////////////////////////////////*/
-
-    /// @notice EIP 4337 Entrypoint contract.
-    address private immutable entrypointContract;
+    using EnumerableSet for EnumerableSet.AddressSet;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
@@ -41,16 +38,17 @@ contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder,
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
-        require(msg.sender == address(entrypointContract) || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
+        require(
+            msg.sender == address(AccountCore(payable(address(this))).entryPoint()) || isAdmin(msg.sender),
+            "Account: not admin or EntryPoint."
+        );
         _;
     }
 
     // solhint-disable-next-line no-empty-blocks
     receive() external payable virtual {}
 
-    constructor(address _entrypoint) EIP712("Account", "1") {
-        entrypointContract = _entrypoint;
-    }
+    constructor() EIP712("Account", "1") {}
 
     /*///////////////////////////////////////////////////////////////
                             View functions
@@ -62,6 +60,31 @@ contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder,
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
             super.supportsInterface(interfaceId);
+    }
+
+    /// @notice See EIP-1271
+    function isValidSignature(bytes32 _hash, bytes memory _signature)
+        public
+        view
+        virtual
+        override
+        returns (bytes4 magicValue)
+    {
+        address signer = _hash.recover(_signature);
+
+        if (isAdmin(signer)) {
+            return MAGICVALUE;
+        }
+
+        address caller = msg.sender;
+        require(
+            _accountPermissionsStorage().approvedTargets[signer].contains(caller),
+            "Account: caller not approved target."
+        );
+
+        if (isActiveSigner(signer)) {
+            magicValue = MAGICVALUE;
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -100,7 +123,7 @@ contract AccountExtension is ContractMetadata, AccountPermissions, ERC721Holder,
         address factory = AccountCore(payable(address(this))).factory();
         BaseAccountFactory factoryContract = BaseAccountFactory(factory);
         if (!factoryContract.isRegistered(address(this))) {
-            factoryContract.onRegister();
+            factoryContract.onRegister(AccountCoreStorage.data().firstAdmin, "");
         }
     }
 

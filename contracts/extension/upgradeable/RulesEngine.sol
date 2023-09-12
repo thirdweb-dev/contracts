@@ -6,6 +6,7 @@ pragma solidity ^0.8.11;
 import "../interface/IRulesEngine.sol";
 
 import "../../eip/interface/IERC20.sol";
+import "../../eip/interface/IERC20Metadata.sol";
 import "../../eip/interface/IERC721.sol";
 import "../../eip/interface/IERC1155.sol";
 
@@ -71,7 +72,7 @@ abstract contract RulesEngine is IRulesEngine {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    function createRuleMulitiplicative(RuleTypeMultiplicative memory rule) external returns (bytes32 ruleId) {
+    function createRuleMultiplicative(RuleTypeMultiplicative memory rule) external returns (bytes32 ruleId) {
         require(_canSetRules(), "RulesEngine: cannot set rules");
 
         ruleId = keccak256(
@@ -114,7 +115,9 @@ abstract contract RulesEngine is IRulesEngine {
         uint256 balance = 0;
 
         if (_rule.tokenType == TokenType.ERC20) {
-            balance = IERC20(_rule.token).balanceOf(_tokenOwner);
+            // NOTE: We are rounding down the ERC20 balance to the nearest full unit.
+            uint256 unit = 10**IERC20Metadata(_rule.token).decimals();
+            balance = IERC20(_rule.token).balanceOf(_tokenOwner) / unit;
         } else if (_rule.tokenType == TokenType.ERC721) {
             balance = IERC721(_rule.token).balanceOf(_tokenOwner);
         } else if (_rule.tokenType == TokenType.ERC1155) {
@@ -143,7 +146,7 @@ abstract contract RulesEngine is IRulesEngine {
     }
 
     function setRulesEngineOverride(address _rulesEngineAddress) external {
-        require(_canOverrieRulesEngine(), "RulesEngine: cannot override rules engine");
+        require(_canOverrideRulesEngine(), "RulesEngine: cannot override rules engine");
         _rulesEngineStorage().rulesEngineOverride = _rulesEngineAddress;
 
         emit RulesEngineOverriden(_rulesEngineAddress);
@@ -155,5 +158,5 @@ abstract contract RulesEngine is IRulesEngine {
 
     function _canSetRules() internal view virtual returns (bool);
 
-    function _canOverrieRulesEngine() internal view virtual returns (bool);
+    function _canOverrideRulesEngine() internal view virtual returns (bool);
 }

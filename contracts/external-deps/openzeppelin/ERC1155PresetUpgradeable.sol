@@ -45,7 +45,7 @@ contract ERC1155PresetUpgradeable is
 
     mapping(uint256 => uint256) private _totalSupply;
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function __ERC1155Preset_init(address _deployer, string memory uri) internal onlyInitializing {
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC1155_init(uri);

@@ -20,7 +20,7 @@ import "../../../extension/upgradeable/init/ContractMetadataInit.sol";
 import "../../../extension/upgradeable/init/RoyaltyInit.sol";
 import "../../../extension/upgradeable/init/PrimarySaleInit.sol";
 import "../../../extension/upgradeable/init/OwnableInit.sol";
-import "../../../extension/upgradeable/init/PermissionsInit.sol";
+import "../../../extension/upgradeable/init/PermissionsEnumerableInit.sol";
 import "../../../extension/upgradeable/init/ERC2771ContextInit.sol";
 import "../../../extension/upgradeable/init/ERC721AQueryableInit.sol";
 import "../../../extension/upgradeable/init/DefaultOperatorFiltererInit.sol";
@@ -35,17 +35,17 @@ contract EvolvingNFT is
     RoyaltyInit,
     PrimarySaleInit,
     OwnableInit,
-    PermissionsInit,
+    PermissionsEnumerableInit,
     DefaultOperatorFiltererInit
 {
-    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
+    /// @dev Only EXTENSION_ROLE holders can update the contract's extensions.
     bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
 
     constructor(Extension[] memory _extensions) BaseRouter(_extensions) {
         _disableInitializers();
     }
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,
@@ -77,6 +77,9 @@ contract EvolvingNFT is
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
+
+        _setupRole(EXTENSION_ROLE, _defaultAdmin);
+        _setRoleAdmin(EXTENSION_ROLE, EXTENSION_ROLE);
     }
 
     /*///////////////////////////////////////////////////////////////

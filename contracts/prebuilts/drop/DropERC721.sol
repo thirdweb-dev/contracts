@@ -82,7 +82,7 @@ contract DropERC721 is
 
     constructor() initializer {}
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,

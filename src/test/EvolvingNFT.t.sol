@@ -72,7 +72,7 @@ contract EvolvingNFTTest is BaseTest {
             implementation: address(new RulesEngineExtension())
         });
 
-        evolvingNftExtension.functions = new IExtension.ExtensionFunction[](10);
+        evolvingNftExtension.functions = new IExtension.ExtensionFunction[](11);
         rulesEngineExtension.functions = new IExtension.ExtensionFunction[](4);
         permissionsExtension.functions = new IExtension.ExtensionFunction[](4);
 
@@ -128,6 +128,10 @@ contract EvolvingNFTTest is BaseTest {
         evolvingNftExtension.functions[9] = IExtension.ExtensionFunction(
             Drop.claimCondition.selector,
             "claimCondition()"
+        );
+        evolvingNftExtension.functions[10] = IExtension.ExtensionFunction(
+            SharedMetadataBatch.deleteSharedMetadata.selector,
+            "deleteSharedMetadata(bytes32)"
         );
         permissionsExtension.functions[0] = IExtension.ExtensionFunction(
             Permissions.renounceRole.selector,
@@ -236,7 +240,7 @@ contract EvolvingNFTTest is BaseTest {
                 token: address(erc20),
                 tokenType: IRulesEngine.TokenType.ERC20,
                 tokenId: 0,
-                balance: 10 ether,
+                balance: 10,
                 score: score1
             })
         );
@@ -1112,5 +1116,93 @@ contract EvolvingNFTTest is BaseTest {
 
         vm.warp(40);
         assertEq(Drop(evolvingNFT).getActiveClaimConditionId(), 2);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Audit POC tests
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_incorrectTokenUri() public {
+        // Set shared metadata
+        vm.startPrank(deployer);
+        SharedMetadataBatch(evolvingNFT).setSharedMetadata(sharedMetadataBatch[0], bytes32(0));
+        SharedMetadataBatch(evolvingNFT).setSharedMetadata(sharedMetadataBatch[score1], bytes32(score1));
+        SharedMetadataBatch(evolvingNFT).setSharedMetadata(
+            sharedMetadataBatch[score1 + score2],
+            bytes32(score1 + score2)
+        );
+        SharedMetadataBatch(evolvingNFT).setSharedMetadata(
+            sharedMetadataBatch[score1 + score2 + score3],
+            bytes32(score1 + score2 + score3)
+        );
+
+        // Delete metadata at index "score1"
+        // Now the order of metadata ids is: 0, 150, 50
+        SharedMetadataBatch(evolvingNFT).deleteSharedMetadata(bytes32(score1));
+        vm.stopPrank();
+
+        // Set rules
+        vm.prank(deployer);
+        RulesEngine(evolvingNFT).createRuleThreshold(
+            IRulesEngine.RuleTypeThreshold({
+                token: address(erc20),
+                tokenType: IRulesEngine.TokenType.ERC20,
+                tokenId: 0,
+                balance: 10,
+                score: score1 + score2 + score3
+            })
+        );
+
+        // `Receiver` mints token
+        string[] memory inputs = new string[](5);
+
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRoot.ts";
+        inputs[2] = "300";
+        inputs[3] = "0";
+        inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
+
+        bytes memory result = vm.ffi(inputs);
+        // revert();
+        bytes32 root = abi.decode(result, (bytes32));
+
+        inputs[1] = "src/test/scripts/getProof.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+        IDrop.AllowlistProof memory alp;
+        alp.proof = proofs;
+        alp.quantityLimitPerWallet = 300;
+        alp.pricePerToken = 0;
+        alp.currency = address(erc20);
+
+        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+
+        IDrop.ClaimCondition[] memory conditions = new IDrop.ClaimCondition[](1);
+        conditions[0].maxClaimableSupply = 500;
+        conditions[0].quantityLimitPerWallet = 10;
+        conditions[0].merkleRoot = root;
+        conditions[0].pricePerToken = 0;
+        conditions[0].currency = address(erc20);
+        vm.prank(deployer);
+        IDrop(evolvingNFT).setClaimConditions(conditions, false);
+
+        vm.prank(receiver, receiver);
+        IDrop(evolvingNFT).claim(receiver, 1, address(erc20), 0, alp, ""); // claims for free, because allowlist price is 0
+
+        // NFT should return metadata of a rule at "score1 + score2 + score3"
+        // It used to return metadata for "score1 + score2", but now this is fixed.
+        erc20.mint(receiver, 10 ether);
+        string memory uri = EvolvingNFTLogic(evolvingNFT).tokenURI(1);
+        assertEq(
+            uri,
+            NFTMetadataRenderer.createMetadataEdition({
+                name: sharedMetadataBatch[score1 + score2 + score3].name,
+                description: sharedMetadataBatch[score1 + score2 + score3].description,
+                imageURI: sharedMetadataBatch[score1 + score2 + score3].imageURI,
+                animationURI: sharedMetadataBatch[score1 + score2 + score3].animationURI,
+                tokenOfEdition: 1
+            })
+        );
     }
 }
