@@ -32,6 +32,10 @@ contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
     {
         __BaseRouter_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+
+        bytes32 _extensionRole = keccak256("EXTENSION_ROLE");
+        _setupRole(_extensionRole, msg.sender);
+        _setRoleAdmin(_extensionRole, _extensionRole);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -49,7 +53,7 @@ contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
 
     /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
     function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        return hasRole(keccak256("EXTENSION_ROLE"), msg.sender);
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
