@@ -2,7 +2,7 @@
 pragma solidity ^0.8.12;
 
 // Utils
-import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
 import "../utils/BaseAccountFactory.sol";
 
 // Extensions
@@ -21,15 +21,16 @@ import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable, BaseRouterWithDefaults {
+contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable, BaseRouter {
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
-        BaseRouterWithDefaults(_defaultExtensions)
+        BaseRouter(_defaultExtensions)
         BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint, address(this)))), address(_entrypoint))
     {
+        __BaseRouter_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
