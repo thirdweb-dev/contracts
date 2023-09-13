@@ -11,12 +11,13 @@ import "./../utils/BaseAccount.sol";
 // Fixed Extensions
 import "../../../extension/Multicall.sol";
 import "../../../extension/upgradeable/Initializable.sol";
-import "../../../eip/ERC1271.sol";
 import "../../../extension/upgradeable/AccountPermissions.sol";
 
 // Utils
+import "./Helpers.sol";
+import "./AccountCoreStorage.sol";
 import "./BaseAccountFactory.sol";
-import { Account } from "../non-upgradeable/Account.sol";
+import { AccountExtension } from "./AccountExtension.sol";
 import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 
 import "../interface/IAccountCore.sol";
@@ -30,7 +31,7 @@ import "../interface/IAccountCore.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC1271, AccountPermissions {
+contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, AccountPermissions {
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -48,9 +49,6 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    // solhint-disable-next-line no-empty-blocks
-    receive() external payable virtual {}
-
     constructor(IEntryPoint _entrypoint, address _factory) EIP712("Account", "1") {
         _disableInitializers();
         factory = _factory;
@@ -59,8 +57,16 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
 
     /// @notice Initializes the smart contract wallet.
     function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
+        // This is passed as data in the `_registerOnFactory()` call in `AccountExtension` / `Account`.
+        AccountCoreStorage.data().firstAdmin = _defaultAdmin;
         _setAdmin(_defaultAdmin, true);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                                Events
+    //////////////////////////////////////////////////////////////*/
+
+    event EntrypointOverride(IEntryPoint entrypointOverride);
 
     /*///////////////////////////////////////////////////////////////
                             View functions
@@ -68,6 +74,10 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
 
     /// @notice Returns the EIP 4337 entrypoint contract.
     function entryPoint() public view virtual override returns (IEntryPoint) {
+        address entrypointOverride = AccountCoreStorage.data().entrypointOverride;
+        if (address(entrypointOverride) != address(0)) {
+            return IEntryPoint(entrypointOverride);
+        }
         return entrypointContract;
     }
 
@@ -78,22 +88,18 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
 
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
     function isValidSigner(address _signer, UserOperation calldata _userOp) public view virtual returns (bool) {
-        // We use the underlying storage instead of high level view functions to save gas.
-        // We use the underlying storage instead of high level view functions to save gas.
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-
         // First, check if the signer is an admin.
-        if (data.isAdmin[_signer]) {
+        if (_accountPermissionsStorage().isAdmin[_signer]) {
             return true;
         }
 
-        SignerPermissionsStatic memory permissions = data.signerPermissions[_signer];
+        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[_signer];
 
         // If not an admin, check if the signer is active.
         if (
             permissions.startTimestamp > block.timestamp ||
             block.timestamp >= permissions.endTimestamp ||
-            data.approvedTargets[_signer].length() == 0
+            _accountPermissionsStorage().approvedTargets[_signer].length() == 0
         ) {
             // Account: no active permissions.
             return false;
@@ -102,16 +108,19 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
         // Extract the function signature from the userOp calldata and check whether the signer is attempting to call `execute` or `executeBatch`.
         bytes4 sig = getFunctionSignature(_userOp.callData);
 
-        if (sig == Account.execute.selector) {
+        if (sig == AccountExtension.execute.selector) {
             // Extract the `target` and `value` arguments from the calldata for `execute`.
             (address target, uint256 value) = decodeExecuteCalldata(_userOp.callData);
 
             // Check if the value is within the allowed range and if the target is approved.
-            if (permissions.nativeTokenLimitPerTransaction < value || !data.approvedTargets[_signer].contains(target)) {
+            if (
+                permissions.nativeTokenLimitPerTransaction < value ||
+                !_accountPermissionsStorage().approvedTargets[_signer].contains(target)
+            ) {
                 // Account: value too high OR Account: target not approved.
                 return false;
             }
-        } else if (sig == Account.executeBatch.selector) {
+        } else if (sig == AccountExtension.executeBatch.selector) {
             // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
             (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
 
@@ -119,7 +128,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
             for (uint256 i = 0; i < targets.length; i++) {
                 if (
                     permissions.nativeTokenLimitPerTransaction < values[i] ||
-                    !data.approvedTargets[_signer].contains(targets[i])
+                    !_accountPermissionsStorage().approvedTargets[_signer].contains(targets[i])
                 ) {
                     // Account: value too high OR Account: target not approved.
                     return false;
@@ -131,29 +140,6 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
         }
 
         return true;
-    }
-
-    /// @notice See EIP-1271
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
-        public
-        view
-        virtual
-        override
-        returns (bytes4 magicValue)
-    {
-        address signer = _hash.recover(_signature);
-
-        if (isAdmin(signer)) {
-            return MAGICVALUE;
-        }
-
-        AccountPermissionsStorage.Data storage data = AccountPermissionsStorage.accountPermissionsStorage();
-        address caller = msg.sender;
-        require(data.approvedTargets[signer].contains(caller), "Account: caller not approved target.");
-
-        if (isActiveSigner(signer)) {
-            magicValue = MAGICVALUE;
-        }
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -168,6 +154,12 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
     /// @notice Withdraw funds for this account from Entrypoint.
     function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public onlyAdmin {
         entryPoint().withdrawTo(withdrawAddress, amount);
+    }
+
+    /// @notice Overrides the Entrypoint contract being used.
+    function setEntrypointOverride(IEntryPoint _entrypointOverride) public virtual onlyAdmin {
+        AccountCoreStorage.data().entrypointOverride = address(_entrypointOverride);
+        emit EntrypointOverride(_entrypointOverride);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -214,7 +206,11 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
         address signer = hash.recover(userOp.signature);
 
         if (!isValidSigner(signer, userOp)) return SIG_VALIDATION_FAILED;
-        return 0;
+
+        uint48 validAfter = uint48(_accountPermissionsStorage().signerPermissions[signer].startTimestamp);
+        uint48 validUntil = uint48(_accountPermissionsStorage().signerPermissions[signer].endTimestamp);
+
+        return _packValidationData(ValidationData(address(0), validAfter, validUntil));
     }
 
     /// @notice Makes the given account an admin.
@@ -222,9 +218,9 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
         super._setAdmin(_account, _isAdmin);
         if (factory.code.length > 0) {
             if (_isAdmin) {
-                BaseAccountFactory(factory).onSignerAdded(_account);
+                BaseAccountFactory(factory).onSignerAdded(_account, AccountCoreStorage.data().firstAdmin, "");
             } else {
-                BaseAccountFactory(factory).onSignerRemoved(_account);
+                BaseAccountFactory(factory).onSignerRemoved(_account, AccountCoreStorage.data().firstAdmin, "");
             }
         }
     }
@@ -232,7 +228,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, ERC
     /// @notice Runs after every `changeRole` run.
     function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {
         if (factory.code.length > 0) {
-            BaseAccountFactory(factory).onSignerAdded(_req.signer);
+            BaseAccountFactory(factory).onSignerAdded(_req.signer, AccountCoreStorage.data().firstAdmin, "");
         }
     }
 }

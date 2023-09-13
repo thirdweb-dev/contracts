@@ -97,7 +97,7 @@ contract Pack is
         forwarder = _trustedForwarder;
     }
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,
@@ -354,7 +354,9 @@ contract Pack is
                 if (target < step + totalRewardUnitsOfKind) {
                     _token[j].totalAmount -= perUnitAmount;
                     _isUpdated[j] = true;
-                    rewardUnits[i] = _token[j];
+                    rewardUnits[i].assetContract = _token[j].assetContract;
+                    rewardUnits[i].tokenType = _token[j].tokenType;
+                    rewardUnits[i].tokenId = _token[j].tokenId;
                     rewardUnits[i].totalAmount = perUnitAmount;
                     totalRewardUnits -= 1;
                     break;

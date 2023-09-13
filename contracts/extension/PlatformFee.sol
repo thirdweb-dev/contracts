@@ -19,11 +19,11 @@ abstract contract PlatformFee is IPlatformFee {
     /// @dev The % of primary sales collected as platform fees.
     uint16 private platformFeeBps;
 
-    /// @dev The flat amount collected by the contract as fees on primary sales.
-    uint256 private flatPlatformFee;
-
     /// @dev Fee type variants: percentage fee and flat fee
     PlatformFeeType private platformFeeType;
+
+    /// @dev The flat amount collected by the contract as fees on primary sales.
+    uint256 private flatPlatformFee;
 
     /// @dev Returns the platform fee recipient and bps.
     function getPlatformFeeInfo() public view override returns (address, uint16) {
@@ -90,9 +90,7 @@ abstract contract PlatformFee is IPlatformFee {
         if (!_canSetPlatformFeeInfo()) {
             revert("Not authorized");
         }
-        platformFeeType = _feeType;
-
-        emit PlatformFeeTypeUpdated(_feeType);
+        _setupPlatformFeeType(_feeType);
     }
 
     /// @dev Sets platform fee type.

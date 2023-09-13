@@ -70,7 +70,7 @@ contract Multiwrap is
 
     constructor(address _nativeTokenWrapper) TokenStore(_nativeTokenWrapper) initializer {}
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,
