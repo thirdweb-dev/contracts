@@ -12,7 +12,7 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
 
 import "../../../extension/Multicall.sol";
 
@@ -34,7 +34,7 @@ contract BurnToClaimDropERC721 is
     Initializable,
     Multicall,
     ERC2771ContextUpgradeable,
-    BaseRouterWithDefaults,
+    BaseRouter,
     DefaultOperatorFiltererInit,
     ContractMetadataInit,
     PlatformFeeInit,
@@ -48,11 +48,11 @@ contract BurnToClaimDropERC721 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Extension[] memory _extensions) BaseRouterWithDefaults(_extensions) {
+    constructor(Extension[] memory _extensions) BaseRouter(_extensions) {
         _disableInitializers();
     }
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,
@@ -65,6 +65,9 @@ contract BurnToClaimDropERC721 is
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
+        // Initialize extensions
+        __BaseRouter_init();
+
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);

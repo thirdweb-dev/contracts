@@ -25,7 +25,6 @@ import "../../../lib/CurrencyTransferLib.sol";
 import "../../../extension/SignatureMintERC20Upgradeable.sol";
 import "../../../extension/ContractMetadata.sol";
 import "../../../extension/PrimarySale.sol";
-import "../../../extension/PrimarySale.sol";
 import "../../../extension/PlatformFee.sol";
 import "../../../extension/PermissionsEnumerable.sol";
 import "../../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
@@ -73,7 +72,7 @@ contract LoyaltyPoints is
 
     constructor() initializer {}
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,
@@ -116,7 +115,7 @@ contract LoyaltyPoints is
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Mints tokens to a recipeint using a signature from an authorized party.
+    /// @notice Mints tokens to a recipient using a signature from an authorized party.
     function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
         external
         payable
