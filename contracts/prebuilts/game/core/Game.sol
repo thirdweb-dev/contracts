@@ -27,7 +27,7 @@ contract Game is IGame, GameLibrary, BaseRouter {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Sets admin and automatically adds them as a manager.
-    constructor(address admin, GameMetadata memory metadata) {
+    constructor(address admin, GameMetadata memory metadata) BaseRouter(new Extension[](0)) {
         gs.admin = admin;
         gs.managers[admin] = true;
         gs.metadata = metadata;
@@ -111,8 +111,8 @@ contract Game is IGame, GameLibrary, BaseRouter {
                         BaseRouter overrides
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns whether address can set extension(s).
-    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
+    /// @dev To override; returns whether all relevant permission and other checks are met before any upgrade.
+    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
         return msg.sender == gs.admin;
     }
 }

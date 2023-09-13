@@ -265,7 +265,7 @@ contract Leaderboard is ILeaderboard, GameLibrary, RulesEngine {
         return gs.managers[msg.sender];
     }
 
-    function _canOverrieRulesEngine() internal view override returns (bool) {
+    function _canOverrideRulesEngine() internal view override returns (bool) {
         return gs.admin == msg.sender;
     }
 }

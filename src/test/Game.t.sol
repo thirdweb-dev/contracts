@@ -160,26 +160,26 @@ contract GameTest is BaseTest {
 
         // Test adding the same extension again (should fail)
         vm.prank(admin);
-        vm.expectRevert("ExtensionState: extension already exists.");
+        vm.expectRevert("ExtensionManager: extension already exists.");
         game.addExtension(extension);
 
         // Test adding an extension as a non-admin (should fail)
         vm.prank(randomAddress);
-        vm.expectRevert("BaseRouter: not authorized.");
+        vm.expectRevert("ExtensionManager: unauthorized.");
         game.addExtension(extension);
 
         // Test removing an extension as admin
         vm.prank(admin);
-        game.removeExtension(extension);
+        game.removeExtension(extension.metadata.name);
 
         // Test removing a non-existing extension (should fail)
         vm.prank(admin);
-        vm.expectRevert("ExtensionState: extension does not exist.");
-        game.removeExtension(extension);
+        vm.expectRevert("ExtensionManager: extension does not exist.");
+        game.removeExtension(extension.metadata.name);
 
         // Test removing an extension as a non-admin (should fail)
         vm.prank(randomAddress);
-        vm.expectRevert("BaseRouter: not authorized.");
-        game.removeExtension(extension);
+        vm.expectRevert("ExtensionManager: unauthorized.");
+        game.removeExtension(extension.metadata.name);
     }
 }
