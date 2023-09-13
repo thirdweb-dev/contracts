@@ -18,6 +18,7 @@ interface IReward {
     }
 
     event RegisterReward(string indexed identifier, RewardInfo rewardInfo);
+    event UpdateReward(string indexed identifier, RewardInfo rewardInfo);
     event UnregisterReward(string indexed identifier);
     event ClaimReward(address indexed receiver, string indexed identifier, RewardInfo rewardInfo);
 

@@ -6,8 +6,6 @@ import { GameLibrary } from "../core/LibGame.sol";
 import { RewardStorage } from "./RewardStorage.sol";
 
 contract Reward is IReward, GameLibrary {
-    using RewardStorage for RewardStorage.Data;
-
     /*///////////////////////////////////////////////////////////////
                         External functions
     //////////////////////////////////////////////////////////////*/
@@ -15,6 +13,11 @@ contract Reward is IReward, GameLibrary {
     /// @dev Register a reward.
     function registerReward(string memory identifier, RewardInfo calldata rewardInfo) external onlyManager {
         _registerReward(identifier, rewardInfo);
+    }
+
+    /// @dev Update a reward.
+    function updateReward(string memory identifier, RewardInfo calldata rewardInfo) external onlyManager {
+        _updateReward(identifier, rewardInfo);
     }
 
     /// @dev Unregister a reward.
@@ -31,7 +34,7 @@ contract Reward is IReward, GameLibrary {
                         Signature-based external functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Register a reward with a signature.
+    /// @dev Register a reward with signature.
     function registerRewardWithSignature(GameRequest calldata req, bytes calldata signature)
         external
         onlyManagerApproved(req, signature)
@@ -40,7 +43,16 @@ contract Reward is IReward, GameLibrary {
         _registerReward(identifier, rewardInfo);
     }
 
-    /// @dev Unregister a reward with a signature.
+    /// @dev Update a reward with signature.
+    function updateRewardWithSignature(GameRequest calldata req, bytes calldata signature)
+        external
+        onlyManagerApproved(req, signature)
+    {
+        (string memory identifier, RewardInfo memory rewardInfo) = abi.decode(req.data, (string, RewardInfo));
+        _updateReward(identifier, rewardInfo);
+    }
+
+    /// @dev Unregister a reward with signature.
     function unregisterRewardWithSignature(GameRequest calldata req, bytes calldata signature)
         external
         onlyManagerApproved(req, signature)
@@ -49,7 +61,7 @@ contract Reward is IReward, GameLibrary {
         _unregisterReward(identifier);
     }
 
-    /// @dev Claim a reward with a signature.
+    /// @dev Claim a reward with signature.
     function claimRewardWithSignature(GameRequest calldata req, bytes calldata signature)
         external
         onlyManagerApproved(req, signature)
@@ -71,21 +83,28 @@ contract Reward is IReward, GameLibrary {
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Register a reward with signature.
+    /// @dev Register a reward.
     function _registerReward(string memory identifier, RewardInfo memory rewardInfo) internal {
         RewardStorage.Data storage rs = RewardStorage.rewardStorage();
         rs.rewardInfo[_getRewardBytes32(identifier)] = rewardInfo;
         emit RegisterReward(identifier, rewardInfo);
     }
 
-    /// @dev Unregister a reward with signature.
+    /// @dev Update a reward.
+    function _updateReward(string memory identifier, RewardInfo memory rewardInfo) internal {
+        RewardStorage.Data storage rs = RewardStorage.rewardStorage();
+        rs.rewardInfo[_getRewardBytes32(identifier)] = rewardInfo;
+        emit UpdateReward(identifier, rewardInfo);
+    }
+
+    /// @dev Unregister a reward.
     function _unregisterReward(string memory identifier) internal {
         RewardStorage.Data storage rs = RewardStorage.rewardStorage();
         delete rs.rewardInfo[_getRewardBytes32(identifier)];
         emit UnregisterReward(identifier);
     }
 
-    /// @dev Claim a reward with signature.
+    /// @dev Claim a reward.
     function _claimReward(address receiver, string memory identifier) internal {
         IReward.RewardInfo memory rewardInfo = RewardStorage.rewardStorage().rewardInfo[_getRewardBytes32(identifier)];
         if (rewardInfo.rewardAddress == address(0)) revert("Reward: Reward not registered");
