@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 //  ==========  Internal imports    ==========
-import { BaseRouterWithDefaults, IRouter, IRouterState } from "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
+import { BaseRouter, IRouter, IRouterState } from "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
 import { ERC165 } from "../../../eip/ERC165.sol";
 
 import "../../../extension/Multicall.sol";
@@ -35,7 +35,7 @@ import { RoyaltyPaymentsLogic } from "../../../extension/upgradeable/RoyaltyPaym
 contract MarketplaceV3 is
     Initializable,
     Multicall,
-    BaseRouterWithDefaults,
+    BaseRouter,
     ContractMetadata,
     PlatformFee,
     PermissionsEnumerable,
@@ -57,7 +57,7 @@ contract MarketplaceV3 is
     //////////////////////////////////////////////////////////////*/
 
     constructor(Extension[] memory _extensions, address _royaltyEngineAddress)
-        BaseRouterWithDefaults(_extensions)
+        BaseRouter(_extensions)
         RoyaltyPaymentsLogic(_royaltyEngineAddress)
     {
         _disableInitializers();
@@ -73,6 +73,9 @@ contract MarketplaceV3 is
         address _platformFeeRecipient,
         uint16 _platformFeeBps
     ) external initializer {
+        // Initialize BaseRouter
+        __BaseRouter_init();
+
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
