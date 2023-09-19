@@ -28,6 +28,8 @@ contract Game is IGame, GameLibrary, BaseRouter {
 
     /// @dev Sets admin and automatically adds them as a manager.
     constructor(address admin, GameMetadata memory metadata) BaseRouter(new Extension[](0)) {
+        gs.managers[address(this)] = true; // Contract itself is a manager.
+
         gs.admin = admin;
         gs.managers[admin] = true;
         gs.metadata = metadata;

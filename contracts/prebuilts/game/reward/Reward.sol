@@ -24,22 +24,22 @@ contract Reward is IReward, GameLibrary {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Register a reward.
-    function registerReward(string memory identifier, RewardInfo calldata rewardInfo) external onlyManager {
+    function registerReward(string calldata identifier, RewardInfo calldata rewardInfo) external onlyManager {
         _registerReward(identifier, rewardInfo);
     }
 
     /// @dev Update a reward.
-    function updateReward(string memory identifier, RewardInfo calldata rewardInfo) external onlyManager {
+    function updateReward(string calldata identifier, RewardInfo calldata rewardInfo) external onlyManager {
         _updateReward(identifier, rewardInfo);
     }
 
     /// @dev Unregister a reward.
-    function unregisterReward(string memory identifier) external onlyManager {
+    function unregisterReward(string calldata identifier) external onlyManager {
         _unregisterReward(identifier);
     }
 
     /// @dev Claim a reward.
-    function claimReward(address receiver, string memory identifier) external onlyManager {
+    function claimReward(address receiver, string calldata identifier) external onlyManager {
         _claimReward(receiver, identifier);
     }
 
@@ -88,8 +88,9 @@ contract Reward is IReward, GameLibrary {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Get reward information by identifier.
-    function getRewardInfo(string calldata identifier) external view returns (RewardInfo memory rewardInfo) {
-        rewardInfo = RewardStorage.rewardStorage().rewardInfo[_getRewardBytes32(identifier)];
+    function getRewardInfo(string calldata identifier) public view returns (RewardInfo memory rewardInfo) {
+        bytes32 rewardId = _toBytes32(identifier);
+        rewardInfo = RewardStorage.rewardStorage().rewardInfo[rewardId];
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -98,28 +99,36 @@ contract Reward is IReward, GameLibrary {
 
     /// @dev Register a reward.
     function _registerReward(string memory identifier, RewardInfo memory rewardInfo) internal {
+        bytes32 rewardId = _toBytes32(identifier);
         RewardStorage.Data storage rs = RewardStorage.rewardStorage();
-        rs.rewardInfo[_getRewardBytes32(identifier)] = rewardInfo;
-        emit RegisterReward(identifier, rewardInfo);
+        if (rewardInfo.rewardAddress == address(0)) revert("Reward: Reward address cannot be zero address");
+        if (rs.rewardInfo[rewardId].rewardAddress != address(0)) revert("Reward: Reward already registered");
+        rs.rewardInfo[rewardId] = rewardInfo;
+        emit RegisterReward(rewardId, rewardInfo);
     }
 
     /// @dev Update a reward.
     function _updateReward(string memory identifier, RewardInfo memory rewardInfo) internal {
+        bytes32 rewardId = _toBytes32(identifier);
         RewardStorage.Data storage rs = RewardStorage.rewardStorage();
-        rs.rewardInfo[_getRewardBytes32(identifier)] = rewardInfo;
-        emit UpdateReward(identifier, rewardInfo);
+        if (rs.rewardInfo[rewardId].rewardAddress == address(0)) revert("Reward: Reward not registered");
+        rs.rewardInfo[rewardId] = rewardInfo;
+        emit UpdateReward(rewardId, rewardInfo);
     }
 
     /// @dev Unregister a reward.
     function _unregisterReward(string memory identifier) internal {
+        bytes32 rewardId = _toBytes32(identifier);
         RewardStorage.Data storage rs = RewardStorage.rewardStorage();
-        delete rs.rewardInfo[_getRewardBytes32(identifier)];
-        emit UnregisterReward(identifier);
+        if (rs.rewardInfo[rewardId].rewardAddress == address(0)) revert("Reward: Reward not registered");
+        delete rs.rewardInfo[rewardId];
+        emit UnregisterReward(rewardId);
     }
 
     /// @dev Claim a reward.
     function _claimReward(address receiver, string memory identifier) internal {
-        IReward.RewardInfo memory rewardInfo = RewardStorage.rewardStorage().rewardInfo[_getRewardBytes32(identifier)];
+        bytes32 rewardId = _toBytes32(identifier);
+        IReward.RewardInfo memory rewardInfo = RewardStorage.rewardStorage().rewardInfo[rewardId];
         if (rewardInfo.rewardAddress == address(0)) revert("Reward: Reward not registered");
         if (receiver == address(0)) revert("Reward: Receiver cannot be zero address");
         if (rewardInfo.rewardType == RewardType.ERC20) {
@@ -131,14 +140,14 @@ contract Reward is IReward, GameLibrary {
         } else {
             revert("Reward: Invalid reward type");
         }
-        emit ClaimReward(receiver, identifier, rewardInfo);
+        emit ClaimReward(receiver, rewardId, rewardInfo);
     }
 
     /*///////////////////////////////////////////////////////////////
                         Private functions
     //////////////////////////////////////////////////////////////*/
 
-    function _getRewardBytes32(string memory identifier) private pure returns (bytes32) {
+    function _toBytes32(string memory identifier) private pure returns (bytes32) {
         return keccak256(abi.encodePacked(identifier));
     }
 
