@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
+import "./utils/BaseTest.sol";
 import "lib/dynamic-contracts/src/interface/IExtension.sol";
 import "contracts/prebuilts/game/core/Game.sol";
-import "./utils/BaseTest.sol";
+import "contracts/prebuilts/game/player/Player.sol";
+import "contracts/prebuilts/game/achievement/Achievement.sol";
+import "contracts/prebuilts/game/leaderboard/Leaderboard.sol";
+import "contracts/prebuilts/game/reward/Reward.sol";
 
 contract TestExtension {
     uint256 private _test;
@@ -15,6 +19,10 @@ contract TestExtension {
 
 contract GameTest is BaseTest {
     Game public game;
+    Player public player;
+    Leaderboard public leaderboard;
+    Reward public reward;
+    Achievement public achievement;
     address public admin;
 
     function setUp() public override {
@@ -24,7 +32,63 @@ contract GameTest is BaseTest {
             admin,
             IGame.GameMetadata("Test Game", "Amazing Test Game", "https://test.com", "https://test.com/logo.png")
         );
+        player = new Player();
+        leaderboard = new Leaderboard();
+        reward = new Reward();
+        achievement = new Achievement();
     }
+
+    /// GENERAL TESTS ///
+
+    function testOptimistic() public {
+        vm.startPrank(admin);
+
+        IExtension.ExtensionFunction[] memory playerFunctions = new IExtension.ExtensionFunction[](2);
+        playerFunctions[0] = IExtension.ExtensionFunction(
+            player.createPlayer.selector,
+            "createPlayer(address,(string,string,uint256,bytes))"
+        );
+        playerFunctions[1] = IExtension.ExtensionFunction(player.getPlayerInfo.selector, "getPlayerInfo(address)");
+
+        game.addExtension(
+            IExtension.Extension(
+                IExtension.ExtensionMetadata("Player", "ipfs://playerCid", address(player)),
+                playerFunctions
+            )
+        );
+
+        game.addExtension(
+            IExtension.Extension(
+                IExtension.ExtensionMetadata("Leaderboard", "ipfs://leaderboardCid", address(leaderboard)),
+                new IExtension.ExtensionFunction[](0)
+            )
+        );
+
+        game.addExtension(
+            IExtension.Extension(
+                IExtension.ExtensionMetadata("Reward", "ipfs://rewardCid", address(reward)),
+                new IExtension.ExtensionFunction[](0)
+            )
+        );
+
+        game.addExtension(
+            IExtension.Extension(
+                IExtension.ExtensionMetadata("Achievement", "ipfs://achievementCid", address(achievement)),
+                new IExtension.ExtensionFunction[](0)
+            )
+        );
+
+        IPlayer(address(game)).createPlayer(getActor(1), IPlayer.PlayerInfo("Player 1", "ipfs://avatar1", 1, ""));
+        IPlayer(address(game)).createPlayer(getActor(2), IPlayer.PlayerInfo("Player 2", "ipfs://avatar2", 2, ""));
+
+        assertEq(IPlayer(address(game)).getPlayerInfo(getActor(1)).name, "Player 1");
+
+        assertEq(IPlayer(address(game)).getPlayerInfo(getActor(2)).avatar, "ipfs://avatar2");
+
+        vm.stopPrank();
+    }
+
+    /// GAME TESTS ///
 
     function testGameMetadata() public {
         // Test the game's metadata retrieval
