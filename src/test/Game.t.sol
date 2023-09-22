@@ -312,7 +312,7 @@ contract GameTest is BaseTest {
             0,
             1 * 1e18
         );
-        erc20.mint(address(game), 1 * 1e18);
+        erc20.mint(address(game), 100 * 1e18);
         rewardExtension.registerReward("Reward 1", rewardInfo);
         assertEq(rewardExtension.getRewardInfo("Reward 1").rewardAddress, address(erc20));
 
