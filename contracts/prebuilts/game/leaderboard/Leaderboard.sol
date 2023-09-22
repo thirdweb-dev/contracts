@@ -106,6 +106,7 @@ contract Leaderboard is ILeaderboard, GameLibrary, RulesEngine {
 
     /// @dev Get score for a player.
     function getPlayerScore(uint256 leaderboardIndex, address player) public view returns (uint256 score) {
+        if (!_isPlayerInLeaderboard(leaderboardIndex, player)) return 0;
         LeaderboardInfo memory leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[
             leaderboardIndex
         ];
@@ -114,6 +115,7 @@ contract Leaderboard is ILeaderboard, GameLibrary, RulesEngine {
 
     /// @dev Get player rank for a leaderboard.
     function getPlayerRank(uint256 leaderboardIndex, address player) public view returns (uint256 rank) {
+        if (!_isPlayerInLeaderboard(leaderboardIndex, player)) return type(uint256).max;
         LeaderboardInfo memory leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[
             leaderboardIndex
         ];
@@ -251,6 +253,23 @@ contract Leaderboard is ILeaderboard, GameLibrary, RulesEngine {
                 }
             }
         }
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Private functions
+    //////////////////////////////////////////////////////////////*/
+
+    function _isPlayerInLeaderboard(uint256 leaderboardIndex, address player) private view returns (bool) {
+        LeaderboardInfo memory leaderboardInfo = LeaderboardStorage.leaderboardStorage().leaderboardInfo[
+            leaderboardIndex
+        ];
+        uint256 len = leaderboardInfo.players.length;
+        for (uint256 i = 0; i < len; i += 1) {
+            if (leaderboardInfo.players[i] == player) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /*///////////////////////////////////////////////////////////////

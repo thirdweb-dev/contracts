@@ -8,6 +8,8 @@ import "contracts/prebuilts/game/player/Player.sol";
 import "contracts/prebuilts/game/achievement/Achievement.sol";
 import "contracts/prebuilts/game/leaderboard/Leaderboard.sol";
 import "contracts/prebuilts/game/reward/Reward.sol";
+import "forge-std/console.sol";
+import { IRulesEngine } from "contracts/extension/interface/IRulesEngine.sol";
 
 contract TestExtension {
     uint256 private _test;
@@ -36,19 +38,30 @@ contract GameTest is BaseTest {
         leaderboard = new Leaderboard();
         reward = new Reward();
         achievement = new Achievement();
-    }
 
-    /// GENERAL TESTS ///
-
-    function testOptimistic() public {
         vm.startPrank(admin);
 
-        IExtension.ExtensionFunction[] memory playerFunctions = new IExtension.ExtensionFunction[](2);
+        // IPlayer
+        console.log("Setting up Player extension");
+
+        IExtension.ExtensionFunction[] memory playerFunctions = new IExtension.ExtensionFunction[](5);
         playerFunctions[0] = IExtension.ExtensionFunction(
             player.createPlayer.selector,
             "createPlayer(address,(string,string,uint256,bytes))"
         );
-        playerFunctions[1] = IExtension.ExtensionFunction(player.getPlayerInfo.selector, "getPlayerInfo(address)");
+        playerFunctions[1] = IExtension.ExtensionFunction(
+            player.updatePlayerInfo.selector,
+            "updatePlayerInfo(address,(string,string,uint256,bytes))"
+        );
+        playerFunctions[2] = IExtension.ExtensionFunction(
+            player.createPlayerWithSignature.selector,
+            "createPlayerWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        playerFunctions[3] = IExtension.ExtensionFunction(
+            player.updatePlayerInfoWithSignature.selector,
+            "updatePlayerInfoWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        playerFunctions[4] = IExtension.ExtensionFunction(player.getPlayerInfo.selector, "getPlayerInfo(address)");
 
         game.addExtension(
             IExtension.Extension(
@@ -57,33 +70,271 @@ contract GameTest is BaseTest {
             )
         );
 
+        // ILeaderboard
+        console.log("Setting up Leaderboard extension");
+        IExtension.ExtensionFunction[] memory leaderboardFunctions = new IExtension.ExtensionFunction[](15);
+        leaderboardFunctions[0] = IExtension.ExtensionFunction(
+            leaderboard.createLeaderboard.selector,
+            "createLeaderboard((string,bytes32[],address[]))"
+        );
+        leaderboardFunctions[1] = IExtension.ExtensionFunction(
+            leaderboard.updateLeaderboardInfo.selector,
+            "updateLeaderboardInfo(uint256,(string,bytes32[],address[]))"
+        );
+        leaderboardFunctions[2] = IExtension.ExtensionFunction(
+            leaderboard.addPlayerToLeaderboard.selector,
+            "addPlayerToLeaderboard(uint256,address)"
+        );
+        leaderboardFunctions[3] = IExtension.ExtensionFunction(
+            leaderboard.removePlayerFromLeaderboard.selector,
+            "removePlayerFromLeaderboard(uint256,address)"
+        );
+        leaderboardFunctions[4] = IExtension.ExtensionFunction(
+            leaderboard.createLeaderboardWithSignature.selector,
+            "createLeaderboardWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        leaderboardFunctions[5] = IExtension.ExtensionFunction(
+            leaderboard.updateLeaderboardInfoWithSignature.selector,
+            "updateLeaderboardInfoWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        leaderboardFunctions[6] = IExtension.ExtensionFunction(
+            leaderboard.addPlayerToLeaderboardWithSignature.selector,
+            "addPlayerToLeaderboardWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        leaderboardFunctions[7] = IExtension.ExtensionFunction(
+            leaderboard.removePlayerFromLeaderboardWithSignature.selector,
+            "removePlayerFromLeaderboardWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        leaderboardFunctions[8] = IExtension.ExtensionFunction(
+            leaderboard.getLeaderboardCount.selector,
+            "getLeaderboardCount()"
+        );
+        leaderboardFunctions[9] = IExtension.ExtensionFunction(
+            leaderboard.getLeaderboardInfo.selector,
+            "getLeaderboardInfo(uint256)"
+        );
+        leaderboardFunctions[10] = IExtension.ExtensionFunction(
+            leaderboard.getPlayerScore.selector,
+            "getPlayerScore(uint256,address)"
+        );
+        leaderboardFunctions[11] = IExtension.ExtensionFunction(
+            leaderboard.getPlayerRank.selector,
+            "getPlayerRank(uint256,address)"
+        );
+        leaderboardFunctions[12] = IExtension.ExtensionFunction(
+            leaderboard.getLeaderboardScores.selector,
+            "getLeaderboardScores(uint256,uint8)"
+        );
+        leaderboardFunctions[13] = IExtension.ExtensionFunction(
+            leaderboard.getLeaderboardScoresInRange.selector,
+            "getLeaderboardScoresInRange(uint256,uint256,uint256,uint8)"
+        );
+        leaderboardFunctions[14] = IExtension.ExtensionFunction(
+            leaderboard.createRuleMultiplicative.selector,
+            "createRuleMultiplicative((address,uint8,uint256,uint256))"
+        );
         game.addExtension(
             IExtension.Extension(
                 IExtension.ExtensionMetadata("Leaderboard", "ipfs://leaderboardCid", address(leaderboard)),
-                new IExtension.ExtensionFunction[](0)
+                leaderboardFunctions
             )
         );
 
+        // IReward
+        console.log("Setting up Reward extension");
+        IExtension.ExtensionFunction[] memory rewardFunctions = new IExtension.ExtensionFunction[](7);
+        rewardFunctions[0] = IExtension.ExtensionFunction(
+            reward.registerReward.selector,
+            "registerReward(string,(address,uint8,uint256,uint256))"
+        );
+        rewardFunctions[1] = IExtension.ExtensionFunction(reward.unregisterReward.selector, "unregisterReward(string)");
+        rewardFunctions[2] = IExtension.ExtensionFunction(reward.claimReward.selector, "claimReward(address,string)");
+        rewardFunctions[3] = IExtension.ExtensionFunction(
+            reward.registerRewardWithSignature.selector,
+            "registerRewardWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        rewardFunctions[4] = IExtension.ExtensionFunction(
+            reward.unregisterRewardWithSignature.selector,
+            "unregisterRewardWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        rewardFunctions[5] = IExtension.ExtensionFunction(
+            reward.claimRewardWithSignature.selector,
+            "claimRewardWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        rewardFunctions[6] = IExtension.ExtensionFunction(reward.getRewardInfo.selector, "getRewardInfo(string)");
         game.addExtension(
             IExtension.Extension(
                 IExtension.ExtensionMetadata("Reward", "ipfs://rewardCid", address(reward)),
-                new IExtension.ExtensionFunction[](0)
+                rewardFunctions
             )
         );
 
+        // IAchievement
+        console.log("Setting up Achievement extension");
+        IExtension.ExtensionFunction[] memory achievementFunctions = new IExtension.ExtensionFunction[](10);
+        achievementFunctions[0] = IExtension.ExtensionFunction(
+            achievement.createAchievement.selector,
+            "createAchievement(string,(bool,bool,string))"
+        );
+        achievementFunctions[1] = IExtension.ExtensionFunction(
+            achievement.updateAchievement.selector,
+            "updateAchievement(string,(bool,bool,string))"
+        );
+        achievementFunctions[2] = IExtension.ExtensionFunction(
+            achievement.deleteAchievement.selector,
+            "deleteAchievement(string)"
+        );
+        achievementFunctions[3] = IExtension.ExtensionFunction(
+            achievement.claimAchievement.selector,
+            "claimAchievement(address,string)"
+        );
+        achievementFunctions[4] = IExtension.ExtensionFunction(
+            achievement.createAchievementWithSignature.selector,
+            "createAchievementWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        achievementFunctions[5] = IExtension.ExtensionFunction(
+            achievement.updateAchievementWithSignature.selector,
+            "updateAchievementWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        achievementFunctions[6] = IExtension.ExtensionFunction(
+            achievement.deleteAchievementWithSignature.selector,
+            "deleteAchievementWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        achievementFunctions[7] = IExtension.ExtensionFunction(
+            achievement.claimAchievementWithSignature.selector,
+            "claimAchievementWithSignature((uint128,uint128,bytes32,bytes),bytes)"
+        );
+        achievementFunctions[8] = IExtension.ExtensionFunction(
+            achievement.getAchievementInfo.selector,
+            "getAchievementInfo(string)"
+        );
+        achievementFunctions[9] = IExtension.ExtensionFunction(
+            achievement.getAchievementClaimCount.selector,
+            "getAchievementClaimCount(address,string)"
+        );
         game.addExtension(
             IExtension.Extension(
                 IExtension.ExtensionMetadata("Achievement", "ipfs://achievementCid", address(achievement)),
-                new IExtension.ExtensionFunction[](0)
+                achievementFunctions
             )
         );
 
-        IPlayer(address(game)).createPlayer(getActor(1), IPlayer.PlayerInfo("Player 1", "ipfs://avatar1", 1, ""));
-        IPlayer(address(game)).createPlayer(getActor(2), IPlayer.PlayerInfo("Player 2", "ipfs://avatar2", 2, ""));
+        vm.stopPrank();
+    }
 
-        assertEq(IPlayer(address(game)).getPlayerInfo(getActor(1)).name, "Player 1");
+    /// GENERAL TESTS ///
 
-        assertEq(IPlayer(address(game)).getPlayerInfo(getActor(2)).avatar, "ipfs://avatar2");
+    function testOptimistic() public {
+        vm.startPrank(admin);
+
+        // Player tests
+        console.log("Testing Player extension");
+
+        console.log("[Player] Adding players");
+        IPlayer playerExtension = IPlayer(address(game));
+        IPlayer.PlayerInfo memory player1Info = IPlayer.PlayerInfo("Player 1", "ipfs://avatar1", 1, "");
+        IPlayer.PlayerInfo memory player2Info = IPlayer.PlayerInfo("Player 2", "ipfs://avatar2", 2, "");
+        address player1 = getActor(1);
+        address player2 = getActor(2);
+        playerExtension.createPlayer(player1, player1Info);
+        playerExtension.createPlayer(player2, player2Info);
+
+        console.log("[Player] Checking player info");
+        assertEq(playerExtension.getPlayerInfo(player1).name, "Player 1");
+        assertEq(playerExtension.getPlayerInfo(player2).avatar, "ipfs://avatar2");
+
+        console.log("[Player] Checking update info");
+        playerExtension.updatePlayerInfo(player1, player2Info);
+        assertEq(playerExtension.getPlayerInfo(player1).avatar, "ipfs://avatar2");
+
+        console.log("[Player] Checking update info (1)");
+        playerExtension.updatePlayerInfo(player1, player1Info);
+        assertEq(playerExtension.getPlayerInfo(player1).avatar, "ipfs://avatar1");
+
+        // Leaderboard tests
+        console.log("Testing Leaderboard extension");
+
+        console.log("[Leaderboard] Adding rules");
+        IRulesEngine leaderboardRulesEngine = IRulesEngine(address(game));
+        bytes32 ruleId = leaderboardRulesEngine.createRuleMultiplicative(
+            IRulesEngine.RuleTypeMultiplicative(address(erc20), IRulesEngine.TokenType.ERC20, 0, 1)
+        );
+
+        console.log("[Leaderboard] Minting tokens to players");
+        erc20.mint(player1, 1 * 1e18);
+        erc20.mint(player2, 2 * 1e18);
+
+        console.log("[Leaderboard] Creating leaderboard");
+        ILeaderboard leaderboardExtension = ILeaderboard(address(game));
+        ILeaderboard.LeaderboardInfo memory leaderboardInfo = ILeaderboard.LeaderboardInfo(
+            "Leaderboard 1",
+            new bytes32[](1),
+            new address[](0)
+        );
+        leaderboardInfo.rules[0] = ruleId;
+        leaderboardExtension.createLeaderboard(leaderboardInfo);
+
+        console.log("[Leaderboard] Checking count and info");
+        assertEq(leaderboardExtension.getLeaderboardCount(), 1);
+        assertEq(leaderboardExtension.getLeaderboardInfo(0).name, "Leaderboard 1");
+
+        console.log("[Leaderboard] Checking update info");
+        leaderboardExtension.updateLeaderboardInfo(0, leaderboardInfo);
+        assertEq(leaderboardExtension.getLeaderboardInfo(0).name, "Leaderboard 1");
+
+        console.log("[Leaderboard] Adding players");
+        leaderboardExtension.addPlayerToLeaderboard(0, player1);
+        leaderboardExtension.addPlayerToLeaderboard(0, player2);
+
+        console.log("[Leaderboard] Checking player scores");
+        assertEq(leaderboardExtension.getPlayerScore(0, player1), 1);
+        assertEq(leaderboardExtension.getPlayerScore(0, player2), 2);
+
+        console.log("[Leaderboard] Checking player ranks");
+        assertEq(leaderboardExtension.getPlayerRank(0, player1), 2);
+        assertEq(leaderboardExtension.getPlayerRank(0, player2), 1);
+
+        console.log("[Leaderboard] Removing player2");
+        leaderboardExtension.removePlayerFromLeaderboard(0, player2);
+        assertEq(leaderboardExtension.getPlayerScore(0, player2), 0);
+        assertEq(leaderboardExtension.getPlayerRank(0, player2), type(uint256).max);
+        assertEq(leaderboardExtension.getPlayerRank(0, player1), 1);
+
+        // Reward tests
+        console.log("Testing Reward extension");
+
+        console.log("[Reward] Registering reward");
+        address randomPlayer = getActor(1234554321);
+        IReward rewardExtension = IReward(address(game));
+        IReward.RewardInfo memory rewardInfo = IReward.RewardInfo(
+            address(erc20),
+            IReward.RewardType.ERC20,
+            0,
+            1 * 1e18
+        );
+        erc20.mint(address(game), 1 * 1e18);
+        rewardExtension.registerReward("Reward 1", rewardInfo);
+        assertEq(rewardExtension.getRewardInfo("Reward 1").rewardAddress, address(erc20));
+
+        console.log("[Reward] Claiming reward");
+        rewardExtension.claimReward(randomPlayer, "Reward 1");
+        assertEq(erc20.balanceOf(randomPlayer), 1 * 1e18);
+
+        console.log("[Reward] Unregistering reward");
+        rewardExtension.unregisterReward("Reward 1");
+        assertEq(rewardExtension.getRewardInfo("Reward 1").rewardAddress, address(0));
+
+        // Achievement tests
+
+        console.log("Testing Achievement extension");
+        rewardExtension.registerReward("Reward 1", rewardInfo);
+        IAchievement achievementExtension = IAchievement(address(game));
+        IAchievement.AchievementInfo memory achievementInfo = IAchievement.AchievementInfo(true, false, "Reward 1");
+        achievementExtension.createAchievement("Achievement 1", achievementInfo);
+
+        console.log("[Achievement] Claiming achievement");
+        achievementExtension.claimAchievement(randomPlayer, "Achievement 1");
+        assertEq(erc20.balanceOf(randomPlayer), 2 * 1e18);
 
         vm.stopPrank();
     }
