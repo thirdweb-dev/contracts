@@ -22,7 +22,7 @@ import { Multicall } from "../extension/Multicall.sol";
  *  - ERC2771Context & ERC2771ContextConsumer: gasless support
  */
 
-abstract contract CoreRouter is
+contract CoreRouter is
     Initializable,
     Multicall,
     ContractMetadata,
@@ -31,8 +31,32 @@ abstract contract CoreRouter is
     ERC2771Context,
     BaseRouter
 {
-    // Default extensions: enabled.
+    /*///////////////////////////////////////////////////////////////
+                                Constructor
+    //////////////////////////////////////////////////////////////*/
+
     constructor(Extension[] memory _defaultExtensions) BaseRouter(_defaultExtensions) {
         _disableInitializers();
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                            Internal overrides
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev To override; returns whether all relevant permission and other checks are met before any upgrade.
+    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
+        return hasRole(keccak256("EXTENSION_ROLE"), _msgSender());
+    }
+
+    /// @dev Returns whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view virtual override returns (bool) {
+        // Defualt admin role.
+        return hasRole(0x00, _msgSender());
+    }
+
+    /// @dev Returns whether owner can be set in the given execution context.
+    function _canSetOwner() internal view virtual override returns (bool) {
+        // Defualt admin role.
+        return hasRole(0x00, _msgSender());
     }
 }
