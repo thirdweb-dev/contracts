@@ -5,12 +5,13 @@ pragma solidity ^0.8.0;
 
 import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
 
-import { ContractMetadata } from "../extension/upgradeable/ContractMetadata.sol";
-import { Ownable } from "../extension/upgradeable/Ownable.sol";
-import { PermissionsEnumerable } from "./extension/PermissionsEnumerable.sol";
-import { Initializable } from "../extension/upgradeable/Initializable.sol";
-import { ERC2771Context } from "./extension/ERC2771Context.sol";
 import { Multicall } from "../extension/Multicall.sol";
+import { Ownable } from "../extension/upgradeable/Ownable.sol";
+import { Initializable } from "../extension/upgradeable/Initializable.sol";
+import { ContractMetadata } from "../extension/upgradeable/ContractMetadata.sol";
+
+import { ERC2771Context } from "./inherit/ERC2771Context.sol";
+import { PermissionsEnumerable } from "./inherit/PermissionsEnumerable.sol";
 
 /**
  *  The `CoreRouter` contract is a router contract that starts with a basic set of fixed functions / functionality.

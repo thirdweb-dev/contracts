@@ -13,11 +13,7 @@ import "./ERC721A__Initializable.sol";
  *
  * @dev ERC721A subclass with convenience query functions.
  */
-abstract contract ERC721AQueryableUpgradeable is
-    ERC721A__Initializable,
-    ERC721AUpgradeable,
-    IERC721AQueryableUpgradeable
-{
+contract ERC721AQueryableUpgradeable is ERC721A__Initializable, ERC721AUpgradeable, IERC721AQueryableUpgradeable {
     function __ERC721AQueryable_init() internal onlyInitializingERC721A {
         __ERC721AQueryable_init_unchained();
     }

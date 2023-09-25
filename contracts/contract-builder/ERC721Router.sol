@@ -4,9 +4,9 @@ pragma solidity ^0.8.0;
 /// @author thirdweb
 
 import "./CoreRouter.sol";
-import "./eip/ERC721AExt.sol";
+import "./eip/queryable/ERC721AQueryableUpgradeable.sol";
 
-contract ERC721Router is CoreRouter, ERC721AExt {
+contract ERC721Router is CoreRouter, ERC721AQueryableUpgradeable {
     /*///////////////////////////////////////////////////////////////
                                 Constructor
     //////////////////////////////////////////////////////////////*/
