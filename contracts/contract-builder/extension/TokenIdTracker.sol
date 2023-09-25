@@ -10,3 +10,9 @@ contract TokenIdTrackerLazyMintExt is LazyMintInternal {
         return _currentTotalMinted + _quantitytoMint <= _nextTokenIdToLazyMint();
     }
 }
+
+contract TokenIdTrackerSharedMetadataExt is LazyMintInternal {
+    function canMintQuantity(uint256, uint256) internal view returns (bool) {
+        return true;
+    }
+}
