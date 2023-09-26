@@ -35,6 +35,8 @@ abstract contract BurnToClaim is IBurnToClaim {
 
     function setBurnToClaimInfo(BurnToClaimInfo calldata _burnToClaimInfo) external virtual {
         require(_canSetBurnToClaim(), "Not authorized.");
+        require(_burnToClaimInfo.originContractAddress != address(0), "Origin contract not set.");
+        require(_burnToClaimInfo.currency != address(0), "Currency not set.");
 
         _burnToClaimStorage().burnToClaimInfo = _burnToClaimInfo;
     }
