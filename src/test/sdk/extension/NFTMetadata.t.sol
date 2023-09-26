@@ -28,7 +28,7 @@ contract NFTMetadataHarness is NFTMetadata {
     }
 
     function URIStatus() external view returns (bool) {
-        return _URIFrozen;
+        return uriFrozen;
     }
 
     function supportsInterface(bytes4 interfaceId) external view override returns (bool) {}
@@ -79,12 +79,12 @@ contract ExtensionNFTMetadata is DSTest, Test {
                         Unit tests: `freezeMetadata`
     //////////////////////////////////////////////////////////////*/
 
-    function test_freezeTokenURI_state() public {
+    function test_freezeMetadata_state() public {
         ext.freezeMetadata();
         assertEq(ext.URIStatus(), true);
     }
 
-    function test_freezeTokenURI_revert_notAuthorized() public {
+    function test_freezeMetadata_revert_notAuthorized() public {
         vm.startPrank(address(0x1));
         vm.expectRevert("NFTMetadata: not authorized to freeze metdata");
         ext.freezeMetadata();

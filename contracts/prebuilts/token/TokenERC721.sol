@@ -201,20 +201,24 @@ contract TokenERC721 is
     ///     =====   External functions  =====
 
     /// @dev See EIP-2981
-    function royaltyInfo(
-        uint256 tokenId,
-        uint256 salePrice
-    ) external view virtual returns (address receiver, uint256 royaltyAmount) {
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+        external
+        view
+        virtual
+        returns (address receiver, uint256 royaltyAmount)
+    {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mintWithSignature(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    ) external payable nonReentrant returns (uint256 tokenIdMinted) {
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
+        external
+        payable
+        nonReentrant
+        returns (uint256 tokenIdMinted)
+    {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to;
 
@@ -241,10 +245,10 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(
-        address _royaltyRecipient,
-        uint256 _royaltyBps
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -267,10 +271,10 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(
-        address _platformFeeRecipient,
-        uint256 _platformFeeBps
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -323,7 +327,7 @@ contract TokenERC721 is
         nextTokenIdToMint += 1;
 
         require(bytes(_uri).length > 0, "empty uri.");
-        _tokenURI[tokenIdToMint] = _uri;
+        _setTokenURI(tokenIdToMint, _uri);
 
         _safeMint(_to, tokenIdToMint);
 
@@ -417,18 +421,20 @@ contract TokenERC721 is
     }
 
     /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(
-        address operator,
-        bool approved
-    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperatorApproval(operator) {
+    function setApprovalForAll(address operator, bool approved)
+        public
+        override(ERC721Upgradeable, IERC721Upgradeable)
+        onlyAllowedOperatorApproval(operator)
+    {
         super.setApprovalForAll(operator, approved);
     }
 
     /// @dev See {ERC721-approve}.
-    function approve(
-        address operator,
-        uint256 tokenId
-    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperatorApproval(operator) {
+    function approve(address operator, uint256 tokenId)
+        public
+        override(ERC721Upgradeable, IERC721Upgradeable)
+        onlyAllowedOperatorApproval(operator)
+    {
         super.approve(operator, tokenId);
     }
 
@@ -470,13 +476,12 @@ contract TokenERC721 is
         return hasRole(METADATA_ROLE, _msgSender());
     }
 
+    /// @dev Returns whether metadata can be frozen in the given execution context.
     function _canFreezeMetadata() internal view virtual override returns (bool) {
         return hasRole(METADATA_ROLE, _msgSender());
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    )
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual

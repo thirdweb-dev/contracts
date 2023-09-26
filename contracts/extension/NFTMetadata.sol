@@ -4,8 +4,7 @@ pragma solidity ^0.8.0;
 import "./interface/INFTMetadata.sol";
 
 abstract contract NFTMetadata is INFTMetadata {
-
-    bool internal _URIFrozen;
+    bool public uriFrozen;
 
     mapping(uint256 => string) internal _tokenURI;
 
@@ -25,13 +24,14 @@ abstract contract NFTMetadata is INFTMetadata {
     /// @notice Sets the metadata URI for a given NFT.
     function setTokenURI(uint256 _tokenId, string memory _uri) public virtual {
         require(_canSetMetadata(), "NFTMetadata: not authorized to set metadata.");
-        require(!_URIFrozen, "NFTMetadata: metadata is frozen.");
+        require(!uriFrozen, "NFTMetadata: metadata is frozen.");
         _setTokenURI(_tokenId, _uri);
     }
 
     function freezeMetadata() public virtual {
         require(_canFreezeMetadata(), "NFTMetadata: not authorized to freeze metdata");
-        _URIFrozen = true;
+        uriFrozen = true;
+        emit MetadataFrozen();
     }
 
     /// @dev Returns whether metadata can be set in the given execution context.
