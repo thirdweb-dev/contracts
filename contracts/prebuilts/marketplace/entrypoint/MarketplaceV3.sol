@@ -50,7 +50,7 @@ contract MarketplaceV3 is
     bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
 
     bytes32 private constant MODULE_TYPE = bytes32("MarketplaceV3");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 3;
 
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
