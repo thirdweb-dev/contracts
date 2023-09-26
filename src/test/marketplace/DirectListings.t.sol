@@ -2106,4 +2106,36 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest, IExtension {
         // assertBalERC20Eq(address(erc20), buyer, 0);
         // assertBalERC20Eq(address(erc20), seller, totalPrice);
     }
+
+    function test_audit_native_tokens_locked() public {
+        (uint256 listingId, IDirectListings.Listing memory existingListing) = _setup_buyFromListing();
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingListing.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingListing.assetContract, address(erc721));
+
+        vm.warp(existingListing.startTimestamp);
+
+        // No ether is locked in contract
+        assertEq(marketplace.balance, 0);
+
+        // buy from listing
+        erc20.mint(buyer, 10 ether);
+        vm.deal(buyer, 1 ether);
+
+        vm.prank(seller);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
+
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 10 ether);
+        DirectListingsLogic(marketplace).buyFromListing{ value: 1 ether }(listingId, buyer, 1, address(erc20), 1 ether);
+        vm.stopPrank();
+
+        assertIsOwnerERC721(address(erc721), buyer, tokenIds);
+
+        // 1 ether is temporary locked in contract
+        assertEq(marketplace.balance, 1 ether);
+    }
 }

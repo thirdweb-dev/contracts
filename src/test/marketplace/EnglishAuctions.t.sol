@@ -1893,6 +1893,55 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         vm.expectRevert("Marketplace: invalid auction.");
         EnglishAuctionsLogic(marketplace).isAuctionExpired(auctionId + 1);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                            Audit POCs
+    //////////////////////////////////////////////////////////////*/
+
+    function test_audit_native_tokens_locked() public {
+        uint256 auctionId = _setup_newAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place buyout bid
+        erc20.mint(buyer, 10 ether);
+        vm.deal(buyer, 1 ether);
+
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 10 ether);
+        EnglishAuctionsLogic(marketplace).bidInAuction{ value: 1 ether }(auctionId, 10 ether);
+        vm.stopPrank();
+
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
+
+        // Test consequent states.
+        // Seller is owner of token.
+        assertIsOwnerERC721(address(erc721), buyer, tokenIds);
+        assertEq(erc20.balanceOf(marketplace), 10 ether);
+        assertEq(erc20.balanceOf(buyer), 0);
+        assertEq(buyer, bidder);
+        assertEq(currency, address(erc20));
+        assertEq(bidAmount, 10 ether);
+
+        // collect auction payout
+        vm.prank(seller);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
+
+        assertEq(erc20.balanceOf(marketplace), 0);
+        assertEq(erc20.balanceOf(seller), 10 ether);
+
+        // 1 ether is temporary locked in contract
+        assertEq(marketplace.balance, 1 ether);
+    }
 }
 
 contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
