@@ -61,8 +61,6 @@ contract BurnToClaimDrop721Logic is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    /// @dev Only transfers initiated by operator role hodlers are valid, when operator-initated transfers are restricted.
-    bytes32 private constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;

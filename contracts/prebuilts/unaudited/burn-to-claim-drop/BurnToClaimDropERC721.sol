@@ -85,7 +85,6 @@ contract BurnToClaimDropERC721 is
     }
 
     function _setupRoles(address _defaultAdmin) internal onlyInitializing {
-        bytes32 _operatorRole = keccak256("OPERATOR_ROLE");
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
         bytes32 _extensionRole = keccak256("EXTENSION_ROLE");
@@ -95,8 +94,6 @@ contract BurnToClaimDropERC721 is
         _setupRole(_minterRole, _defaultAdmin);
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
-        _setupRole(_operatorRole, _defaultAdmin);
-        _setupRole(_operatorRole, address(0));
         _setupRole(_extensionRole, _defaultAdmin);
         _setRoleAdmin(_extensionRole, _extensionRole);
     }
