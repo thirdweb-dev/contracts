@@ -1916,31 +1916,13 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
         vm.startPrank(buyer);
         erc20.approve(marketplace, 10 ether);
+
+        vm.expectRevert("Marketplace: invalid native tokens sent.");
         EnglishAuctionsLogic(marketplace).bidInAuction{ value: 1 ether }(auctionId, 10 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
-            auctionId
-        );
-
-        // Test consequent states.
-        // Seller is owner of token.
-        assertIsOwnerERC721(address(erc721), buyer, tokenIds);
-        assertEq(erc20.balanceOf(marketplace), 10 ether);
-        assertEq(erc20.balanceOf(buyer), 0);
-        assertEq(buyer, bidder);
-        assertEq(currency, address(erc20));
-        assertEq(bidAmount, 10 ether);
-
-        // collect auction payout
-        vm.prank(seller);
-        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
-
-        assertEq(erc20.balanceOf(marketplace), 0);
-        assertEq(erc20.balanceOf(seller), 10 ether);
-
-        // 1 ether is temporary locked in contract
-        assertEq(marketplace.balance, 1 ether);
+        // No ether is temporary locked in contract
+        assertEq(marketplace.balance, 0);
     }
 }
 

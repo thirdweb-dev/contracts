@@ -135,6 +135,10 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
             "Marketplace: inactive auction."
         );
         require(_bidAmount != 0, "Marketplace: Bidding with zero amount.");
+        require(
+            _targetAuction.currency == CurrencyTransferLib.NATIVE_TOKEN || msg.value == 0,
+            "Marketplace: invalid native tokens sent."
+        );
 
         Bid memory newBid = Bid({ auctionId: _auctionId, bidder: _msgSender(), bidAmount: _bidAmount });
 
