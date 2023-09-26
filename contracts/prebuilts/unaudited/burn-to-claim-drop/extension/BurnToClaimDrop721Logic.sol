@@ -71,8 +71,8 @@ contract BurnToClaimDrop721Logic is
                                 Events
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Emitted when the global max supply of tokens is updated.
-    event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
+    /// @dev Emitted when the global max NFTs that can be minted is updated.
+    event MaxTotalMintedUpdated(uint256 maxTotalSupply);
 
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 2981 logic
@@ -174,13 +174,13 @@ contract BurnToClaimDrop721Logic is
                         Setter functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Lets a contract admin set the global maximum supply for collection's NFTs.
-    function setMaxTotalSupply(uint256 _maxTotalSupply) external {
+    /// @dev Lets a contract admin set the global maximum NFTs that can be minted.
+    function setMaxTotalMinted(uint256 _maxTotalMinted) external {
         require(_hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not admin.");
 
         BurnToClaimDrop721Storage.Data storage data = BurnToClaimDrop721Storage.burnToClaimDrop721Storage();
-        data.maxTotalSupply = _maxTotalSupply;
-        emit MaxTotalSupplyUpdated(_maxTotalSupply);
+        data.maxTotalMinted = _maxTotalMinted;
+        emit MaxTotalMintedUpdated(_maxTotalMinted);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -192,11 +192,11 @@ contract BurnToClaimDrop721Logic is
         BurnToClaimDrop721Storage.Data storage dropData = BurnToClaimDrop721Storage.burnToClaimDrop721Storage();
         ERC721AStorage.Data storage erc721AData = ERC721AStorage.erc721AStorage();
 
-        uint256 _maxTotalSupply = dropData.maxTotalSupply;
+        uint256 _maxTotalMinted = dropData.maxTotalMinted;
         uint256 currentIndex_ = erc721AData._currentIndex;
 
         require(currentIndex_ + _quantity <= nextTokenIdToLazyMint(), "!Tokens");
-        require(_maxTotalSupply == 0 || currentIndex_ + _quantity <= _maxTotalSupply, "exceed max total supply.");
+        require(_maxTotalMinted == 0 || currentIndex_ + _quantity <= _maxTotalMinted, "exceed max total mint cap.");
     }
 
     /// @dev Runs before every `claim` function call.
@@ -326,7 +326,7 @@ contract BurnToClaimDrop721Logic is
     /// @dev Global max total supply of NFTs.
     function maxTotalSupply() public view returns (uint256) {
         BurnToClaimDrop721Storage.Data storage data = BurnToClaimDrop721Storage.burnToClaimDrop721Storage();
-        return data.maxTotalSupply;
+        return data.maxTotalMinted;
     }
 
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
