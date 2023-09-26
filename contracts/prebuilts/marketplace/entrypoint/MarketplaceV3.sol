@@ -172,21 +172,10 @@ contract MarketplaceV3 is
     }
 
     function _msgSender() internal view override(ERC2771ContextUpgradeable, Permissions) returns (address sender) {
-        if (isTrustedForwarder(msg.sender)) {
-            // The assembly code is more direct than the Solidity version using `abi.decode`.
-            assembly {
-                sender := shr(96, calldataload(sub(calldatasize(), 20)))
-            }
-        } else {
-            return msg.sender;
-        }
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
     function _msgData() internal view override(ERC2771ContextUpgradeable, Permissions) returns (bytes calldata) {
-        if (isTrustedForwarder(msg.sender)) {
-            return msg.data[:msg.data.length - 20];
-        } else {
-            return msg.data;
-        }
+        return ERC2771ContextUpgradeable._msgData();
     }
 }
