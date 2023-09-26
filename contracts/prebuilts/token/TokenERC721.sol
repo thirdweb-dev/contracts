@@ -20,6 +20,7 @@ import "../../extension/interface/IPlatformFee.sol";
 import "../../extension/interface/IPrimarySale.sol";
 import "../../extension/interface/IRoyalty.sol";
 import "../../extension/interface/IOwnable.sol";
+import "../../extension/NFTMetadata.sol";
 
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
@@ -61,7 +62,8 @@ contract TokenERC721 is
     AccessControlEnumerableUpgradeable,
     DefaultOperatorFiltererUpgradeable,
     ERC721EnumerableUpgradeable,
-    ITokenERC721
+    ITokenERC721,
+    NFTMetadata
 {
     using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
@@ -194,24 +196,20 @@ contract TokenERC721 is
     ///     =====   External functions  =====
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view virtual returns (address receiver, uint256 royaltyAmount) {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        nonReentrant
-        returns (uint256 tokenIdMinted)
-    {
+    function mintWithSignature(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) external payable nonReentrant returns (uint256 tokenIdMinted) {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to;
 
@@ -238,10 +236,10 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setDefaultRoyaltyInfo(
+        address _royaltyRecipient,
+        uint256 _royaltyBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -264,10 +262,10 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -414,20 +412,18 @@ contract TokenERC721 is
     }
 
     /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved)
-        public
-        override(ERC721Upgradeable, IERC721Upgradeable)
-        onlyAllowedOperatorApproval(operator)
-    {
+    function setApprovalForAll(
+        address operator,
+        bool approved
+    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperatorApproval(operator) {
         super.setApprovalForAll(operator, approved);
     }
 
     /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId)
-        public
-        override(ERC721Upgradeable, IERC721Upgradeable)
-        onlyAllowedOperatorApproval(operator)
-    {
+    function approve(
+        address operator,
+        uint256 tokenId
+    ) public override(ERC721Upgradeable, IERC721Upgradeable) onlyAllowedOperatorApproval(operator) {
         super.approve(operator, tokenId);
     }
 
@@ -464,7 +460,23 @@ contract TokenERC721 is
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    function supportsInterface(bytes4 interfaceId)
+    /// @dev Returns whether metadata can be set in the given execution context.
+    function _canSetMetadata(uint256 _tokenId) internal view virtual override returns (bool) {
+        bool canSet = hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        if (canSet) {
+            canSet = !_URIFrozen[_tokenId];
+        }
+        return canSet;
+    }
+
+    function _canFreezeMetadata(uint256 _tokenId) internal view virtual override returns (bool) {
+        bool canFreeze = ownerOf(_tokenId) == _msgSender();
+        return canFreeze;
+    }
+
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual

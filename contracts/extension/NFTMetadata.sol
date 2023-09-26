@@ -5,6 +5,7 @@ import "./interface/INFTMetadata.sol";
 
 abstract contract NFTMetadata is INFTMetadata {
     mapping(uint256 => string) private _tokenURI;
+    mapping(uint256 => bool) internal _URIFrozen;
 
     /// @notice Returns the metadata URI for a given NFT.
     function _getTokenURI(uint256 _tokenId) internal view virtual returns (string memory) {
@@ -21,10 +22,17 @@ abstract contract NFTMetadata is INFTMetadata {
 
     /// @notice Sets the metadata URI for a given NFT.
     function setTokenURI(uint256 _tokenId, string memory _uri) public virtual {
-        require(_canSetMetadata(), "Not authorized to set metadata");
+        require(_canSetMetadata(_tokenId), "Not authorized to set metadata");
         _setTokenURI(_tokenId, _uri);
     }
 
+    function freezeTokenURI(uint256 _tokenId) public virtual {
+        require(_canFreezeMetadata(_tokenId), "Not authorized to freeze metdata");
+        _URIFrozen[_tokenId] = true;
+    }
+
     /// @dev Returns whether metadata can be set in the given execution context.
-    function _canSetMetadata() internal view virtual returns (bool);
+    function _canSetMetadata(uint256 _tokenId) internal view virtual returns (bool);
+
+    function _canFreezeMetadata(uint256 _tokenId) internal view virtual returns (bool);
 }
