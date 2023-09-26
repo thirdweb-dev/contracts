@@ -340,14 +340,13 @@ contract LoyaltyCard is
     }
 
     /// @dev Returns whether metadata can be set in the given execution context.
-    function _canSetMetadata(uint256 /*tokenId*/) internal view virtual override returns (bool) {
+    function _canSetMetadata() internal view virtual override returns (bool) {
         return hasRole(METADATA_ROLE, _msgSender());
     }
 
     /// @dev Returns whether metadata can be frozen in the given execution context.
-    function _canFreezeMetadata(uint256 _tokenId) internal view virtual override returns (bool) {
-        bool canFreeze = ownerOf(_tokenId) == _msgSender();
-        return canFreeze;
+    function _canFreezeMetadata() internal view virtual override returns (bool) {
+        return hasRole(METADATA_ROLE, _msgSender());
     }
 
     /// @dev Returns whether operator restriction can be set in the given execution context.
@@ -374,4 +373,5 @@ contract LoyaltyCard is
     {
         return ERC2771ContextUpgradeable._msgData();
     }
+
 }

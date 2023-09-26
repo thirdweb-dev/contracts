@@ -13,13 +13,13 @@ contract NFTMetadataHarness is NFTMetadata {
         authorized = msg.sender;
     }
 
-    function _canSetMetadata(uint256 /*_tokenId*/) internal view override returns (bool) {
+    function _canSetMetadata() internal view override returns (bool) {
         if (msg.sender == authorized) return true;
         return false;
     }
 
-    function _canFreezeMetadata(uint256 _tokenId) internal pure override returns (bool) {
-        if (_tokenId % 2 == 0) return true;
+    function _canFreezeMetadata() internal view override returns (bool) {
+        if (msg.sender == authorized) return true;
         return false;
     }
 
@@ -27,8 +27,8 @@ contract NFTMetadataHarness is NFTMetadata {
         return _getTokenURI(_tokenId);
     }
 
-    function frozenURIStatus(uint256 _tokenId) external view returns (bool) {
-        return _URIFrozen[_tokenId];
+    function URIStatus() external view returns (bool) {
+        return _URIFrozen;
     }
 
     function supportsInterface(bytes4 interfaceId) external view override returns (bool) {}
@@ -69,80 +69,24 @@ contract ExtensionNFTMetadata is DSTest, Test {
     }
 
     function test_setTokenURI_revert_frozen() public {
-        ext.freezeTokenURI(2);
+        ext.freezeMetadata();
         string memory uri = "test";
         vm.expectRevert("NFTMetadata: metadata is frozen.");
         ext.setTokenURI(2, uri);
     }
 
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: `freezeMetadata`
+    //////////////////////////////////////////////////////////////*/
+
     function test_freezeTokenURI_state() public {
-        ext.freezeTokenURI(0);
-        assertEq(ext.frozenURIStatus(0), true);
+        ext.freezeMetadata();
+        assertEq(ext.URIStatus(), true);
     }
 
     function test_freezeTokenURI_revert_notAuthorized() public {
+        vm.startPrank(address(0x1));
         vm.expectRevert("NFTMetadata: not authorized to freeze metdata");
-        ext.freezeTokenURI(1);
+        ext.freezeMetadata();
     }
 }
-
-// contract MyBatchMintMetadata is BatchMintMetadata {
-//     function setBaseURI(uint256 _batchId, string memory _baseURI) external {
-//         _setBaseURI(_batchId, _baseURI);
-//     }
-
-//     function batchMintMetadata(
-//         uint256 _startId,
-//         uint256 _amountToMint,
-//         string memory _baseURIForTokens
-//     ) external returns (uint256 nextTokenIdToMint, uint256 batchId) {
-//         (nextTokenIdToMint, batchId) = _batchMintMetadata(_startId, _amountToMint, _baseURIForTokens);
-//     }
-
-//     function viewBaseURI(uint256 _tokenId) external view returns (string memory) {
-//         return _getBaseURI(_tokenId);
-//     }
-// }
-
-// contract ExtensionBatchMintMetadata is DSTest, Test {
-//     MyBatchMintMetadata internal ext;
-
-//     function setUp() public {
-//         ext = new MyBatchMintMetadata();
-//     }
-
-//     /*///////////////////////////////////////////////////////////////
-//                         Unit tests: `batchMintMetadata`
-//     //////////////////////////////////////////////////////////////*/
-
-//     function test_state_batchMintMetadata() public {
-//         (uint256 nextTokenIdToMint, uint256 batchId) = ext.batchMintMetadata(0, 100, "");
-//         assertEq(nextTokenIdToMint, 100);
-//         assertEq(batchId, 100);
-
-//         (nextTokenIdToMint, batchId) = ext.batchMintMetadata(100, 100, "");
-//         assertEq(nextTokenIdToMint, 200);
-//         assertEq(batchId, 200);
-
-//         assertEq(2, ext.getBaseURICount());
-
-//         assertEq(100, ext.getBatchIdAtIndex(0));
-//         assertEq(200, ext.getBatchIdAtIndex(1));
-//     }
-
-//     /*///////////////////////////////////////////////////////////////
-//                         Unit tests: `setBaseURI`
-//     //////////////////////////////////////////////////////////////*/
-
-//     function test_state_setBaseURI() public {
-//         string memory baseUriOne = "one";
-//         string memory baseUriTwo = "two";
-
-//         (, uint256 batchId) = ext.batchMintMetadata(0, 100, baseUriOne);
-
-//         assertEq(baseUriOne, ext.viewBaseURI(10));
-
-//         ext.setBaseURI(batchId, baseUriTwo);
-//         assertEq(baseUriTwo, ext.viewBaseURI(10));
-//     }
-// }

@@ -20,6 +20,8 @@ import "../../extension/interface/IPlatformFee.sol";
 import "../../extension/interface/IPrimarySale.sol";
 import "../../extension/interface/IRoyalty.sol";
 import "../../extension/interface/IOwnable.sol";
+
+//Extensions
 import "../../extension/NFTMetadata.sol";
 
 // Token
@@ -80,6 +82,8 @@ contract TokenERC721 is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    /// @dev Only METADATA_ROLE holders can update NFT metadata.
+    bytes32 private constant METADATA_ROLE = keccak256("METADATA_ROLE");
 
     /// @dev Max bps in the thirdweb system
     uint256 private constant MAX_BPS = 10_000;
@@ -153,6 +157,10 @@ contract TokenERC721 is
         _owner = _defaultAdmin;
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
+
+        _setupRole(METADATA_ROLE, _defaultAdmin);
+        _setRoleAdmin(METADATA_ROLE, METADATA_ROLE);
+
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
     }
@@ -461,13 +469,12 @@ contract TokenERC721 is
     }
 
     /// @dev Returns whether metadata can be set in the given execution context.
-    function _canSetMetadata(uint256 /*_tokenId*/) internal view virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    function _canSetMetadata() internal view virtual override returns (bool) {
+        return hasRole(METADATA_ROLE, _msgSender());
     }
 
-    function _canFreezeMetadata(uint256 _tokenId) internal view virtual override returns (bool) {
-        bool canFreeze = ownerOf(_tokenId) == _msgSender();
-        return canFreeze;
+    function _canFreezeMetadata() internal view virtual override returns (bool) {
+        return hasRole(METADATA_ROLE, _msgSender());
     }
 
     function supportsInterface(

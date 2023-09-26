@@ -9,6 +9,6 @@ interface INFTMetadata is IERC4906 {
     function setTokenURI(uint256 _tokenId, string memory _uri) external;
 
     /// @notice Freezes the metadata URI for a given NFT.
-    function freezeTokenURI(uint256 _tokenId) external;
+    function freezeMetadata() external;
 
 }
