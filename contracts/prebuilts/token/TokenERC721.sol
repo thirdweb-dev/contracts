@@ -115,9 +115,6 @@ contract TokenERC721 is
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
-    /// @dev Mapping from tokenId => URI
-    mapping(uint256 => string) private uri;
-
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
@@ -192,7 +189,7 @@ contract TokenERC721 is
 
     /// @dev Returns the URI for a tokenId
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        return uri[_tokenId];
+        return _tokenURI[_tokenId];
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
@@ -326,7 +323,7 @@ contract TokenERC721 is
         nextTokenIdToMint += 1;
 
         require(bytes(_uri).length > 0, "empty uri.");
-        uri[tokenIdToMint] = _uri;
+        _tokenURI[tokenIdToMint] = _uri;
 
         _safeMint(_to, tokenIdToMint);
 

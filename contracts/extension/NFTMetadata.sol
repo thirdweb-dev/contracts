@@ -7,7 +7,7 @@ abstract contract NFTMetadata is INFTMetadata {
 
     bool internal _URIFrozen;
 
-    mapping(uint256 => string) private _tokenURI;
+    mapping(uint256 => string) internal _tokenURI;
 
     /// @notice Returns the metadata URI for a given NFT.
     function _getTokenURI(uint256 _tokenId) internal view virtual returns (string memory) {
