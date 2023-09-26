@@ -111,7 +111,7 @@ contract BurnToClaimDrop721Logic is
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _data
-    ) public override returns (uint256 batchId) {
+    ) public override returns (uint256) {
         uint256 nextId = nextTokenIdToLazyMint();
         if (_data.length > 0) {
             (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
@@ -397,7 +397,7 @@ contract BurnToClaimDrop721Logic is
         return _msgSender();
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender() internal view virtual override(Context, ERC2771ContextUpgradeable) returns (address) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
