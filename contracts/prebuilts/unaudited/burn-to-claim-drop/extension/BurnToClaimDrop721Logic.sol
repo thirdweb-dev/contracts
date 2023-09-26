@@ -70,7 +70,7 @@ contract BurnToClaimDrop721Logic is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Emitted when the global max NFTs that can be minted is updated.
-    event MaxTotalMintedUpdated(uint256 maxTotalSupply);
+    event MaxTotalMintedUpdated(uint256 maxTotalMinted);
 
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 2981 logic
@@ -321,8 +321,8 @@ contract BurnToClaimDrop721Logic is
         return data._currentIndex;
     }
 
-    /// @dev Global max total supply of NFTs.
-    function maxTotalSupply() public view returns (uint256) {
+    /// @dev Global max total NFTs that can be minted.
+    function maxTotalMinted() public view returns (uint256) {
         BurnToClaimDrop721Storage.Data storage data = BurnToClaimDrop721Storage.burnToClaimDrop721Storage();
         return data.maxTotalMinted;
     }
