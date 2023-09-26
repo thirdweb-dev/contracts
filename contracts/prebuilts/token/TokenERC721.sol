@@ -461,12 +461,8 @@ contract TokenERC721 is
     }
 
     /// @dev Returns whether metadata can be set in the given execution context.
-    function _canSetMetadata(uint256 _tokenId) internal view virtual override returns (bool) {
-        bool canSet = hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-        if (canSet) {
-            canSet = !_URIFrozen[_tokenId];
-        }
-        return canSet;
+    function _canSetMetadata(uint256 /*_tokenId*/) internal view virtual override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     function _canFreezeMetadata(uint256 _tokenId) internal view virtual override returns (bool) {

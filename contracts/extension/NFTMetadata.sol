@@ -12,9 +12,10 @@ abstract contract NFTMetadata is INFTMetadata {
         return _tokenURI[_tokenId];
     }
 
-    /// @notice SEts the metadata URI for a given NFT.
+    /// @notice Sets the metadata URI for a given NFT.
     function _setTokenURI(uint256 _tokenId, string memory _uri) internal virtual {
         require(bytes(_uri).length > 0, "NFTMetadata: empty metadata.");
+        require(!_URIFrozen[_tokenId], "NFTMetadata: metadata is frozen.");
         _tokenURI[_tokenId] = _uri;
 
         emit MetadataUpdate(_tokenId);
@@ -22,12 +23,12 @@ abstract contract NFTMetadata is INFTMetadata {
 
     /// @notice Sets the metadata URI for a given NFT.
     function setTokenURI(uint256 _tokenId, string memory _uri) public virtual {
-        require(_canSetMetadata(_tokenId), "Not authorized to set metadata");
+        require(_canSetMetadata(_tokenId), "NFTMetadata: not authorized to set metadata.");
         _setTokenURI(_tokenId, _uri);
     }
 
     function freezeTokenURI(uint256 _tokenId) public virtual {
-        require(_canFreezeMetadata(_tokenId), "Not authorized to freeze metdata");
+        require(_canFreezeMetadata(_tokenId), "NFTMetadata: not authorized to freeze metdata");
         _URIFrozen[_tokenId] = true;
     }
 
