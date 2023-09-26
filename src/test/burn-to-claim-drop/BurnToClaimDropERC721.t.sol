@@ -1313,7 +1313,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC1155;
         burnToClaimInfo.tokenId = 0;
         burnToClaimInfo.mintPriceForNewToken = 0;
-        burnToClaimInfo.currency = address(0);
+        burnToClaimInfo.currency = address(erc20);
 
         // set origin contract details for burn and claim
         vm.prank(deployer);
@@ -1451,7 +1451,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC721;
         burnToClaimInfo.tokenId = 0;
         burnToClaimInfo.mintPriceForNewToken = 0;
-        burnToClaimInfo.currency = address(0);
+        burnToClaimInfo.currency = address(erc20);
 
         // set origin contract details for burn and claim
         vm.prank(deployer);
@@ -1614,7 +1614,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC1155;
         burnToClaimInfo.tokenId = 0;
         burnToClaimInfo.mintPriceForNewToken = 0;
-        burnToClaimInfo.currency = address(0);
+        burnToClaimInfo.currency = address(erc20);
 
         // set origin contract details for burn and claim
         vm.prank(deployer);
@@ -1644,7 +1644,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         burnToClaimInfo.tokenType = IBurnToClaim.TokenType.ERC1155;
         burnToClaimInfo.tokenId = 0;
         burnToClaimInfo.mintPriceForNewToken = 0;
-        burnToClaimInfo.currency = address(0);
+        burnToClaimInfo.currency = address(erc20);
 
         // set origin contract details for burn and claim
         vm.prank(deployer);
