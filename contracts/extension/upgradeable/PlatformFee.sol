@@ -64,6 +64,9 @@ abstract contract PlatformFee is IPlatformFee {
         if (_platformFeeBps > 10_000) {
             revert("Exceeds max bps");
         }
+        if (_platformFeeRecipient == address(0)) {
+            revert("Invalid recipient");
+        }
 
         _platformFeeStorage().platformFeeBps = uint16(_platformFeeBps);
         _platformFeeStorage().platformFeeRecipient = _platformFeeRecipient;
