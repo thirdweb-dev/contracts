@@ -35,7 +35,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
-        address impl = address(new MarketplaceV3(extensions, address(0)));
+        address impl = address(
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+        );
 
         vm.prank(marketplaceDeployer);
         marketplace = address(
@@ -1953,7 +1955,9 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
 
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
-        address impl = address(new MarketplaceV3(extensions, address(0)));
+        address impl = address(
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+        );
 
         vm.prank(marketplaceDeployer);
         marketplace = address(
@@ -2145,7 +2149,9 @@ contract BreitwieserTheBidder is BaseTest, IExtension {
 
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
-        address impl = address(new MarketplaceV3(extensions, address(0)));
+        address impl = address(
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+        );
 
         vm.prank(marketplaceDeployer);
         marketplace = address(
@@ -2370,7 +2376,9 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
-        address impl = address(new MarketplaceV3(extensions, address(0)));
+        address impl = address(
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+        );
 
         vm.prank(marketplaceDeployer);
         marketplace = address(

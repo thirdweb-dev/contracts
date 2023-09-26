@@ -52,18 +52,31 @@ contract MarketplaceV3 is
     bytes32 private constant MODULE_TYPE = bytes32("MarketplaceV3");
     uint256 private constant VERSION = 1;
 
+    /// @dev The address of the native token wrapper contract.
+    address private immutable nativeTokenWrapper;
+
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Extension[] memory _extensions, address _royaltyEngineAddress)
-        BaseRouter(_extensions)
-        RoyaltyPaymentsLogic(_royaltyEngineAddress)
+    /// @dev We accept constructor params as a struct to avoid `Stack too deep` errors.
+    struct MarketplaceConstructorParams {
+        Extension[] extensions;
+        address royaltyEngineAddress;
+        address nativeTokenWrapper;
+    }
+
+    constructor(MarketplaceConstructorParams memory _params)
+        BaseRouter(_params.extensions)
+        RoyaltyPaymentsLogic(_params.royaltyEngineAddress)
     {
+        nativeTokenWrapper = _params.nativeTokenWrapper;
         _disableInitializers();
     }
 
-    receive() external payable {}
+    receive() external payable {
+        assert(msg.sender == nativeTokenWrapper); // only accept ETH via fallback from the native token wrapper contract
+    }
 
     /// @dev Initializes the contract, like a constructor.
     function initialize(
