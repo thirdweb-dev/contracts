@@ -9,7 +9,7 @@ import { IEnglishAuctions } from "../IMarketplace.sol";
  * @author  thirdweb.com
  */
 library EnglishAuctionsStorage {
-    /// @custom:storage-location erc7201:extension.manager.storage
+    /// @custom:storage-location erc7201:english.auctions.storage
     bytes32 public constant ENGLISH_AUCTIONS_STORAGE_POSITION =
         keccak256(abi.encode(uint256(keccak256("english.auctions.storage")) - 1));
 

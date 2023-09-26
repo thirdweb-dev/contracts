@@ -9,7 +9,7 @@ import { IOffers } from "../IMarketplace.sol";
  * @author  thirdweb.com
  */
 library OffersStorage {
-    /// @custom:storage-location erc7201:extension.manager.storage
+    /// @custom:storage-location erc7201:offers.storage.storage
     bytes32 public constant OFFERS_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("offers.storage")) - 1));
 
     struct Data {
