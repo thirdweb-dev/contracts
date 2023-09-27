@@ -52,7 +52,7 @@ contract UpgradeableBurnToClaim_VerifyBurnToClaim is ExtensionUtilTest {
                 tokenType: IBurnToClaim.TokenType.ERC721,
                 tokenId: 0,
                 mintPriceForNewToken: 0,
-                currency: address(0)
+                currency: address(erc20)
             })
         );
         IBurnToClaim.BurnToClaimInfo memory info = ext.getBurnToClaimInfo();
@@ -103,7 +103,7 @@ contract UpgradeableBurnToClaim_VerifyBurnToClaim is ExtensionUtilTest {
                 tokenType: IBurnToClaim.TokenType.ERC1155,
                 tokenId: 1,
                 mintPriceForNewToken: 0,
-                currency: address(0)
+                currency: address(erc20)
             })
         );
         IBurnToClaim.BurnToClaimInfo memory info = ext.getBurnToClaimInfo();
