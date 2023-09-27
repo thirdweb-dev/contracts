@@ -658,4 +658,37 @@ contract TokenERC721Test is BaseTest {
         vm.prank(address(0x1));
         tokenContract.setContractURI("");
     }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: setTokenURI
+    //////////////////////////////////////////////////////////////*/
+
+    function test_setTokenURI_state() public {
+        string memory uri = "uri_string";
+
+        vm.prank(deployerSigner);
+        tokenContract.setTokenURI(0, uri);
+
+        string memory _tokenURI = tokenContract.tokenURI(0);
+
+        assertEq(_tokenURI, uri);
+    }
+
+    function test_setTokenURI_revert_NotAuthorized() public {
+        string memory uri = "uri_string";
+
+        vm.expectRevert("NFTMetadata: not authorized to set metadata.");
+        vm.prank(address(0x1));
+        tokenContract.setTokenURI(0, uri);
+    }
+
+    function test_setTokenURI_revert_Frozen() public {
+        string memory uri = "uri_string";
+
+        vm.startPrank(deployerSigner);
+        tokenContract.freezeMetadata();
+
+        vm.expectRevert("NFTMetadata: metadata is frozen.");
+        tokenContract.setTokenURI(0, uri);
+    }
 }
