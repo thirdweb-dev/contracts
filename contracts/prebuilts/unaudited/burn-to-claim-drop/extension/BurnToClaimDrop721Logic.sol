@@ -76,7 +76,8 @@ contract BurnToClaimDrop721Logic is
                         ERC 165 / 721 / 2981 logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the URI for a given tokenId.
+    /// @notice Returns the URI for a given tokenId.
+    /// @dev The URI, for a given tokenId, is returned once it is lazy minted, even if it might not be actually minted. (See `LazyMint`)
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         (uint256 batchId, ) = _getBatchId(_tokenId);
         string memory batchUri = _getBaseURI(_tokenId);
