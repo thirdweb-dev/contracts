@@ -350,6 +350,11 @@ contract LoyaltyCard is
         return hasRole(METADATA_ROLE, _msgSender());
     }
 
+    /// @dev Returns whether metadata can be frozen in the given execution context.
+    function _canFreezeMetadata() internal view virtual override returns (bool) {
+        return hasRole(METADATA_ROLE, _msgSender());
+    }
+
     /// @dev Returns whether operator restriction can be set in the given execution context.
     function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());

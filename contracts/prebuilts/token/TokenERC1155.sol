@@ -21,6 +21,8 @@ import "../../extension/interface/IPrimarySale.sol";
 import "../../extension/interface/IRoyalty.sol";
 import "../../extension/interface/IOwnable.sol";
 
+import "../../extension/NFTMetadata.sol";
+
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
@@ -59,7 +61,8 @@ contract TokenERC1155 is
     AccessControlEnumerableUpgradeable,
     DefaultOperatorFiltererUpgradeable,
     ERC1155Upgradeable,
-    ITokenERC1155
+    ITokenERC1155,
+    NFTMetadata
 {
     using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
@@ -82,6 +85,8 @@ contract TokenERC1155 is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    /// @dev Only METADATA_ROLE holders can update NFT metadata.
+    bytes32 private constant METADATA_ROLE = keccak256("METADATA_ROLE");
 
     /// @dev Max bps in the thirdweb system
     uint256 private constant MAX_BPS = 10_000;
@@ -118,8 +123,6 @@ contract TokenERC1155 is
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
-
-    mapping(uint256 => string) private _tokenURI;
 
     /// @dev Token ID => total circulating supply of tokens with that ID.
     mapping(uint256 => uint256) public totalSupply;
@@ -173,6 +176,9 @@ contract TokenERC1155 is
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
+
+        _setupRole(METADATA_ROLE, _defaultAdmin);
+        _setRoleAdmin(METADATA_ROLE, METADATA_ROLE);
     }
 
     ///     =====   Public functions  =====
@@ -388,8 +394,7 @@ contract TokenERC1155 is
         uint256 _amount
     ) internal {
         if (bytes(_tokenURI[_tokenId]).length == 0) {
-            require(bytes(_uri).length > 0, "empty uri.");
-            _tokenURI[_tokenId] = _uri;
+            _setTokenURI(_tokenId, _uri);
         }
 
         _mint(_to, _tokenId, _amount, "");
@@ -582,6 +587,16 @@ contract TokenERC1155 is
     /// @dev Returns whether operator restriction can be set in the given execution context.
     function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether metadata can be set in the given execution context.
+    function _canSetMetadata() internal view virtual override returns (bool) {
+        return hasRole(METADATA_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether metadata can be frozen in the given execution context.
+    function _canFreezeMetadata() internal view virtual override returns (bool) {
+        return hasRole(METADATA_ROLE, _msgSender());
     }
 
     function _msgSender()
