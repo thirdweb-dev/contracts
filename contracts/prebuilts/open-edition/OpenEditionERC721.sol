@@ -35,8 +35,6 @@ import "../../extension/SharedMetadata.sol";
 import "../../extension/PermissionsEnumerable.sol";
 import "../../extension/Drop.sol";
 
-// OpenSea operator filter
-import "../../extension/DefaultOperatorFiltererUpgradeable.sol";
 
 contract OpenEditionERC721 is
     Initializable,
@@ -49,7 +47,6 @@ contract OpenEditionERC721 is
     Drop,
     ERC2771ContextUpgradeable,
     Multicall,
-    DefaultOperatorFiltererUpgradeable,
     ERC721AQueryableUpgradeable
 {
     using StringsUpgradeable for uint256;
@@ -89,11 +86,9 @@ contract OpenEditionERC721 is
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);
-        __DefaultOperatorFilterer_init();
 
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
-        _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(_minterRole, _defaultAdmin);
@@ -217,11 +212,6 @@ contract OpenEditionERC721 is
         return hasRole(minterRole, _msgSender());
     }
 
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
@@ -266,53 +256,6 @@ contract OpenEditionERC721 is
                 revert("!T");
             }
         }
-    }
-
-    /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved)
-        public
-        override(IERC721AUpgradeable, ERC721AUpgradeable)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId)
-        public
-        payable
-        override(ERC721AUpgradeable, IERC721AUpgradeable)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.approve(operator, tokenId);
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     function _dropMsgSender() internal view virtual override returns (address) {

@@ -11,7 +11,6 @@ import "../extension/Royalty.sol";
 import "../extension/SoulboundERC721A.sol";
 import "../extension/TokenStore.sol";
 import "../extension/Multicall.sol";
-import "../extension/DefaultOperatorFilterer.sol";
 
 /**
  *      BASE:      ERC721Base
@@ -27,16 +26,7 @@ import "../extension/DefaultOperatorFilterer.sol";
  *
  */
 
-contract ERC721Multiwrap is
-    Multicall,
-    TokenStore,
-    SoulboundERC721A,
-    ERC721A,
-    ContractMetadata,
-    Ownable,
-    Royalty,
-    DefaultOperatorFilterer
-{
+contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, ContractMetadata, Ownable, Royalty {
     /*//////////////////////////////////////////////////////////////
                     Permission control roles
     //////////////////////////////////////////////////////////////*/
@@ -91,7 +81,6 @@ contract ERC721Multiwrap is
     ) ERC721A(_name, _symbol) TokenStore(_nativeTokenWrapper) {
         _setupOwner(_defaultAdmin);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-        _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
@@ -108,13 +97,9 @@ contract ERC721Multiwrap is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev See ERC-165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155Receiver, ERC721A, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155Receiver, ERC721A, IERC165) returns (bool) {
         return
             super.supportsInterface(interfaceId) ||
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -192,68 +177,14 @@ contract ERC721Multiwrap is
     }
 
     /// @notice Returns whether a given address is the owner, or approved to transfer an NFT.
-    function isApprovedOrOwner(address _operator, uint256 _tokenId)
-        public
-        view
-        virtual
-        returns (bool isApprovedOrOwnerOf)
-    {
+    function isApprovedOrOwner(
+        address _operator,
+        uint256 _tokenId
+    ) public view virtual returns (bool isApprovedOrOwnerOf) {
         address owner = ownerOf(_tokenId);
         isApprovedOrOwnerOf = (_operator == owner ||
             isApprovedForAll(owner, _operator) ||
             getApproved(_tokenId) == _operator);
-    }
-
-    /*//////////////////////////////////////////////////////////////
-                        ERC-721 overrides
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved)
-        public
-        virtual
-        override(ERC721A)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId)
-        public
-        virtual
-        override(ERC721A)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.approve(operator, tokenId);
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -288,11 +219,6 @@ contract ERC721Multiwrap is
 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
-        return msg.sender == owner();
-    }
-
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 }

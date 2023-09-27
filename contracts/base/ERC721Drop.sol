@@ -14,7 +14,6 @@ import "../extension/PrimarySale.sol";
 import "../extension/DropSinglePhase.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
-import "../extension/DefaultOperatorFilterer.sol";
 
 import "../lib/TWStrings.sol";
 import "../lib/CurrencyTransferLib.sol";
@@ -52,7 +51,6 @@ contract ERC721Drop is
     PrimarySale,
     LazyMint,
     DelayedReveal,
-    DefaultOperatorFilterer,
     DropSinglePhase
 {
     using TWStrings for uint256;
@@ -72,7 +70,6 @@ contract ERC721Drop is
         _setupOwner(_defaultAdmin);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
-        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -183,58 +180,6 @@ contract ERC721Drop is
         _burn(_tokenId, true);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                        ERC-721 overrides
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved)
-        public
-        virtual
-        override(ERC721A)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId)
-        public
-        virtual
-        override(ERC721A)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.approve(operator, tokenId);
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId, data);
-    }
-
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -322,11 +267,6 @@ contract ERC721Drop is
 
     /// @dev Checks whether NFTs can be revealed in the given execution context.
     function _canReveal() internal view virtual returns (bool) {
-        return msg.sender == owner();
-    }
-
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 

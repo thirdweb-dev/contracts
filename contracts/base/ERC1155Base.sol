@@ -10,7 +10,6 @@ import "../extension/Multicall.sol";
 import "../extension/Ownable.sol";
 import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
-import "../extension/DefaultOperatorFilterer.sol";
 
 import "../lib/TWStrings.sol";
 
@@ -31,15 +30,7 @@ import "../lib/TWStrings.sol";
  *      - EIP 2981 compliance for royalty support on NFT marketplaces.
  */
 
-contract ERC1155Base is
-    ERC1155,
-    ContractMetadata,
-    Ownable,
-    Royalty,
-    Multicall,
-    BatchMintMetadata,
-    DefaultOperatorFilterer
-{
+contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, BatchMintMetadata {
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -72,7 +63,6 @@ contract ERC1155Base is
     ) ERC1155(_name, _symbol) {
         _setupOwner(_defaultAdmin);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -105,12 +95,7 @@ contract ERC1155Base is
      *  @param _tokenURI The full metadata URI for the NFTs minted (if a new NFT is being minted).
      *  @param _amount   The amount of the same NFT to mint.
      */
-    function mintTo(
-        address _to,
-        uint256 _tokenId,
-        string memory _tokenURI,
-        uint256 _amount
-    ) public virtual {
+    function mintTo(address _to, uint256 _tokenId, string memory _tokenURI, uint256 _amount) public virtual {
         require(_canMint(), "Not authorized to mint.");
 
         uint256 tokenIdToMint;
@@ -181,11 +166,7 @@ contract ERC1155Base is
      *  @param _tokenId The tokenId of the NFT to burn.
      *  @param _amount  The amount of the NFT to burn.
      */
-    function burn(
-        address _owner,
-        uint256 _tokenId,
-        uint256 _amount
-    ) external virtual {
+    function burn(address _owner, uint256 _tokenId, uint256 _amount) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
@@ -201,11 +182,7 @@ contract ERC1155Base is
      *  @param _tokenIds The tokenIds of the NFTs to burn.
      *  @param _amounts  The amounts of the NFTs to burn.
      */
-    function burnBatch(
-        address _owner,
-        uint256[] memory _tokenIds,
-        uint256[] memory _amounts
-    ) external virtual {
+    function burnBatch(address _owner, uint256[] memory _tokenIds, uint256[] memory _amounts) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
@@ -241,46 +218,6 @@ contract ERC1155Base is
     }
 
     /*//////////////////////////////////////////////////////////////
-                        ERC-1155 overrides
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev See {ERC1155-setApprovalForAll}
-    function setApprovalForAll(address operator, bool approved)
-        public
-        virtual
-        override(ERC1155)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /**
-     * @dev See {IERC1155-safeTransferFrom}.
-     */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) public virtual override(ERC1155) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, id, amount, data);
-    }
-
-    /**
-     * @dev See {IERC1155-safeBatchTransferFrom}.
-     */
-    function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) public virtual override(ERC1155) onlyAllowedOperator(from) {
-        super.safeBatchTransferFrom(from, to, ids, amounts, data);
-    }
-
-    /*//////////////////////////////////////////////////////////////
                     Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
 
@@ -301,11 +238,6 @@ contract ERC1155Base is
 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
-        return msg.sender == owner();
-    }
-
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 
