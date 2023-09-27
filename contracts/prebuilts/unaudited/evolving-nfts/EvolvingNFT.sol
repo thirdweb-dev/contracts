@@ -23,7 +23,6 @@ import "../../../extension/upgradeable/init/OwnableInit.sol";
 import "../../../extension/upgradeable/init/PermissionsEnumerableInit.sol";
 import "../../../extension/upgradeable/init/ERC2771ContextInit.sol";
 import "../../../extension/upgradeable/init/ERC721AQueryableInit.sol";
-import "../../../extension/upgradeable/init/DefaultOperatorFiltererInit.sol";
 
 contract EvolvingNFT is
     Initializable,
@@ -35,8 +34,7 @@ contract EvolvingNFT is
     RoyaltyInit,
     PrimarySaleInit,
     OwnableInit,
-    PermissionsEnumerableInit,
-    DefaultOperatorFiltererInit
+    PermissionsEnumerableInit
 {
     /// @dev Only EXTENSION_ROLE holders can update the contract's extensions.
     bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
@@ -67,7 +65,6 @@ contract EvolvingNFT is
 
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
-        _setupOperatorFilterer();
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(EXTENSION_ROLE, _defaultAdmin);
