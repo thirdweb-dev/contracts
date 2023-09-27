@@ -30,14 +30,7 @@ import "../lib/TWStrings.sol";
  *      - EIP 2981 compliance for royalty support on NFT marketplaces.
  */
 
-contract ERC721Base is
-    ERC721A,
-    ContractMetadata,
-    Multicall,
-    Ownable,
-    Royalty,
-    BatchMintMetadata
-{
+contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata {
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -191,5 +184,4 @@ contract ERC721Base is
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
-
 }

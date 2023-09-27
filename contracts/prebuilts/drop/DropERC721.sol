@@ -37,7 +37,6 @@ import "../../extension/LazyMint.sol";
 import "../../extension/PermissionsEnumerable.sol";
 import "../../extension/Drop.sol";
 
-
 contract DropERC721 is
     Initializable,
     ContractMetadata,

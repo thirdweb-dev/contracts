@@ -156,7 +156,6 @@ contract ERC721LazyMint is
         return _currentIndex;
     }
 
-
     /*//////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -197,5 +196,4 @@ contract ERC721LazyMint is
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
-
 }

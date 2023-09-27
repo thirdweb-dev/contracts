@@ -78,7 +78,6 @@ contract BurnToClaimDropERC721 is
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
-
     }
 
     function _setupRoles(address _defaultAdmin) internal onlyInitializing {

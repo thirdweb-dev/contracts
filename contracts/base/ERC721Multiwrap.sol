@@ -97,9 +97,13 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
     //////////////////////////////////////////////////////////////*/
 
     /// @dev See ERC-165
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(ERC1155Receiver, ERC721A, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC1155Receiver, ERC721A, IERC165)
+        returns (bool)
+    {
         return
             super.supportsInterface(interfaceId) ||
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -177,10 +181,12 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
     }
 
     /// @notice Returns whether a given address is the owner, or approved to transfer an NFT.
-    function isApprovedOrOwner(
-        address _operator,
-        uint256 _tokenId
-    ) public view virtual returns (bool isApprovedOrOwnerOf) {
+    function isApprovedOrOwner(address _operator, uint256 _tokenId)
+        public
+        view
+        virtual
+        returns (bool isApprovedOrOwnerOf)
+    {
         address owner = ownerOf(_tokenId);
         isApprovedOrOwnerOf = (_operator == owner ||
             isApprovedForAll(owner, _operator) ||

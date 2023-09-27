@@ -35,7 +35,6 @@ import "../../extension/SharedMetadata.sol";
 import "../../extension/PermissionsEnumerable.sol";
 import "../../extension/Drop.sol";
 
-
 contract OpenEditionERC721 is
     Initializable,
     ContractMetadata,

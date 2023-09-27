@@ -339,7 +339,6 @@ contract DropERC1155 is
         }
     }
 
-
     function _dropMsgSender() internal view virtual override returns (address) {
         return _msgSender();
     }

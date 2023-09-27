@@ -542,7 +542,7 @@ contract TokenERC1155 is
             interfaceId == type(IERC1155Upgradeable).interfaceId ||
             interfaceId == type(IERC2981Upgradeable).interfaceId;
     }
-    
+
     /// @dev Returns whether metadata can be set in the given execution context.
     function _canSetMetadata() internal view virtual override returns (bool) {
         return hasRole(METADATA_ROLE, _msgSender());
