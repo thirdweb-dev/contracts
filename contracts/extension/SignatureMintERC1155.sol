@@ -57,20 +57,24 @@ abstract contract SignatureMintERC1155 is EIP712, ISignatureMintERC1155 {
     /// @dev Resolves 'stack too deep' error in `recoverAddress`.
     function _encodeRequest(MintRequest calldata _req) internal pure returns (bytes memory) {
         return
-            abi.encode(
-                TYPEHASH,
-                _req.to,
-                _req.royaltyRecipient,
-                _req.royaltyBps,
-                _req.primarySaleRecipient,
-                _req.tokenId,
-                keccak256(bytes(_req.uri)),
-                _req.quantity,
-                _req.pricePerToken,
-                _req.currency,
-                _req.validityStartTimestamp,
-                _req.validityEndTimestamp,
-                _req.uid
+            bytes.concat(
+                abi.encode(
+                    TYPEHASH,
+                    _req.to,
+                    _req.royaltyRecipient,
+                    _req.royaltyBps,
+                    _req.primarySaleRecipient,
+                    _req.tokenId,
+                    keccak256(bytes(_req.uri))
+                ),
+                abi.encode(
+                    _req.quantity,
+                    _req.pricePerToken,
+                    _req.currency,
+                    _req.validityStartTimestamp,
+                    _req.validityEndTimestamp,
+                    _req.uid
+                )
             );
     }
 }
