@@ -4,10 +4,10 @@ pragma solidity ^0.8.11;
 import "@std/Test.sol";
 import "@ds-test/test.sol";
 
-import { BurnToClaim, IBurnToClaim } from "contracts/extension/upgradeable/BurnToClaim.sol";
-import "../../../ExtensionUtilTest.sol";
+import { BurnToClaim, IBurnToClaim } from "contracts/extension/BurnToClaim.sol";
+import "../../ExtensionUtilTest.sol";
 
-contract MyBurnToClaimUpg is BurnToClaim {
+contract MyBurnToClaim is BurnToClaim {
     bool condition;
 
     function setCondition(bool _condition) external {
@@ -19,8 +19,8 @@ contract MyBurnToClaimUpg is BurnToClaim {
     }
 }
 
-contract UpgradeableBurnToClaim_VerifyBurnToClaim is ExtensionUtilTest {
-    MyBurnToClaimUpg internal ext;
+contract BurnToClaim_VerifyBurnToClaim is ExtensionUtilTest {
+    MyBurnToClaim internal ext;
     address internal tokenOwner;
     uint256 internal tokenId;
     uint256 internal quantity;
@@ -28,7 +28,7 @@ contract UpgradeableBurnToClaim_VerifyBurnToClaim is ExtensionUtilTest {
     function setUp() public override {
         super.setUp();
 
-        ext = new MyBurnToClaimUpg();
+        ext = new MyBurnToClaim();
         ext.setCondition(true);
 
         tokenOwner = getActor(1);
