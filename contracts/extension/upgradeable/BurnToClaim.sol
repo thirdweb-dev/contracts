@@ -29,10 +29,12 @@ library BurnToClaimStorage {
 }
 
 abstract contract BurnToClaim is IBurnToClaim {
+    /// @notice Returns the confugration for burning tokens to claim new tokens.
     function getBurnToClaimInfo() public view returns (BurnToClaimInfo memory) {
         return _burnToClaimStorage().burnToClaimInfo;
     }
 
+    /// @notice Sets the configuration for burning tokens to claim new tokens.
     function setBurnToClaimInfo(BurnToClaimInfo calldata _burnToClaimInfo) external virtual {
         require(_canSetBurnToClaim(), "Not authorized.");
         require(_burnToClaimInfo.originContractAddress != address(0), "Origin contract not set.");
@@ -41,6 +43,7 @@ abstract contract BurnToClaim is IBurnToClaim {
         _burnToClaimStorage().burnToClaimInfo = _burnToClaimInfo;
     }
 
+    /// @notice Verifies an attempt to burn tokens to claim new tokens.
     function verifyBurnToClaim(
         address _tokenOwner,
         uint256 _tokenId,
@@ -63,6 +66,7 @@ abstract contract BurnToClaim is IBurnToClaim {
         }
     }
 
+    /// @dev Burns tokens to claim new tokens.
     function _burnTokensOnOrigin(
         address _tokenOwner,
         uint256 _tokenId,
@@ -82,5 +86,6 @@ abstract contract BurnToClaim is IBurnToClaim {
         data = BurnToClaimStorage.data();
     }
 
+    /// @dev Returns whether the caller can set the burn to claim configuration.
     function _canSetBurnToClaim() internal view virtual returns (bool);
 }
