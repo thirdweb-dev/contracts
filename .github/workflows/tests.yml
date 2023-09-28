@@ -40,4 +40,8 @@ jobs:
           version: nightly
       - name: Run tests
         run: |
-          forge test
+          forge coverage --report lcov
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./lcov.info,
