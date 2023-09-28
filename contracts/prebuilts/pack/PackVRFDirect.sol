@@ -119,7 +119,7 @@ contract PackVRFDirect is
         forwarder = _trustedForwarder;
     }
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,
@@ -318,8 +318,7 @@ contract PackVRFDirect is
     }
 
     function _claimRewards(address opener) internal returns (Token[] memory) {
-        require(isTrustedForwarder(msg.sender) || msg.sender == address(VRF_V2_WRAPPER) || opener == tx.origin, "!EOA");
-
+        require(isTrustedForwarder(msg.sender) || msg.sender == address(this) || opener == tx.origin, "!EOA");
         require(canClaimRewards(opener), "!ActiveReq");
         uint256 reqId = openerToReqId[opener];
         RequestInfo memory info = requestInfo[reqId];

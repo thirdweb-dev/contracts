@@ -12,7 +12,7 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
 
 import "../../../extension/Multicall.sol";
 
@@ -34,7 +34,7 @@ contract BurnToClaimDropERC721 is
     Initializable,
     Multicall,
     ERC2771ContextUpgradeable,
-    BaseRouterWithDefaults,
+    BaseRouter,
     DefaultOperatorFiltererInit,
     ContractMetadataInit,
     PlatformFeeInit,
@@ -48,11 +48,11 @@ contract BurnToClaimDropERC721 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Extension[] memory _extensions) BaseRouterWithDefaults(_extensions) {
+    constructor(Extension[] memory _extensions) BaseRouter(_extensions) {
         _disableInitializers();
     }
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,
@@ -65,6 +65,9 @@ contract BurnToClaimDropERC721 is
         uint128 _platformFeeBps,
         address _platformFeeRecipient
     ) external initializer {
+        // Initialize extensions
+        __BaseRouter_init();
+
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);
@@ -99,21 +102,6 @@ contract BurnToClaimDropERC721 is
     }
 
     /*///////////////////////////////////////////////////////////////
-                        ERC 165 / 721 / 2981 logic
-    //////////////////////////////////////////////////////////////*/
-
-    // /// @dev See ERC 165
-    // function supportsInterface(bytes4 interfaceId)
-    //     public
-    //     view
-    //     virtual
-    //     override(ERC721AUpgradeable, IERC165)
-    //     returns (bool)
-    // {
-    //     return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
-    // }
-
-    /*///////////////////////////////////////////////////////////////
                         Contract identifiers
     //////////////////////////////////////////////////////////////*/
 
@@ -129,14 +117,14 @@ contract BurnToClaimDropERC721 is
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns whether an extension can be set in the given execution context.
-    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
+    /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
+    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
         return _hasRole(keccak256("EXTENSION_ROLE"), msg.sender);
     }
 
     /// @dev Checks whether an account holds the given role.
     function _hasRole(bytes32 role, address addr) internal view returns (bool) {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsStorage.Data storage data = PermissionsStorage.data();
         return data._hasRole[role][addr];
     }
 }

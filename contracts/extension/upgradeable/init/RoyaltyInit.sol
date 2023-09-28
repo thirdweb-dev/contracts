@@ -12,7 +12,7 @@ contract RoyaltyInit {
             revert("Exceeds max bps");
         }
 
-        RoyaltyStorage.Data storage data = RoyaltyStorage.royaltyStorage();
+        RoyaltyStorage.Data storage data = RoyaltyStorage.data();
 
         data.royaltyRecipient = _royaltyRecipient;
         data.royaltyBps = uint16(_royaltyBps);

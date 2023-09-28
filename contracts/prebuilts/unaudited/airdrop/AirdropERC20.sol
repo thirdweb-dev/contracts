@@ -50,7 +50,7 @@ contract AirdropERC20 is
 
     constructor() initializer {}
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _contractURI,
@@ -90,7 +90,7 @@ contract AirdropERC20 is
      *  @param _tokenOwner      The owner of the the tokens to transfer.
      *  @param _contents        List containing recipient, tokenId and amounts to airdrop.
      */
-    function airdrop(
+    function airdropERC20(
         address _tokenAddress,
         address _tokenOwner,
         AirdropContent[] calldata _contents

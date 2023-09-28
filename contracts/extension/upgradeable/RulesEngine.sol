@@ -6,13 +6,16 @@ pragma solidity ^0.8.11;
 import "../interface/IRulesEngine.sol";
 
 import "../../eip/interface/IERC20.sol";
+import "../../eip/interface/IERC20Metadata.sol";
 import "../../eip/interface/IERC721.sol";
 import "../../eip/interface/IERC1155.sol";
 
 import "../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 
 library RulesEngineStorage {
-    bytes32 public constant RULES_ENGINE_STORAGE_POSITION = keccak256("rules.engine.storage");
+    /// @custom:storage-location erc7201:extension.manager.storage
+    bytes32 public constant RULES_ENGINE_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("rules.engine.storage")) - 1));
 
     struct Data {
         address rulesEngineOverride;
@@ -20,10 +23,10 @@ library RulesEngineStorage {
         mapping(bytes32 => IRulesEngine.RuleWithId) rules;
     }
 
-    function rulesEngineStorage() internal pure returns (Data storage rulesEngineData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = RULES_ENGINE_STORAGE_POSITION;
         assembly {
-            rulesEngineData.slot := position
+            data_.slot := position
         }
     }
 }
@@ -69,7 +72,7 @@ abstract contract RulesEngine is IRulesEngine {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    function createRuleMulitiplicative(RuleTypeMultiplicative memory rule) external returns (bytes32 ruleId) {
+    function createRuleMultiplicative(RuleTypeMultiplicative memory rule) external returns (bytes32 ruleId) {
         require(_canSetRules(), "RulesEngine: cannot set rules");
 
         ruleId = keccak256(
@@ -112,7 +115,9 @@ abstract contract RulesEngine is IRulesEngine {
         uint256 balance = 0;
 
         if (_rule.tokenType == TokenType.ERC20) {
-            balance = IERC20(_rule.token).balanceOf(_tokenOwner);
+            // NOTE: We are rounding down the ERC20 balance to the nearest full unit.
+            uint256 unit = 10**IERC20Metadata(_rule.token).decimals();
+            balance = IERC20(_rule.token).balanceOf(_tokenOwner) / unit;
         } else if (_rule.tokenType == TokenType.ERC721) {
             balance = IERC721(_rule.token).balanceOf(_tokenOwner);
         } else if (_rule.tokenType == TokenType.ERC1155) {
@@ -141,17 +146,17 @@ abstract contract RulesEngine is IRulesEngine {
     }
 
     function setRulesEngineOverride(address _rulesEngineAddress) external {
-        require(_canOverrieRulesEngine(), "RulesEngine: cannot override rules engine");
+        require(_canOverrideRulesEngine(), "RulesEngine: cannot override rules engine");
         _rulesEngineStorage().rulesEngineOverride = _rulesEngineAddress;
 
         emit RulesEngineOverriden(_rulesEngineAddress);
     }
 
     function _rulesEngineStorage() internal pure returns (RulesEngineStorage.Data storage data) {
-        data = RulesEngineStorage.rulesEngineStorage();
+        data = RulesEngineStorage.data();
     }
 
     function _canSetRules() internal view virtual returns (bool);
 
-    function _canOverrieRulesEngine() internal view virtual returns (bool);
+    function _canOverrideRulesEngine() internal view virtual returns (bool);
 }

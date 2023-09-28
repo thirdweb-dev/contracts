@@ -81,7 +81,7 @@ contract LoyaltyCard is
 
     constructor() initializer {}
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,
@@ -347,6 +347,11 @@ contract LoyaltyCard is
 
     /// @dev Returns whether metadata can be set in the given execution context.
     function _canSetMetadata() internal view virtual override returns (bool) {
+        return hasRole(METADATA_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether metadata can be frozen in the given execution context.
+    function _canFreezeMetadata() internal view virtual override returns (bool) {
         return hasRole(METADATA_ROLE, _msgSender());
     }
 

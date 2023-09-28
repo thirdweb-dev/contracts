@@ -21,6 +21,9 @@ import "../../extension/interface/IPrimarySale.sol";
 import "../../extension/interface/IRoyalty.sol";
 import "../../extension/interface/IOwnable.sol";
 
+//Extensions
+import "../../extension/NFTMetadata.sol";
+
 // Token
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
 
@@ -61,7 +64,8 @@ contract TokenERC721 is
     AccessControlEnumerableUpgradeable,
     DefaultOperatorFiltererUpgradeable,
     ERC721EnumerableUpgradeable,
-    ITokenERC721
+    ITokenERC721,
+    NFTMetadata
 {
     using ECDSAUpgradeable for bytes32;
     using StringsUpgradeable for uint256;
@@ -78,6 +82,8 @@ contract TokenERC721 is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    /// @dev Only METADATA_ROLE holders can update NFT metadata.
+    bytes32 private constant METADATA_ROLE = keccak256("METADATA_ROLE");
 
     /// @dev Max bps in the thirdweb system
     uint256 private constant MAX_BPS = 10_000;
@@ -109,15 +115,12 @@ contract TokenERC721 is
     /// @dev Mapping from mint request UID => whether the mint request is processed.
     mapping(bytes32 => bool) private minted;
 
-    /// @dev Mapping from tokenId => URI
-    mapping(uint256 => string) private uri;
-
     /// @dev Token ID => royalty recipient and bps for token
     mapping(uint256 => RoyaltyInfo) private royaltyInfoForToken;
 
     constructor() initializer {}
 
-    /// @dev Initiliazes the contract, like a constructor.
+    /// @dev Initializes the contract, like a constructor.
     function initialize(
         address _defaultAdmin,
         string memory _name,
@@ -151,6 +154,10 @@ contract TokenERC721 is
         _owner = _defaultAdmin;
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
+
+        _setupRole(METADATA_ROLE, _defaultAdmin);
+        _setRoleAdmin(METADATA_ROLE, METADATA_ROLE);
+
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
     }
@@ -182,7 +189,7 @@ contract TokenERC721 is
 
     /// @dev Returns the URI for a tokenId
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        return uri[_tokenId];
+        return _tokenURI[_tokenId];
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
@@ -320,7 +327,7 @@ contract TokenERC721 is
         nextTokenIdToMint += 1;
 
         require(bytes(_uri).length > 0, "empty uri.");
-        uri[tokenIdToMint] = _uri;
+        _setTokenURI(tokenIdToMint, _uri);
 
         _safeMint(_to, tokenIdToMint);
 
@@ -462,6 +469,16 @@ contract TokenERC721 is
     /// @dev Returns whether operator restriction can be set in the given execution context.
     function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether metadata can be set in the given execution context.
+    function _canSetMetadata() internal view virtual override returns (bool) {
+        return hasRole(METADATA_ROLE, _msgSender());
+    }
+
+    /// @dev Returns whether metadata can be frozen in the given execution context.
+    function _canFreezeMetadata() internal view virtual override returns (bool) {
+        return hasRole(METADATA_ROLE, _msgSender());
     }
 
     function supportsInterface(bytes4 interfaceId)

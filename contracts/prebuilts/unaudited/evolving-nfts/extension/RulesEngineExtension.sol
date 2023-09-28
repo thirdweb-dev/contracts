@@ -13,14 +13,14 @@ contract RulesEngineExtension is RulesEngine {
     }
 
     /// @dev Returns whether the rules engine used by the contract can be overriden in the given execution context.
-    function _canOverrieRulesEngine() internal view virtual override returns (bool) {
+    function _canOverrideRulesEngine() internal view virtual override returns (bool) {
         // DEFAULT_ADMIN_ROLE
         return _hasRole(0x00, msg.sender);
     }
 
     /// @dev Checks whether an account has a particular role.
     function _hasRole(bytes32 _role, address _account) internal view returns (bool) {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsStorage.Data storage data = PermissionsStorage.data();
         return data._hasRole[_role][_account];
     }
 }

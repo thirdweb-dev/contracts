@@ -13,7 +13,7 @@ contract PermissionsEnumerableInit is PermissionsInit {
 
     /// @dev adds `account` to {roleMembers}, for `role`
     function _addMember(bytes32 role, address account) internal {
-        PermissionsEnumerableStorage.Data storage data = PermissionsEnumerableStorage.permissionsEnumerableStorage();
+        PermissionsEnumerableStorage.Data storage data = PermissionsEnumerableStorage.data();
         uint256 idx = data.roleMembers[role].index;
         data.roleMembers[role].index += 1;
 

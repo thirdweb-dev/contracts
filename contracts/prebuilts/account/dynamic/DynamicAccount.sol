@@ -7,7 +7,7 @@ pragma solidity ^0.8.11;
 
 import "../utils/AccountCore.sol";
 
-import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
+import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -18,24 +18,31 @@ import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouterWithDefaults.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract DynamicAccount is AccountCore, BaseRouterWithDefaults {
+contract DynamicAccount is AccountCore, BaseRouter {
     /*///////////////////////////////////////////////////////////////
-                                Constructor
+                    Constructor and Initializer
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
         AccountCore(_entrypoint, msg.sender)
-        BaseRouterWithDefaults(_defaultExtensions)
+        BaseRouter(_defaultExtensions)
     {
         _disableInitializers();
+    }
+
+    /// @notice Initializes the smart contract wallet.
+    function initialize(address _defaultAdmin, bytes calldata) public override initializer {
+        __BaseRouter_init();
+        AccountCoreStorage.data().firstAdmin = _defaultAdmin;
+        _setAdmin(_defaultAdmin, true);
     }
 
     /*///////////////////////////////////////////////////////////////
                         Internal overrides
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns whether a extension can be set in the given execution context.
-    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
+    /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
+    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
         return isAdmin(msg.sender);
     }
 }

@@ -63,8 +63,6 @@ contract EvolvingNFTLogic is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    /// @dev Max bps in the thirdweb system.
-    uint256 private constant MAX_BPS = 10_000;
 
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 2981 logic
@@ -96,12 +94,14 @@ contract EvolvingNFTLogic is
         // Get the target ID i.e. `start` of the range that the score falls into.
         bytes32[] memory ids = _sharedMetadataBatchStorage().ids.values();
         bytes32 targetId = 0;
+        uint256 check = 0;
 
         for (uint256 i = 0; i < ids.length; i += 1) {
-            if (uint256(ids[i]) <= score) {
+            uint256 id = uint256(ids[i]);
+
+            if (id <= score && id >= check) {
                 targetId = ids[i];
-            } else {
-                break;
+                check = id;
             }
         }
         return _getURIFromSharedMetadata(targetId, _tokenId);
@@ -205,7 +205,7 @@ contract EvolvingNFTLogic is
 
     /// @dev Checks whether an account has a particular role.
     function _hasRole(bytes32 _role, address _account) internal view returns (bool) {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsStorage.Data storage data = PermissionsStorage.data();
         return data._hasRole[_role][_account];
     }
 

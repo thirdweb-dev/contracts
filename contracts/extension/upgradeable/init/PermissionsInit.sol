@@ -12,14 +12,14 @@ contract PermissionsInit {
 
     /// @dev Sets up `role` for `account`
     function _setupRole(bytes32 role, address account) internal virtual {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsStorage.Data storage data = PermissionsStorage.data();
         data._hasRole[role][account] = true;
         emit RoleGranted(role, account, msg.sender);
     }
 
     /// @dev Sets `adminRole` as `role`'s admin role.
     function _setRoleAdmin(bytes32 role, bytes32 adminRole) internal virtual {
-        PermissionsStorage.Data storage data = PermissionsStorage.permissionsStorage();
+        PermissionsStorage.Data storage data = PermissionsStorage.data();
         bytes32 previousAdminRole = data._getRoleAdmin[role];
         data._getRoleAdmin[role] = adminRole;
         emit RoleAdminChanged(role, previousAdminRole, adminRole);
