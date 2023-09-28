@@ -64,7 +64,7 @@ contract UpgradeableDrop_VerifyClaim is ExtensionUtilTest {
         ext = new MyDropUpg();
 
         _claimer = getActor(1);
-        _allowlistClaimer = address(0x9999999999999999999999999999999999999999);
+        _allowlistClaimer = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
 
         // claim condition without allowlist
         claimCondition = IClaimCondition.ClaimCondition({

@@ -36,7 +36,7 @@ pragma solidity ^0.8.0;
 
 //         vm.warp(1);
 
-//         address receiver = address(0x9999999999999999999999999999999999999999);
+//         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
 //         uint256 quantity = 2;
 
 //         uint256 _availableAmount = drop.availableAmount();
@@ -66,7 +66,7 @@ pragma solidity ^0.8.0;
 
 //         vm.warp(1);
 
-//         address receiver = address(0x9999999999999999999999999999999999999999);
+//         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
 //         uint256 quantity = 2;
 
 //         vm.prank(receiver);
@@ -87,7 +87,7 @@ pragma solidity ^0.8.0;
 
 //         vm.warp(1);
 
-//         address receiver = address(0x9999999999999999999999999999999999999999);
+//         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
 //         uint256 quantity = 2;
 
 //         uint256 _availableAmount = drop.availableAmount();
@@ -126,7 +126,7 @@ pragma solidity ^0.8.0;
 
 //         vm.warp(1);
 
-//         address receiver = address(0x9999999999999999999999999999999999999999);
+//         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
 //         uint256 quantity = 6;
 
 //         vm.prank(receiver);
@@ -147,7 +147,7 @@ pragma solidity ^0.8.0;
 
 //         vm.warp(1001);
 
-//         address receiver = address(0x9999999999999999999999999999999999999999);
+//         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
 //         uint256 quantity = 5;
 
 //         vm.prank(receiver);
