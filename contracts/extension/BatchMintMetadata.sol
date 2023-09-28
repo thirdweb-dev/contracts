@@ -16,7 +16,9 @@ contract BatchMintMetadata {
 
     /// @dev Mapping from id of a batch of tokens => to base URI for the respective batch of tokens.
     mapping(uint256 => string) private baseURI;
-    mapping(uint256 => bool) private batchIdFrozen;
+
+    /// @dev Mapping from id of a batch of tokens => to whether the base URI for the respective batch of tokens is frozen.
+    mapping(uint256 => bool) public batchFrozen;
 
     /**
      *  @notice         Returns the count of batches of NFTs.
@@ -71,14 +73,14 @@ contract BatchMintMetadata {
 
     /// @dev Sets the base URI for the batch of tokens with the given batchId.
     function _setBaseURI(uint256 _batchId, string memory _baseURI) internal {
-        require(!batchIdFrozen[_batchId], "BatchMintMetadata: Batch does not exist");
+        require(!batchFrozen[_batchId], "Batch frozen");
         baseURI[_batchId] = _baseURI;
     }
 
     /// @dev Freezes the base URI for the batch of tokens with the given batchId.
     function _freezeBaseURI(uint256 _batchId) internal {
-        require(_batchID < getBaseURICount(), "BatchMintMetadata: Invalid batchId"
-        batchIdFrozen[_batchId] = true;
+        require(_batchId < getBaseURICount(), "Invalid batchId");
+        batchFrozen[_batchId] = true;
     }
 
     /// @dev Mints a batch of tokenIds and associates a common baseURI to all those Ids.

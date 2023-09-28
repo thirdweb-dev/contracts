@@ -66,6 +66,8 @@ contract DropERC721 is
     bytes32 private transferRole;
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
     bytes32 private minterRole;
+    /// @dev Only METADATA_ROLE holders can reveal the URI for a batch of delayed reveal NFTs, and update or freeze batch metadata.
+    bytes32 private metadataRole;
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -97,6 +99,7 @@ contract DropERC721 is
     ) external initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
+        bytes32 _metadataRole = keccak256("METADATA_ROLE");
 
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
@@ -111,6 +114,8 @@ contract DropERC721 is
         _setupRole(_minterRole, _defaultAdmin);
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
+        _setupRole(_metadataRole, _defaultAdmin);
+        _setRoleAdmin(_metadataRole, _metadataRole);
 
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
@@ -118,6 +123,7 @@ contract DropERC721 is
 
         transferRole = _transferRole;
         minterRole = _minterRole;
+        metadataRole = _metadataRole;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -137,13 +143,9 @@ contract DropERC721 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
@@ -182,12 +184,13 @@ contract DropERC721 is
         return super.lazyMint(_amount, _baseURIForTokens, _data);
     }
 
-    /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
-        external
-        onlyRole(minterRole)
-        returns (string memory revealedURI)
-    {
+    /// @dev Lets an account with `METADATA_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
+    /// @param _index the ID of a token with the desired batch.
+    /// @param _key the key to decrypt the batch's URI.
+    function reveal(
+        uint256 _index,
+        bytes calldata _key
+    ) external onlyRole(metadataRole) returns (string memory revealedURI) {
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
@@ -195,6 +198,21 @@ contract DropERC721 is
         _setBaseURI(batchId, revealedURI);
 
         emit TokenURIRevealed(_index, revealedURI);
+    }
+
+    /// @notice Updates the base URI for a batch of tokens. Can only be called if the batch has been revealed/is not encrypted.
+    /// @param _index the ID of a token with the desired batch.
+    /// @param _uri the new base URI for the batch.
+    function updateBatchBaseURI(uint256 _index, string calldata _uri) external onlyRole(metadataRole) {
+        require(!isEncryptedBatch(getBatchIdAtIndex(_index)), "Encrypted batch");
+        uint256 batchId = getBatchIdAtIndex(_index);
+        _setBaseURI(batchId, _uri);
+    }
+
+    function freezeBatchBaseURI(uint256 _index) external onlyRole(metadataRole) {
+        require(!isEncryptedBatch(getBatchIdAtIndex(_index)), "Encrypted batch");
+        uint256 batchId = getBatchIdAtIndex(_index);
+        _freezeBaseURI(batchId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -256,11 +274,10 @@ contract DropERC721 is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId) {
         startTokenId = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
     }
@@ -313,9 +330,7 @@ contract DropERC721 is
      * Returns the total amount of tokens minted in the contract.
      */
     function totalMinted() external view returns (uint256) {
-        unchecked {
-            return _currentIndex - _startTokenId();
-        }
+        return _totalMinted();
     }
 
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
