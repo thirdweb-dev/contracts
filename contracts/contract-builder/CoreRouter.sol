@@ -10,8 +10,7 @@ import "lib/dynamic-contracts/src/presets/BaseRouter.sol";
 import "lib/dynamic-contracts/src/core/Router.sol";
 
 // Utils
-import "lib/dynamic-contracts/src/presets/utils/StringSet.sol";
-import "lib/dynamic-contracts/src/presets/utils/ExtensionState.sol";
+import "lib/dynamic-contracts/src/lib/StringSet.sol";
 import "./extension/PermissionOverride.sol";
 
 // Fixed extensions
@@ -25,7 +24,10 @@ contract CoreRouter is BaseRouter, ContractMetadata, Ownable {
                                 Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _owner) {
+    constructor(address _owner, Extension[] memory _extensions) BaseRouter(_extensions) {
+        // Initialize extensions
+        __BaseRouter_init();
+
         _setupOwner(_owner);
     }
 
@@ -33,8 +35,8 @@ contract CoreRouter is BaseRouter, ContractMetadata, Ownable {
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns whether a extension can be set in the given execution context.
-    function _canSetExtension(Extension memory) internal view virtual override returns (bool) {
+    /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
+    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
