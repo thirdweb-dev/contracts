@@ -14,3 +14,9 @@ runs:
     - name: Install dependencies
       shell: bash
       run: yarn
+
+    - name: Setup lcov
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install -y lcov
