@@ -742,7 +742,7 @@ contract DropERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0x9999999999999999999999999999999999999999); // in allowlist
 
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -792,7 +792,7 @@ contract DropERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0x9999999999999999999999999999999999999999); // in allowlist
 
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -851,7 +851,7 @@ contract DropERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0x9999999999999999999999999999999999999999); // in allowlist
 
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -906,7 +906,7 @@ contract DropERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0x9999999999999999999999999999999999999999); // in allowlist
 
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -962,7 +962,7 @@ contract DropERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address receiver = address(0x9999999999999999999999999999999999999999);
 
         // bytes32[] memory proofs = new bytes32[](0);
 

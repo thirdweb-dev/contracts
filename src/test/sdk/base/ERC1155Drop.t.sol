@@ -230,7 +230,7 @@ contract ERC1155DropTest is DSTest, Test {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        address claimer = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address claimer = address(0x9999999999999999999999999999999999999999);
 
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
@@ -288,7 +288,7 @@ contract ERC1155DropTest is DSTest, Test {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        address claimer = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address claimer = address(0x9999999999999999999999999999999999999999);
 
         condition.startTimestamp = block.timestamp;
         condition.maxClaimableSupply = 100;
