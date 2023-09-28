@@ -44,6 +44,7 @@ yarn.lock
 # Forge
 #/lib
 /out
+lcov.info
 
 #Build
 .swc/

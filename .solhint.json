@@ -16,6 +16,9 @@
     "var-name-mixedcase": "error",
     "func-visibility": ["error", { "ignoreConstructors": true }],
     "not-rely-on-time": "off",
+    "no-empty-blocks": "off",
+    "contract-name-camelcase": "off",
+    "no-inline-assembly": "off",
     "prettier/prettier": [
       "error",
       {
