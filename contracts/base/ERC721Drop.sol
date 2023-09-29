@@ -59,6 +59,16 @@ contract ERC721Drop is
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Initializes the contract during construction.
+     *
+     * @param _defaultAdmin     The default admin of the contract.
+     * @param _name             The name of the contract.
+     * @param _symbol           The symbol of the contract.
+     * @param _royaltyRecipient The address to receive royalties.
+     * @param _royaltyBps       The royalty basis points to be charged. Max = 10000 (10000 = 100%, 1000 = 10%)
+     * @param _primarySaleRecipient The address to receive primary sale value.
+     */
     constructor(
         address _defaultAdmin,
         string memory _name,
@@ -76,7 +86,10 @@ contract ERC721Drop is
                             ERC165 Logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+    /**
+     * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -184,7 +197,11 @@ contract ERC721Drop is
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Runs before every `claim` function call.
+    /**
+     * @dev Runs before every `claim` function call.
+     *
+     * @param _quantity The quantity of NFTs being claimed.
+     */
     function _beforeClaim(
         address,
         uint256 _quantity,
@@ -198,7 +215,14 @@ contract ERC721Drop is
         }
     }
 
-    /// @dev Collects and distributes the primary sale value of NFTs being claimed.
+    /**
+     * @dev Collects and distributes the primary sale value of NFTs being claimed.
+     *
+     * @param _primarySaleRecipient The address to receive the primary sale value.
+     * @param _quantityToClaim      The quantity of NFTs being claimed.
+     * @param _currency             The currency in which the NFTs are being claimed.
+     * @param _pricePerToken        The price per token in the given currency.
+     */
     function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
@@ -224,7 +248,12 @@ contract ERC721Drop is
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 
-    /// @dev Transfers the NFTs being claimed.
+    /**
+     * @dev Transfers the NFTs being claimed.
+     *
+     * @param _to                    The address to which the NFTs are being transferred.
+     * @param _quantityBeingClaimed  The quantity of NFTs being claimed.
+     */
     function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
         internal
         virtual

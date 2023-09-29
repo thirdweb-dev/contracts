@@ -43,6 +43,15 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Initializes the contract during construction.
+     *
+     * @param _defaultAdmin     The default admin of the contract.
+     * @param _name             The name of the contract.
+     * @param _symbol           The symbol of the contract.
+     * @param _royaltyRecipient The address to receive royalties.
+     * @param _royaltyBps       The royalty basis points to be charged. Max = 10000 (10000 = 100%, 1000 = 10%)
+     */
     constructor(
         address _defaultAdmin,
         string memory _name,
@@ -58,7 +67,10 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
                             ERC165 Logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+    /**
+     * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -143,7 +155,14 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
         return _currentIndex;
     }
 
-    /// @notice Returns whether a given address is the owner, or approved to transfer an NFT.
+    /**
+     * @notice Returns whether a given address is the owner, or approved to transfer an NFT.
+     *
+     * @param _operator The address to check.
+     * @param _tokenId  The tokenId of the NFT to check.
+     *
+     * @return isApprovedOrOwnerOf Whether the given address is approved to transfer the given NFT.
+     */
     function isApprovedOrOwner(address _operator, uint256 _tokenId)
         public
         view
@@ -160,6 +179,12 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
                         Internal (overrideable) functions
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Sets the metadata URI for a given tokenId.
+     *
+     * @param _tokenId  The tokenId of the NFT to set the URI for.
+     * @param _tokenURI The URI to set for the given tokenId.
+     */
     function _setTokenURI(uint256 _tokenId, string memory _tokenURI) internal virtual {
         require(bytes(fullURI[_tokenId]).length == 0, "URI already set");
         fullURI[_tokenId] = _tokenURI;

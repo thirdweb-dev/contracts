@@ -75,6 +75,15 @@ contract ERC1155LazyMint is
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Initializes the contract during construction.
+     *
+     * @param _defaultAdmin     The default admin of the contract.
+     * @param _name             The name of the contract.
+     * @param _symbol           The symbol of the contract.
+     * @param _royaltyRecipient The address to receive royalties.
+     * @param _royaltyBps       The royalty basis points to be charged. Max = 10000 (10000 = 100%, 1000 = 10%)
+     */
     constructor(
         address _defaultAdmin,
         string memory _name,
@@ -90,7 +99,12 @@ contract ERC1155LazyMint is
                     Overriden metadata logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Returns the metadata URI for the given tokenId.
+    /**
+     * @notice Returns the metadata URI for the given tokenId.
+     *
+     * @param _tokenId The tokenId of the NFT.
+     * @return The metadata URI for the given tokenId.
+     */
     function uri(uint256 _tokenId) public view virtual override returns (string memory) {
         string memory batchUri = _getBaseURI(_tokenId);
         return string(abi.encodePacked(batchUri, _tokenId.toString()));
@@ -192,7 +206,10 @@ contract ERC1155LazyMint is
                             ERC165 Logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Returns whether this contract supports the given interface.
+    /**
+     * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -221,6 +238,10 @@ contract ERC1155LazyMint is
      *
      *  @dev             Override this function to add logic for state updation.
      *                   When overriding, apply any state changes before `_mint`.
+     *
+     *  @param _receiver The receiver of the tokens to mint.
+     *  @param _tokenId  The tokenId of the lazy minted NFT to mint.
+     *  @param _quantity The number of tokens to mint.
      */
     function _transferTokensOnClaim(
         address _receiver,
@@ -250,7 +271,16 @@ contract ERC1155LazyMint is
         return msg.sender == owner();
     }
 
-    /// @dev Runs before every token transfer / mint / burn.
+    /**
+     * @dev Runs before every token transfer / mint / burn.
+     *
+     * @param operator The address performing the token transfer.
+     * @param from     The address from which the token is being transferred.
+     * @param to       The address to which the token is being transferred.
+     * @param ids      The tokenIds of the tokens being transferred.
+     * @param amounts  The amounts of the tokens being transferred.
+     * @param data     Any additional data being passed in the token transfer.
+     */
     function _beforeTokenTransfer(
         address operator,
         address from,

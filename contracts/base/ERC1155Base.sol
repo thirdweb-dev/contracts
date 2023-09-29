@@ -70,6 +70,8 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns the metadata URI for the given tokenId.
+    /// @param _tokenId The tokenId of the token for which a URI should be returned.
+    /// @return The metadata URI for the given tokenId.
     function uri(uint256 _tokenId) public view virtual override returns (string memory) {
         string memory uriForToken = _uri[_tokenId];
         if (bytes(uriForToken).length > 0) {
@@ -212,7 +214,10 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
                             ERC165 Logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Returns whether this contract supports the given interface.
+    /**
+     * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -235,26 +240,36 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
+    /// @return Whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Returns whether a token can be minted in the given execution context.
+    /// @return Whether a token can be minted in the given execution context.
     function _canMint() internal view virtual returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Returns whether owner can be set in the given execution context.
+    /// @return Whether owner can be set in the given execution context.
     function _canSetOwner() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Returns whether royalty info can be set in the given execution context.
+    /// @return Whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
     /// @dev Runs before every token transfer / mint / burn.
+    /// @param operator The address of the caller.
+    /// @param from The address of the sender.
+    /// @param to The address of the recipient.
+    /// @param ids The tokenIds of the tokens being transferred.
+    /// @param amounts The amounts of the tokens being transferred.
+    /// @param data Additional data with no specified format.
     function _beforeTokenTransfer(
         address operator,
         address from,
