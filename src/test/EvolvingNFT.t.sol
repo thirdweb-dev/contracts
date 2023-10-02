@@ -109,7 +109,7 @@ contract EvolvingNFTTest is BaseTest {
             "tokenURI(uint256)"
         );
         evolvingNftExtension.functions[4] = IExtension.ExtensionFunction(
-            EvolvingNFTLogic.transferFrom.selector,
+            IERC721Upgradeable.transferFrom.selector,
             "transferFrom(address,address,uint256)"
         );
         evolvingNftExtension.functions[5] = IExtension.ExtensionFunction(IERC721.ownerOf.selector, "ownerOf(uint256)");
