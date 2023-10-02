@@ -1,0 +1,37 @@
+function updateListing(uint256 _listingId, ListingParameters memory _params)
+├── when the listing does not exist
+│   └── it should revert
+└── when the listing exists
+    ├── when the listed asset does not have ASSET_ROLE
+    │   └── it should revert
+    └── when the listed asset has ASSET_ROLE
+        ├── when the caller is not the listing creator
+        │   └── it should revert
+        └── when the caller is the listing creator
+            ├── when the listing has expired i.e. end time is less than or before the block timestamp
+            │   └── it should revert
+            └── when the listing has not expired
+                ├── when the updated asset and tokenId is different from the listed asset and tokenId
+                │   └── it should revert
+                └── when the updated asset and tokenId is the same as the listed asset and tokenId
+                    ├── when the updated start time is greater or equal to than the updated end time
+                    │   └── it should revert
+                    └── when the updated start time is less than the updated end time
+                        ├── when the updated start time is different from the listed start time and before the block timestamp
+                        │   └── it should revert
+                        └── when the updated start time is the same as the listed start time or after the block timestamp
+                            ├── when the approved price for updated currency is different than the updated price
+                            │   └── it should revert
+                            └── when the approved price for updated currency is zero or the same as the updated price
+                                ├── when the updated listing params are invalid
+                                │   └── it should revert
+                                └── when the updated listing params are valid
+                                    └── when the updated start time is different from the listed start time and less than the block timestamp
+                                        ├── when the updated start time is more than 60 minutes before block timestamp
+                                        │   └── it should revert
+                                        ├── when the updated start time is less than or equal to 60 minutes before block timestamp
+                                        │   ├── it should store updated listing at the same listing ID
+                                        │   └── it should emit UpdatedListing event with listing creator, listing ID, updated asset contract and listing data
+                                        └── when the updated start time is same as listed start time or after the block timestamp
+                                            ├── it should store updated listing at the same listing ID
+                                            └── it should emit UpdatedListing event with listing creator, listing ID, updated asset contract and listing data
