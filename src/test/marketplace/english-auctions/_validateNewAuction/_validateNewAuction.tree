@@ -1,0 +1,20 @@
+function _validateNewAuction(AuctionParameters memory _params, TokenType _tokenType)
+├── when the auction quantity is zero
+│   └── it should revert
+└── when the auction quantity is non-zero
+    ├── when the quantity is greater than one and the token type is ERC721
+    │   └── it should revert
+    └── when the quantity is equal to one or the token type is ERC1155
+        ├── when the time buffer is zero
+        │   └── it should revert
+        └── when the time buffer is non-zero
+            ├── when the bid buffer bps is zero
+            │   └── it should revert
+            └── when the bid buffer bps is non-zero
+                ├── when the start time is more than 60 minutes before block timestamp or start time is gte end time
+                │   └── it should revert
+                └── when the start time is not more than 60 minutes before block timestamp and start time is less than end time
+                    ├── when there is a non zero buyout price and buyout price is less than minimum bid amount
+                    │   └── it should revert
+                    └── when there is zero buyout price or buyout price is gte minimum bid amount
+                        └── it should return
