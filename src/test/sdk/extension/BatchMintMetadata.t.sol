@@ -94,7 +94,7 @@ contract ExtensionBatchMintMetadata is DSTest, Test {
     }
 
     function test_freezeBaseURI_revert_invalidBatch() public {
-        vm.expectRevert("Invalid batchId");
+        vm.expectRevert("Invalid batch");
         ext.freezeBaseURI(100);
     }
 

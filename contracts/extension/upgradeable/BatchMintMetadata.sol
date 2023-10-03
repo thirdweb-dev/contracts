@@ -112,12 +112,15 @@ contract BatchMintMetadata {
     function _setBaseURI(uint256 _batchId, string memory _baseURI) internal {
         require(!_batchMintMetadataStorage().batchFrozen[_batchId], "Batch frozen");
         _batchMintMetadataStorage().baseURI[_batchId] = _baseURI;
+        emit BatchMetadataUpdate(_getBatchStartId(_batchId), _batchId);
     }
 
     /// @dev Freezes the base URI for the batch of tokens with the given batchId.
     function _freezeBaseURI(uint256 _batchId) internal {
-        require(_batchId < getBaseURICount(), "Invalid batchId");
+        string memory baseURIForBatch = _batchMintMetadataStorage().baseURI[_batchId];
+        require(bytes(baseURIForBatch).length > 0, "Invalid batch");
         _batchMintMetadataStorage().batchFrozen[_batchId] = true;
+        emit MetadataFrozen();
     }
 
     /// @dev Mints a batch of tokenIds and associates a common baseURI to all those Ids.
