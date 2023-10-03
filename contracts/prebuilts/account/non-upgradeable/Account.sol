@@ -142,6 +142,6 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {
-        return isAdmin(msg.sender);
+        return isAdmin(msg.sender) || msg.sender == address(this);
     }
 }
