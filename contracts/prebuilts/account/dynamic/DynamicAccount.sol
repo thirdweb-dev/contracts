@@ -42,7 +42,7 @@ contract DynamicAccount is AccountCore, BaseRouter {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
-    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
+    function _isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
         return isAdmin(msg.sender);
     }
 }

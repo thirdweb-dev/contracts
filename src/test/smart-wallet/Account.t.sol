@@ -529,15 +529,15 @@ contract SimpleAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 0);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 0);
 
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).addDeposit{ value: 1000 }();
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 1000);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 1000);
 
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).withdrawDepositTo(payable(accountSigner), 500);
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 500);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 500);
     }
 
     /*///////////////////////////////////////////////////////////////

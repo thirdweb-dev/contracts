@@ -45,7 +45,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         );
 
     modifier onlyAdmin() virtual {
-        require(isAdmin(msg.sender), "AccountPermissions: caller is not an admin");
+        require(isAdmin(msg.sender), "caller is not an admin");
         _;
     }
 
@@ -61,15 +61,15 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     /// @notice Sets the permissions for a given signer.
     function setPermissionsForSigner(SignerPermissionRequest calldata _req, bytes calldata _signature) external {
         address targetSigner = _req.signer;
-        require(!isAdmin(targetSigner), "AccountPermissions: signer is already an admin");
+        require(!isAdmin(targetSigner), "signer is already an admin");
 
         require(
             _req.reqValidityStartTimestamp <= block.timestamp && block.timestamp < _req.reqValidityEndTimestamp,
-            "AccountPermissions: invalid request validity period"
+            "invalid request validity period"
         );
 
         (bool success, address signer) = verifySignerPermissionRequest(_req, _signature);
-        require(success, "AccountPermissions: invalid signature");
+        require(success, "invalid signature");
 
         _accountPermissionsStorage().allSigners.add(targetSigner);
         _accountPermissionsStorage().executed[_req.uid] = true;

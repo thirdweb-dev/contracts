@@ -243,6 +243,59 @@ contract ManagedAccountTest is BaseTest {
         numberContract = new Number();
     }
 
+    /// @dev benchmark test for deployment gas cost
+    function test_deploy_managedAccount() public {
+        // Setting up default extension.
+        IExtension.Extension memory defaultExtension;
+
+        defaultExtension.metadata = IExtension.ExtensionMetadata({
+            name: "AccountExtension",
+            metadataURI: "ipfs://AccountExtension",
+            implementation: address(new AccountExtension())
+        });
+
+        defaultExtension.functions = new IExtension.ExtensionFunction[](7);
+
+        defaultExtension.functions[0] = IExtension.ExtensionFunction(
+            AccountExtension.supportsInterface.selector,
+            "supportsInterface(bytes4)"
+        );
+        defaultExtension.functions[1] = IExtension.ExtensionFunction(
+            AccountExtension.execute.selector,
+            "execute(address,uint256,bytes)"
+        );
+        defaultExtension.functions[2] = IExtension.ExtensionFunction(
+            AccountExtension.executeBatch.selector,
+            "executeBatch(address[],uint256[],bytes[])"
+        );
+        defaultExtension.functions[3] = IExtension.ExtensionFunction(
+            ERC721Holder.onERC721Received.selector,
+            "onERC721Received(address,address,uint256,bytes)"
+        );
+        defaultExtension.functions[4] = IExtension.ExtensionFunction(
+            ERC1155Holder.onERC1155Received.selector,
+            "onERC1155Received(address,address,uint256,uint256,bytes)"
+        );
+        defaultExtension.functions[5] = IExtension.ExtensionFunction(
+            bytes4(0), // Selector for `receive()` function.
+            "receive()"
+        );
+        defaultExtension.functions[6] = IExtension.ExtensionFunction(
+            AccountExtension.isValidSignature.selector,
+            "isValidSignature(bytes32,bytes)"
+        );
+
+        IExtension.Extension[] memory extensions = new IExtension.Extension[](1);
+        extensions[0] = defaultExtension;
+
+        // deploy account factory
+        vm.prank(factoryDeployer);
+        ManagedAccountFactory factory = new ManagedAccountFactory(
+            IEntryPoint(payable(address(entrypoint))),
+            extensions
+        );
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Test: creating an account
     //////////////////////////////////////////////////////////////*/
@@ -593,15 +646,15 @@ contract ManagedAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 0);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 0);
 
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).addDeposit{ value: 1000 }();
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 1000);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 1000);
 
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).withdrawDepositTo(payable(accountSigner), 500);
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 500);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 500);
     }
 
     /*///////////////////////////////////////////////////////////////
