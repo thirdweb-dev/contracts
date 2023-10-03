@@ -591,5 +591,37 @@ contract SimpleAccountTest is BaseTest {
 
         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
         assertEq(SimpleAccount(payable(account)).contractURI(), "https://thirdweb.com");
+
+        address[] memory targets = new address[](0);
+        uint256[] memory values = new uint256[](0);
+        bytes[] memory callData = new bytes[](0);
+
+        address[] memory approvedTargets = new address[](0);
+
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
+
+        vm.prank(accountAdmin);
+        bytes memory sig = _signSignerPermissionRequest(permissionsReq);
+        SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
+
+        UserOperation[] memory userOpViaSigner = _setupUserOpExecute(
+            accountSignerPKey,
+            bytes(""),
+            address(account),
+            0,
+            abi.encodeWithSignature("setContractURI(string)", "https://thirdweb.com")
+        );
+
+        vm.expectRevert();
+        EntryPoint(entrypoint).handleOps(userOpViaSigner, beneficiary);
     }
 }
