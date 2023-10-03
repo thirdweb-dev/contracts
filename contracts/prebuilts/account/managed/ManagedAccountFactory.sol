@@ -52,7 +52,7 @@ contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
     }
 
     /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
-    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
+    function _isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
         return hasRole(keccak256("EXTENSION_ROLE"), msg.sender);
     }
 
