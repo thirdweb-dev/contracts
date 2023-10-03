@@ -137,9 +137,13 @@ contract DropERC721 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721AUpgradeable, IERC165)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
@@ -181,10 +185,11 @@ contract DropERC721 is
     /// @dev Lets an account with `METADATA_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
     /// @param _index the ID of a token with the desired batch.
     /// @param _key the key to decrypt the batch's URI.
-    function reveal(
-        uint256 _index,
-        bytes calldata _key
-    ) external onlyRole(metadataRole) returns (string memory revealedURI) {
+    function reveal(uint256 _index, bytes calldata _key)
+        external
+        onlyRole(metadataRole)
+        returns (string memory revealedURI)
+    {
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
@@ -203,6 +208,11 @@ contract DropERC721 is
         _setBaseURI(batchId, _uri);
     }
 
+    /**
+     * @notice Freezes the base URI for a batch of tokens.
+     *
+     * @param _index the ID of a token with the desired batch.
+     */
     function freezeBatchBaseURI(uint256 _index) external onlyRole(metadataRole) {
         require(!isEncryptedBatch(getBatchIdAtIndex(_index)), "Encrypted batch");
         uint256 batchId = getBatchIdAtIndex(_index);
@@ -268,10 +278,11 @@ contract DropERC721 is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal override returns (uint256 startTokenId) {
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        override
+        returns (uint256 startTokenId)
+    {
         startTokenId = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
     }

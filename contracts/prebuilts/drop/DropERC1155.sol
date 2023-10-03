@@ -66,6 +66,8 @@ contract DropERC1155 is
     bytes32 private transferRole;
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
     bytes32 private minterRole;
+    /// @dev Only METADATA_ROLE holders can reveal the URI for a batch of delayed reveal NFTs, and update or freeze batch metadata.
+    bytes32 private metadataRole;
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -114,6 +116,7 @@ contract DropERC1155 is
     ) external initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
+        bytes32 _metadataRole = keccak256("METADATA_ROLE");
 
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
@@ -127,6 +130,8 @@ contract DropERC1155 is
         _setupRole(_minterRole, _defaultAdmin);
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
+        _setupRole(_metadataRole, _defaultAdmin);
+        _setRoleAdmin(_metadataRole, _metadataRole);
 
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
@@ -134,6 +139,7 @@ contract DropERC1155 is
 
         transferRole = _transferRole;
         minterRole = _minterRole;
+        metadataRole = _metadataRole;
         name = _name;
         symbol = _symbol;
     }
@@ -185,6 +191,27 @@ contract DropERC1155 is
     function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         saleRecipient[_tokenId] = _saleRecipient;
         emit SaleRecipientForTokenUpdated(_tokenId, _saleRecipient);
+    }
+
+    /**
+     * @notice Updates the base URI for a batch of tokens.
+     *
+     * @param _index the index of a given batch within the batchIds array.
+     * @param _uri   the new base URI for the batch.
+     */
+    function updateBatchBaseURI(uint256 _index, string calldata _uri) external onlyRole(metadataRole) {
+        uint256 batchId = getBatchIdAtIndex(_index);
+        _setBaseURI(batchId, _uri);
+    }
+
+    /**
+     * @notice Freezes the base URI for a batch of tokens.
+     *
+     * @param _index the index of a given batch within the batchIds array.
+     */
+    function freezeBatchBaseURI(uint256 _index) external onlyRole(metadataRole) {
+        uint256 batchId = getBatchIdAtIndex(_index);
+        _freezeBaseURI(batchId);
     }
 
     /*///////////////////////////////////////////////////////////////

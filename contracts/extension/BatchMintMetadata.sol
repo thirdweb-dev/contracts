@@ -20,6 +20,16 @@ contract BatchMintMetadata {
     /// @dev Mapping from id of a batch of tokens => to whether the base URI for the respective batch of tokens is frozen.
     mapping(uint256 => bool) public batchFrozen;
 
+    /// @dev This event emits when the metadata of all tokens are frozen.
+    /// While not currently supported by marketplaces, this event allows
+    /// future indexing if desired.
+    event MetadataFrozen();
+
+    // @dev This event emits when the metadata of a range of tokens is updated.
+    /// So that the third-party platforms such as NFT market could
+    /// timely update the images and related attributes of the NFTs.
+    event BatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId);
+
     /**
      *  @notice         Returns the count of batches of NFTs.
      *  @dev            Each batch of tokens has an in ID and an associated `baseURI`.
@@ -30,9 +40,9 @@ contract BatchMintMetadata {
     }
 
     /**
-     *  @notice         Returns the ID for the batch of tokens the given tokenId belongs to.
+     *  @notice         Returns the ID for the batch of tokens at the given index.
      *  @dev            See {getBaseURICount}.
-     *  @param _index   ID of a token.
+     *  @param _index   Index of value in batchIds array.
      */
     function getBatchIdAtIndex(uint256 _index) public view returns (uint256) {
         if (_index >= getBaseURICount()) {
@@ -71,15 +81,33 @@ contract BatchMintMetadata {
         revert("Invalid tokenId");
     }
 
+    /// @dev returns the starting tokenId of a given batchId.
+    function _getBatchStartId(uint256 _batchID) internal view returns (uint256) {
+        uint256 numOfTokenBatches = getBaseURICount();
+        uint256[] memory indices = batchIds;
+
+        for (uint256 i = 0; i < numOfTokenBatches; i++) {
+            if (_batchID == indices[i]) {
+                if (i > 0) {
+                    return indices[i - 1];
+                }
+                return 0;
+            }
+        }
+        revert("Invalid batchId");
+    }
+
     /// @dev Sets the base URI for the batch of tokens with the given batchId.
     function _setBaseURI(uint256 _batchId, string memory _baseURI) internal {
         require(!batchFrozen[_batchId], "Batch frozen");
         baseURI[_batchId] = _baseURI;
+        emit BatchMetadataUpdate(_getBatchStartId(_batchId), _batchId);
     }
 
     /// @dev Freezes the base URI for the batch of tokens with the given batchId.
     function _freezeBaseURI(uint256 _batchId) internal {
-        require(_batchId < getBaseURICount(), "Invalid batchId");
+        string memory baseURIForBatch = baseURI[_batchId];
+        require(bytes(baseURIForBatch).length > 0, "Invalid batchId");
         batchFrozen[_batchId] = true;
     }
 
