@@ -567,4 +567,29 @@ contract SimpleAccountTest is BaseTest {
 
         assertEq(erc1155.balanceOf(account, 0), 1);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                Test: setting contract metadata
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Set contract metadata via admin or entrypoint.
+    function test_state_contractMetadata() public {
+        _setup_executeTransaction();
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
+
+        vm.prank(accountAdmin);
+        SimpleAccount(payable(account)).setContractURI("https://example.com");
+        assertEq(SimpleAccount(payable(account)).contractURI(), "https://example.com");
+
+        UserOperation[] memory userOp = _setupUserOpExecute(
+            accountAdminPKey,
+            bytes(""),
+            address(account),
+            0,
+            abi.encodeWithSignature("setContractURI(string)", "https://thirdweb.com")
+        );
+
+        EntryPoint(entrypoint).handleOps(userOp, beneficiary);
+        assertEq(SimpleAccount(payable(account)).contractURI(), "https://thirdweb.com");
+    }
 }
