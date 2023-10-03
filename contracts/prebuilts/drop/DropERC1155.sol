@@ -196,7 +196,7 @@ contract DropERC1155 is
     /**
      * @notice Updates the base URI for a batch of tokens.
      *
-     * @param _index the index of a given batch within the batchIds array.
+     * @param _index Index of the desired batch in batchIds array.
      * @param _uri   the new base URI for the batch.
      */
     function updateBatchBaseURI(uint256 _index, string calldata _uri) external onlyRole(metadataRole) {
@@ -207,7 +207,7 @@ contract DropERC1155 is
     /**
      * @notice Freezes the base URI for a batch of tokens.
      *
-     * @param _index the index of a given batch within the batchIds array.
+     * @param _index Index of the desired batch in batchIds array.
      */
     function freezeBatchBaseURI(uint256 _index) external onlyRole(metadataRole) {
         uint256 batchId = getBatchIdAtIndex(_index);

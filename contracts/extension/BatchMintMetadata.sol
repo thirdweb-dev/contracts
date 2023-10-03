@@ -42,7 +42,7 @@ contract BatchMintMetadata {
     /**
      *  @notice         Returns the ID for the batch of tokens at the given index.
      *  @dev            See {getBaseURICount}.
-     *  @param _index   Index of value in batchIds array.
+     *  @param _index   Index of the desired batch in batchIds array.
      */
     function getBatchIdAtIndex(uint256 _index) public view returns (uint256) {
         if (_index >= getBaseURICount()) {

@@ -199,9 +199,12 @@ contract DropERC721 is
         emit TokenURIRevealed(_index, revealedURI);
     }
 
-    /// @notice Updates the base URI for a batch of tokens. Can only be called if the batch has been revealed/is not encrypted.
-    /// @param _index the ID of a token with the desired batch.
-    /// @param _uri the new base URI for the batch.
+    /**
+     * @notice Updates the base URI for a batch of tokens. Can only be called if the batch has been revealed/is not encrypted.
+     * 
+     * @param _index Index of the desired batch in batchIds array
+     * @param _uri   the new base URI for the batch.
+     */ 
     function updateBatchBaseURI(uint256 _index, string calldata _uri) external onlyRole(metadataRole) {
         require(!isEncryptedBatch(getBatchIdAtIndex(_index)), "Encrypted batch");
         uint256 batchId = getBatchIdAtIndex(_index);
@@ -211,7 +214,7 @@ contract DropERC721 is
     /**
      * @notice Freezes the base URI for a batch of tokens.
      *
-     * @param _index the ID of a token with the desired batch.
+     * @param _index Index of the desired batch in batchIds array.
      */
     function freezeBatchBaseURI(uint256 _index) external onlyRole(metadataRole) {
         require(!isEncryptedBatch(getBatchIdAtIndex(_index)), "Encrypted batch");
