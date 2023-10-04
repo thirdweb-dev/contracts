@@ -14,9 +14,9 @@ function lazyMint(
     │       ├── it should set baseURI[batchId] as _baseURIForTokens
     │       └── it should emit TokensLazyMinted with the parameters: startId, startId + amount - 1, _baseURIForTokens, _data
     └── when _data.length > 0
-        ├── when _data.length < 32 bytes
+        ├── when _data invalid format
         │   └── it should revert
-        └── when _data.length >= 32 bytes
+        └── when _data valid format
             ├── it should decode _data into bytes memory encryptedURI and bytes32 provenanceHash
             ├── if encryptedURI.length = 0
             │   ├── it should push batchId (_startId + _amountToMint) to the batchIds array
