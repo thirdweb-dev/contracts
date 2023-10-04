@@ -1,0 +1,7 @@
+function reveal(uint256 _index, bytes calldata _key)
+├── when called by a user without the METADATA_ROLE
+│   └── it should revert
+└── when called by a user with the METADATA_ROLE
+    ├── it should set encryptedData[(batchId of _index)] as a blank string ("")
+    ├── it should set the baseURI[(batchId of _index)] as the revealed uri
+    └── it should emit TokenURIRevealed with the following parameters: _index, revealed uri
