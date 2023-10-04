@@ -1,0 +1,17 @@
+function totalMinted()
+# it should return total number of minted tokens
+
+function nextTokenIdToMint()
+# it should return the next tokenId that is to be lazy minted
+
+function nextTokenIdToClaim()
+# it should return the next tokenId to be minted
+
+function burn(uint256 tokenId)
+# if caller is not the owner of tokenId
+## if caller is not an approved operator of the owner of tokenId
+### it should revert
+## if caller is an approved operator of the owner of tokenId
+### it should burn the token  
+# if caller is the owner of tokenId
+## it should burn the token
