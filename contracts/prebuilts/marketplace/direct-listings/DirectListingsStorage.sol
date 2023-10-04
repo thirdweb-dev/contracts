@@ -9,7 +9,9 @@ import { IDirectListings } from "../IMarketplace.sol";
  * @author  thirdweb.com
  */
 library DirectListingsStorage {
-    bytes32 public constant DIRECT_LISTINGS_STORAGE_POSITION = keccak256("direct.listings.storage");
+    /// @custom:storage-location erc7201:extension.manager.storage
+    bytes32 public constant DIRECT_LISTINGS_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("direct.listings.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         uint256 totalListings;
@@ -18,10 +20,10 @@ library DirectListingsStorage {
         mapping(uint256 => mapping(address => uint256)) currencyPriceForListing;
     }
 
-    function directListingsStorage() internal pure returns (Data storage directListingsData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = DIRECT_LISTINGS_STORAGE_POSITION;
         assembly {
-            directListingsData.slot := position
+            data_.slot := position
         }
     }
 }

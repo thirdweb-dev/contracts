@@ -15,19 +15,17 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../../../extension/plugin/ERC2771ContextConsumer.sol";
-
 import "../../../extension/interface/IPlatformFee.sol";
-
-import "../../../extension/plugin/ReentrancyGuardLogic.sol";
-import "../../../extension/plugin/PermissionsEnumerableLogic.sol";
-import { RoyaltyPaymentsLogic } from "../../../extension/plugin/RoyaltyPayments.sol";
+import "../../../extension/upgradeable/ERC2771ContextConsumer.sol";
+import "../../../extension/upgradeable/ReentrancyGuard.sol";
+import "../../../extension/upgradeable/PermissionsEnumerable.sol";
+import { RoyaltyPaymentsLogic } from "../../../extension/upgradeable/RoyaltyPayments.sol";
 import { CurrencyTransferLib } from "../../../lib/CurrencyTransferLib.sol";
 
 /**
  * @author  thirdweb.com
  */
-contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771ContextConsumer {
+contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771ContextConsumer {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -48,27 +46,30 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyListerRole() {
-        require(PermissionsLogic(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
         _;
     }
 
     modifier onlyAssetRole(address _asset) {
-        require(PermissionsLogic(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 
     /// @dev Checks whether caller is a auction creator.
     modifier onlyAuctionCreator(uint256 _auctionId) {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-
-        require(data.auctions[_auctionId].auctionCreator == _msgSender(), "Marketplace: not auction creator.");
+        require(
+            _englishAuctionsStorage().auctions[_auctionId].auctionCreator == _msgSender(),
+            "Marketplace: not auction creator."
+        );
         _;
     }
 
     /// @dev Checks whether an auction exists.
     modifier onlyExistingAuction(uint256 _auctionId) {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        require(data.auctions[_auctionId].status == IEnglishAuctions.Status.CREATED, "Marketplace: invalid auction.");
+        require(
+            _englishAuctionsStorage().auctions[_auctionId].status == IEnglishAuctions.Status.CREATED,
+            "Marketplace: invalid auction."
+        );
         _;
     }
 
@@ -114,8 +115,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             status: IEnglishAuctions.Status.CREATED
         });
 
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        data.auctions[auctionId] = auction;
+        _englishAuctionsStorage().auctions[auctionId] = auction;
 
         _transferAuctionTokens(auctionCreator, address(this), auction);
 
@@ -128,8 +128,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         nonReentrant
         onlyExistingAuction(_auctionId)
     {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        Auction memory _targetAuction = data.auctions[_auctionId];
+        Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
 
         require(
             _targetAuction.endTimestamp > block.timestamp && _targetAuction.startTimestamp <= block.timestamp,
@@ -147,13 +146,14 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
     }
 
     function collectAuctionPayout(uint256 _auctionId) external nonReentrant {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
+        require(
+            !_englishAuctionsStorage().payoutStatus[_auctionId].paidOutBidAmount,
+            "Marketplace: payout already completed."
+        );
+        _englishAuctionsStorage().payoutStatus[_auctionId].paidOutBidAmount = true;
 
-        require(!data.payoutStatus[_auctionId].paidOutBidAmount, "Marketplace: payout already completed.");
-        data.payoutStatus[_auctionId].paidOutBidAmount = true;
-
-        Auction memory _targetAuction = data.auctions[_auctionId];
-        Bid memory _winningBid = data.winningBid[_auctionId];
+        Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
+        Bid memory _winningBid = _englishAuctionsStorage().winningBid[_auctionId];
 
         require(_targetAuction.status != IEnglishAuctions.Status.CANCELLED, "Marketplace: invalid auction.");
         require(_targetAuction.endTimestamp <= block.timestamp, "Marketplace: auction still active.");
@@ -162,14 +162,13 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         _closeAuctionForAuctionCreator(_targetAuction, _winningBid);
 
         if (_targetAuction.status != IEnglishAuctions.Status.COMPLETED) {
-            data.auctions[_auctionId].status = IEnglishAuctions.Status.COMPLETED;
+            _englishAuctionsStorage().auctions[_auctionId].status = IEnglishAuctions.Status.COMPLETED;
         }
     }
 
     function collectAuctionTokens(uint256 _auctionId) external nonReentrant {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        Auction memory _targetAuction = data.auctions[_auctionId];
-        Bid memory _winningBid = data.winningBid[_auctionId];
+        Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
+        Bid memory _winningBid = _englishAuctionsStorage().winningBid[_auctionId];
 
         require(_targetAuction.status != IEnglishAuctions.Status.CANCELLED, "Marketplace: invalid auction.");
         require(_targetAuction.endTimestamp <= block.timestamp, "Marketplace: auction still active.");
@@ -178,19 +177,18 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         _closeAuctionForBidder(_targetAuction, _winningBid);
 
         if (_targetAuction.status != IEnglishAuctions.Status.COMPLETED) {
-            data.auctions[_auctionId].status = IEnglishAuctions.Status.COMPLETED;
+            _englishAuctionsStorage().auctions[_auctionId].status = IEnglishAuctions.Status.COMPLETED;
         }
     }
 
     /// @dev Cancels an auction.
     function cancelAuction(uint256 _auctionId) external onlyExistingAuction(_auctionId) onlyAuctionCreator(_auctionId) {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        Auction memory _targetAuction = data.auctions[_auctionId];
-        Bid memory _winningBid = data.winningBid[_auctionId];
+        Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
+        Bid memory _winningBid = _englishAuctionsStorage().winningBid[_auctionId];
 
         require(_winningBid.bidder == address(0), "Marketplace: bids already made.");
 
-        data.auctions[_auctionId].status = IEnglishAuctions.Status.CANCELLED;
+        _englishAuctionsStorage().auctions[_auctionId].status = IEnglishAuctions.Status.CANCELLED;
 
         _transferAuctionTokens(address(this), _targetAuction.auctionCreator, _targetAuction);
 
@@ -207,9 +205,8 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         onlyExistingAuction(_auctionId)
         returns (bool)
     {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        Auction memory _targetAuction = data.auctions[_auctionId];
-        Bid memory _currentWinningBid = data.winningBid[_auctionId];
+        Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
+        Bid memory _currentWinningBid = _englishAuctionsStorage().winningBid[_auctionId];
 
         return
             _isNewWinningBid(
@@ -221,23 +218,20 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
     }
 
     function totalAuctions() external view returns (uint256) {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        return data.totalAuctions;
+        return _englishAuctionsStorage().totalAuctions;
     }
 
     function getAuction(uint256 _auctionId) external view returns (Auction memory _auction) {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        _auction = data.auctions[_auctionId];
+        _auction = _englishAuctionsStorage().auctions[_auctionId];
     }
 
     function getAllAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory _allAuctions) {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        require(_startId <= _endId && _endId < data.totalAuctions, "invalid range");
+        require(_startId <= _endId && _endId < _englishAuctionsStorage().totalAuctions, "invalid range");
 
         _allAuctions = new Auction[](_endId - _startId + 1);
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            _allAuctions[i - _startId] = data.auctions[i];
+            _allAuctions[i - _startId] = _englishAuctionsStorage().auctions[i];
         }
     }
 
@@ -246,15 +240,14 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
         view
         returns (Auction[] memory _validAuctions)
     {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        require(_startId <= _endId && _endId < data.totalAuctions, "invalid range");
+        require(_startId <= _endId && _endId < _englishAuctionsStorage().totalAuctions, "invalid range");
 
         Auction[] memory _auctions = new Auction[](_endId - _startId + 1);
         uint256 _auctionCount;
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
             uint256 j = i - _startId;
-            _auctions[j] = data.auctions[i];
+            _auctions[j] = _englishAuctionsStorage().auctions[i];
             if (
                 _auctions[j].startTimestamp <= block.timestamp &&
                 _auctions[j].endTimestamp > block.timestamp &&
@@ -289,9 +282,8 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             uint256 _bidAmount
         )
     {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        Auction memory _targetAuction = data.auctions[_auctionId];
-        Bid memory _currentWinningBid = data.winningBid[_auctionId];
+        Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
+        Bid memory _currentWinningBid = _englishAuctionsStorage().winningBid[_auctionId];
 
         _bidder = _currentWinningBid.bidder;
         _currency = _targetAuction.currency;
@@ -299,8 +291,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
     }
 
     function isAuctionExpired(uint256 _auctionId) external view onlyExistingAuction(_auctionId) returns (bool) {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        return data.auctions[_auctionId].endTimestamp >= block.timestamp;
+        return _englishAuctionsStorage().auctions[_auctionId].endTimestamp >= block.timestamp;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -309,9 +300,8 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
 
     /// @dev Returns the next auction Id.
     function _getNextAuctionId() internal returns (uint256 id) {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        id = data.totalAuctions;
-        data.totalAuctions += 1;
+        id = _englishAuctionsStorage().totalAuctions;
+        _englishAuctionsStorage().totalAuctions += 1;
     }
 
     /// @dev Returns the interface supported by a contract.
@@ -343,8 +333,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
 
     /// @dev Processes an incoming bid in an auction.
     function _handleBid(Auction memory _targetAuction, Bid memory _incomingBid) internal {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-        Bid memory currentWinningBid = data.winningBid[_targetAuction.auctionId];
+        Bid memory currentWinningBid = _englishAuctionsStorage().winningBid[_targetAuction.auctionId];
         uint256 currentBidAmount = currentWinningBid.bidAmount;
         uint256 incomingBidAmount = _incomingBid.bidAmount;
         address _nativeTokenWrapper = nativeTokenWrapper;
@@ -371,11 +360,11 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             );
 
             // Update the winning bid and auction's end time before external contract calls.
-            data.winningBid[_targetAuction.auctionId] = _incomingBid;
+            _englishAuctionsStorage().winningBid[_targetAuction.auctionId] = _incomingBid;
 
             if (_targetAuction.endTimestamp - block.timestamp <= _targetAuction.timeBufferInSeconds) {
                 _targetAuction.endTimestamp += _targetAuction.timeBufferInSeconds;
-                data.auctions[_targetAuction.auctionId] = _targetAuction;
+                _englishAuctionsStorage().auctions[_targetAuction.auctionId] = _targetAuction;
             }
         }
 
@@ -426,18 +415,16 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
 
     /// @dev Closes an auction for the winning bidder; distributes auction items to the winning bidder.
     function _closeAuctionForBidder(Auction memory _targetAuction, Bid memory _winningBid) internal {
-        EnglishAuctionsStorage.Data storage data = EnglishAuctionsStorage.englishAuctionsStorage();
-
         require(
-            !data.payoutStatus[_targetAuction.auctionId].paidOutAuctionTokens,
+            !_englishAuctionsStorage().payoutStatus[_targetAuction.auctionId].paidOutAuctionTokens,
             "Marketplace: payout already completed."
         );
-        data.payoutStatus[_targetAuction.auctionId].paidOutAuctionTokens = true;
+        _englishAuctionsStorage().payoutStatus[_targetAuction.auctionId].paidOutAuctionTokens = true;
 
         _targetAuction.endTimestamp = uint64(block.timestamp);
 
-        data.winningBid[_targetAuction.auctionId] = _winningBid;
-        data.auctions[_targetAuction.auctionId] = _targetAuction;
+        _englishAuctionsStorage().winningBid[_targetAuction.auctionId] = _winningBid;
+        _englishAuctionsStorage().auctions[_targetAuction.auctionId] = _targetAuction;
 
         _transferAuctionTokens(address(this), _winningBid.bidder, _targetAuction);
 
@@ -551,5 +538,10 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuardLogic, ERC2771
             amountRemaining,
             _nativeTokenWrapper
         );
+    }
+
+    /// @dev Returns the EnglishAuctions storage.
+    function _englishAuctionsStorage() internal pure returns (EnglishAuctionsStorage.Data storage data) {
+        data = EnglishAuctionsStorage.data();
     }
 }

@@ -9,17 +9,19 @@ import { IOffers } from "../IMarketplace.sol";
  * @author  thirdweb.com
  */
 library OffersStorage {
-    bytes32 public constant OFFERS_STORAGE_POSITION = keccak256("offers.storage");
+    /// @custom:storage-location erc7201:extension.manager.storage
+    bytes32 public constant OFFERS_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("offers.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         uint256 totalOffers;
         mapping(uint256 => IOffers.Offer) offers;
     }
 
-    function offersStorage() internal pure returns (Data storage offersData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = OFFERS_STORAGE_POSITION;
         assembly {
-            offersData.slot := position
+            data_.slot := position
         }
     }
 }

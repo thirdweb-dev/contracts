@@ -11,7 +11,7 @@ import "../interface/IPlatformFee.sol";
 library PlatformFeeStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant PLATFORM_FEE_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("platform.fee.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("platform.fee.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         /// @dev The address that receives all platform fees from all sales.
@@ -63,6 +63,9 @@ abstract contract PlatformFee is IPlatformFee {
     function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
         if (_platformFeeBps > 10_000) {
             revert("Exceeds max bps");
+        }
+        if (_platformFeeRecipient == address(0)) {
+            revert("Invalid recipient");
         }
 
         _platformFeeStorage().platformFeeBps = uint16(_platformFeeBps);

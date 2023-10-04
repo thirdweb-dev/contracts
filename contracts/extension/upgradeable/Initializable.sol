@@ -5,7 +5,8 @@ import "../../lib/TWAddress.sol";
 
 library InitStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
-    bytes32 constant INIT_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("init.storage")) - 1));
+    bytes32 constant INIT_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("init.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     /// @dev Layout of the entrypoint contract's storage.
     struct Data {

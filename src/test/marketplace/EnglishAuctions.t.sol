@@ -15,12 +15,13 @@ import { MockRoyaltyEngineV1 } from "../mocks/MockRoyaltyEngineV1.sol";
 
 import { IEnglishAuctions } from "contracts/prebuilts/marketplace/IMarketplace.sol";
 
-contract MarketplaceEnglishAuctionsTest is BaseTest {
+import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
+
+contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
     // Target contract
     address public marketplace;
 
     // Participants
-    address public adminDeployer;
     address public marketplaceDeployer;
     address public seller;
     address public buyer;
@@ -28,101 +29,26 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        adminDeployer = getActor(0);
         marketplaceDeployer = getActor(1);
         seller = getActor(2);
         buyer = getActor(3);
 
-        setupMarketplace(adminDeployer, marketplaceDeployer);
-    }
+        // Deploy implementation.
+        Extension[] memory extensions = _setupExtensions();
+        address impl = address(new MarketplaceV3(extensions, address(0)));
 
-    function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
-        vm.startPrank(_adminDeployer);
-
-        // [1] Deploy `EnglishAuctions`
-        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
-
-        // [2] Index `EnglishAuctions` functions in `PluginMap`
-        IPluginMap.Plugin[] memory plugins = new IPluginMap.Plugin[](12);
-        plugins[0] = IPluginMap.Plugin(EnglishAuctionsLogic.totalAuctions.selector, "totalAuctions()", englishAuctions);
-        plugins[1] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.createAuction.selector,
-            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))",
-            englishAuctions
-        );
-        plugins[2] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.cancelAuction.selector,
-            "cancelAuction(uint256)",
-            englishAuctions
-        );
-        plugins[3] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.collectAuctionPayout.selector,
-            "collectAuctionPayout(uint256)",
-            englishAuctions
-        );
-        plugins[4] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.collectAuctionTokens.selector,
-            "collectAuctionTokens(uint256)",
-            englishAuctions
-        );
-        plugins[5] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.bidInAuction.selector,
-            "bidInAuction(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[6] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.isNewWinningBid.selector,
-            "isNewWinningBid(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[7] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAuction.selector,
-            "getAuction(uint256)",
-            englishAuctions
-        );
-        plugins[8] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAllAuctions.selector,
-            "getAllAuctions(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[9] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAllValidAuctions.selector,
-            "getAllValidAuctions(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[10] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getWinningBid.selector,
-            "getWinningBid(uint256)",
-            englishAuctions
-        );
-        plugins[11] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.isAuctionExpired.selector,
-            "isAuctionExpired(uint256)",
-            englishAuctions
-        );
-
-        // [3] Deploy `PluginMap`.
-        PluginMap map = new PluginMap(plugins);
-        assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
-
-        // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
-
-        vm.stopPrank();
-
-        // [5] Deploy proxy pointing to `MarkeptlaceEntrypoint`
-        vm.prank(_marketplaceDeployer);
+        vm.prank(marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(router),
+                impl,
                 abi.encodeCall(
                     MarketplaceV3.initialize,
-                    (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
+                    (marketplaceDeployer, "", new address[](0), marketplaceDeployer, 0)
                 )
             )
         );
 
-        // [6] Setup roles for seller and assets
+        // Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
         Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(0));
         Permissions(marketplace).revokeRole(keccak256("LISTER_ROLE"), address(0));
@@ -132,13 +58,80 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceV3_Impl");
+        vm.label(impl, "MarketplaceV3_Impl");
         vm.label(marketplace, "Marketplace");
-        vm.label(englishAuctions, "EnglishAuctions_Extension");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
         vm.label(address(erc721), "ERC721_Token");
         vm.label(address(erc1155), "ERC1155_Token");
+    }
+
+    function _setupExtensions() internal returns (Extension[] memory extensions) {
+        extensions = new Extension[](1);
+
+        // Deploy `EnglishAuctions`
+        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
+        vm.label(englishAuctions, "EnglishAuctions_Extension");
+
+        // Extension: EnglishAuctionsLogic
+        Extension memory extension_englishAuctions;
+        extension_englishAuctions.metadata = ExtensionMetadata({
+            name: "EnglishAuctionsLogic",
+            metadataURI: "ipfs://EnglishAuctions",
+            implementation: englishAuctions
+        });
+
+        extension_englishAuctions.functions = new ExtensionFunction[](12);
+        extension_englishAuctions.functions[0] = ExtensionFunction(
+            EnglishAuctionsLogic.totalAuctions.selector,
+            "totalAuctions()"
+        );
+        extension_englishAuctions.functions[1] = ExtensionFunction(
+            EnglishAuctionsLogic.createAuction.selector,
+            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))"
+        );
+        extension_englishAuctions.functions[2] = ExtensionFunction(
+            EnglishAuctionsLogic.cancelAuction.selector,
+            "cancelAuction(uint256)"
+        );
+        extension_englishAuctions.functions[3] = ExtensionFunction(
+            EnglishAuctionsLogic.collectAuctionPayout.selector,
+            "collectAuctionPayout(uint256)"
+        );
+        extension_englishAuctions.functions[4] = ExtensionFunction(
+            EnglishAuctionsLogic.collectAuctionTokens.selector,
+            "collectAuctionTokens(uint256)"
+        );
+        extension_englishAuctions.functions[5] = ExtensionFunction(
+            EnglishAuctionsLogic.bidInAuction.selector,
+            "bidInAuction(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[6] = ExtensionFunction(
+            EnglishAuctionsLogic.isNewWinningBid.selector,
+            "isNewWinningBid(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[7] = ExtensionFunction(
+            EnglishAuctionsLogic.getAuction.selector,
+            "getAuction(uint256)"
+        );
+        extension_englishAuctions.functions[8] = ExtensionFunction(
+            EnglishAuctionsLogic.getAllAuctions.selector,
+            "getAllAuctions(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[9] = ExtensionFunction(
+            EnglishAuctionsLogic.getAllValidAuctions.selector,
+            "getAllValidAuctions(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[10] = ExtensionFunction(
+            EnglishAuctionsLogic.getWinningBid.selector,
+            "getWinningBid(uint256)"
+        );
+        extension_englishAuctions.functions[11] = ExtensionFunction(
+            EnglishAuctionsLogic.isAuctionExpired.selector,
+            "isAuctionExpired(uint256)"
+        );
+
+        extensions[0] = extension_englishAuctions;
     }
 
     function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
@@ -2021,12 +2014,11 @@ contract MarketplaceEnglishAuctionsTest is BaseTest {
     }
 }
 
-contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
+contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
     // Target contract
     address public marketplace;
 
     // Participants
-    address public adminDeployer;
     address public marketplaceDeployer;
     address public seller;
     address public buyer;
@@ -2043,119 +2035,113 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
     function setUp() public override {
         super.setUp();
 
-        adminDeployer = getActor(0);
         marketplaceDeployer = getActor(1);
         seller = getActor(2);
         buyer = getActor(3);
 
-        setupMarketplaceEnglish(adminDeployer, marketplaceDeployer);
-    }
+        // Deploy implementation.
+        Extension[] memory extensions = _setupExtensions();
+        address impl = address(new MarketplaceV3(extensions, address(0)));
 
-    function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
-        erc721.mint(_seller, _numOfTokens);
-    }
-
-    function setupMarketplaceEnglish(address _adminDeployer, address _marketplaceDeployer) private {
-        vm.startPrank(_adminDeployer);
-
-        // [1] Deploy `EnglishAuctions`
-        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
-
-        // [2] Index `EnglishAuctions` functions in `PluginMap`
-        IPluginMap.Plugin[] memory plugins = new IPluginMap.Plugin[](12);
-        plugins[0] = IPluginMap.Plugin(EnglishAuctionsLogic.totalAuctions.selector, "totalAuctions()", englishAuctions);
-        plugins[1] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.createAuction.selector,
-            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))",
-            englishAuctions
-        );
-        plugins[2] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.cancelAuction.selector,
-            "cancelAuction(uint256)",
-            englishAuctions
-        );
-        plugins[3] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.collectAuctionPayout.selector,
-            "collectAuctionPayout(uint256)",
-            englishAuctions
-        );
-        plugins[4] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.collectAuctionTokens.selector,
-            "collectAuctionTokens(uint256)",
-            englishAuctions
-        );
-        plugins[5] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.bidInAuction.selector,
-            "bidInAuction(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[6] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.isNewWinningBid.selector,
-            "isNewWinningBid(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[7] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAuction.selector,
-            "getAuction(uint256)",
-            englishAuctions
-        );
-        plugins[8] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAllAuctions.selector,
-            "getAllAuctions(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[9] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAllValidAuctions.selector,
-            "getAllValidAuctions(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[10] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getWinningBid.selector,
-            "getWinningBid(uint256)",
-            englishAuctions
-        );
-        plugins[11] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.isAuctionExpired.selector,
-            "isAuctionExpired(uint256)",
-            englishAuctions
-        );
-
-        // [3] Deploy `PluginMap`.
-        PluginMap map = new PluginMap(plugins);
-        assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
-
-        // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
-
-        vm.stopPrank();
-
-        // [5] Deploy proxy pointing to `MarketplaceV3`
-        vm.prank(_marketplaceDeployer);
+        vm.prank(marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(router),
+                impl,
                 abi.encodeCall(
                     MarketplaceV3.initialize,
-                    (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
+                    (marketplaceDeployer, "", new address[](0), marketplaceDeployer, 0)
                 )
             )
         );
 
-        // [6] Setup roles for seller and assets
+        // Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
+        Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(0));
+        Permissions(marketplace).revokeRole(keccak256("LISTER_ROLE"), address(0));
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceV3_Impl");
+        vm.label(impl, "MarketplaceV3_Impl");
         vm.label(marketplace, "Marketplace");
-        vm.label(englishAuctions, "EnglishAuctions_Extension");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
         vm.label(address(erc721), "ERC721_Token");
         vm.label(address(erc1155), "ERC1155_Token");
+    }
+
+    function _setupExtensions() internal returns (Extension[] memory extensions) {
+        extensions = new Extension[](1);
+
+        // Deploy `EnglishAuctions`
+        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
+        vm.label(englishAuctions, "EnglishAuctions_Extension");
+
+        // Extension: EnglishAuctionsLogic
+        Extension memory extension_englishAuctions;
+        extension_englishAuctions.metadata = ExtensionMetadata({
+            name: "EnglishAuctionsLogic",
+            metadataURI: "ipfs://EnglishAuctions",
+            implementation: englishAuctions
+        });
+
+        extension_englishAuctions.functions = new ExtensionFunction[](12);
+        extension_englishAuctions.functions[0] = ExtensionFunction(
+            EnglishAuctionsLogic.totalAuctions.selector,
+            "totalAuctions()"
+        );
+        extension_englishAuctions.functions[1] = ExtensionFunction(
+            EnglishAuctionsLogic.createAuction.selector,
+            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))"
+        );
+        extension_englishAuctions.functions[2] = ExtensionFunction(
+            EnglishAuctionsLogic.cancelAuction.selector,
+            "cancelAuction(uint256)"
+        );
+        extension_englishAuctions.functions[3] = ExtensionFunction(
+            EnglishAuctionsLogic.collectAuctionPayout.selector,
+            "collectAuctionPayout(uint256)"
+        );
+        extension_englishAuctions.functions[4] = ExtensionFunction(
+            EnglishAuctionsLogic.collectAuctionTokens.selector,
+            "collectAuctionTokens(uint256)"
+        );
+        extension_englishAuctions.functions[5] = ExtensionFunction(
+            EnglishAuctionsLogic.bidInAuction.selector,
+            "bidInAuction(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[6] = ExtensionFunction(
+            EnglishAuctionsLogic.isNewWinningBid.selector,
+            "isNewWinningBid(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[7] = ExtensionFunction(
+            EnglishAuctionsLogic.getAuction.selector,
+            "getAuction(uint256)"
+        );
+        extension_englishAuctions.functions[8] = ExtensionFunction(
+            EnglishAuctionsLogic.getAllAuctions.selector,
+            "getAllAuctions(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[9] = ExtensionFunction(
+            EnglishAuctionsLogic.getAllValidAuctions.selector,
+            "getAllValidAuctions(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[10] = ExtensionFunction(
+            EnglishAuctionsLogic.getWinningBid.selector,
+            "getWinningBid(uint256)"
+        );
+        extension_englishAuctions.functions[11] = ExtensionFunction(
+            EnglishAuctionsLogic.isAuctionExpired.selector,
+            "isAuctionExpired(uint256)"
+        );
+
+        extensions[0] = extension_englishAuctions;
+    }
+
+    function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
+        erc721.mint(_seller, _numOfTokens);
     }
 
     function test_rob_as_creator() public {
@@ -2229,12 +2215,11 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver {
     }
 }
 
-contract BreitwieserTheBidder is BaseTest {
+contract BreitwieserTheBidder is BaseTest, IExtension {
     // Target contract
     address public marketplace;
 
     // Participants
-    address public adminDeployer;
     address public marketplaceDeployer;
     address public seller;
     address public buyer;
@@ -2242,119 +2227,113 @@ contract BreitwieserTheBidder is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        adminDeployer = getActor(0);
         marketplaceDeployer = getActor(1);
         seller = getActor(2);
         buyer = getActor(3);
 
-        setupMarketplaceEnglish(adminDeployer, marketplaceDeployer);
-    }
+        // Deploy implementation.
+        Extension[] memory extensions = _setupExtensions();
+        address impl = address(new MarketplaceV3(extensions, address(0)));
 
-    function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
-        erc721.mint(_seller, _numOfTokens);
-    }
-
-    function setupMarketplaceEnglish(address _adminDeployer, address _marketplaceDeployer) private {
-        vm.startPrank(_adminDeployer);
-
-        // [1] Deploy `EnglishAuctions`
-        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
-
-        // [2] Index `EnglishAuctions` functions in `PluginMap`
-        IPluginMap.Plugin[] memory plugins = new IPluginMap.Plugin[](12);
-        plugins[0] = IPluginMap.Plugin(EnglishAuctionsLogic.totalAuctions.selector, "totalAuctions()", englishAuctions);
-        plugins[1] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.createAuction.selector,
-            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))",
-            englishAuctions
-        );
-        plugins[2] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.cancelAuction.selector,
-            "cancelAuction(uint256)",
-            englishAuctions
-        );
-        plugins[3] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.collectAuctionPayout.selector,
-            "collectAuctionPayout(uint256)",
-            englishAuctions
-        );
-        plugins[4] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.collectAuctionTokens.selector,
-            "collectAuctionTokens(uint256)",
-            englishAuctions
-        );
-        plugins[5] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.bidInAuction.selector,
-            "bidInAuction(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[6] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.isNewWinningBid.selector,
-            "isNewWinningBid(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[7] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAuction.selector,
-            "getAuction(uint256)",
-            englishAuctions
-        );
-        plugins[8] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAllAuctions.selector,
-            "getAllAuctions(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[9] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAllValidAuctions.selector,
-            "getAllValidAuctions(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[10] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getWinningBid.selector,
-            "getWinningBid(uint256)",
-            englishAuctions
-        );
-        plugins[11] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.isAuctionExpired.selector,
-            "isAuctionExpired(uint256)",
-            englishAuctions
-        );
-
-        // [3] Deploy `PluginMap`.
-        PluginMap map = new PluginMap(plugins);
-        assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
-
-        // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
-
-        vm.stopPrank();
-
-        // [5] Deploy proxy pointing to `MarketplaceV3`
-        vm.prank(_marketplaceDeployer);
+        vm.prank(marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(router),
+                impl,
                 abi.encodeCall(
                     MarketplaceV3.initialize,
-                    (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
+                    (marketplaceDeployer, "", new address[](0), marketplaceDeployer, 0)
                 )
             )
         );
 
-        // [6] Setup roles for seller and assets
+        // Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
+        Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(0));
+        Permissions(marketplace).revokeRole(keccak256("LISTER_ROLE"), address(0));
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceV3_Impl");
+        vm.label(impl, "MarketplaceV3_Impl");
         vm.label(marketplace, "Marketplace");
-        vm.label(englishAuctions, "EnglishAuctions_Extension");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
         vm.label(address(erc721), "ERC721_Token");
         vm.label(address(erc1155), "ERC1155_Token");
+    }
+
+    function _setupExtensions() internal returns (Extension[] memory extensions) {
+        extensions = new Extension[](1);
+
+        // Deploy `EnglishAuctions`
+        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
+        vm.label(englishAuctions, "EnglishAuctions_Extension");
+
+        // Extension: EnglishAuctionsLogic
+        Extension memory extension_englishAuctions;
+        extension_englishAuctions.metadata = ExtensionMetadata({
+            name: "EnglishAuctionsLogic",
+            metadataURI: "ipfs://EnglishAuctions",
+            implementation: englishAuctions
+        });
+
+        extension_englishAuctions.functions = new ExtensionFunction[](12);
+        extension_englishAuctions.functions[0] = ExtensionFunction(
+            EnglishAuctionsLogic.totalAuctions.selector,
+            "totalAuctions()"
+        );
+        extension_englishAuctions.functions[1] = ExtensionFunction(
+            EnglishAuctionsLogic.createAuction.selector,
+            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))"
+        );
+        extension_englishAuctions.functions[2] = ExtensionFunction(
+            EnglishAuctionsLogic.cancelAuction.selector,
+            "cancelAuction(uint256)"
+        );
+        extension_englishAuctions.functions[3] = ExtensionFunction(
+            EnglishAuctionsLogic.collectAuctionPayout.selector,
+            "collectAuctionPayout(uint256)"
+        );
+        extension_englishAuctions.functions[4] = ExtensionFunction(
+            EnglishAuctionsLogic.collectAuctionTokens.selector,
+            "collectAuctionTokens(uint256)"
+        );
+        extension_englishAuctions.functions[5] = ExtensionFunction(
+            EnglishAuctionsLogic.bidInAuction.selector,
+            "bidInAuction(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[6] = ExtensionFunction(
+            EnglishAuctionsLogic.isNewWinningBid.selector,
+            "isNewWinningBid(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[7] = ExtensionFunction(
+            EnglishAuctionsLogic.getAuction.selector,
+            "getAuction(uint256)"
+        );
+        extension_englishAuctions.functions[8] = ExtensionFunction(
+            EnglishAuctionsLogic.getAllAuctions.selector,
+            "getAllAuctions(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[9] = ExtensionFunction(
+            EnglishAuctionsLogic.getAllValidAuctions.selector,
+            "getAllValidAuctions(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[10] = ExtensionFunction(
+            EnglishAuctionsLogic.getWinningBid.selector,
+            "getWinningBid(uint256)"
+        );
+        extension_englishAuctions.functions[11] = ExtensionFunction(
+            EnglishAuctionsLogic.isAuctionExpired.selector,
+            "isAuctionExpired(uint256)"
+        );
+
+        extensions[0] = extension_englishAuctions;
+    }
+
+    function _setupERC721BalanceForSeller(address _seller, uint256 _numOfTokens) private {
+        erc721.mint(_seller, _numOfTokens);
     }
 
     function test_rob_as_bidder() public {
@@ -2461,12 +2440,11 @@ contract BreitwieserTheBidder is BaseTest {
     }
 }
 
-contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
+contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
     // Target contract
     address public marketplace;
 
     // Participants
-    address public adminDeployer;
     address public marketplaceDeployer;
     address public seller;
     address public buyer;
@@ -2474,115 +2452,109 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        adminDeployer = getActor(0);
         marketplaceDeployer = getActor(1);
         seller = getActor(2);
         buyer = getActor(3);
 
-        setupMarketplace(adminDeployer, marketplaceDeployer);
-    }
+        // Deploy implementation.
+        Extension[] memory extensions = _setupExtensions();
+        address impl = address(new MarketplaceV3(extensions, address(0)));
 
-    function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
-        vm.startPrank(_adminDeployer);
-
-        // [1] Deploy `EnglishAuctions`
-        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
-
-        // [2] Index `EnglishAuctions` functions in `PluginMap`
-        IPluginMap.Plugin[] memory plugins = new IPluginMap.Plugin[](12);
-        plugins[0] = IPluginMap.Plugin(EnglishAuctionsLogic.totalAuctions.selector, "totalAuctions()", englishAuctions);
-        plugins[1] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.createAuction.selector,
-            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))",
-            englishAuctions
-        );
-        plugins[2] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.cancelAuction.selector,
-            "cancelAuction(uint256)",
-            englishAuctions
-        );
-        plugins[3] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.collectAuctionPayout.selector,
-            "collectAuctionPayout(uint256)",
-            englishAuctions
-        );
-        plugins[4] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.collectAuctionTokens.selector,
-            "collectAuctionTokens(uint256)",
-            englishAuctions
-        );
-        plugins[5] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.bidInAuction.selector,
-            "bidInAuction(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[6] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.isNewWinningBid.selector,
-            "isNewWinningBid(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[7] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAuction.selector,
-            "getAuction(uint256)",
-            englishAuctions
-        );
-        plugins[8] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAllAuctions.selector,
-            "getAllAuctions(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[9] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getAllValidAuctions.selector,
-            "getAllValidAuctions(uint256,uint256)",
-            englishAuctions
-        );
-        plugins[10] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.getWinningBid.selector,
-            "getWinningBid(uint256)",
-            englishAuctions
-        );
-        plugins[11] = IPluginMap.Plugin(
-            EnglishAuctionsLogic.isAuctionExpired.selector,
-            "isAuctionExpired(uint256)",
-            englishAuctions
-        );
-
-        // [3] Deploy `PluginMap`.
-        PluginMap map = new PluginMap(plugins);
-        assertEq(map.getAllFunctionsOfPlugin(englishAuctions).length, 12);
-
-        // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
-
-        vm.stopPrank();
-
-        // [5] Deploy proxy pointing to `MarketplaceV3`
-        vm.prank(_marketplaceDeployer);
+        vm.prank(marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(router),
+                impl,
                 abi.encodeCall(
                     MarketplaceV3.initialize,
-                    (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
+                    (marketplaceDeployer, "", new address[](0), marketplaceDeployer, 0)
                 )
             )
         );
 
-        // [6] Setup roles for seller and assets
+        // Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
+        Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(0));
+        Permissions(marketplace).revokeRole(keccak256("LISTER_ROLE"), address(0));
         Permissions(marketplace).grantRole(keccak256("LISTER_ROLE"), seller);
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc1155));
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceV3_Impl");
+        vm.label(impl, "MarketplaceV3_Impl");
         vm.label(marketplace, "Marketplace");
-        vm.label(englishAuctions, "EnglishAuctions_Extension");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
         vm.label(address(erc721), "ERC721_Token");
         vm.label(address(erc1155), "ERC1155_Token");
+    }
+
+    function _setupExtensions() internal returns (Extension[] memory extensions) {
+        extensions = new Extension[](1);
+
+        // Deploy `EnglishAuctions`
+        address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
+        vm.label(englishAuctions, "EnglishAuctions_Extension");
+
+        // Extension: EnglishAuctionsLogic
+        Extension memory extension_englishAuctions;
+        extension_englishAuctions.metadata = ExtensionMetadata({
+            name: "EnglishAuctionsLogic",
+            metadataURI: "ipfs://EnglishAuctions",
+            implementation: englishAuctions
+        });
+
+        extension_englishAuctions.functions = new ExtensionFunction[](12);
+        extension_englishAuctions.functions[0] = ExtensionFunction(
+            EnglishAuctionsLogic.totalAuctions.selector,
+            "totalAuctions()"
+        );
+        extension_englishAuctions.functions[1] = ExtensionFunction(
+            EnglishAuctionsLogic.createAuction.selector,
+            "createAuction((address,uint256,uint256,address,uint256,uint256,uint64,uint64,uint64,uint64))"
+        );
+        extension_englishAuctions.functions[2] = ExtensionFunction(
+            EnglishAuctionsLogic.cancelAuction.selector,
+            "cancelAuction(uint256)"
+        );
+        extension_englishAuctions.functions[3] = ExtensionFunction(
+            EnglishAuctionsLogic.collectAuctionPayout.selector,
+            "collectAuctionPayout(uint256)"
+        );
+        extension_englishAuctions.functions[4] = ExtensionFunction(
+            EnglishAuctionsLogic.collectAuctionTokens.selector,
+            "collectAuctionTokens(uint256)"
+        );
+        extension_englishAuctions.functions[5] = ExtensionFunction(
+            EnglishAuctionsLogic.bidInAuction.selector,
+            "bidInAuction(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[6] = ExtensionFunction(
+            EnglishAuctionsLogic.isNewWinningBid.selector,
+            "isNewWinningBid(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[7] = ExtensionFunction(
+            EnglishAuctionsLogic.getAuction.selector,
+            "getAuction(uint256)"
+        );
+        extension_englishAuctions.functions[8] = ExtensionFunction(
+            EnglishAuctionsLogic.getAllAuctions.selector,
+            "getAllAuctions(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[9] = ExtensionFunction(
+            EnglishAuctionsLogic.getAllValidAuctions.selector,
+            "getAllValidAuctions(uint256,uint256)"
+        );
+        extension_englishAuctions.functions[10] = ExtensionFunction(
+            EnglishAuctionsLogic.getWinningBid.selector,
+            "getWinningBid(uint256)"
+        );
+        extension_englishAuctions.functions[11] = ExtensionFunction(
+            EnglishAuctionsLogic.isAuctionExpired.selector,
+            "isAuctionExpired(uint256)"
+        );
+
+        extensions[0] = extension_englishAuctions;
     }
 
     function _setupERC1155BalanceForSeller(address _seller, uint256 _numOfTokens) private {

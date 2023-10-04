@@ -7,7 +7,8 @@ import "../interface/IRoyalty.sol";
 
 library RoyaltyStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
-    bytes32 public constant ROYALTY_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("royalty.storage")) - 1));
+    bytes32 public constant ROYALTY_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("royalty.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         /// @dev The (default) address that receives all royalty value.
