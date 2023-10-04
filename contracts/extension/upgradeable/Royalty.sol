@@ -6,9 +6,10 @@ pragma solidity ^0.8.0;
 import "../interface/IRoyalty.sol";
 
 library RoyaltyStorage {
-    /// @custom:storage-location erc7201:extension.manager.storage
+    /// @custom:storage-location erc7201:royalty.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("royalty.storage")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 public constant ROYALTY_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("royalty.storage")) - 1)) & ~bytes32(uint256(0xff));
+        0x8116a128b135962baae86382f90f26a5e28c4bb803b8888f92fd98e3bbbc6d00;
 
     struct Data {
         /// @dev The (default) address that receives all royalty value.

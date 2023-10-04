@@ -8,7 +8,10 @@ import "../interface/IRoyaltyEngineV1.sol";
 import { IERC2981 } from "../../eip/interface/IERC2981.sol";
 
 library RoyaltyPaymentsStorage {
-    bytes32 public constant ROYALTY_PAYMENTS_STORAGE_POSITION = keccak256("royalty.payments.storage");
+    /// @custom:storage-location erc7201:royalty.payments.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("royalty.payments.storage")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 public constant ROYALTY_PAYMENTS_STORAGE_POSITION =
+        0xc802b338f3fb784853cf3c808df5ff08335200e394ea2c687d12571a91045000;
 
     struct Data {
         /// @dev The address of RoyaltyEngineV1, replacing the one set during construction.
