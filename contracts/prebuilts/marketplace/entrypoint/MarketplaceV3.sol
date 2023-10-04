@@ -49,7 +49,7 @@ contract MarketplaceV3 is
     ERC1155Holder,
     ERC165
 {
-    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
+    /// @dev Only EXTENSION_ROLE holders can perform upgrades.
     bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
 
     bytes32 private constant MODULE_TYPE = bytes32("MarketplaceV3");
