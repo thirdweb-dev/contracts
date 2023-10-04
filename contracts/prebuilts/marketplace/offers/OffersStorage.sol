@@ -10,7 +10,8 @@ import { IOffers } from "../IMarketplace.sol";
  */
 library OffersStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
-    bytes32 public constant OFFERS_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("offers.storage")) - 1));
+    bytes32 public constant OFFERS_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("offers.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         uint256 totalOffers;

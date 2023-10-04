@@ -11,7 +11,7 @@ import { IEnglishAuctions } from "../IMarketplace.sol";
 library EnglishAuctionsStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant ENGLISH_AUCTIONS_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("english.auctions.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("english.auctions.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         uint256 totalAuctions;

@@ -14,7 +14,7 @@ import "../interface/IBurnToClaim.sol";
 library BurnToClaimStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant BURN_TO_CLAIM_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("burn.to.claim.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("burn.to.claim.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         IBurnToClaim.BurnToClaimInfo burnToClaimInfo;

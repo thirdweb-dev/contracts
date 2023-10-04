@@ -10,7 +10,7 @@ import "../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 library AccountPermissionsStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant ACCOUNT_PERMISSIONS_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("account.permissions.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("account.permissions.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         /// @dev The set of all admins of the wallet.

@@ -11,7 +11,7 @@ import { IDirectListings } from "../IMarketplace.sol";
 library DirectListingsStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant DIRECT_LISTINGS_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("direct.listings.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("direct.listings.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         uint256 totalListings;

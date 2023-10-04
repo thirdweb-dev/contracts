@@ -10,7 +10,7 @@ import "../interface/IERC2771Context.sol";
 library ERC2771ContextStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant ERC2771_CONTEXT_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("erc2771.context.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("erc2771.context.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         mapping(address => bool) trustedForwarder;
