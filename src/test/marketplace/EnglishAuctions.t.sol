@@ -1900,6 +1900,49 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
                             Audit POCs
     //////////////////////////////////////////////////////////////*/
 
+    function test_state_collectAuctionPayout_buyoutBid_nativeToken() public {
+        uint256 auctionId = _setup_newAuction_nativeToken();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place bid
+        vm.deal(buyer, 10 ether);
+        vm.startPrank(buyer);
+        EnglishAuctionsLogic(marketplace).bidInAuction{ value: 10 ether }(auctionId, 10 ether);
+        vm.stopPrank();
+
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
+
+        // Test consequent states.
+        // Seller is owner of token.
+        assertIsOwnerERC721(address(erc721), buyer, tokenIds);
+        assertEq(weth.balanceOf(marketplace), 10 ether);
+        assertEq(buyer.balance, 0 ether);
+        assertEq(buyer, bidder);
+        assertEq(currency, NATIVE_TOKEN);
+        assertEq(bidAmount, 10 ether);
+
+        vm.prank(seller);
+        // calls WETH.withdraw (which calls receive function of Marketplace) and sends native tokens to seller
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
+        assertEq(weth.balanceOf(marketplace), 0 ether);
+        assertEq(seller.balance, 10 ether);
+
+        // sending eth directly should fail
+        vm.deal(address(this), 1 ether);
+        (bool success, ) = marketplace.call{ value: 1 ether }("");
+        assertEq(success, false);
+    }
+
     function test_audit_native_tokens_locked() public {
         uint256 auctionId = _setup_newAuction();
         IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
