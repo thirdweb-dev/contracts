@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "../utils/BaseTest.sol";
 import { BurnToClaimDropERC721 } from "contracts/prebuilts/unaudited/burn-to-claim-drop/BurnToClaimDropERC721.sol";
-import { BurnToClaimDrop721Logic, ERC721AUpgradeable, DelayedReveal, LazyMint, Drop, BurnToClaim } from "contracts/prebuilts/unaudited/burn-to-claim-drop/extension/BurnToClaimDrop721Logic.sol";
+import { BurnToClaimDrop721Logic, ERC721AUpgradeable, DelayedReveal, LazyMint, Drop, BurnToClaim, PrimarySale, PlatformFee } from "contracts/prebuilts/unaudited/burn-to-claim-drop/extension/BurnToClaimDrop721Logic.sol";
 import { PermissionsEnumerableImpl } from "contracts/extension/upgradeable/impl/PermissionsEnumerableImpl.sol";
 import { Royalty } from "contracts/extension/upgradeable/Royalty.sol";
 import { BatchMintMetadata } from "contracts/extension/upgradeable/BatchMintMetadata.sol";
@@ -122,7 +122,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
             implementation: dropLogic
         });
 
-        extension_drop.functions = new ExtensionFunction[](30);
+        extension_drop.functions = new ExtensionFunction[](32);
         extension_drop.functions[0] = ExtensionFunction(BurnToClaimDrop721Logic.tokenURI.selector, "tokenURI(uint256)");
         extension_drop.functions[1] = ExtensionFunction(
             BurnToClaimDrop721Logic.lazyMint.selector,
@@ -221,6 +221,14 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         extension_drop.functions[29] = ExtensionFunction(
             BurnToClaimDrop721Logic.nextTokenIdToClaim.selector,
             "nextTokenIdToClaim()"
+        );
+        extension_drop.functions[30] = ExtensionFunction(
+            PrimarySale.setPrimarySaleRecipient.selector,
+            "setPrimarySaleRecipient(address)"
+        );
+        extension_drop.functions[31] = ExtensionFunction(
+            PlatformFee.setPlatformFeeInfo.selector,
+            "setPlatformFeeInfo(address,uint256)"
         );
 
         extensions[1] = extension_drop;
@@ -467,6 +475,94 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         vm.warp(100);
         vm.prank(getActor(4), getActor(4));
         drop.claim(receiver, 1, address(0), 0, alp, "");
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                    Primary sale and Platform fee tests
+    //////////////////////////////////////////////////////////////*/
+
+    /// note: Test whether transaction reverts when adding address(0) as primary sale recipient at deploy time
+    function test_revert_deploy_emptyPrimarySaleRecipient() public {
+        // Deploy implementation.
+        Extension[] memory extensions = _setupExtensions();
+        address dropImpl = address(new BurnToClaimDropERC721(extensions));
+
+        // Deploy proxy pointing to implementaion.
+        vm.prank(deployer);
+        vm.expectRevert("Invalid recipient");
+        drop = BurnToClaimDrop721Logic(
+            payable(
+                address(
+                    new TWProxy(
+                        dropImpl,
+                        abi.encodeCall(
+                            BurnToClaimDropERC721.initialize,
+                            (
+                                deployer,
+                                NAME,
+                                SYMBOL,
+                                CONTRACT_URI,
+                                forwarders(),
+                                address(0),
+                                royaltyRecipient,
+                                royaltyBps,
+                                platformFeeBps,
+                                platformFeeRecipient
+                            )
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    /// note: Test whether transaction reverts when adding address(0) as primary sale recipient
+    function test_revert_emptyPrimarySaleRecipient() public {
+        vm.prank(deployer);
+        vm.expectRevert("Invalid recipient");
+        drop.setPrimarySaleRecipient(address(0));
+    }
+
+    /// note: Test whether transaction reverts when adding address(0) as platform fee recipient at deploy time
+    function test_revert_deploy_emptyPlatformFeeRecipient() public {
+        // Deploy implementation.
+        Extension[] memory extensions = _setupExtensions();
+        address dropImpl = address(new BurnToClaimDropERC721(extensions));
+
+        // Deploy proxy pointing to implementaion.
+        vm.prank(deployer);
+        vm.expectRevert("Invalid recipient");
+        drop = BurnToClaimDrop721Logic(
+            payable(
+                address(
+                    new TWProxy(
+                        dropImpl,
+                        abi.encodeCall(
+                            BurnToClaimDropERC721.initialize,
+                            (
+                                deployer,
+                                NAME,
+                                SYMBOL,
+                                CONTRACT_URI,
+                                forwarders(),
+                                saleRecipient,
+                                royaltyRecipient,
+                                royaltyBps,
+                                platformFeeBps,
+                                address(0)
+                            )
+                        )
+                    )
+                )
+            )
+        );
+    }
+
+    /// note: Test whether transaction reverts when adding address(0) as platform fee recipient
+    function test_revert_emptyPlatformFeeRecipient() public {
+        vm.prank(deployer);
+        vm.expectRevert("Invalid recipient");
+        drop.setPlatformFeeInfo(address(0), 100);
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -306,7 +306,7 @@ contract BurnToClaimDrop721Logic is
     /**
      * @notice Returns the total amount of tokens minted in the contract.
      */
-    function totalMinted() external view returns (uint256) {
+    function totalMinted() public view returns (uint256) {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
         unchecked {
             return data._currentIndex - _startTokenId();
