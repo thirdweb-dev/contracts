@@ -101,6 +101,7 @@ contract MarketplaceV3 is
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(EXTENSION_ROLE, _defaultAdmin);
         _setupRole(keccak256("LISTER_ROLE"), address(0));
         _setupRole(keccak256("ASSET_ROLE"), address(0));
 

@@ -16,7 +16,44 @@
 ## Installation
 
 ```shell
+# Forge projects
+forge install https://github.com/thirdweb-dev/contracts
+
+# Hardhat / npm based projects
 npm i @thirdweb-dev/contracts
+```
+
+```bash
+contracts
+|
+|-- extension: "extensions that can be inherited by NON-upgradeable contracts"
+|   |-- interface: "interfaces of all extension contracts"
+|   |-- upgradeable: "extensions that can be inherited by upgradeable contracts"
+|   |-- [$prebuilt-category]: "legacy extensions written specifically for a prebuilt contract"
+|
+|-- base: "NON-upgradeable base contracts to build on top of"
+|   |-- interface: "interfaces for all base contracts"
+|   |--  upgradeable: "upgradeable base contracts to build on top of"
+|
+|-- prebuilt: "audited, ready-to-deploy thirdweb smart contracts"
+|   |-- interface: "interfaces for all prebuilt contracts"
+|   |--[$prebuilt-category]: "feature-based group of prebuilt contracts"
+|   |-- unaudited: "yet-to-audit thirdweb smart contracts"
+|       |-- [$prebuilt-category]: "feature-based group of prebuilt contracts"
+|
+|-- infra: "onchain infrastructure contracts"
+|   |-- interface: "interfaces for all infrastructure contracts"
+|
+|-- eip: "implementations of relevant EIP standards"
+|   |-- interface "all interfaces of relevant EIP standards"
+|
+|-- lib: "Solidity libraries"
+|
+|-- external-deps: "modified / copied over external dependencies"
+|   |-- openzeppelin: "modified / copied over openzeppelin dependencies"
+|   |-- chainlink: "modified / copied over chainlink dependencies"
+|
+|-- legacy-contracts: "maintained legacy thirdweb contracts"
 ```
 
 ## Running Tests
@@ -51,8 +88,6 @@ forge test
 
 Pre-built contracts are written by the thirdweb team, and cover the most common use cases for smart contracts.
 
-Release pages for pre-built contracts:
-
 - [DropERC20](https://thirdweb.com/deployer.thirdweb.eth/DropERC20)
 - [DropERC721](https://thirdweb.com/deployer.thirdweb.eth/DropERC721)
 - [DropERC1155](https://thirdweb.com/deployer.thirdweb.eth/DropERC1155)
@@ -76,27 +111,6 @@ Some blocks come packaged together as Base Contracts, which come with a full set
 Other (smaller) blocks are Features, which provide a way for you to pick and choose which individual pieces you want to put into your contract; with full customization of how those features work. These are available at `contracts/extension/`.
 
 [Learn more about extensions](https://portal.thirdweb.com/extensions)
-
-## Deployments
-
-The thirdweb registry (`TWRegistry`) and factory (`TWFactory`) have been deployed on the following chains:
-
-- [Ethereum mainnet](https://etherscan.io/)
-- [Rinkeby](https://rinkeby.etherscan.io/)
-- [Goerli](https://goerli.etherscan.io/)
-- [Polygon mainnet](https://polygonscan.com/)
-- [Polygon Mumbai testnet](https://mumbai.polygonscan.com/)
-- [Avalanche mainnet](https://snowtrace.io/)
-- [Avalanche Fuji testnet](https://testnet.snowtrace.io/)
-- [Fantom mainnet](https://ftmscan.com/)
-- [Fantom testnet](https://testnet.ftmscan.com/)
-
-`TWRegistry` is deployed to a common address on all mentioned networks. `TWFactory` is deployed to a common address on all mentioned networks except Fantom mainnet.
-
-- `TWRegistry`: [0x7c487845f98938Bb955B1D5AD069d9a30e4131fd](https://blockscan.com/address/0x7c487845f98938Bb955B1D5AD069d9a30e4131fd)
-
-- `TWFactory`: [0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0](https://blockscan.com/address/0x5DBC7B840baa9daBcBe9D2492E45D7244B54A2A0)
-- `TWFactory` (Fantom mainnet): [0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B](https://blockscan.com/address/0x97EA0Fcc552D5A8Fb5e9101316AAd0D62Ea0876B)
 
 ## Contract Audits
 

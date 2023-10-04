@@ -31,7 +31,6 @@ import "../../extension/PrimarySale.sol";
 import "../../extension/PlatformFee.sol";
 import "../../extension/Multicall.sol";
 import "../../extension/PermissionsEnumerable.sol";
-import "../../extension/DefaultOperatorFiltererUpgradeable.sol";
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
@@ -53,7 +52,6 @@ contract LoyaltyCard is
     Multicall,
     PermissionsEnumerable,
     ReentrancyGuardUpgradeable,
-    DefaultOperatorFiltererUpgradeable,
     ERC2771ContextUpgradeable,
     NFTMetadata,
     SignatureMintERC721Upgradeable,
@@ -97,13 +95,11 @@ contract LoyaltyCard is
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);
-        __DefaultOperatorFilterer_init();
         __SignatureMintERC721_init();
         __ReentrancyGuard_init();
 
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
-        _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
@@ -182,48 +178,6 @@ contract LoyaltyCard is
     /// @dev Burns `tokenId`. See {ERC721-_burn}.
     function revoke(uint256 tokenId) external virtual override onlyRole(REVOKE_ROLE) {
         _burn(tokenId);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Operator filter overrides
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved) public override onlyAllowedOperatorApproval(operator) {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId) public override onlyAllowedOperatorApproval(operator) {
-        super.approve(operator, tokenId);
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -350,9 +304,9 @@ contract LoyaltyCard is
         return hasRole(METADATA_ROLE, _msgSender());
     }
 
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    /// @dev Returns whether metadata can be frozen in the given execution context.
+    function _canFreezeMetadata() internal view virtual override returns (bool) {
+        return hasRole(METADATA_ROLE, _msgSender());
     }
 
     function _msgSender()

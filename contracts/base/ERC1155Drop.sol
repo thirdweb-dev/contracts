@@ -14,7 +14,6 @@ import "../extension/PrimarySale.sol";
 import "../extension/DropSinglePhase1155.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
-import "../extension/DefaultOperatorFilterer.sol";
 
 import "../lib/CurrencyTransferLib.sol";
 import "../lib/TWStrings.sol";
@@ -52,8 +51,7 @@ contract ERC1155Drop is
     PrimarySale,
     LazyMint,
     DelayedReveal,
-    DropSinglePhase1155,
-    DefaultOperatorFilterer
+    DropSinglePhase1155
 {
     using TWStrings for uint256;
 
@@ -71,6 +69,16 @@ contract ERC1155Drop is
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Initializes the contract with the given parameters.
+     *
+     * @param _defaultAdmin         The default admin for the contract.
+     * @param _name                 The name of the contract.
+     * @param _symbol               The symbol of the contract.
+     * @param _royaltyRecipient     The address to which royalties should be sent.
+     * @param _royaltyBps           The royalty basis points to be charged. Max = 10000 (10000 = 100%, 1000 = 10%)
+     * @param _primarySaleRecipient The address to which primary sale revenue should be sent.
+     */
     constructor(
         address _defaultAdmin,
         string memory _name,
@@ -82,14 +90,16 @@ contract ERC1155Drop is
         _setupOwner(_defaultAdmin);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
-        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////
                             ERC165 Logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Returns whether this contract supports the given interface.
+    /**
+     * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -151,10 +161,11 @@ contract ERC1155Drop is
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  @notice         Returns the metadata URI for an NFT.
-     *  @dev            See `BatchMintMetadata` for handling of metadata in this contract.
+     * @notice         Returns the metadata URI for an NFT.
+     * @dev            See `BatchMintMetadata` for handling of metadata in this contract.
      *
-     *  @param _tokenId The tokenId of an NFT.
+     * @param _tokenId The tokenId of an NFT.
+     * @return         The metadata URI for the given NFT.
      */
     function uri(uint256 _tokenId) public view virtual override returns (string memory) {
         (uint256 batchId, ) = _getBatchId(_tokenId);
@@ -174,8 +185,9 @@ contract ERC1155Drop is
     /**
      *  @notice       Lets an authorized address reveal a batch of delayed reveal NFTs.
      *
-     *  @param _index The ID for the batch of delayed-reveal NFTs to reveal.
-     *  @param _key   The key with which the base URI for the relevant batch of NFTs was encrypted.
+     *  @param _index       The ID for the batch of delayed-reveal NFTs to reveal.
+     *  @param _key         The key with which the base URI for the relevant batch of NFTs was encrypted.
+     *  @return revealedURI The revealed URI for the batch of NFTs.
      */
     function reveal(uint256 _index, bytes calldata _key) public virtual override returns (string memory revealedURI) {
         require(_canReveal(), "Not authorized");
@@ -222,51 +234,15 @@ contract ERC1155Drop is
         return nextTokenIdToLazyMint;
     }
 
-    /*//////////////////////////////////////////////////////////////
-                        ERC-1155 overrides
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev See {ERC1155-setApprovalForAll}
-    function setApprovalForAll(address operator, bool approved)
-        public
-        virtual
-        override(ERC1155)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /**
-     * @dev See {IERC1155-safeTransferFrom}.
-     */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) public virtual override(ERC1155) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, id, amount, data);
-    }
-
-    /**
-     * @dev See {IERC1155-safeBatchTransferFrom}.
-     */
-    function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) public virtual override(ERC1155) onlyAllowedOperator(from) {
-        super.safeBatchTransferFrom(from, to, ids, amounts, data);
-    }
-
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Runs before every `claim` function call.
+    /**
+     * @dev Runs before every `claim` function call.
+     *
+     * @param _tokenId The tokenId of the NFT being claimed.
+     */
     function _beforeClaim(
         uint256 _tokenId,
         address,
@@ -281,7 +257,15 @@ contract ERC1155Drop is
         }
     }
 
-    /// @dev Collects and distributes the primary sale value of NFTs being claimed.
+    /**
+     * @dev Collects and distributes the primary sale value of NFTs being claimed.
+     *
+     * @param _primarySaleRecipient The address to which primary sale revenue should be sent.
+     * @param _quantityToClaim      The quantity of NFTs being claimed.
+     * @param _currency             The currency in which the NFTs are being sold.
+     * @param _pricePerToken        The price per NFT being claimed.
+     */
+
     function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
@@ -307,7 +291,13 @@ contract ERC1155Drop is
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 
-    /// @dev Transfers the NFTs being claimed.
+    /**
+     * @dev Transfers the NFTs being claimed.
+     *
+     * @param _to                    The address to which the NFTs are being transferred.
+     * @param _tokenId               The tokenId of the NFTs being claimed.
+     * @param _quantityBeingClaimed  The quantity of NFTs being claimed.
+     */
     function _transferTokensOnClaim(
         address _to,
         uint256 _tokenId,
@@ -316,7 +306,16 @@ contract ERC1155Drop is
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
 
-    /// @dev Runs before every token transfer / mint / burn.
+    /**
+     * @dev Runs before every token transfer / mint / burn.
+     *
+     * @param operator The address performing the token transfer.
+     * @param from     The address from which the token is being transferred.
+     * @param to       The address to which the token is being transferred.
+     * @param ids      The tokenIds of the tokens being transferred.
+     * @param amounts  The amounts of the tokens being transferred.
+     * @param data     Any additional data being passed in the token transfer.
+     */
     function _beforeTokenTransfer(
         address operator,
         address from,
@@ -367,11 +366,6 @@ contract ERC1155Drop is
 
     /// @dev Returns whether lazy minting can be done in the given execution context.
     function _canLazyMint() internal view virtual override returns (bool) {
-        return msg.sender == owner();
-    }
-
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 

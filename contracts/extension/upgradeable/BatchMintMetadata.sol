@@ -4,13 +4,15 @@ pragma solidity ^0.8.0;
 library BatchMintMetadataStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant BATCH_MINT_METADATA_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("batch.mint.metadata.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("batch.mint.metadata.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         /// @dev Largest tokenId of each batch of tokens with the same baseURI.
         uint256[] batchIds;
         /// @dev Mapping from id of a batch of tokens => to base URI for the respective batch of tokens.
         mapping(uint256 => string) baseURI;
+        /// @dev Mapping from id of a batch of tokens => to whether the base URI for the respective batch of tokens is frozen.
+        mapping(uint256 => bool) batchFrozen;
     }
 
     function data() internal pure returns (Data storage data_) {
@@ -29,6 +31,16 @@ library BatchMintMetadataStorage {
  */
 
 contract BatchMintMetadata {
+    /// @dev This event emits when the metadata of all tokens are frozen.
+    /// While not currently supported by marketplaces, this event allows
+    /// future indexing if desired.
+    event MetadataFrozen();
+
+    // @dev This event emits when the metadata of a range of tokens is updated.
+    /// So that the third-party platforms such as NFT market could
+    /// timely update the images and related attributes of the NFTs.
+    event BatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId);
+
     /**
      *  @notice         Returns the count of batches of NFTs.
      *  @dev            Each batch of tokens has an in ID and an associated `baseURI`.
@@ -80,9 +92,35 @@ contract BatchMintMetadata {
         revert("Invalid tokenId");
     }
 
+    /// @dev returns the starting tokenId of a given batchId.
+    function _getBatchStartId(uint256 _batchID) internal view returns (uint256) {
+        uint256 numOfTokenBatches = getBaseURICount();
+        uint256[] memory indices = _batchMintMetadataStorage().batchIds;
+
+        for (uint256 i = 0; i < numOfTokenBatches; i++) {
+            if (_batchID == indices[i]) {
+                if (i > 0) {
+                    return indices[i - 1];
+                }
+                return 0;
+            }
+        }
+        revert("Invalid batchId");
+    }
+
     /// @dev Sets the base URI for the batch of tokens with the given batchId.
     function _setBaseURI(uint256 _batchId, string memory _baseURI) internal {
+        require(!_batchMintMetadataStorage().batchFrozen[_batchId], "Batch frozen");
         _batchMintMetadataStorage().baseURI[_batchId] = _baseURI;
+        emit BatchMetadataUpdate(_getBatchStartId(_batchId), _batchId);
+    }
+
+    /// @dev Freezes the base URI for the batch of tokens with the given batchId.
+    function _freezeBaseURI(uint256 _batchId) internal {
+        string memory baseURIForBatch = _batchMintMetadataStorage().baseURI[_batchId];
+        require(bytes(baseURIForBatch).length > 0, "Invalid batch");
+        _batchMintMetadataStorage().batchFrozen[_batchId] = true;
+        emit MetadataFrozen();
     }
 
     /// @dev Mints a batch of tokenIds and associates a common baseURI to all those Ids.

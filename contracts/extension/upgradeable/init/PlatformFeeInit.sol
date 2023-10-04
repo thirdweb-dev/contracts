@@ -8,10 +8,14 @@ contract PlatformFeeInit {
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
     function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
-        PlatformFeeStorage.Data storage data = PlatformFeeStorage.data();
         if (_platformFeeBps > 10_000) {
             revert("Exceeds max bps");
         }
+        if (_platformFeeRecipient == address(0)) {
+            revert("Invalid recipient");
+        }
+
+        PlatformFeeStorage.Data storage data = PlatformFeeStorage.data();
 
         data.platformFeeBps = uint16(_platformFeeBps);
         data.platformFeeRecipient = _platformFeeRecipient;

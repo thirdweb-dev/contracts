@@ -88,20 +88,24 @@ contract TokenERC1155Test is BaseTest {
         view
         returns (bytes memory)
     {
-        bytes memory encodedRequest = abi.encode(
-            typehashMintRequest,
-            _request.to,
-            _request.royaltyRecipient,
-            _request.royaltyBps,
-            _request.primarySaleRecipient,
-            _request.tokenId,
-            keccak256(bytes(_request.uri)),
-            _request.quantity,
-            _request.pricePerToken,
-            _request.currency,
-            _request.validityStartTimestamp,
-            _request.validityEndTimestamp,
-            _request.uid
+        bytes memory encodedRequest = bytes.concat(
+            abi.encode(
+                typehashMintRequest,
+                _request.to,
+                _request.royaltyRecipient,
+                _request.royaltyBps,
+                _request.primarySaleRecipient,
+                _request.tokenId,
+                keccak256(bytes(_request.uri))
+            ),
+            abi.encode(
+                _request.quantity,
+                _request.pricePerToken,
+                _request.currency,
+                _request.validityStartTimestamp,
+                _request.validityEndTimestamp,
+                _request.uid
+            )
         );
         bytes32 structHash = keccak256(encodedRequest);
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
@@ -110,6 +114,53 @@ contract TokenERC1155Test is BaseTest {
         bytes memory sig = abi.encodePacked(r, s, v);
 
         return sig;
+    }
+
+    function test_compareEncoding() public {
+        bytes memory encodedRequestOne = abi.encode(
+            typehashMintRequest,
+            _mintrequest.to,
+            _mintrequest.royaltyRecipient,
+            _mintrequest.royaltyBps,
+            _mintrequest.primarySaleRecipient,
+            keccak256(bytes(_mintrequest.uri)),
+            _mintrequest.quantity,
+            _mintrequest.pricePerToken,
+            _mintrequest.currency,
+            _mintrequest.validityStartTimestamp,
+            _mintrequest.validityEndTimestamp,
+            _mintrequest.uid
+        );
+        bytes memory encodedRequestTwo = bytes.concat(
+            abi.encode(
+                typehashMintRequest,
+                _mintrequest.to,
+                _mintrequest.royaltyRecipient,
+                _mintrequest.royaltyBps,
+                _mintrequest.primarySaleRecipient,
+                keccak256(bytes(_mintrequest.uri))
+            ),
+            abi.encode(
+                _mintrequest.quantity,
+                _mintrequest.pricePerToken,
+                _mintrequest.currency,
+                _mintrequest.validityStartTimestamp,
+                _mintrequest.validityEndTimestamp,
+                _mintrequest.uid
+            )
+        );
+        bytes32 structHashOne = keccak256(encodedRequestOne);
+        bytes32 typedDataHashOne = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHashOne));
+
+        bytes32 structHashTwo = keccak256(encodedRequestTwo);
+        bytes32 typedDataHashTwo = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHashTwo));
+
+        assertEq(structHashOne, structHashTwo);
+        assertEq(typedDataHashOne, typedDataHashTwo);
+        console.logBytes32(structHashOne);
+        console.logBytes32(structHashTwo);
+        console.logBytes32(typedDataHashOne);
+        console.logBytes32(typedDataHashTwo);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -851,5 +902,38 @@ contract TokenERC1155Test is BaseTest {
         );
         vm.prank(address(0x1));
         tokenContract.setContractURI("");
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: setTokenURI
+    //////////////////////////////////////////////////////////////*/
+
+    function test_setTokenURI_state() public {
+        string memory uri = "uri_string";
+
+        vm.prank(deployerSigner);
+        tokenContract.setTokenURI(0, uri);
+
+        string memory _tokenURI = tokenContract.uri(0);
+
+        assertEq(_tokenURI, uri);
+    }
+
+    function test_setTokenURI_revert_NotAuthorized() public {
+        string memory uri = "uri_string";
+
+        vm.expectRevert("NFTMetadata: not authorized to set metadata.");
+        vm.prank(address(0x1));
+        tokenContract.setTokenURI(0, uri);
+    }
+
+    function test_setTokenURI_revert_Frozen() public {
+        string memory uri = "uri_string";
+
+        vm.startPrank(deployerSigner);
+        tokenContract.freezeMetadata();
+
+        vm.expectRevert("NFTMetadata: metadata is frozen.");
+        tokenContract.setTokenURI(0, uri);
     }
 }

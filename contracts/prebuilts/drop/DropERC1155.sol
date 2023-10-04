@@ -36,9 +36,6 @@ import "../../extension/LazyMint.sol";
 import "../../extension/PermissionsEnumerable.sol";
 import "../../extension/Drop1155.sol";
 
-// OpenSea operator filter
-import "../../extension/DefaultOperatorFiltererUpgradeable.sol";
-
 contract DropERC1155 is
     Initializable,
     ContractMetadata,
@@ -51,7 +48,6 @@ contract DropERC1155 is
     Drop1155,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    DefaultOperatorFiltererUpgradeable,
     ERC1155Upgradeable
 {
     using StringsUpgradeable for uint256;
@@ -70,6 +66,8 @@ contract DropERC1155 is
     bytes32 private transferRole;
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
     bytes32 private minterRole;
+    /// @dev Only METADATA_ROLE holders can reveal the URI for a batch of delayed reveal NFTs, and update or freeze batch metadata.
+    bytes32 private metadataRole;
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -118,21 +116,22 @@ contract DropERC1155 is
     ) external initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
+        bytes32 _metadataRole = keccak256("METADATA_ROLE");
 
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC1155_init_unchained("");
-        __DefaultOperatorFilterer_init();
 
         // Initialize this contract's state.
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
-        _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(_minterRole, _defaultAdmin);
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
+        _setupRole(_metadataRole, _defaultAdmin);
+        _setRoleAdmin(_metadataRole, _metadataRole);
 
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
@@ -140,6 +139,7 @@ contract DropERC1155 is
 
         transferRole = _transferRole;
         minterRole = _minterRole;
+        metadataRole = _metadataRole;
         name = _name;
         symbol = _symbol;
     }
@@ -191,6 +191,27 @@ contract DropERC1155 is
     function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         saleRecipient[_tokenId] = _saleRecipient;
         emit SaleRecipientForTokenUpdated(_tokenId, _saleRecipient);
+    }
+
+    /**
+     * @notice Updates the base URI for a batch of tokens.
+     *
+     * @param _index Index of the desired batch in batchIds array.
+     * @param _uri   the new base URI for the batch.
+     */
+    function updateBatchBaseURI(uint256 _index, string calldata _uri) external onlyRole(metadataRole) {
+        uint256 batchId = getBatchIdAtIndex(_index);
+        _setBaseURI(batchId, _uri);
+    }
+
+    /**
+     * @notice Freezes the base URI for a batch of tokens.
+     *
+     * @param _index Index of the desired batch in batchIds array.
+     */
+    function freezeBatchBaseURI(uint256 _index) external onlyRole(metadataRole) {
+        uint256 batchId = getBatchIdAtIndex(_index);
+        _freezeBaseURI(batchId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -291,11 +312,6 @@ contract DropERC1155 is
         return hasRole(minterRole, _msgSender());
     }
 
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
@@ -348,37 +364,6 @@ contract DropERC1155 is
                 totalSupply[ids[i]] -= amounts[i];
             }
         }
-    }
-
-    /// @dev See {ERC1155-setApprovalForAll}
-    function setApprovalForAll(address operator, bool approved) public override onlyAllowedOperatorApproval(operator) {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /**
-     * @dev See {IERC1155-safeTransferFrom}.
-     */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) public override(ERC1155Upgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, id, amount, data);
-    }
-
-    /**
-     * @dev See {IERC1155-safeBatchTransferFrom}.
-     */
-    function safeBatchTransferFrom(
-        address from,
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) public override(ERC1155Upgradeable) onlyAllowedOperator(from) {
-        super.safeBatchTransferFrom(from, to, ids, amounts, data);
     }
 
     function _dropMsgSender() internal view virtual override returns (address) {

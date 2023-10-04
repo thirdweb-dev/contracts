@@ -14,7 +14,7 @@ import "../../external-deps/openzeppelin/utils/EnumerableSet.sol";
 library SharedMetadataBatchStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant SHARED_METADATA_BATCH_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("shared.metadata.batch.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("shared.metadata.batch.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         EnumerableSet.Bytes32Set ids;

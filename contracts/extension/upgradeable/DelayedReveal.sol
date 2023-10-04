@@ -8,7 +8,7 @@ import "../interface/IDelayedReveal.sol";
 library DelayedRevealStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant DELAYED_REVEAL_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("delayed.reveal.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("delayed.reveal.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         /// @dev Mapping from tokenId of a batch of tokens => to delayed reveal data.

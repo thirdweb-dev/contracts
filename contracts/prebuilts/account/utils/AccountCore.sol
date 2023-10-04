@@ -63,12 +63,6 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     }
 
     /*///////////////////////////////////////////////////////////////
-                                Events
-    //////////////////////////////////////////////////////////////*/
-
-    event EntrypointOverride(IEntryPoint entrypointOverride);
-
-    /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
 
@@ -79,11 +73,6 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
             return IEntryPoint(entrypointOverride);
         }
         return entrypointContract;
-    }
-
-    /// @notice Returns the balance of the account in Entrypoint.
-    function getDeposit() public view returns (uint256) {
-        return entryPoint().balanceOf(address(this));
     }
 
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
@@ -159,7 +148,6 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     /// @notice Overrides the Entrypoint contract being used.
     function setEntrypointOverride(IEntryPoint _entrypointOverride) public virtual onlyAdmin {
         AccountCoreStorage.data().entrypointOverride = address(_entrypointOverride);
-        emit EntrypointOverride(_entrypointOverride);
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -14,7 +14,7 @@ import "../../lib/TWStrings.sol";
 library PermissionsStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant PERMISSIONS_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("permissions.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("permissions.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         /// @dev Map from keccak256 hash of a role => a map from address => whether address has role.

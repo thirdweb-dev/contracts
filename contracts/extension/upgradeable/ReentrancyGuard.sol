@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 library ReentrancyGuardStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant REENTRANCY_GUARD_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("reentrancy.guard.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("reentrancy.guard.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         uint256 _status;
