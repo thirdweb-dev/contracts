@@ -16,6 +16,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
+import { ERC721Holder } from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import { ERC1155Holder, ERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+
 //  ==========  Internal imports    ==========
 import { BaseRouter, IRouter, IRouterState } from "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
 import { ERC165 } from "../../../eip/ERC165.sol";
@@ -42,28 +45,41 @@ contract MarketplaceV3 is
     ReentrancyGuardInit,
     ERC2771ContextUpgradeable,
     RoyaltyPaymentsLogic,
-    IERC721Receiver,
-    IERC1155Receiver,
+    ERC721Holder,
+    ERC1155Holder,
     ERC165
 {
-    /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s.
+    /// @dev Only EXTENSION_ROLE holders can perform upgrades.
     bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
 
     bytes32 private constant MODULE_TYPE = bytes32("MarketplaceV3");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 3;
+
+    /// @dev The address of the native token wrapper contract.
+    address private immutable nativeTokenWrapper;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(Extension[] memory _extensions, address _royaltyEngineAddress)
-        BaseRouter(_extensions)
-        RoyaltyPaymentsLogic(_royaltyEngineAddress)
+    /// @dev We accept constructor params as a struct to avoid `Stack too deep` errors.
+    struct MarketplaceConstructorParams {
+        Extension[] extensions;
+        address royaltyEngineAddress;
+        address nativeTokenWrapper;
+    }
+
+    constructor(MarketplaceConstructorParams memory _params)
+        BaseRouter(_params.extensions)
+        RoyaltyPaymentsLogic(_params.royaltyEngineAddress)
     {
+        nativeTokenWrapper = _params.nativeTokenWrapper;
         _disableInitializers();
     }
 
-    receive() external payable {}
+    receive() external payable {
+        assert(msg.sender == nativeTokenWrapper); // only accept ETH via fallback from the native token wrapper contract
+    }
 
     /// @dev Initializes the contract, like a constructor.
     function initialize(
@@ -88,6 +104,9 @@ contract MarketplaceV3 is
         _setupRole(EXTENSION_ROLE, _defaultAdmin);
         _setupRole(keccak256("LISTER_ROLE"), address(0));
         _setupRole(keccak256("ASSET_ROLE"), address(0));
+
+        _setupRole(EXTENSION_ROLE, _defaultAdmin);
+        _setRoleAdmin(EXTENSION_ROLE, EXTENSION_ROLE);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -108,36 +127,13 @@ contract MarketplaceV3 is
                         ERC 165 / 721 / 1155 logic
     //////////////////////////////////////////////////////////////*/
 
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes memory
-    ) public virtual override returns (bytes4) {
-        return this.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address,
-        address,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) public virtual override returns (bytes4) {
-        return this.onERC1155BatchReceived.selector;
-    }
-
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC165, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165, IERC165, ERC1155Receiver)
+        returns (bool)
+    {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
@@ -177,21 +173,10 @@ contract MarketplaceV3 is
     }
 
     function _msgSender() internal view override(ERC2771ContextUpgradeable, Permissions) returns (address sender) {
-        if (isTrustedForwarder(msg.sender)) {
-            // The assembly code is more direct than the Solidity version using `abi.decode`.
-            assembly {
-                sender := shr(96, calldataload(sub(calldatasize(), 20)))
-            }
-        } else {
-            return msg.sender;
-        }
+        return ERC2771ContextUpgradeable._msgSender();
     }
 
     function _msgData() internal view override(ERC2771ContextUpgradeable, Permissions) returns (bytes calldata) {
-        if (isTrustedForwarder(msg.sender)) {
-            return msg.data[:msg.data.length - 20];
-        } else {
-            return msg.data;
-        }
+        return ERC2771ContextUpgradeable._msgData();
     }
 }

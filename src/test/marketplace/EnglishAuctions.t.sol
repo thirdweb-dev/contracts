@@ -35,7 +35,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
-        address impl = address(new MarketplaceV3(extensions, address(0)));
+        address impl = address(
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+        );
 
         vm.prank(marketplaceDeployer);
         marketplace = address(
@@ -1895,8 +1897,78 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
     }
 
     /*///////////////////////////////////////////////////////////////
-                                Audit POC
+                            Audit POCs
     //////////////////////////////////////////////////////////////*/
+
+    function test_state_collectAuctionPayout_buyoutBid_nativeToken() public {
+        uint256 auctionId = _setup_newAuction_nativeToken();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place bid
+        vm.deal(buyer, 10 ether);
+        vm.startPrank(buyer);
+        EnglishAuctionsLogic(marketplace).bidInAuction{ value: 10 ether }(auctionId, 10 ether);
+        vm.stopPrank();
+
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
+
+        // Test consequent states.
+        // Seller is owner of token.
+        assertIsOwnerERC721(address(erc721), buyer, tokenIds);
+        assertEq(weth.balanceOf(marketplace), 10 ether);
+        assertEq(buyer.balance, 0 ether);
+        assertEq(buyer, bidder);
+        assertEq(currency, NATIVE_TOKEN);
+        assertEq(bidAmount, 10 ether);
+
+        vm.prank(seller);
+        // calls WETH.withdraw (which calls receive function of Marketplace) and sends native tokens to seller
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
+        assertEq(weth.balanceOf(marketplace), 0 ether);
+        assertEq(seller.balance, 10 ether);
+
+        // sending eth directly should fail
+        vm.deal(address(this), 1 ether);
+        (bool success, ) = marketplace.call{ value: 1 ether }("");
+        assertEq(success, false);
+    }
+
+    function test_audit_native_tokens_locked() public {
+        uint256 auctionId = _setup_newAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        // place buyout bid
+        erc20.mint(buyer, 10 ether);
+        vm.deal(buyer, 1 ether);
+
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 10 ether);
+
+        vm.expectRevert("Marketplace: invalid native tokens sent.");
+        EnglishAuctionsLogic(marketplace).bidInAuction{ value: 1 ether }(auctionId, 10 ether);
+        vm.stopPrank();
+
+        // No ether is temporary locked in contract
+        assertEq(marketplace.balance, 0);
+    }
 
     function test_revert_collectAuctionPayout_buyoutBid_poc() public {
         /*///////////////////////////////////////////////////////////////
@@ -2041,7 +2113,9 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
 
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
-        address impl = address(new MarketplaceV3(extensions, address(0)));
+        address impl = address(
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+        );
 
         vm.prank(marketplaceDeployer);
         marketplace = address(
@@ -2233,7 +2307,9 @@ contract BreitwieserTheBidder is BaseTest, IExtension {
 
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
-        address impl = address(new MarketplaceV3(extensions, address(0)));
+        address impl = address(
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+        );
 
         vm.prank(marketplaceDeployer);
         marketplace = address(
@@ -2458,7 +2534,9 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
-        address impl = address(new MarketplaceV3(extensions, address(0)));
+        address impl = address(
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+        );
 
         vm.prank(marketplaceDeployer);
         marketplace = address(

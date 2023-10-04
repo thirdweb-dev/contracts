@@ -34,7 +34,9 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
 
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
-        address impl = address(new MarketplaceV3(extensions, address(0)));
+        address impl = address(
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+        );
 
         vm.prank(marketplaceDeployer);
         marketplace = address(
@@ -1865,6 +1867,38 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         vm.prank(_seller);
         listingId = DirectListingsLogic(marketplace).createListing(listingParams);
     }
+
+    function test_audit_native_tokens_locked() public {
+        (uint256 listingId, IDirectListings.Listing memory existingListing) = _setup_buyFromListing();
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingListing.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingListing.assetContract, address(erc721));
+
+        vm.warp(existingListing.startTimestamp);
+
+        // No ether is locked in contract
+        assertEq(marketplace.balance, 0);
+
+        // buy from listing
+        erc20.mint(buyer, 10 ether);
+        vm.deal(buyer, 1 ether);
+
+        vm.prank(seller);
+        DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
+
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 10 ether);
+
+        vm.expectRevert("Marketplace: invalid native tokens sent.");
+        DirectListingsLogic(marketplace).buyFromListing{ value: 1 ether }(listingId, buyer, 1, address(erc20), 1 ether);
+        vm.stopPrank();
+
+        // 1 ether is temporary locked in contract
+        assertEq(marketplace.balance, 0 ether);
+    }
 }
 
 contract IssueC2_MarketplaceDirectListingsTest is BaseTest, IExtension {
@@ -1885,7 +1919,9 @@ contract IssueC2_MarketplaceDirectListingsTest is BaseTest, IExtension {
 
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
-        address impl = address(new MarketplaceV3(extensions, address(0)));
+        address impl = address(
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+        );
 
         vm.prank(marketplaceDeployer);
         marketplace = address(

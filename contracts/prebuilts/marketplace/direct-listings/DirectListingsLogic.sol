@@ -285,6 +285,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == targetTotalPrice, "Marketplace: msg.value must exactly be the total price.");
         } else {
+            require(msg.value == 0, "Marketplace: invalid native tokens sent.");
             _validateERC20BalAndAllowance(buyer, _currency, targetTotalPrice);
         }
 
