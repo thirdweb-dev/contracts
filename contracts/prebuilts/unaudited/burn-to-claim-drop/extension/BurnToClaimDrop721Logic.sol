@@ -31,7 +31,6 @@ import { LazyMint } from "../../../../extension/upgradeable/LazyMint.sol";
 import { Drop } from "../../../../extension/upgradeable/Drop.sol";
 import { ContractMetadata } from "../../../../extension/upgradeable/ContractMetadata.sol";
 import { Ownable } from "../../../../extension/upgradeable/Ownable.sol";
-import { DefaultOperatorFiltererUpgradeable } from "../../../../extension/upgradeable/DefaultOperatorFiltererUpgradeable.sol";
 import { PermissionsStorage } from "../../../../extension/upgradeable/Permissions.sol";
 import { BurnToClaim, BurnToClaimStorage } from "../../../../extension/upgradeable/BurnToClaim.sol";
 
@@ -46,7 +45,6 @@ contract BurnToClaimDrop721Logic is
     LazyMint,
     Drop,
     ERC2771ContextUpgradeable,
-    DefaultOperatorFiltererUpgradeable,
     ERC721AUpgradeable
 {
     using TWStrings for uint256;
@@ -289,11 +287,6 @@ contract BurnToClaimDrop721Logic is
         return _hasRole(MINTER_ROLE, _msgSender());
     }
 
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
-        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
     /// @dev Returns whether burn-to-claim info can be set in the given execution context.
     function _canSetBurnToClaim() internal view virtual override returns (bool) {
         return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -353,45 +346,6 @@ contract BurnToClaimDrop721Logic is
         }
     }
 
-    /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved) public override onlyAllowedOperatorApproval(operator) {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId) public override onlyAllowedOperatorApproval(operator) {
-        super.approve(operator, tokenId);
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId, data);
-    }
-
-    /// @dev Returns whether `addr` holds the given role.
     function _hasRole(bytes32 role, address addr) internal view returns (bool) {
         PermissionsStorage.Data storage data = PermissionsStorage.data();
         return data._hasRole[role][addr];

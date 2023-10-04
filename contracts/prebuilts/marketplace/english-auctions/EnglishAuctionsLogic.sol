@@ -135,6 +135,10 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
             "Marketplace: inactive auction."
         );
         require(_bidAmount != 0, "Marketplace: Bidding with zero amount.");
+        require(
+            _bidAmount <= _targetAuction.buyoutBidAmount || _targetAuction.buyoutBidAmount == 0,
+            "Marketplace: Bidding above buyout price."
+        );
 
         Bid memory newBid = Bid({ auctionId: _auctionId, bidder: _msgSender(), bidAmount: _bidAmount });
 
@@ -337,6 +341,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         // Close auction and execute sale if there's a buyout price and incoming bid amount is buyout price.
         if (_targetAuction.buyoutBidAmount > 0 && incomingBidAmount >= _targetAuction.buyoutBidAmount) {
             incomingBidAmount = _targetAuction.buyoutBidAmount;
+            _incomingBid.bidAmount = _targetAuction.buyoutBidAmount;
 
             _closeAuctionForBidder(_targetAuction, _incomingBid);
         } else {

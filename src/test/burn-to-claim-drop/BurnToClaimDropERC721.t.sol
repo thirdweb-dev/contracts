@@ -163,15 +163,15 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
             "nextTokenIdToMint()"
         );
         extension_drop.functions[12] = ExtensionFunction(
-            BurnToClaimDrop721Logic.setApprovalForAll.selector,
+            IERC721Upgradeable.setApprovalForAll.selector,
             "setApprovalForAll(address,bool)"
         );
         extension_drop.functions[13] = ExtensionFunction(
-            BurnToClaimDrop721Logic.approve.selector,
+            IERC721Upgradeable.approve.selector,
             "approve(address,uint256)"
         );
         extension_drop.functions[14] = ExtensionFunction(
-            BurnToClaimDrop721Logic.transferFrom.selector,
+            IERC721Upgradeable.transferFrom.selector,
             "transferFrom(address,address,uint256)"
         );
         extension_drop.functions[15] = ExtensionFunction(ERC721AUpgradeable.balanceOf.selector, "balanceOf(address)");

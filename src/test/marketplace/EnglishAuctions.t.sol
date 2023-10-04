@@ -1893,6 +1893,125 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         vm.expectRevert("Marketplace: invalid auction.");
         EnglishAuctionsLogic(marketplace).isAuctionExpired(auctionId + 1);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                                Audit POC
+    //////////////////////////////////////////////////////////////*/
+
+    function test_revert_collectAuctionPayout_buyoutBid_poc() public {
+        /*///////////////////////////////////////////////////////////////
+                        Initial State
+        //////////////////////////////////////////////////////////////*/
+
+        // consider that market place already has 200 ETH worth of tokens from all bids made
+        erc20.mint(marketplace, 200 ether);
+
+        /*///////////////////////////////////////////////////////////////
+                       Create Auction
+        //////////////////////////////////////////////////////////////*/
+
+        // Buyout bid : 10 ETH
+        uint256 auctionId = _setup_newAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        /*///////////////////////////////////////////////////////////////
+                       BID
+        //////////////////////////////////////////////////////////////*/
+
+        // place bid : 200 ETH
+        erc20.mint(buyer, 200 ether);
+        vm.startPrank(buyer);
+        erc20.approve(marketplace, 200 ether);
+
+        vm.expectRevert("Marketplace: Bidding above buyout price.");
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 200 ether);
+        vm.stopPrank();
+    }
+
+    function _setup_nativeTokenAuction() private returns (uint256 auctionId) {
+        // Sample auction parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = NATIVE_TOKEN;
+        uint256 minimumBidAmount = 1 ether;
+        uint256 buyoutBidAmount = 10 ether;
+        uint64 timeBufferInSeconds = 10 seconds;
+        uint64 bidBufferBps = 1000;
+        uint64 startTimestamp = 100;
+        uint64 endTimestamp = 200;
+
+        // Mint the ERC721 tokens to seller. These tokens will be auctioned.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // Auction tokens.
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
+
+        vm.prank(seller);
+        auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
+    }
+
+    function test_revert_collectAuctionPayout_buyoutBid_nativeTokens_poc() public {
+        /*///////////////////////////////////////////////////////////////
+                        Initial State
+        //////////////////////////////////////////////////////////////*/
+
+        // consider that market place already has 200 ETH worth of tokens from all bids made
+        vm.deal(address(marketplace), 200 ether);
+
+        /*///////////////////////////////////////////////////////////////
+                       Create Auction
+        //////////////////////////////////////////////////////////////*/
+
+        // Buyout bid : 10 ETH
+        uint256 auctionId = _setup_nativeTokenAuction();
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = existingAuction.tokenId;
+
+        // Verify existing auction at `auctionId`
+        assertEq(existingAuction.assetContract, address(erc721));
+
+        vm.warp(existingAuction.startTimestamp);
+
+        /*///////////////////////////////////////////////////////////////
+                       BID
+        //////////////////////////////////////////////////////////////*/
+
+        // place bid : 200 ETH
+        vm.deal(buyer, 200 ether);
+        vm.prank(buyer);
+        vm.expectRevert("Marketplace: Bidding above buyout price.");
+        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 200 ether);
+    }
 }
 
 contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {

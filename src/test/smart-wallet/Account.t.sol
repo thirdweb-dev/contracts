@@ -529,15 +529,15 @@ contract SimpleAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 0);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 0);
 
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).addDeposit{ value: 1000 }();
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 1000);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 1000);
 
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).withdrawDepositTo(payable(accountSigner), 500);
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 500);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 500);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -566,5 +566,62 @@ contract SimpleAccountTest is BaseTest {
         erc1155.mint(account, 0, 1);
 
         assertEq(erc1155.balanceOf(account, 0), 1);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                Test: setting contract metadata
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Set contract metadata via admin or entrypoint.
+    function test_state_contractMetadata() public {
+        _setup_executeTransaction();
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
+
+        vm.prank(accountAdmin);
+        SimpleAccount(payable(account)).setContractURI("https://example.com");
+        assertEq(SimpleAccount(payable(account)).contractURI(), "https://example.com");
+
+        UserOperation[] memory userOp = _setupUserOpExecute(
+            accountAdminPKey,
+            bytes(""),
+            address(account),
+            0,
+            abi.encodeWithSignature("setContractURI(string)", "https://thirdweb.com")
+        );
+
+        EntryPoint(entrypoint).handleOps(userOp, beneficiary);
+        assertEq(SimpleAccount(payable(account)).contractURI(), "https://thirdweb.com");
+
+        address[] memory targets = new address[](0);
+        uint256[] memory values = new uint256[](0);
+        bytes[] memory callData = new bytes[](0);
+
+        address[] memory approvedTargets = new address[](0);
+
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
+
+        vm.prank(accountAdmin);
+        bytes memory sig = _signSignerPermissionRequest(permissionsReq);
+        SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
+
+        UserOperation[] memory userOpViaSigner = _setupUserOpExecute(
+            accountSignerPKey,
+            bytes(""),
+            address(account),
+            0,
+            abi.encodeWithSignature("setContractURI(string)", "https://thirdweb.com")
+        );
+
+        vm.expectRevert();
+        EntryPoint(entrypoint).handleOps(userOpViaSigner, beneficiary);
     }
 }

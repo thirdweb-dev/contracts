@@ -27,7 +27,6 @@ import "../../../extension/upgradeable/init/PrimarySaleInit.sol";
 import "../../../extension/upgradeable/init/OwnableInit.sol";
 import "../../../extension/upgradeable/init/ERC721AInit.sol";
 import "../../../extension/upgradeable/init/PermissionsEnumerableInit.sol";
-import "../../../extension/upgradeable/init/DefaultOperatorFiltererInit.sol";
 import "../../../extension/upgradeable/init/ReentrancyGuardInit.sol";
 
 contract BurnToClaimDropERC721 is
@@ -35,7 +34,6 @@ contract BurnToClaimDropERC721 is
     Multicall,
     ERC2771ContextUpgradeable,
     BaseRouter,
-    DefaultOperatorFiltererInit,
     ContractMetadataInit,
     PlatformFeeInit,
     RoyaltyInit,
@@ -80,8 +78,6 @@ contract BurnToClaimDropERC721 is
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
-
-        _setupOperatorFilterer();
     }
 
     /// @dev Called in the initialize function. Sets up roles.

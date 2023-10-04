@@ -81,20 +81,24 @@ contract ExtensionSignatureMintERC1155 is DSTest, Test {
         view
         returns (bytes memory)
     {
-        bytes memory encodedRequest = abi.encode(
-            typehashMintRequest,
-            _request.to,
-            _request.royaltyRecipient,
-            _request.royaltyBps,
-            _request.primarySaleRecipient,
-            _request.tokenId,
-            keccak256(bytes(_request.uri)),
-            _request.quantity,
-            _request.pricePerToken,
-            _request.currency,
-            _request.validityStartTimestamp,
-            _request.validityEndTimestamp,
-            _request.uid
+        bytes memory encodedRequest = bytes.concat(
+            abi.encode(
+                typehashMintRequest,
+                _request.to,
+                _request.royaltyRecipient,
+                _request.royaltyBps,
+                _request.primarySaleRecipient,
+                _request.tokenId,
+                keccak256(bytes(_request.uri))
+            ),
+            abi.encode(
+                _request.quantity,
+                _request.pricePerToken,
+                _request.currency,
+                _request.validityStartTimestamp,
+                _request.validityEndTimestamp,
+                _request.uid
+            )
         );
         bytes32 structHash = keccak256(encodedRequest);
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
