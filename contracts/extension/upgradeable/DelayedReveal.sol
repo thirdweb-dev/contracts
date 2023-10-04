@@ -6,9 +6,10 @@ pragma solidity ^0.8.0;
 import "../interface/IDelayedReveal.sol";
 
 library DelayedRevealStorage {
-    /// @custom:storage-location erc7201:extension.manager.storage
+    /// @custom:storage-location erc7201:delayed.reveal.storage
+    ///@dev keccak256(abi.encode(uint256(keccak256("delayed.reveal.storage")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 public constant DELAYED_REVEAL_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("delayed.reveal.storage")) - 1)) & ~bytes32(uint256(0xff));
+        0x29cbb6a3768b42f407b01945994a37861bf5a2179c5dea5be7e378415e755100;
 
     struct Data {
         /// @dev Mapping from tokenId of a batch of tokens => to delayed reveal data.

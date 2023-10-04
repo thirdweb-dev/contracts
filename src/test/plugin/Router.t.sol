@@ -15,7 +15,10 @@ contract RouterImplementation is Router {
 }
 
 library CounterStorage {
-    bytes32 public constant COUNTER_STORAGE_POSITION = keccak256("counter.storage");
+    /// @custom:storage-location erc7201:counter.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("counter.storage")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 public constant COUNTER_STORAGE_POSITION =
+        0x3a8940d2c88113c2296117248b8b2aedcf41634993b4c0b4ea1a36805e66c300;
 
     struct Data {
         uint256 number;
