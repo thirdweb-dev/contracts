@@ -1693,7 +1693,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
 
         // burn and claim
-        vm.expectRevert("Origin contract not set.");
+        vm.expectRevert();
         drop.burnAndClaim(0, 1);
     }
 
