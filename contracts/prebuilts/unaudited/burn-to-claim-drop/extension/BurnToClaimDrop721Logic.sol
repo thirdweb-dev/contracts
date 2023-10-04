@@ -190,13 +190,14 @@ contract BurnToClaimDrop721Logic is
 
     /// @dev Check if given quantity is available for minting.
     function _checkTokenSupply(uint256 _quantity) internal view {
-        ERC721AStorage.Data storage erc721AData = ERC721AStorage.erc721AStorage();
-
         uint256 _maxTotalMinted = maxTotalMinted();
-        uint256 currentIndex_ = erc721AData._currentIndex;
+        uint256 currentTotalMinted = totalMinted();
 
-        require(currentIndex_ + _quantity <= nextTokenIdToLazyMint(), "!Tokens");
-        require(_maxTotalMinted == 0 || currentIndex_ + _quantity <= _maxTotalMinted, "exceed max total mint cap.");
+        require(currentTotalMinted + _quantity <= nextTokenIdToLazyMint(), "!Tokens");
+        require(
+            _maxTotalMinted == 0 || currentTotalMinted + _quantity <= _maxTotalMinted,
+            "exceed max total mint cap."
+        );
     }
 
     /// @dev Runs before every `claim` function call.
