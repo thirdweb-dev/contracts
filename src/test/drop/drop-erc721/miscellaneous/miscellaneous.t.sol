@@ -16,14 +16,14 @@ contract DropERC721Test_misc is BaseTest {
 
     DropERC721 public drop;
 
-    bytes private reveal_data;
-    string private reveal_baseURI;
-    uint256 private reveal_amount;
-    bytes private reveal_encryptedURI;
-    bytes32 private reveal_provenanceHash;
-    string private reveal_revealedURI;
-    uint256 private reveal_index;
-    bytes private reveal_key;
+    bytes private misc_data;
+    string private misc_baseURI;
+    uint256 private misc_amount;
+    bytes private misc_encryptedURI;
+    bytes32 private misc_provenanceHash;
+    string private misc_revealedURI;
+    uint256 private misc_index;
+    bytes private misc_key;
     address private unauthorized = address(0x123);
 
     function setUp() public override {
@@ -65,38 +65,38 @@ contract DropERC721Test_misc is BaseTest {
     }
 
     modifier validIndex() {
-        reveal_index = 0;
+        misc_index = 0;
         _;
     }
 
     modifier invalidKey() {
-        reveal_key = "invalidKey";
+        misc_key = "invalidKey";
         _;
     }
 
     modifier invalidIndex() {
-        reveal_index = 1;
+        misc_index = 1;
         _;
     }
 
     modifier lazyMintEncrypted() {
-        reveal_amount = 10;
-        reveal_baseURI = "ipfs://";
-        reveal_revealedURI = "ipfs://revealed";
-        reveal_key = "key";
-        reveal_encryptedURI = drop.encryptDecrypt(bytes(reveal_revealedURI), reveal_key);
-        reveal_provenanceHash = keccak256(abi.encodePacked(reveal_revealedURI, reveal_key, block.chainid));
-        reveal_data = abi.encode(reveal_encryptedURI, reveal_provenanceHash);
+        misc_amount = 10;
+        misc_baseURI = "ipfs://";
+        misc_revealedURI = "ipfs://revealed";
+        misc_key = "key";
+        misc_encryptedURI = drop.encryptDecrypt(bytes(misc_revealedURI), misc_key);
+        misc_provenanceHash = keccak256(abi.encodePacked(misc_revealedURI, misc_key, block.chainid));
+        misc_data = abi.encode(misc_encryptedURI, misc_provenanceHash);
         vm.prank(deployer);
-        drop.lazyMint(reveal_amount, reveal_baseURI, reveal_data);
+        drop.lazyMint(misc_amount, misc_baseURI, misc_data);
         _;
     }
 
     modifier lazyMintUnEncrypted() {
-        reveal_amount = 10;
-        reveal_baseURI = "ipfs://";
+        misc_amount = 10;
+        misc_baseURI = "ipfs://";
         vm.prank(deployer);
-        drop.lazyMint(reveal_amount, reveal_baseURI, reveal_data);
+        drop.lazyMint(misc_amount, misc_baseURI, misc_data);
         _;
     }
 
@@ -192,5 +192,13 @@ contract DropERC721Test_misc is BaseTest {
         assertEq(totalSupply, 9);
         vm.expectRevert(IERC721AUpgradeable.OwnerQueryForNonexistentToken.selector);
         drop.ownerOf(0);
+    }
+
+    function test_contractType() public {
+        assertEq(drop.contractType(), bytes32("DropERC721"));
+    }
+
+    function test_contractVersion() public {
+        assertEq(drop.contractVersion(), uint8(4));
     }
 }
