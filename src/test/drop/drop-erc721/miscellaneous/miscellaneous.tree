@@ -17,7 +17,7 @@ function burn(uint256 tokenId)
     └── it should burn the token ✅
 
 function contractType()
-└── it should return "DropERC721" in bytes32 format
+└── it should return "DropERC721" in bytes32 format ✅
 
 function contractVersion() 
-└── it should return 4 in uint8 format
+└── it should return 4 in uint8 format ✅
