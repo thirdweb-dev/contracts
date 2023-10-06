@@ -61,7 +61,7 @@ contract DropERC721Test_initializer is BaseTest {
         (address _royaltyRecipient, uint128 _royaltyBps) = newDropContract.getDefaultRoyaltyInfo();
         address _saleRecipient = newDropContract.primarySaleRecipient();
 
-        for (uint i = 0; i < forwarders().length; i++) {
+        for (uint256 i = 0; i < forwarders().length; i++) {
             assertEq(newDropContract.isTrustedForwarder(forwarders()[i]), true);
         }
 
@@ -410,4 +410,3 @@ contract DropERC721Test_initializer is BaseTest {
         assertEq(newDropContract.getRoleAdmin(keccak256("METADATA_ROLE")), keccak256("METADATA_ROLE"));
     }
 }
-

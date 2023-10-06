@@ -56,7 +56,9 @@ contract DropERC721Test_updateBatchBaseURI is BaseTest {
         updateBatch_revealedURI = "ipfs://revealed";
         updateBatch_key = "key";
         updateBatch_encryptedURI = drop.encryptDecrypt(bytes(updateBatch_revealedURI), updateBatch_key);
-        updateBatch_provenanceHash = keccak256(abi.encodePacked(updateBatch_revealedURI, updateBatch_key, block.chainid));
+        updateBatch_provenanceHash = keccak256(
+            abi.encodePacked(updateBatch_revealedURI, updateBatch_key, block.chainid)
+        );
         updateBatch_data = abi.encode(updateBatch_encryptedURI, updateBatch_provenanceHash);
         vm.prank(deployer);
         drop.lazyMint(updateBatch_amount, updateBatch_baseURI, updateBatch_data);
@@ -106,7 +108,7 @@ contract DropERC721Test_updateBatchBaseURI is BaseTest {
         vm.expectRevert("Batch frozen");
         drop.updateBatchBaseURI(0, updateBatch_newBaseURI);
     }
-    
+
     function test_state() public lazyMintUnEncryptedRegularBaseURI callerWithMetadataRole {
         drop.updateBatchBaseURI(0, updateBatch_newBaseURI);
         for (uint256 i = 0; i < updateBatch_amount; i += 1) {

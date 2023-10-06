@@ -25,7 +25,6 @@ contract DropERC721Test_reveal is BaseTest {
     bytes private reveal_key;
     address private unauthorized = address(0x123);
 
-
     function setUp() public override {
         super.setUp();
         drop = DropERC721(getContract("DropERC721"));

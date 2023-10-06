@@ -107,8 +107,6 @@ contract DropERC721Test_lazyMint is BaseTest {
         _;
     }
 
-
-
     function test_revert_NoMinterRole() public callerWithoutMinterRole dataLengthZero {
         vm.expectRevert("Not authorized");
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
@@ -119,7 +117,7 @@ contract DropERC721Test_lazyMint is BaseTest {
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 
-    function test_revert_DataInvalidFormat() public callerWithMinterRole amountNotEqualZero dataInvalidFormat  {
+    function test_revert_DataInvalidFormat() public callerWithMinterRole amountNotEqualZero dataInvalidFormat {
         vm.expectRevert();
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
@@ -143,7 +141,12 @@ contract DropERC721Test_lazyMint is BaseTest {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
 
         vm.expectEmit(true, false, false, true);
-        emit TokensLazyMinted(nextTokenIdToLazyMintBefore, nextTokenIdToLazyMintBefore + lazyMint_amount - 1, lazyMint_revealedURI, lazymint_data);
+        emit TokensLazyMinted(
+            nextTokenIdToLazyMintBefore,
+            nextTokenIdToLazyMintBefore + lazyMint_amount - 1,
+            lazyMint_revealedURI,
+            lazymint_data
+        );
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 
@@ -169,7 +172,12 @@ contract DropERC721Test_lazyMint is BaseTest {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
 
         vm.expectEmit(true, false, false, true);
-        emit TokensLazyMinted(nextTokenIdToLazyMintBefore, nextTokenIdToLazyMintBefore + lazyMint_amount - 1, lazyMint_revealedURI, lazymint_data);
+        emit TokensLazyMinted(
+            nextTokenIdToLazyMintBefore,
+            nextTokenIdToLazyMintBefore + lazyMint_amount - 1,
+            lazyMint_revealedURI,
+            lazymint_data
+        );
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 
@@ -195,7 +203,12 @@ contract DropERC721Test_lazyMint is BaseTest {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
 
         vm.expectEmit(true, false, false, true);
-        emit TokensLazyMinted(nextTokenIdToLazyMintBefore, nextTokenIdToLazyMintBefore + lazyMint_amount - 1, lazyMint_revealedURI, lazymint_data);
+        emit TokensLazyMinted(
+            nextTokenIdToLazyMintBefore,
+            nextTokenIdToLazyMintBefore + lazyMint_amount - 1,
+            lazyMint_revealedURI,
+            lazymint_data
+        );
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 
@@ -220,8 +233,12 @@ contract DropERC721Test_lazyMint is BaseTest {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
 
         vm.expectEmit(true, false, false, true);
-        emit TokensLazyMinted(nextTokenIdToLazyMintBefore, nextTokenIdToLazyMintBefore + lazyMint_amount - 1, lazyMint_revealedURI, lazymint_data);
+        emit TokensLazyMinted(
+            nextTokenIdToLazyMintBefore,
+            nextTokenIdToLazyMintBefore + lazyMint_amount - 1,
+            lazyMint_revealedURI,
+            lazymint_data
+        );
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
-
 }
