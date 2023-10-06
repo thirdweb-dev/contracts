@@ -6,15 +6,15 @@ function _collectPriceOnClaim(
 )
 ├── if _pricePerToken is equal to zero
 │   └── if msg.value does not equal to zero
-│       └── it should revert
+│       └── it should revert ✅
 └── if _pricePerToken is not equal to zero
     └── if _primarySaleRecipient is equal to address(0)
         ├── if _currency is native token
         │   ├── if msg.value does not equal to totalPrice
-        │   │   └── it should revert
+        │   │   └── it should revert ✅
         │   └── if msg.value does equal to totalPrice
-        │       ├── it should transfer platformFees to platformFeeRecipient in native token
-        │       └── it should transfer totalPrice - platformFees to saleRecipient in native token
+        │       ├── it should transfer platformFees to platformFeeRecipient in native token ✅
+        │       └── it should transfer totalPrice - platformFees to saleRecipient in native token ✅
         └── if _currency is not native token
-            ├── it should transfer platformFees to platformFeeRecipient in _currency token
-            └── it should transfer totalPrice - platformFees to saleRecipient in _currency token
+            ├── it should transfer platformFees to platformFeeRecipient in _currency token  ✅
+            └── it should transfer totalPrice - platformFees to saleRecipient in _currency token ✅
