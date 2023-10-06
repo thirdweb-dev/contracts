@@ -7,6 +7,7 @@ import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
 import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
+import "../../../../../lib/openzeppelin-contracts-upgradeable/contracts/interfaces/IERC2981Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC721Test_misc is BaseTest {
@@ -200,5 +201,24 @@ contract DropERC721Test_misc is BaseTest {
 
     function test_contractVersion() public {
         assertEq(drop.contractVersion(), uint8(4));
+    }
+
+    function test_supportsInterface() public {
+        assertEq(drop.supportsInterface(type(IERC2981Upgradeable).interfaceId), true);
+        assertEq(drop.supportsInterface(type(IERC721Upgradeable).interfaceId), true);
+        assertEq(drop.supportsInterface(type(IERC721MetadataUpgradeable).interfaceId), true);
+    }
+
+    function test__msgData() public {
+        HarnessDropERC721MsgData msgDataDrop = new HarnessDropERC721MsgData();
+        bytes memory msgData = msgDataDrop.msgData();
+        bytes4 expectedData = msgDataDrop.msgData.selector;
+        assertEq(bytes4(msgData), expectedData);
+    }
+}
+
+contract HarnessDropERC721MsgData is DropERC721 {
+    function msgData() public view returns (bytes memory) {
+        return _msgData();
     }
 }
