@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
@@ -62,9 +62,6 @@ contract DropERC721Test_transferTokensOnClaim is BaseTest {
     address private transferTokens_platformFeeRecipient = address(0x012);
     uint256 private transferTokens_quantityToClaim = 1;
     address private transferTokens_receiver;
-
-    address private unauthorized = address(0x123);
-    address private receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
 
     ERC20 private nonReceiver;
 

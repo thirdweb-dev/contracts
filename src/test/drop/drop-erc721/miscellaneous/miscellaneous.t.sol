@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
@@ -12,8 +12,6 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC721Test_misc is BaseTest {
     using StringsUpgradeable for uint256;
-
-    event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
     DropERC721 public drop;
 
@@ -35,16 +33,6 @@ contract DropERC721Test_misc is BaseTest {
     /*///////////////////////////////////////////////////////////////
                         Branch Testing
     //////////////////////////////////////////////////////////////*/
-
-    modifier callerWithoutMetadataRole() {
-        vm.startPrank(unauthorized);
-        _;
-    }
-
-    modifier callerWithMetadataRole() {
-        vm.startPrank(deployer);
-        _;
-    }
 
     modifier callerNotApproved() {
         vm.startPrank(unauthorized);
@@ -75,11 +63,6 @@ contract DropERC721Test_misc is BaseTest {
         _;
     }
 
-    modifier invalidIndex() {
-        misc_index = 1;
-        _;
-    }
-
     modifier lazyMintEncrypted() {
         misc_amount = 10;
         misc_baseURI = "ipfs://";
@@ -88,14 +71,6 @@ contract DropERC721Test_misc is BaseTest {
         misc_encryptedURI = drop.encryptDecrypt(bytes(misc_revealedURI), misc_key);
         misc_provenanceHash = keccak256(abi.encodePacked(misc_revealedURI, misc_key, block.chainid));
         misc_data = abi.encode(misc_encryptedURI, misc_provenanceHash);
-        vm.prank(deployer);
-        drop.lazyMint(misc_amount, misc_baseURI, misc_data);
-        _;
-    }
-
-    modifier lazyMintUnEncrypted() {
-        misc_amount = 10;
-        misc_baseURI = "ipfs://";
         vm.prank(deployer);
         drop.lazyMint(misc_amount, misc_baseURI, misc_data);
         _;

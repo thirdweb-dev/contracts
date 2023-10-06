@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
-import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
 import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
@@ -21,10 +20,7 @@ contract HarnessDropERC721 is DropERC721 {
 
     function initializeHarness(
         address _defaultAdmin,
-        string memory _name,
-        string memory _symbol,
         string memory _contractURI,
-        address[] memory _trustedForwarders,
         address _saleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps,
@@ -34,10 +30,6 @@ contract HarnessDropERC721 is DropERC721 {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
         bytes32 _metadataRole = keccak256("METADATA_ROLE");
-
-        // Initialize inherited contracts, most base-like -> most derived.
-        // __ERC2771Context_init(_trustedForwarders);
-        // __ERC721A_init(_name, _symbol);
 
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
@@ -58,8 +50,6 @@ contract HarnessDropERC721 is DropERC721 {
 contract DropERC721Test_collectPrice is BaseTest {
     using StringsUpgradeable for uint256;
 
-    event TokenURIRevealed(uint256 indexed index, string revealedURI);
-
     HarnessDropERC721 public dropImp;
 
     address private collectPrice_saleRecipient = address(0x010);
@@ -72,19 +62,13 @@ contract DropERC721Test_collectPrice is BaseTest {
     address private collectPrice_currency;
     uint256 private collectPrice_msgValue;
 
-    address private unauthorized = address(0x123);
-    address private receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
-
     function setUp() public override {
         super.setUp();
 
         dropImp = new HarnessDropERC721();
         dropImp.initializeHarness(
             deployer,
-            NAME,
-            SYMBOL,
             CONTRACT_URI,
-            forwarders(),
             collectPrice_saleRecipient,
             collectPrice_royaltyRecipient,
             collectPrice_royaltyBps,

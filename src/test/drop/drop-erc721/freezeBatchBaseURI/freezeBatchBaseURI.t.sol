@@ -1,21 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
-import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
 import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract DropERC721Test_freezeBatchBaseURI is BaseTest {
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for address;
 
-    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
-    event TokenURIRevealed(uint256 indexed index, string revealedURI);
     event MetadataFrozen();
 
     DropERC721 public drop;
@@ -26,18 +22,12 @@ contract DropERC721Test_freezeBatchBaseURI is BaseTest {
     bytes private freeze_encryptedURI;
     bytes32 private freeze_provenanceHash;
     string private freeze_revealedURI;
-    uint256 private freeze_index;
     bytes private freeze_key;
     address private unauthorized = address(0x123);
-
-    using stdStorage for StdStorage;
 
     function setUp() public override {
         super.setUp();
         drop = DropERC721(getContract("DropERC721"));
-
-        erc20.mint(deployer, 1_000 ether);
-        vm.deal(deployer, 1_000 ether);
     }
 
     /*///////////////////////////////////////////////////////////////

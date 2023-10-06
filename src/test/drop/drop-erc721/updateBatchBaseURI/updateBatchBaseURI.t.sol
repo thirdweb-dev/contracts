@@ -1,17 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
-import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
 import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC721Test_updateBatchBaseURI is BaseTest {
     using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
 
     event BatchMetadataUpdate(uint256 _fromTokenId, uint256 _toTokenId);
 
@@ -24,16 +22,12 @@ contract DropERC721Test_updateBatchBaseURI is BaseTest {
     bytes private updateBatch_encryptedURI;
     bytes32 private updateBatch_provenanceHash;
     string private updateBatch_revealedURI;
-    uint256 private updateBatch_index;
     bytes private updateBatch_key;
     address private unauthorized = address(0x123);
 
     function setUp() public override {
         super.setUp();
         drop = DropERC721(getContract("DropERC721"));
-
-        erc20.mint(deployer, 1_000 ether);
-        vm.deal(deployer, 1_000 ether);
     }
 
     /*///////////////////////////////////////////////////////////////

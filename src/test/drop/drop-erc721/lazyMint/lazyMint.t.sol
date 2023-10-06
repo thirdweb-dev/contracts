@@ -1,40 +1,30 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
-import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
 import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract DropERC721Test_lazyMint is BaseTest {
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for address;
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
-    event TokenURIRevealed(uint256 indexed index, string revealedURI);
-    event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 
     DropERC721 public drop;
 
     bytes private lazymint_data;
-    string private lazyMint_baseURI;
     uint256 private lazyMint_amount;
     bytes private lazyMint_encryptedURI;
     bytes32 private lazyMint_provenanceHash;
     string private lazyMint_revealedURI = "test";
 
-    using stdStorage for StdStorage;
-
     function setUp() public override {
         super.setUp();
         drop = DropERC721(getContract("DropERC721"));
-
-        erc20.mint(deployer, 1_000 ether);
-        vm.deal(deployer, 1_000 ether);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -48,16 +38,6 @@ contract DropERC721Test_lazyMint is BaseTest {
 
     modifier callerWithMinterRole() {
         vm.startPrank(deployer);
-        _;
-    }
-
-    modifier callerWithoutMetadataRole() {
-        vm.startPrank(address(0x123));
-        _;
-    }
-
-    modifier callerWithMetadataRole() {
-        vm.prank(deployer);
         _;
     }
 

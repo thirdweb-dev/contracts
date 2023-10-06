@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
-import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
 import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC721Test_canSetFunctions is BaseTest {
     using StringsUpgradeable for uint256;
-
-    event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
     DropERC721 public drop;
 
@@ -21,9 +18,6 @@ contract DropERC721Test_canSetFunctions is BaseTest {
     uint256 private canset_amount;
     bytes private canset_encryptedURI;
     bytes32 private canset_provenanceHash;
-    string private canset_revealedURI;
-    uint256 private canset_index;
-    bytes private canset_key;
     address private unauthorized = address(0x123);
 
     function setUp() public override {
