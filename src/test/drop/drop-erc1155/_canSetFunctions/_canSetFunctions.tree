@@ -1,41 +1,41 @@
 function _canSetPlatformFeeInfo()
-# if caller has DEFAULT_ADMIN_ROLE
-## it should return true
-# if caller does not have DEFAULT_ADMIN_ROLE
-## it should return false
+├── if caller has DEFAULT_ADMIN_ROLE
+│   └── it should return true
+└── if caller does not have DEFAULT_ADMIN_ROLE
+    └── it should return false
 
 function _canSetPrimarySaleRecipient()
-# if caller has DEFAULT_ADMIN_ROLE
-## it should return true
-# if caller does not have DEFAULT_ADMIN_ROLE
-## it should return false
+├── if caller has DEFAULT_ADMIN_ROLE
+│   └── it should return true
+└── if caller does not have DEFAULT_ADMIN_ROLE
+    └── it should return false
 
 function _canSetOwner()
-# if caller has DEFAULT_ADMIN_ROLE
-## it should return true
-# if caller does not have DEFAULT_ADMIN_ROLE
-## it should return false
+├── if caller has DEFAULT_ADMIN_ROLE
+│   └── it should return true
+└── if caller does not have DEFAULT_ADMIN_ROLE
+    └── it should return false
 
 function _canSetRoyaltyInfo()
-# if caller has DEFAULT_ADMIN_ROLE
-## it should return true
-# if caller does not have DEFAULT_ADMIN_ROLE
-## it should return false
+├── if caller has DEFAULT_ADMIN_ROLE
+│   └── it should return true
+└── if caller does not have DEFAULT_ADMIN_ROLE
+    └── it should return false
 
 function _canSetContractURI()
-# if caller has DEFAULT_ADMIN_ROLE
-## it should return true
-# if caller does not have DEFAULT_ADMIN_ROLE
-## it should return false
+├── if caller has DEFAULT_ADMIN_ROLE
+│   └── it should return true
+└── if caller does not have DEFAULT_ADMIN_ROLE
+    └── it should return false
 
 function _canSetClaimConditions()
-# if caller has DEFAULT_ADMIN_ROLE
-## it should return true
-# if caller does not have DEFAULT_ADMIN_ROLE
-## it should return false
+├── if caller has DEFAULT_ADMIN_ROLE
+│   └── it should return true
+└── if caller does not have DEFAULT_ADMIN_ROLE
+    └── it should return false
 
 function _canLazyMint()
-# if caller has minterRole
-## it should return true
-# if caller does not have minterRole
-## it should return false
+├── if caller has minterRole
+│   └── it should return true
+└── if caller does not have minterRole
+    └── it should return false
