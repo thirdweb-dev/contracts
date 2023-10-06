@@ -8,9 +8,10 @@ import "../../external-deps/openzeppelin/utils/cryptography/EIP712.sol";
 import "../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 
 library AccountPermissionsStorage {
-    /// @custom:storage-location erc7201:extension.manager.storage
+    /// @custom:storage-location erc7201:account.permissions.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("account.permissions.storage")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 public constant ACCOUNT_PERMISSIONS_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("account.permissions.storage")) - 1));
+        0x3181e78fc1b109bc611fd2406150bf06e33faa75f71cba12c3e1fd670f2def00;
 
     struct Data {
         /// @dev The set of all admins of the wallet.

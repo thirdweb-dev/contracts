@@ -2,9 +2,10 @@
 pragma solidity ^0.8.0;
 
 library BatchMintMetadataStorage {
-    /// @custom:storage-location erc7201:extension.manager.storage
+    /// @custom:storage-location erc7201:batch.mint.metadata.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("batch.mint.metadata.storage")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 public constant BATCH_MINT_METADATA_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("batch.mint.metadata.storage")) - 1));
+        0xf5b99f0648d517803cfbd359284c3fd81ac54e1c89b4874d917ae042d05e8500;
 
     struct Data {
         /// @dev Largest tokenId of each batch of tokens with the same baseURI.

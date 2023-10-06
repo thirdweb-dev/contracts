@@ -50,7 +50,7 @@ contract BurnToClaimDropERC721 is
         _disableInitializers();
     }
 
-    /// @dev Initializes the contract, like a constructor.
+    /// @notice Initializes the contract.
     function initialize(
         address _defaultAdmin,
         string memory _name,
@@ -80,8 +80,8 @@ contract BurnToClaimDropERC721 is
         _setupPrimarySaleRecipient(_saleRecipient);
     }
 
+    /// @dev Called in the initialize function. Sets up roles.
     function _setupRoles(address _defaultAdmin) internal onlyInitializing {
-        bytes32 _operatorRole = keccak256("OPERATOR_ROLE");
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
         bytes32 _extensionRole = keccak256("EXTENSION_ROLE");
@@ -91,8 +91,6 @@ contract BurnToClaimDropERC721 is
         _setupRole(_minterRole, _defaultAdmin);
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
-        _setupRole(_operatorRole, _defaultAdmin);
-        _setupRole(_operatorRole, address(0));
         _setupRole(_extensionRole, _defaultAdmin);
         _setRoleAdmin(_extensionRole, _extensionRole);
     }
@@ -101,10 +99,12 @@ contract BurnToClaimDropERC721 is
                         Contract identifiers
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Returns the type of contract.
     function contractType() external pure returns (bytes32) {
         return bytes32("BurnToClaimDropERC721");
     }
 
+    /// @notice Returns the contract version.
     function contractVersion() external pure returns (uint8) {
         return uint8(5);
     }

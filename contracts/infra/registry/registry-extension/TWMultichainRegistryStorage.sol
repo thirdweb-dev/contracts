@@ -8,7 +8,10 @@ import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "../../interface/ITWMultichainRegistry.sol";
 
 library TWMultichainRegistryStorage {
-    bytes32 public constant MULTICHAIN_REGISTRY_STORAGE_POSITION = keccak256("multichain.registry.storage");
+    /// @custom:storage-location erc7201:multichain.registry.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("multichain.registry.storage")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 public constant MULTICHAIN_REGISTRY_STORAGE_POSITION =
+        0x14e6df431852605a9ea88d8bd521d0d3fa06563ab37f65080e288e5afad4ac00;
 
     struct Data {
         /// @dev wallet address => [contract addresses]
