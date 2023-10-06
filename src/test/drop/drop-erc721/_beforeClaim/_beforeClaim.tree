@@ -6,7 +6,7 @@ function _beforeClaim(
     AllowlistProof calldata,
     bytes memory
 )
-# if _current index + _quantity are greater than nextTokenIdToLazyMint
-## it should revert
-# if maxTotalSupply does not equal zero and _currentIndex + _quantity is greater than maxTotalSupply
-## it should revert
+├── if _current index + _quantity are greater than nextTokenIdToLazyMint
+│   └── it should revert ✅
+└── if maxTotalSupply does not equal zero and _currentIndex + _quantity is greater than maxTotalSupply
+    └── it should revert ✅
