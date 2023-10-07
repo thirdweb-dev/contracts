@@ -5,8 +5,8 @@ function transferTokensOnClaim(
 )
 ├── when {to} is a smart contract
 │   ├── when {to} does not implement onERC1155Received
-│   │   └── it should revert
+│   │   └── it should revert ✅
 │   └── when {to} does implement onERC1155Received
-│       └── it should mint {amount} number of {id} tokens to {to}
+│       └── it should mint {amount} number of {id} tokens to {to} ✅
 └── when {to} is an EOA
-    └── it should mint {amount} number of {id} tokens to {to}
+    └── it should mint {amount} number of {id} tokens to {to} ✅
