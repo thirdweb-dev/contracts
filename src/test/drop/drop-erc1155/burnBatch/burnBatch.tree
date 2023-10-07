@@ -14,4 +14,4 @@ function burnBatch(
         └── if the balance of account for each id is greater than or equal to the corresponding value
             ├── it should reduce the balance of each id for account by the corresponding value ✅
             ├── it should reduce the total supply of each id by the corresponding value ✅
-            └── it should emit TransferBatch with the following parameters: _msgSender(), account, address(0), ids, amounts
+            └── it should emit TransferBatch with the following parameters: _msgSender(), account, address(0), ids, amounts ✅

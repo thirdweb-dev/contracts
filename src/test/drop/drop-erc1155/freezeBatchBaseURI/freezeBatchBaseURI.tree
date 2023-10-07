@@ -1,12 +1,12 @@
 function freezeBatchBaseURI(uint256 _index)
-├── if the caller does not have metadataRole
-│   └── it should revert
+├── if the caller does not have metadataRole 
+│   └── it should revert ✅
 └── if the caller has metadataRole
     ├── if _index is greater than the number of current batches
-    │   └── it should revert
+    │   └── it should revert ✅
     └── if _index is equal to or less than the number of current batches
         ├── if the baseURI for the batch at _index is not set
-        │   └── it should revert
+        │   └── it should revert ✅
         └── if the baseURI for the batch at _index is set
-            ├── it should set batchFrozen[(batchId for _index)] to true
-            └── it should emit MetadataFrozen
+            ├── it should set batchFrozen[(batchId for _index)] to true ✅
+            └── it should emit MetadataFrozen ✅
