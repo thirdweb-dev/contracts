@@ -14,15 +14,15 @@ pragma solidity ^0.8.11;
 
 import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
 
-import "../../../extension/Multicall.sol";
-import "../../../extension/upgradeable/Initializable.sol";
-import "../../../extension/upgradeable/init/ContractMetadataInit.sol";
-import "../../../extension/upgradeable/init/RoyaltyInit.sol";
-import "../../../extension/upgradeable/init/PrimarySaleInit.sol";
-import "../../../extension/upgradeable/init/OwnableInit.sol";
-import "../../../extension/upgradeable/init/PermissionsEnumerableInit.sol";
-import "../../../extension/upgradeable/init/ERC2771ContextInit.sol";
-import "../../../extension/upgradeable/init/ERC721AQueryableInit.sol";
+import "../../extension/Multicall.sol";
+import "../../extension/upgradeable/Initializable.sol";
+import "../../extension/upgradeable/init/ContractMetadataInit.sol";
+import "../../extension/upgradeable/init/RoyaltyInit.sol";
+import "../../extension/upgradeable/init/PrimarySaleInit.sol";
+import "../../extension/upgradeable/init/OwnableInit.sol";
+import "../../extension/upgradeable/init/PermissionsEnumerableInit.sol";
+import "../../extension/upgradeable/init/ERC2771ContextInit.sol";
+import "../../extension/upgradeable/init/ERC721AQueryableInit.sol";
 
 contract EvolvingNFT is
     Initializable,
