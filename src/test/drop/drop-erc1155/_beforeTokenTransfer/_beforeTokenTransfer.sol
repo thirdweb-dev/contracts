@@ -116,7 +116,14 @@ contract DropERC1155Test_beforeTokenTransfer is BaseTest {
     }
 
     function test_state_tranferToZero() public toAddressZero {
-        drop.beforeTokenTransfer(deployer, beforeTransfer_to, beforeTransfer_from, beforeTransfer_ids, beforeTransfer_amounts, beforeTransfer_data);
+        drop.beforeTokenTransfer(
+            deployer,
+            beforeTransfer_to,
+            beforeTransfer_from,
+            beforeTransfer_ids,
+            beforeTransfer_amounts,
+            beforeTransfer_data
+        );
         uint256 beforeTokenTotalSupply = drop.totalSupply(0);
         drop.beforeTokenTransfer(
             deployer,

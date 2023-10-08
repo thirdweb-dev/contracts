@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract HarnessDropERC1155 is DropERC1155 {
     function collectPriceOnClaimHarness(
-        uint256 _tokenId, 
+        uint256 _tokenId,
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
@@ -119,7 +119,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
         vm.prank(deployer);
         dropImp.setSaleRecipientForToken(0, address(0x111));
         _;
-    } 
+    }
 
     /*///////////////////////////////////////////////////////////////
                         Branch Testing
@@ -145,7 +145,6 @@ contract DropERC1155Test_collectPrice is BaseTest {
             collectPrice_pricePerToken
         );
     }
-
 
     function test_revert_priceValueMismatchNativeCurrency() public nativeCurrency pricePerTokenNotZero {
         vm.expectRevert();
@@ -199,7 +198,14 @@ contract DropERC1155Test_collectPrice is BaseTest {
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 
-    function test_transferNativeCurrencyToTokenIdSaleRecipient() public nativeCurrency pricePerTokenNotZero msgValueNotZero saleRecipientSet primarySaleRecipientZeroAddress {
+    function test_transferNativeCurrencyToTokenIdSaleRecipient()
+        public
+        nativeCurrency
+        pricePerTokenNotZero
+        msgValueNotZero
+        saleRecipientSet
+        primarySaleRecipientZeroAddress
+    {
         uint256 balanceSaleRecipientBefore = address(collectPrice_tokenSaleRecipient).balance;
         uint256 platformFeeRecipientBefore = address(collectPrice_platformFeeRecipient).balance;
         dropImp.collectPriceOnClaimHarness{ value: collectPrice_msgValue }(
@@ -219,7 +225,13 @@ contract DropERC1155Test_collectPrice is BaseTest {
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 
-    function test_transferERc20ToTokenIdSaleRecipient() public erc20Currency pricePerTokenNotZero saleRecipientSet primarySaleRecipientZeroAddress {
+    function test_transferERc20ToTokenIdSaleRecipient()
+        public
+        erc20Currency
+        pricePerTokenNotZero
+        saleRecipientSet
+        primarySaleRecipientZeroAddress
+    {
         uint256 balanceSaleRecipientBefore = erc20.balanceOf(collectPrice_tokenSaleRecipient);
         uint256 platformFeeRecipientBefore = erc20.balanceOf(collectPrice_platformFeeRecipient);
         erc20.approve(address(dropImp), collectPrice_pricePerToken);
@@ -240,7 +252,12 @@ contract DropERC1155Test_collectPrice is BaseTest {
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 
-    function test_transferNativeCurrencyToPrimarySaleRecipient() public nativeCurrency pricePerTokenNotZero msgValueNotZero {
+    function test_transferNativeCurrencyToPrimarySaleRecipient()
+        public
+        nativeCurrency
+        pricePerTokenNotZero
+        msgValueNotZero
+    {
         uint256 balanceSaleRecipientBefore = address(collectPrice_saleRecipient).balance;
         uint256 platformFeeRecipientBefore = address(collectPrice_platformFeeRecipient).balance;
         dropImp.collectPriceOnClaimHarness{ value: collectPrice_msgValue }(

@@ -10,7 +10,11 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract HarnessDropERC1155 is DropERC1155 {
-    function transferTokensOnClaimHarness(address to, uint256 _tokenId, uint256 _quantityBeingClaimed) external {
+    function transferTokensOnClaimHarness(
+        address to,
+        uint256 _tokenId,
+        uint256 _quantityBeingClaimed
+    ) external {
         transferTokensOnClaim(to, _tokenId, _quantityBeingClaimed);
     }
 
@@ -44,7 +48,13 @@ contract HarnessDropERC1155 is DropERC1155 {
 }
 
 contract MockERC1155Receiver {
-    function onERC1155Received(address, address, uint256, uint256, bytes memory) external pure returns (bytes4) {
+    function onERC1155Received(
+        address,
+        address,
+        uint256,
+        uint256,
+        bytes memory
+    ) external pure returns (bytes4) {
         return this.onERC1155Received.selector;
     }
 
