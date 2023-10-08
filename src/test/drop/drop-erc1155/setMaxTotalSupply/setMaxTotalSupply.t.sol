@@ -41,7 +41,7 @@ contract DropERC1155Test_setMaxTotalSupply is BaseTest {
     }
 
     function test_revert_NoAdminRole() public callerWithoutAdminRole {
-        bytes32 role = keccak256("METADATA_ROLE");
+        bytes32 role = bytes32(0x00);
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
