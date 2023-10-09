@@ -1,6 +1,6 @@
 [profile.default]
 solc-version = "0.8.12"
-# auto_detect_solc = false
+#auto_detect_solc = false
 cache = true
 evm_version = 'shanghai'
 force = false
