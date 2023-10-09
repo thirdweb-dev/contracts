@@ -7,4 +7,4 @@ function _beforeClaim(
     bytes memory
 )
 └── when maxTotalSupply does not equal to 0 and totalSupply() + _quantity is greater than _maxTotalSupply
-    └── it should revert
+    └── it should revert ✅
