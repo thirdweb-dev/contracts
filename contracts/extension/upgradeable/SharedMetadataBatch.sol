@@ -12,9 +12,10 @@ import "../../external-deps/openzeppelin/utils/EnumerableSet.sol";
  *  @notice  Store a batch of shared metadata for NFTs
  */
 library SharedMetadataBatchStorage {
-    /// @custom:storage-location erc7201:extension.manager.storage
+    /// @custom:storage-location erc7201:shared.metadata.batch.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("shared.metadata.batch.storage")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 public constant SHARED_METADATA_BATCH_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("shared.metadata.batch.storage")) - 1));
+        0xf85ae2b98503142dac20c6561e88360cff7f1cb5634b6ad090b7f724e2f67a00;
 
     struct Data {
         EnumerableSet.Bytes32Set ids;

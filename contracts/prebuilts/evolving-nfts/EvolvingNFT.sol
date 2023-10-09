@@ -14,16 +14,15 @@ pragma solidity ^0.8.11;
 
 import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
 
-import "../../../extension/Multicall.sol";
-import "../../../extension/upgradeable/Initializable.sol";
-import "../../../extension/upgradeable/init/ContractMetadataInit.sol";
-import "../../../extension/upgradeable/init/RoyaltyInit.sol";
-import "../../../extension/upgradeable/init/PrimarySaleInit.sol";
-import "../../../extension/upgradeable/init/OwnableInit.sol";
-import "../../../extension/upgradeable/init/PermissionsEnumerableInit.sol";
-import "../../../extension/upgradeable/init/ERC2771ContextInit.sol";
-import "../../../extension/upgradeable/init/ERC721AQueryableInit.sol";
-import "../../../extension/upgradeable/init/DefaultOperatorFiltererInit.sol";
+import "../../extension/Multicall.sol";
+import "../../extension/upgradeable/Initializable.sol";
+import "../../extension/upgradeable/init/ContractMetadataInit.sol";
+import "../../extension/upgradeable/init/RoyaltyInit.sol";
+import "../../extension/upgradeable/init/PrimarySaleInit.sol";
+import "../../extension/upgradeable/init/OwnableInit.sol";
+import "../../extension/upgradeable/init/PermissionsEnumerableInit.sol";
+import "../../extension/upgradeable/init/ERC2771ContextInit.sol";
+import "../../extension/upgradeable/init/ERC721AQueryableInit.sol";
 
 contract EvolvingNFT is
     Initializable,
@@ -35,8 +34,7 @@ contract EvolvingNFT is
     RoyaltyInit,
     PrimarySaleInit,
     OwnableInit,
-    PermissionsEnumerableInit,
-    DefaultOperatorFiltererInit
+    PermissionsEnumerableInit
 {
     /// @dev Only EXTENSION_ROLE holders can update the contract's extensions.
     bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
@@ -67,7 +65,6 @@ contract EvolvingNFT is
 
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
-        _setupOperatorFilterer();
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(EXTENSION_ROLE, _defaultAdmin);
@@ -92,7 +89,7 @@ contract EvolvingNFT is
     }
 
     /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
-    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
+    function _isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
         return _hasRole(EXTENSION_ROLE, msg.sender);
     }
 

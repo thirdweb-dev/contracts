@@ -12,9 +12,10 @@ import "../../eip/interface/IERC721.sol";
 import "../interface/IBurnToClaim.sol";
 
 library BurnToClaimStorage {
-    /// @custom:storage-location erc7201:extension.manager.storage
+    /// @custom:storage-location erc7201:burn.to.claim.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("burn.to.claim.storage")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 public constant BURN_TO_CLAIM_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("burn.to.claim.storage")) - 1));
+        0x6f0d20bed2d5528732497d5a17ac45087a6175b2a140eebe2a39ab447d7ad400;
 
     struct Data {
         IBurnToClaim.BurnToClaimInfo burnToClaimInfo;
@@ -29,10 +30,12 @@ library BurnToClaimStorage {
 }
 
 abstract contract BurnToClaim is IBurnToClaim {
+    /// @notice Returns the confugration for burning tokens to claim new tokens.
     function getBurnToClaimInfo() public view returns (BurnToClaimInfo memory) {
         return _burnToClaimStorage().burnToClaimInfo;
     }
 
+    /// @notice Sets the configuration for burning tokens to claim new tokens.
     function setBurnToClaimInfo(BurnToClaimInfo calldata _burnToClaimInfo) external virtual {
         require(_canSetBurnToClaim(), "Not authorized.");
         require(_burnToClaimInfo.originContractAddress != address(0), "Origin contract not set.");
@@ -41,13 +44,13 @@ abstract contract BurnToClaim is IBurnToClaim {
         _burnToClaimStorage().burnToClaimInfo = _burnToClaimInfo;
     }
 
+    /// @notice Verifies an attempt to burn tokens to claim new tokens.
     function verifyBurnToClaim(
         address _tokenOwner,
         uint256 _tokenId,
         uint256 _quantity
     ) public view virtual {
         BurnToClaimInfo memory _burnToClaimInfo = getBurnToClaimInfo();
-        require(_burnToClaimInfo.originContractAddress != address(0), "Origin contract not set.");
 
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {
             require(_quantity == 1, "Invalid amount");
@@ -63,6 +66,7 @@ abstract contract BurnToClaim is IBurnToClaim {
         }
     }
 
+    /// @dev Burns tokens to claim new tokens.
     function _burnTokensOnOrigin(
         address _tokenOwner,
         uint256 _tokenId,
@@ -82,5 +86,6 @@ abstract contract BurnToClaim is IBurnToClaim {
         data = BurnToClaimStorage.data();
     }
 
+    /// @dev Returns whether the caller can set the burn to claim configuration.
     function _canSetBurnToClaim() internal view virtual returns (bool);
 }

@@ -3,8 +3,8 @@ pragma solidity ^0.8.11;
 
 /// @author thirdweb
 
-import { PermissionsStorage } from "../../../../extension/upgradeable/Permissions.sol";
-import { RulesEngine } from "../../../../extension/upgradeable/RulesEngine.sol";
+import { PermissionsStorage } from "../../../extension/upgradeable/Permissions.sol";
+import { RulesEngine } from "../../../extension/upgradeable/RulesEngine.sol";
 
 contract RulesEngineExtension is RulesEngine {
     /// @dev Returns whether the rules of the contract can be set in the given execution context.

@@ -16,6 +16,7 @@ contract DropERC721Test is BaseTest {
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
+    event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 
     DropERC721 public drop;
 
@@ -514,9 +515,9 @@ contract DropERC721Test is BaseTest {
     }
 
     /**
-     *  note: Testing revert condition; an address without MINTER_ROLE calls reveal function.
+     *  note: Testing revert condition; an address without METADATA_ROLE calls reveal function.
      */
-    function test_revert_reveal_MINTER_ROLE() public {
+    function test_revert_reveal_METADATA_ROLE() public {
         bytes memory key = "key";
         bytes memory encryptedURI = drop.encryptDecrypt("ipfs://", key);
         bytes32 provenanceHash = keccak256(abi.encodePacked("ipfs://", key, block.chainid));
@@ -530,7 +531,7 @@ contract DropERC721Test is BaseTest {
             "Permissions: account ",
             TWStrings.toHexString(uint160(address(this)), 20),
             " is missing role ",
-            TWStrings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
+            TWStrings.toHexString(uint256(keccak256("METADATA_ROLE")), 32)
         );
 
         vm.expectRevert(errorMessage);
@@ -609,6 +610,79 @@ contract DropERC721Test is BaseTest {
         drop.reveal(0, "key");
 
         vm.stopPrank();
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                    Unit Test: updateBatchBaseURI
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_updateBatchBaseURI() public {
+        string memory initURI = "ipfs://init";
+        string memory newURI = "ipfs://new";
+
+        vm.startPrank(deployer);
+        drop.lazyMint(100, initURI, "");
+
+        string memory initTokenURI = drop.tokenURI(0);
+
+        assertEq(initTokenURI, string(abi.encodePacked(initURI, "0")));
+
+        drop.updateBatchBaseURI(0, newURI);
+
+        string memory newTokenURI = drop.tokenURI(0);
+
+        assertEq(newTokenURI, string(abi.encodePacked(newURI, "0")));
+    }
+
+    function test_updateBatchBaseURI_revert_encrypted() public {
+        bytes memory uri = "ipfs://init";
+        bytes memory key = "key";
+
+        vm.startPrank(deployer);
+        bytes memory encryptedURI = drop.encryptDecrypt(uri, key);
+        bytes32 provenanceHash = keccak256(abi.encodePacked(uri, key, block.chainid));
+        drop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
+
+        vm.expectRevert("Encrypted batch");
+        drop.updateBatchBaseURI(0, "uri");
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                    Unit Test: freezeBatchBaseURI
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_freezeBatchBaseURI() public {
+        string memory initURI = "ipfs://init";
+
+        vm.startPrank(deployer);
+        drop.lazyMint(100, initURI, "");
+
+        string memory initTokenURI = drop.tokenURI(0);
+
+        assertEq(initTokenURI, string(abi.encodePacked(initURI, "0")));
+
+        drop.freezeBatchBaseURI(0);
+
+        assertEq(drop.batchFrozen(100), true);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                    Unit Test: setMaxTotalSupply
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_setMaxTotalSupply() public {
+        vm.startPrank(deployer);
+        drop.setMaxTotalSupply(100);
+
+        assertEq(drop.maxTotalSupply(), 100);
+    }
+
+    function test_event_setMaxTotalSupply_MaxTotalSupplyUpdated() public {
+        vm.startPrank(deployer);
+
+        vm.expectEmit(true, false, false, true);
+        emit MaxTotalSupplyUpdated(100);
+        drop.setMaxTotalSupply(100);
     }
 
     /*///////////////////////////////////////////////////////////////

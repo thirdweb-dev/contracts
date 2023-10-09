@@ -15,19 +15,17 @@ import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 // ====== Internal imports ======
 
-import "../../../extension/plugin/ERC2771ContextConsumer.sol";
-
 import "../../../extension/interface/IPlatformFee.sol";
-
-import "../../../extension/plugin/ReentrancyGuardLogic.sol";
-import "../../../extension/plugin/PermissionsEnumerableLogic.sol";
-import { RoyaltyPaymentsLogic } from "../../../extension/plugin/RoyaltyPayments.sol";
+import "../../../extension/upgradeable/ERC2771ContextConsumer.sol";
+import "../../../extension/upgradeable/ReentrancyGuard.sol";
+import "../../../extension/upgradeable/PermissionsEnumerable.sol";
+import { RoyaltyPaymentsLogic } from "../../../extension/upgradeable/RoyaltyPayments.sol";
 import { CurrencyTransferLib } from "../../../lib/CurrencyTransferLib.sol";
 
 /**
  * @author  thirdweb.com
  */
-contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
+contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     /*///////////////////////////////////////////////////////////////
                         Constants / Immutables
     //////////////////////////////////////////////////////////////*/
@@ -42,21 +40,19 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyAssetRole(address _asset) {
-        require(PermissionsLogic(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
+        require(Permissions(address(this)).hasRoleWithSwitch(ASSET_ROLE, _asset), "!ASSET_ROLE");
         _;
     }
 
     /// @dev Checks whether caller is a offer creator.
     modifier onlyOfferor(uint256 _offerId) {
-        OffersStorage.Data storage data = OffersStorage.offersStorage();
-        require(data.offers[_offerId].offeror == _msgSender(), "!Offeror");
+        require(_offersStorage().offers[_offerId].offeror == _msgSender(), "!Offeror");
         _;
     }
 
     /// @dev Checks whether an auction exists.
     modifier onlyExistingOffer(uint256 _offerId) {
-        OffersStorage.Data storage data = OffersStorage.offersStorage();
-        require(data.offers[_offerId].status == IOffers.Status.CREATED, "Marketplace: invalid offer.");
+        require(_offersStorage().offers[_offerId].status == IOffers.Status.CREATED, "Marketplace: invalid offer.");
         _;
     }
 
@@ -94,24 +90,19 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
             status: IOffers.Status.CREATED
         });
 
-        OffersStorage.Data storage data = OffersStorage.offersStorage();
-
-        data.offers[_offerId] = _offer;
+        _offersStorage().offers[_offerId] = _offer;
 
         emit NewOffer(_offeror, _offerId, _params.assetContract, _offer);
     }
 
     function cancelOffer(uint256 _offerId) external onlyExistingOffer(_offerId) onlyOfferor(_offerId) {
-        OffersStorage.Data storage data = OffersStorage.offersStorage();
-
-        data.offers[_offerId].status = IOffers.Status.CANCELLED;
+        _offersStorage().offers[_offerId].status = IOffers.Status.CANCELLED;
 
         emit CancelledOffer(_msgSender(), _offerId);
     }
 
     function acceptOffer(uint256 _offerId) external nonReentrant onlyExistingOffer(_offerId) {
-        OffersStorage.Data storage data = OffersStorage.offersStorage();
-        Offer memory _targetOffer = data.offers[_offerId];
+        Offer memory _targetOffer = _offersStorage().offers[_offerId];
 
         require(_targetOffer.expirationTimestamp > block.timestamp, "EXPIRED");
 
@@ -128,7 +119,7 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
             _targetOffer.tokenType
         );
 
-        data.offers[_offerId].status = IOffers.Status.COMPLETED;
+        _offersStorage().offers[_offerId].status = IOffers.Status.COMPLETED;
 
         _payout(_targetOffer.offeror, _msgSender(), _targetOffer.currency, _targetOffer.totalPrice, _targetOffer);
         _transferOfferTokens(_msgSender(), _targetOffer.offeror, _targetOffer.quantity, _targetOffer);
@@ -150,39 +141,35 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
 
     /// @dev Returns total number of offers
     function totalOffers() public view returns (uint256) {
-        OffersStorage.Data storage data = OffersStorage.offersStorage();
-        return data.totalOffers;
+        return _offersStorage().totalOffers;
     }
 
     /// @dev Returns existing offer with the given uid.
     function getOffer(uint256 _offerId) external view returns (Offer memory _offer) {
-        OffersStorage.Data storage data = OffersStorage.offersStorage();
-        _offer = data.offers[_offerId];
+        _offer = _offersStorage().offers[_offerId];
     }
 
     /// @dev Returns all existing offers within the specified range.
     function getAllOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _allOffers) {
-        OffersStorage.Data storage data = OffersStorage.offersStorage();
-        require(_startId <= _endId && _endId < data.totalOffers, "invalid range");
+        require(_startId <= _endId && _endId < _offersStorage().totalOffers, "invalid range");
 
         _allOffers = new Offer[](_endId - _startId + 1);
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
-            _allOffers[i - _startId] = data.offers[i];
+            _allOffers[i - _startId] = _offersStorage().offers[i];
         }
     }
 
     /// @dev Returns offers within the specified range, where offeror has sufficient balance.
     function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _validOffers) {
-        OffersStorage.Data storage data = OffersStorage.offersStorage();
-        require(_startId <= _endId && _endId < data.totalOffers, "invalid range");
+        require(_startId <= _endId && _endId < _offersStorage().totalOffers, "invalid range");
 
         Offer[] memory _offers = new Offer[](_endId - _startId + 1);
         uint256 _offerCount;
 
         for (uint256 i = _startId; i <= _endId; i += 1) {
             uint256 j = i - _startId;
-            _offers[j] = data.offers[i];
+            _offers[j] = _offersStorage().offers[i];
             if (_validateExistingOffer(_offers[j])) {
                 _offerCount += 1;
             }
@@ -204,9 +191,8 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
 
     /// @dev Returns the next offer Id.
     function _getNextOfferId() internal returns (uint256 id) {
-        OffersStorage.Data storage data = OffersStorage.offersStorage();
-        id = data.totalOffers;
-        data.totalOffers += 1;
+        id = _offersStorage().totalOffers;
+        _offersStorage().totalOffers += 1;
     }
 
     /// @dev Returns the interface supported by a contract.
@@ -359,5 +345,10 @@ contract OffersLogic is IOffers, ReentrancyGuardLogic, ERC2771ContextConsumer {
 
         // Distribute price to token owner
         CurrencyTransferLib.transferCurrencyWithWrapper(_currencyToUse, _payer, _payee, amountRemaining, address(0));
+    }
+
+    /// @dev Returns the Offers storage.
+    function _offersStorage() internal pure returns (OffersStorage.Data storage data) {
+        data = OffersStorage.data();
     }
 }

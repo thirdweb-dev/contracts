@@ -8,7 +8,8 @@ import "../../lib/MerkleProof.sol";
 
 library DropStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
-    bytes32 public constant DROP_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("drop.storage")) - 1));
+    bytes32 public constant DROP_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("drop.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         /// @dev The active conditions for claiming tokens.
