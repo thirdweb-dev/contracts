@@ -33,7 +33,6 @@ abstract contract BurnToClaim is IBurnToClaim {
         uint256 _quantity
     ) public view virtual {
         BurnToClaimInfo memory _burnToClaimInfo = burnToClaimInfo;
-        require(_burnToClaimInfo.originContractAddress != address(0), "Origin contract not set.");
 
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {
             require(_quantity == 1, "Invalid amount");

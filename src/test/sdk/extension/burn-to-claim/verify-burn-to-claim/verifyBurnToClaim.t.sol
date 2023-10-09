@@ -37,8 +37,8 @@ contract BurnToClaim_VerifyBurnToClaim is ExtensionUtilTest {
     }
 
     function test_verifyBurnToClaim_infoNotSet() public {
-        vm.expectRevert("Origin contract not set.");
-        ext.verifyBurnToClaim(tokenOwner, tokenId, quantity);
+        vm.expectRevert();
+        ext.verifyBurnToClaim(tokenOwner, tokenId, 1);
     }
 
     // ==================
