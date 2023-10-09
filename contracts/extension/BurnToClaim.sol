@@ -37,7 +37,10 @@ abstract contract BurnToClaim is IBurnToClaim {
             uint256 _eligible1155TokenId = _burnToClaimInfo.tokenId;
 
             require(_tokenId == _eligible1155TokenId, "Invalid token Id");
-            require(IERC1155(_burnToClaimInfo.originContractAddress).balanceOf(_tokenOwner, _tokenId) >= _quantity, "!Balance");
+            require(
+                IERC1155(_burnToClaimInfo.originContractAddress).balanceOf(_tokenOwner, _tokenId) >= _quantity,
+                "!Balance"
+            );
         }
 
         // TODO: check if additional verification steps are required / override in main contract
