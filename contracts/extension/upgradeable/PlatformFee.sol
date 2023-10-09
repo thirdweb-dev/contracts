@@ -19,6 +19,10 @@ library PlatformFeeStorage {
         address platformFeeRecipient;
         /// @dev The % of primary sales collected as platform fees.
         uint16 platformFeeBps;
+        /// @dev Fee type variants: percentage fee and flat fee
+        IPlatformFee.PlatformFeeType platformFeeType;
+        /// @dev The flat amount collected by the contract as fees on primary sales.
+        uint256 flatPlatformFee;
     }
 
     function data() internal pure returns (Data storage data_) {
@@ -42,6 +46,16 @@ abstract contract PlatformFee is IPlatformFee {
     /// @dev Returns the platform fee recipient and bps.
     function getPlatformFeeInfo() public view override returns (address, uint16) {
         return (_platformFeeStorage().platformFeeRecipient, uint16(_platformFeeStorage().platformFeeBps));
+    }
+
+    /// @dev Returns the platform fee bps and recipient.
+    function getFlatPlatformFeeInfo() public view returns (address, uint256) {
+        return (_platformFeeStorage().platformFeeRecipient, _platformFeeStorage().flatPlatformFee);
+    }
+
+    /// @dev Returns the platform fee type.
+    function getPlatformFeeType() public view returns (PlatformFeeType) {
+        return _platformFeeStorage().platformFeeType;
     }
 
     /**
@@ -73,6 +87,38 @@ abstract contract PlatformFee is IPlatformFee {
         _platformFeeStorage().platformFeeRecipient = _platformFeeRecipient;
 
         emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
+    }
+
+    /// @notice Lets a module admin set a flat fee on primary sales.
+    function setFlatPlatformFeeInfo(address _platformFeeRecipient, uint256 _flatFee) external {
+        if (!_canSetPlatformFeeInfo()) {
+            revert("Not authorized");
+        }
+
+        _setupFlatPlatformFeeInfo(_platformFeeRecipient, _flatFee);
+    }
+
+    /// @dev Sets a flat fee on primary sales.
+    function _setupFlatPlatformFeeInfo(address _platformFeeRecipient, uint256 _flatFee) internal {
+        _platformFeeStorage().flatPlatformFee = _flatFee;
+        _platformFeeStorage().platformFeeRecipient = _platformFeeRecipient;
+
+        emit FlatPlatformFeeUpdated(_platformFeeRecipient, _flatFee);
+    }
+
+    /// @notice Lets a module admin set platform fee type.
+    function setPlatformFeeType(PlatformFeeType _feeType) external {
+        if (!_canSetPlatformFeeInfo()) {
+            revert("Not authorized");
+        }
+        _setupPlatformFeeType(_feeType);
+    }
+
+    /// @dev Sets platform fee type.
+    function _setupPlatformFeeType(PlatformFeeType _feeType) internal {
+        _platformFeeStorage().platformFeeType = _feeType;
+
+        emit PlatformFeeTypeUpdated(_feeType);
     }
 
     /// @dev Returns the PlatformFee storage.
