@@ -7,6 +7,6 @@ function _beforeTokenTransfer(
     bytes memory data
 )
 ├── when from equals to address(0)
-│   └── totalSupply for each id is incremented by the corresponding amounts
+│   └── totalSupply for each id is incremented by the corresponding amounts ✅
 └── when to equals address(0)
-    └── totalSupply for each id is decremented by the corresponding amounts
+    └── totalSupply for each id is decremented by the corresponding amounts ✅
