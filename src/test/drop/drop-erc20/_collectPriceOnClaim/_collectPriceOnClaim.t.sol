@@ -10,8 +10,6 @@ import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "lib/forge-std/src/StdCheats.sol";
 
 contract HarnessDropERC20CollectPriceOnClaim is DropERC20 {
-    bytes private emptyBytes = bytes("");
-
     function harness_collectPrice(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
@@ -201,7 +199,13 @@ contract DropERC20Test_collectPrice is BaseTest {
         assertEq(beforeBalancePlatformFeeRecipient + platformFeeVal, afterBalancePlatformFeeRecipient);
     }
 
-   function test_state_nativeCurrencyStoredPrimarySaleRecipient() public currencyNativeToken pricePerTokenNotZero primarySaleRecipientZeroAddress msgValueNotZero {
+    function test_state_nativeCurrencyStoredPrimarySaleRecipient()
+        public
+        currencyNativeToken
+        pricePerTokenNotZero
+        primarySaleRecipientZeroAddress
+        msgValueNotZero
+    {
         (address platformFeeRecipient, uint16 platformFeeBps) = drop.getPlatformFeeInfo();
         address storedPrimarySaleRecipient = drop.primarySaleRecipient();
 

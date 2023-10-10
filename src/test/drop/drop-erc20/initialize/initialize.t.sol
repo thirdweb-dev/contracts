@@ -14,11 +14,8 @@ contract DropERC20Test_initializer is BaseTest {
     DropERC20 public newDropContract;
 
     event ContractURIUpdated(string prevURI, string newURI);
-    event OwnerUpdated(address indexed prevOwner, address indexed newOwner);
     event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
-    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
     event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
-    event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);
     event PrimarySaleRecipientUpdated(address indexed recipient);
 
     function setUp() public override {

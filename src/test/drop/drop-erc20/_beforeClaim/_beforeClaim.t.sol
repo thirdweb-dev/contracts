@@ -46,13 +46,7 @@ contract DropERC20Test_beforeClaim is BaseTest {
         super.setUp();
 
         drop = new HarnessDropERC20BeforeClaim();
-        drop.initializeHarness(
-            deployer,
-            CONTRACT_URI,
-            saleRecipient,
-            platformFeeBps,
-            platformFeeRecipient
-        );
+        drop.initializeHarness(deployer, CONTRACT_URI, saleRecipient, platformFeeBps, platformFeeRecipient);
     }
 
     modifier setMaxTotalSupply() {

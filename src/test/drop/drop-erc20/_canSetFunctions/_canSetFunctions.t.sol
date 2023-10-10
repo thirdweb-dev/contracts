@@ -51,11 +51,6 @@ contract DropERC20Test_canSet is BaseTest {
 
     HarnessDropERC20CanSet public drop;
 
-    address private currency;
-    address private primarySaleRecipient;
-    uint256 private msgValue;
-    uint256 private pricePerToken;
-
     function setUp() public override {
         super.setUp();
 
