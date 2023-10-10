@@ -59,7 +59,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         _setAdmin(_account, _isAdmin);
     }
 
-    function setAdminWithSigner(AdminPermisionRequest calldata _req, bytes calldata _signature) external {
+    function setAdminWithSigner(AdminPermissionRequest calldata _req, bytes calldata _signature) external {
         address targetAdmin = _req.account;
 
         require(
@@ -148,18 +148,22 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @dev Verifies that a request is signed by an authorized account.
-    function verifySignerPermissionRequest(
-        SignerPermissionRequest calldata req,
-        bytes calldata signature
-    ) public view virtual returns (bool success, address signer) {
+    function verifySignerPermissionRequest(SignerPermissionRequest calldata req, bytes calldata signature)
+        public
+        view
+        virtual
+        returns (bool success, address signer)
+    {
         signer = _recoverAddress(req, signature);
         success = !_accountPermissionsStorage().executed[req.uid] && isAdmin(signer);
     }
 
-    function verifyAdminPermissionsRequest(
-        AdminPermisionRequest calldata req,
-        bytes calldata signature
-    ) public view virtual returns (bool success, address signer) {
+    function verifyAdminPermissionsRequest(AdminPermissionRequest calldata req, bytes calldata signature)
+        public
+        view
+        virtual
+        returns (bool success, address signer)
+    {
         signer = _recoverAddressAdminRequest(req, signature);
         success = !_accountPermissionsStorage().executed[req.uid] && isAdmin(signer);
     }
@@ -247,17 +251,21 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @dev Returns the address of the signer of the request.
-    function _recoverAddress(
-        SignerPermissionRequest calldata _req,
-        bytes calldata _signature
-    ) internal view virtual returns (address) {
+    function _recoverAddress(SignerPermissionRequest calldata _req, bytes calldata _signature)
+        internal
+        view
+        virtual
+        returns (address)
+    {
         return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
     }
 
-    function _recoverAddressAdminRequest(
-        AdminPermisionRequest calldata _req,
-        bytes calldata _signature
-    ) internal view virtual returns (address) {
+    function _recoverAddressAdminRequest(AdminPermissionRequest calldata _req, bytes calldata _signature)
+        internal
+        view
+        virtual
+        returns (address)
+    {
         return _hashTypedDataV4(keccak256(_encodeRequestAdmin(_req))).recover(_signature);
     }
 
@@ -277,7 +285,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
             );
     }
 
-    function _encodeRequestAdmin(AdminPermisionRequest calldata _req) internal pure virtual returns (bytes memory) {
+    function _encodeRequestAdmin(AdminPermissionRequest calldata _req) internal pure virtual returns (bytes memory) {
         return
             abi.encode(
                 TYPEHASH,
