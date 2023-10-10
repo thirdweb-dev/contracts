@@ -141,8 +141,8 @@ contract DropERC20Test_misc is BaseTest {
     function test_transfer_drop() public {
         //deal erc20 drop to address(0x1)
         deal(address(drop), address(0x1), 1);
-        assertEq(drop.balanceOf(address(0x1)), 1);
         vm.prank(address(0x1));
         drop.transfer(address(0x2), 1);
+        assertEq(drop.balanceOf(address(0x2)), 1);
     }
 }
