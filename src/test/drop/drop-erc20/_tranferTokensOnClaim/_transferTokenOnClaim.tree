@@ -1,3 +1,0 @@
-function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-├── it should mint _quantityBeingClaimed tokens to _to
-└── it should return 0
