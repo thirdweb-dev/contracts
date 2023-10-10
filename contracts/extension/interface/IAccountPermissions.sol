@@ -31,6 +31,14 @@ interface IAccountPermissions {
         bytes32 uid;
     }
 
+    struct AdminPermisionRequest {
+        address account;
+        bool isAdmin;
+        uint128 reqValidityStartTimestamp;
+        uint128 reqValidityEndTimestamp;
+        bytes32 uid;
+    }
+
     /**
      *  @notice The permissions that a signer has to use the smart wallet.
      *
@@ -98,10 +106,15 @@ interface IAccountPermissions {
     function getAllAdmins() external view returns (address[] memory admins);
 
     /// @dev Verifies that a request is signed by an authorized account.
-    function verifySignerPermissionRequest(SignerPermissionRequest calldata req, bytes calldata signature)
-        external
-        view
-        returns (bool success, address signer);
+    function verifySignerPermissionRequest(
+        SignerPermissionRequest calldata req,
+        bytes calldata signature
+    ) external view returns (bool success, address signer);
+
+    function verifyAdminPermissionsRequest(
+        AdminPermisionRequest calldata req,
+        bytes calldata signature
+    ) external view returns (bool success, address signer);
 
     /*///////////////////////////////////////////////////////////////
                             External functions
