@@ -1,60 +1,22 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC1155, IPermissions, ILazyMint } from "contracts/prebuilts/drop/DropERC1155.sol";
+import { DropERC1155 } from "contracts/prebuilts/drop/DropERC1155.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract HarnessDropERC1155 is DropERC1155 {
-    function transferTokensOnClaimHarness(
-        address to,
-        uint256 _tokenId,
-        uint256 _quantityBeingClaimed
-    ) external {
+    function transferTokensOnClaimHarness(address to, uint256 _tokenId, uint256 _quantityBeingClaimed) external {
         transferTokensOnClaim(to, _tokenId, _quantityBeingClaimed);
-    }
-
-    function initializeHarness(
-        address _defaultAdmin,
-        string memory _contractURI,
-        address _saleRecipient,
-        address _royaltyRecipient,
-        uint128 _royaltyBps,
-        uint128 _platformFeeBps,
-        address _platformFeeRecipient
-    ) external {
-        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
-        bytes32 _minterRole = keccak256("MINTER_ROLE");
-        bytes32 _metadataRole = keccak256("METADATA_ROLE");
-
-        _setupContractURI(_contractURI);
-        _setupOwner(_defaultAdmin);
-
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(_minterRole, _defaultAdmin);
-        _setupRole(_transferRole, _defaultAdmin);
-        _setupRole(_transferRole, address(0));
-        _setupRole(_metadataRole, _defaultAdmin);
-        _setRoleAdmin(_metadataRole, _metadataRole);
-
-        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
-        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-        _setupPrimarySaleRecipient(_saleRecipient);
     }
 }
 
 contract MockERC1155Receiver {
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes memory
-    ) external pure returns (bytes4) {
+    function onERC1155Received(address, address, uint256, uint256, bytes memory) external pure returns (bytes4) {
         return this.onERC1155Received.selector;
     }
 
@@ -75,24 +37,35 @@ contract DropERC1155Test_transferTokensOnClaim is BaseTest {
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for address;
 
-    HarnessDropERC1155 public drop;
-
     address private to;
     MockERC1155Receiver private receiver;
     MockERC11555NotReceiver private notReceiver;
 
+    address public dropImp;
+    HarnessDropERC1155 public proxy;
+
     function setUp() public override {
         super.setUp();
-        drop = new HarnessDropERC1155();
-        drop.initializeHarness(
-            address(this),
-            "https://token-cdn-domain/{id}.json",
-            deployer,
-            deployer,
-            1000,
-            1000,
-            deployer
+
+        bytes memory initializeData = abi.encodeCall(
+            DropERC1155.initialize,
+            (
+                deployer,
+                NAME,
+                SYMBOL,
+                CONTRACT_URI,
+                forwarders(),
+                saleRecipient,
+                royaltyRecipient,
+                royaltyBps,
+                platformFeeBps,
+                platformFeeRecipient
+            )
         );
+
+        dropImp = address(new HarnessDropERC1155());
+        proxy = HarnessDropERC1155(address(new TWProxy(dropImp, initializeData)));
+
         receiver = new MockERC1155Receiver();
         notReceiver = new MockERC11555NotReceiver();
     }
@@ -121,20 +94,20 @@ contract DropERC1155Test_transferTokensOnClaim is BaseTest {
      */
     function test_revert_ContractNotERC155Receiver() public toNotReceiever {
         vm.expectRevert("ERC1155: transfer to non ERC1155Receiver implementer");
-        drop.transferTokensOnClaimHarness(to, 0, 1);
+        proxy.transferTokensOnClaimHarness(to, 0, 1);
     }
 
     function test_state_ContractERC1155Receiver() public toReceiever {
-        uint256 beforeBalance = drop.balanceOf(to, 0);
-        drop.transferTokensOnClaimHarness(to, 0, 1);
-        uint256 afterBalance = drop.balanceOf(to, 0);
+        uint256 beforeBalance = proxy.balanceOf(to, 0);
+        proxy.transferTokensOnClaimHarness(to, 0, 1);
+        uint256 afterBalance = proxy.balanceOf(to, 0);
         assertEq(beforeBalance + 1, afterBalance);
     }
 
     function test_state_EOAReceiver() public toEOA {
-        uint256 beforeBalance = drop.balanceOf(to, 0);
-        drop.transferTokensOnClaimHarness(to, 0, 1);
-        uint256 afterBalance = drop.balanceOf(to, 0);
+        uint256 beforeBalance = proxy.balanceOf(to, 0);
+        proxy.transferTokensOnClaimHarness(to, 0, 1);
+        uint256 afterBalance = proxy.balanceOf(to, 0);
         assertEq(beforeBalance + 1, afterBalance);
     }
 }
