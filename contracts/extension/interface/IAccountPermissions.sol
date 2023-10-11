@@ -31,13 +31,16 @@ interface IAccountPermissions {
         bytes32 uid;
     }
 
-    struct AdminPermissionRequest {
-        address account;
-        bool isAdmin;
-        uint128 reqValidityStartTimestamp;
-        uint128 reqValidityEndTimestamp;
-        bytes32 uid;
-    }
+    // struct SignerPermissionRequest {
+    //     address signer;
+    //     address[] approvedTargets; empty = admin, not empty = signer
+    //     uint256 nativeTokenLimitPerTransaction; 0 = revoke, 1 = set
+    //     uint128 permissionStartTimestamp;
+    //     uint128 permissionEndTimestamp;
+    //     uint128 reqValidityStartTimestamp;
+    //     uint128 reqValidityEndTimestamp;
+    //     bytes32 uid;
+    // }
 
     /**
      *  @notice The permissions that a signer has to use the smart wallet.
@@ -105,23 +108,9 @@ interface IAccountPermissions {
     /// @notice Returns all admins of the account.
     function getAllAdmins() external view returns (address[] memory admins);
 
-    /// @dev Verifies that a request is signed by an authorized account.
-    function verifySignerPermissionRequest(SignerPermissionRequest calldata req, bytes calldata signature)
-        external
-        view
-        returns (bool success, address signer);
-
-    function verifyAdminPermissionsRequest(AdminPermissionRequest calldata req, bytes calldata signature)
-        external
-        view
-        returns (bool success, address signer);
-
     /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice Adds / removes an account as an admin.
-    function setAdmin(address account, bool isAdmin) external;
 
     /// @notice Sets the permissions for a given signer.
     function setPermissionsForSigner(SignerPermissionRequest calldata req, bytes calldata signature) external;

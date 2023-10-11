@@ -46,7 +46,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         );
 
     modifier onlyAdmin() virtual {
-        require(isAdmin(msg.sender), "caller is not an admin");
+        require(isAdmin(msg.sender), "!admin");
         _;
     }
 
@@ -54,39 +54,38 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Adds / removes an account as an admin.
-    function setAdmin(address _account, bool _isAdmin) external virtual onlyAdmin {
-        _setAdmin(_account, _isAdmin);
-    }
-
-    function setAdminWithSigner(AdminPermissionRequest calldata _req, bytes calldata _signature) external {
-        address targetAdmin = _req.account;
+    function setAdminWithSigner(SignerPermissionRequest calldata _req, bytes calldata _signature) external {
+        address targetAdmin = _req.signer;
 
         require(
             _req.reqValidityStartTimestamp <= block.timestamp && block.timestamp < _req.reqValidityEndTimestamp,
-            "invalid request validity period"
+            "!period"
         );
 
-        (bool success, ) = verifyAdminPermissionsRequest(_req, _signature);
-        require(success, "invalid signature");
+        require(_req.approvedTargets.length == 0, "!targets");
+
+        (bool success, ) = verifySignerPermissionRequest(_req, _signature);
+        require(success, "!sig");
 
         _accountPermissionsStorage().executed[_req.uid] = true;
 
-        _setAdmin(targetAdmin, _req.isAdmin);
+        bool _isAdmin = _req.nativeTokenLimitPerTransaction == 1;
+
+        _setAdmin(targetAdmin, _isAdmin);
     }
 
     /// @notice Sets the permissions for a given signer.
     function setPermissionsForSigner(SignerPermissionRequest calldata _req, bytes calldata _signature) external {
         address targetSigner = _req.signer;
-        require(!isAdmin(targetSigner), "signer is already an admin");
+        require(!isAdmin(targetSigner), "already admin");
 
         require(
             _req.reqValidityStartTimestamp <= block.timestamp && block.timestamp < _req.reqValidityEndTimestamp,
-            "invalid request validity period"
+            "!period"
         );
 
         (bool success, address signer) = verifySignerPermissionRequest(_req, _signature);
-        require(success, "invalid signature");
+        require(success, "!sig");
 
         _accountPermissionsStorage().allSigners.add(targetSigner);
         _accountPermissionsStorage().executed[_req.uid] = true;
@@ -149,22 +148,13 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
     /// @dev Verifies that a request is signed by an authorized account.
     function verifySignerPermissionRequest(SignerPermissionRequest calldata req, bytes calldata signature)
-        public
+        internal
         view
         virtual
         returns (bool success, address signer)
     {
-        signer = _recoverAddress(req, signature);
-        success = !_accountPermissionsStorage().executed[req.uid] && isAdmin(signer);
-    }
-
-    function verifyAdminPermissionsRequest(AdminPermissionRequest calldata req, bytes calldata signature)
-        public
-        view
-        virtual
-        returns (bool success, address signer)
-    {
-        signer = _recoverAddressAdminRequest(req, signature);
+        bytes memory encoded = _encodeRequest(req);
+        signer = _recoverAddress(encoded, signature);
         success = !_accountPermissionsStorage().executed[req.uid] && isAdmin(signer);
     }
 
@@ -251,22 +241,8 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @dev Returns the address of the signer of the request.
-    function _recoverAddress(SignerPermissionRequest calldata _req, bytes calldata _signature)
-        internal
-        view
-        virtual
-        returns (address)
-    {
-        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
-    }
-
-    function _recoverAddressAdminRequest(AdminPermissionRequest calldata _req, bytes calldata _signature)
-        internal
-        view
-        virtual
-        returns (address)
-    {
-        return _hashTypedDataV4(keccak256(_encodeRequestAdmin(_req))).recover(_signature);
+    function _recoverAddress(bytes memory _encoded, bytes calldata _signature) internal view virtual returns (address) {
+        return _hashTypedDataV4(keccak256(_encoded)).recover(_signature);
     }
 
     /// @dev Encodes a request for recovery of the signer in `recoverAddress`.
@@ -279,18 +255,6 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
                 _req.nativeTokenLimitPerTransaction,
                 _req.permissionStartTimestamp,
                 _req.permissionEndTimestamp,
-                _req.reqValidityStartTimestamp,
-                _req.reqValidityEndTimestamp,
-                _req.uid
-            );
-    }
-
-    function _encodeRequestAdmin(AdminPermissionRequest calldata _req) internal pure virtual returns (bytes memory) {
-        return
-            abi.encode(
-                TYPEHASH,
-                _req.account,
-                _req.isAdmin,
                 _req.reqValidityStartTimestamp,
                 _req.reqValidityEndTimestamp,
                 _req.uid
