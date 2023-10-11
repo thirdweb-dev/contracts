@@ -5,10 +5,7 @@ import { DropERC20 } from "contracts/prebuilts/drop/DropERC20.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "lib/forge-std/src/StdCheats.sol";
 
 contract HarnessDropERC20CollectPriceOnClaim is DropERC20 {
     function harness_collectPrice(
@@ -22,8 +19,6 @@ contract HarnessDropERC20CollectPriceOnClaim is DropERC20 {
 }
 
 contract DropERC20Test_collectPrice is BaseTest {
-    using StringsUpgradeable for uint256;
-
     address public dropImp;
     HarnessDropERC20CollectPriceOnClaim public proxy;
 

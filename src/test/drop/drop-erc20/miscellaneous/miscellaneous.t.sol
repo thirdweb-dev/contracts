@@ -4,12 +4,8 @@ pragma solidity ^0.8.0;
 import { DropERC20 } from "contracts/prebuilts/drop/DropERC20.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
-
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "lib/forge-std/src/StdCheats.sol";
 
 contract HarnessDropERC20Misc is DropERC20 {
     bytes32 private transferRole = keccak256("TRANSFER_ROLE");
@@ -22,7 +18,11 @@ contract HarnessDropERC20Misc is DropERC20 {
         return _transferTokensOnClaim(_to, _quantityBeingClaimed);
     }
 
-    function beforeTokenTransfer(address from, address to, uint256 amount) public {
+    function beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) public {
         _beforeTokenTransfer(from, to, amount);
     }
 
@@ -40,8 +40,6 @@ contract HarnessDropERC20Misc is DropERC20 {
 }
 
 contract DropERC20Test_misc is BaseTest {
-    using StringsUpgradeable for uint256;
-
     address public dropImp;
     HarnessDropERC20Misc public proxy;
 

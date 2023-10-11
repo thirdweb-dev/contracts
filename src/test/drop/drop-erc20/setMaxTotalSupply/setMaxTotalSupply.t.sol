@@ -4,14 +4,9 @@ pragma solidity ^0.8.0;
 import { DropERC20 } from "contracts/prebuilts/drop/DropERC20.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "lib/forge-std/src/StdCheats.sol";
 
 contract DropERC20Test_setMaxTotalSupply is BaseTest {
-    using StringsUpgradeable for uint256;
-
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 
     DropERC20 public drop;
