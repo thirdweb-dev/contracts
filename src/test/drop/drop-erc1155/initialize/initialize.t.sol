@@ -4,13 +4,9 @@ pragma solidity ^0.8.0;
 import { DropERC1155 } from "contracts/prebuilts/drop/DropERC1155.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC1155Test_initializer is BaseTest {
-    using StringsUpgradeable for uint256;
-
     DropERC1155 public newDropContract;
 
     event ContractURIUpdated(string prevURI, string newURI);

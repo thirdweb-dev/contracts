@@ -7,11 +7,8 @@ import { DropERC1155 } from "contracts/prebuilts/drop/DropERC1155.sol";
 import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
 import "../../../../../lib/openzeppelin-contracts-upgradeable/contracts/interfaces/IERC2981Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC1155Test_freezeBatchBaseURI is BaseTest {
-    using StringsUpgradeable for uint256;
-
     event MetadataFrozen();
 
     DropERC1155 public drop;

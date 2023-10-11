@@ -7,6 +7,6 @@ function _beforeClaim(
     AllowlistProof calldata,
     bytes memory
 )
-└── if maxTotalSupply for _tokenId is not zero
-    └── if totalSupply of _tokenId + _quantity is greater than or equal to maxTotalSupply for _tokenId
+└── when maxTotalSupply for _tokenId is not zero
+    └── when totalSupply of _tokenId + _quantity is greater than or equal to maxTotalSupply for _tokenId
         └── it should revert ✅

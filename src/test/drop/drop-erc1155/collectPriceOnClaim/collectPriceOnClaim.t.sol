@@ -5,9 +5,7 @@ import { DropERC1155 } from "contracts/prebuilts/drop/DropERC1155.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract HarnessDropERC1155 is DropERC1155 {
     function collectPriceOnClaimHarness(
@@ -22,8 +20,6 @@ contract HarnessDropERC1155 is DropERC1155 {
 }
 
 contract DropERC1155Test_collectPrice is BaseTest {
-    using StringsUpgradeable for uint256;
-
     address private collectPrice_saleRecipient = address(0x010);
     address private collectPrice_royaltyRecipient = address(0x011);
     uint128 private collectPrice_royaltyBps = 1000;

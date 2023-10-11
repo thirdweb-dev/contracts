@@ -10,15 +10,8 @@ import "../../../../../lib/openzeppelin-contracts-upgradeable/contracts/interfac
 import "../../../../../lib/openzeppelin-contracts-upgradeable/contracts/interfaces/IERC1155Upgradeable.sol";
 import "../../../../../lib/openzeppelin-contracts-upgradeable/contracts/interfaces/IERC1155MetadataURIUpgradeable.sol";
 
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-
 contract DropERC1155Test_misc is BaseTest {
-    using StringsUpgradeable for uint256;
-
     DropERC1155 public drop;
-
-    address private unauthorized = address(0x123);
-    address private receiver;
 
     bytes private emptyEncodedBytes = abi.encode("", "");
 

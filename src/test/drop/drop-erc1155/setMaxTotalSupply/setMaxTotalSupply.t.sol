@@ -7,11 +7,8 @@ import { DropERC1155 } from "contracts/prebuilts/drop/DropERC1155.sol";
 import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
 import "../../../../../lib/openzeppelin-contracts-upgradeable/contracts/interfaces/IERC2981Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC1155Test_setMaxTotalSupply is BaseTest {
-    using StringsUpgradeable for uint256;
-
     DropERC1155 public drop;
 
     address private unauthorized = address(0x123);
