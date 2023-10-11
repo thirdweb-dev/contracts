@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
@@ -13,47 +14,13 @@ contract HarnessDropERC721 is DropERC721 {
     function transferTokensOnClaim(address _to, uint256 _quantityToClaim) public payable {
         _transferTokensOnClaim(_to, _quantityToClaim);
     }
-
-    function initializeHarness(
-        address _defaultAdmin,
-        string memory _name,
-        string memory _symbol,
-        string memory _contractURI,
-        address[] memory _trustedForwarders,
-        address _saleRecipient,
-        address _royaltyRecipient,
-        uint128 _royaltyBps,
-        uint128 _platformFeeBps,
-        address _platformFeeRecipient
-    ) external {
-        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
-        bytes32 _minterRole = keccak256("MINTER_ROLE");
-        bytes32 _metadataRole = keccak256("METADATA_ROLE");
-
-        // Initialize inherited contracts, most base-like -> most derived.
-        // __ERC2771Context_init(_trustedForwarders);
-        // __ERC721A_init(_name, _symbol);
-
-        _setupContractURI(_contractURI);
-        _setupOwner(_defaultAdmin);
-
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(_minterRole, _defaultAdmin);
-        _setupRole(_transferRole, _defaultAdmin);
-        _setupRole(_transferRole, address(0));
-        _setupRole(_metadataRole, _defaultAdmin);
-        _setRoleAdmin(_metadataRole, _metadataRole);
-
-        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
-        _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-        _setupPrimarySaleRecipient(_saleRecipient);
-    }
 }
 
 contract DropERC721Test_transferTokensOnClaim is BaseTest {
     using StringsUpgradeable for uint256;
 
-    HarnessDropERC721 public dropImp;
+    address public dropImp;
+    HarnessDropERC721 public proxy;
 
     address private transferTokens_saleRecipient = address(0x010);
     address private transferTokens_royaltyRecipient = address(0x011);
@@ -68,19 +35,24 @@ contract DropERC721Test_transferTokensOnClaim is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        dropImp = new HarnessDropERC721();
-        dropImp.initializeHarness(
-            deployer,
-            NAME,
-            SYMBOL,
-            CONTRACT_URI,
-            forwarders(),
-            transferTokens_saleRecipient,
-            transferTokens_royaltyRecipient,
-            transferTokens_royaltyBps,
-            transferTokens_platformFeeBps,
-            transferTokens_platformFeeRecipient
+        bytes memory initializeData = abi.encodeCall(
+            DropERC721.initialize,
+            (
+                deployer,
+                NAME,
+                SYMBOL,
+                CONTRACT_URI,
+                forwarders(),
+                saleRecipient,
+                royaltyRecipient,
+                royaltyBps,
+                platformFeeBps,
+                platformFeeRecipient
+            )
         );
+
+        dropImp = address(new HarnessDropERC721());
+        proxy = HarnessDropERC721(address(new TWProxy(dropImp, initializeData)));
 
         nonReceiver = new ERC20("", "");
     }
@@ -101,14 +73,14 @@ contract DropERC721Test_transferTokensOnClaim is BaseTest {
 
     function test_revert_transferToNonReceiver() public transferToNonReceiver {
         vm.expectRevert(IERC721AUpgradeable.TransferToNonERC721ReceiverImplementer.selector);
-        dropImp.transferTokensOnClaim(transferTokens_receiver, 1);
+        proxy.transferTokensOnClaim(transferTokens_receiver, 1);
     }
 
     function test_transferToEOA() public transferToEOA {
-        uint256 eoaBalanceBefore = dropImp.balanceOf(transferTokens_receiver);
-        uint256 supplyBefore = dropImp.totalSupply();
-        dropImp.transferTokensOnClaim(transferTokens_receiver, 1);
-        assertEq(dropImp.totalSupply(), supplyBefore + 1);
-        assertEq(dropImp.balanceOf(transferTokens_receiver), eoaBalanceBefore + 1);
+        uint256 eoaBalanceBefore = proxy.balanceOf(transferTokens_receiver);
+        uint256 supplyBefore = proxy.totalSupply();
+        proxy.transferTokensOnClaim(transferTokens_receiver, 1);
+        assertEq(proxy.totalSupply(), supplyBefore + 1);
+        assertEq(proxy.balanceOf(transferTokens_receiver), eoaBalanceBefore + 1);
     }
 }
