@@ -153,8 +153,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         virtual
         returns (bool success, address signer)
     {
-        bytes memory encoded = _encodeRequest(req);
-        signer = _recoverAddress(encoded, signature);
+        signer = _recoverAddress(_encodeRequest(req), signature);
         success = !_accountPermissionsStorage().executed[req.uid] && isAdmin(signer);
     }
 
@@ -184,34 +183,30 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
         uint256 len = allSigners.length;
         uint256 numOfActiveSigners = 0;
-        bool[] memory isSignerActive = new bool[](len);
 
         for (uint256 i = 0; i < len; i += 1) {
-            address signer = allSigners[i];
-
-            bool isActive = isActiveSigner(signer);
-            isSignerActive[i] = isActive;
-            if (isActive) {
+            if (isActiveSigner(allSigners[i])) {
                 numOfActiveSigners++;
+            } else {
+                allSigners[i] = address(0);
             }
         }
 
         signers = new SignerPermissions[](numOfActiveSigners);
         uint256 index = 0;
         for (uint256 i = 0; i < len; i += 1) {
-            if (!isSignerActive[i]) {
-                continue;
-            }
-            address signer = allSigners[i];
-            SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
+            if (allSigners[i] != address(0)) {
+                address signer = allSigners[i];
+                SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
 
-            signers[index++] = SignerPermissions(
-                signer,
-                _accountPermissionsStorage().approvedTargets[signer].values(),
-                permissions.nativeTokenLimitPerTransaction,
-                permissions.startTimestamp,
-                permissions.endTimestamp
-            );
+                signers[index++] = SignerPermissions(
+                    signer,
+                    _accountPermissionsStorage().approvedTargets[signer].values(),
+                    permissions.nativeTokenLimitPerTransaction,
+                    permissions.startTimestamp,
+                    permissions.endTimestamp
+                );
+            }
         }
     }
 

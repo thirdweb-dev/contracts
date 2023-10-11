@@ -155,12 +155,12 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     //////////////////////////////////////////////////////////////*/
 
     function getFunctionSignature(bytes calldata data) internal pure returns (bytes4 functionSelector) {
-        require(data.length >= 4, "Data too short");
+        require(data.length >= 4, "!Data");
         return bytes4(data[:4]);
     }
 
     function decodeExecuteCalldata(bytes calldata data) internal pure returns (address _target, uint256 _value) {
-        require(data.length >= 4 + 32 + 32, "Data too short");
+        require(data.length >= 4 + 32 + 32, "!Data");
 
         // Decode the address, which is bytes 4 to 35
         _target = abi.decode(data[4:36], (address));
@@ -178,7 +178,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
             bytes[] memory _callData
         )
     {
-        require(data.length >= 4 + 32 + 32 + 32, "Data too short");
+        require(data.length >= 4 + 32 + 32 + 32, "!Data");
 
         (_targets, _values, _callData) = abi.decode(data[4:], (address[], uint256[], bytes[]));
     }
