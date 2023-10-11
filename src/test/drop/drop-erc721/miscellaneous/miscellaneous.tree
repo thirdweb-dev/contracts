@@ -8,12 +8,12 @@ function nextTokenIdToClaim()
 └── it should return the next tokenId to be minted ✅
 
 function burn(uint256 tokenId)
-├── if caller is not the owner of tokenId
-│   ├── if caller is not an approved operator of the owner of tokenId
+├── when caller is not the owner of tokenId
+│   ├── when caller is not an approved operator of the owner of tokenId
 │   │   └── it should revert ✅
-│   └── if caller is an approved operator of the owner of tokenId
+│   └── when caller is an approved operator of the owner of tokenId
 │       └── it should burn the token ✅
-└── if caller is the owner of tokenId
+└── when caller is the owner of tokenId
     └── it should burn the token ✅
 
 function contractType()

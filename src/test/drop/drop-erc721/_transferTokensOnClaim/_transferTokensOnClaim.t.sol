@@ -6,9 +6,7 @@ import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract HarnessDropERC721 is DropERC721 {
     function transferTokensOnClaim(address _to, uint256 _quantityToClaim) public payable {
@@ -17,17 +15,9 @@ contract HarnessDropERC721 is DropERC721 {
 }
 
 contract DropERC721Test_transferTokensOnClaim is BaseTest {
-    using StringsUpgradeable for uint256;
-
     address public dropImp;
     HarnessDropERC721 public proxy;
 
-    address private transferTokens_saleRecipient = address(0x010);
-    address private transferTokens_royaltyRecipient = address(0x011);
-    uint128 private transferTokens_royaltyBps = 1000;
-    uint128 private transferTokens_platformFeeBps = 1000;
-    address private transferTokens_platformFeeRecipient = address(0x012);
-    uint256 private transferTokens_quantityToClaim = 1;
     address private transferTokens_receiver;
 
     ERC20 private nonReceiver;

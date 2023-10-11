@@ -4,12 +4,9 @@ pragma solidity ^0.8.0;
 import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC721Test_beforeClaim is BaseTest {
-    using StringsUpgradeable for uint256;
 
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
@@ -18,12 +15,6 @@ contract DropERC721Test_beforeClaim is BaseTest {
     bytes private beforeClaim_data;
     string private beforeClaim_baseURI;
     uint256 private beforeClaim_amount;
-    bytes private beforeClaim_encryptedURI;
-    bytes32 private beforeClaim_provenanceHash;
-    string private beforeClaim_revealedURI;
-    uint256 private beforeClaim_index;
-    bytes private beforeClaim_key;
-    address private unauthorized = address(0x123);
     address private receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
 
     DropERC721.AllowlistProof private alp;

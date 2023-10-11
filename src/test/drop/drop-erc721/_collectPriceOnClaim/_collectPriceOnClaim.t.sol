@@ -2,13 +2,10 @@
 pragma solidity ^0.8.0;
 
 import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-
-import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 contract HarnessDropERC721 is DropERC721 {
     function collectionPriceOnClaim(
@@ -22,8 +19,6 @@ contract HarnessDropERC721 is DropERC721 {
 }
 
 contract DropERC721Test_collectPrice is BaseTest {
-    using StringsUpgradeable for uint256;
-
     address public dropImp;
     HarnessDropERC721 public proxy;
 

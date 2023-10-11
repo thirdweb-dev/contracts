@@ -5,13 +5,10 @@ import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
 import "../../../../../lib/openzeppelin-contracts-upgradeable/contracts/interfaces/IERC2981Upgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC721Test_misc is BaseTest {
-    using StringsUpgradeable for uint256;
 
     DropERC721 public drop;
 

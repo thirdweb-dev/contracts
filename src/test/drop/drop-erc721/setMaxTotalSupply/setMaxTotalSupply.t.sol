@@ -6,10 +6,8 @@ import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 // Test imports
 import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC721Test_setMaxTotalSupply is BaseTest {
-    using StringsUpgradeable for uint256;
 
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 

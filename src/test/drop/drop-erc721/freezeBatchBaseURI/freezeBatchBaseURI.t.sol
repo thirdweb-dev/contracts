@@ -4,13 +4,9 @@ pragma solidity ^0.8.0;
 import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC721Test_freezeBatchBaseURI is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
 
     event MetadataFrozen();
 
