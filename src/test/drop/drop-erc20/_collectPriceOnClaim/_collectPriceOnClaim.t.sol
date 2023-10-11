@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { DropERC20 } from "contracts/prebuilts/drop/DropERC20.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";
@@ -18,31 +19,13 @@ contract HarnessDropERC20CollectPriceOnClaim is DropERC20 {
     ) public payable {
         _collectPriceOnClaim(_primarySaleRecipient, _quantityToClaim, _currency, _pricePerToken);
     }
-
-    function initializeHarness(
-        address _defaultAdmin,
-        string memory _contractURI,
-        address _saleRecipient,
-        uint128 _platformFeeBps,
-        address _platformFeeRecipient
-    ) external {
-        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
-
-        _setupContractURI(_contractURI);
-
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(_transferRole, _defaultAdmin);
-        _setupRole(_transferRole, address(0));
-
-        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
-        _setupPrimarySaleRecipient(_saleRecipient);
-    }
 }
 
 contract DropERC20Test_collectPrice is BaseTest {
     using StringsUpgradeable for uint256;
 
-    HarnessDropERC20CollectPriceOnClaim public drop;
+    address public dropImp;
+    HarnessDropERC20CollectPriceOnClaim public proxy;
 
     address private currency;
     address private primarySaleRecipient;
@@ -52,8 +35,13 @@ contract DropERC20Test_collectPrice is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        drop = new HarnessDropERC20CollectPriceOnClaim();
-        drop.initializeHarness(deployer, CONTRACT_URI, saleRecipient, platformFeeBps, platformFeeRecipient);
+        bytes memory initializeData = abi.encodeCall(
+            DropERC20.initialize,
+            (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), saleRecipient, platformFeeRecipient, platformFeeBps)
+        );
+
+        dropImp = address(new HarnessDropERC20CollectPriceOnClaim());
+        proxy = HarnessDropERC20CollectPriceOnClaim(address(new TWProxy(dropImp, initializeData)));
     }
 
     modifier pricePerTokenZero() {
@@ -102,22 +90,22 @@ contract DropERC20Test_collectPrice is BaseTest {
 
     function test_revert_pricePerTokenZeroMsgValueNotZero() public pricePerTokenZero msgValueNotZero {
         vm.expectRevert("!Value");
-        drop.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 1 ether, currency, pricePerToken);
+        proxy.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 1 ether, currency, pricePerToken);
     }
 
     function test_revert_nativeCurrencyTotalPriceZero() public pricePerTokenNotZero msgValueZero currencyNativeToken {
         vm.expectRevert("quantity too low");
-        drop.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 0, currency, pricePerToken);
+        proxy.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 0, currency, pricePerToken);
     }
 
     function test_revert_nativeCurrencyValuePriceMismatch() public currencyNativeToken valuePriceMismatch {
         vm.expectRevert("Invalid msg value");
-        drop.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 1 ether, currency, pricePerToken);
+        proxy.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 1 ether, currency, pricePerToken);
     }
 
     function test_revert_erc20ValuePriceMismatch() public currencyNotNativeToken valuePriceMismatch {
         vm.expectRevert("Invalid msg value");
-        drop.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 1 ether, currency, pricePerToken);
+        proxy.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 1 ether, currency, pricePerToken);
     }
 
     function test_state_nativeCurrency()
@@ -127,11 +115,11 @@ contract DropERC20Test_collectPrice is BaseTest {
         msgValueNotZero
         primarySaleRecipientNotZeroAddress
     {
-        (address platformFeeRecipient, uint16 platformFeeBps) = drop.getPlatformFeeInfo();
+        (address platformFeeRecipient, uint16 platformFeeBps) = proxy.getPlatformFeeInfo();
         uint256 beforeBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
         uint256 beforeBalancePlatformFeeRecipient = address(platformFeeRecipient).balance;
 
-        drop.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 1 ether, currency, pricePerToken);
+        proxy.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 1 ether, currency, pricePerToken);
 
         uint256 afterBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
         uint256 afterBalancePlatformFeeRecipient = address(platformFeeRecipient).balance;
@@ -150,18 +138,18 @@ contract DropERC20Test_collectPrice is BaseTest {
         primarySaleRecipientNotZeroAddress
     {
         vm.expectRevert("!Value");
-        drop.harness_collectPrice{ value: msgValue }(primarySaleRecipient, msgValue, currency, pricePerToken);
+        proxy.harness_collectPrice{ value: msgValue }(primarySaleRecipient, msgValue, currency, pricePerToken);
     }
 
     function test_state_erc20() public currencyNotNativeToken pricePerTokenNotZero primarySaleRecipientNotZeroAddress {
-        (address platformFeeRecipient, uint16 platformFeeBps) = drop.getPlatformFeeInfo();
+        (address platformFeeRecipient, uint16 platformFeeBps) = proxy.getPlatformFeeInfo();
 
         erc20.mint(address(this), pricePerToken);
-        ERC20(erc20).approve(address(drop), pricePerToken);
+        ERC20(erc20).approve(address(proxy), pricePerToken);
         uint256 beforeBalancePrimarySaleRecipient = erc20.balanceOf(primarySaleRecipient);
         uint256 beforeBalancePlatformFeeRecipient = erc20.balanceOf(platformFeeRecipient);
 
-        drop.harness_collectPrice(primarySaleRecipient, pricePerToken, currency, pricePerToken);
+        proxy.harness_collectPrice(primarySaleRecipient, pricePerToken, currency, pricePerToken);
 
         uint256 afterBalancePrimarySaleRecipient = erc20.balanceOf(primarySaleRecipient);
         uint256 afterBalancePlatformFeeRecipient = erc20.balanceOf(platformFeeRecipient);
@@ -179,15 +167,15 @@ contract DropERC20Test_collectPrice is BaseTest {
         pricePerTokenNotZero
         primarySaleRecipientZeroAddress
     {
-        (address platformFeeRecipient, uint16 platformFeeBps) = drop.getPlatformFeeInfo();
-        address storedPrimarySaleRecipient = drop.primarySaleRecipient();
+        (address platformFeeRecipient, uint16 platformFeeBps) = proxy.getPlatformFeeInfo();
+        address storedPrimarySaleRecipient = proxy.primarySaleRecipient();
 
         erc20.mint(address(this), pricePerToken);
-        ERC20(erc20).approve(address(drop), pricePerToken);
+        ERC20(erc20).approve(address(proxy), pricePerToken);
         uint256 beforeBalancePrimarySaleRecipient = erc20.balanceOf(storedPrimarySaleRecipient);
         uint256 beforeBalancePlatformFeeRecipient = erc20.balanceOf(platformFeeRecipient);
 
-        drop.harness_collectPrice(primarySaleRecipient, pricePerToken, currency, pricePerToken);
+        proxy.harness_collectPrice(primarySaleRecipient, pricePerToken, currency, pricePerToken);
 
         uint256 afterBalancePrimarySaleRecipient = erc20.balanceOf(storedPrimarySaleRecipient);
         uint256 afterBalancePlatformFeeRecipient = erc20.balanceOf(platformFeeRecipient);
@@ -206,13 +194,13 @@ contract DropERC20Test_collectPrice is BaseTest {
         primarySaleRecipientZeroAddress
         msgValueNotZero
     {
-        (address platformFeeRecipient, uint16 platformFeeBps) = drop.getPlatformFeeInfo();
-        address storedPrimarySaleRecipient = drop.primarySaleRecipient();
+        (address platformFeeRecipient, uint16 platformFeeBps) = proxy.getPlatformFeeInfo();
+        address storedPrimarySaleRecipient = proxy.primarySaleRecipient();
 
         uint256 beforeBalancePrimarySaleRecipient = address(storedPrimarySaleRecipient).balance;
         uint256 beforeBalancePlatformFeeRecipient = address(platformFeeRecipient).balance;
 
-        drop.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 1 ether, currency, pricePerToken);
+        proxy.harness_collectPrice{ value: msgValue }(primarySaleRecipient, 1 ether, currency, pricePerToken);
 
         uint256 afterBalancePrimarySaleRecipient = address(storedPrimarySaleRecipient).balance;
         uint256 afterBalancePlatformFeeRecipient = address(platformFeeRecipient).balance;

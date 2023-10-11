@@ -2,6 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { DropERC20 } from "contracts/prebuilts/drop/DropERC20.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "contracts/lib/TWStrings.sol";
@@ -25,37 +26,25 @@ contract HarnessDropERC20CanSet is DropERC20 {
     function canSetClaimConditions() external view returns (bool) {
         return _canSetClaimConditions();
     }
-
-    function initializeHarness(
-        address _defaultAdmin,
-        string memory _contractURI,
-        address _saleRecipient,
-        uint128 _platformFeeBps,
-        address _platformFeeRecipient
-    ) external {
-        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
-
-        _setupContractURI(_contractURI);
-
-        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupRole(_transferRole, _defaultAdmin);
-        _setupRole(_transferRole, address(0));
-
-        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
-        _setupPrimarySaleRecipient(_saleRecipient);
-    }
 }
 
 contract DropERC20Test_canSet is BaseTest {
     using StringsUpgradeable for uint256;
 
-    HarnessDropERC20CanSet public drop;
+    address public dropImp;
+
+    HarnessDropERC20CanSet public proxy;
 
     function setUp() public override {
         super.setUp();
 
-        drop = new HarnessDropERC20CanSet();
-        drop.initializeHarness(deployer, CONTRACT_URI, saleRecipient, platformFeeBps, platformFeeRecipient);
+        bytes memory initializeData = abi.encodeCall(
+            DropERC20.initialize,
+            (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), saleRecipient, platformFeeRecipient, platformFeeBps)
+        );
+
+        dropImp = address(new HarnessDropERC20CanSet());
+        proxy = HarnessDropERC20CanSet(address(new TWProxy(dropImp, initializeData)));
     }
 
     modifier callerHasDefaultAdminRole() {
@@ -68,42 +57,42 @@ contract DropERC20Test_canSet is BaseTest {
     }
 
     function test_canSetPlatformFee_returnTrue() public callerHasDefaultAdminRole {
-        bool status = drop.canSetPlatformFeeInfo();
+        bool status = proxy.canSetPlatformFeeInfo();
         assertEq(status, true);
     }
 
     function test_canSetPlatformFee_returnFalse() public callerDoesNotHaveDefaultAdminRole {
-        bool status = drop.canSetPlatformFeeInfo();
+        bool status = proxy.canSetPlatformFeeInfo();
         assertEq(status, false);
     }
 
     function test_canSetPrimarySaleRecipient_returnTrue() public callerHasDefaultAdminRole {
-        bool status = drop.canSetPrimarySaleRecipient();
+        bool status = proxy.canSetPrimarySaleRecipient();
         assertEq(status, true);
     }
 
     function test_canSetPrimarySaleRecipient_returnFalse() public callerDoesNotHaveDefaultAdminRole {
-        bool status = drop.canSetPrimarySaleRecipient();
+        bool status = proxy.canSetPrimarySaleRecipient();
         assertEq(status, false);
     }
 
     function test_canSetContractURI_returnTrue() public callerHasDefaultAdminRole {
-        bool status = drop.canSetContractURI();
+        bool status = proxy.canSetContractURI();
         assertEq(status, true);
     }
 
     function test_canSetContractURI_returnFalse() public callerDoesNotHaveDefaultAdminRole {
-        bool status = drop.canSetContractURI();
+        bool status = proxy.canSetContractURI();
         assertEq(status, false);
     }
 
     function test_canSetClaimConditions_returnTrue() public callerHasDefaultAdminRole {
-        bool status = drop.canSetClaimConditions();
+        bool status = proxy.canSetClaimConditions();
         assertEq(status, true);
     }
 
     function test_canSetClaimConditions_returnFalse() public callerDoesNotHaveDefaultAdminRole {
-        bool status = drop.canSetClaimConditions();
+        bool status = proxy.canSetClaimConditions();
         assertEq(status, false);
     }
 }
