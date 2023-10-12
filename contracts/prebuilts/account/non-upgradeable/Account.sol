@@ -61,10 +61,13 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     }
 
     /// @notice See EIP-1271
-    function isValidSignature(
-        bytes32 _hash,
-        bytes memory _signature
-    ) public view virtual override returns (bytes4 magicValue) {
+    function isValidSignature(bytes32 _hash, bytes memory _signature)
+        public
+        view
+        virtual
+        override
+        returns (bytes4 magicValue)
+    {
         address signer = _hash.recover(_signature);
 
         if (isAdmin(signer)) {
@@ -89,7 +92,11 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual onlyAdminOrEntrypoint {
+    function execute(
+        address _target,
+        uint256 _value,
+        bytes calldata _calldata
+    ) external virtual onlyAdminOrEntrypoint {
         _registerOnFactory();
         _call(_target, _value, _calldata);
     }
