@@ -21,6 +21,7 @@ gas_reports = [
   "TokenStakeBenchmark",
   "PackBenchmark",
   "PackVRFDirectBenchmark",
+  "DynamicAccountBenchmark",
 ]
 libraries = []
 libs = ['lib']
