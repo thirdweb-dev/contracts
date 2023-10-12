@@ -83,12 +83,13 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         }
 
         SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[_signer];
+        EnumerableSet.AddressSet storage approvedTargets = _accountPermissionsStorage().approvedTargets[_signer];
 
         // If not an admin, check if the signer is active.
         if (
             permissions.startTimestamp > block.timestamp ||
             block.timestamp >= permissions.endTimestamp ||
-            _accountPermissionsStorage().approvedTargets[_signer].length() == 0
+            approvedTargets.length() == 0
         ) {
             // Account: no active permissions.
             return false;
@@ -97,15 +98,24 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         // Extract the function signature from the userOp calldata and check whether the signer is attempting to call `execute` or `executeBatch`.
         bytes4 sig = getFunctionSignature(_userOp.callData);
 
+        bool isWildCard = approvedTargets.length() == 1 && approvedTargets.contains(address(0));
+
         if (sig == AccountExtension.execute.selector) {
             // Extract the `target` and `value` arguments from the calldata for `execute`.
             (address target, uint256 value) = decodeExecuteCalldata(_userOp.callData);
 
+
+            // 
+            if (!isWildCard) {
+                // Check if the target is approved.
+                if (!approvedTargets.contains(target)) {
+                    // Account: target not approved.
+                    return false;
+                }
+            }
+
             // Check if the value is within the allowed range and if the target is approved.
-            if (
-                permissions.nativeTokenLimitPerTransaction < value ||
-                !_accountPermissionsStorage().approvedTargets[_signer].contains(target)
-            ) {
+            if (permissions.nativeTokenLimitPerTransaction < value) {
                 // Account: value too high OR Account: target not approved.
                 return false;
             }
@@ -113,12 +123,19 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
             // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
             (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
 
+            // if address(0) is the only approved target, set targetStatus to true (wildcard approved).
+            if (!isWildCard) {
+                for (uint256 i = 0; i < targets.length; i++) {
+                    if (!approvedTargets.contains(targets[i])) {
+                        // If any target is not approved, break the loop.
+                        return false;
+                    }
+                }
+            }
+
             // For each target+value pair, check if the value is within the allowed range and if the target is approved.
             for (uint256 i = 0; i < targets.length; i++) {
-                if (
-                    permissions.nativeTokenLimitPerTransaction < values[i] ||
-                    !_accountPermissionsStorage().approvedTargets[_signer].contains(targets[i])
-                ) {
+                if (permissions.nativeTokenLimitPerTransaction < values[i]) {
                     // Account: value too high OR Account: target not approved.
                     return false;
                 }
@@ -130,6 +147,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
 
         return true;
     }
+
 
     /*///////////////////////////////////////////////////////////////
                             External functions
@@ -169,27 +187,19 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         _value = abi.decode(data[36:68], (uint256));
     }
 
-    function decodeExecuteBatchCalldata(bytes calldata data)
-        internal
-        pure
-        returns (
-            address[] memory _targets,
-            uint256[] memory _values,
-            bytes[] memory _callData
-        )
-    {
+    function decodeExecuteBatchCalldata(
+        bytes calldata data
+    ) internal pure returns (address[] memory _targets, uint256[] memory _values, bytes[] memory _callData) {
         require(data.length >= 4 + 32 + 32 + 32, "!Data");
 
         (_targets, _values, _callData) = abi.decode(data[4:], (address[], uint256[], bytes[]));
     }
 
     /// @notice Validates the signature of a user operation.
-    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
-        internal
-        virtual
-        override
-        returns (uint256 validationData)
-    {
+    function _validateSignature(
+        UserOperation calldata userOp,
+        bytes32 userOpHash
+    ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         address signer = hash.recover(userOp.signature);
 

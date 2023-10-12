@@ -77,8 +77,10 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         }
 
         address caller = msg.sender;
-        require(
-            _accountPermissionsStorage().approvedTargets[signer].contains(caller),
+         require(
+            _accountPermissionsStorage().approvedTargets[signer].contains(caller) ||
+                (_accountPermissionsStorage().approvedTargets[signer].contains(address(0)) &&
+                    _accountPermissionsStorage().approvedTargets[signer].length() == 1),
             "Account: caller not approved target."
         );
 
