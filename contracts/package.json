@@ -22,5 +22,8 @@
     "@openzeppelin/contracts-upgradeable": "4.7.3",
     "erc721a-upgradeable": "^3.3.0",
     "@thirdweb-dev/dynamic-contracts": "^1.1.2"
+  },
+  "engines": {
+    "node": ">=20.0.0"
   }
 }
