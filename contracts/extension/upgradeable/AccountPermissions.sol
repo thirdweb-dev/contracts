@@ -46,7 +46,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         );
 
     modifier onlyAdmin() virtual {
-        require(isAdmin(msg.sender), "caller is not an admin");
+        require(isAdmin(msg.sender), "!admin");
         _;
     }
 
@@ -54,26 +54,33 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Adds / removes an account as an admin.
-    function setAdmin(address _account, bool _isAdmin) external virtual onlyAdmin {
-        _setAdmin(_account, _isAdmin);
-    }
-
     /// @notice Sets the permissions for a given signer.
     function setPermissionsForSigner(SignerPermissionRequest calldata _req, bytes calldata _signature) external {
         address targetSigner = _req.signer;
-        require(!isAdmin(targetSigner), "signer is already an admin");
 
         require(
             _req.reqValidityStartTimestamp <= block.timestamp && block.timestamp < _req.reqValidityEndTimestamp,
-            "invalid request validity period"
+            "!period"
         );
 
         (bool success, address signer) = verifySignerPermissionRequest(_req, _signature);
-        require(success, "invalid signature");
+        require(success, "!sig");
+
+        _accountPermissionsStorage().executed[_req.uid] = true;
+
+        //isAdmin > 0, set admin or remove admin
+        if (_req.isAdmin > 0) {
+            //isAdmin = 1, set admin
+            //isAdmin > 1, remove admin
+            bool _isAdmin = _req.isAdmin == 1;
+
+            _setAdmin(targetSigner, _isAdmin);
+            return;
+        }
+
+        require(!isAdmin(targetSigner), "already admin");
 
         _accountPermissionsStorage().allSigners.add(targetSigner);
-        _accountPermissionsStorage().executed[_req.uid] = true;
 
         _accountPermissionsStorage().signerPermissions[targetSigner] = SignerPermissionsStatic(
             _req.nativeTokenLimitPerTransaction,
@@ -138,7 +145,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         virtual
         returns (bool success, address signer)
     {
-        signer = _recoverAddress(req, signature);
+        signer = _recoverAddress(_encodeRequest(req), signature);
         success = !_accountPermissionsStorage().executed[req.uid] && isAdmin(signer);
     }
 
@@ -168,34 +175,30 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
         uint256 len = allSigners.length;
         uint256 numOfActiveSigners = 0;
-        bool[] memory isSignerActive = new bool[](len);
 
         for (uint256 i = 0; i < len; i += 1) {
-            address signer = allSigners[i];
-
-            bool isActive = isActiveSigner(signer);
-            isSignerActive[i] = isActive;
-            if (isActive) {
+            if (isActiveSigner(allSigners[i])) {
                 numOfActiveSigners++;
+            } else {
+                allSigners[i] = address(0);
             }
         }
 
         signers = new SignerPermissions[](numOfActiveSigners);
         uint256 index = 0;
         for (uint256 i = 0; i < len; i += 1) {
-            if (!isSignerActive[i]) {
-                continue;
-            }
-            address signer = allSigners[i];
-            SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
+            if (allSigners[i] != address(0)) {
+                address signer = allSigners[i];
+                SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
 
-            signers[index++] = SignerPermissions(
-                signer,
-                _accountPermissionsStorage().approvedTargets[signer].values(),
-                permissions.nativeTokenLimitPerTransaction,
-                permissions.startTimestamp,
-                permissions.endTimestamp
-            );
+                signers[index++] = SignerPermissions(
+                    signer,
+                    _accountPermissionsStorage().approvedTargets[signer].values(),
+                    permissions.nativeTokenLimitPerTransaction,
+                    permissions.startTimestamp,
+                    permissions.endTimestamp
+                );
+            }
         }
     }
 
@@ -225,13 +228,8 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @dev Returns the address of the signer of the request.
-    function _recoverAddress(SignerPermissionRequest calldata _req, bytes calldata _signature)
-        internal
-        view
-        virtual
-        returns (address)
-    {
-        return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
+    function _recoverAddress(bytes memory _encoded, bytes calldata _signature) internal view virtual returns (address) {
+        return _hashTypedDataV4(keccak256(_encoded)).recover(_signature);
     }
 
     /// @dev Encodes a request for recovery of the signer in `recoverAddress`.

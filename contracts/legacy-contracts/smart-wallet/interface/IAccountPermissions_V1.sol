@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-interface IAccountPermissions {
+interface IAccountPermissions_V1 {
     /*///////////////////////////////////////////////////////////////
                                 Types
     //////////////////////////////////////////////////////////////*/
@@ -19,7 +19,6 @@ interface IAccountPermissions {
      *  @param reqValidityStartTimestamp The UNIX timestamp at and after which a signature is valid.
      *  @param reqValidityEndTimestamp The UNIX timestamp at and after which a signature is invalid/expired.
      *  @param uid A unique non-repeatable ID for the payload.
-     *  @param isAdmin Whether the signer should be an admin.
      */
     struct SignerPermissionRequest {
         address signer;
@@ -30,7 +29,6 @@ interface IAccountPermissions {
         uint128 reqValidityStartTimestamp;
         uint128 reqValidityEndTimestamp;
         bytes32 uid;
-        uint8 isAdmin;
     }
 
     /**
@@ -108,6 +106,9 @@ interface IAccountPermissions {
     /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
+
+    /// @notice Adds / removes an account as an admin.
+    function setAdmin(address account, bool isAdmin) external;
 
     /// @notice Sets the permissions for a given signer.
     function setPermissionsForSigner(SignerPermissionRequest calldata req, bytes calldata signature) external;
