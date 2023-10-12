@@ -607,10 +607,6 @@ contract SimpleAccountTest is BaseTest {
         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
         assertEq(SimpleAccount(payable(account)).contractURI(), "https://thirdweb.com");
 
-        address[] memory targets = new address[](0);
-        uint256[] memory values = new uint256[](0);
-        bytes[] memory callData = new bytes[](0);
-
         address[] memory approvedTargets = new address[](0);
 
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(

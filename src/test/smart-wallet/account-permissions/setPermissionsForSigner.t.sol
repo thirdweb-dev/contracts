@@ -323,7 +323,7 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address[] memory approvedTargets = new address[](0);
 
         {
-            IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
+            IAccountPermissions.SignerPermissionRequest memory request = IAccountPermissions
                 .SignerPermissionRequest(
                     accountSigner,
                     1,
@@ -336,8 +336,8 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
                     uidCache
                 );
 
-            bytes memory sig = _signSignerPermissionRequest(permissionsReq);
-            SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
+            bytes memory sig2 = _signSignerPermissionRequest(request);
+            SimpleAccount(payable(account)).setPermissionsForSigner(request, sig2);
 
             address[] memory adminsBefore = SimpleAccount(payable(account)).getAllAdmins();
             assertEq(adminsBefore[1], accountSigner);
@@ -347,7 +347,7 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         uidCache = bytes32("new uid");
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory req = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
             2,
             approvedTargets,
@@ -359,8 +359,8 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
             uidCache
         );
 
-        bytes memory sig = _signSignerPermissionRequest(permissionsReq);
-        SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
+        bytes memory sig3 = _signSignerPermissionRequest(req);
+        SimpleAccount(payable(account)).setPermissionsForSigner(req, sig3);
 
         bool adminStatusAfter = SimpleAccount(payable(account)).isAdmin(accountSigner);
         address[] memory adminsAfter = SimpleAccount(payable(account)).getAllAdmins();
@@ -376,8 +376,6 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         address[] memory approvedTargets = new address[](0);
 
-        bool adminStatusBefore = SimpleAccount(payable(account)).isAdmin(accountAdmin);
-
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
             1,
@@ -392,8 +390,6 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
         SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
-
-        bool adminStatusAfter = SimpleAccount(payable(account)).isAdmin(accountSigner);
 
         // Attempt replay UID
 
@@ -471,8 +467,6 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         address[] memory approvedTargets = new address[](0);
 
-        bool adminStatusBefore = SimpleAccount(payable(account)).isAdmin(accountSigner);
-
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
             1,
@@ -497,8 +491,6 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         address[] memory approvedTargets = new address[](0);
 
-        bool adminStatusBefore = SimpleAccount(payable(account)).isAdmin(accountSigner);
-
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
             1,
@@ -522,8 +514,6 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         address[] memory approvedTargets = new address[](0);
-
-        bool adminStatusBefore = SimpleAccount(payable(account)).isAdmin(accountSigner);
 
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
@@ -551,7 +541,7 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         {
             //set admin status
-            IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
+            IAccountPermissions.SignerPermissionRequest memory req = IAccountPermissions
                 .SignerPermissionRequest(
                     accountSigner,
                     1,
@@ -565,8 +555,8 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
                 );
 
             vm.prank(accountAdmin);
-            bytes memory sig = _signSignerPermissionRequest(permissionsReq);
-            SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
+            bytes memory sig2 = _signSignerPermissionRequest(req);
+            SimpleAccount(payable(account)).setPermissionsForSigner(req, sig2);
         }
 
         //test set signerPerms as admin
@@ -586,9 +576,9 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         );
 
         vm.prank(accountAdmin);
-        bytes memory sig = _signSignerPermissionRequest(permissionsReq);
+        bytes memory sig3 = _signSignerPermissionRequest(permissionsReq);
         vm.expectRevert("already admin");
-        SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
+        SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig3);
     }
 
     function test_state_setPermissionsForSigner() public {

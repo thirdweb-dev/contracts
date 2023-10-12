@@ -306,6 +306,7 @@ contract ManagedAccountTest is BaseTest {
             IEntryPoint(payable(address(entrypoint))),
             extensions
         );
+        assertTrue(address(factory) != address(0), "factory address should not be zero");
     }
 
     /*///////////////////////////////////////////////////////////////
