@@ -98,14 +98,14 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         // Extract the function signature from the userOp calldata and check whether the signer is attempting to call `execute` or `executeBatch`.
         bytes4 sig = getFunctionSignature(_userOp.callData);
 
-        bool isWildCard = approvedTargets.length() == 1 && approvedTargets.contains(address(0));
+        // if address(0) is the only approved target, set isWildCard to true (wildcard approved).
+        bool isWildCard = approvedTargets.length() == 1 && approvedTargets.at(0) == address(0);
 
         if (sig == AccountExtension.execute.selector) {
             // Extract the `target` and `value` arguments from the calldata for `execute`.
             (address target, uint256 value) = decodeExecuteCalldata(_userOp.callData);
 
-
-            // 
+            // if wildcard target is not approved, check that the target is in the approvedTargets set.
             if (!isWildCard) {
                 // Check if the target is approved.
                 if (!approvedTargets.contains(target)) {
@@ -123,7 +123,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
             // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
             (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
 
-            // if address(0) is the only approved target, set targetStatus to true (wildcard approved).
+            // if wildcard target is not approved, check that the targets are in the approvedTargets set.
             if (!isWildCard) {
                 for (uint256 i = 0; i < targets.length; i++) {
                     if (!approvedTargets.contains(targets[i])) {
@@ -147,7 +147,6 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
 
         return true;
     }
-
 
     /*///////////////////////////////////////////////////////////////
                             External functions
