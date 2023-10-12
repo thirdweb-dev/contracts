@@ -241,7 +241,8 @@ contract SimpleAccountVulnPOCTest is BaseTest {
             type(uint128).max,
             0,
             type(uint128).max,
-            uidCache
+            uidCache,
+            0
         );
 
         vm.prank(accountAdmin);

@@ -19,6 +19,7 @@ interface IAccountPermissions {
      *  @param reqValidityStartTimestamp The UNIX timestamp at and after which a signature is valid.
      *  @param reqValidityEndTimestamp The UNIX timestamp at and after which a signature is invalid/expired.
      *  @param uid A unique non-repeatable ID for the payload.
+     *  @param isAdmin Whether the signer should be an admin.
      */
     struct SignerPermissionRequest {
         address signer;
@@ -29,18 +30,8 @@ interface IAccountPermissions {
         uint128 reqValidityStartTimestamp;
         uint128 reqValidityEndTimestamp;
         bytes32 uid;
+        uint8 isAdmin;
     }
-
-    // struct SignerPermissionRequest {
-    //     address signer;
-    //     address[] approvedTargets; empty = admin, not empty = signer
-    //     uint256 nativeTokenLimitPerTransaction; 0 = revoke, 1 = set
-    //     uint128 permissionStartTimestamp;
-    //     uint128 permissionEndTimestamp;
-    //     uint128 reqValidityStartTimestamp;
-    //     uint128 reqValidityEndTimestamp;
-    //     bytes32 uid;
-    // }
 
     /**
      *  @notice The permissions that a signer has to use the smart wallet.
@@ -107,6 +98,12 @@ interface IAccountPermissions {
 
     /// @notice Returns all admins of the account.
     function getAllAdmins() external view returns (address[] memory admins);
+
+    /// @dev Verifies that a request is signed by an authorized account.
+    function verifySignerPermissionRequest(
+        SignerPermissionRequest calldata req,
+        bytes calldata signature
+    ) external view returns (bool success, address signer);
 
     /*///////////////////////////////////////////////////////////////
                             External functions

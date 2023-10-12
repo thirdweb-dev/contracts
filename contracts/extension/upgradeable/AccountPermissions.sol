@@ -54,30 +54,9 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    function setAdminWithSigner(SignerPermissionRequest calldata _req, bytes calldata _signature) external {
-        address targetAdmin = _req.signer;
-
-        require(
-            _req.reqValidityStartTimestamp <= block.timestamp && block.timestamp < _req.reqValidityEndTimestamp,
-            "!period"
-        );
-
-        require(_req.approvedTargets.length == 0, "!targets");
-
-        (bool success, ) = verifySignerPermissionRequest(_req, _signature);
-        require(success, "!sig");
-
-        _accountPermissionsStorage().executed[_req.uid] = true;
-
-        bool _isAdmin = _req.nativeTokenLimitPerTransaction == 1;
-
-        _setAdmin(targetAdmin, _isAdmin);
-    }
-
     /// @notice Sets the permissions for a given signer.
     function setPermissionsForSigner(SignerPermissionRequest calldata _req, bytes calldata _signature) external {
         address targetSigner = _req.signer;
-        require(!isAdmin(targetSigner), "already admin");
 
         require(
             _req.reqValidityStartTimestamp <= block.timestamp && block.timestamp < _req.reqValidityEndTimestamp,
@@ -87,8 +66,21 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         (bool success, address signer) = verifySignerPermissionRequest(_req, _signature);
         require(success, "!sig");
 
-        _accountPermissionsStorage().allSigners.add(targetSigner);
         _accountPermissionsStorage().executed[_req.uid] = true;
+
+        //isAdmin > 0, set admin or remove admin
+        if (_req.isAdmin > 0) {
+            //isAdmin = 1, set admin
+            //isAdmin > 1, remove admin
+            bool _isAdmin = _req.isAdmin == 1;
+
+            _setAdmin(targetSigner, _isAdmin);
+            return;
+        }
+
+        require(!isAdmin(targetSigner), "already admin");
+
+        _accountPermissionsStorage().allSigners.add(targetSigner);
 
         _accountPermissionsStorage().signerPermissions[targetSigner] = SignerPermissionsStatic(
             _req.nativeTokenLimitPerTransaction,
@@ -147,12 +139,10 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @dev Verifies that a request is signed by an authorized account.
-    function verifySignerPermissionRequest(SignerPermissionRequest calldata req, bytes calldata signature)
-        internal
-        view
-        virtual
-        returns (bool success, address signer)
-    {
+    function verifySignerPermissionRequest(
+        SignerPermissionRequest calldata req,
+        bytes calldata signature
+    ) public view virtual returns (bool success, address signer) {
         signer = _recoverAddress(_encodeRequest(req), signature);
         success = !_accountPermissionsStorage().executed[req.uid] && isAdmin(signer);
     }
