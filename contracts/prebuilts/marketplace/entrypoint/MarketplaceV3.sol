@@ -69,11 +69,11 @@ contract MarketplaceV3 is
         address nativeTokenWrapper;
     }
 
-    constructor(MarketplaceConstructorParams memory _params)
-        BaseRouter(_params.extensions)
-        RoyaltyPaymentsLogic(_params.royaltyEngineAddress)
+    constructor(MarketplaceConstructorParams memory _marketplaceV3Params)
+        BaseRouter(_marketplaceV3Params.extensions)
+        RoyaltyPaymentsLogic(_marketplaceV3Params.royaltyEngineAddress)
     {
-        nativeTokenWrapper = _params.nativeTokenWrapper;
+        nativeTokenWrapper = _marketplaceV3Params.nativeTokenWrapper;
         _disableInitializers();
     }
 
