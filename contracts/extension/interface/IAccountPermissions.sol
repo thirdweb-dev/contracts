@@ -23,6 +23,7 @@ interface IAccountPermissions {
      */
     struct SignerPermissionRequest {
         address signer;
+        uint8 isAdmin;
         address[] approvedTargets;
         uint256 nativeTokenLimitPerTransaction;
         uint128 permissionStartTimestamp;
@@ -30,7 +31,6 @@ interface IAccountPermissions {
         uint128 reqValidityStartTimestamp;
         uint128 reqValidityEndTimestamp;
         bytes32 uid;
-        uint8 isAdmin;
     }
 
     /**
