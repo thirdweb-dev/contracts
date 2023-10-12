@@ -15,7 +15,10 @@ import "./ERC165.sol";
 import "../extension/upgradeable/Initializable.sol";
 
 library ERC721AStorage {
-    bytes32 public constant ERC721A_STORAGE_POSITION = keccak256("erc721.a.storage");
+    /// @custom:storage-location erc7201:erc721.a.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("erc721.a.storage")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 public constant ERC721A_STORAGE_POSITION =
+        0xe2efff925b8936e8a3471e86ad87942375e24de600ddfb2b841647ce1379ed00;
 
     struct Data {
         // The tokenId of the next token to be minted.

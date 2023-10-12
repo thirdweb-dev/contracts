@@ -9,6 +9,9 @@ contract PrimarySaleInit {
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
     function _setupPrimarySaleRecipient(address _saleRecipient) internal {
+        if (_saleRecipient == address(0)) {
+            revert("Invalid recipient");
+        }
         PrimarySaleStorage.Data storage data = PrimarySaleStorage.data();
         data.recipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);

@@ -8,7 +8,7 @@ import "../interface/IPrimarySale.sol";
 library PrimarySaleStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant PRIMARY_SALE_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("primary.sale.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("primary.sale.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         address recipient;
@@ -52,6 +52,9 @@ abstract contract PrimarySale is IPrimarySale {
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
     function _setupPrimarySaleRecipient(address _saleRecipient) internal {
+        if (_saleRecipient == address(0)) {
+            revert("Invalid recipient");
+        }
         _primarySaleStorage().recipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
     }

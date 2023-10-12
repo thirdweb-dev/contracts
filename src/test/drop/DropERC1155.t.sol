@@ -15,6 +15,7 @@ contract DropERC1155Test is BaseTest {
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
+    event MaxTotalSupplyUpdated(uint256 tokenId, uint256 maxTotalSupply);
 
     DropERC1155 public drop;
 
@@ -907,6 +908,66 @@ contract DropERC1155Test is BaseTest {
 
         vm.warp(40);
         assertEq(drop.getActiveClaimConditionId(_tokenId), 2);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                    Unit Test: updateBatchBaseURI
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_updateBatchBaseURI() public {
+        string memory initURI = "ipfs://init";
+        string memory newURI = "ipfs://new";
+
+        vm.startPrank(deployer);
+        drop.lazyMint(100, initURI, "");
+
+        string memory initTokenURI = drop.uri(0);
+
+        assertEq(initTokenURI, string(abi.encodePacked(initURI, "0")));
+
+        drop.updateBatchBaseURI(0, newURI);
+
+        string memory newTokenURI = drop.uri(0);
+
+        assertEq(newTokenURI, string(abi.encodePacked(newURI, "0")));
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                    Unit Test: freezeBatchBaseURI
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_freezeBatchBaseURI() public {
+        string memory initURI = "ipfs://init";
+
+        vm.startPrank(deployer);
+        drop.lazyMint(100, initURI, "");
+
+        string memory initTokenURI = drop.uri(0);
+
+        assertEq(initTokenURI, string(abi.encodePacked(initURI, "0")));
+
+        drop.freezeBatchBaseURI(0);
+
+        assertEq(drop.batchFrozen(100), true);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                    Unit Test: setMaxTotalSupply
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_setMaxTotalSupply() public {
+        vm.startPrank(deployer);
+        drop.setMaxTotalSupply(1, 100);
+
+        assertEq(drop.maxTotalSupply(1), 100);
+    }
+
+    function test_event_setMaxTotalSupply_MaxTotalSupplyUpdated() public {
+        vm.startPrank(deployer);
+
+        vm.expectEmit(true, false, false, true);
+        emit MaxTotalSupplyUpdated(1, 100);
+        drop.setMaxTotalSupply(1, 100);
     }
 
     /*///////////////////////////////////////////////////////////////

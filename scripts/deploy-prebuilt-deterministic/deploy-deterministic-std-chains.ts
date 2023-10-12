@@ -18,11 +18,12 @@ import { apiMap, chainIdApiKey, chainIdToName } from "./constants";
 ////// To run this script: `npx ts-node scripts/deploy-prebuilt-deterministic/deploy-deterministic-std-chains.ts` //////
 ///// MAKE SURE TO PUT IN THE RIGHT CONTRACT NAME HERE AFTER PUBLISHING IT /////
 //// THE CONTRACT SHOULD BE PUBLISHED WITH THE NEW PUBLISH FLOW ////
-const publishedContractName = "TokenERC20";
+const publishedContractName = "DropERC1155";
 const publisherKey: string = process.env.THIRDWEB_PUBLISHER_PRIVATE_KEY as string;
 const deployerKey: string = process.env.PRIVATE_KEY as string;
+const secretKey: string = process.env.THIRDWEB_SECRET_KEY as string;
 
-const polygonSDK = ThirdwebSDK.fromPrivateKey(publisherKey, "polygon");
+const polygonSDK = ThirdwebSDK.fromPrivateKey(publisherKey, "polygon", { secretKey });
 
 async function main() {
   const publisher = await polygonSDK.wallet.getAddress();
@@ -42,7 +43,7 @@ async function main() {
       }
 
       console.log(`Deploying ${publishedContractName} on ${networkName}`);
-      const sdk = ThirdwebSDK.fromPrivateKey(deployerKey, chainId); // can also hardcode the chain here
+      const sdk = ThirdwebSDK.fromPrivateKey(deployerKey, chainId, { secretKey }); // can also hardcode the chain here
       const signer = sdk.getSigner() as Signer;
       // const chainId = (await sdk.getProvider().getNetwork()).chainId;
 

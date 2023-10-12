@@ -14,8 +14,16 @@ import "lib/dynamic-contracts/src/lib/StringSet.sol";
 import "./extension/PermissionOverride.sol";
 
 // Fixed extensions
-import "../extension/Ownable.sol";
-import "../extension/ContractMetadata.sol";
+import "../../../extension/Ownable.sol";
+import "../../../extension/ContractMetadata.sol";
+
+/**
+ *   ////////////
+ *
+ *   NOTE: This contract is a work in progress, and has not been audited.
+ *
+ *   ////////////
+ */
 
 contract CoreRouter is BaseRouter, ContractMetadata, Ownable {
     using StringSet for StringSet.Set;
@@ -36,7 +44,7 @@ contract CoreRouter is BaseRouter, ContractMetadata, Ownable {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
-    function isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
+    function _isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
