@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-interface IAccountPermissions {
+interface IAccountPermissions_V1 {
     /*///////////////////////////////////////////////////////////////
                                 Types
     //////////////////////////////////////////////////////////////*/
