@@ -42,7 +42,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
     bytes32 private constant TYPEHASH =
         keccak256(
-            "SignerPermissionRequest(address signer,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
+            "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
 
     modifier onlyAdmin() virtual {
@@ -238,6 +238,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
             abi.encode(
                 TYPEHASH,
                 _req.signer,
+                _req.isAdmin,
                 keccak256(abi.encodePacked(_req.approvedTargets)),
                 _req.nativeTokenLimitPerTransaction,
                 _req.permissionStartTimestamp,
