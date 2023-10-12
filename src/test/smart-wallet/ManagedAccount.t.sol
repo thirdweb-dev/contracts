@@ -73,13 +73,13 @@ contract ManagedAccountTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
+    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
         internal
         view
-        returns (bytes memory signature)
+        returns (bytes32 typedDataHash)
     {
         bytes32 typehashSignerPermissionRequest = keccak256(
-            "SignerPermissionRequest(address signer,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
+            "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
         bytes32 nameHash = keccak256(bytes("Account"));
         bytes32 versionHash = keccak256(bytes("1"));
@@ -88,20 +88,32 @@ contract ManagedAccountTest is BaseTest {
         );
         bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
 
-        bytes memory encodedRequest = abi.encode(
+        bytes memory encodedRequestStart = abi.encode(
             typehashSignerPermissionRequest,
             _req.signer,
+            _req.isAdmin,
             keccak256(abi.encodePacked(_req.approvedTargets)),
-            _req.nativeTokenLimitPerTransaction,
+            _req.nativeTokenLimitPerTransaction
+        );
+
+        bytes memory encodedRequestEnd = abi.encode(
             _req.permissionStartTimestamp,
             _req.permissionEndTimestamp,
             _req.reqValidityStartTimestamp,
             _req.reqValidityEndTimestamp,
             _req.uid
         );
-        bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
+        bytes32 structHash = keccak256(bytes.concat(encodedRequestStart, encodedRequestEnd));
+        typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+    }
+
+    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
+        internal
+        view
+        returns (bytes memory signature)
+    {
+        bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
     }
@@ -294,6 +306,7 @@ contract ManagedAccountTest is BaseTest {
             IEntryPoint(payable(address(entrypoint))),
             extensions
         );
+        assertTrue(address(factory) != address(0), "factory address should not be zero");
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -462,14 +475,14 @@ contract ManagedAccountTest is BaseTest {
 
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
+            0,
             approvedTargets,
             1 ether,
             0,
             type(uint128).max,
             0,
             type(uint128).max,
-            uidCache,
-            0
+            uidCache
         );
 
         vm.prank(accountAdmin);
@@ -533,14 +546,14 @@ contract ManagedAccountTest is BaseTest {
 
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
+            0,
             approvedTargets,
             1 ether,
             0,
             type(uint128).max,
             0,
             type(uint128).max,
-            uidCache,
-            0
+            uidCache
         );
 
         vm.prank(accountAdmin);
@@ -571,14 +584,14 @@ contract ManagedAccountTest is BaseTest {
 
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
+            0,
             approvedTargets,
             1 ether,
             0,
             type(uint128).max,
             0,
             type(uint128).max,
-            uidCache,
-            0
+            uidCache
         );
 
         vm.prank(accountAdmin);
