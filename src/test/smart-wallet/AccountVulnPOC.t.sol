@@ -243,7 +243,7 @@ contract SimpleAccountVulnPOCTest is BaseTest {
                                 Setup
         //////////////////////////////////////////////////////////////*/
         address[] memory approvedTargets = new address[](1);
-        approvedTargets[0] = address(0); // allowing accountSigner permissions for some random contract, consider it as 0 address here
+        approvedTargets[0] = address(0x123); // allowing accountSigner permissions for some random contract, consider it as 0 address here
 
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
