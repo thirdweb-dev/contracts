@@ -76,7 +76,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     }
 
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
-    /* solhint-disable*/
+
     function isValidSigner(address _signer, UserOperation calldata _userOp) public view virtual returns (bool) {
         // First, check if the signer is an admin.
         if (_accountPermissionsStorage().isAdmin[_signer]) {
