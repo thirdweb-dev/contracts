@@ -323,18 +323,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address[] memory approvedTargets = new address[](0);
 
         {
-            IAccountPermissions.SignerPermissionRequest memory request = IAccountPermissions
-                .SignerPermissionRequest(
-                    accountSigner,
-                    1,
-                    approvedTargets,
-                    1,
-                    0,
-                    type(uint128).max,
-                    0,
-                    type(uint128).max,
-                    uidCache
-                );
+            IAccountPermissions.SignerPermissionRequest memory request = IAccountPermissions.SignerPermissionRequest(
+                accountSigner,
+                1,
+                approvedTargets,
+                1,
+                0,
+                type(uint128).max,
+                0,
+                type(uint128).max,
+                uidCache
+            );
 
             bytes memory sig2 = _signSignerPermissionRequest(request);
             SimpleAccount(payable(account)).setPermissionsForSigner(request, sig2);
@@ -541,18 +540,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         {
             //set admin status
-            IAccountPermissions.SignerPermissionRequest memory req = IAccountPermissions
-                .SignerPermissionRequest(
-                    accountSigner,
-                    1,
-                    approvedTargets,
-                    0,
-                    0,
-                    type(uint128).max,
-                    0,
-                    type(uint128).max,
-                    uidCache
-                );
+            IAccountPermissions.SignerPermissionRequest memory req = IAccountPermissions.SignerPermissionRequest(
+                accountSigner,
+                1,
+                approvedTargets,
+                0,
+                0,
+                type(uint128).max,
+                0,
+                type(uint128).max,
+                uidCache
+            );
 
             vm.prank(accountAdmin);
             bytes memory sig2 = _signSignerPermissionRequest(req);
@@ -577,7 +575,7 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         vm.prank(accountAdmin);
         bytes memory sig3 = _signSignerPermissionRequest(permissionsReq);
-        vm.expectRevert("already admin");
+        vm.expectRevert("admin");
         SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig3);
     }
 
