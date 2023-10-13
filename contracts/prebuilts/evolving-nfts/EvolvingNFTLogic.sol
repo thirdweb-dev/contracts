@@ -17,27 +17,24 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-import "../../../eip/queryable/ERC721AQueryableUpgradeable.sol";
+import "../../eip/queryable/ERC721AQueryableUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
-import "../../../lib/CurrencyTransferLib.sol";
+import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
+import "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
-import "../../../extension/Multicall.sol";
-import "../../../extension/upgradeable/ContractMetadata.sol";
-import "../../../extension/upgradeable/Royalty.sol";
-import "../../../extension/upgradeable/PrimarySale.sol";
-import "../../../extension/upgradeable/Ownable.sol";
-import "../../../extension/upgradeable/Permissions.sol";
-import "../../../extension/upgradeable/Drop.sol";
-import "../../../extension/upgradeable/SharedMetadataBatch.sol";
-import { RulesEngine } from "../../../extension/upgradeable/RulesEngine.sol";
-
-// OpenSea operator filter
-import "../../../extension/DefaultOperatorFiltererUpgradeable.sol";
+import "../../extension/Multicall.sol";
+import "../../extension/upgradeable/ContractMetadata.sol";
+import "../../extension/upgradeable/Royalty.sol";
+import "../../extension/upgradeable/PrimarySale.sol";
+import "../../extension/upgradeable/Ownable.sol";
+import "../../extension/upgradeable/Permissions.sol";
+import "../../extension/upgradeable/Drop.sol";
+import "../../extension/upgradeable/SharedMetadataBatch.sol";
+import { RulesEngine } from "../../extension/upgradeable/RulesEngine.sol";
 
 contract EvolvingNFTLogic is
     ContractMetadata,
@@ -47,7 +44,6 @@ contract EvolvingNFTLogic is
     SharedMetadataBatch,
     Drop,
     ERC2771ContextUpgradeable,
-    DefaultOperatorFiltererUpgradeable,
     ERC721AQueryableUpgradeable
 {
     using StringsUpgradeable for uint256;
@@ -198,11 +194,6 @@ contract EvolvingNFTLogic is
         return _hasRole(MINTER_ROLE, _msgSender());
     }
 
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
-        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
     /// @dev Checks whether an account has a particular role.
     function _hasRole(bytes32 _role, address _account) internal view returns (bool) {
         PermissionsStorage.Data storage data = PermissionsStorage.data();
@@ -253,53 +244,6 @@ contract EvolvingNFTLogic is
                 revert("!T");
             }
         }
-    }
-
-    /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved)
-        public
-        override(ERC721AUpgradeable, IERC721AUpgradeable)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId)
-        public
-        payable
-        override(ERC721AUpgradeable, IERC721AUpgradeable)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.approve(operator, tokenId);
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public payable override(ERC721AUpgradeable, IERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     function _dropMsgSender() internal view virtual override returns (address) {

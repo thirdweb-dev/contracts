@@ -9,7 +9,10 @@ import { IEnglishAuctions } from "../IMarketplace.sol";
  * @author  thirdweb.com
  */
 library EnglishAuctionsStorage {
-    bytes32 public constant ENGLISH_AUCTIONS_STORAGE_POSITION = keccak256("english.auctions.storage");
+    /// @custom:storage-location erc7201:english.auctions.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("english.auctions.storage")) - 1)) & ~bytes32(uint256(0xff))
+    bytes32 public constant ENGLISH_AUCTIONS_STORAGE_POSITION =
+        0x89032daddd224983b4d69fda31dc440901185d9636f6e798dbe1e433d9d34c00;
 
     struct Data {
         uint256 totalAuctions;
@@ -18,10 +21,10 @@ library EnglishAuctionsStorage {
         mapping(uint256 => IEnglishAuctions.AuctionPayoutStatus) payoutStatus;
     }
 
-    function englishAuctionsStorage() internal pure returns (Data storage englishAuctionsData) {
+    function data() internal pure returns (Data storage data_) {
         bytes32 position = ENGLISH_AUCTIONS_STORAGE_POSITION;
         assembly {
-            englishAuctionsData.slot := position
+            data_.slot := position
         }
     }
 }

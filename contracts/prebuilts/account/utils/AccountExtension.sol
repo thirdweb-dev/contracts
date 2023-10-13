@@ -77,8 +77,10 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         }
 
         address caller = msg.sender;
+        EnumerableSet.AddressSet storage approvedTargets = _accountPermissionsStorage().approvedTargets[signer];
+
         require(
-            _accountPermissionsStorage().approvedTargets[signer].contains(caller),
+            approvedTargets.contains(caller) || (approvedTargets.length() == 1 && approvedTargets.at(0) == address(0)),
             "Account: caller not approved target."
         );
 
@@ -144,7 +146,7 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {
-        return isAdmin(msg.sender);
+        return isAdmin(msg.sender) || msg.sender == address(this);
     }
 
     function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {}

@@ -12,7 +12,6 @@ import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
 import "../extension/LazyMint.sol";
 import "../extension/interface/IClaimableERC721.sol";
-import "../extension/DefaultOperatorFilterer.sol";
 
 import "../lib/TWStrings.sol";
 import "../external-deps/openzeppelin/security/ReentrancyGuard.sol";
@@ -52,7 +51,6 @@ contract ERC721LazyMint is
     BatchMintMetadata,
     LazyMint,
     IClaimableERC721,
-    DefaultOperatorFilterer,
     ReentrancyGuard
 {
     using TWStrings for uint256;
@@ -61,6 +59,15 @@ contract ERC721LazyMint is
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Initializes the contract during construction.
+     *
+     * @param _defaultAdmin     The default admin of the contract.
+     * @param _name             The name of the contract.
+     * @param _symbol           The symbol of the contract.
+     * @param _royaltyRecipient The address to receive royalties.
+     * @param _royaltyBps       The royalty basis points to be charged. Max = 10000 (10000 = 100%, 1000 = 10%)
+     */
     constructor(
         address _defaultAdmin,
         string memory _name,
@@ -70,14 +77,16 @@ contract ERC721LazyMint is
     ) ERC721A(_name, _symbol) {
         _setupOwner(_defaultAdmin);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////
                             ERC165 Logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+    /**
+     * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -109,11 +118,10 @@ contract ERC721LazyMint is
      *  @notice          Lets an address claim multiple lazy minted NFTs at once to a recipient.
      *                   This function prevents any reentrant calls, and is not allowed to be overridden.
      *
-     *                   Contract creators should override `verifyClaim` and `transferTokensOnClaim`
+     *  @dev             Contract creators should override `verifyClaim` and `transferTokensOnClaim`
      *                   functions to create custom logic for verification and claiming,
      *                   for e.g. price collection, allowlist, max quantity, etc.
-     *
-     *  @dev             The logic in `verifyClaim` determines whether the caller is authorized to mint NFTs.
+     *                   The logic in `verifyClaim` determines whether the caller is authorized to mint NFTs.
      *                   The logic in `transferTokensOnClaim` does actual minting of tokens,
      *                   can also be used to apply other state changes.
      *
@@ -129,10 +137,10 @@ contract ERC721LazyMint is
     }
 
     /**
-     *  @notice          Override this function to add logic for claim verification, based on conditions
-     *                   such as allowlist, price, max quantity etc.
+     *  @notice          Checks a request to claim NFTs against a custom condition.
      *
-     *  @dev             Checks a request to claim NFTs against a custom condition.
+     *  @dev             Override this function to add logic for claim verification, based on conditions
+     *                   such as allowlist, price, max quantity etc.
      *
      *  @param _claimer   Caller of the claim function.
      *  @param _quantity  The number of NFTs being claimed.
@@ -160,58 +168,6 @@ contract ERC721LazyMint is
     }
 
     /*//////////////////////////////////////////////////////////////
-                        ERC-721 overrides
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved)
-        public
-        virtual
-        override(ERC721A)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId)
-        public
-        virtual
-        override(ERC721A)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.approve(operator, tokenId);
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId, data);
-    }
-
-    /*//////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
@@ -222,6 +178,11 @@ contract ERC721LazyMint is
      *
      *  @dev             Override this function to add logic for state updation.
      *                   When overriding, apply any state changes before `_safeMint`.
+     *
+     * @param _receiver The recipient of the NFT to mint.
+     * @param _quantity The number of NFTs to mint.
+     *
+     * @return startTokenId The tokenId of the first NFT minted.
      */
     function _transferTokensOnClaim(address _receiver, uint256 _quantity)
         internal
@@ -249,11 +210,6 @@ contract ERC721LazyMint is
 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
-        return msg.sender == owner();
-    }
-
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 }

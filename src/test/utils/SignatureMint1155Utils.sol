@@ -32,20 +32,24 @@ contract SignatureMint1155Utils {
     function getStructHash(ISignatureMintERC1155.MintRequest memory _req) internal pure returns (bytes32) {
         return
             keccak256(
-                abi.encode(
-                    TYPEHASH,
-                    _req.to,
-                    _req.royaltyRecipient,
-                    _req.royaltyBps,
-                    _req.primarySaleRecipient,
-                    _req.tokenId,
-                    keccak256(bytes(_req.uri)),
-                    _req.quantity,
-                    _req.pricePerToken,
-                    _req.currency,
-                    _req.validityStartTimestamp,
-                    _req.validityEndTimestamp,
-                    _req.uid
+                bytes.concat(
+                    abi.encode(
+                        TYPEHASH,
+                        _req.to,
+                        _req.royaltyRecipient,
+                        _req.royaltyBps,
+                        _req.primarySaleRecipient,
+                        _req.tokenId,
+                        keccak256(bytes(_req.uri))
+                    ),
+                    abi.encode(
+                        _req.quantity,
+                        _req.pricePerToken,
+                        _req.currency,
+                        _req.validityStartTimestamp,
+                        _req.validityEndTimestamp,
+                        _req.uid
+                    )
                 )
             );
     }

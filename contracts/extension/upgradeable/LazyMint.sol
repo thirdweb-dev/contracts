@@ -7,9 +7,10 @@ import "../interface/ILazyMint.sol";
 import "./BatchMintMetadata.sol";
 
 library LazyMintStorage {
-    /// @custom:storage-location erc7201:extension.manager.storage
+    /// @custom:storage-location erc7201:lazy.mint.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("lazy.mint.storage")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 public constant LAZY_MINT_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("lazy.mint.storage")) - 1));
+        0xb9d1563179e0b515350da446a9b78048cef890c6aaa6e34cdf88122d970b5c00;
 
     struct Data {
         /// @notice The tokenId assigned to the next new NFT to be lazy minted.

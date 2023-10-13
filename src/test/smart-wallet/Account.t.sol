@@ -56,13 +56,13 @@ contract SimpleAccountTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
+    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
         internal
         view
-        returns (bytes memory signature)
+        returns (bytes32 typedDataHash)
     {
         bytes32 typehashSignerPermissionRequest = keccak256(
-            "SignerPermissionRequest(address signer,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
+            "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
         bytes32 nameHash = keccak256(bytes("Account"));
         bytes32 versionHash = keccak256(bytes("1"));
@@ -71,20 +71,32 @@ contract SimpleAccountTest is BaseTest {
         );
         bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
 
-        bytes memory encodedRequest = abi.encode(
+        bytes memory encodedRequestStart = abi.encode(
             typehashSignerPermissionRequest,
             _req.signer,
+            _req.isAdmin,
             keccak256(abi.encodePacked(_req.approvedTargets)),
-            _req.nativeTokenLimitPerTransaction,
+            _req.nativeTokenLimitPerTransaction
+        );
+
+        bytes memory encodedRequestEnd = abi.encode(
             _req.permissionStartTimestamp,
             _req.permissionEndTimestamp,
             _req.reqValidityStartTimestamp,
             _req.reqValidityEndTimestamp,
             _req.uid
         );
-        bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
+        bytes32 structHash = keccak256(bytes.concat(encodedRequestStart, encodedRequestEnd));
+        typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+    }
+
+    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
+        internal
+        view
+        returns (bytes memory signature)
+    {
+        bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
     }
@@ -360,6 +372,7 @@ contract SimpleAccountTest is BaseTest {
 
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
+            0,
             approvedTargets,
             1 ether,
             0,
@@ -397,6 +410,7 @@ contract SimpleAccountTest is BaseTest {
 
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
+            0,
             approvedTargets,
             1 ether,
             0,
@@ -452,6 +466,7 @@ contract SimpleAccountTest is BaseTest {
         approvedTargets[0] = address(numberContract);
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
+            0,
             approvedTargets,
             1 ether,
             0,
@@ -529,15 +544,15 @@ contract SimpleAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 0);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 0);
 
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).addDeposit{ value: 1000 }();
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 1000);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 1000);
 
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).withdrawDepositTo(payable(accountSigner), 500);
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 500);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 500);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -566,5 +581,59 @@ contract SimpleAccountTest is BaseTest {
         erc1155.mint(account, 0, 1);
 
         assertEq(erc1155.balanceOf(account, 0), 1);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                Test: setting contract metadata
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Set contract metadata via admin or entrypoint.
+    function test_state_contractMetadata() public {
+        _setup_executeTransaction();
+        address account = accountFactory.getAddress(accountAdmin, bytes(""));
+
+        vm.prank(accountAdmin);
+        SimpleAccount(payable(account)).setContractURI("https://example.com");
+        assertEq(SimpleAccount(payable(account)).contractURI(), "https://example.com");
+
+        UserOperation[] memory userOp = _setupUserOpExecute(
+            accountAdminPKey,
+            bytes(""),
+            address(account),
+            0,
+            abi.encodeWithSignature("setContractURI(string)", "https://thirdweb.com")
+        );
+
+        EntryPoint(entrypoint).handleOps(userOp, beneficiary);
+        assertEq(SimpleAccount(payable(account)).contractURI(), "https://thirdweb.com");
+
+        address[] memory approvedTargets = new address[](0);
+
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            0,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
+
+        vm.prank(accountAdmin);
+        bytes memory sig = _signSignerPermissionRequest(permissionsReq);
+        SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
+
+        UserOperation[] memory userOpViaSigner = _setupUserOpExecute(
+            accountSignerPKey,
+            bytes(""),
+            address(account),
+            0,
+            abi.encodeWithSignature("setContractURI(string)", "https://thirdweb.com")
+        );
+
+        vm.expectRevert();
+        EntryPoint(entrypoint).handleOps(userOpViaSigner, beneficiary);
     }
 }

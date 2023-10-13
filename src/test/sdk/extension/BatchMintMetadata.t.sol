@@ -22,6 +22,10 @@ contract MyBatchMintMetadata is BatchMintMetadata {
     function viewBaseURI(uint256 _tokenId) external view returns (string memory) {
         return _getBaseURI(_tokenId);
     }
+
+    function freezeBaseURI(uint256 _batchId) external {
+        _freezeBaseURI(_batchId);
+    }
 }
 
 contract ExtensionBatchMintMetadata is DSTest, Test {
@@ -64,5 +68,42 @@ contract ExtensionBatchMintMetadata is DSTest, Test {
 
         ext.setBaseURI(batchId, baseUriTwo);
         assertEq(baseUriTwo, ext.viewBaseURI(10));
+    }
+
+    function test_setBaseURI_revert_frozen() public {
+        string memory baseUriOne = "one";
+        (, uint256 batchId) = ext.batchMintMetadata(0, 100, baseUriOne);
+
+        ext.freezeBaseURI(batchId);
+
+        vm.expectRevert("Batch frozen");
+        string memory baseUri = "one";
+        ext.setBaseURI(batchId, baseUri);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: `freezeBaseURI`
+    //////////////////////////////////////////////////////////////*/
+
+    function test_state_freezeBaseURI() public {
+        string memory baseUriOne = "one";
+        (, uint256 batchId) = ext.batchMintMetadata(0, 100, baseUriOne);
+
+        ext.freezeBaseURI(batchId);
+        assertEq(ext.batchFrozen(batchId), true);
+    }
+
+    function test_freezeBaseURI_revert_invalidBatch() public {
+        vm.expectRevert("Invalid batch");
+        ext.freezeBaseURI(100);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Unit tests: `viewBaseURI`
+    //////////////////////////////////////////////////////////////*/
+
+    function test_viewBaseURI_revert_invalidTokenId() public {
+        vm.expectRevert("Invalid tokenId");
+        ext.viewBaseURI(100);
     }
 }
