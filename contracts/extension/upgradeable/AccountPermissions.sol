@@ -45,9 +45,8 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
 
-    modifier onlyAdmin() virtual {
+    function _onlyAdmin() internal virtual {
         require(isAdmin(msg.sender), "!admin");
-        _;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -78,7 +77,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
             return;
         }
 
-        require(!isAdmin(targetSigner), "already admin");
+        require(!isAdmin(targetSigner), "admin");
 
         _accountPermissionsStorage().allSigners.add(targetSigner);
 
@@ -89,13 +88,13 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         );
 
         address[] memory currentTargets = _accountPermissionsStorage().approvedTargets[targetSigner].values();
-        uint256 currentLen = currentTargets.length;
+        uint256 len = currentTargets.length;
 
-        for (uint256 i = 0; i < currentLen; i += 1) {
+        for (uint256 i = 0; i < len; i += 1) {
             _accountPermissionsStorage().approvedTargets[targetSigner].remove(currentTargets[i]);
         }
 
-        uint256 len = _req.approvedTargets.length;
+        len = _req.approvedTargets.length;
         for (uint256 i = 0; i < len; i += 1) {
             _accountPermissionsStorage().approvedTargets[targetSigner].add(_req.approvedTargets[i]);
         }

@@ -161,12 +161,14 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     }
 
     /// @notice Withdraw funds for this account from Entrypoint.
-    function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public onlyAdmin {
+    function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public {
+        _onlyAdmin();
         entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
     /// @notice Overrides the Entrypoint contract being used.
-    function setEntrypointOverride(IEntryPoint _entrypointOverride) public virtual onlyAdmin {
+    function setEntrypointOverride(IEntryPoint _entrypointOverride) public virtual {
+        _onlyAdmin();
         AccountCoreStorage.data().entrypointOverride = address(_entrypointOverride);
     }
 
@@ -215,8 +217,10 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
 
         if (!isValidSigner(signer, userOp)) return SIG_VALIDATION_FAILED;
 
-        uint48 validAfter = uint48(_accountPermissionsStorage().signerPermissions[signer].startTimestamp);
-        uint48 validUntil = uint48(_accountPermissionsStorage().signerPermissions[signer].endTimestamp);
+        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
+
+        uint48 validAfter = uint48(permissions.startTimestamp);
+        uint48 validUntil = uint48(permissions.endTimestamp);
 
         return _packValidationData(ValidationData(address(0), validAfter, validUntil));
     }
