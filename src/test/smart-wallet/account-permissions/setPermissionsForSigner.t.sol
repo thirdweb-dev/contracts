@@ -575,7 +575,7 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         vm.prank(accountAdmin);
         bytes memory sig3 = _signSignerPermissionRequest(permissionsReq);
-        vm.expectRevert("already admin");
+        vm.expectRevert("admin");
         SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig3);
     }
 
