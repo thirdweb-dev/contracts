@@ -6,9 +6,10 @@ pragma solidity ^0.8.0;
 import "../interface/IOperatorFilterToggle.sol";
 
 library OperatorFilterToggleStorage {
-    /// @custom:storage-location erc7201:extension.manager.storage
+    /// @custom:storage-location erc7201:operator.filter.toggle.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("operator.filter.toggle.storage")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 public constant OPERATOR_FILTER_TOGGLE_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("operator.filter.toggle.storage")) - 1));
+        0xc9c6c05578224a00a593ea5c05021a182582a08fc1143a677c61a8fe56c23800;
 
     struct Data {
         bool operatorRestriction;

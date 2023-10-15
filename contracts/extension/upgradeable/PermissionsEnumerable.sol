@@ -15,7 +15,7 @@ import "./Permissions.sol";
 library PermissionsEnumerableStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant PERMISSIONS_ENUMERABLE_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("permissions.enumerable.storage")) - 1));
+        keccak256(abi.encode(uint256(keccak256("permissions.enumerable.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     /**
      *  @notice A data structure to store data of members for a given role.

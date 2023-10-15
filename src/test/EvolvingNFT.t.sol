@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 import { IExtension } from "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 
-import { EvolvingNFT } from "contracts/prebuilts/unaudited/evolving-nfts/EvolvingNFT.sol";
-import { EvolvingNFTLogic } from "contracts/prebuilts/unaudited/evolving-nfts/EvolvingNFTLogic.sol";
-import { RulesEngineExtension } from "contracts/prebuilts/unaudited/evolving-nfts/extension/RulesEngineExtension.sol";
+import { EvolvingNFT } from "contracts/prebuilts/evolving-nfts/EvolvingNFT.sol";
+import { EvolvingNFTLogic } from "contracts/prebuilts/evolving-nfts/EvolvingNFTLogic.sol";
+import { RulesEngineExtension } from "contracts/prebuilts/evolving-nfts/extension/RulesEngineExtension.sol";
 
 import { IDrop } from "contracts/extension/interface/IDrop.sol";
 import { Drop } from "contracts/extension/upgradeable/Drop.sol";
@@ -109,7 +109,7 @@ contract EvolvingNFTTest is BaseTest {
             "tokenURI(uint256)"
         );
         evolvingNftExtension.functions[4] = IExtension.ExtensionFunction(
-            EvolvingNFTLogic.transferFrom.selector,
+            IERC721Upgradeable.transferFrom.selector,
             "transferFrom(address,address,uint256)"
         );
         evolvingNftExtension.functions[5] = IExtension.ExtensionFunction(IERC721.ownerOf.selector, "ownerOf(uint256)");

@@ -19,9 +19,11 @@ interface IAccountPermissions {
      *  @param reqValidityStartTimestamp The UNIX timestamp at and after which a signature is valid.
      *  @param reqValidityEndTimestamp The UNIX timestamp at and after which a signature is invalid/expired.
      *  @param uid A unique non-repeatable ID for the payload.
+     *  @param isAdmin Whether the signer should be an admin.
      */
     struct SignerPermissionRequest {
         address signer;
+        uint8 isAdmin;
         address[] approvedTargets;
         uint256 nativeTokenLimitPerTransaction;
         uint128 permissionStartTimestamp;
@@ -106,9 +108,6 @@ interface IAccountPermissions {
     /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice Adds / removes an account as an admin.
-    function setAdmin(address account, bool isAdmin) external;
 
     /// @notice Sets the permissions for a given signer.
     function setPermissionsForSigner(SignerPermissionRequest calldata req, bytes calldata signature) external;

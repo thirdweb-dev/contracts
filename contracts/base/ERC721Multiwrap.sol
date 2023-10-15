@@ -11,7 +11,6 @@ import "../extension/Royalty.sol";
 import "../extension/SoulboundERC721A.sol";
 import "../extension/TokenStore.sol";
 import "../extension/Multicall.sol";
-import "../extension/DefaultOperatorFilterer.sol";
 
 /**
  *      BASE:      ERC721Base
@@ -27,16 +26,7 @@ import "../extension/DefaultOperatorFilterer.sol";
  *
  */
 
-contract ERC721Multiwrap is
-    Multicall,
-    TokenStore,
-    SoulboundERC721A,
-    ERC721A,
-    ContractMetadata,
-    Ownable,
-    Royalty,
-    DefaultOperatorFilterer
-{
+contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, ContractMetadata, Ownable, Royalty {
     /*//////////////////////////////////////////////////////////////
                     Permission control roles
     //////////////////////////////////////////////////////////////*/
@@ -81,6 +71,16 @@ contract ERC721Multiwrap is
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Initializes the contract during construction.
+     *
+     * @param _defaultAdmin     The default admin of the contract.
+     * @param _name             The name of the contract.
+     * @param _symbol           The symbol of the contract.
+     * @param _royaltyRecipient The address to receive royalties.
+     * @param _royaltyBps       The royalty basis points to be charged. Max = 10000 (10000 = 100%, 1000 = 10%)
+     * @param _nativeTokenWrapper The address of the ERC20 wrapper for the native token.
+     */
     constructor(
         address _defaultAdmin,
         string memory _name,
@@ -91,7 +91,6 @@ contract ERC721Multiwrap is
     ) ERC721A(_name, _symbol) TokenStore(_nativeTokenWrapper) {
         _setupOwner(_defaultAdmin);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-        _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
@@ -107,7 +106,10 @@ contract ERC721Multiwrap is
                         Public gette functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev See ERC-165
+    /**
+     * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -191,7 +193,14 @@ contract ERC721Multiwrap is
         return _currentIndex;
     }
 
-    /// @notice Returns whether a given address is the owner, or approved to transfer an NFT.
+    /**
+     * @notice Returns whether a given address is the owner, or approved to transfer an NFT.
+     *
+     * @param _operator The address to check.
+     * @param _tokenId The tokenId to check.
+     *
+     * @return isApprovedOrOwnerOf Whether `_operator` is approved to transfer `_tokenId`.
+     */
     function isApprovedOrOwner(address _operator, uint256 _tokenId)
         public
         view
@@ -204,63 +213,14 @@ contract ERC721Multiwrap is
             getApproved(_tokenId) == _operator);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                        ERC-721 overrides
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved)
-        public
-        virtual
-        override(ERC721A)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId)
-        public
-        virtual
-        override(ERC721A)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.approve(operator, tokenId);
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId, data);
-    }
-
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev See {ERC721-_beforeTokenTransfer}.
+    /**
+     * @dev See {ERC721-_beforeTokenTransfer}.
+     * @inheritdoc ERC721A
+     */
     function _beforeTokenTransfers(
         address from,
         address to,
@@ -288,11 +248,6 @@ contract ERC721Multiwrap is
 
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
-        return msg.sender == owner();
-    }
-
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 }

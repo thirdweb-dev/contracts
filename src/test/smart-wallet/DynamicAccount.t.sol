@@ -72,13 +72,13 @@ contract DynamicAccountTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
+    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
         internal
         view
-        returns (bytes memory signature)
+        returns (bytes32 typedDataHash)
     {
         bytes32 typehashSignerPermissionRequest = keccak256(
-            "SignerPermissionRequest(address signer,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
+            "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
         bytes32 nameHash = keccak256(bytes("Account"));
         bytes32 versionHash = keccak256(bytes("1"));
@@ -87,20 +87,32 @@ contract DynamicAccountTest is BaseTest {
         );
         bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
 
-        bytes memory encodedRequest = abi.encode(
+        bytes memory encodedRequestStart = abi.encode(
             typehashSignerPermissionRequest,
             _req.signer,
+            _req.isAdmin,
             keccak256(abi.encodePacked(_req.approvedTargets)),
-            _req.nativeTokenLimitPerTransaction,
+            _req.nativeTokenLimitPerTransaction
+        );
+
+        bytes memory encodedRequestEnd = abi.encode(
             _req.permissionStartTimestamp,
             _req.permissionEndTimestamp,
             _req.reqValidityStartTimestamp,
             _req.reqValidityEndTimestamp,
             _req.uid
         );
-        bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
+        bytes32 structHash = keccak256(bytes.concat(encodedRequestStart, encodedRequestEnd));
+        typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+    }
+
+    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
+        internal
+        view
+        returns (bytes memory signature)
+    {
+        bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
     }
@@ -244,6 +256,58 @@ contract DynamicAccountTest is BaseTest {
     /*///////////////////////////////////////////////////////////////
                         Test: creating an account
     //////////////////////////////////////////////////////////////*/
+
+    /// @dev benchmark test for deployment gas cost
+    function test_deploy_dynamicAccount() public {
+        // Setting up default extension.
+        IExtension.Extension memory defaultExtension;
+
+        defaultExtension.metadata = IExtension.ExtensionMetadata({
+            name: "AccountExtension",
+            metadataURI: "ipfs://AccountExtension",
+            implementation: address(new AccountExtension())
+        });
+
+        defaultExtension.functions = new IExtension.ExtensionFunction[](7);
+
+        defaultExtension.functions[0] = IExtension.ExtensionFunction(
+            AccountExtension.supportsInterface.selector,
+            "supportsInterface(bytes4)"
+        );
+        defaultExtension.functions[1] = IExtension.ExtensionFunction(
+            AccountExtension.execute.selector,
+            "execute(address,uint256,bytes)"
+        );
+        defaultExtension.functions[2] = IExtension.ExtensionFunction(
+            AccountExtension.executeBatch.selector,
+            "executeBatch(address[],uint256[],bytes[])"
+        );
+        defaultExtension.functions[3] = IExtension.ExtensionFunction(
+            ERC721Holder.onERC721Received.selector,
+            "onERC721Received(address,address,uint256,bytes)"
+        );
+        defaultExtension.functions[4] = IExtension.ExtensionFunction(
+            ERC1155Holder.onERC1155Received.selector,
+            "onERC1155Received(address,address,uint256,uint256,bytes)"
+        );
+        defaultExtension.functions[5] = IExtension.ExtensionFunction(
+            bytes4(0), // Selector for `receive()` function.
+            "receive()"
+        );
+        defaultExtension.functions[6] = IExtension.ExtensionFunction(
+            AccountExtension.isValidSignature.selector,
+            "isValidSignature(bytes32,bytes)"
+        );
+
+        IExtension.Extension[] memory extensions = new IExtension.Extension[](1);
+        extensions[0] = defaultExtension;
+
+        // deploy account factory
+        DynamicAccountFactory factory = new DynamicAccountFactory(
+            IEntryPoint(payable(address(entrypoint))),
+            extensions
+        );
+    }
 
     /// @dev Create an account by directly calling the factory.
     function test_state_createAccount_viaFactory() public {
@@ -420,6 +484,7 @@ contract DynamicAccountTest is BaseTest {
 
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
+            0,
             approvedTargets,
             1 ether,
             0,
@@ -457,6 +522,7 @@ contract DynamicAccountTest is BaseTest {
 
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
+            0,
             approvedTargets,
             1 ether,
             0,
@@ -514,6 +580,7 @@ contract DynamicAccountTest is BaseTest {
 
         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
             accountSigner,
+            0,
             approvedTargets,
             1 ether,
             0,
@@ -590,15 +657,15 @@ contract DynamicAccountTest is BaseTest {
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
 
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 0);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 0);
 
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).addDeposit{ value: 1000 }();
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 1000);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 1000);
 
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).withdrawDepositTo(payable(accountSigner), 500);
-        assertEq(SimpleAccount(payable(account)).getDeposit(), 500);
+        assertEq(EntryPoint(entrypoint).balanceOf(account), 500);
     }
 
     /*///////////////////////////////////////////////////////////////
