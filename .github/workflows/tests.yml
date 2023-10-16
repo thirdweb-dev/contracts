@@ -21,7 +21,7 @@ jobs:
   test:
     # The type of runner that the job will run on
     # 16 core paid runner
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-16-cores
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -30,6 +30,7 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 25
+          node-version: 18
 
       - name: Setup Project
         uses: ./.github/composite-actions/setup
