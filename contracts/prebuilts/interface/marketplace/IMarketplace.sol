@@ -24,7 +24,7 @@ interface IMarketplace is IThirdwebContract, IPlatformFee {
     /**
      *  @notice The information related to either (1) an offer on a direct listing, or (2) a bid in an auction.
      *
-     *  @dev The type of the listing at ID `lisingId` determins how the `Offer` is interpreted.
+     *  @dev The type of the listing at ID `lisingId` determines how the `Offer` is interpreted.
      *      If the listing is of type `Direct`, the `Offer` is interpreted as an offer to a direct listing.
      *      If the listing is of type `Auction`, the `Offer` is interpreted as a bid in an auction.
      *
@@ -209,9 +209,9 @@ interface IMarketplace is IThirdwebContract, IPlatformFee {
      *  @notice Lets a listing's creator edit the listing's parameters. A direct listing can be edited whenever.
      *          An auction listing cannot be edited after the auction has started.
      *
-     *  @param _listingId            The uid of the lisitng to edit.
+     *  @param _listingId            The uid of the listing to edit.
      *
-     *  @param _quantityToList       The amount of NFTs to list for sale in the listing. For direct lisitngs, the contract
+     *  @param _quantityToList       The amount of NFTs to list for sale in the listing. For direct listings, the contract
      *                               only checks whether the listing creator owns and has approved Marketplace to transfer
      *                               `_quantityToList` amount of NFTs to list for sale. For auction listings, the contract
      *                               ensures that exactly `_quantityToList` amount of NFTs to list are escrowed.
@@ -248,14 +248,14 @@ interface IMarketplace is IThirdwebContract, IPlatformFee {
     /**
      *  @notice Lets a direct listing creator cancel their listing.
      *
-     *  @param _listingId The unique Id of the lisitng to cancel.
+     *  @param _listingId The unique Id of the listing to cancel.
      */
     function cancelDirectListing(uint256 _listingId) external;
 
     /**
      *  @notice Lets someone buy a given quantity of tokens from a direct listing by paying the fixed price.
      *
-     *  @param _listingId The uid of the direct lisitng to buy from.
+     *  @param _listingId The uid of the direct listing to buy from.
      *  @param _buyFor The receiver of the NFT being bought.
      *  @param _quantity The amount of NFTs to buy from the direct listing.
      *  @param _currency The currency to pay the price in.
@@ -265,7 +265,7 @@ interface IMarketplace is IThirdwebContract, IPlatformFee {
      *          (1) buyer does not own or has not approved Marketplace to transfer the appropriate
      *              amount of currency (or hasn't sent the appropriate amount of native tokens)
      *
-     *          (2) the lister does not own or has removed Markeplace's
+     *          (2) the lister does not own or has removed Marketplace's
      *              approval to transfer the tokens listed for sale.
      */
     function buy(
@@ -283,7 +283,7 @@ interface IMarketplace is IThirdwebContract, IPlatformFee {
      *       makes two offers to the same direct listing, the last offer is counted as the buyer's
      *       offer to that listing.
      *
-     *  @param _listingId        The unique ID of the lisitng to make an offer/bid to.
+     *  @param _listingId        The unique ID of the listing to make an offer/bid to.
      *
      *  @param _quantityWanted   For auction listings: the 'quantity wanted' is the total amount of NFTs
      *                           being auctioned, regardless of the value of `_quantityWanted` passed.
@@ -297,7 +297,7 @@ interface IMarketplace is IThirdwebContract, IPlatformFee {
      *  @param _pricePerToken    For direct listings: offered price per token. For auction listings: the bid
      *                           amount per token. The total offer/bid amount is `_quantityWanted * _pricePerToken`.
      *
-     *  @param _expirationTimestamp For aution listings: inapplicable. For direct listings: The timestamp after which
+     *  @param _expirationTimestamp For auction listings: inapplicable. For direct listings: The timestamp after which
      *                              the seller can no longer accept the offer.
      */
     function offer(
@@ -324,7 +324,7 @@ interface IMarketplace is IThirdwebContract, IPlatformFee {
 
     /**
      *  @notice Lets any account close an auction on behalf of either the (1) auction's creator, or (2) winning bidder.
-     *              For (1): The auction creator is sent the the winning bid amount.
+     *              For (1): The auction creator is sent the winning bid amount.
      *              For (2): The winning bidder is sent the auctioned NFTs.
      *
      *  @param _listingId The uid of the listing (the auction to close).

@@ -20,7 +20,7 @@ The single wrapped token received on bundling up multiple assets, as mentioned a
 
 A token owner should be able to wrap any combination of *n* ERC20, ERC721 or ERC1155 tokens as a wrapped NFT. When wrapping, the token owner should be able to specify a recipient for the wrapped NFT. At the time of wrapping, the token owner should be able to set the metadata of the wrapped NFT that will be minted.
 
-The wrapped NFT owner should be able to unwrap the the NFT to retrieve the underlying tokens of the wrapped NFT. At the time of unwrapping, the wrapped NFT owner should be able to specify a recipient for the underlying tokens of the wrapped NFT.
+The wrapped NFT owner should be able to unwrap the NFT to retrieve the underlying tokens of the wrapped NFT. At the time of unwrapping, the wrapped NFT owner should be able to specify a recipient for the underlying tokens of the wrapped NFT.
 
 The `Multiwrap` contract creator should be able to apply the following role-based restrictions:
 
