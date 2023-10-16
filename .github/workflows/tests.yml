@@ -30,6 +30,7 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 25
+          node-version: 18
 
       - name: Setup Project
         uses: ./.github/composite-actions/setup
