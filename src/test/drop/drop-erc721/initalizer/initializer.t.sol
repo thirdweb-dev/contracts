@@ -164,7 +164,7 @@ contract DropERC721Test_initializer is BaseTest {
     function test_event_RoleGrantedDefaultAdminRole() public {
         bytes32 role = bytes32(0x00);
         vm.expectEmit(true, true, true, false);
-        emit RoleGranted(role, deployer, 0xf29D12e4c9d593D2887EEDDe076bBe39EDf3cD0F);
+        emit RoleGranted(role, deployer, factory);
         deployContractProxy(
             "DropERC721",
             abi.encodeCall(
@@ -188,7 +188,7 @@ contract DropERC721Test_initializer is BaseTest {
     function test_event_RoleGrantedMinterRole() public {
         bytes32 role = keccak256("MINTER_ROLE");
         vm.expectEmit(true, true, true, false);
-        emit RoleGranted(role, deployer, 0xf29D12e4c9d593D2887EEDDe076bBe39EDf3cD0F);
+        emit RoleGranted(role, deployer, factory);
         deployContractProxy(
             "DropERC721",
             abi.encodeCall(
@@ -212,7 +212,7 @@ contract DropERC721Test_initializer is BaseTest {
     function test_event_RoleGrantedTransferRole() public {
         bytes32 role = keccak256("TRANSFER_ROLE");
         vm.expectEmit(true, true, true, false);
-        emit RoleGranted(role, deployer, 0xf29D12e4c9d593D2887EEDDe076bBe39EDf3cD0F);
+        emit RoleGranted(role, deployer, factory);
         deployContractProxy(
             "DropERC721",
             abi.encodeCall(
@@ -236,7 +236,7 @@ contract DropERC721Test_initializer is BaseTest {
     function test_event_RoleGrantedTransferRoleZeroAddress() public {
         bytes32 role = keccak256("TRANSFER_ROLE");
         vm.expectEmit(true, true, true, false);
-        emit RoleGranted(role, address(0), 0xf29D12e4c9d593D2887EEDDe076bBe39EDf3cD0F);
+        emit RoleGranted(role, address(0), factory);
         deployContractProxy(
             "DropERC721",
             abi.encodeCall(
@@ -260,7 +260,7 @@ contract DropERC721Test_initializer is BaseTest {
     function test_event_RoleGrantedMetadataRole() public {
         bytes32 role = keccak256("METADATA_ROLE");
         vm.expectEmit(true, true, true, false);
-        emit RoleGranted(role, deployer, 0xf29D12e4c9d593D2887EEDDe076bBe39EDf3cD0F);
+        emit RoleGranted(role, deployer, factory);
         deployContractProxy(
             "DropERC721",
             abi.encodeCall(
