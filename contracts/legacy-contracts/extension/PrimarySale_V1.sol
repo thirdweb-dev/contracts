@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "./interface/IPrimarySale.sol";
+import "./interface/IPrimarySale_V1.sol";
 
 /**
  *  @title   Primary Sale
@@ -38,9 +38,6 @@ abstract contract PrimarySale is IPrimarySale {
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
     function _setupPrimarySaleRecipient(address _saleRecipient) internal {
-        if (_saleRecipient == address(0)) {
-            revert("Invalid recipient");
-        }
         recipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
     }
