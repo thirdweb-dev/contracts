@@ -114,4 +114,164 @@ contract ValidateNewListingTest is BaseTest, IExtension {
         );
         extensions[0] = extension_directListings;
     }
+
+    function test_validateNewListing_whenQuantityIsZero() public {
+        listingParams.quantity = 0;
+
+        vm.expectRevert("Marketplace: listing zero quantity.");
+        MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC721);
+    }
+
+    modifier whenQuantityIsOne() {
+        listingParams.quantity = 1;
+        _;
+    }
+
+    modifier whenQuantityIsGtOne() {
+        listingParams.quantity = 2;
+        _;
+    }
+
+    modifier whenTokenIsERC721() {
+        listingParams.assetContract = address(erc721);
+        _;
+    }
+
+    modifier whenTokenIsERC1155() {
+        listingParams.assetContract = address(erc1155);
+        _;
+    }
+
+    function test_validateNewListing_whenTokenIsERC721() public whenQuantityIsGtOne {
+        vm.expectRevert("Marketplace: listing invalid quantity.");
+        MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC721);
+    }
+
+    function test_validateNewListing_whenTokenOwnerDoesntOwnSufficientTokens_1()
+        public
+        whenQuantityIsGtOne
+        whenTokenIsERC1155
+    {
+        vm.startPrank(seller);
+        erc1155.setApprovalForAll(marketplace, true);
+        erc1155.burn(seller, listingParams.tokenId, 100);
+        vm.stopPrank();
+
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
+    }
+
+    modifier whenTokenOwnerOwnsSufficientTokens() {
+        _;
+    }
+
+    function test_validateNewListing_whenTokensNotApprovedForTransfer_1()
+        public
+        whenQuantityIsGtOne
+        whenTokenIsERC1155
+        whenTokenOwnerOwnsSufficientTokens
+    {
+        vm.prank(seller);
+        erc1155.setApprovalForAll(marketplace, false);
+
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
+    }
+
+    modifier whenTokensApprovedForTransfer(IDirectListings.TokenType tokenType) {
+        vm.prank(seller);
+        if (tokenType == IDirectListings.TokenType.ERC721) {
+            erc721.setApprovalForAll(marketplace, true);
+        } else {
+            erc1155.setApprovalForAll(marketplace, true);
+        }
+        _;
+    }
+
+    function test_validateNewListing_whenTokensOwnedAndApproved_1()
+        public
+        whenQuantityIsGtOne
+        whenTokenIsERC1155
+        whenTokenOwnerOwnsSufficientTokens
+        whenTokensApprovedForTransfer(IDirectListings.TokenType.ERC1155)
+    {
+        assertEq(
+            MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC1155),
+            true
+        );
+    }
+
+    function test_validateNewListing_whenTokenOwnerDoesntOwnSufficientTokens_2a()
+        public
+        whenQuantityIsOne
+        whenTokenIsERC1155
+    {
+        vm.startPrank(seller);
+        erc1155.setApprovalForAll(marketplace, true);
+        erc1155.burn(seller, listingParams.tokenId, 100);
+        vm.stopPrank();
+
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
+    }
+
+    function test_validateNewListing_whenTokenOwnerDoesntOwnSufficientTokens_2b()
+        public
+        whenQuantityIsOne
+        whenTokenIsERC721
+    {
+        vm.startPrank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+        erc721.burn(listingParams.tokenId);
+        vm.stopPrank();
+
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
+    }
+
+    function test_validateNewListing_whenTokensNotApprovedForTransfer_2a()
+        public
+        whenQuantityIsOne
+        whenTokenIsERC721
+        whenTokenOwnerOwnsSufficientTokens
+    {
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, false);
+
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
+    }
+
+    function test_validateNewListing_whenTokensNotApprovedForTransfer_2b()
+        public
+        whenQuantityIsOne
+        whenTokenIsERC1155
+        whenTokenOwnerOwnsSufficientTokens
+    {
+        vm.prank(seller);
+        erc1155.setApprovalForAll(marketplace, false);
+
+        vm.expectRevert("Marketplace: not owner or approved tokens.");
+    }
+
+    function test_validateNewListing_whenTokensOwnedAndApproved_2a()
+        public
+        whenQuantityIsOne
+        whenTokenIsERC1155
+        whenTokenOwnerOwnsSufficientTokens
+        whenTokensApprovedForTransfer(IDirectListings.TokenType.ERC1155)
+    {
+        assertEq(
+            MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC1155),
+            true
+        );
+    }
+
+    function test_validateNewListing_whenTokensOwnedAndApproved_2b()
+        public
+        whenQuantityIsOne
+        whenTokenIsERC721
+        whenTokenOwnerOwnsSufficientTokens
+        whenTokensApprovedForTransfer(IDirectListings.TokenType.ERC721)
+    {
+        assertEq(
+            MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC721),
+            true
+        );
+    }
 }
