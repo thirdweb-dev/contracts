@@ -16,46 +16,70 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC1155/IERC1155Receiver.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
-//  ==========  Internal imports    ==========
-import "./InitStorage.sol";
-import { RouterImmutable, Router } from "../../../extension/plugin/RouterImmutable.sol";
+import { ERC721Holder } from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import { ERC1155Holder, ERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
-import "../../../extension/plugin/ContractMetadataLogic.sol";
-import "../../../extension/plugin/PlatformFeeLogic.sol";
-import "../../../extension/plugin/PermissionsEnumerableLogic.sol";
-import "../../../extension/plugin/ReentrancyGuardLogic.sol";
-import "../../../extension/plugin/ERC2771ContextUpgradeableLogic.sol";
-import { RoyaltyPaymentsLogic } from "../../../extension/plugin/RoyaltyPayments.sol";
+//  ==========  Internal imports    ==========
+import { BaseRouter, IRouter, IRouterState } from "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
+import { ERC165 } from "../../../eip/ERC165.sol";
+
+import "../../../extension/Multicall.sol";
+import "../../../extension/upgradeable/Initializable.sol";
+import "../../../extension/upgradeable/ContractMetadata.sol";
+import "../../../extension/upgradeable/PlatformFee.sol";
+import "../../../extension/upgradeable/PermissionsEnumerable.sol";
+import "../../../extension/upgradeable/init/ReentrancyGuardInit.sol";
+import "../../../extension/upgradeable/ERC2771ContextUpgradeable.sol";
+import { RoyaltyPaymentsLogic } from "../../../extension/upgradeable/RoyaltyPayments.sol";
 
 /**
  * @author  thirdweb.com
  */
 contract MarketplaceV3 is
-    ContractMetadataLogic,
-    PlatformFeeLogic,
-    PermissionsEnumerableLogic,
-    ReentrancyGuardLogic,
-    ERC2771ContextUpgradeableLogic,
+    Initializable,
+    Multicall,
+    BaseRouter,
+    ContractMetadata,
+    PlatformFee,
+    PermissionsEnumerable,
+    ReentrancyGuardInit,
+    ERC2771ContextUpgradeable,
     RoyaltyPaymentsLogic,
-    RouterImmutable,
-    IERC721Receiver,
-    IERC1155Receiver
+    ERC721Holder,
+    ERC1155Holder,
+    ERC165
 {
-    /*///////////////////////////////////////////////////////////////
-                            State variables
-    //////////////////////////////////////////////////////////////*/
+    /// @dev Only EXTENSION_ROLE holders can perform upgrades.
+    bytes32 private constant EXTENSION_ROLE = keccak256("EXTENSION_ROLE");
 
     bytes32 private constant MODULE_TYPE = bytes32("MarketplaceV3");
-    uint256 private constant VERSION = 1;
+    uint256 private constant VERSION = 3;
+
+    /// @dev The address of the native token wrapper contract.
+    address private immutable nativeTokenWrapper;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _pluginMap, address _royaltyEngineAddress)
-        RouterImmutable(_pluginMap)
-        RoyaltyPaymentsLogic(_royaltyEngineAddress)
-    {}
+    /// @dev We accept constructor params as a struct to avoid `Stack too deep` errors.
+    struct MarketplaceConstructorParams {
+        Extension[] extensions;
+        address royaltyEngineAddress;
+        address nativeTokenWrapper;
+    }
+
+    constructor(MarketplaceConstructorParams memory _marketplaceV3Params)
+        BaseRouter(_marketplaceV3Params.extensions)
+        RoyaltyPaymentsLogic(_marketplaceV3Params.royaltyEngineAddress)
+    {
+        nativeTokenWrapper = _marketplaceV3Params.nativeTokenWrapper;
+        _disableInitializers();
+    }
+
+    receive() external payable {
+        assert(msg.sender == nativeTokenWrapper); // only accept ETH via fallback from the native token wrapper contract
+    }
 
     /// @dev Initializes the contract, like a constructor.
     function initialize(
@@ -64,11 +88,9 @@ contract MarketplaceV3 is
         address[] memory _trustedForwarders,
         address _platformFeeRecipient,
         uint16 _platformFeeBps
-    ) external {
-        InitStorage.Data storage data = InitStorage.initStorage();
-
-        require(!data.initialized, "Already initialized.");
-        data.initialized = true;
+    ) external initializer {
+        // Initialize BaseRouter
+        __BaseRouter_init();
 
         // Initialize inherited contracts, most base-like -> most derived.
         __ReentrancyGuard_init();
@@ -79,8 +101,12 @@ contract MarketplaceV3 is
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(EXTENSION_ROLE, _defaultAdmin);
         _setupRole(keccak256("LISTER_ROLE"), address(0));
         _setupRole(keccak256("ASSET_ROLE"), address(0));
+
+        _setupRole(EXTENSION_ROLE, _defaultAdmin);
+        _setRoleAdmin(EXTENSION_ROLE, EXTENSION_ROLE);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -101,39 +127,18 @@ contract MarketplaceV3 is
                         ERC 165 / 721 / 1155 logic
     //////////////////////////////////////////////////////////////*/
 
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes memory
-    ) public virtual override returns (bytes4) {
-        return this.onERC1155Received.selector;
-    }
-
-    function onERC1155BatchReceived(
-        address,
-        address,
-        uint256[] memory,
-        uint256[] memory,
-        bytes memory
-    ) public virtual override returns (bytes4) {
-        return this.onERC1155BatchReceived.selector;
-    }
-
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
-        return this.onERC721Received.selector;
-    }
-
-    function supportsInterface(bytes4 interfaceId) public view virtual override(Router, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165, IERC165, ERC1155Receiver)
+        returns (bool)
+    {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
+            interfaceId == type(IRouter).interfaceId ||
+            interfaceId == type(IRouterState).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
@@ -143,45 +148,35 @@ contract MarketplaceV3 is
 
     /// @dev Checks whether platform fee info can be set in the given execution context.
     function _canSetPlatformFeeInfo() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Checks whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /// @dev Returns whether royalty engine address can be set in the given execution context.
     function _canSetRoyaltyEngine() internal view override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
+        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    function _msgSender()
-        internal
-        view
-        override(ERC2771ContextUpgradeableLogic, PermissionsLogic)
-        returns (address sender)
-    {
-        if (isTrustedForwarder(msg.sender)) {
-            // The assembly code is more direct than the Solidity version using `abi.decode`.
-            assembly {
-                sender := shr(96, calldataload(sub(calldatasize(), 20)))
-            }
-        } else {
-            return msg.sender;
-        }
+    /// @dev Checks whether an account has a particular role.
+    function _hasRole(bytes32 _role, address _account) internal view returns (bool) {
+        PermissionsStorage.Data storage data = PermissionsStorage.data();
+        return data._hasRole[_role][_account];
     }
 
-    function _msgData()
-        internal
-        view
-        override(ERC2771ContextUpgradeableLogic, PermissionsLogic)
-        returns (bytes calldata)
-    {
-        if (isTrustedForwarder(msg.sender)) {
-            return msg.data[:msg.data.length - 20];
-        } else {
-            return msg.data;
-        }
+    /// @dev Returns whether all relevant permission and other checks are met before any upgrade.
+    function _isAuthorizedCallToUpgrade() internal view virtual override returns (bool) {
+        return _hasRole(EXTENSION_ROLE, msg.sender);
+    }
+
+    function _msgSender() internal view override(ERC2771ContextUpgradeable, Permissions) returns (address sender) {
+        return ERC2771ContextUpgradeable._msgSender();
+    }
+
+    function _msgData() internal view override(ERC2771ContextUpgradeable, Permissions) returns (bytes calldata) {
+        return ERC2771ContextUpgradeable._msgData();
     }
 }

@@ -14,7 +14,6 @@ import "../extension/PrimarySale.sol";
 import "../extension/DropSinglePhase.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
-import "../extension/DefaultOperatorFilterer.sol";
 
 import "../lib/TWStrings.sol";
 import "../lib/CurrencyTransferLib.sol";
@@ -52,7 +51,6 @@ contract ERC721Drop is
     PrimarySale,
     LazyMint,
     DelayedReveal,
-    DefaultOperatorFilterer,
     DropSinglePhase
 {
     using TWStrings for uint256;
@@ -61,6 +59,16 @@ contract ERC721Drop is
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     * @notice Initializes the contract during construction.
+     *
+     * @param _defaultAdmin     The default admin of the contract.
+     * @param _name             The name of the contract.
+     * @param _symbol           The symbol of the contract.
+     * @param _royaltyRecipient The address to receive royalties.
+     * @param _royaltyBps       The royalty basis points to be charged. Max = 10000 (10000 = 100%, 1000 = 10%)
+     * @param _primarySaleRecipient The address to receive primary sale value.
+     */
     constructor(
         address _defaultAdmin,
         string memory _name,
@@ -72,14 +80,16 @@ contract ERC721Drop is
         _setupOwner(_defaultAdmin);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_primarySaleRecipient);
-        _setOperatorRestriction(true);
     }
 
     /*//////////////////////////////////////////////////////////////
                             ERC165 Logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+    /**
+     * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -183,63 +193,15 @@ contract ERC721Drop is
         _burn(_tokenId, true);
     }
 
-    /*//////////////////////////////////////////////////////////////
-                        ERC-721 overrides
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved)
-        public
-        virtual
-        override(ERC721A)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId)
-        public
-        virtual
-        override(ERC721A)
-        onlyAllowedOperatorApproval(operator)
-    {
-        super.approve(operator, tokenId);
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public virtual override(ERC721A) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId, data);
-    }
-
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Runs before every `claim` function call.
+    /**
+     * @dev Runs before every `claim` function call.
+     *
+     * @param _quantity The quantity of NFTs being claimed.
+     */
     function _beforeClaim(
         address,
         uint256 _quantity,
@@ -253,7 +215,14 @@ contract ERC721Drop is
         }
     }
 
-    /// @dev Collects and distributes the primary sale value of NFTs being claimed.
+    /**
+     * @dev Collects and distributes the primary sale value of NFTs being claimed.
+     *
+     * @param _primarySaleRecipient The address to receive the primary sale value.
+     * @param _quantityToClaim      The quantity of NFTs being claimed.
+     * @param _currency             The currency in which the NFTs are being claimed.
+     * @param _pricePerToken        The price per token in the given currency.
+     */
     function _collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
@@ -279,7 +248,12 @@ contract ERC721Drop is
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 
-    /// @dev Transfers the NFTs being claimed.
+    /**
+     * @dev Transfers the NFTs being claimed.
+     *
+     * @param _to                    The address to which the NFTs are being transferred.
+     * @param _quantityBeingClaimed  The quantity of NFTs being claimed.
+     */
     function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
         internal
         virtual
@@ -322,11 +296,6 @@ contract ERC721Drop is
 
     /// @dev Checks whether NFTs can be revealed in the given execution context.
     function _canReveal() internal view virtual returns (bool) {
-        return msg.sender == owner();
-    }
-
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
         return msg.sender == owner();
     }
 

@@ -16,12 +16,13 @@ import { MockRoyaltyEngineV1 } from "../mocks/MockRoyaltyEngineV1.sol";
 
 import { IOffers } from "contracts/prebuilts/marketplace/IMarketplace.sol";
 
-contract MarketplaceOffersTest is BaseTest {
+import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
+
+contract MarketplaceOffersTest is BaseTest, IExtension {
     // Target contract
     address public marketplace;
 
     // Participants
-    address public adminDeployer;
     address public marketplaceDeployer;
     address public seller;
     address public buyer;
@@ -29,60 +30,28 @@ contract MarketplaceOffersTest is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        adminDeployer = getActor(0);
         marketplaceDeployer = getActor(1);
         seller = getActor(2);
         buyer = getActor(3);
 
-        setupMarketplace(adminDeployer, marketplaceDeployer);
-    }
-
-    function setupMarketplace(address _adminDeployer, address _marketplaceDeployer) private {
-        vm.startPrank(_adminDeployer);
-
-        // [1] Deploy `Offers`
-        address offers = address(new OffersLogic());
-
-        // [2] Index `Offers` functions in `Map`
-        IPluginMap.Plugin[] memory plugins = new IPluginMap.Plugin[](7);
-        plugins[0] = IPluginMap.Plugin(OffersLogic.totalOffers.selector, "totalOffers()", offers);
-        plugins[1] = IPluginMap.Plugin(
-            OffersLogic.makeOffer.selector,
-            "makeOffer((address,uint256,uint256,address,uint256,uint256))",
-            offers
+        // Deploy implementation.
+        Extension[] memory extensions = _setupExtensions();
+        address impl = address(
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
-        plugins[2] = IPluginMap.Plugin(OffersLogic.cancelOffer.selector, "cancelOffer(uint256)", offers);
-        plugins[3] = IPluginMap.Plugin(OffersLogic.acceptOffer.selector, "acceptOffer(uint256)", offers);
-        plugins[4] = IPluginMap.Plugin(
-            OffersLogic.getAllValidOffers.selector,
-            "getAllValidOffers(uint256,uint256)",
-            offers
-        );
-        plugins[5] = IPluginMap.Plugin(OffersLogic.getAllOffers.selector, "getAllOffers(uint256,uint256)", offers);
-        plugins[6] = IPluginMap.Plugin(OffersLogic.getOffer.selector, "getOffer(uint256)", offers);
 
-        // [3] Deploy `PluginMap`.
-        PluginMap map = new PluginMap(plugins);
-        assertEq(map.getAllFunctionsOfPlugin(offers).length, 7);
-
-        // [4] Deploy `MarketplaceV3`
-        MarketplaceV3 router = new MarketplaceV3(address(map), address(0));
-
-        vm.stopPrank();
-
-        // [5] Deploy proxy pointing to `MarketplaceV3`
-        vm.prank(_marketplaceDeployer);
+        vm.prank(marketplaceDeployer);
         marketplace = address(
             new TWProxy(
-                address(router),
+                impl,
                 abi.encodeCall(
                     MarketplaceV3.initialize,
-                    (_marketplaceDeployer, "", new address[](0), _marketplaceDeployer, 0)
+                    (marketplaceDeployer, "", new address[](0), marketplaceDeployer, 0)
                 )
             )
         );
 
-        // [6] Setup roles for seller and assets
+        // Setup roles for seller and assets
         vm.startPrank(marketplaceDeployer);
         Permissions(marketplace).revokeRole(keccak256("ASSET_ROLE"), address(0));
         Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc721));
@@ -90,13 +59,48 @@ contract MarketplaceOffersTest is BaseTest {
 
         vm.stopPrank();
 
-        vm.label(address(router), "MarketplaceV3_Impl");
+        vm.label(impl, "MarketplaceV3_Impl");
         vm.label(marketplace, "Marketplace");
-        vm.label(offers, "Offers_Extension");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
         vm.label(address(erc721), "ERC721_Token");
         vm.label(address(erc1155), "ERC1155_Token");
+    }
+
+    function _setupExtensions() internal returns (Extension[] memory extensions) {
+        extensions = new Extension[](1);
+
+        // Deploy `Offers`
+        address offers = address(new OffersLogic());
+        vm.label(offers, "Offers_Extension");
+
+        // Extension: OffersLogic
+        Extension memory extension_offers;
+        extension_offers.metadata = ExtensionMetadata({
+            name: "OffersLogic",
+            metadataURI: "ipfs://Offers",
+            implementation: offers
+        });
+
+        extension_offers.functions = new ExtensionFunction[](7);
+        extension_offers.functions[0] = ExtensionFunction(OffersLogic.totalOffers.selector, "totalOffers()");
+        extension_offers.functions[1] = ExtensionFunction(
+            OffersLogic.makeOffer.selector,
+            "makeOffer((address,uint256,uint256,address,uint256,uint256))"
+        );
+        extension_offers.functions[2] = ExtensionFunction(OffersLogic.cancelOffer.selector, "cancelOffer(uint256)");
+        extension_offers.functions[3] = ExtensionFunction(OffersLogic.acceptOffer.selector, "acceptOffer(uint256)");
+        extension_offers.functions[4] = ExtensionFunction(
+            OffersLogic.getAllValidOffers.selector,
+            "getAllValidOffers(uint256,uint256)"
+        );
+        extension_offers.functions[5] = ExtensionFunction(
+            OffersLogic.getAllOffers.selector,
+            "getAllOffers(uint256,uint256)"
+        );
+        extension_offers.functions[6] = ExtensionFunction(OffersLogic.getOffer.selector, "getOffer(uint256)");
+
+        extensions[0] = extension_offers;
     }
 
     function test_state_initial() public {

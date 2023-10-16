@@ -13,9 +13,10 @@ import "../../eip/interface/IERC1155.sol";
 import "../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 
 library RulesEngineStorage {
-    /// @custom:storage-location erc7201:extension.manager.storage
+    /// @custom:storage-location erc7201:rules.engine.storage
+    /// @dev keccak256(abi.encode(uint256(keccak256("rules.engine.storage")) - 1)) & ~bytes32(uint256(0xff))
     bytes32 public constant RULES_ENGINE_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("rules.engine.storage")) - 1));
+        0x41d4cb087b2c44a761b2288e4c8ac115e76a546efd837c9a2e9cec2661a49a00;
 
     struct Data {
         address rulesEngineOverride;

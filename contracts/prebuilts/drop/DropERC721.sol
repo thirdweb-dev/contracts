@@ -37,9 +37,6 @@ import "../../extension/LazyMint.sol";
 import "../../extension/PermissionsEnumerable.sol";
 import "../../extension/Drop.sol";
 
-// OpenSea operator filter
-import "../../extension/DefaultOperatorFiltererUpgradeable.sol";
-
 contract DropERC721 is
     Initializable,
     ContractMetadata,
@@ -53,7 +50,6 @@ contract DropERC721 is
     Drop,
     ERC2771ContextUpgradeable,
     MulticallUpgradeable,
-    DefaultOperatorFiltererUpgradeable,
     ERC721AUpgradeable
 {
     using StringsUpgradeable for uint256;
@@ -66,6 +62,8 @@ contract DropERC721 is
     bytes32 private transferRole;
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
     bytes32 private minterRole;
+    /// @dev Only METADATA_ROLE holders can reveal the URI for a batch of delayed reveal NFTs, and update or freeze batch metadata.
+    bytes32 private metadataRole;
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -97,20 +95,21 @@ contract DropERC721 is
     ) external initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
+        bytes32 _metadataRole = keccak256("METADATA_ROLE");
 
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);
-        __DefaultOperatorFilterer_init();
 
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
-        _setOperatorRestriction(true);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(_minterRole, _defaultAdmin);
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
+        _setupRole(_metadataRole, _defaultAdmin);
+        _setRoleAdmin(_metadataRole, _metadataRole);
 
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
@@ -118,6 +117,7 @@ contract DropERC721 is
 
         transferRole = _transferRole;
         minterRole = _minterRole;
+        metadataRole = _metadataRole;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -182,10 +182,12 @@ contract DropERC721 is
         return super.lazyMint(_amount, _baseURIForTokens, _data);
     }
 
-    /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
+    /// @dev Lets an account with `METADATA_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
+    /// @param _index the ID of a token with the desired batch.
+    /// @param _key the key to decrypt the batch's URI.
     function reveal(uint256 _index, bytes calldata _key)
         external
-        onlyRole(minterRole)
+        onlyRole(metadataRole)
         returns (string memory revealedURI)
     {
         uint256 batchId = getBatchIdAtIndex(_index);
@@ -195,6 +197,29 @@ contract DropERC721 is
         _setBaseURI(batchId, revealedURI);
 
         emit TokenURIRevealed(_index, revealedURI);
+    }
+
+    /**
+     * @notice Updates the base URI for a batch of tokens. Can only be called if the batch has been revealed/is not encrypted.
+     *
+     * @param _index Index of the desired batch in batchIds array
+     * @param _uri   the new base URI for the batch.
+     */
+    function updateBatchBaseURI(uint256 _index, string calldata _uri) external onlyRole(metadataRole) {
+        require(!isEncryptedBatch(getBatchIdAtIndex(_index)), "Encrypted batch");
+        uint256 batchId = getBatchIdAtIndex(_index);
+        _setBaseURI(batchId, _uri);
+    }
+
+    /**
+     * @notice Freezes the base URI for a batch of tokens.
+     *
+     * @param _index Index of the desired batch in batchIds array.
+     */
+    function freezeBatchBaseURI(uint256 _index) external onlyRole(metadataRole) {
+        require(!isEncryptedBatch(getBatchIdAtIndex(_index)), "Encrypted batch");
+        uint256 batchId = getBatchIdAtIndex(_index);
+        _freezeBaseURI(batchId);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -300,11 +325,6 @@ contract DropERC721 is
         return hasRole(minterRole, _msgSender());
     }
 
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
@@ -313,9 +333,7 @@ contract DropERC721 is
      * Returns the total amount of tokens minted in the contract.
      */
     function totalMinted() external view returns (uint256) {
-        unchecked {
-            return _currentIndex - _startTokenId();
-        }
+        return _totalMinted();
     }
 
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
@@ -349,44 +367,6 @@ contract DropERC721 is
                 revert("!Transfer-Role");
             }
         }
-    }
-
-    /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved) public override onlyAllowedOperatorApproval(operator) {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId) public override onlyAllowedOperatorApproval(operator) {
-        super.approve(operator, tokenId);
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId, data);
     }
 
     function _dropMsgSender() internal view virtual override returns (address) {

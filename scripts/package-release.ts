@@ -6,7 +6,12 @@ const artifactsForgeDir = path.join(__dirname, "..", "artifacts_forge");
 const contractsDir = path.join(__dirname, "..", "contracts");
 const contractArtifactsDir = path.join(__dirname, "..", "contract_artifacts");
 
-const specialCases: string[] = ["IBaseRouter.sol", "MockContractPublisher.sol"];
+const specialCases: string[] = [
+  "IRouterState.sol",
+  "BaseRouter.sol",
+  "ExtensionManager.sol",
+  "MockContractPublisher.sol",
+];
 
 async function getAllSolidityFiles(dir: string): Promise<string[]> {
   const dirents = await fs.readdir(dir, { withFileTypes: true });
