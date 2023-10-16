@@ -9,7 +9,6 @@ import "../../../utils/BaseTest.sol";
 import "../../../../../lib/openzeppelin-contracts-upgradeable/contracts/interfaces/IERC2981Upgradeable.sol";
 
 contract DropERC721Test_misc is BaseTest {
-
     DropERC721 public drop;
 
     bytes private misc_data;

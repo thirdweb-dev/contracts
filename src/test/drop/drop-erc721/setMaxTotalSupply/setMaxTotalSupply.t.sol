@@ -8,7 +8,6 @@ import "contracts/lib/TWStrings.sol";
 import "../../../utils/BaseTest.sol";
 
 contract DropERC721Test_setMaxTotalSupply is BaseTest {
-
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 
     DropERC721 public drop;

@@ -7,7 +7,6 @@ import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 import "../../../utils/BaseTest.sol";
 
 contract DropERC721Test_initializer is BaseTest {
-
     DropERC721 public newDropContract;
 
     event ContractURIUpdated(string prevURI, string newURI);

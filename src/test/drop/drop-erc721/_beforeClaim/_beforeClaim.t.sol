@@ -7,7 +7,6 @@ import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 import "../../../utils/BaseTest.sol";
 
 contract DropERC721Test_beforeClaim is BaseTest {
-
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
     DropERC721 public drop;

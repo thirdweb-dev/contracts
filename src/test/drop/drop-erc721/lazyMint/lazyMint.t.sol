@@ -7,7 +7,6 @@ import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 import "../../../utils/BaseTest.sol";
 
 contract DropERC721Test_lazyMint is BaseTest {
-
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
 
     DropERC721 public drop;
