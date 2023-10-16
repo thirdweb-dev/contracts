@@ -21,7 +21,7 @@ jobs:
   test:
     # The type of runner that the job will run on
     # 16 core paid runner
-    runs-on: ubuntu-latest-16
+    runs-on: ubuntu-latest
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
