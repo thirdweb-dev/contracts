@@ -35,7 +35,7 @@ interface IAirdropERC20 {
      *                   which acts as operator for the tokens.
      *
      *  @param tokenAddress    The contract address of the tokens to transfer.
-     *  @param tokenOwner      The owner of the the tokens to transfer.
+     *  @param tokenOwner      The owner of the tokens to transfer.
      *  @param contents        List containing recipient, tokenId to airdrop.
      */
     function airdropERC20(
