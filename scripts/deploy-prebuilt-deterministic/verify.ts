@@ -1,25 +1,32 @@
 import { ThirdwebSDK } from "@thirdweb-dev/sdk";
 
-import { apiMap, chainIdApiKey, chainIdToName } from "./constants";
+import { DEFAULT_CHAINS, apiMap, chainIdApiKey } from "./constants";
 
 ////// To run this script: `npx ts-node scripts/deploy-prebuilt-deterministic/verify.ts` //////
-const deployedContractName = "VoteERC20";
+const deployedContractName = "AccountExtension";
+const secretKey: string = process.env.THIRDWEB_SECRET_KEY as string;
 
 async function main() {
   console.log("---------- Verification ---------");
   console.log();
-  for (const [chainId, networkName] of Object.entries(chainIdToName)) {
-    const sdk = new ThirdwebSDK(chainId);
-    console.log("Network: ", networkName);
+  for (const chain of DEFAULT_CHAINS) {
+    const sdk = new ThirdwebSDK(chain, {
+      secretKey,
+    });
+    console.log("Network: ", chain.slug);
     try {
       await sdk.verifier.verifyThirdwebContract(
         deployedContractName,
-        apiMap[parseInt(chainId)],
-        chainIdApiKey[parseInt(chainId)] as string,
+        apiMap[chain.chainId],
+        chainIdApiKey[chain.chainId] as string,
       );
       console.log();
     } catch (error) {
-      console.log(error);
+      if ((error as Error)?.message?.includes("already verified")) {
+        console.log("Already verified");
+      } else {
+        console.log(error);
+      }
       console.log();
     }
   }

@@ -15,8 +15,14 @@ import "./interface/IBurnToClaim.sol";
 abstract contract BurnToClaim is IBurnToClaim {
     BurnToClaimInfo internal burnToClaimInfo;
 
+    function getBurnToClaimInfo() public view returns (BurnToClaimInfo memory) {
+        return burnToClaimInfo;
+    }
+
     function setBurnToClaimInfo(BurnToClaimInfo calldata _burnToClaimInfo) external virtual {
         require(_canSetBurnToClaim(), "Not authorized.");
+        require(_burnToClaimInfo.originContractAddress != address(0), "Origin contract not set.");
+        require(_burnToClaimInfo.currency != address(0), "Currency not set.");
 
         burnToClaimInfo = _burnToClaimInfo;
     }
@@ -30,12 +36,15 @@ abstract contract BurnToClaim is IBurnToClaim {
 
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {
             require(_quantity == 1, "Invalid amount");
-            require(IERC721(_burnToClaimInfo.originContractAddress).ownerOf(_tokenId) == _tokenOwner);
+            require(IERC721(_burnToClaimInfo.originContractAddress).ownerOf(_tokenId) == _tokenOwner, "!Owner");
         } else if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC1155) {
             uint256 _eligible1155TokenId = _burnToClaimInfo.tokenId;
 
-            require(_tokenId == _eligible1155TokenId || _eligible1155TokenId == type(uint256).max);
-            require(IERC1155(_burnToClaimInfo.originContractAddress).balanceOf(_tokenOwner, _tokenId) >= _quantity);
+            require(_tokenId == _eligible1155TokenId, "Invalid token Id");
+            require(
+                IERC1155(_burnToClaimInfo.originContractAddress).balanceOf(_tokenOwner, _tokenId) >= _quantity,
+                "!Balance"
+            );
         }
 
         // TODO: check if additional verification steps are required / override in main contract

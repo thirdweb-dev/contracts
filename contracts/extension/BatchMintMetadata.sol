@@ -11,7 +11,7 @@ pragma solidity ^0.8.0;
  */
 
 contract BatchMintMetadata {
-    /// @dev Largest tokenId of each batch of tokens with the same baseURI.
+    /// @dev Largest tokenId of each batch of tokens with the same baseURI + 1 {ex: batchId 100 at position 0 includes tokens 0-99}
     uint256[] private batchIds;
 
     /// @dev Mapping from id of a batch of tokens => to base URI for the respective batch of tokens.
