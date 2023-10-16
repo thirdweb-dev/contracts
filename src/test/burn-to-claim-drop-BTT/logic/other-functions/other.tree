@@ -1,12 +1,67 @@
-contractType()
-├── it should return bytes32("BurnToClaimDropERC721")
+_canSetPlatformFeeInfo()
+├── when the caller doesn't have DEFAULT_ADMIN_ROLE
+│   └── it should revert ✅
+└── when the caller has DEFAULT_ADMIN_ROLE
+    └── it should return true ✅
 
-contractVersion()
-├── it should return uint8(5)
+_canSetPrimarySaleRecipient()
+├── when the caller doesn't have DEFAULT_ADMIN_ROLE
+│   └── it should revert ✅
+└── when the caller has DEFAULT_ADMIN_ROLE
+    └── it should return true ✅
 
-_isAuthorizedCallToUpgrade()
-├── when the caller doesn't have EXTENSION_ROLE
-│   └── it should revert
-└── when the caller has EXTENSION_ROLE
-    └── it should return true
+_canSetOwner()
+├── when the caller doesn't have DEFAULT_ADMIN_ROLE
+│   └── it should revert ✅
+└── when the caller has DEFAULT_ADMIN_ROLE
+    └── it should return true ✅
+
+_canSetRoyaltyInfo()
+├── when the caller doesn't have DEFAULT_ADMIN_ROLE
+│   └── it should revert ✅
+└── when the caller has DEFAULT_ADMIN_ROLE
+    └── it should return true ✅
+
+_canSetContractURI()
+├── when the caller doesn't have DEFAULT_ADMIN_ROLE
+│   └── it should revert ✅
+└── when the caller has DEFAULT_ADMIN_ROLE
+    └── it should return true ✅
+
+_canSetClaimConditions()
+├── when the caller doesn't have DEFAULT_ADMIN_ROLE
+│   └── it should revert ✅
+└── when the caller has DEFAULT_ADMIN_ROLE
+    └── it should return true ✅
+    
+_canLazyMint()
+├── when the caller doesn't have MINTER_ROLE
+│   └── it should revert ✅
+└── when the caller has MINTER_ROLE
+    └── it should return true ✅
+
+_canSetBurnToClaim()
+├── when the caller doesn't have DEFAULT_ADMIN_ROLE
+│   └── it should revert ✅
+└── when the caller has DEFAULT_ADMIN_ROLE
+    └── it should return true ✅
+
+burn(uint256 tokenId)
+├── when the caller isn't the owner of `tokenId`
+│   └── it should revert ✅
+└── when the caller owns `tokenId`
+    └── it should burn the token ✅
+
+_beforeTokenTransfers(
+    address from,
+    address to,
+    uint256 startTokenId,
+    uint256 quantity
+)
+├── when transfers are restricted (i.e. address(0) doesn't have transfer role, or from-to addresses are not address(0)
+│   └── when from and to don't have transfer role
+│       └── it should revert ✅
+
+totalMinted()
+├── should return the quantity of tokens minted (i.e. claimed) so far ✅
 

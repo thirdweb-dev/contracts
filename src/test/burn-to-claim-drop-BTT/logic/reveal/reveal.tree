@@ -11,6 +11,6 @@ reveal(uint256 index, bytes calldata key)
          ├── when the provenance hash generated is incorrect for the given key
          │  └── it should revert ✅
          └── when provenance hash is correct
-               └── it should set the encrypted data for this batch to ""
-               └── it should set base URI for this batch to correct revealed URI
-               └── it should emit TokenURIRevealed event
+               └── it should set the encrypted data for this batch to "" ✅
+               └── it should set base URI for this batch to correct revealed URI ✅
+               └── it should emit TokenURIRevealed event ✅

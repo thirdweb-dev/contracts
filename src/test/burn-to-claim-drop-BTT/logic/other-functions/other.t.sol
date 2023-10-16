@@ -1,79 +1,300 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-// import "../../../utils/BaseTest.sol";
-// import { BurnToClaimDropERC721 } from "contracts/prebuilts/unaudited/burn-to-claim-drop/BurnToClaimDropERC721.sol";
+import "../../../utils/BaseTest.sol";
+import { BurnToClaimDropERC721 } from "contracts/prebuilts/unaudited/burn-to-claim-drop/BurnToClaimDropERC721.sol";
+import { BurnToClaimDrop721Logic } from "contracts/prebuilts/unaudited/burn-to-claim-drop/extension/BurnToClaimDrop721Logic.sol";
+import { PermissionsEnumerableImpl } from "contracts/extension/upgradeable/impl/PermissionsEnumerableImpl.sol";
 
-// import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
+import { ERC721AStorage } from "contracts/extension/upgradeable/init/ERC721AInit.sol";
 
-// import { TWProxy } from "contracts/infra/TWProxy.sol";
+import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 
-// contract BurnToClaimDropERC721Router is BurnToClaimDropERC721 {
-//     constructor(Extension[] memory _extensions) BurnToClaimDropERC721(_extensions) {}
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
-//     function isAuthorizedCallToUpgrade() public view returns (bool) {
-//         return _isAuthorizedCallToUpgrade();
-//     }
-// }
+contract MyBurnToClaimDrop721Logic is BurnToClaimDrop721Logic {
+    function canSetPlatformFeeInfo() external view returns (bool) {
+        return _canSetPlatformFeeInfo();
+    }
 
-// contract BurnToClaimDropERC721_OtherFunctions is BaseTest, IExtension {
-//     address public implementation;
-//     address public proxy;
+    function canSetPrimarySaleRecipient() external view returns (bool) {
+        return _canSetPrimarySaleRecipient();
+    }
 
-//     function setUp() public override {
-//         super.setUp();
+    function canSetOwner() external view returns (bool) {
+        return _canSetOwner();
+    }
 
-//         // Deploy implementation.
-//         Extension[] memory extensions;
-//         implementation = address(new BurnToClaimDropERC721Router(extensions));
+    function canSetRoyaltyInfo() external view returns (bool) {
+        return _canSetRoyaltyInfo();
+    }
 
-//         // Deploy proxy pointing to implementaion.
-//         vm.prank(deployer);
-//         proxy = address(
-//             new TWProxy(
-//                 implementation,
-//                 abi.encodeCall(
-//                     BurnToClaimDropERC721.initialize,
-//                     (
-//                         deployer,
-//                         NAME,
-//                         SYMBOL,
-//                         CONTRACT_URI,
-//                         forwarders(),
-//                         saleRecipient,
-//                         royaltyRecipient,
-//                         royaltyBps,
-//                         platformFeeBps,
-//                         platformFeeRecipient
-//                     )
-//                 )
-//             )
-//         );
-//     }
+    function canSetContractURI() external view returns (bool) {
+        return _canSetContractURI();
+    }
 
-//     function test_contractType() public {
-//         BurnToClaimDropERC721Router router = BurnToClaimDropERC721Router(payable(proxy));
-//         assertEq(router.contractType(), bytes32("BurnToClaimDropERC721"));
-//     }
+    function canSetClaimConditions() external view returns (bool) {
+        return _canSetClaimConditions();
+    }
 
-//     function test_contractVersion() public {
-//         BurnToClaimDropERC721Router router = BurnToClaimDropERC721Router(payable(proxy));
-//         assertEq(router.contractVersion(), uint8(5));
-//     }
+    function canLazyMint() external view returns (bool) {
+        return _canLazyMint();
+    }
 
-//     function test_isAuthorizedCallToUpgrade_notExtensionRole() public {
-//         BurnToClaimDropERC721Router router = BurnToClaimDropERC721Router(payable(proxy));
-//         assertFalse(router.isAuthorizedCallToUpgrade());
-//     }
+    function canSetBurnToClaim() external view returns (bool) {
+        return _canSetBurnToClaim();
+    }
 
-//     modifier whenExtensionRole() {
-//         _;
-//     }
+    function beforeTokenTransfers(
+        address from,
+        address to,
+        uint256 startTokenId,
+        uint256 quantity
+    ) external {
+        _beforeTokenTransfers(from, to, startTokenId, quantity);
+    }
 
-//     function test_isAuthorizedCallToUpgrade() public whenExtensionRole {
-//         BurnToClaimDropERC721Router router = BurnToClaimDropERC721Router(payable(proxy));
+    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed) external returns (uint256 startTokenId) {
+        ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
+        startTokenId = data._currentIndex;
+        _safeMint(_to, _quantityBeingClaimed);
+    }
+}
 
-//         vm.prank(deployer);
-//         assertTrue(router.isAuthorizedCallToUpgrade());
-//     }
-// }
+contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
+    MyBurnToClaimDrop721Logic public drop;
+    address internal caller;
+
+    function setUp() public override {
+        super.setUp();
+
+        // Deploy implementation.
+        Extension[] memory extensions = _setupExtensions();
+        address dropImpl = address(new BurnToClaimDropERC721(extensions));
+
+        // Deploy proxy pointing to implementaion.
+        vm.prank(deployer);
+        drop = MyBurnToClaimDrop721Logic(
+            payable(
+                address(
+                    new TWProxy(
+                        dropImpl,
+                        abi.encodeCall(
+                            BurnToClaimDropERC721.initialize,
+                            (
+                                deployer,
+                                NAME,
+                                SYMBOL,
+                                CONTRACT_URI,
+                                forwarders(),
+                                saleRecipient,
+                                royaltyRecipient,
+                                royaltyBps,
+                                platformFeeBps,
+                                platformFeeRecipient
+                            )
+                        )
+                    )
+                )
+            )
+        );
+
+        caller = getActor(5);
+    }
+
+    function _setupExtensions() internal returns (Extension[] memory extensions) {
+        extensions = new Extension[](2);
+
+        // Extension: Permissions
+        address permissions = address(new PermissionsEnumerableImpl());
+
+        Extension memory extension_permissions;
+        extension_permissions.metadata = ExtensionMetadata({
+            name: "Permissions",
+            metadataURI: "ipfs://Permissions",
+            implementation: permissions
+        });
+
+        extension_permissions.functions = new ExtensionFunction[](3);
+        extension_permissions.functions[0] = ExtensionFunction(
+            Permissions.hasRole.selector,
+            "hasRole(bytes32,address)"
+        );
+        extension_permissions.functions[1] = ExtensionFunction(
+            Permissions.grantRole.selector,
+            "grantRole(bytes32,address)"
+        );
+        extension_permissions.functions[2] = ExtensionFunction(
+            Permissions.revokeRole.selector,
+            "revokeRole(bytes32,address)"
+        );
+
+        extensions[0] = extension_permissions;
+
+        address dropLogic = address(new MyBurnToClaimDrop721Logic());
+
+        Extension memory extension_drop;
+        extension_drop.metadata = ExtensionMetadata({
+            name: "MyBurnToClaimDrop721Logic",
+            metadataURI: "ipfs://MyBurnToClaimDrop721Logic",
+            implementation: dropLogic
+        });
+
+        extension_drop.functions = new ExtensionFunction[](11);
+        extension_drop.functions[0] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.canSetPlatformFeeInfo.selector,
+            "canSetPlatformFeeInfo()"
+        );
+        extension_drop.functions[1] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.canSetPrimarySaleRecipient.selector,
+            "canSetPrimarySaleRecipient()"
+        );
+        extension_drop.functions[2] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.canSetOwner.selector,
+            "canSetOwner()"
+        );
+        extension_drop.functions[3] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.canSetRoyaltyInfo.selector,
+            "canSetRoyaltyInfo()"
+        );
+        extension_drop.functions[4] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.canSetClaimConditions.selector,
+            "canSetClaimConditions()"
+        );
+        extension_drop.functions[5] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.canSetContractURI.selector,
+            "canSetContractURI()"
+        );
+        extension_drop.functions[6] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.canLazyMint.selector,
+            "canLazyMint()"
+        );
+        extension_drop.functions[7] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.canSetBurnToClaim.selector,
+            "canSetBurnToClaim()"
+        );
+        extension_drop.functions[8] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.beforeTokenTransfers.selector,
+            "beforeTokenTransfers(address,address,uint256,uint256)"
+        );
+        extension_drop.functions[9] = ExtensionFunction(BurnToClaimDrop721Logic.totalMinted.selector, "totalMinted()");
+        extension_drop.functions[10] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.transferTokensOnClaim.selector,
+            "transferTokensOnClaim(address,uint256)"
+        );
+
+        extensions[1] = extension_drop;
+    }
+
+    modifier whenCallerAuthorized() {
+        caller = deployer;
+        _;
+    }
+
+    function test_canSetPlatformFeeInfo_notAuthorized() public {
+        vm.prank(caller);
+        drop.canSetPlatformFeeInfo();
+    }
+
+    function test_canSetPlatformFeeInfo() public whenCallerAuthorized {
+        vm.prank(caller);
+        assertTrue(drop.canSetPlatformFeeInfo());
+    }
+
+    function test_canSetPrimarySaleRecipient_notAuthorized() public {
+        vm.prank(caller);
+        drop.canSetPrimarySaleRecipient();
+    }
+
+    function test_canSetPrimarySaleRecipient() public whenCallerAuthorized {
+        vm.prank(caller);
+        assertTrue(drop.canSetPrimarySaleRecipient());
+    }
+
+    function test_canSetOwner_notAuthorized() public {
+        vm.prank(caller);
+        drop.canSetOwner();
+    }
+
+    function test_canSetOwner() public whenCallerAuthorized {
+        vm.prank(caller);
+        assertTrue(drop.canSetOwner());
+    }
+
+    function test_canSetRoyaltyInfo_notAuthorized() public {
+        vm.prank(caller);
+        drop.canSetRoyaltyInfo();
+    }
+
+    function test_canSetRoyaltyInfo() public whenCallerAuthorized {
+        vm.prank(caller);
+        assertTrue(drop.canSetRoyaltyInfo());
+    }
+
+    function test_canSetContractURI_notAuthorized() public {
+        vm.prank(caller);
+        drop.canSetContractURI();
+    }
+
+    function test_canSetContractURI() public whenCallerAuthorized {
+        vm.prank(caller);
+        assertTrue(drop.canSetContractURI());
+    }
+
+    function test_canSetClaimConditions_notAuthorized() public {
+        vm.prank(caller);
+        drop.canSetClaimConditions();
+    }
+
+    function test_canSetClaimConditions() public whenCallerAuthorized {
+        vm.prank(caller);
+        assertTrue(drop.canSetClaimConditions());
+    }
+
+    function test_canLazyMint_notAuthorized() public {
+        vm.prank(caller);
+        drop.canLazyMint();
+    }
+
+    function test_canLazyMint() public whenCallerAuthorized {
+        vm.prank(caller);
+        assertTrue(drop.canLazyMint());
+    }
+
+    function test_canSetBurnToClaim_notAuthorized() public {
+        vm.prank(caller);
+        drop.canSetBurnToClaim();
+    }
+
+    function test_canSetBurnToClaim() public whenCallerAuthorized {
+        vm.prank(caller);
+        assertTrue(drop.canSetBurnToClaim());
+    }
+
+    function test_beforeTokenTransfers_restricted_notTransferRole() public {
+        vm.prank(deployer);
+        Permissions(address(drop)).revokeRole(keccak256("TRANSFER_ROLE"), address(0));
+        vm.expectRevert("!Transfer-Role");
+        drop.beforeTokenTransfers(caller, address(0x123), 0, 1);
+    }
+
+    modifier whenTransferRole() {
+        vm.prank(deployer);
+        Permissions(address(drop)).grantRole(keccak256("TRANSFER_ROLE"), caller);
+        _;
+    }
+
+    function test_beforeTokenTransfers_restricted() public whenTransferRole {
+        drop.beforeTokenTransfers(caller, address(0x123), 0, 1);
+    }
+
+    function test_totalMinted() public {
+        uint256 totalMinted = drop.totalMinted();
+        assertEq(totalMinted, 0);
+
+        // mint tokens
+        drop.transferTokensOnClaim(caller, 10);
+        totalMinted = drop.totalMinted();
+        assertEq(totalMinted, 10);
+    }
+}
