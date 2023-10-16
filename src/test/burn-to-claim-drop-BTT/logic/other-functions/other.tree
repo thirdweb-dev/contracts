@@ -65,3 +65,20 @@ _beforeTokenTransfers(
 totalMinted()
 ├── should return the quantity of tokens minted (i.e. claimed) so far ✅
 
+supportsInterface(bytes4 interfaceId)
+├── it should return true for supported interface ✅
+├── it should return false for not supported interface ✅
+
+_beforeClaim(
+    address,
+    uint256 _quantity,
+    address,
+    uint256,
+    AllowlistProof calldata,
+    bytes memory
+)
+├── when `_quantity` exceeds lazy minted quantity
+│    └── it should revert ✅
+├── when `_quantity` exceeds max total mint cap (if not zero)
+│    └── it should revert ✅
+

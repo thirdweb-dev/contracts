@@ -3,7 +3,9 @@ pragma solidity ^0.8.0;
 
 import "../../../utils/BaseTest.sol";
 import { BurnToClaimDropERC721 } from "contracts/prebuilts/unaudited/burn-to-claim-drop/BurnToClaimDropERC721.sol";
-import { BurnToClaimDrop721Logic } from "contracts/prebuilts/unaudited/burn-to-claim-drop/extension/BurnToClaimDrop721Logic.sol";
+import { BurnToClaimDrop721Logic, IERC2981 } from "contracts/prebuilts/unaudited/burn-to-claim-drop/extension/BurnToClaimDrop721Logic.sol";
+import { IDrop } from "contracts/extension/interface/IDrop.sol";
+import { IStaking721 } from "contracts/extension/interface/IStaking721.sol";
 import { PermissionsEnumerableImpl } from "contracts/extension/upgradeable/impl/PermissionsEnumerableImpl.sol";
 
 import { ERC721AStorage } from "contracts/extension/upgradeable/init/ERC721AInit.sol";
@@ -58,6 +60,10 @@ contract MyBurnToClaimDrop721Logic is BurnToClaimDrop721Logic {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
         startTokenId = data._currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
+    }
+
+    function beforeClaim(uint256 _quantity, AllowlistProof calldata proof) external {
+        _beforeClaim(address(0), _quantity, address(0), 0, proof, "");
     }
 }
 
@@ -140,7 +146,7 @@ contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
             implementation: dropLogic
         });
 
-        extension_drop.functions = new ExtensionFunction[](11);
+        extension_drop.functions = new ExtensionFunction[](15);
         extension_drop.functions[0] = ExtensionFunction(
             MyBurnToClaimDrop721Logic.canSetPlatformFeeInfo.selector,
             "canSetPlatformFeeInfo()"
@@ -181,6 +187,22 @@ contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
         extension_drop.functions[10] = ExtensionFunction(
             MyBurnToClaimDrop721Logic.transferTokensOnClaim.selector,
             "transferTokensOnClaim(address,uint256)"
+        );
+        extension_drop.functions[11] = ExtensionFunction(
+            BurnToClaimDrop721Logic.supportsInterface.selector,
+            "supportsInterface(bytes4)"
+        );
+        extension_drop.functions[12] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.beforeClaim.selector,
+            "beforeClaim(uint256,(bytes32[],uint256,uint256,address))"
+        );
+        extension_drop.functions[13] = ExtensionFunction(
+            BurnToClaimDrop721Logic.lazyMint.selector,
+            "lazyMint(uint256,string,bytes)"
+        );
+        extension_drop.functions[14] = ExtensionFunction(
+            BurnToClaimDrop721Logic.setMaxTotalMinted.selector,
+            "setMaxTotalMinted(uint256)"
         );
 
         extensions[1] = extension_drop;
@@ -296,5 +318,33 @@ contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
         drop.transferTokensOnClaim(caller, 10);
         totalMinted = drop.totalMinted();
         assertEq(totalMinted, 10);
+    }
+
+    function test_supportsInterface() public {
+        assertTrue(drop.supportsInterface(type(IERC2981).interfaceId));
+        assertFalse(drop.supportsInterface(type(IStaking721).interfaceId));
+    }
+
+    function test_beforeClaim() public {
+        bytes32[] memory emptyBytes32Array = new bytes32[](0);
+        IDrop.AllowlistProof memory proof = IDrop.AllowlistProof(emptyBytes32Array, 0, 0, address(0));
+        drop.beforeClaim(0, proof);
+
+        vm.expectRevert("!Tokens");
+        drop.beforeClaim(1, proof);
+
+        vm.prank(deployer);
+        drop.lazyMint(100, "ipfs://", "");
+
+        vm.prank(deployer);
+        drop.setMaxTotalMinted(1);
+
+        vm.expectRevert("exceed max total mint cap.");
+        drop.beforeClaim(10, proof);
+
+        vm.prank(deployer);
+        drop.setMaxTotalMinted(0);
+
+        drop.beforeClaim(10, proof); // no revert if max total mint cap is set to 0
     }
 }
