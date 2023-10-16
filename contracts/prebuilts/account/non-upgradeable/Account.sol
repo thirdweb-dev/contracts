@@ -75,8 +75,10 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         }
 
         address caller = msg.sender;
+        EnumerableSet.AddressSet storage approvedTargets = _accountPermissionsStorage().approvedTargets[signer];
+
         require(
-            _accountPermissionsStorage().approvedTargets[signer].contains(caller),
+            approvedTargets.contains(caller) || (approvedTargets.length() == 1 && approvedTargets.at(0) == address(0)),
             "Account: caller not approved target."
         );
 

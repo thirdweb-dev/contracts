@@ -24,7 +24,7 @@ import "../../extension/Royalty.sol";
 import "../../extension/PrimarySale.sol";
 import "../../extension/Ownable.sol";
 import "../../extension/DelayedReveal.sol";
-import "../../extension/LazyMint.sol";
+import "../extension/LazyMint_V1.sol";
 import "../../extension/PermissionsEnumerable.sol";
 import "../extension/DropSinglePhase_V1.sol";
 import "../../extension/SignatureMintERC721Upgradeable.sol";
@@ -37,7 +37,7 @@ contract SignatureDrop_V4 is
     PrimarySale,
     Ownable,
     DelayedReveal,
-    LazyMint,
+    LazyMint_V1,
     PermissionsEnumerable,
     DropSinglePhase_V1,
     SignatureMintERC721Upgradeable,
