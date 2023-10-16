@@ -491,7 +491,7 @@ contract AccountBenchmarkTest is BaseTest {
 
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).setContractURI("https://example.com");
-        
+
         vm.resumeGasMetering();
         UserOperation[] memory userOp = _setupUserOpExecute(
             accountAdminPKey,
