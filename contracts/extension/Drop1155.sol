@@ -134,7 +134,7 @@ abstract contract Drop1155 is IDrop1155 {
         address _currency,
         uint256 _pricePerToken,
         AllowlistProof calldata _allowlistProof
-    ) public view returns (bool isOverride) {
+    ) public view virtual returns (bool isOverride) {
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].conditions[_conditionId];
         uint256 claimLimit = currentClaimPhase.quantityLimitPerWallet;
         uint256 claimPrice = currentClaimPhase.pricePerToken;

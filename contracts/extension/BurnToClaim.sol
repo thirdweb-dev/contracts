@@ -15,6 +15,10 @@ import "./interface/IBurnToClaim.sol";
 abstract contract BurnToClaim is IBurnToClaim {
     BurnToClaimInfo internal burnToClaimInfo;
 
+    function getBurnToClaimInfo() public view returns (BurnToClaimInfo memory) {
+        return burnToClaimInfo;
+    }
+
     function setBurnToClaimInfo(BurnToClaimInfo calldata _burnToClaimInfo) external virtual {
         require(_canSetBurnToClaim(), "Not authorized.");
         require(_burnToClaimInfo.originContractAddress != address(0), "Origin contract not set.");
