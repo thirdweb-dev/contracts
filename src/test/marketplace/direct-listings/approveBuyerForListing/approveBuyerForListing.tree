@@ -4,12 +4,12 @@ function approveBuyerForListing(
     bool _toApprove
 )
 ├── when the lisitng does not exist
-│   └── it should revert
+│   └── it should revert ✅
 └── when the listing exists
     ├── when the caller is not listing creator
-    │   └── it should revert
+    │   └── it should revert ✅
     └── when the caller is listing creator
         ├── when the listing is not reserved
-        │   └── it should revert
+        │   └── it should revert ✅
         └── when the listing is reserved
-            └── it should set the intended approval status for buyer
+            └── it should set the intended approval status for buyer ✅
