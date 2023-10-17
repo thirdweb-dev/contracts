@@ -4,16 +4,16 @@ function approveCurrencyForListing(
     uint256 _pricePerTokenInCurrency
 )
 ├── when listing does not exist
-│   └── it should revert
+│   └── it should revert ✅
 └── when the listing exists
     ├── when the caller is not listing creator
-    │   └── it should revert
+    │   └── it should revert ✅
     └── when the caller is listing creator
-        ├── when the currency to approve is the listing currency and price to approve is listing price
-        │   └── it should revert
-        └── when the currency to approve is not the listing currency or price to approve is not listing price
-            ├── when the price to approve for currency is same as currently approved price
-            │   └── it should revert
-            └── when the price to approve for currency is different from currently approved price
+        ├── when approving different price for listed currency
+        │   └── it should revert ✅
+        └── when not approving different price for listed currency
+            ├── when prive to approve for curreny is already approved
+            │   └── it should revert ✅
+            └── when approving a new price for currency ✅
                 ├── it should update the approved price for currency
                 └── it should emit CurrencyApprovedForListing event with the listing ID, currency and approved price
