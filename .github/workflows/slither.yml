@@ -23,7 +23,7 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 25
-          node-version: 18
+          node-version: 18.16
 
       - name: Setup Project
         uses: ./.github/composite-actions/setup
@@ -39,7 +39,6 @@ jobs:
         id: slither
         with:
           sarif: results.sarif
-          fail-on: none
 
       - name: Upload SARIF file
         uses: github/codeql-action/upload-sarif@v2
