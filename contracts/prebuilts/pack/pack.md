@@ -54,7 +54,7 @@ We’ll now go over the technical details of the `Pack` contract, with reference
 
 ## What can be packed in packs?
 
-You can create a set of packs with any combination of any number of ERC20, ERC721 and ERC1155 tokens. For example, you can create a set of packs with 10,000 [USDC](https://www.circle.com/en/usdc) (ERC20), 1 [Bored Ape Yatch Club](https://opensea.io/collection/boredapeyachtclub) NFT (ERC721), and 50 of [adidas originals’ first NFT](https://opensea.io/assets/0x28472a58a490c5e09a238847f66a68a47cc76f0f/0) (ERC1155).
+You can create a set of packs with any combination of any number of ERC20, ERC721 and ERC1155 tokens. For example, you can create a set of packs with 10,000 [USDC](https://www.circle.com/en/usdc) (ERC20), 1 [Bored Ape Yacht Club](https://opensea.io/collection/boredapeyachtclub) NFT (ERC721), and 50 of [adidas originals’ first NFT](https://opensea.io/assets/0x28472a58a490c5e09a238847f66a68a47cc76f0f/0) (ERC1155).
 
 With strictly non-fungible tokens i.e. ERC721 NFTs, each NFT has a supply of 1. This means if a pack is opened and an ERC721 NFT is selected by the `Pack` contract to be distributed to the opener, that 1 NFT will be distributed to the opener.
 
@@ -79,7 +79,7 @@ uint256 perUnitAmount;
 | ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | assetContract | The contract address of the token.                                                                                                                                      |
 | tokenType     | The type of the token -- ERC20 / ERC721 / ERC1155                                                                                                                       |
-| tokenId       | The tokenId of the the token. (Not applicable for ERC20 tokens. The contract will ignore this value for ERC20 tokens.)                                                  |
+| tokenId       | The tokenId of the token. (Not applicable for ERC20 tokens. The contract will ignore this value for ERC20 tokens.)                                                      |
 | totalAmount   | The total amount of this token packed in the pack. (Not applicable for ERC721 tokens. The contract will always consider this as 1 for ERC721 tokens.)                   |
 | perUnitAmount | The amount of this token to distribute as a unit, on opening a pack. (Not applicable for ERC721 tokens. The contract will always consider this as 1 for ERC721 tokens.) |
 
@@ -120,7 +120,7 @@ Since packs are ERC1155 tokens, you can publish multiple sets of packs using the
 
 ### Supply of packs
 
-When creating packs, you can specify the numer of reward units to distribute to the opener on opening a pack. And so, when creating a set of packs, the total number of packs in that set is calculated as:
+When creating packs, you can specify the number of reward units to distribute to the opener on opening a pack. And so, when creating a set of packs, the total number of packs in that set is calculated as:
 
 `total_supply_of_packs = (total_reward_units) / (reward_units_to_distribute_per_open)`
 

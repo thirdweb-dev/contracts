@@ -75,7 +75,17 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         return entrypointContract;
     }
 
-    /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
+    /** 
+    @notice Returns whether a signer is authorized to perform transactions using the account.
+            Validity of the signature is based upon signer permission start/end timestamps, txn target, and txn value.
+            Account admins will always return true, and signers with address(0) as the only approved target will skip target checks.
+
+    @param _signer The signer to check.
+    @param _userOp The user operation to check.
+
+    @return Whether the signer is authorized to perform the transaction.
+    */
+
     /* solhint-disable*/
     function isValidSigner(address _signer, UserOperation calldata _userOp) public view virtual returns (bool) {
         // First, check if the signer is an admin.
@@ -102,6 +112,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         // if address(0) is the only approved target, set isWildCard to true (wildcard approved).
         bool isWildCard = approvedTargets.length() == 1 && approvedTargets.at(0) == address(0);
 
+        // checking target and value for `execute`
         if (sig == AccountExtension.execute.selector) {
             // Extract the `target` and `value` arguments from the calldata for `execute`.
             (address target, uint256 value) = decodeExecuteCalldata(_userOp.callData);
@@ -115,12 +126,14 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
                 }
             }
 
-            // Check if the value is within the allowed range and if the target is approved.
+            // Check if the value is within the allowed range.
             if (permissions.nativeTokenLimitPerTransaction < value) {
                 // Account: value too high OR Account: target not approved.
                 return false;
             }
-        } else if (sig == AccountExtension.executeBatch.selector) {
+        }
+        // checking target and value for `executeBatch`
+        else if (sig == AccountExtension.executeBatch.selector) {
             // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
             (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
 
@@ -134,7 +147,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
                 }
             }
 
-            // For each target+value pair, check if the value is within the allowed range and if the target is approved.
+            // For each target+value pair, check if the value is within the allowed range.
             for (uint256 i = 0; i < targets.length; i++) {
                 if (permissions.nativeTokenLimitPerTransaction < values[i]) {
                     // Account: value too high OR Account: target not approved.
