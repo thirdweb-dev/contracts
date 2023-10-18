@@ -9,4 +9,4 @@ function _beforeTokenTransfers(
         └── when to does not equal address(0)
             └── when from does not have the transfer role
                 └── when to does not have the transfer role
-                    └── it should revert
+                    └── it should revert ✅
