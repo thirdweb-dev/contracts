@@ -24,6 +24,3 @@
 [submodule "lib/dynamic-contracts"]
 	path = lib/dynamic-contracts
 	url = https://github.com/thirdweb-dev/dynamic-contracts
-[submodule "lib/sstore2"]
-	path = lib/sstore2
-	url = https://github.com/0xsequence/sstore2

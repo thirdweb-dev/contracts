@@ -37,6 +37,7 @@ remappings = [
   'erc721a-upgradeable/=lib/ERC721A-Upgradeable/',
   'erc721a/=lib/ERC721A/',
   '@thirdweb-dev/dynamic-contracts/=lib/dynamic-contracts/',
+  'lib/sstore2=lib/dynamic-contracts/lib/sstore2/'
 ]
 src = 'contracts'
 test = 'src/test'
