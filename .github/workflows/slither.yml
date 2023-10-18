@@ -34,7 +34,7 @@ jobs:
           version: nightly
 
       - name: Run Slither
-        uses: crytic/slither-action@v0.3.5
+        uses: crytic/slither-action@v0.3.0
         continue-on-error: true
         id: slither
         with:
