@@ -47,7 +47,7 @@ interface IPack is ITokenBundle {
      *  @param amountDistributedPerOpen The number of reward units distributed per open.
      *  @param recipient                The recipient of the packs created.
      *
-     *  @return packId The unique identifer of the created set of packs.
+     *  @return packId The unique identifier of the created set of packs.
      *  @return packTotalSupply The total number of packs created.
      */
     function createPack(
