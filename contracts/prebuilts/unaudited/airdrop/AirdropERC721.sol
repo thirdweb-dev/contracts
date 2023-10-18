@@ -86,7 +86,7 @@ contract AirdropERC721 is
      *                   which acts as operator for the tokens.
      *
      *  @param _tokenAddress    The contract address of the tokens to transfer.
-     *  @param _tokenOwner      The owner of the the tokens to transfer.
+     *  @param _tokenOwner      The owner of the tokens to transfer.
      *  @param _contents        List containing recipient, tokenId to airdrop.
      */
     function airdropERC721(

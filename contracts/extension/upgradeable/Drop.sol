@@ -8,7 +8,8 @@ import "../../lib/MerkleProof.sol";
 
 library DropStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
-    bytes32 public constant DROP_STORAGE_POSITION = keccak256(abi.encode(uint256(keccak256("drop.storage")) - 1));
+    bytes32 public constant DROP_STORAGE_POSITION =
+        keccak256(abi.encode(uint256(keccak256("drop.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     struct Data {
         /// @dev The active conditions for claiming tokens.
@@ -138,7 +139,7 @@ abstract contract Drop is IDrop {
         address _currency,
         uint256 _pricePerToken,
         AllowlistProof calldata _allowlistProof
-    ) public view returns (bool isOverride) {
+    ) public view virtual returns (bool isOverride) {
         ClaimCondition memory currentClaimPhase = _dropStorage().claimCondition.conditions[_conditionId];
         uint256 claimLimit = currentClaimPhase.quantityLimitPerWallet;
         uint256 claimPrice = currentClaimPhase.pricePerToken;

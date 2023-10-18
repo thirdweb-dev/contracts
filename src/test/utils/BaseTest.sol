@@ -10,6 +10,8 @@ import "../mocks/WETH9.sol";
 import "../mocks/MockERC20.sol";
 import "../mocks/MockERC721.sol";
 import "../mocks/MockERC1155.sol";
+import { MockERC721NonBurnable } from "../mocks/MockERC721NonBurnable.sol";
+import { MockERC1155NonBurnable } from "../mocks/MockERC1155NonBurnable.sol";
 import "contracts/infra/forwarder/Forwarder.sol";
 import { ForwarderEOAOnly } from "contracts/infra/forwarder/ForwarderEOAOnly.sol";
 import "contracts/infra/TWRegistry.sol";
@@ -51,6 +53,8 @@ abstract contract BaseTest is DSTest, Test {
     MockERC20 public erc20Aux;
     MockERC721 public erc721;
     MockERC1155 public erc1155;
+    MockERC721NonBurnable public erc721NonBurnable;
+    MockERC1155NonBurnable public erc1155NonBurnable;
     WETH9 public weth;
 
     address public forwarder;
@@ -100,6 +104,8 @@ abstract contract BaseTest is DSTest, Test {
         erc20Aux = new MockERC20();
         erc721 = new MockERC721();
         erc1155 = new MockERC1155();
+        erc721NonBurnable = new MockERC721NonBurnable();
+        erc1155NonBurnable = new MockERC1155NonBurnable();
         weth = new WETH9();
         forwarder = address(new Forwarder());
         eoaForwarder = address(new ForwarderEOAOnly());

@@ -38,6 +38,9 @@ abstract contract PrimarySale is IPrimarySale {
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
     function _setupPrimarySaleRecipient(address _saleRecipient) internal {
+        if (_saleRecipient == address(0)) {
+            revert("Invalid recipient");
+        }
         recipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
     }

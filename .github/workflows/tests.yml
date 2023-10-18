@@ -30,6 +30,7 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 25
+          node-version: 18
 
       - name: Setup Project
         uses: ./.github/composite-actions/setup
@@ -42,6 +43,8 @@ jobs:
         run: |
           forge coverage --report lcov
           lcov --remove lcov.info -o lcov.info 'src/test/**'
+          lcov --remove lcov.info -o lcov.info 'contracts/external-deps/**'
+          lcov --remove lcov.info -o lcov.info 'contracts/eip/**'
           forge test
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3

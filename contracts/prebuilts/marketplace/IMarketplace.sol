@@ -59,21 +59,22 @@ interface IDirectListings {
      *  @param startTimestamp The UNIX timestamp at and after which NFTs can be bought from the listing.
      *  @param endTimestamp The UNIX timestamp at and after which NFTs cannot be bought from the listing.
      *  @param reserved Whether the listing is reserved to be bought from a specific set of buyers.
+     *  @param status The status of the listing (created, completed, or cancelled).
      *  @param tokenType The type of token listed (ERC-721 or ERC-1155)
      */
     struct Listing {
         uint256 listingId;
-        address listingCreator;
-        address assetContract;
         uint256 tokenId;
         uint256 quantity;
-        address currency;
         uint256 pricePerToken;
         uint128 startTimestamp;
         uint128 endTimestamp;
-        bool reserved;
+        address listingCreator;
+        address assetContract;
+        address currency;
         TokenType tokenType;
         Status status;
+        bool reserved;
     }
 
     /// @notice Emitted when a new listing is created.
@@ -268,21 +269,22 @@ interface IEnglishAuctions {
      *                      the current winning bid.
      *  @param startTimestamp The timestamp at and after which bids can be made to the auction
      *  @param endTimestamp The timestamp at and after which bids cannot be made to the auction.
+     *  @param status The status of the auction (created, completed, or cancelled).
      *  @param tokenType The type of NFTs auctioned (ERC-721 or ERC-1155)
      */
     struct Auction {
         uint256 auctionId;
-        address auctionCreator;
-        address assetContract;
         uint256 tokenId;
         uint256 quantity;
-        address currency;
         uint256 minimumBidAmount;
         uint256 buyoutBidAmount;
         uint64 timeBufferInSeconds;
         uint64 bidBufferBps;
         uint64 startTimestamp;
         uint64 endTimestamp;
+        address auctionCreator;
+        address assetContract;
+        address currency;
         TokenType tokenType;
         Status status;
     }
@@ -452,17 +454,18 @@ interface IOffers {
      *  @param currency The currency offered for the NFTs.
      *  @param totalPrice The total offer amount for the NFTs.
      *  @param expirationTimestamp The timestamp at and after which the offer cannot be accepted.
+     *  @param status The status of the offer (created, completed, or cancelled).
      *  @param tokenType The type of token (ERC-721 or ERC-1155) the offer is made for.
      */
     struct Offer {
         uint256 offerId;
-        address offeror;
-        address assetContract;
         uint256 tokenId;
         uint256 quantity;
-        address currency;
         uint256 totalPrice;
         uint256 expirationTimestamp;
+        address offeror;
+        address assetContract;
+        address currency;
         TokenType tokenType;
         Status status;
     }

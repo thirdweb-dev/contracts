@@ -160,11 +160,11 @@ There are a few key differences between the three implementations —
 
 The distribution mechanism of thirdweb’s `Drop` contracts is vulnerable to [sybil attacks](https://en.wikipedia.org/wiki/Sybil_attack). That is, despite the various ways in which restrictions can be applied to the minting of tokens, some restrictions that claim conditions can express target wallets and not persons.
 
-For example, the restriction `quantityLimitPerWallet` expresses the max quantity a _wallet_ can claim during the respective claim condition. A sophisticated actor may generate multiple wallets to claim tokens in a way that undermine such restrictions, when viewing such restrictions as restrictions on unique persons, and not wallets.
+For example, the restriction `quantityLimitPerWallet` expresses the max quantity a _wallet_ can claim during the respective claim condition. A sophisticated actor may generate multiple wallets to claim tokens in a way that undermines such restrictions, when viewing such restrictions as restrictions on unique persons, and not wallets.
 
 ### Allowlist behavior
 
-When specifiying allowlist of addresses, and quantities, price, etc. for those addresses, contract admins must ensure that they don't list an address more than once in the same merkle tree.
+When specifying allowlist of addresses, and quantities, price, etc. for those addresses, contract admins must ensure that they don't list an address more than once in the same merkle tree.
 
 For e.g. admin wishes to grant user X permission to mint 2 tokens at 0.25 ETH, and 4 tokens at 0.5 ETH. In this case, the contract design will not permit the user X to claim 6 tokens with different prices as desired. Instead, the user may be limited to claiming just 2 tokens or 4 tokens based on their order of claiming.
 

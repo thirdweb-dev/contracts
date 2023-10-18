@@ -1,7 +1,7 @@
 {
   "name": "@thirdweb-dev/contracts",
   "description": "Collection of smart contracts deployable via the thirdweb SDK, dashboard and CLI",
-  "version": "3.10.0",
+  "version": "3.10.3",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -22,5 +22,8 @@
     "@openzeppelin/contracts-upgradeable": "4.7.3",
     "erc721a-upgradeable": "^3.3.0",
     "@thirdweb-dev/dynamic-contracts": "^1.1.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }

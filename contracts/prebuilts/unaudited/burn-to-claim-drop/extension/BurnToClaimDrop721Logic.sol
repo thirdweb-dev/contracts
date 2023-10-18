@@ -31,7 +31,6 @@ import { LazyMint } from "../../../../extension/upgradeable/LazyMint.sol";
 import { Drop } from "../../../../extension/upgradeable/Drop.sol";
 import { ContractMetadata } from "../../../../extension/upgradeable/ContractMetadata.sol";
 import { Ownable } from "../../../../extension/upgradeable/Ownable.sol";
-import { DefaultOperatorFiltererUpgradeable } from "../../../../extension/upgradeable/DefaultOperatorFiltererUpgradeable.sol";
 import { PermissionsStorage } from "../../../../extension/upgradeable/Permissions.sol";
 import { BurnToClaim, BurnToClaimStorage } from "../../../../extension/upgradeable/BurnToClaim.sol";
 
@@ -46,7 +45,6 @@ contract BurnToClaimDrop721Logic is
     LazyMint,
     Drop,
     ERC2771ContextUpgradeable,
-    DefaultOperatorFiltererUpgradeable,
     ERC721AUpgradeable
 {
     using TWStrings for uint256;
@@ -61,8 +59,6 @@ contract BurnToClaimDrop721Logic is
     bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
     /// @dev Only MINTER_ROLE holders can sign off on `MintRequest`s and lazy mint tokens.
     bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
-    /// @dev Only transfers initiated by operator role hodlers are valid, when operator-initated transfers are restricted.
-    bytes32 private constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
@@ -71,14 +67,17 @@ contract BurnToClaimDrop721Logic is
                                 Events
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Emitted when the global max supply of tokens is updated.
-    event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
+    /// @dev Emitted when the global max NFTs that can be minted is updated.
+    event MaxTotalMintedUpdated(uint256 maxTotalMinted);
 
     /*///////////////////////////////////////////////////////////////
                         ERC 165 / 721 / 2981 logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the URI for a given tokenId.
+    /**
+     *  @notice Returns the URI for a given tokenId.
+     *  @dev The URI, for a given tokenId, is returned once it is lazy minted, even if it might not be actually minted. (See `LazyMint`)
+     */
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         (uint256 batchId, ) = _getBatchId(_tokenId);
         string memory batchUri = _getBaseURI(_tokenId);
@@ -90,7 +89,7 @@ contract BurnToClaimDrop721Logic is
         }
     }
 
-    /// @dev See ERC 165
+    /// @notice See ERC 165
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -106,14 +105,14 @@ contract BurnToClaimDrop721Logic is
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  @dev Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
-     *       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
+     *  @notice Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
+     *          The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
      */
     function lazyMint(
         uint256 _amount,
         string calldata _baseURIForTokens,
         bytes calldata _data
-    ) public override returns (uint256 batchId) {
+    ) public override returns (uint256) {
         uint256 nextId = nextTokenIdToLazyMint();
         if (_data.length > 0) {
             (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
@@ -125,7 +124,7 @@ contract BurnToClaimDrop721Logic is
         return super.lazyMint(_amount, _baseURIForTokens, _data);
     }
 
-    /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
+    /// @notice Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
     function reveal(uint256 _index, bytes calldata _key) external returns (string memory revealedURI) {
         require(_hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         uint256 batchId = getBatchIdAtIndex(_index);
@@ -141,7 +140,7 @@ contract BurnToClaimDrop721Logic is
                     Claiming lazy minted tokens logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Claim lazy minted after burning required tokens from origin contract.
+    /// @notice Claim lazy minted tokens after burning required tokens from origin contract.
     function burnAndClaim(uint256 _burnTokenId, uint256 _quantity) external payable {
         _checkTokenSupply(_quantity);
 
@@ -174,13 +173,13 @@ contract BurnToClaimDrop721Logic is
                         Setter functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Lets a contract admin set the global maximum supply for collection's NFTs.
-    function setMaxTotalSupply(uint256 _maxTotalSupply) external {
+    /// @notice Lets a contract admin set the global maximum NFTs that can be minted.
+    function setMaxTotalMinted(uint256 _maxTotalMinted) external {
         require(_hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not admin.");
 
         BurnToClaimDrop721Storage.Data storage data = BurnToClaimDrop721Storage.burnToClaimDrop721Storage();
-        data.maxTotalSupply = _maxTotalSupply;
-        emit MaxTotalSupplyUpdated(_maxTotalSupply);
+        data.maxTotalMinted = _maxTotalMinted;
+        emit MaxTotalMintedUpdated(_maxTotalMinted);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -189,14 +188,14 @@ contract BurnToClaimDrop721Logic is
 
     /// @dev Check if given quantity is available for minting.
     function _checkTokenSupply(uint256 _quantity) internal view {
-        BurnToClaimDrop721Storage.Data storage dropData = BurnToClaimDrop721Storage.burnToClaimDrop721Storage();
-        ERC721AStorage.Data storage erc721AData = ERC721AStorage.erc721AStorage();
+        uint256 _maxTotalMinted = maxTotalMinted();
+        uint256 currentTotalMinted = totalMinted();
 
-        uint256 _maxTotalSupply = dropData.maxTotalSupply;
-        uint256 currentIndex_ = erc721AData._currentIndex;
-
-        require(currentIndex_ + _quantity <= nextTokenIdToLazyMint(), "!Tokens");
-        require(_maxTotalSupply == 0 || currentIndex_ + _quantity <= _maxTotalSupply, "exceed max total supply.");
+        require(currentTotalMinted + _quantity <= nextTokenIdToLazyMint(), "!Tokens");
+        require(
+            _maxTotalMinted == 0 || currentTotalMinted + _quantity <= _maxTotalMinted,
+            "exceed max total mint cap."
+        );
     }
 
     /// @dev Runs before every `claim` function call.
@@ -288,11 +287,6 @@ contract BurnToClaimDrop721Logic is
         return _hasRole(MINTER_ROLE, _msgSender());
     }
 
-    /// @dev Returns whether operator restriction can be set in the given execution context.
-    function _canSetOperatorRestriction() internal virtual override returns (bool) {
-        return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
-    }
-
     /// @dev Returns whether burn-to-claim info can be set in the given execution context.
     function _canSetBurnToClaim() internal view virtual override returns (bool) {
         return _hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
@@ -303,33 +297,33 @@ contract BurnToClaimDrop721Logic is
     //////////////////////////////////////////////////////////////*/
 
     /**
-     * Returns the total amount of tokens minted in the contract.
+     * @notice Returns the total amount of tokens minted in the contract.
      */
-    function totalMinted() external view returns (uint256) {
+    function totalMinted() public view returns (uint256) {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
         unchecked {
             return data._currentIndex - _startTokenId();
         }
     }
 
-    /// @dev The tokenId of the next NFT that will be minted / lazy minted.
+    /// @notice The tokenId of the next NFT that will be minted / lazy minted.
     function nextTokenIdToMint() external view returns (uint256) {
         return nextTokenIdToLazyMint();
     }
 
-    /// @dev The next token ID of the NFT that can be claimed.
+    /// @notice The next token ID of the NFT that can be claimed.
     function nextTokenIdToClaim() external view returns (uint256) {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
         return data._currentIndex;
     }
 
-    /// @dev Global max total supply of NFTs.
-    function maxTotalSupply() public view returns (uint256) {
+    /// @notice Global max total NFTs that can be minted.
+    function maxTotalMinted() public view returns (uint256) {
         BurnToClaimDrop721Storage.Data storage data = BurnToClaimDrop721Storage.burnToClaimDrop721Storage();
-        return data.maxTotalSupply;
+        return data.maxTotalMinted;
     }
 
-    /// @dev Burns `tokenId`. See {ERC721-_burn}.
+    /// @notice Burns `tokenId`. See {ERC721-_burn}.
     function burn(uint256 tokenId) external virtual {
         // note: ERC721AUpgradeable's `_burn(uint256,bool)` internally checks for token approvals.
         _burn(tokenId, true);
@@ -352,44 +346,6 @@ contract BurnToClaimDrop721Logic is
         }
     }
 
-    /// @dev See {ERC721-setApprovalForAll}.
-    function setApprovalForAll(address operator, bool approved) public override onlyAllowedOperatorApproval(operator) {
-        super.setApprovalForAll(operator, approved);
-    }
-
-    /// @dev See {ERC721-approve}.
-    function approve(address operator, uint256 tokenId) public override onlyAllowedOperatorApproval(operator) {
-        super.approve(operator, tokenId);
-    }
-
-    /// @dev See {ERC721-_transferFrom}.
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.transferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId);
-    }
-
-    /// @dev See {ERC721-_safeTransferFrom}.
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory data
-    ) public override(ERC721AUpgradeable) onlyAllowedOperator(from) {
-        super.safeTransferFrom(from, to, tokenId, data);
-    }
-
     function _hasRole(bytes32 role, address addr) internal view returns (bool) {
         PermissionsStorage.Data storage data = PermissionsStorage.data();
         return data._hasRole[role][addr];
@@ -399,7 +355,7 @@ contract BurnToClaimDrop721Logic is
         return _msgSender();
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771ContextUpgradeable) returns (address sender) {
+    function _msgSender() internal view virtual override(Context, ERC2771ContextUpgradeable) returns (address) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
