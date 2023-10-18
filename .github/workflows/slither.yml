@@ -23,7 +23,6 @@ jobs:
         with:
           submodules: recursive
           fetch-depth: 25
-          node-version: 18.16
 
       - name: Setup Project
         uses: ./.github/composite-actions/setup
@@ -38,6 +37,7 @@ jobs:
         continue-on-error: true
         id: slither
         with:
+          node-version: 18
           sarif: results.sarif
 
       - name: Upload SARIF file
