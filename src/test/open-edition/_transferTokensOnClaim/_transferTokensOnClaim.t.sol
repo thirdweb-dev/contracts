@@ -14,7 +14,12 @@ contract OpenEditionERC721Harness is OpenEditionERC721 {
 }
 
 contract MockERC721Receiver {
-    function onERC721Received(address, address, uint256, bytes memory) external pure returns (bytes4) {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes memory
+    ) external pure returns (bytes4) {
         return this.onERC721Received.selector;
     }
 }
@@ -68,7 +73,6 @@ contract OpenEditionERC721Test_transferTokensOnClaim is BaseTest {
     }
 
     function test_state_transferToReceiverContract() public {
-
         uint256 receiverBalanceBefore = openEdition.balanceOf(address(receiver));
         uint256 nextTokenToMintBefore = openEdition.nextTokenIdToMint();
 
@@ -93,6 +97,5 @@ contract OpenEditionERC721Test_transferTokensOnClaim is BaseTest {
 
         assertEq(receiverBalanceAfter, receiverBalanceBefore + 1);
         assertEq(nextTokenToMintAfter, nextTokenToMintBefore + 1);
-
     }
 }

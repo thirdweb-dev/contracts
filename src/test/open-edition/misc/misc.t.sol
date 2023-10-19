@@ -59,7 +59,7 @@ contract OpenEditionERC721Test_misc is BaseTest {
         });
     }
 
-    function deployHarness() public {
+    function deployHarness() internal {
         harnessImpl = address(new HarnessOpenEditionERC721());
         harnessOpenEdition = HarnessOpenEditionERC721(
             address(
@@ -121,7 +121,6 @@ contract OpenEditionERC721Test_misc is BaseTest {
         vm.prank(deployer);
         openEdition.setClaimConditions(conditions, false);
 
-        // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         openEdition.claim(receiver, 100, address(erc20), 0, alp, "");
         _;

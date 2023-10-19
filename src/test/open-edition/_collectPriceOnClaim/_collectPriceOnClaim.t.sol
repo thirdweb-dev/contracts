@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { OpenEditionERC721, IERC721AUpgradeable } from "contracts/prebuilts/open-edition/OpenEditionERC721.sol";
+import { OpenEditionERC721 } from "contracts/prebuilts/open-edition/OpenEditionERC721.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
