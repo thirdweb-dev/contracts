@@ -18,7 +18,7 @@ import { DEFAULT_CHAINS, apiMap, chainIdApiKey } from "./constants";
 ////// To run this script: `npx ts-node scripts/deploy-prebuilt-deterministic/deploy-deterministic-std-chains.ts` //////
 ///// MAKE SURE TO PUT IN THE RIGHT CONTRACT NAME HERE AFTER PUBLISHING IT /////
 //// THE CONTRACT SHOULD BE PUBLISHED WITH THE NEW PUBLISH FLOW ////
-const publishedContractName = "AccountExtension";
+const publishedContractName = "MarketplaceV3";
 const publisherAddress: string = "deployer.thirdweb.eth";
 const deployerKey: string = process.env.PRIVATE_KEY as string;
 const secretKey: string = process.env.THIRDWEB_SECRET_KEY as string;
@@ -47,7 +47,14 @@ async function main() {
       // const chainId = (await sdk.getProvider().getNetwork()).chainId;
 
       try {
-        const implAddr = await getThirdwebContractAddress(publishedContractName, chain.chainId, sdk.storage);
+        const implAddr = await getThirdwebContractAddress(
+          publishedContractName,
+          chain.chainId,
+          sdk.storage,
+          "latest",
+          sdk.options.clientId,
+          sdk.options.secretKey,
+        );
         if (implAddr) {
           console.log(`implementation ${implAddr} already deployed on chainId: ${chain.slug}`);
           console.log();
@@ -76,6 +83,8 @@ async function main() {
           sdk.getProvider(),
           sdk.storage,
           create2FactoryAddress,
+          sdk.options.clientId,
+          sdk.options.secretKey,
         );
         if (await isContractDeployed(cloneFactoryAddress, sdk.getProvider())) {
           console.log(`-- TWCloneFactory already present at ${cloneFactoryAddress}`);
@@ -87,6 +96,8 @@ async function main() {
           sdk.storage,
           sdk.getProvider(),
           create2FactoryAddress,
+          sdk.options.clientId,
+          sdk.options.secretKey,
         );
 
         const implementationAddress = deploymentInfo.find(i => i.type === "implementation")?.transaction
