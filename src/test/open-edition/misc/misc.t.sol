@@ -9,10 +9,18 @@ import { TWProxy } from "contracts/infra/TWProxy.sol";
 import "src/test/utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
+contract HarnessOpenEditionERC721 is OpenEditionERC721 {
+    function msgData() public view returns (bytes memory) {
+        return _msgData();
+    }
+}
+
 contract OpenEditionERC721Test_misc is BaseTest {
     OpenEditionERC721 public openEdition;
+    HarnessOpenEditionERC721 public harnessOpenEdition;
 
     address private openEditionImpl;
+    address private harnessImpl;
 
     address private receiver = 0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3;
 
@@ -49,6 +57,30 @@ contract OpenEditionERC721Test_misc is BaseTest {
             imageURI: "https://test.com",
             animationURI: "https://test.com"
         });
+    }
+
+    function deployHarness() public {
+        harnessImpl = address(new HarnessOpenEditionERC721());
+        harnessOpenEdition = HarnessOpenEditionERC721(
+            address(
+                new TWProxy(
+                    harnessImpl,
+                    abi.encodeCall(
+                        OpenEditionERC721.initialize,
+                        (
+                            deployer,
+                            NAME,
+                            SYMBOL,
+                            CONTRACT_URI,
+                            forwarders(),
+                            saleRecipient,
+                            royaltyRecipient,
+                            royaltyBps
+                        )
+                    )
+                )
+            )
+        );
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -187,5 +219,12 @@ contract OpenEditionERC721Test_misc is BaseTest {
         assertEq(openEdition.supportsInterface(type(IERC2981Upgradeable).interfaceId), true);
         bytes4 invalidId = bytes4(0);
         assertEq(openEdition.supportsInterface(invalidId), false);
+    }
+
+    function test_msgData_returnValue() public {
+        deployHarness();
+        bytes memory msgData = harnessOpenEdition.msgData();
+        bytes4 expectedData = harnessOpenEdition.msgData.selector;
+        assertEq(bytes4(msgData), expectedData);
     }
 }
