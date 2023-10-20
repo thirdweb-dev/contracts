@@ -247,6 +247,7 @@ contract DynamicAccountBenchmarkTest is BaseTest {
 
     /// @dev benchmark test for deployment gas cost
     function test_deploy_dynamicAccount() public {
+        vm.pauseGasMetering();
         // Setting up default extension.
         IExtension.Extension memory defaultExtension;
 
@@ -290,6 +291,7 @@ contract DynamicAccountBenchmarkTest is BaseTest {
         IExtension.Extension[] memory extensions = new IExtension.Extension[](1);
         extensions[0] = defaultExtension;
 
+        vm.resumeGasMetering();
         // deploy account factory
         DynamicAccountFactory factory = new DynamicAccountFactory(
             IEntryPoint(payable(address(entrypoint))),
@@ -308,6 +310,7 @@ contract DynamicAccountBenchmarkTest is BaseTest {
         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
+        vm.resumeGasMetering();
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
             accountAdminPKey,
             initCode,
@@ -316,7 +319,6 @@ contract DynamicAccountBenchmarkTest is BaseTest {
             bytes("")
         );
 
-        vm.resumeGasMetering();
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
     }
 
@@ -329,6 +331,7 @@ contract DynamicAccountBenchmarkTest is BaseTest {
         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
+        vm.resumeGasMetering();
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
             accountAdminPKey,
             initCode,
@@ -337,7 +340,6 @@ contract DynamicAccountBenchmarkTest is BaseTest {
             bytes("")
         );
 
-        vm.resumeGasMetering();
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
     }
 
@@ -385,6 +387,7 @@ contract DynamicAccountBenchmarkTest is BaseTest {
         vm.pauseGasMetering();
         _setup_executeTransaction();
 
+        vm.resumeGasMetering();
         UserOperation[] memory userOp = _setupUserOpExecute(
             accountAdminPKey,
             bytes(""),
@@ -393,7 +396,6 @@ contract DynamicAccountBenchmarkTest is BaseTest {
             abi.encodeWithSignature("setNum(uint256)", 42)
         );
 
-        vm.resumeGasMetering();
         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
     }
 
@@ -413,6 +415,7 @@ contract DynamicAccountBenchmarkTest is BaseTest {
             callData[i] = abi.encodeWithSignature("incrementNum()", i);
         }
 
+        vm.resumeGasMetering();
         UserOperation[] memory userOp = _setupUserOpExecuteBatch(
             accountAdminPKey,
             bytes(""),
@@ -421,7 +424,6 @@ contract DynamicAccountBenchmarkTest is BaseTest {
             callData
         );
 
-        vm.resumeGasMetering();
         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
     }
 
@@ -525,9 +527,6 @@ contract DynamicAccountBenchmarkTest is BaseTest {
         vm.prank(accountAdmin);
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory ret) = payable(account).call{ value: 1000 }("");
-
-        // Silence warning: Return value of low-level calls not used.
-        (success, ret) = (success, ret);
     }
 
     /// @dev Transfer native tokens out of an account.
@@ -538,16 +537,14 @@ contract DynamicAccountBenchmarkTest is BaseTest {
         uint256 value = 1000;
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-        vm.resumeGasMetering();
+        
         vm.prank(accountAdmin);
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory ret) = payable(account).call{ value: value }("");
         
-        // Silence warning: Return value of low-level calls not used.
-        (success, ret) = (success, ret);
-
         address recipient = address(0x3456);
-
+        
+        vm.resumeGasMetering();
         UserOperation[] memory userOp = _setupUserOpExecute(accountAdminPKey, bytes(""), recipient, value, bytes(""));
 
         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
