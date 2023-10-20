@@ -17,9 +17,9 @@ mintTo(
           │    │       └── it should set uri for minted tokenId equal to `_uri` ✅
           │    │       └── it should emit MetadataUpdate event ✅
           │    └── when `_to` address is a contract
-          │         ├── when `_to` address is non ERC721Receiver implementer
+          │         ├── when `_to` address is non ERC1155Receiver implementer
           │         │  └── it should revert ✅
-          │         └── when `_to` address implements ERC721Receiver
+          │         └── when `_to` address implements ERC1155Receiver
           │              └── it should mint tokenId equal to current value of `nextTokenIdToMint` ✅
           │              └── it should increment `nextTokenIdToMint` by 1 ✅
           │              └── it should mint the `_amount` number of tokens to the `_to` address ✅
@@ -38,9 +38,9 @@ mintTo(
                     │  └── it should mint the `_amount` number of tokens to the `_to` address ✅
                     │  └── it should emit TokensMinted event ✅
                     └── when `_to` address is a contract
-                         ├── when `_to` address is non ERC721Receiver implementer
+                         ├── when `_to` address is non ERC1155Receiver implementer
                          │  └── it should revert ✅
-                         └── when `_to` address implements ERC721Receiver
+                         └── when `_to` address implements ERC1155Receiver
                               └── it should mint tokenId equal to current value of `nextTokenIdToMint` ✅
                               └── it should increment `nextTokenIdToMint` by 1 ✅
                               └── it should mint the `_amount` number of tokens to the `_to` address ✅
