@@ -4,6 +4,12 @@ pragma solidity ^0.8.12;
 import "../utils/UserOperation.sol";
 
 interface IAccount {
+
+    ///////////////////////
+    //// Events //////////
+    ///////////////////////
+    event AccountLocked(address indexed account);
+
     /**
      * Validate user's signature and nonce
      * the entryPoint will make the call to the recipient only if this validation call returns successfully.
@@ -33,4 +39,20 @@ interface IAccount {
         bytes32 userOpHash,
         uint256 missingAccountFunds
     ) external returns (uint256 validationData);
+
+    /**
+     * Function to lock this smart account.
+     * Only the guardian of the account can call this function.
+     */
+    function lockAccount() external returns(bool);
+
+    /**
+     * Returns the current status of the smart account (locked/unlocked)
+     */
+    function getAccountLockStatus() external returns(bool);
+
+    /**
+     * Send lock request to all other guardians of this account
+     */
+    function sentLockRequestToGuardians(bytes memory lockRequest) external;
 }

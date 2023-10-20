@@ -56,10 +56,15 @@ interface IGuardian {
     /**
      * @notice Remove the sender as a verified thirdweb guardian.
      */
-    function removeGuardian() external;
+    function removeVerifiedGuardian() external;
 
     //////////////////////////////////////
     /////////// Getter Function //////////
     //////////////////////////////////////
+
+    /**
+     * Returns the list of verified guardians.
+     * Can only be called by the owner.
+     */
     function getVerifiedGuardians() external view returns(address[] memory);
 }

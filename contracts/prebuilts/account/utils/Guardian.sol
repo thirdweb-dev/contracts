@@ -42,7 +42,7 @@ contract Guardian is IGuardian {
         return false;
     }
 
-    function removeGuardian() external {
+    function removeVerifiedGuardian() external {
         address guardian = msg.sender;
         bool guardianFound = false;
 
@@ -50,8 +50,8 @@ contract Guardian is IGuardian {
             if(verifiedGuardians[g] == guardian ) {
                 // remove the guardian
                 guardianFound = true;
-                emit GuardianRemoved(guardian);
                 delete verifiedGuardians[g];
+                emit GuardianRemoved(guardian);
             }
         }
         if(!guardianFound){

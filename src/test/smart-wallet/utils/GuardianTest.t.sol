@@ -63,10 +63,10 @@ contract GuardianTest is Test {
     }
 
      ///////////////////////////////////////
-    ///// removeGuardian() test ///////////
+    ///// removeVerifiedGuardian() test ///////////
     ///////////////////////////////////////
 
-    function testRemoveGuardian() external {
+    function testremoveVerifiedGuardian() external {
         // Arrange
         vm.prank(user);
         guardian.addVerifiedGuardian();
@@ -74,7 +74,7 @@ contract GuardianTest is Test {
 
         // Act
         vm.prank(user);
-        guardian.removeGuardian();
+        guardian.removeVerifiedGuardian();
         
         //Assert
         assertEq(guardian.isVerifiedGuardian(user), false);
@@ -89,7 +89,7 @@ contract GuardianTest is Test {
                 user
             )
         );
-        guardian.removeGuardian();
+        guardian.removeVerifiedGuardian();
     }
 
      ///////////////////////////////////////

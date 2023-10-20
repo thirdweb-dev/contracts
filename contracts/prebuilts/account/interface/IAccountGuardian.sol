@@ -63,9 +63,8 @@ interface IAccountGuardian {
      * guardian signup dapp by accepting the signin request.
      * @param guardian the verified address of a wallet to be
      * added as a guardian.
-     * @return bool boolean flag indicating whether the guardian was added.
      */
-    function addGuardian(address guardian) external returns(bool);
+    function addGuardian(address guardian) external;
 
 
     /**
@@ -73,14 +72,14 @@ interface IAccountGuardian {
      * their smart-wallet guardian list.
      * @dev The address should be a registered guardian of the account.
      * @param guardian address of the guardian the user wishes to remove.
-     * @return bool flag indicating whether the guardian was removed from the list or not.
      */
-    function removeGuardian(address guardian) external returns(bool);
+    function removeGuardian(address guardian) external;
 
     /**
      * @notice Returns a list of all added guardians of the sender.
      * @return List of guardians of the sender smart-wallet.
      */
     function getAllGuardians() external returns(address[] memory);
+    
 
 }
