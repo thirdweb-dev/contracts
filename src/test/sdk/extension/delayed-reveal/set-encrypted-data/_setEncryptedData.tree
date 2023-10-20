@@ -1,0 +1,3 @@
+_setEncryptedData(uint256 _batchId, bytes memory _encryptedData)
+├── it should store input bytes data for the given batch id param ✅
+├── isEncryptedBatch should return true for this batch id ✅

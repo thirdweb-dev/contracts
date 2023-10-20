@@ -1,7 +1,44 @@
+import {
+  Arbitrum,
+  ArbitrumGoerli,
+  Avalanche,
+  AvalancheFuji,
+  Base,
+  BaseGoerli,
+  CeloAlfajoresTestnet,
+  Ethereum,
+  Goerli,
+  Linea,
+  LineaTestnet,
+  Mumbai,
+  Optimism,
+  OptimismGoerli,
+  Polygon,
+  Sepolia,
+} from "@thirdweb-dev/chains";
 import { ChainId } from "@thirdweb-dev/sdk";
 import dotenv from "dotenv";
 
 dotenv.config();
+
+export const DEFAULT_CHAINS = [
+  Ethereum,
+  Goerli,
+  Sepolia,
+  Polygon,
+  Mumbai,
+  Optimism,
+  OptimismGoerli,
+  Arbitrum,
+  ArbitrumGoerli,
+  Avalanche,
+  AvalancheFuji,
+  Base,
+  BaseGoerli,
+  Linea,
+  LineaTestnet,
+  CeloAlfajoresTestnet,
+];
 
 export const chainIdToName: Record<number, string> = {
   [ChainId.Mumbai]: "mumbai",
@@ -12,12 +49,8 @@ export const chainIdToName: Record<number, string> = {
   [ChainId.OptimismGoerli]: "optimism-goerli",
   [ChainId.Arbitrum]: "arbitrum",
   [ChainId.ArbitrumGoerli]: "arbitrum-goerli",
-  [ChainId.Fantom]: "fantom",
-  [ChainId.FantomTestnet]: "fantom-testnet",
   [ChainId.Avalanche]: "avalanche",
   [ChainId.AvalancheFujiTestnet]: "avalanche-testnet",
-  [ChainId.BinanceSmartChainMainnet]: "binance",
-  [ChainId.BinanceSmartChainTestnet]: "binance-testnet",
   [84531]: "base-goerli",
   [8453]: "base",
 };
@@ -25,6 +58,7 @@ export const chainIdToName: Record<number, string> = {
 export const chainIdApiKey: Record<number, string | undefined> = {
   [ChainId.Mumbai]: process.env.POLYGONSCAN_API_KEY || process.env.SCAN_API_KEY,
   [ChainId.Goerli]: process.env.ETHERSCAN_API_KEY || process.env.SCAN_API_KEY,
+  [Sepolia.chainId]: process.env.ETHERSCAN_API_KEY || process.env.SCAN_API_KEY,
   [ChainId.Polygon]: process.env.POLYGONSCAN_API_KEY || process.env.SCAN_API_KEY,
   [ChainId.Mainnet]: process.env.ETHERSCAN_API_KEY || process.env.SCAN_API_KEY,
   [ChainId.Optimism]: process.env.OPTIMISM_SCAN_API_KEY || process.env.SCAN_API_KEY,
@@ -37,13 +71,16 @@ export const chainIdApiKey: Record<number, string | undefined> = {
   [ChainId.AvalancheFujiTestnet]: process.env.SNOWTRACE_API_KEY || process.env.SCAN_API_KEY,
   [ChainId.BinanceSmartChainMainnet]: process.env.BINANCE_SCAN_API_KEY || process.env.SCAN_API_KEY,
   [ChainId.BinanceSmartChainTestnet]: process.env.BINANCE_SCAN_API_KEY || process.env.SCAN_API_KEY,
-  [84531]: "" as string,
-  [8453]: process.env.BASE_SCAN_API_KEY || process.env.SCAN_API_KEY,
+  [Base.chainId]: process.env.BASE_SCAN_API_KEY || process.env.SCAN_API_KEY,
+  [BaseGoerli.chainId]: process.env.BASE_SCAN_API_KEY || process.env.SCAN_API_KEY,
+  [Linea.chainId]: process.env.LINEA_SCAN_API_KEY || process.env.SCAN_API_KEY,
+  [LineaTestnet.chainId]: process.env.LINEA_SCAN_API_KEY || process.env.SCAN_API_KEY,
 };
 
 export const apiMap: Record<number, string> = {
   1: "https://api.etherscan.io/api",
   5: "https://api-goerli.etherscan.io/api",
+  [Sepolia.chainId]: "https://api-sepolia.etherscan.io/api",
   10: "https://api-optimistic.etherscan.io/api",
   56: "https://api.bscscan.com/api",
   97: "https://api-testnet.bscscan.com/api",
@@ -58,6 +95,8 @@ export const apiMap: Record<number, string> = {
   80001: "https://api-testnet.polygonscan.com/api",
   84531: "https://api-goerli.basescan.org/api",
   8453: "https://api.basescan.org/api",
+  [Linea.chainId]: "https://api.lineascan.build/api",
+  [LineaTestnet.chainId]: "https://api-testnet.lineascan.build/api",
 };
 
 export const contractsToDeploy = [
