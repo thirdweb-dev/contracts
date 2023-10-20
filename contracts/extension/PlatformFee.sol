@@ -35,7 +35,7 @@ abstract contract PlatformFee is IPlatformFee {
         return (platformFeeRecipient, flatPlatformFee);
     }
 
-    /// @dev Returns the platform fee bps and recipient.
+    /// @dev Returns the platform fee type.
     function getPlatformFeeType() public view returns (PlatformFeeType) {
         return platformFeeType;
     }
@@ -60,6 +60,9 @@ abstract contract PlatformFee is IPlatformFee {
     function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
         if (_platformFeeBps > 10_000) {
             revert("Exceeds max bps");
+        }
+        if (_platformFeeRecipient == address(0)) {
+            revert("Invalid recipient");
         }
 
         platformFeeBps = uint16(_platformFeeBps);

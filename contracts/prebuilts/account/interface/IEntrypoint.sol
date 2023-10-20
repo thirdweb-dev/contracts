@@ -211,7 +211,7 @@ interface IEntryPoint is IStakeManager, INonceManager {
      * it performs full validation of the UserOperation, but ignores signature error.
      * an optional target address is called after the userop succeeds, and its value is returned
      * (before the entire call is reverted)
-     * Note that in order to collect the the success/failure of the target call, it must be executed
+     * Note that in order to collect the success/failure of the target call, it must be executed
      * with trace enabled to track the emitted events.
      * @param op the UserOperation to simulate
      * @param target if nonzero, a target address to call after userop simulation. If called, the targetSuccess and targetResult

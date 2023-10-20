@@ -13,51 +13,60 @@ import {
   resolveAddress,
 } from "@thirdweb-dev/sdk";
 import { Signer } from "ethers";
-import { apiMap, chainIdApiKey, chainIdToName } from "./constants";
+import { DEFAULT_CHAINS, apiMap, chainIdApiKey } from "./constants";
 
 ////// To run this script: `npx ts-node scripts/deploy-prebuilt-deterministic/deploy-deterministic-std-chains.ts` //////
 ///// MAKE SURE TO PUT IN THE RIGHT CONTRACT NAME HERE AFTER PUBLISHING IT /////
 //// THE CONTRACT SHOULD BE PUBLISHED WITH THE NEW PUBLISH FLOW ////
-const publishedContractName = "DropERC1155";
-const publisherKey: string = process.env.THIRDWEB_PUBLISHER_PRIVATE_KEY as string;
+const publishedContractName = "MarketplaceV3";
+const publisherAddress: string = "deployer.thirdweb.eth";
 const deployerKey: string = process.env.PRIVATE_KEY as string;
 const secretKey: string = process.env.THIRDWEB_SECRET_KEY as string;
 
-const polygonSDK = ThirdwebSDK.fromPrivateKey(publisherKey, "polygon", { secretKey });
+const polygonSDK = new ThirdwebSDK("polygon", { secretKey });
 
 async function main() {
-  const publisher = await polygonSDK.wallet.getAddress();
-  const latest = await polygonSDK.getPublisher().getLatest(publisher, publishedContractName);
+  const latest = await polygonSDK.getPublisher().getLatest(publisherAddress, publishedContractName);
 
   if (latest && latest.metadataUri) {
     const { extendedMetadata } = await fetchAndCacheDeployMetadata(latest?.metadataUri, polygonSDK.storage);
 
-    for (const [chainId, networkName] of Object.entries(chainIdToName)) {
+    for (const chain of DEFAULT_CHAINS) {
       const isNetworkEnabled =
-        extendedMetadata?.networksForDeployment?.networksEnabled.includes(parseInt(chainId)) ||
+        extendedMetadata?.networksForDeployment?.networksEnabled.includes(chain.chainId) ||
         extendedMetadata?.networksForDeployment?.allNetworks;
 
       if (extendedMetadata?.networksForDeployment && !isNetworkEnabled) {
-        console.log(`Deployment of ${publishedContractName} disabled on ${networkName}\n`);
+        console.log(`Deployment of ${publishedContractName} disabled on ${chain.slug}\n`);
         continue;
       }
 
-      console.log(`Deploying ${publishedContractName} on ${networkName}`);
-      const sdk = ThirdwebSDK.fromPrivateKey(deployerKey, chainId, { secretKey }); // can also hardcode the chain here
+      console.log(`Deploying ${publishedContractName} on ${chain.slug}`);
+      const sdk = ThirdwebSDK.fromPrivateKey(deployerKey, chain, { secretKey }); // can also hardcode the chain here
       const signer = sdk.getSigner() as Signer;
       // const chainId = (await sdk.getProvider().getNetwork()).chainId;
 
       try {
-        const implAddr = await getThirdwebContractAddress(publishedContractName, parseInt(chainId), sdk.storage);
+        const implAddr = await getThirdwebContractAddress(
+          publishedContractName,
+          chain.chainId,
+          sdk.storage,
+          "latest",
+          sdk.options.clientId,
+          sdk.options.secretKey,
+        );
         if (implAddr) {
-          console.log(`implementation ${implAddr} already deployed on chainId: ${chainId}`);
+          console.log(`implementation ${implAddr} already deployed on chainId: ${chain.slug}`);
           console.log();
           continue;
         }
-      } catch (error) {}
+      } catch (error) {
+        // no-op
+      }
 
       try {
-        console.log("Deploying as", await signer?.getAddress());
+        console.log("Deploying as", await sdk.wallet.getAddress());
+        console.log("Balance", await sdk.wallet.balance().then(b => b.displayValue));
         // any evm deployment flow
 
         // Deploy CREATE2 factory (if not already exists)
@@ -74,6 +83,8 @@ async function main() {
           sdk.getProvider(),
           sdk.storage,
           create2FactoryAddress,
+          sdk.options.clientId,
+          sdk.options.secretKey,
         );
         if (await isContractDeployed(cloneFactoryAddress, sdk.getProvider())) {
           console.log(`-- TWCloneFactory already present at ${cloneFactoryAddress}`);
@@ -85,6 +96,8 @@ async function main() {
           sdk.storage,
           sdk.getProvider(),
           create2FactoryAddress,
+          sdk.options.clientId,
+          sdk.options.secretKey,
         );
 
         const implementationAddress = deploymentInfo.find(i => i.type === "implementation")?.transaction
@@ -133,14 +146,16 @@ async function main() {
     console.log();
     console.log("---------- Verification ---------");
     console.log();
-    for (const [chainId, networkName] of Object.entries(chainIdToName)) {
-      const sdk = new ThirdwebSDK(chainId);
-      console.log("Network: ", networkName);
+    for (const chain of DEFAULT_CHAINS) {
+      const sdk = new ThirdwebSDK(chain, {
+        secretKey,
+      });
+      console.log("Verifying on: ", chain.slug);
       try {
         await sdk.verifier.verifyThirdwebContract(
           publishedContractName,
-          apiMap[parseInt(chainId)],
-          chainIdApiKey[parseInt(chainId)] as string,
+          apiMap[chain.chainId],
+          chainIdApiKey[chain.chainId] as string,
         );
         console.log();
       } catch (error) {
