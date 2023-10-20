@@ -4,7 +4,7 @@ pragma solidity ^0.8.12;
 import {IAccountGuardian} from "../interface/IAccountGuardian.sol";
 import {Guardian} from "./Guardian.sol";
 
-contract AccountGuardian is IAccountGuardian {
+abstract contract AccountGuardian is IAccountGuardian {
     Guardian guardianContract = new Guardian();
     address[] accountGuardians; 
 
