@@ -9,12 +9,16 @@ import "../../../external-deps/openzeppelin/proxy/Clones.sol";
 // Extensions
 import "../../../extension/upgradeable//PermissionsEnumerable.sol";
 import "../../../extension/upgradeable//ContractMetadata.sol";
+import { AccountLock } from "../utils/AccountLock.sol";
+import { Guardian } from "../utils/Guardian.sol";
 
 // Interface
 import "../interface/IEntrypoint.sol";
 
 // Smart wallet implementation
 import { Account } from "./Account.sol";
+
+
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -26,14 +30,19 @@ import { Account } from "./Account.sol";
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
+
+    AccountLock public accountLock = new AccountLock();
+    Guardian public guardian = new Guardian();
+
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint)
-        BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint))
+        BaseAccountFactory(address(new Account(_entrypoint, address(this), (accountLock), (guardian))), address(_entrypoint))
     {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -3,9 +3,12 @@ pragma solidity ^0.8.12;
 
 import {IAccountGuardian} from "../interface/IAccountGuardian.sol";
 import {Guardian} from "./Guardian.sol";
+import {AccountLock} from "./AccountLock.sol";
 
 contract AccountGuardian is IAccountGuardian {
     Guardian public guardianContract;
+    AccountLock public accountLock;
+    address guardianForAccount;
     address[] private accountGuardians;
     address public owner;
 
@@ -18,8 +21,10 @@ contract AccountGuardian is IAccountGuardian {
         _;
     }
 
-    constructor(Guardian _guardianContract) {
+    constructor(Guardian _guardianContract, AccountLock _accountLock, address _guardianForAccount) {
         guardianContract = _guardianContract;
+        accountLock = _accountLock;
+        guardianForAccount = _guardianForAccount;
         owner = msg.sender;
     }
 

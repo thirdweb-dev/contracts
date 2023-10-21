@@ -2,9 +2,9 @@
 
 pragma solidity ^0.8.12;
 
-import {IAccountLockRequest} from "../interface/IAccountLockRequest.sol";
+import {IAccountLock} from "../interface/IAccountLock.sol";
 
-abstract contract AccountLockRequest is IAccountLockRequest {
+ contract AccountLock {
     
     function createLockRequest(address smartWallet) external returns(bytes memory) {
         /**

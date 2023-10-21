@@ -10,6 +10,9 @@ import "../utils/BaseAccount.sol";
 
 // Extensions
 import "../utils/AccountCore.sol";
+import {Guardian} from "../utils/Guardian.sol";
+import {AccountLock} from "../utils/AccountLock.sol";
+import {AccountGuardian} from "../utils/AccountGuardian.sol";
 import "../../../extension/upgradeable/ContractMetadata.sol";
 import "../../../external-deps/openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import "../../../external-deps/openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
@@ -19,6 +22,7 @@ import "../../../eip/ERC1271.sol";
 import "../utils/Helpers.sol";
 import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 import "../utils/BaseAccountFactory.sol";
+
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -32,12 +36,22 @@ import "../utils/BaseAccountFactory.sol";
 contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC1155Holder {
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
+    AccountLock public accountLock;
+    AccountGuardian accountGuardian;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {}
+    constructor(
+        IEntryPoint _entrypoint,
+        address _factory,
+        AccountLock _accountLock,
+        Guardian _guardian
+    ) AccountCore(_entrypoint, _factory) {
+        accountLock = _accountLock;
+        accountGuardian = new AccountGuardian(_guardian, _accountLock, address(this));
+    }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
@@ -61,13 +75,10 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     }
 
     /// @notice See EIP-1271
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
-        public
-        view
-        virtual
-        override
-        returns (bytes4 magicValue)
-    {
+    function isValidSignature(
+        bytes32 _hash,
+        bytes memory _signature
+    ) public view virtual override returns (bytes4 magicValue) {
         address signer = _hash.recover(_signature);
 
         if (isAdmin(signer)) {
@@ -92,11 +103,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(
-        address _target,
-        uint256 _value,
-        bytes calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
+    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual onlyAdminOrEntrypoint {
         _registerOnFactory();
         _call(_target, _value, _calldata);
     }
