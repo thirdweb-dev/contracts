@@ -18,8 +18,8 @@ contract AccountGuardian is IAccountGuardian {
         _;
     }
 
-    constructor() {
-        guardianContract = new Guardian();
+    constructor(Guardian _guardianContract) {
+        guardianContract = _guardianContract;
         owner = msg.sender;
     }
 
