@@ -1,0 +1,3 @@
+uri(uint256 _tokenId)
+├── it should return uri associated with the given `_tokenId` ✅
+
