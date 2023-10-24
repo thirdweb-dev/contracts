@@ -19,8 +19,6 @@ interface IGuardian {
      */
     error NotAGuardian(address guardian);
 
-
-
      //////////////////////////////////////
     /////////// Events ////////////////
     //////////////////////////////////////
@@ -58,6 +56,15 @@ interface IGuardian {
      */
     function removeVerifiedGuardian() external;
 
+
+    /**
+     * @notice Used to maintain a record of each account and it's guardian (accountGuardian) contract instance
+     * @param account Address of the account that got initialised
+     * @param accountGuardian Address of the guardian contract of the
+     * account
+     */
+    function linkAccountToAccountGuardian(address account, address accountGuardian) external;
+
     //////////////////////////////////////
     /////////// Getter Function //////////
     //////////////////////////////////////
@@ -67,4 +74,11 @@ interface IGuardian {
      * Can only be called by the owner.
      */
     function getVerifiedGuardians() external view returns(address[] memory);
+
+    /**
+     * @notice Returns the accountGuardian address of an account
+     * @param account account
+     * @return address accountGuardian
+     */
+    function getAccountGuardian(address account) external view returns(address);
 }

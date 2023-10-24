@@ -8,15 +8,15 @@ interface IAccountLock {
 
     /**
      * An event emitted when account lock request is successfully created by a guardian.
-     * @param smartWallet address of the smart wallet for which lock request is created
+     * @param account address of the smart wallet for which lock request is created
      */
-    event AccountLockRequestCreated(address indexed smartWallet);
+    event AccountLockRequestCreated(address indexed account);
 
     /**
      * An event emitted when account unlock request is successfully created by a guardian.
-     * @param smartWallet address of the smart wallet for which lock request is created
+     * @param account address of the smart wallet for which lock request is created
      */
-    event AccountUnLockRequestCreated(address indexed smartWallet);
+    event AccountUnLockRequestCreated(address indexed account);
 
     /**
      * An event emitted when a guardian accepts a lock request.
@@ -39,42 +39,68 @@ interface IAccountLock {
     /**
      * This error is thrown when a non-guardian tries to create a recovery
      * request of a smart wallet account.
-     * @param smartWallet address of the smart wallet being recovered
+     * @param account address of the smart wallet being recovered
      */
-    error NotAGuardian(address smartWallet);
+    error NotAGuardian(address account);
+
+     /**
+     * Error thrown when a lock request is created for an already locked smart-wallet
+     * @param account address of the smart wallet being unlocked
+     */
+    error AccountAlreadyLocked(address account);
 
     /**
-     * Error thrown when a unlock request is created for an already unlocked smart-wallet
-     * @param smartWallet address of the smart wallet being unlocked
+     * Error returned when creating a account lock request for which lock reques already exists.
      */
-    error AccountAlreadyUnlocked(address smartWallet);
+    error ActiveLockRequestFound();
+    
+    /**
+     * Error thrown when a unlock request is created for an already unlocked smart-wallet
+     * @param account address of the smart wallet being unlocked
+     */
+    error AccountAlreadyUnlocked(address account);
 
      /*///////////////////////////////////////////////////////////////
                         External Functions
     //////////////////////////////////////////////////////////////*/
 
+
     /**
      * @dev Triggered by a guardian to create a lock request.
-     * @param smartWallet address of the smart wallet to be recovered
+     * @param account address of the smart wallet to be recovered
      */
 
-    function createLockRequest(address smartWallet) external returns(bytes memory);
+    function createLockRequest(address account) external returns(bytes32);
 
     /**
-     * @dev This function is called when a guardian makes his choice of 
-     * signing or not signing the account lock request.
-     * @param lockRequest type hash of the lock request
-     * @return Request signature incase the guardian accepts the request else returns null.
+     * @notice Records guardian's signature on a lock request by 
+     * updating `lockRequestToGuardianToSignature` mapping
+     * @param lockRequest Lock request of an account
+     * @param signature Guardian's signature on the lock request 
+     */
+    function recordSignatureOnLockRequest(bytes32 lockRequest, bytes calldata signature) external;
+
+ 
+    /**
+     * @dev This function is used to evaluate if the lockRequest was accepted or rejected by the guardians.
+     * @param account The account whose `lockRequest` acceptance/rejection is being evaluated
+     * @return bool Boolean flag indicating if the lock request was accepted or not.
      */
 
-    function acceptOrRejectLockRequest(bytes32 lockRequest) external returns(bytes memory);
+    function lockRequestAccepted(address account) external returns(bool);
+
+    /**
+     * Will be called to execute the lock request on an account
+     * @param account account to be locked
+     */
+    // function executeLockRequest(address account) external;
 
     /**
      * @dev Triggered by a guardian to create an unlock request.
-     * @param smartWallet address of the smart wallet to be unlocked
+     * @param account address of the smart wallet to be unlocked
      */
 
-    function createUnLockRequest(address smartWallet) external returns(bytes memory);
+    // function createUnLockRequest(address account) external returns(bytes memory);
 
     /**
      * @dev This function is called when a guardian makes his choice of 
@@ -82,6 +108,16 @@ interface IAccountLock {
      * @param unlockRequest type hash of the unlock request
      * @return Request signature incase the guardian accepts the request else returns null.
      */
-    function acceptOrRejectUnlockRequest(bytes32 unlockRequest) external returns(bytes memory);
+    // function unlockRequestAccepted(bytes32 unlockRequest) external returns(bytes memory);
 
+
+/*///////////////////////////////////////////////////////////////
+                        View Functions
+    //////////////////////////////////////////////////////////////*/
+
+    /**
+     * @notice Returns a bool indicating if a lock request for the account already exists
+     * @param account Account for which active lock request has to be checked
+     */
+    function activeLockRequestExists(address account) external view returns(bool);
 }

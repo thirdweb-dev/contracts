@@ -37,6 +37,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
     AccountLock public accountLock;
+    Guardian public guardian;
     AccountGuardian accountGuardian;
 
     /*///////////////////////////////////////////////////////////////
@@ -50,7 +51,11 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         Guardian _guardian
     ) AccountCore(_entrypoint, _factory) {
         accountLock = _accountLock;
+        guardian = _guardian;
+        
         accountGuardian = new AccountGuardian(_guardian, _accountLock, address(this));
+        Guardian(_guardian).linkAccountToAccountGuardian(address(this), address(accountGuardian));
+        
     }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.

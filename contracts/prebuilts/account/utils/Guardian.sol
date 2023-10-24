@@ -6,6 +6,7 @@ import {IGuardian} from "../interface/IGuardian.sol";
 contract Guardian is IGuardian {
     address[] private verifiedGuardians;
     address public owner;
+    mapping(address => address) private accountToAccountGuardian; 
    
     error NotOwner();
 
@@ -59,11 +60,19 @@ contract Guardian is IGuardian {
         }
     }
 
+    function linkAccountToAccountGuardian(address account, address accountGuardian) external {
+        accountToAccountGuardian[account] = accountGuardian;
+    }
+
     ///////////////////////////////
     ///// Getter Functions ///////
     ///////////////////////////////
 
     function getVerifiedGuardians() external view onlyOwner returns(address[] memory) {
         return verifiedGuardians;
+    }
+
+    function getAccountGuardian(address account) external view  returns(address) {
+        return accountToAccountGuardian[account];
     }
 }

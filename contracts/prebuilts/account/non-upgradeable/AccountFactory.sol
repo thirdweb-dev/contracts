@@ -31,8 +31,9 @@ import { Account } from "./Account.sol";
 
 contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
 
-    AccountLock public accountLock = new AccountLock();
+    // Creating instances of thirdweb's guardian & accountLock contracts
     Guardian public guardian = new Guardian();
+    AccountLock public accountLock = new AccountLock(guardian);
 
     /*///////////////////////////////////////////////////////////////
                             Constructor

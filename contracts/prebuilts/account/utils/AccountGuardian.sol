@@ -8,31 +8,31 @@ import {AccountLock} from "./AccountLock.sol";
 contract AccountGuardian is IAccountGuardian {
     Guardian public guardianContract;
     AccountLock public accountLock;
-    address guardianForAccount;
+    address account;
     address[] private accountGuardians;
     address public owner;
 
-    error NotAccountOwner();
+    error NotOwnerOrAccountLock();
 
-    modifier onlyOwner() {
-        if(owner != msg.sender) {
-            revert NotAccountOwner();
-        }
-        _;
-    }
-
-    constructor(Guardian _guardianContract, AccountLock _accountLock, address _guardianForAccount) {
+    constructor(Guardian _guardianContract, AccountLock _accountLock, address _account) {
         guardianContract = _guardianContract;
         accountLock = _accountLock;
-        guardianForAccount = _guardianForAccount;
-        owner = msg.sender;
+        account = _account;
+        owner = account;
+    }
+
+        modifier onlyOwnerOrAccountLock() {
+        if( msg.sender != owner || msg.sender != address(accountLock)) {
+            revert NotOwnerOrAccountLock();
+        }
+        _;
     }
 
     ////////////////////////////
     ///// External Functions////
     ////////////////////////////
 
-    function addGuardian(address guardian) external onlyOwner {
+    function addGuardian(address guardian) external onlyOwnerOrAccountLock {
         if(guardianContract.isVerifiedGuardian(guardian)) {
             accountGuardians.push(guardian);
             emit GuardianAdded(guardian);
@@ -41,7 +41,7 @@ contract AccountGuardian is IAccountGuardian {
         }
     }
 
-    function removeGuardian(address guardian) external onlyOwner {
+    function removeGuardian(address guardian) external onlyOwnerOrAccountLock {
         bool guardianFound = false;
         for(uint256 g = 0; g < accountGuardians.length; g++) {
             if(accountGuardians[g] == guardian) {
@@ -55,7 +55,16 @@ contract AccountGuardian is IAccountGuardian {
         }
     }
 
-    function getAllGuardians() external view onlyOwner returns(address[] memory){
+    function getAllGuardians() external view onlyOwnerOrAccountLock returns(address[] memory){
         return accountGuardians;
+    }
+
+    function isAccountGuardian(address guardian) external view onlyOwnerOrAccountLock returns (bool){
+        for(uint256 g = 0; g < accountGuardians.length; g++) {
+            if(accountGuardians[g] == guardian) {
+                return true;
+            }
+        }
+        return false;
     }
 }

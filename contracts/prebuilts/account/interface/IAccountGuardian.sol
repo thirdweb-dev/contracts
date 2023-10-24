@@ -80,6 +80,16 @@ interface IAccountGuardian {
      * @return List of guardians of the sender smart-wallet.
      */
     function getAllGuardians() external returns(address[] memory);
-    
 
+    /**
+     * @notice Returns a bool value indicating if the guardian is that
+     * account's guardian or not.
+     * @param guardian guardian to be checked for
+     * @return bool
+     */
+    function isAccountGuardian(address guardian) external view returns (bool); 
+    
+    /**
+     * @notice Sign the lock request
+     */
 }
