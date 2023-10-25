@@ -30,7 +30,7 @@ contract ReentrantRecipient is ERC1155Holder {
     }
 }
 
-contract CollectAuctionTokensTest is BaseTest, IExtension {
+contract CollectAuctionPayoutTest is BaseTest, IExtension {
     // Target contract
     address public marketplace;
 
@@ -205,25 +205,25 @@ contract CollectAuctionTokensTest is BaseTest, IExtension {
         extensions[0] = extension_englishAuctions;
     }
 
-    function test_collectAuctionTokens_whenAuctionIsCancelled() public {
+    function test_collectAuctionPayout_whenAuctionIsCancelled() public {
         vm.prank(seller);
         EnglishAuctionsLogic(marketplace).cancelAuction(auctionId);
 
-        vm.prank(buyer);
+        vm.prank(seller);
         vm.expectRevert("Marketplace: invalid auction.");
-        EnglishAuctionsLogic(marketplace).collectAuctionTokens(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
     }
 
     modifier whenAuctionNotCancelled() {
         _;
     }
 
-    function test_collectAuctionTokens_whenAuctionIsActive() public whenAuctionNotCancelled {
+    function test_collectAuctionPayout_whenAuctionIsActive() public whenAuctionNotCancelled {
         vm.warp(auctionParams.startTimestamp + 1);
 
-        vm.prank(buyer);
+        vm.prank(seller);
         vm.expectRevert("Marketplace: auction still active.");
-        EnglishAuctionsLogic(marketplace).collectAuctionTokens(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
     }
 
     modifier whenAuctionHasEnded() {
@@ -231,12 +231,12 @@ contract CollectAuctionTokensTest is BaseTest, IExtension {
         _;
     }
 
-    function test_collectAuctionTokens_whenNoWinningBid() public whenAuctionNotCancelled whenAuctionHasEnded {
+    function test_collectAuctionPayout_whenNoWinningBid() public whenAuctionNotCancelled whenAuctionHasEnded {
         vm.warp(auctionParams.endTimestamp + 1);
 
-        vm.prank(buyer);
+        vm.prank(seller);
         vm.expectRevert("Marketplace: no bids were made.");
-        EnglishAuctionsLogic(marketplace).collectAuctionTokens(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
     }
 
     modifier whenAuctionHasWinningBid() {
@@ -248,25 +248,25 @@ contract CollectAuctionTokensTest is BaseTest, IExtension {
         _;
     }
 
-    function test_collectAuctionTokens_whenAuctionTokensAlreadyPaidOut()
+    function test_collectAuctionPayout_whenAuctionTokensAlreadyPaidOut()
         public
         whenAuctionNotCancelled
         whenAuctionHasWinningBid
         whenAuctionHasEnded
     {
-        vm.prank(buyer);
-        EnglishAuctionsLogic(marketplace).collectAuctionTokens(auctionId);
+        vm.prank(seller);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
 
-        vm.prank(buyer);
+        vm.prank(seller);
         vm.expectRevert("Marketplace: payout already completed.");
-        EnglishAuctionsLogic(marketplace).collectAuctionTokens(auctionId);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
     }
 
     modifier whenAuctionTokensNotPaidOut() {
         _;
     }
 
-    function test_collectAuctionTokens_whenAuctionTokensNotYetPaidOut()
+    function test_collectAuctionPayout_whenAuctionTokensNotYetPaidOut()
         public
         whenAuctionNotCancelled
         whenAuctionHasWinningBid
@@ -278,21 +278,21 @@ contract CollectAuctionTokensTest is BaseTest, IExtension {
             uint256(IEnglishAuctions.Status.CREATED)
         );
 
-        assertEq(erc1155.balanceOf(address(marketplace), auctionParams.tokenId), 1);
-        assertEq(erc1155.balanceOf(buyer, auctionParams.tokenId), 0);
+        uint256 marketplaceBal = erc20.balanceOf(address(marketplace));
+        assertEq(marketplaceBal, auctionParams.minimumBidAmount);
+        assertEq(erc20.balanceOf(seller), 0);
 
-        vm.prank(buyer);
+        vm.prank(seller);
         vm.expectEmit(true, true, true, true);
-        emit AuctionClosed(auctionId, address(erc1155), buyer, auctionParams.tokenId, seller, buyer);
-        EnglishAuctionsLogic(marketplace).collectAuctionTokens(auctionId);
+        emit AuctionClosed(auctionId, address(erc1155), seller, auctionParams.tokenId, seller, buyer);
+        EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
 
         assertEq(
             uint256(EnglishAuctionsLogic(marketplace).getAuction(auctionId).status),
             uint256(IEnglishAuctions.Status.COMPLETED)
         );
-        assertEq(EnglishAuctionsLogic(marketplace).getAuction(auctionId).endTimestamp, uint64(block.timestamp));
 
-        assertEq(erc1155.balanceOf(address(marketplace), auctionParams.tokenId), 0);
-        assertEq(erc1155.balanceOf(buyer, auctionParams.tokenId), 1);
+        assertEq(erc20.balanceOf(address(marketplace)), 0);
+        assertEq(erc20.balanceOf(seller), marketplaceBal);
     }
 }
