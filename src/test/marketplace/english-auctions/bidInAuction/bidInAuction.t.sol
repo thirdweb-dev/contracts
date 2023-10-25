@@ -387,6 +387,8 @@ contract BidInAuctionTest is BaseTest, IExtension {
         whenBidAmountIsNotZero
         whenBidAmountLtBuyoutPrice
     {
+        assertEq(EnglishAuctionsLogic(marketplace).isNewWinningBid(auctionId, auctionParams.minimumBidAmount), false);
+
         vm.prank(buyer);
         vm.expectRevert("Marketplace: not winning bid.");
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, auctionParams.minimumBidAmount);
@@ -394,6 +396,7 @@ contract BidInAuctionTest is BaseTest, IExtension {
 
     modifier whenBidIsNewWinningBig() {
         bidAmount = auctionParams.buyoutBidAmount - 1;
+        assertEq(EnglishAuctionsLogic(marketplace).isNewWinningBid(auctionId, bidAmount), true);
         _;
     }
 
@@ -431,6 +434,8 @@ contract BidInAuctionTest is BaseTest, IExtension {
         assertEq(bidderBefore, winningBidder);
         assertEq(currencyBefore, address(erc20));
         assertEq(bidAmountBefore, auctionParams.minimumBidAmount + 1);
+
+        assertEq(EnglishAuctionsLogic(marketplace).isNewWinningBid(auctionId, bidAmount), true);
 
         vm.startPrank(buyer);
         vm.expectEmit(true, true, true, false);

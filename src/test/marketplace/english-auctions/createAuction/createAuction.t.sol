@@ -15,6 +15,12 @@ import { IEnglishAuctions } from "contracts/prebuilts/marketplace/IMarketplace.s
 
 import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 
+contract InvalidToken {
+    function supportsInterface(bytes4) public pure returns (bool) {
+        return false;
+    }
+}
+
 contract CreateAuctionTest is BaseTest, IExtension {
     // Target contract
     address public marketplace;
@@ -201,7 +207,29 @@ contract CreateAuctionTest is BaseTest, IExtension {
         _;
     }
 
-    function test_createAuction_whenAuctionParamsAreInvalid() public whenCallerHasListerRole whenAssetHasAssetRole {
+    function test_createAuction_whenTokenIsInvalid() public whenCallerHasListerRole whenAssetHasAssetRole {
+        address newToken = address(new InvalidToken());
+
+        vm.prank(marketplaceDeployer);
+        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), newToken);
+
+        auctionParams.assetContract = newToken;
+
+        vm.prank(seller);
+        vm.expectRevert("Marketplace: auctioned token must be ERC1155 or ERC721.");
+        EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
+    }
+
+    modifier whenTokenIsValid() {
+        _;
+    }
+
+    function test_createAuction_whenAuctionParamsAreInvalid()
+        public
+        whenCallerHasListerRole
+        whenAssetHasAssetRole
+        whenTokenIsValid
+    {
         // This is one way for params to be invalid. `_validateNewAuction` has its own tests.
         auctionParams.quantity = 0;
 
@@ -218,6 +246,7 @@ contract CreateAuctionTest is BaseTest, IExtension {
         public
         whenCallerHasListerRole
         whenAssetHasAssetRole
+        whenTokenIsValid
         whenAuctionParamsAreValid
     {
         uint256 expectedAuctionId = 0;
@@ -238,6 +267,12 @@ contract CreateAuctionTest is BaseTest, IExtension {
 
         assertEq(EnglishAuctionsLogic(marketplace).totalAuctions(), 1);
         assertEq(erc721.ownerOf(0), marketplace);
+        assertEq(EnglishAuctionsLogic(marketplace).getAllAuctions(0, 0).length, 1);
+
+        assertEq(EnglishAuctionsLogic(marketplace).getAllValidAuctions(0, 0).length, 0);
+        vm.warp(auctionParams.startTimestamp);
+        assertEq(EnglishAuctionsLogic(marketplace).getAllValidAuctions(0, 0).length, 1);
+
         assertEq(EnglishAuctionsLogic(marketplace).getAllAuctions(0, 0).length, 1);
         assertEq(EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).auctionId, expectedAuctionId);
         assertEq(
