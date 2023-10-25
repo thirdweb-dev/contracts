@@ -265,6 +265,20 @@ contract BidInAuctionTest is BaseTest, IExtension {
         _;
     }
 
+    function test_bidInAuction_whenAuctionCurrencyIsERC20AndMsgValueSent()
+        public
+        whenCallIsNotReentrant
+        whenAuctionExists
+        whenAuctionIsActive
+        whenBidAmountIsNotZero
+    {
+        vm.deal(buyer, 1 ether);
+
+        vm.prank(buyer);
+        vm.expectRevert("Marketplace: invalid native tokens sent.");
+        EnglishAuctionsLogic(marketplace).bidInAuction{ value: 1 }(auctionId, auctionParams.buyoutBidAmount);
+    }
+
     function test_bidInAuction_whenBidAmountIsGtBuyoutPrice()
         public
         whenCallIsNotReentrant
