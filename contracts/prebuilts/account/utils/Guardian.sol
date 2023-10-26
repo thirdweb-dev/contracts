@@ -6,8 +6,9 @@ import {IGuardian} from "../interface/IGuardian.sol";
 contract Guardian is IGuardian {
     address[] private verifiedGuardians;
     address public owner;
-    mapping(address => address) private accountToAccountGuardian; 
-   
+    mapping(address => address) private accountToAccountGuardian;
+    mapping(address => address[]) private guardianToAccounts;
+
     error NotOwner();
 
     constructor() {
@@ -60,19 +61,36 @@ contract Guardian is IGuardian {
         }
     }
 
-    function linkAccountToAccountGuardian(address account, address accountGuardian) external {
+    function linkAccountToAccountGuardian(address accountGuardian, address account) external {
         accountToAccountGuardian[account] = accountGuardian;
+    }
+
+    function addAccountToGuardian(address guardian, address account) external {
+        guardianToAccounts[guardian].push(account);
     }
 
     ///////////////////////////////
     ///// Getter Functions ///////
     ///////////////////////////////
 
+
     function getVerifiedGuardians() external view onlyOwner returns(address[] memory) {
         return verifiedGuardians;
     }
 
-    function getAccountGuardian(address account) external view  returns(address) {
+    function getAccountGuardian(address account) external view returns(address) {
         return accountToAccountGuardian[account];
     }
+
+// TODO: Refactor this functions with the POV of access modifiers
+    function getAccountsTheGuardianIsGuarding(address guardian) external view returns(address[] memory) {
+
+        if(!isVerifiedGuardian(guardian)) {
+            revert NotAGuardian(guardian);
+        }
+
+        return guardianToAccounts[guardian];
+    }
+
+    
 }

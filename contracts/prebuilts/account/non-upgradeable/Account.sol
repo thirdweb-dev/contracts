@@ -10,9 +10,9 @@ import "../utils/BaseAccount.sol";
 
 // Extensions
 import "../utils/AccountCore.sol";
-import {Guardian} from "../utils/Guardian.sol";
-import {AccountLock} from "../utils/AccountLock.sol";
-import {AccountGuardian} from "../utils/AccountGuardian.sol";
+import { Guardian } from "../utils/Guardian.sol";
+import { AccountLock } from "../utils/AccountLock.sol";
+import { AccountGuardian } from "../utils/AccountGuardian.sol";
 import "../../../extension/upgradeable/ContractMetadata.sol";
 import "../../../external-deps/openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import "../../../external-deps/openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
@@ -22,7 +22,6 @@ import "../../../eip/ERC1271.sol";
 import "../utils/Helpers.sol";
 import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 import "../utils/BaseAccountFactory.sol";
-
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -39,6 +38,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     AccountLock public accountLock;
     Guardian public guardian;
     AccountGuardian accountGuardian;
+    bool public paused;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
@@ -52,15 +52,21 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     ) AccountCore(_entrypoint, _factory) {
         accountLock = _accountLock;
         guardian = _guardian;
-        
+
         accountGuardian = new AccountGuardian(_guardian, _accountLock, address(this));
         Guardian(_guardian).linkAccountToAccountGuardian(address(this), address(accountGuardian));
-        
+        paused = false;
     }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
         require(msg.sender == address(entryPoint()) || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
+        _;
+    }
+
+    /// @notice Will check if the Account transactions has been paused by the guardians. If paused, it will not allow the `execute(..)` or the `executeBatch(..)` function to run.
+    modifier whenNotPaused() {
+        require(!paused, "Smart account has been paused.");
         _;
     }
 
@@ -108,7 +114,11 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual onlyAdminOrEntrypoint {
+    function execute(
+        address _target,
+        uint256 _value,
+        bytes calldata _calldata
+    ) external virtual onlyAdminOrEntrypoint whenNotPaused {
         _registerOnFactory();
         _call(_target, _value, _calldata);
     }
@@ -118,13 +128,17 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         address[] calldata _target,
         uint256[] calldata _value,
         bytes[] calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
+    ) external virtual onlyAdminOrEntrypoint whenNotPaused {
         _registerOnFactory();
 
         require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
         for (uint256 i = 0; i < _target.length; i++) {
             _call(_target[i], _value[i], _calldata[i]);
         }
+    }
+
+    function setPaused(bool pauseStatus) external {
+        paused = pauseStatus;
     }
 
     /*///////////////////////////////////////////////////////////////

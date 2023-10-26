@@ -65,6 +65,13 @@ interface IGuardian {
      */
     function linkAccountToAccountGuardian(address account, address accountGuardian) external;
 
+    /**
+     * @notice Creates a mapping of account to their respective guardians
+     * @param guardian Guardian to be added to account
+     * @param account Account whose guardian list is to be updated. 
+     */
+     function addAccountToGuardian(address guardian, address account) external;
+
     //////////////////////////////////////
     /////////// Getter Function //////////
     //////////////////////////////////////
@@ -81,4 +88,11 @@ interface IGuardian {
      * @return address accountGuardian
      */
     function getAccountGuardian(address account) external view returns(address);
+
+    /**
+     * @notice Returns the list of accounts the guardian is guarding
+     * @param guardian Guardian whose account list has to be returned
+     */
+    function getAccountsTheGuardianIsGuarding(address guardian) external view returns(address[] memory);
+
 }

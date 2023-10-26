@@ -37,6 +37,12 @@ interface IAccountLock {
     //////////////////////////////////////////////////////////////*/
 
     /**
+     * Error returned when guardian trying to send lock request for account which doesn't have a lock req. created
+     * @param account Account whose lock req. has to be send to it's guardians
+     */
+    error NoLockRequestFound(address account);
+
+    /**
      * This error is thrown when a non-guardian tries to create a recovery
      * request of a smart wallet account.
      * @param account address of the smart wallet being recovered
@@ -83,11 +89,11 @@ interface IAccountLock {
  
     /**
      * @dev This function is used to evaluate if the lockRequest was accepted or rejected by the guardians.
-     * @param account The account whose `lockRequest` acceptance/rejection is being evaluated
-     * @return bool Boolean flag indicating if the lock request was accepted or not.
+     * @param lockRequest The lockRequest to evaluate
+     * @param account Account to which the lock request belongs.
      */
 
-    function lockRequestAccepted(address account) external returns(bool);
+    function lockRequestEvaluation(bytes32 lockRequest, address account) external;
 
     /**
      * Will be called to execute the lock request on an account
@@ -120,4 +126,9 @@ interface IAccountLock {
      * @param account Account for which active lock request has to be checked
      */
     function activeLockRequestExists(address account) external view returns(bool);
+
+    /**
+     * @notice Returns all the lock request of a guardian
+     */
+    function getLockRequests() external view returns(bytes32[] memory);
 }

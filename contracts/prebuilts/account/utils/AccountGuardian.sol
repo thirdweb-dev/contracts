@@ -35,6 +35,7 @@ contract AccountGuardian is IAccountGuardian {
     function addGuardian(address guardian) external onlyOwnerOrAccountLock {
         if(guardianContract.isVerifiedGuardian(guardian)) {
             accountGuardians.push(guardian);
+            guardianContract.addAccountToGuardian(guardian, owner);
             emit GuardianAdded(guardian);
         } else {
             revert GuardianNotVerified(guardian);
