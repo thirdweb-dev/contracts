@@ -22,14 +22,19 @@ import { DynamicAccount, IEntryPoint } from "./DynamicAccount.sol";
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract DynamicAccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
+    address public constant ENTRYPOINT_ADDRESS = 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
+
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint, IExtension.Extension[] memory _defaultExtensions)
-        BaseAccountFactory(payable(address(new DynamicAccount(_entrypoint, _defaultExtensions))), address(_entrypoint))
+    constructor(address _defaultAdmin, IExtension.Extension[] memory _defaultExtensions)
+        BaseAccountFactory(
+            payable(address(new DynamicAccount(IEntryPoint(ENTRYPOINT_ADDRESS), _defaultExtensions))),
+            ENTRYPOINT_ADDRESS
+        )
     {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
     /*///////////////////////////////////////////////////////////////
