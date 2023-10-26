@@ -212,7 +212,7 @@ contract SimpleAccountVulnPOCTest is BaseTest {
         // Setup contracts
         entrypoint = new EntryPoint();
         // deploy account factory
-        accountFactory = new AccountFactory(IEntryPoint(payable(address(entrypoint))));
+        accountFactory = new AccountFactory(deployer, IEntryPoint(payable(address(entrypoint))));
         // deploy dummy contract
         numberContract = new Number();
     }
