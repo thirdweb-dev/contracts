@@ -1,38 +1,24 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.12;
 
-import {Test} from "forge-std/Test.sol";
-import {Guardian} from "contracts/prebuilts/account/utils/Guardian.sol";
-import {EntryPoint} from "contracts/prebuilts/account/utils/EntryPoint.sol";
-import {AccountLock} from "contracts/prebuilts/account/utils/AccountLock.sol";
-import {AccountFactory} from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
-import {Account} from "contracts/prebuilts/account/non-upgradeable/Account.sol";
-import {AccountGuardian} from "contracts/prebuilts/account/utils/AccountGuardian.sol";
-import {IAccountGuardian} from "contracts/prebuilts/account/interface/IAccountGuardian.sol";
-import {DeployGuardian} from "scripts/DeployGuardian.s.sol";
-import {IAccountGuardian} from "contracts/prebuilts/account/interface/IAccountGuardian.sol";
+import { Test } from "forge-std/Test.sol";
+import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
+import { AccountGuardian } from "contracts/prebuilts/account/utils/AccountGuardian.sol";
+import { DeploySmartAccountUtilContracts } from "scripts/DeploySmartAccountUtilContracts.s.sol";
+import { IAccountGuardian } from "contracts/prebuilts/account/interface/IAccountGuardian.sol";
 
 contract AccountGuardianTest is Test {
-   AccountGuardian accountGuardian;
-   Guardian public guardianContract;
-   AccountLock public accountLock;
-   address randomUser = makeAddr("randomUser");
-   address guardian = makeAddr("guardian");
+    AccountGuardian accountGuardian;
+    Guardian public guardianContract;
+    address randomUser = makeAddr("randomUser");
+    address guardian = makeAddr("guardian");
 
-   event GuardianRemoved(address indexed guardian);
+    event GuardianRemoved(address indexed guardian);
 
-   function setUp() public {
-        EntryPoint entryPoint = new EntryPoint();
-
-        AccountFactory accountFactory = new AccountFactory(entryPoint);
-
-        guardianContract = accountFactory.guardian();
-        accountLock = accountFactory.accountLock();
-
-        address account = accountFactory.createAccount(address(this), "");
-
-        accountGuardian = new AccountGuardian(guardianContract, accountLock, account);
-    } 
+    function setUp() public {
+        DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
+        (, , accountGuardian, guardianContract, ) = deployer.run();
+    }
 
     modifier addVerifiedGuardian() {
         vm.prank(guardian);
@@ -50,17 +36,12 @@ contract AccountGuardianTest is Test {
     }
 
     function testRevertOnAddingUnverifiedGuardian() public {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccountGuardian.GuardianNotVerified.selector,
-                randomUser
-            ));
-            
+        vm.expectRevert(abi.encodeWithSelector(IAccountGuardian.GuardianNotVerified.selector, randomUser));
+
         accountGuardian.addGuardian(randomUser);
     }
 
-     function testAddGuardianAddsGuardianToList() public addVerifiedGuardian{      
-
+    function testAddGuardianAddsGuardianToList() public addVerifiedGuardian {
         // ACT
         accountGuardian.addGuardian(guardian);
 
@@ -81,16 +62,11 @@ contract AccountGuardianTest is Test {
     }
 
     function testRevertIfRemovingGuardianThatDoesNotExist() external {
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IAccountGuardian.NotAGuardian.selector,
-                guardian
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(IAccountGuardian.NotAGuardian.selector, guardian));
         accountGuardian.removeGuardian(guardian);
     }
 
-    function testRemoveGuardianRemovesGuardianFromList() external addVerifiedGuardian{
+    function testRemoveGuardianRemovesGuardianFromList() external addVerifiedGuardian {
         // SETUP
         accountGuardian.addGuardian(guardian);
 
@@ -102,7 +78,6 @@ contract AccountGuardianTest is Test {
         // ASSERT
         address[] memory accountGuardians = accountGuardian.getAllGuardians();
         assertEq(accountGuardians[0], address(0)); // the delete function in `removeGuardian()` will remove the guardian address but replace it with a zero address rather than removing the entry.
-        
     }
 
     /////////////////////////////
@@ -115,7 +90,7 @@ contract AccountGuardianTest is Test {
         accountGuardian.getAllGuardians();
     }
 
-    function testGetAllGuardians() external addVerifiedGuardian{
+    function testGetAllGuardians() external addVerifiedGuardian {
         // SETUP
         accountGuardian.addGuardian(guardian);
 

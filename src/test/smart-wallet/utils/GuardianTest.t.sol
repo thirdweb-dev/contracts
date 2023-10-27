@@ -1,21 +1,20 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.12;
 
-import {Guardian} from "contracts/prebuilts/account/utils/Guardian.sol";
-import {IGuardian} from "contracts/prebuilts/account/interface/IGuardian.sol";
-import {DeployGuardian} from "scripts/DeployGuardian.s.sol";
-import {Test} from "forge-std/Test.sol";
+import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
+import { IGuardian } from "contracts/prebuilts/account/interface/IGuardian.sol";
+import { DeploySmartAccountUtilContracts } from "scripts/DeploySmartAccountUtilContracts.s.sol";
+import { Test } from "forge-std/Test.sol";
 
 contract GuardianTest is Test {
     Guardian public guardian;
-    DeployGuardian public deployer;
-    address public user = makeAddr('guardianUser');
+    address public user = makeAddr("guardianUser");
     address public owner = msg.sender;
     uint256 public STARTING_USER_BALANCE = 10 ether;
 
     function setUp() external {
-        deployer = new DeployGuardian();
-        guardian = deployer.run();
+        DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
+        (, , , guardian, ) = deployer.run();
         vm.deal(user, STARTING_USER_BALANCE);
     }
 
@@ -41,11 +40,7 @@ contract GuardianTest is Test {
         vm.startPrank(user);
         guardian.addVerifiedGuardian();
 
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IGuardian.GuardianAlreadyExists.selector,
-                user
-            ));
+        vm.expectRevert(abi.encodeWithSelector(IGuardian.GuardianAlreadyExists.selector, user));
         guardian.addVerifiedGuardian();
     }
 
@@ -62,7 +57,7 @@ contract GuardianTest is Test {
         assertEq(guardian.isVerifiedGuardian(owner), false);
     }
 
-     ///////////////////////////////////////
+    ///////////////////////////////////////
     ///// removeVerifiedGuardian() test ///////////
     ///////////////////////////////////////
 
@@ -75,7 +70,7 @@ contract GuardianTest is Test {
         // Act
         vm.prank(user);
         guardian.removeVerifiedGuardian();
-        
+
         //Assert
         assertEq(guardian.isVerifiedGuardian(user), false);
     }
@@ -83,16 +78,11 @@ contract GuardianTest is Test {
     function testRevertOnRemovingGuardianThatDoesNotExist() external {
         // ACT
         vm.prank(user);
-        vm.expectRevert(
-            abi.encodeWithSelector(
-                IGuardian.NotAGuardian.selector,
-                user
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(IGuardian.NotAGuardian.selector, user));
         guardian.removeVerifiedGuardian();
     }
 
-     ///////////////////////////////////////
+    ///////////////////////////////////////
     ///// getVerified() test //////////////
     ///////////////////////////////////////
     function testGetVerifiedGuardians() external {
