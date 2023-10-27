@@ -4,8 +4,8 @@
 
 pragma solidity ^0.8.4;
 
-import './IERC721AQueryable.sol';
-import '../ERC721A.sol';
+import "./IERC721AQueryable.sol";
+import "../ERC721A.sol";
 
 /**
  * @title ERC721A Queryable
@@ -69,6 +69,7 @@ abstract contract ERC721AQueryable is ERC721A, IERC721AQueryable {
      *
      * - `start` < `stop`
      */
+    /* solhint-disable*/
     function tokensOfOwnerIn(
         address owner,
         uint256 start,
@@ -129,6 +130,8 @@ abstract contract ERC721AQueryable is ERC721A, IERC721AQueryable {
             return tokenIds;
         }
     }
+
+    /* solhint-enable */
 
     /**
      * @dev Returns an array of token IDs owned by `owner`.

@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8.4;
 
-import '../interface/IERC721A.sol';
+import "../interface/IERC721A.sol";
 
 /**
  * @dev Interface of an ERC721AQueryable compliant contract.
