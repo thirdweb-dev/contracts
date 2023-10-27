@@ -45,6 +45,7 @@ jobs:
           lcov --remove lcov.info -o lcov.info 'src/test/**'
           lcov --remove lcov.info -o lcov.info 'contracts/external-deps/**'
           lcov --remove lcov.info -o lcov.info 'contracts/eip/**'
+          lcov --remove lcov.info -o lcov.info 'node_modules/**'
           forge test
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v3
