@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import { ERC721A } from "../eip/ERC721AVirtualApprove.sol";
+import "../eip/queryable/ERC721AQueryable.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/Multicall.sol";
@@ -30,7 +30,7 @@ import "../lib/TWStrings.sol";
  *      - EIP 2981 compliance for royalty support on NFT marketplaces.
  */
 
-contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata {
+contract ERC721Base is ERC721AQueryable, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata {
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -67,10 +67,10 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
                             ERC165 Logic
     //////////////////////////////////////////////////////////////*/
 
-    /**
-     * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
-     * @inheritdoc IERC165
-     */
+    // /**
+    //  * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+    //  * @inheritdoc IERC165
+    //  */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -89,7 +89,7 @@ contract ERC721Base is ERC721A, ContractMetadata, Multicall, Ownable, Royalty, B
      *
      *  @param _tokenId The tokenId of an NFT.
      */
-    function tokenURI(uint256 _tokenId) public view virtual override returns (string memory) {
+    function tokenURI(uint256 _tokenId) public view virtual override(ERC721A, IERC721Metadata) returns (string memory) {
         string memory fullUriForToken = fullURI[_tokenId];
         if (bytes(fullUriForToken).length > 0) {
             return fullUriForToken;
