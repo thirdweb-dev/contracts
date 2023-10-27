@@ -5,7 +5,7 @@
 pragma solidity ^0.8.4;
 
 import "./IERC721AQueryable.sol";
-import "../ERC721A.sol";
+import "../ERC721AVirtualApprove.sol";
 
 /**
  * @title ERC721A Queryable
