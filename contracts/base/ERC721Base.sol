@@ -67,10 +67,10 @@ contract ERC721Base is ERC721AQueryable, ContractMetadata, Multicall, Ownable, R
                             ERC165 Logic
     //////////////////////////////////////////////////////////////*/
 
-    // /**
-    //  * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
-    //  * @inheritdoc IERC165
-    //  */
+    /**
+     * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
+     * @inheritdoc IERC165
+     */
     function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
