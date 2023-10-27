@@ -228,6 +228,7 @@ contract VoteERC20Test_Propose is BaseTest {
             voteContract.proposalSnapshot(proposalIdTwo) + voteContract.votingPeriod()
         );
         assertEq(voteContract.proposalIndex(), 2); // because two proposals have been created
+        assertEq(voteContract.getAllProposals().length, 2);
 
         (
             uint256 _proposalId,
