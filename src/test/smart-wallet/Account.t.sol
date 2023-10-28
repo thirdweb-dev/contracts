@@ -175,6 +175,11 @@ contract SimpleAccountTest is BaseTest {
         return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint);
     }
 
+    /// @dev Returns the salt used when deploying an Account.
+    function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
+        return keccak256(abi.encodePacked(_admin, _data));
+    }
+
     function setUp() public override {
         super.setUp();
 
@@ -234,7 +239,7 @@ contract SimpleAccountTest is BaseTest {
     function test_revert_onRegister_nonFactoryChildContract() public {
         vm.prank(address(0x12345));
         vm.expectRevert("AccountFactory: not an account.");
-        accountFactory.onRegister(accountAdmin, "");
+        accountFactory.onRegister(_generateSalt(accountAdmin, ""));
     }
 
     /*///////////////////////////////////////////////////////////////

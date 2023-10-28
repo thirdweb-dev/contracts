@@ -56,9 +56,9 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
+    function initialize(address _defaultAdmin, bytes calldata _data) public virtual initializer {
         // This is passed as data in the `_registerOnFactory()` call in `AccountExtension` / `Account`.
-        AccountCoreStorage.data().firstAdmin = _defaultAdmin;
+        AccountCoreStorage.data().creationSalt = _generateSalt(_defaultAdmin, _data);
         _setAdmin(_defaultAdmin, true);
     }
 
@@ -189,6 +189,11 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
                         Internal functions
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Returns the salt used when deploying an Account.
+    function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
+        return keccak256(abi.encodePacked(_admin, _data));
+    }
+
     function getFunctionSignature(bytes calldata data) internal pure returns (bytes4 functionSelector) {
         require(data.length >= 4, "!Data");
         return bytes4(data[:4]);
@@ -243,9 +248,9 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         super._setAdmin(_account, _isAdmin);
         if (factory.code.length > 0) {
             if (_isAdmin) {
-                BaseAccountFactory(factory).onSignerAdded(_account, AccountCoreStorage.data().firstAdmin, "");
+                BaseAccountFactory(factory).onSignerAdded(_account, AccountCoreStorage.data().creationSalt);
             } else {
-                BaseAccountFactory(factory).onSignerRemoved(_account, AccountCoreStorage.data().firstAdmin, "");
+                BaseAccountFactory(factory).onSignerRemoved(_account, AccountCoreStorage.data().creationSalt);
             }
         }
     }
@@ -253,7 +258,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     /// @notice Runs after every `changeRole` run.
     function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {
         if (factory.code.length > 0) {
-            BaseAccountFactory(factory).onSignerAdded(_req.signer, AccountCoreStorage.data().firstAdmin, "");
+            BaseAccountFactory(factory).onSignerAdded(_req.signer, AccountCoreStorage.data().creationSalt);
         }
     }
 }

@@ -123,7 +123,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     function _registerOnFactory() internal virtual {
         BaseAccountFactory factoryContract = BaseAccountFactory(factory);
         if (!factoryContract.isRegistered(address(this))) {
-            factoryContract.onRegister(AccountCoreStorage.data().firstAdmin, "");
+            factoryContract.onRegister(AccountCoreStorage.data().creationSalt);
         }
     }
 

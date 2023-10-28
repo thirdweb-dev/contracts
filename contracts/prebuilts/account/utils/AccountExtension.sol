@@ -125,7 +125,7 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         address factory = AccountCore(payable(address(this))).factory();
         BaseAccountFactory factoryContract = BaseAccountFactory(factory);
         if (!factoryContract.isRegistered(address(this))) {
-            factoryContract.onRegister(AccountCoreStorage.data().firstAdmin, "");
+            factoryContract.onRegister(AccountCoreStorage.data().creationSalt);
         }
     }
 
