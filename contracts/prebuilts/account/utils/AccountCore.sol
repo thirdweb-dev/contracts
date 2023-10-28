@@ -191,7 +191,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
 
     /// @dev Returns the salt used when deploying an Account.
     function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
-        return keccak256(abi.encodePacked(_admin, _data));
+        return keccak256(abi.encode(_admin, _data));
     }
 
     function getFunctionSignature(bytes calldata data) internal pure returns (bytes4 functionSelector) {

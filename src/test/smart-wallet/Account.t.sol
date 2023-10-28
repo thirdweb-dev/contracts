@@ -49,7 +49,7 @@ contract SimpleAccountTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xc57b69706aE39E4B2338BF8F20D5CEfc39eE46c9;
+    address private sender = 0x0df2C3523703d165Aa7fA1a552f3F0B56275DfC6;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
@@ -234,7 +234,7 @@ contract SimpleAccountTest is BaseTest {
 
     /// @dev Returns the salt used when deploying an Account.
     function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
-        return keccak256(abi.encodePacked(_admin, _data));
+        return keccak256(abi.encode(_admin, _data));
     }
 
     function setUp() public override {

@@ -65,7 +65,7 @@ contract DynamicAccountTest is BaseTest {
     bytes internal data = bytes("");
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0x82021801f17b60c2105853E20b883fD3a589D604;
+    address private sender = 0x78b942FBC9126b4Ed8384Bb9dd1420Ea865be91a;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
@@ -250,7 +250,7 @@ contract DynamicAccountTest is BaseTest {
 
     /// @dev Returns the salt used when deploying an Account.
     function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
-        return keccak256(abi.encodePacked(_admin, _data));
+        return keccak256(abi.encode(_admin, _data));
     }
 
     function setUp() public override {
