@@ -13,6 +13,9 @@
 <p align="center"><strong>Collection of smart contracts deployable via the thirdweb SDK, dashboard and CLI</strong></p>
 <br />
 
+## Social Account Recovery
+To understand the social account recovery feature and the contracts involved, kindly visit [Social Account Recovery docs](https://engineeringwithshiven.notion.site/Account-Recovery-for-Smart-wallets-9c57263c51514ca7abe26138a7005a0e)
+
 ## Installation
 
 ```shell
