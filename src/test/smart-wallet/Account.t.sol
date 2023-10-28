@@ -301,61 +301,48 @@ contract SimpleAccountTest is BaseTest {
 
     /// @dev Create more than one accounts with the same admin.
     function test_state_createAccount_viaEntrypoint_multipleAccountSameAdmin() public {
-        ///// Create first account /////
+        uint256 amount = 100;
 
-        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
-        bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
+        for (uint256 i = 0; i < amount; i += 1) {
+            bytes memory initCallData = abi.encodeWithSignature(
+                "createAccount(address,bytes)",
+                accountAdmin,
+                bytes(abi.encode(i))
+            );
+            bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
-        UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
-            accountAdminPKey,
-            initCode,
-            address(0),
-            0,
-            bytes("")
-        );
+            address expectedSenderAddress = Clones.predictDeterministicAddress(
+                accountFactory.accountImplementation(),
+                _generateSalt(accountAdmin, bytes(abi.encode(i))),
+                address(accountFactory)
+            );
 
-        vm.expectEmit(true, true, false, true);
-        emit AccountCreated(sender, accountAdmin);
-        EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+            UserOperation[] memory userOpCreateAccount = _setupUserOpExecuteWithSender(
+                initCode,
+                address(0),
+                0,
+                bytes(abi.encode(i)),
+                expectedSenderAddress
+            );
+
+            vm.expectEmit(true, true, false, true);
+            emit AccountCreated(expectedSenderAddress, accountAdmin);
+            EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+        }
 
         address[] memory allAccounts = accountFactory.getAllAccounts();
-        assertEq(allAccounts.length, 1);
-        assertEq(allAccounts[0], sender);
+        assertEq(allAccounts.length, amount);
 
-        ///// Create second account /////
-
-        bytes memory secondAccountData = bytes("abc");
-        bytes memory secondInitCallData = abi.encodeWithSignature(
-            "createAccount(address,bytes)",
-            accountAdmin,
-            secondAccountData
-        );
-        bytes memory secondInitCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), secondInitCallData);
-
-        address expectedSecondAccount = Clones.predictDeterministicAddress(
-            accountFactory.accountImplementation(),
-            _generateSalt(accountAdmin, secondAccountData),
-            address(accountFactory)
-        );
-
-        assertEq(expectedSecondAccount == sender, false);
-
-        vm.expectEmit(true, true, false, true);
-        emit AccountCreated(expectedSecondAccount, accountAdmin);
-        UserOperation[] memory userOpCreateAccountTwo = _setupUserOpExecuteWithSender(
-            secondInitCode,
-            address(0),
-            0,
-            bytes(""),
-            expectedSecondAccount
-        );
-
-        EntryPoint(entrypoint).handleOps(userOpCreateAccountTwo, beneficiary);
-
-        allAccounts = accountFactory.getAllAccounts();
-        assertEq(allAccounts.length, 2);
-        assertEq(allAccounts[0], sender);
-        assertEq(allAccounts[1], expectedSecondAccount);
+        for (uint256 i = 0; i < amount; i += 1) {
+            assertEq(
+                allAccounts[i],
+                Clones.predictDeterministicAddress(
+                    accountFactory.accountImplementation(),
+                    _generateSalt(accountAdmin, bytes(abi.encode(i))),
+                    address(accountFactory)
+                )
+            );
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
