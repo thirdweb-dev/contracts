@@ -66,7 +66,7 @@ contract ManagedAccountTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0x56C860085A6A0AEd5137b17a185160865bf6a75A;
+    address private sender = 0xC0E425e52b1FAaF84fAc61b63C7D660c87F6eBDB;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");

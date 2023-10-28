@@ -49,7 +49,7 @@ contract SimpleAccountTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xBB956D56140CA3f3060986586A2631922a4B347E;
+    address private sender = 0xc57b69706aE39E4B2338BF8F20D5CEfc39eE46c9;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
