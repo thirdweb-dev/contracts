@@ -46,7 +46,7 @@ contract NFTRejector {
 
 contract DynamicAccountTest is BaseTest {
     // Target contracts
-    EntryPoint private entrypoint;
+    EntryPoint private constant entrypoint = EntryPoint(payable(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789));
     DynamicAccountFactory private accountFactory;
 
     // Mocks
@@ -202,7 +202,8 @@ contract DynamicAccountTest is BaseTest {
         nonSigner = vm.addr(nonSignerPKey);
 
         // Setup contracts
-        entrypoint = new EntryPoint();
+        address _deployedEntrypoint = address(new EntryPoint());
+        vm.etch(address(entrypoint), bytes(_deployedEntrypoint.code));
 
         // Setting up default extension.
         IExtension.Extension memory defaultExtension;
@@ -248,7 +249,7 @@ contract DynamicAccountTest is BaseTest {
         extensions[0] = defaultExtension;
 
         // deploy account factory
-        accountFactory = new DynamicAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
+        accountFactory = new DynamicAccountFactory(deployer, extensions);
         // deploy dummy contract
         numberContract = new Number();
     }
@@ -303,10 +304,7 @@ contract DynamicAccountTest is BaseTest {
         extensions[0] = defaultExtension;
 
         // deploy account factory
-        DynamicAccountFactory factory = new DynamicAccountFactory(
-            IEntryPoint(payable(address(entrypoint))),
-            extensions
-        );
+        DynamicAccountFactory factory = new DynamicAccountFactory(deployer, extensions);
     }
 
     /// @dev Create an account by directly calling the factory.

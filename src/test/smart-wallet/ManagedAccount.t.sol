@@ -250,7 +250,11 @@ contract ManagedAccountTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        accountFactory = new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
+        accountFactory = new ManagedAccountFactory(
+            factoryDeployer,
+            IEntryPoint(payable(address(entrypoint))),
+            extensions
+        );
         // deploy dummy contract
         numberContract = new Number();
     }
@@ -303,6 +307,7 @@ contract ManagedAccountTest is BaseTest {
         // deploy account factory
         vm.prank(factoryDeployer);
         ManagedAccountFactory factory = new ManagedAccountFactory(
+            factoryDeployer,
             IEntryPoint(payable(address(entrypoint))),
             extensions
         );

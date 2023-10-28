@@ -26,15 +26,19 @@ contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
+    constructor(
+        address _defaultAdmin,
+        IEntryPoint _entrypoint,
+        Extension[] memory _defaultExtensions
+    )
         BaseRouter(_defaultExtensions)
         BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint, address(this)))), address(_entrypoint))
     {
         __BaseRouter_init();
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
 
         bytes32 _extensionRole = keccak256("EXTENSION_ROLE");
-        _setupRole(_extensionRole, msg.sender);
+        _setupRole(_extensionRole, _defaultAdmin);
         _setRoleAdmin(_extensionRole, _extensionRole);
     }
 

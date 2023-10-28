@@ -190,7 +190,7 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         IExtension.Extension[] memory extensions;
 
         // deploy account factory
-        accountFactory = new DynamicAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
+        accountFactory = new DynamicAccountFactory(deployer, extensions);
         // deploy dummy contract
         numberContract = new Number();
 
