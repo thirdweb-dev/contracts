@@ -141,6 +141,63 @@ contract SimpleAccountTest is BaseTest {
         ops[0] = op;
     }
 
+    function _setupUserOpWithSender(
+        bytes memory _initCode,
+        bytes memory _callDataForEntrypoint,
+        address _sender
+    ) internal returns (UserOperation[] memory ops) {
+        uint256 nonce = entrypoint.getNonce(_sender, 0);
+
+        // Get user op fields
+        UserOperation memory op = UserOperation({
+            sender: _sender,
+            nonce: nonce,
+            initCode: _initCode,
+            callData: _callDataForEntrypoint,
+            callGasLimit: 500_000,
+            verificationGasLimit: 500_000,
+            preVerificationGas: 500_000,
+            maxFeePerGas: 0,
+            maxPriorityFeePerGas: 0,
+            paymasterAndData: bytes(""),
+            signature: bytes("")
+        });
+
+        // Sign UserOp
+        bytes32 opHash = EntryPoint(entrypoint).getUserOpHash(op);
+        bytes32 msgHash = ECDSA.toEthSignedMessageHash(opHash);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, msgHash);
+        bytes memory userOpSignature = abi.encodePacked(r, s, v);
+
+        address recoveredSigner = ECDSA.recover(msgHash, v, r, s);
+        address expectedSigner = vm.addr(accountAdminPKey);
+        assertEq(recoveredSigner, expectedSigner);
+
+        op.signature = userOpSignature;
+
+        // Store UserOp
+        ops = new UserOperation[](1);
+        ops[0] = op;
+    }
+
+    function _setupUserOpExecuteWithSender(
+        bytes memory _initCode,
+        address _target,
+        uint256 _value,
+        bytes memory _callData,
+        address _sender
+    ) internal returns (UserOperation[] memory) {
+        bytes memory callDataForEntrypoint = abi.encodeWithSignature(
+            "execute(address,uint256,bytes)",
+            _target,
+            _value,
+            _callData
+        );
+
+        return _setupUserOpWithSender(_initCode, callDataForEntrypoint, _sender);
+    }
+
     function _setupUserOpExecute(
         uint256 _signerPKey,
         bytes memory _initCode,
@@ -240,6 +297,65 @@ contract SimpleAccountTest is BaseTest {
         vm.prank(address(0x12345));
         vm.expectRevert("AccountFactory: not an account.");
         accountFactory.onRegister(_generateSalt(accountAdmin, ""));
+    }
+
+    /// @dev Create more than one accounts with the same admin.
+    function test_state_createAccount_viaEntrypoint_multipleAccountSameAdmin() public {
+        ///// Create first account /////
+
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
+        bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
+
+        UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
+            accountAdminPKey,
+            initCode,
+            address(0),
+            0,
+            bytes("")
+        );
+
+        vm.expectEmit(true, true, false, true);
+        emit AccountCreated(sender, accountAdmin);
+        EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+
+        address[] memory allAccounts = accountFactory.getAllAccounts();
+        assertEq(allAccounts.length, 1);
+        assertEq(allAccounts[0], sender);
+
+        ///// Create second account /////
+
+        bytes memory secondAccountData = bytes("abc");
+        bytes memory secondInitCallData = abi.encodeWithSignature(
+            "createAccount(address,bytes)",
+            accountAdmin,
+            secondAccountData
+        );
+        bytes memory secondInitCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), secondInitCallData);
+
+        address expectedSecondAccount = Clones.predictDeterministicAddress(
+            accountFactory.accountImplementation(),
+            _generateSalt(accountAdmin, secondAccountData),
+            address(accountFactory)
+        );
+
+        assertEq(expectedSecondAccount == sender, false);
+
+        vm.expectEmit(true, true, false, true);
+        emit AccountCreated(expectedSecondAccount, accountAdmin);
+        UserOperation[] memory userOpCreateAccountTwo = _setupUserOpExecuteWithSender(
+            secondInitCode,
+            address(0),
+            0,
+            bytes(""),
+            expectedSecondAccount
+        );
+
+        EntryPoint(entrypoint).handleOps(userOpCreateAccountTwo, beneficiary);
+
+        allAccounts = accountFactory.getAllAccounts();
+        assertEq(allAccounts.length, 2);
+        assertEq(allAccounts[0], sender);
+        assertEq(allAccounts[1], expectedSecondAccount);
     }
 
     /*///////////////////////////////////////////////////////////////
