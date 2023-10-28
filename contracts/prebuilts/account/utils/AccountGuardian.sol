@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.12;
 
-import {IAccountGuardian} from "../interface/IAccountGuardian.sol";
-import {Guardian} from "./Guardian.sol";
-import {AccountLock} from "./AccountLock.sol";
+import { IAccountGuardian } from "../interface/IAccountGuardian.sol";
+import { Guardian } from "./Guardian.sol";
+import { AccountLock } from "./AccountLock.sol";
 
 contract AccountGuardian is IAccountGuardian {
     Guardian public guardianContract;
@@ -12,7 +12,7 @@ contract AccountGuardian is IAccountGuardian {
     address[] private accountGuardians;
     address public owner;
 
-    error NotOwnerOrAccountLock();
+    error NotOwnerOrAccountLock(address owner, address sender);
 
     constructor(Guardian _guardianContract, AccountLock _accountLock, address _account) {
         guardianContract = _guardianContract;
@@ -21,9 +21,9 @@ contract AccountGuardian is IAccountGuardian {
         owner = account;
     }
 
-        modifier onlyOwnerOrAccountLock() {
-        if( msg.sender != owner || msg.sender != address(accountLock)) {
-            revert NotOwnerOrAccountLock();
+    modifier onlyOwnerOrAccountLock() {
+        if (msg.sender != owner && msg.sender != address(accountLock)) {
+            revert NotOwnerOrAccountLock(owner, msg.sender);
         }
         _;
     }
@@ -33,7 +33,7 @@ contract AccountGuardian is IAccountGuardian {
     ////////////////////////////
 
     function addGuardian(address guardian) external onlyOwnerOrAccountLock {
-        if(guardianContract.isVerifiedGuardian(guardian)) {
+        if (guardianContract.isVerifiedGuardian(guardian)) {
             accountGuardians.push(guardian);
             guardianContract.addAccountToGuardian(guardian, owner);
             emit GuardianAdded(guardian);
@@ -44,25 +44,25 @@ contract AccountGuardian is IAccountGuardian {
 
     function removeGuardian(address guardian) external onlyOwnerOrAccountLock {
         bool guardianFound = false;
-        for(uint256 g = 0; g < accountGuardians.length; g++) {
-            if(accountGuardians[g] == guardian) {
+        for (uint256 g = 0; g < accountGuardians.length; g++) {
+            if (accountGuardians[g] == guardian) {
                 guardianFound = true;
                 delete accountGuardians[g];
                 emit GuardianRemoved(guardian);
             }
         }
-        if(!guardianFound) {
+        if (!guardianFound) {
             revert NotAGuardian(guardian);
         }
     }
 
-    function getAllGuardians() external view onlyOwnerOrAccountLock returns(address[] memory){
+    function getAllGuardians() external view onlyOwnerOrAccountLock returns (address[] memory) {
         return accountGuardians;
     }
 
-    function isAccountGuardian(address guardian) external view onlyOwnerOrAccountLock returns (bool){
-        for(uint256 g = 0; g < accountGuardians.length; g++) {
-            if(accountGuardians[g] == guardian) {
+    function isAccountGuardian(address guardian) external view onlyOwnerOrAccountLock returns (bool) {
+        for (uint256 g = 0; g < accountGuardians.length; g++) {
+            if (accountGuardians[g] == guardian) {
                 return true;
             }
         }

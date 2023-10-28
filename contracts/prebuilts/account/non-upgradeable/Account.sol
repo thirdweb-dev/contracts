@@ -10,9 +10,10 @@ import "../utils/BaseAccount.sol";
 
 // Extensions
 import "../utils/AccountCore.sol";
-import { Guardian } from "../utils/Guardian.sol";
+
 import { AccountLock } from "../utils/AccountLock.sol";
-import { AccountGuardian } from "../utils/AccountGuardian.sol";
+import { BaseAccountFactory } from "../utils/BaseAccountFactory.sol";
+
 import "../../../extension/upgradeable/ContractMetadata.sol";
 import "../../../external-deps/openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import "../../../external-deps/openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
@@ -35,26 +36,16 @@ import "../utils/BaseAccountFactory.sol";
 contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC1155Holder {
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
-    AccountLock public accountLock;
-    Guardian public guardian;
-    AccountGuardian accountGuardian;
+    AccountLock public accountLock = BaseAccountFactory.accountLock();
+    Guardian public guardian = BaseAccountFactory.guardian();
     bool public paused;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    constructor(
-        IEntryPoint _entrypoint,
-        address _factory,
-        AccountLock _accountLock,
-        Guardian _guardian
-    ) AccountCore(_entrypoint, _factory) {
-        accountLock = _accountLock;
-        guardian = _guardian;
-
-        accountGuardian = new AccountGuardian(_guardian, _accountLock, address(this));
-        Guardian(_guardian).linkAccountToAccountGuardian(address(this), address(accountGuardian));
+    constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {
+        // TODO: to be deployed by BaseFactory after we get the processed account address
         paused = false;
     }
 

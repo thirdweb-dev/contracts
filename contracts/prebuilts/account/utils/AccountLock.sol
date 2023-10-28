@@ -34,7 +34,6 @@ contract AccountLock is IAccountLock, AutomationCompatibleInterface {
     int256 public constant INITIAL_GAS_PRICE = 2e8;
     uint96 public constant FUND_UPKEEP_LINK_TOKEN = 5e18;
     uint256 public constant LOCK_REQUEST_TIME_TO_EVALUATION = 604800; // 7 days
-    address internal _guardianInitiatingLockRequest = msg.sender;
     address[] internal _lockedAccounts;
     mapping(address => bytes32) private accountToLockRequest;
     mapping(bytes32 => uint256) private lockRequestToCreationTime;
@@ -92,8 +91,8 @@ contract AccountLock is IAccountLock, AutomationCompatibleInterface {
          **/
 
         address accountGuardian = guardianContract.getAccountGuardian(account);
-        if (!AccountGuardian(accountGuardian).isAccountGuardian(_guardianInitiatingLockRequest)) {
-            revert NotAGuardian(_guardianInitiatingLockRequest);
+        if (!AccountGuardian(accountGuardian).isAccountGuardian(msg.sender)) {
+            revert NotAGuardian(account);
         }
 
         if (_isLocked(account)) {

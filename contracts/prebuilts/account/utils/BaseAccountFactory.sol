@@ -8,6 +8,9 @@ import "../../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 import "../utils/BaseAccount.sol";
 import "../../../extension/interface/IAccountPermissions.sol";
 import "../../../lib/BytesLib.sol";
+import { Guardian } from "../utils/Guardian.sol";
+import { AccountGuardian } from "../utils/AccountGuardian.sol";
+import { AccountLock } from "../utils/AccountLock.sol";
 
 // Interface
 import "../interface/IEntrypoint.sol";
@@ -31,6 +34,11 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     address public immutable accountImplementation;
     address public immutable entrypoint;
+
+    // Creating instances of thirdweb's guardian & accountLock contracts
+    Guardian public guardian = new Guardian();
+    AccountLock public accountLock = new AccountLock(guardian);
+    AccountGuardian public accountGuardian;
 
     EnumerableSet.AddressSet private allAccounts;
     mapping(address => EnumerableSet.AddressSet) internal accountsOfSigner;
@@ -68,6 +76,10 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
         emit AccountCreated(account, _admin);
 
+        // creating the AccountGuardian for the new Account
+        accountGuardian = new AccountGuardian(guardian, accountLock, account);
+        Guardian(guardian).linkAccountToAccountGuardian(account, address(accountGuardian));
+
         return account;
     }
 
@@ -79,11 +91,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         require(allAccounts.add(account), "AccountFactory: account already registered");
     }
 
-    function onSignerAdded(
-        address _signer,
-        address _defaultAdmin,
-        bytes memory _data
-    ) external {
+    function onSignerAdded(address _signer, address _defaultAdmin, bytes memory _data) external {
         address account = msg.sender;
         require(_isAccountOfFactory(account, _defaultAdmin, _data), "AccountFactory: not an account.");
 
@@ -95,11 +103,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @notice Callback function for an Account to un-register its signers.
-    function onSignerRemoved(
-        address _signer,
-        address _defaultAdmin,
-        bytes memory _data
-    ) external {
+    function onSignerRemoved(address _signer, address _defaultAdmin, bytes memory _data) external {
         address account = msg.sender;
         require(_isAccountOfFactory(account, _defaultAdmin, _data), "AccountFactory: not an account.");
 
@@ -161,9 +165,5 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(
-        address _account,
-        address _admin,
-        bytes calldata _data
-    ) internal virtual;
+    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal virtual;
 }
