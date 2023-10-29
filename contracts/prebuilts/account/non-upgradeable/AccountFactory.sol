@@ -31,9 +31,7 @@ contract AccountFactory is Initializable, BaseAccountFactory, ContractMetadata, 
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint)
-        BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint))
-    {}
+    constructor(IEntryPoint _entrypoint) BaseAccountFactory(address(new Account(_entrypoint)), address(_entrypoint)) {}
 
     /// @notice Initializes the factory contract.
     function initialize(address _defaultAdmin, string memory _contractURI) external initializer {
@@ -51,7 +49,7 @@ contract AccountFactory is Initializable, BaseAccountFactory, ContractMetadata, 
         address _admin,
         bytes calldata _data
     ) internal override {
-        Account(payable(_account)).initialize(_admin, _data);
+        Account(payable(_account)).initialize(_admin, address(this), _data);
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.

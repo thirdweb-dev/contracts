@@ -19,15 +19,15 @@ import "@thirdweb-dev/dynamic-contracts/src/core/Router.sol";
 import "@thirdweb-dev/dynamic-contracts/src/interface/IRouterState.sol";
 
 contract ManagedAccount is AccountCore, Router, IRouterState {
-    constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {}
+    constructor(IEntryPoint _entrypoint) AccountCore(_entrypoint) {}
 
     /// @notice Returns the implementation contract address for a given function signature.
     function getImplementationForFunction(bytes4 _functionSelector) public view virtual override returns (address) {
-        return Router(payable(factory)).getImplementationForFunction(_functionSelector);
+        return Router(payable(AccountCoreStorage.data().factory)).getImplementationForFunction(_functionSelector);
     }
 
     /// @notice Returns all extensions of the Router.
     function getAllExtensions() external view returns (Extension[] memory) {
-        return IRouterState(payable(factory)).getAllExtensions();
+        return IRouterState(payable(AccountCoreStorage.data().factory)).getAllExtensions();
     }
 }

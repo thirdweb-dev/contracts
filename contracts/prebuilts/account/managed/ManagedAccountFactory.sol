@@ -35,7 +35,7 @@ contract ManagedAccountFactory is
 
     constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
         BaseRouter(_defaultExtensions)
-        BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint, address(this)))), address(_entrypoint))
+        BaseAccountFactory(address(new ManagedAccount(_entrypoint)), address(_entrypoint))
     {}
 
     /// @notice Initializes the factory contract.
@@ -61,7 +61,7 @@ contract ManagedAccountFactory is
         address _admin,
         bytes calldata _data
     ) internal override {
-        ManagedAccount(payable(_account)).initialize(_admin, _data);
+        ManagedAccount(payable(_account)).initialize(_admin, address(this), _data);
     }
 
     /// @dev Returns whether all relevant permission and other checks are met before any upgrade.

@@ -31,7 +31,7 @@ contract DynamicAccountFactory is Initializable, BaseAccountFactory, ContractMet
 
     constructor(IExtension.Extension[] memory _defaultExtensions)
         BaseAccountFactory(
-            payable(address(new DynamicAccount(IEntryPoint(ENTRYPOINT_ADDRESS), _defaultExtensions))),
+            address(new DynamicAccount(IEntryPoint(ENTRYPOINT_ADDRESS), _defaultExtensions)),
             ENTRYPOINT_ADDRESS
         )
     {}
@@ -52,7 +52,7 @@ contract DynamicAccountFactory is Initializable, BaseAccountFactory, ContractMet
         address _admin,
         bytes calldata _data
     ) internal override {
-        DynamicAccount(payable(_account)).initialize(_admin, _data);
+        DynamicAccount(payable(_account)).initialize(_admin, address(this), _data);
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
