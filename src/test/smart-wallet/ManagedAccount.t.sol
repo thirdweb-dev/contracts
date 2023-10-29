@@ -67,7 +67,7 @@ contract ManagedAccountTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xbEA1Fa134A1727187A8f2e7E714B660f3a95478D;
+    address private sender = 0x48670c84959b8854A9036D88a020382bA89a47Ce;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
@@ -327,7 +327,7 @@ contract ManagedAccountTest is BaseTest {
                 address(
                     new TWProxy(
                         factoryImpl,
-                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
+                        abi.encodeWithSignature("initialize(address,string)", factoryDeployer, "https://example.com")
                     )
                 )
             )
@@ -413,7 +413,7 @@ contract ManagedAccountTest is BaseTest {
     }
 
     /// @dev Create an account via Entrypoint.
-    function test_state_createAccount_viaEntrypoint() public {
+    function test_state_createAccount_viaEntrypointSingle() public {
         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 

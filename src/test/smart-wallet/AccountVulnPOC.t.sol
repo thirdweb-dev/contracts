@@ -74,7 +74,7 @@ contract SimpleAccountVulnPOCTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0x0df2C3523703d165Aa7fA1a552f3F0B56275DfC6;
+    address private sender = 0xDD1d01438DcF28eb45a611c7faBD716B0dECE259;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
