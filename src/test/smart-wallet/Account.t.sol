@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 // Test utils
 import "../utils/BaseTest.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
@@ -188,9 +189,29 @@ contract SimpleAccountTest is BaseTest {
         // Setup contracts
         entrypoint = new EntryPoint();
         // deploy account factory
-        accountFactory = new AccountFactory(deployer, IEntryPoint(payable(address(entrypoint))));
+        address factoryImpl = address(new AccountFactory(IEntryPoint(payable(address(entrypoint)))));
+        accountFactory = AccountFactory(
+            address(
+                payable(
+                    new TWProxy(
+                        factoryImpl,
+                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
+                    )
+                )
+            )
+        );
         // deploy dummy contract
         numberContract = new Number();
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                        Test: initial state
+    //////////////////////////////////////////////////////////////*/
+
+    function test_initialState() external {
+        assertEq(accountFactory.entrypoint(), address(entrypoint));
+        assertEq(accountFactory.contractURI(), "https://example.com");
+        assertEq(accountFactory.hasRole(0x00, deployer), true);
     }
 
     /*///////////////////////////////////////////////////////////////

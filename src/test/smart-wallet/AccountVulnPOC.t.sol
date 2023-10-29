@@ -6,6 +6,7 @@ import "../utils/BaseTest.sol";
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
 import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Target
 import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
@@ -212,7 +213,17 @@ contract SimpleAccountVulnPOCTest is BaseTest {
         // Setup contracts
         entrypoint = new EntryPoint();
         // deploy account factory
-        accountFactory = new AccountFactory(deployer, IEntryPoint(payable(address(entrypoint))));
+        address factoryImpl = address(new AccountFactory(IEntryPoint(payable(address(entrypoint)))));
+        accountFactory = AccountFactory(
+            address(
+                payable(
+                    new TWProxy(
+                        factoryImpl,
+                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
+                    )
+                )
+            )
+        );
         // deploy dummy contract
         numberContract = new Number();
     }
