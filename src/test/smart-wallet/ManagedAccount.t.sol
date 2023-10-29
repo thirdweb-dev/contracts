@@ -276,7 +276,7 @@ contract ManagedAccountTest is BaseTest {
             implementation: address(new AccountExtension())
         });
 
-        defaultExtension.functions = new IExtension.ExtensionFunction[](7);
+        defaultExtension.functions = new IExtension.ExtensionFunction[](9);
 
         defaultExtension.functions[0] = IExtension.ExtensionFunction(
             AccountExtension.supportsInterface.selector,
@@ -305,6 +305,14 @@ contract ManagedAccountTest is BaseTest {
         defaultExtension.functions[6] = IExtension.ExtensionFunction(
             AccountExtension.isValidSignature.selector,
             "isValidSignature(bytes32,bytes)"
+        );
+        defaultExtension.functions[7] = IExtension.ExtensionFunction(
+            AccountExtension.addDeposit.selector,
+            "addDeposit()"
+        );
+        defaultExtension.functions[8] = IExtension.ExtensionFunction(
+            AccountExtension.withdrawDepositTo.selector,
+            "withdrawDepositTo(address,uint256)"
         );
 
         IExtension.Extension[] memory extensions = new IExtension.Extension[](1);

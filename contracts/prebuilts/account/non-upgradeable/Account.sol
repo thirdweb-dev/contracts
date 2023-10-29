@@ -115,6 +115,17 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         }
     }
 
+    /// @notice Deposit funds for this account in Entrypoint.
+    function addDeposit() public payable {
+        entryPoint().depositTo{ value: msg.value }(address(this));
+    }
+
+    /// @notice Withdraw funds for this account from Entrypoint.
+    function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public {
+        _onlyAdmin();
+        entryPoint().withdrawTo(withdrawAddress, amount);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/

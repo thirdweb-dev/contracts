@@ -116,6 +116,17 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         }
     }
 
+    /// @notice Deposit funds for this account in Entrypoint.
+    function addDeposit() public payable {
+        AccountCore(payable(address(this))).entryPoint().depositTo{ value: msg.value }(address(this));
+    }
+
+    /// @notice Withdraw funds for this account from Entrypoint.
+    function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public {
+        _onlyAdmin();
+        AccountCore(payable(address(this))).entryPoint().withdrawTo(withdrawAddress, amount);
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
