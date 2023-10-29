@@ -67,7 +67,7 @@ contract ManagedAccountTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0x56C860085A6A0AEd5137b17a185160865bf6a75A;
+    address private sender = 0xbEA1Fa134A1727187A8f2e7E714B660f3a95478D;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
@@ -159,6 +159,63 @@ contract ManagedAccountTest is BaseTest {
         ops[0] = op;
     }
 
+    function _setupUserOpWithSender(
+        bytes memory _initCode,
+        bytes memory _callDataForEntrypoint,
+        address _sender
+    ) internal returns (UserOperation[] memory ops) {
+        uint256 nonce = entrypoint.getNonce(_sender, 0);
+
+        // Get user op fields
+        UserOperation memory op = UserOperation({
+            sender: _sender,
+            nonce: nonce,
+            initCode: _initCode,
+            callData: _callDataForEntrypoint,
+            callGasLimit: 5_000_000,
+            verificationGasLimit: 5_000_000,
+            preVerificationGas: 5_000_000,
+            maxFeePerGas: 0,
+            maxPriorityFeePerGas: 0,
+            paymasterAndData: bytes(""),
+            signature: bytes("")
+        });
+
+        // Sign UserOp
+        bytes32 opHash = EntryPoint(entrypoint).getUserOpHash(op);
+        bytes32 msgHash = ECDSA.toEthSignedMessageHash(opHash);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, msgHash);
+        bytes memory userOpSignature = abi.encodePacked(r, s, v);
+
+        address recoveredSigner = ECDSA.recover(msgHash, v, r, s);
+        address expectedSigner = vm.addr(accountAdminPKey);
+        assertEq(recoveredSigner, expectedSigner);
+
+        op.signature = userOpSignature;
+
+        // Store UserOp
+        ops = new UserOperation[](1);
+        ops[0] = op;
+    }
+
+    function _setupUserOpExecuteWithSender(
+        bytes memory _initCode,
+        address _target,
+        uint256 _value,
+        bytes memory _callData,
+        address _sender
+    ) internal returns (UserOperation[] memory) {
+        bytes memory callDataForEntrypoint = abi.encodeWithSignature(
+            "execute(address,uint256,bytes)",
+            _target,
+            _value,
+            _callData
+        );
+
+        return _setupUserOpWithSender(_initCode, callDataForEntrypoint, _sender);
+    }
+
     function _setupUserOpExecute(
         uint256 _signerPKey,
         bytes memory _initCode,
@@ -193,6 +250,11 @@ contract ManagedAccountTest is BaseTest {
         return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint);
     }
 
+    /// @dev Returns the salt used when deploying an Account.
+    function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
+        return keccak256(abi.encode(_admin, _data));
+    }
+
     function setUp() public override {
         super.setUp();
 
@@ -215,7 +277,7 @@ contract ManagedAccountTest is BaseTest {
             implementation: address(new AccountExtension())
         });
 
-        defaultExtension.functions = new IExtension.ExtensionFunction[](7);
+        defaultExtension.functions = new IExtension.ExtensionFunction[](9);
 
         defaultExtension.functions[0] = IExtension.ExtensionFunction(
             AccountExtension.supportsInterface.selector,
@@ -244,6 +306,14 @@ contract ManagedAccountTest is BaseTest {
         defaultExtension.functions[6] = IExtension.ExtensionFunction(
             AccountExtension.isValidSignature.selector,
             "isValidSignature(bytes32,bytes)"
+        );
+        defaultExtension.functions[7] = IExtension.ExtensionFunction(
+            AccountExtension.addDeposit.selector,
+            "addDeposit()"
+        );
+        defaultExtension.functions[8] = IExtension.ExtensionFunction(
+            AccountExtension.withdrawDepositTo.selector,
+            "withdrawDepositTo(address,uint256)"
         );
 
         IExtension.Extension[] memory extensions = new IExtension.Extension[](1);
@@ -368,7 +438,53 @@ contract ManagedAccountTest is BaseTest {
     function test_revert_onRegister_nonFactoryChildContract() public {
         vm.prank(address(0x12345));
         vm.expectRevert("AccountFactory: not an account.");
-        accountFactory.onRegister(accountAdmin, "");
+        accountFactory.onRegister(_generateSalt(accountAdmin, ""));
+    }
+
+    /// @dev Create more than one accounts with the same admin.
+    function test_state_createAccount_viaEntrypoint_multipleAccountSameAdmin() public {
+        uint256 amount = 1;
+
+        for (uint256 i = 0; i < amount; i += 1) {
+            bytes memory initCallData = abi.encodeWithSignature(
+                "createAccount(address,bytes)",
+                accountAdmin,
+                bytes(abi.encode(i))
+            );
+            bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
+
+            address expectedSenderAddress = Clones.predictDeterministicAddress(
+                accountFactory.accountImplementation(),
+                _generateSalt(accountAdmin, bytes(abi.encode(i))),
+                address(accountFactory)
+            );
+
+            UserOperation[] memory userOpCreateAccount = _setupUserOpExecuteWithSender(
+                initCode,
+                address(0),
+                0,
+                bytes(abi.encode(i)),
+                expectedSenderAddress
+            );
+
+            vm.expectEmit(true, true, false, true);
+            emit AccountCreated(expectedSenderAddress, accountAdmin);
+            EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+        }
+
+        address[] memory allAccounts = accountFactory.getAllAccounts();
+        assertEq(allAccounts.length, amount);
+
+        for (uint256 i = 0; i < amount; i += 1) {
+            assertEq(
+                allAccounts[i],
+                Clones.predictDeterministicAddress(
+                    accountFactory.accountImplementation(),
+                    _generateSalt(accountAdmin, bytes(abi.encode(i))),
+                    address(accountFactory)
+                )
+            );
+        }
     }
 
     /*///////////////////////////////////////////////////////////////

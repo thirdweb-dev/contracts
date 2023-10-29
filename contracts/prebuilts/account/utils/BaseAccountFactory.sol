@@ -73,20 +73,16 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @notice Callback function for an Account to register itself on the factory.
-    function onRegister(address _defaultAdmin, bytes memory _data) external {
+    function onRegister(bytes32 _salt) external {
         address account = msg.sender;
-        require(_isAccountOfFactory(account, _defaultAdmin, _data), "AccountFactory: not an account.");
+        require(_isAccountOfFactory(account, _salt), "AccountFactory: not an account.");
 
         require(_baseAccountFactoryStorage().allAccounts.add(account), "AccountFactory: account already registered");
     }
 
-    function onSignerAdded(
-        address _signer,
-        address _defaultAdmin,
-        bytes memory _data
-    ) external {
+    function onSignerAdded(address _signer, bytes32 _salt) external {
         address account = msg.sender;
-        require(_isAccountOfFactory(account, _defaultAdmin, _data), "AccountFactory: not an account.");
+        require(_isAccountOfFactory(account, _salt), "AccountFactory: not an account.");
 
         bool isNewSigner = _baseAccountFactoryStorage().accountsOfSigner[_signer].add(account);
 
@@ -96,13 +92,9 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @notice Callback function for an Account to un-register its signers.
-    function onSignerRemoved(
-        address _signer,
-        address _defaultAdmin,
-        bytes memory _data
-    ) external {
+    function onSignerRemoved(address _signer, bytes32 _salt) external {
         address account = msg.sender;
-        require(_isAccountOfFactory(account, _defaultAdmin, _data), "AccountFactory: not an account.");
+        require(_isAccountOfFactory(account, _salt), "AccountFactory: not an account.");
 
         bool isAccount = _baseAccountFactoryStorage().accountsOfSigner[_signer].remove(account);
 
@@ -141,13 +133,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether the caller is an account deployed by this factory.
-    function _isAccountOfFactory(
-        address _account,
-        address _admin,
-        bytes memory _data
-    ) internal view virtual returns (bool) {
-        bytes32 salt = _generateSalt(_admin, _data);
-        address predicted = Clones.predictDeterministicAddress(accountImplementation, salt);
+    function _isAccountOfFactory(address _account, bytes32 _salt) internal view virtual returns (bool) {
+        address predicted = Clones.predictDeterministicAddress(accountImplementation, _salt);
         return _account == predicted;
     }
 
@@ -157,8 +144,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @dev Returns the salt used when deploying an Account.
-    function _generateSalt(address _admin, bytes memory) internal view virtual returns (bytes32) {
-        return keccak256(abi.encode(_admin));
+    function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
+        return keccak256(abi.encode(_admin, _data));
     }
 
     /// @dev Returns the BaseAccountFactory contract's storage.
