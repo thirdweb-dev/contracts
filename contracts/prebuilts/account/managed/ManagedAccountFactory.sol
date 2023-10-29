@@ -4,6 +4,7 @@ pragma solidity ^0.8.12;
 // Utils
 import "@thirdweb-dev/dynamic-contracts/src/presets/BaseRouter.sol";
 import "../utils/BaseAccountFactory.sol";
+import "../../../extension/upgradeable/Initializable.sol";
 
 // Extensions
 import "../../../extension/upgradeable//PermissionsEnumerable.sol";
@@ -21,25 +22,33 @@ import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable, BaseRouter {
+contract ManagedAccountFactory is
+    Initializable,
+    BaseAccountFactory,
+    ContractMetadata,
+    PermissionsEnumerable,
+    BaseRouter
+{
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(
-        address _defaultAdmin,
-        IEntryPoint _entrypoint,
-        Extension[] memory _defaultExtensions
-    )
+    constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
         BaseRouter(_defaultExtensions)
         BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint, address(this)))), address(_entrypoint))
-    {
+    {}
+
+    /// @notice Initializes the factory contract.
+    function initialize(address _defaultAdmin, string memory _contractURI) external initializer {
         __BaseRouter_init();
+
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
 
         bytes32 _extensionRole = keccak256("EXTENSION_ROLE");
         _setupRole(_extensionRole, _defaultAdmin);
         _setRoleAdmin(_extensionRole, _extensionRole);
+
+        _setupContractURI(_contractURI);
     }
 
     /*///////////////////////////////////////////////////////////////

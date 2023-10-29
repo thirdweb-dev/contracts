@@ -5,6 +5,7 @@ pragma solidity ^0.8.12;
 import "../utils/BaseAccountFactory.sol";
 import "../utils/BaseAccount.sol";
 import "../../../external-deps/openzeppelin/proxy/Clones.sol";
+import "../../../extension/upgradeable/Initializable.sol";
 
 // Extensions
 import "../../../extension/upgradeable//PermissionsEnumerable.sol";
@@ -25,15 +26,19 @@ import { Account } from "./Account.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
+contract AccountFactory is Initializable, BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _defaultAdmin, IEntryPoint _entrypoint)
+    constructor(IEntryPoint _entrypoint)
         BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint))
-    {
+    {}
+
+    /// @notice Initializes the factory contract.
+    function initialize(address _defaultAdmin, string memory _contractURI) external initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupContractURI(_contractURI);
     }
 
     /*///////////////////////////////////////////////////////////////
