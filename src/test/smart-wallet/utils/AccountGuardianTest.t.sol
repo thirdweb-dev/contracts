@@ -2,22 +2,34 @@
 pragma solidity ^0.8.12;
 
 import { Test } from "forge-std/Test.sol";
+import { EntryPoint } from "contracts/prebuilts/account/utils/EntryPoint.sol";
+import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
 import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
 import { AccountGuardian } from "contracts/prebuilts/account/utils/AccountGuardian.sol";
-import { DeploySmartAccountUtilContracts } from "scripts/DeploySmartAccountUtilContracts.s.sol";
+import { AccountLock } from "contracts/prebuilts/account/utils/AccountLock.sol";
+import { DeployGuardian } from "scripts/DeployGuardian.s.sol";
 import { IAccountGuardian } from "contracts/prebuilts/account/interface/IAccountGuardian.sol";
 
 contract AccountGuardianTest is Test {
     AccountGuardian accountGuardian;
     Guardian public guardianContract;
+    AccountLock public accountLock;
     address randomUser = makeAddr("randomUser");
     address guardian = makeAddr("guardian");
 
     event GuardianRemoved(address indexed guardian);
 
     function setUp() public {
-        DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
-        (, , accountGuardian, guardianContract, ) = deployer.run();
+        EntryPoint entryPoint = new EntryPoint();
+
+        AccountFactory accountFactory = new AccountFactory(entryPoint);
+
+        guardianContract = accountFactory.guardian();
+        accountLock = accountFactory.accountLock();
+
+        address account = accountFactory.createAccount(address(this), "");
+
+        accountGuardian = new AccountGuardian(guardianContract, accountLock, account);
     }
 
     modifier addVerifiedGuardian() {

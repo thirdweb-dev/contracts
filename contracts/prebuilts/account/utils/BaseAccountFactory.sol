@@ -8,13 +8,14 @@ import "../../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 import "../utils/BaseAccount.sol";
 import "../../../extension/interface/IAccountPermissions.sol";
 import "../../../lib/BytesLib.sol";
-import { Guardian } from "../utils/Guardian.sol";
-import { AccountGuardian } from "../utils/AccountGuardian.sol";
-import { AccountLock } from "../utils/AccountLock.sol";
 
 // Interface
 import "../interface/IEntrypoint.sol";
 import "../interface/IAccountFactory.sol";
+
+import { AccountLock } from "../utils/AccountLock.sol";
+import { Guardian } from "../utils/Guardian.sol";
+import { AccountGuardian } from "../utils/AccountGuardian.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -34,11 +35,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     address public immutable accountImplementation;
     address public immutable entrypoint;
-
-    // Creating instances of thirdweb's guardian & accountLock contracts
-    Guardian public guardian = new Guardian();
-    AccountLock public accountLock = new AccountLock(guardian);
-    AccountGuardian public accountGuardian;
+    Guardian public guardian;
+    AccountLock public accountLock;
 
     EnumerableSet.AddressSet private allAccounts;
     mapping(address => EnumerableSet.AddressSet) internal accountsOfSigner;
@@ -50,6 +48,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     constructor(address _accountImpl, address _entrypoint) {
         accountImplementation = _accountImpl;
         entrypoint = _entrypoint;
+        guardian = new Guardian();
+        accountLock = new AccountLock(guardian);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -76,9 +76,9 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
         emit AccountCreated(account, _admin);
 
-        // creating the AccountGuardian for the new Account
-        accountGuardian = new AccountGuardian(guardian, accountLock, account);
-        Guardian(guardian).linkAccountToAccountGuardian(account, address(accountGuardian));
+        // Deploying AccountGuardian for this account
+        AccountGuardian accountGuardian = new AccountGuardian(guardian, accountLock, account);
+        guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
 
         return account;
     }
