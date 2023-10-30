@@ -39,7 +39,10 @@ remappings = [
   'erc721a/=lib/ERC721A/',
   '@thirdweb-dev/dynamic-contracts/=lib/dynamic-contracts/',
   'lib/sstore2=lib/dynamic-contracts/lib/sstore2/'
+  'aa-benchmark/=lib/aa-benchmark/',
+  'solady/=lib/solady/src/'
 ]
+fs_permissions = [{ access = "read-write", path = "./src/test/smart-wallet/utils"}]
 src = 'contracts'
 test = 'src/test'
 verbosity = 0

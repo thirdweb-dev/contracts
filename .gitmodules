@@ -24,3 +24,9 @@
 [submodule "lib/dynamic-contracts"]
 	path = lib/dynamic-contracts
 	url = https://github.com/thirdweb-dev/dynamic-contracts
+[submodule "lib/aa-benchmark"]
+	path = lib/aa-benchmark
+	url = https://github.com/zerodevapp/aa-benchmark
+[submodule "lib/solady"]
+	path = lib/solady
+	url = https://github.com/Vectorized/solady
