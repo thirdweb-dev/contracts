@@ -30,9 +30,9 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint)
-        BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint))
-    {
+    constructor(
+        IEntryPoint _entrypoint
+    ) BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint)) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -41,11 +41,7 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(
-        address _account,
-        address _admin,
-        bytes calldata _data
-    ) internal override {
+    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal override {
         Account(payable(_account)).initialize(_admin, _data);
     }
 

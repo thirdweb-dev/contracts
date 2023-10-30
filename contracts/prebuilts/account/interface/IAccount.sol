@@ -4,6 +4,12 @@ pragma solidity ^0.8.12;
 import "../utils/UserOperation.sol";
 
 interface IAccount {
+
+    ///////////////////////
+    //// Events //////////
+    ///////////////////////
+    event AccountLocked(address indexed account);
+
     /**
      * Validate user's signature and nonce
      * the entryPoint will make the call to the recipient only if this validation call returns successfully.

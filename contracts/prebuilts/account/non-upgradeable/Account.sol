@@ -10,6 +10,10 @@ import "../utils/BaseAccount.sol";
 
 // Extensions
 import "../utils/AccountCore.sol";
+
+import { AccountLock } from "../utils/AccountLock.sol";
+import { BaseAccountFactory } from "../utils/BaseAccountFactory.sol";
+
 import "../../../extension/upgradeable/ContractMetadata.sol";
 import "../../../external-deps/openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import "../../../external-deps/openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
@@ -32,16 +36,28 @@ import "../utils/BaseAccountFactory.sol";
 contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC1155Holder {
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
+    AccountLock public accountLock = BaseAccountFactory.accountLock();
+    Guardian public guardian = BaseAccountFactory.guardian();
+    bool public paused;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {}
+    constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {
+        // TODO: to be deployed by BaseFactory after we get the processed account address
+        paused = false;
+    }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
         require(msg.sender == address(entryPoint()) || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
+        _;
+    }
+
+    /// @notice Will check if the Account transactions has been paused by the guardians. If paused, it will not allow the `execute(..)` or the `executeBatch(..)` function to run.
+    modifier whenNotPaused() {
+        require(!paused, "Smart account has been paused.");
         _;
     }
 
@@ -61,13 +77,10 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     }
 
     /// @notice See EIP-1271
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
-        public
-        view
-        virtual
-        override
-        returns (bytes4 magicValue)
-    {
+    function isValidSignature(
+        bytes32 _hash,
+        bytes memory _signature
+    ) public view virtual override returns (bytes4 magicValue) {
         address signer = _hash.recover(_signature);
 
         if (isAdmin(signer)) {
@@ -96,7 +109,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         address _target,
         uint256 _value,
         bytes calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
+    ) external virtual onlyAdminOrEntrypoint whenNotPaused {
         _registerOnFactory();
         _call(_target, _value, _calldata);
     }
@@ -106,13 +119,17 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         address[] calldata _target,
         uint256[] calldata _value,
         bytes[] calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
+    ) external virtual onlyAdminOrEntrypoint whenNotPaused {
         _registerOnFactory();
 
         require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
         for (uint256 i = 0; i < _target.length; i++) {
             _call(_target[i], _value[i], _calldata[i]);
         }
+    }
+
+    function setPaused(bool pauseStatus) external {
+        paused = pauseStatus;
     }
 
     /*///////////////////////////////////////////////////////////////
