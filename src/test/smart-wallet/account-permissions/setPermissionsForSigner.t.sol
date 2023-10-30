@@ -73,7 +73,7 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
     bytes internal data = bytes("");
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xbC12AEae5E1b1a80401dd20A6728f7a01a3A6166;
+    address private sender = 0x78b942FBC9126b4Ed8384Bb9dd1420Ea865be91a;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
