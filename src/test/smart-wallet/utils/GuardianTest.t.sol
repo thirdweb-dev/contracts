@@ -3,7 +3,7 @@ pragma solidity ^0.8.12;
 
 import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
 import { IGuardian } from "contracts/prebuilts/account/interface/IGuardian.sol";
-import { DeploySmartAccountUtilContracts } from "scripts/DeploySmartAccountUtilContracts.s.sol";
+import { DeployGuardian } from "scripts/DeployGuardian.s.sol";
 import { Test } from "forge-std/Test.sol";
 
 contract GuardianTest is Test {
@@ -13,8 +13,8 @@ contract GuardianTest is Test {
     uint256 public STARTING_USER_BALANCE = 10 ether;
 
     function setUp() external {
-        DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
-        (, , , guardian, ) = deployer.run();
+        DeployGuardian deployer = new DeployGuardian();
+        guardian = deployer.run();
         vm.deal(user, STARTING_USER_BALANCE);
     }
 

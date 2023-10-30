@@ -19,15 +19,14 @@ contract DeploySmartAccountUtilContracts is Script {
 
         AccountFactory accountFactory = new AccountFactory(entryPoint);
 
-        Guardian guardianContract = accountFactory.guardian();
-        AccountLock accountLock = accountFactory.accountLock();
-
         /// @dev As pointed out in the previous Natspec, the returned address will not be a processed Account address, hence calling `BaseAccountFactory.getAllAccounts()` returned by BaseAccountFactory.
         address[] memory accounts = accountFactory.getAllAccounts();
         address account = accounts[0]; // processed account address by BaseAccountFactory
 
-        AccountGuardian accountGuardian = Account(account).accountGuardian();
+        Guardian guardianContract = accountFactory.guardian();
+        AccountLock accountLock = accountFactory.accountLock();
+        // AccountGuardian accountGuardian = accountFactory.accountGuardian();
 
-        return (accountFactory, account, accountGuardian, guardianContract, accountLock);
+        return (accountFactory, account, guardianContract, accountLock);
     }
 }

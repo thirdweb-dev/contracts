@@ -3,6 +3,7 @@
 pragma solidity ^0.8.12;
 
 import { IAccountLock } from "../interface/IAccountLock.sol";
+import { Account } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
 import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
 import { AccountGuardian } from "contracts/prebuilts/account/utils/AccountGuardian.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -141,7 +142,7 @@ contract AccountLock is IAccountLock, AutomationCompatibleInterface {
 
                 lockRequestEvaluationStatus[lockRequest] = true;
                 if (validGuardianSignatures > (guardianCount / 2)) {
-                    // _lockAccount(payable(account));
+                    _lockAccount(payable(account));
                 }
             }
         }
@@ -223,13 +224,13 @@ contract AccountLock is IAccountLock, AutomationCompatibleInterface {
         return false;
     }
 
-    // /**
-    //  * @notice Will lock all account assets and transactions
-    //  * @param account The account to be locked
-    //  */
-    // function _lockAccount(address payable account) internal {
-    //     Account(account).setPaused(true);
-    // }
+    /**
+     * @notice Will lock all account assets and transactions
+     * @param account The account to be locked
+     */
+    function _lockAccount(address payable account) internal {
+        Account(account).setPaused(true);
+    }
 
     function _verifyLockRequestSignature(
         bytes32 lockRequest,

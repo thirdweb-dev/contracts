@@ -39,7 +39,6 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {
-        // TODO: to be deployed by BaseFactory after we get the processed account address
         paused = false;
     }
 
