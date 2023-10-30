@@ -353,6 +353,7 @@ contract SimpleAccountTest is BaseTest {
 
         address[] memory allAccounts = accountFactory.getAllAccounts();
         assertEq(allAccounts.length, amount);
+        assertEq(accountFactory.totalAccounts(), amount);
 
         for (uint256 i = 0; i < amount; i += 1) {
             assertEq(
