@@ -37,7 +37,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {}
+    constructor(IEntryPoint _entrypoint) AccountCore(_entrypoint) {}
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
@@ -132,7 +132,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
 
     /// @dev Registers the account on the factory if it hasn't been registered yet.
     function _registerOnFactory() internal virtual {
-        BaseAccountFactory factoryContract = BaseAccountFactory(factory);
+        BaseAccountFactory factoryContract = BaseAccountFactory(AccountCoreStorage.data().factory);
         if (!factoryContract.isRegistered(address(this))) {
             factoryContract.onRegister(AccountCoreStorage.data().creationSalt);
         }

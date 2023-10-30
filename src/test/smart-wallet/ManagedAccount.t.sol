@@ -7,6 +7,7 @@ import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountPermissions } from "contracts/extension/upgradeable/AccountPermissions.sol";
 import { AccountExtension } from "contracts/prebuilts/account/utils/AccountExtension.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
@@ -66,7 +67,7 @@ contract ManagedAccountTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xbEA1Fa134A1727187A8f2e7E714B660f3a95478D;
+    address private sender = 0x48670c84959b8854A9036D88a020382bA89a47Ce;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
@@ -320,10 +321,16 @@ contract ManagedAccountTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        accountFactory = new ManagedAccountFactory(
-            factoryDeployer,
-            IEntryPoint(payable(address(entrypoint))),
-            extensions
+        address factoryImpl = address(new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions));
+        accountFactory = ManagedAccountFactory(
+            payable(
+                address(
+                    new TWProxy(
+                        factoryImpl,
+                        abi.encodeWithSignature("initialize(address,string)", factoryDeployer, "https://example.com")
+                    )
+                )
+            )
         );
         // deploy dummy contract
         numberContract = new Number();
@@ -376,10 +383,16 @@ contract ManagedAccountTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        ManagedAccountFactory factory = new ManagedAccountFactory(
-            factoryDeployer,
-            IEntryPoint(payable(address(entrypoint))),
-            extensions
+        address factoryImpl = address(new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions));
+        ManagedAccountFactory factory = ManagedAccountFactory(
+            payable(
+                address(
+                    new TWProxy(
+                        factoryImpl,
+                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
+                    )
+                )
+            )
         );
         assertTrue(address(factory) != address(0), "factory address should not be zero");
     }
@@ -400,7 +413,7 @@ contract ManagedAccountTest is BaseTest {
     }
 
     /// @dev Create an account via Entrypoint.
-    function test_state_createAccount_viaEntrypoint() public {
+    function test_state_createAccount_viaEntrypointSingle() public {
         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 

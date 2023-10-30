@@ -4,10 +4,11 @@ pragma solidity ^0.8.12;
 // Utils
 import "../utils/BaseAccountFactory.sol";
 import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
+import "../../../extension/upgradeable/Initializable.sol";
 
 // Extensions
-import "../../../extension/upgradeable//PermissionsEnumerable.sol";
-import "../../../extension/upgradeable//ContractMetadata.sol";
+import "../../../extension/upgradeable/PermissionsEnumerable.sol";
+import "../../../extension/upgradeable/ContractMetadata.sol";
 
 // Smart wallet implementation
 import { DynamicAccount, IEntryPoint } from "./DynamicAccount.sol";
@@ -21,20 +22,24 @@ import { DynamicAccount, IEntryPoint } from "./DynamicAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract DynamicAccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
+contract DynamicAccountFactory is Initializable, BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
     address public constant ENTRYPOINT_ADDRESS = 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _defaultAdmin, IExtension.Extension[] memory _defaultExtensions)
+    constructor(IExtension.Extension[] memory _defaultExtensions)
         BaseAccountFactory(
-            payable(address(new DynamicAccount(IEntryPoint(ENTRYPOINT_ADDRESS), _defaultExtensions))),
+            address(new DynamicAccount(IEntryPoint(ENTRYPOINT_ADDRESS), _defaultExtensions)),
             ENTRYPOINT_ADDRESS
         )
-    {
+    {}
+
+    /// @notice Initializes the factory contract.
+    function initialize(address _defaultAdmin, string memory _contractURI) external initializer {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupContractURI(_contractURI);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -47,7 +52,7 @@ contract DynamicAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
         address _admin,
         bytes calldata _data
     ) internal override {
-        DynamicAccount(payable(_account)).initialize(_admin, _data);
+        DynamicAccount(payable(_account)).initialize(_admin, address(this), _data);
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
