@@ -15,7 +15,11 @@ contract ProfileThirdwebAccount is AAGasProfileBase {
         setAccount();
     }
 
-    function fillData(address _to, uint256 _value, bytes memory _data) internal view override returns (bytes memory) {
+    function fillData(
+        address _to,
+        uint256 _value,
+        bytes memory _data
+    ) internal view override returns (bytes memory) {
         return abi.encodeWithSelector(ThirdwebAccount.execute.selector, _to, _value, _data);
     }
 
