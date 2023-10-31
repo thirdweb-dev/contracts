@@ -301,6 +301,14 @@ contract SimpleAccountTest is BaseTest {
 
     /// @dev Create more than one accounts with the same admin.
     function test_state_createAccount_viaEntrypoint_multipleAccountSameAdmin() public {
+        uint256 start = 0;
+        uint256 end = 0;
+
+        assertEq(accountFactory.totalAccounts(), 0);
+
+        vm.expectRevert("BaseAccountFactory: invalid indices");
+        address[] memory accs = accountFactory.getAccounts(start, end);
+
         uint256 amount = 100;
 
         for (uint256 i = 0; i < amount; i += 1) {
@@ -332,6 +340,7 @@ contract SimpleAccountTest is BaseTest {
 
         address[] memory allAccounts = accountFactory.getAllAccounts();
         assertEq(allAccounts.length, amount);
+        assertEq(accountFactory.totalAccounts(), amount);
 
         for (uint256 i = 0; i < amount; i += 1) {
             assertEq(
@@ -343,6 +352,50 @@ contract SimpleAccountTest is BaseTest {
                 )
             );
         }
+
+        start = 25;
+        end = 75;
+
+        address[] memory accountsPaginatedOne = accountFactory.getAccounts(start, end);
+
+        for (uint256 i = 0; i < (end - start); i += 1) {
+            assertEq(
+                accountsPaginatedOne[i],
+                Clones.predictDeterministicAddress(
+                    accountFactory.accountImplementation(),
+                    _generateSalt(accountAdmin, bytes(abi.encode(start + i))),
+                    address(accountFactory)
+                )
+            );
+        }
+
+        start = 0;
+        end = amount;
+
+        address[] memory accountsPaginatedTwo = accountFactory.getAccounts(start, end);
+
+        for (uint256 i = 0; i < (end - start); i += 1) {
+            assertEq(
+                accountsPaginatedTwo[i],
+                Clones.predictDeterministicAddress(
+                    accountFactory.accountImplementation(),
+                    _generateSalt(accountAdmin, bytes(abi.encode(start + i))),
+                    address(accountFactory)
+                )
+            );
+        }
+
+        start = 75;
+        end = 25;
+
+        vm.expectRevert("BaseAccountFactory: invalid indices");
+        accs = accountFactory.getAccounts(start, end);
+
+        start = 25;
+        end = amount + 1;
+
+        vm.expectRevert("BaseAccountFactory: invalid indices");
+        accs = accountFactory.getAccounts(start, end);
     }
 
     /*///////////////////////////////////////////////////////////////
