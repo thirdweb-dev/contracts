@@ -31,7 +31,9 @@ contract AccountFactory is Initializable, BaseAccountFactory, ContractMetadata, 
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint) BaseAccountFactory(address(new Account(_entrypoint)), address(_entrypoint)) {}
+    constructor(IEntryPoint _entrypoint) BaseAccountFactory(address(new Account(_entrypoint)), address(_entrypoint)) {
+        _disableInitializers();
+    }
 
     /// @notice Initializes the factory contract.
     function initialize(address _defaultAdmin, string memory _contractURI) external initializer {

@@ -34,7 +34,9 @@ contract DynamicAccountFactory is Initializable, BaseAccountFactory, ContractMet
             address(new DynamicAccount(IEntryPoint(ENTRYPOINT_ADDRESS), _defaultExtensions)),
             ENTRYPOINT_ADDRESS
         )
-    {}
+    {
+        _disableInitializers();
+    }
 
     /// @notice Initializes the factory contract.
     function initialize(address _defaultAdmin, string memory _contractURI) external initializer {

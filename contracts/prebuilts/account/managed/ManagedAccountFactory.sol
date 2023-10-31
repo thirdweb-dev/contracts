@@ -36,7 +36,9 @@ contract ManagedAccountFactory is
     constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
         BaseRouter(_defaultExtensions)
         BaseAccountFactory(address(new ManagedAccount(_entrypoint)), address(_entrypoint))
-    {}
+    {
+        _disableInitializers();
+    }
 
     /// @notice Initializes the factory contract.
     function initialize(address _defaultAdmin, string memory _contractURI) external initializer {
