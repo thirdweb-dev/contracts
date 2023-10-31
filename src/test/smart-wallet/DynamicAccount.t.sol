@@ -71,6 +71,8 @@ contract DynamicAccountTest is BaseTest {
 
     bytes32 private uidCache = bytes32("random uid");
 
+    address internal factoryImpl;
+
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
     function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
@@ -320,7 +322,7 @@ contract DynamicAccountTest is BaseTest {
         extensions[0] = defaultExtension;
 
         // deploy account factory
-        address factoryImpl = address(new DynamicAccountFactory(extensions));
+        factoryImpl = address(new DynamicAccountFactory(extensions));
         accountFactory = DynamicAccountFactory(
             address(
                 payable(
@@ -338,6 +340,11 @@ contract DynamicAccountTest is BaseTest {
     /*///////////////////////////////////////////////////////////////
                         Test: creating an account
     //////////////////////////////////////////////////////////////*/
+
+    function test_revert_initializeImplementation() public {
+        vm.expectRevert("Initializable: contract is already initialized");
+        DynamicAccountFactory(factoryImpl).initialize(deployer, "https://example.com");
+    }
 
     /// @dev benchmark test for deployment gas cost
     function test_deploy_dynamicAccount() public {
@@ -385,12 +392,12 @@ contract DynamicAccountTest is BaseTest {
         extensions[0] = defaultExtension;
 
         // deploy account factory
-        address factoryImpl = address(new DynamicAccountFactory(extensions));
+        address factoryImplementation = address(new DynamicAccountFactory(extensions));
         DynamicAccountFactory factory = DynamicAccountFactory(
             address(
                 payable(
                     new TWProxy(
-                        factoryImpl,
+                        factoryImplementation,
                         abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
                     )
                 )

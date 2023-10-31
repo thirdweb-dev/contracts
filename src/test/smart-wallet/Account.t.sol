@@ -55,6 +55,8 @@ contract SimpleAccountTest is BaseTest {
 
     bytes32 private uidCache = bytes32("random uid");
 
+    address internal factoryImpl;
+
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
     function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
@@ -251,7 +253,7 @@ contract SimpleAccountTest is BaseTest {
         // Setup contracts
         entrypoint = new EntryPoint();
         // deploy account factory
-        address factoryImpl = address(new AccountFactory(IEntryPoint(payable(address(entrypoint)))));
+        factoryImpl = address(new AccountFactory(IEntryPoint(payable(address(entrypoint)))));
         accountFactory = AccountFactory(
             address(
                 payable(
@@ -274,6 +276,11 @@ contract SimpleAccountTest is BaseTest {
         assertEq(accountFactory.entrypoint(), address(entrypoint));
         assertEq(accountFactory.contractURI(), "https://example.com");
         assertEq(accountFactory.hasRole(0x00, deployer), true);
+    }
+
+    function test_revert_initializeImplementation() public {
+        vm.expectRevert("Initializable: contract is already initialized");
+        AccountFactory(factoryImpl).initialize(deployer, "https://example.com");
     }
 
     /*///////////////////////////////////////////////////////////////

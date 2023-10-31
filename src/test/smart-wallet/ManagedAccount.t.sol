@@ -72,6 +72,8 @@ contract ManagedAccountTest is BaseTest {
 
     bytes32 private uidCache = bytes32("random uid");
 
+    address internal factoryImpl;
+
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
     function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
@@ -321,7 +323,7 @@ contract ManagedAccountTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        address factoryImpl = address(new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions));
+        factoryImpl = address(new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions));
         accountFactory = ManagedAccountFactory(
             payable(
                 address(
@@ -334,6 +336,11 @@ contract ManagedAccountTest is BaseTest {
         );
         // deploy dummy contract
         numberContract = new Number();
+    }
+
+    function test_revert_initializeImplementation() public {
+        vm.expectRevert("Initializable: contract is already initialized");
+        ManagedAccountFactory(payable(factoryImpl)).initialize(deployer, "https://example.com");
     }
 
     /// @dev benchmark test for deployment gas cost
@@ -383,7 +390,7 @@ contract ManagedAccountTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        address factoryImpl = address(new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions));
+        factoryImpl = address(new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions));
         ManagedAccountFactory factory = ManagedAccountFactory(
             payable(
                 address(
