@@ -119,17 +119,16 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     /// @notice Returns all accounts between the given indices.
     function getAccounts(uint256 _start, uint256 _end) external view returns (address[] memory accounts) {
-        uint256 len = _baseAccountFactoryStorage().allAccounts.length();
-        require(_start < _end && _end <= len, "BaseAccountFactory: invalid indices");
+        require(
+            _start < _end && _end <= _baseAccountFactoryStorage().allAccounts.length(),
+            "BaseAccountFactory: invalid indices"
+        );
 
-        if (len == 0) {
-            return new address[](0);
-        }
-
+        uint256 len = _end - _start;
         accounts = new address[](_end - _start);
 
-        for (uint256 i = _start; i < _end; i += 1) {
-            accounts[i] = _baseAccountFactoryStorage().allAccounts.at(i);
+        for (uint256 i = 0; i < len; i += 1) {
+            accounts[i] = _baseAccountFactoryStorage().allAccounts.at(i + _start);
         }
     }
 
