@@ -111,6 +111,27 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         return allAccounts.contains(_account);
     }
 
+    /// @notice Returns the total number of accounts.
+    function totalAccounts() external view returns (uint256) {
+        return allAccounts.length();
+    }
+
+    /// @notice Returns all accounts between the given indices.
+    function getAccounts(uint256 _start, uint256 _end) external view returns (address[] memory accounts) {
+        uint256 len = allAccounts.length();
+        require(_start < _end && _end <= len, "BaseAccountFactory: invalid indices");
+
+        if (len == 0) {
+            return new address[](0);
+        }
+
+        accounts = new address[](_end - _start);
+
+        for (uint256 i = _start; i < _end; i += 1) {
+            accounts[i] = allAccounts.at(i);
+        }
+    }
+
     /// @notice Returns all accounts created on the factory.
     function getAllAccounts() external view returns (address[] memory) {
         return allAccounts.values();
