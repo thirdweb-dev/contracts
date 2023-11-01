@@ -49,7 +49,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         accountImplementation = _accountImpl;
         entrypoint = _entrypoint;
         guardian = new Guardian();
-        accountLock = new AccountLock(guardian);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -73,13 +72,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         }
 
         _initializeAccount(account, _admin, _data);
-
         emit AccountCreated(account, _admin);
-
-        // Deploying AccountGuardian for this account
-        AccountGuardian accountGuardian = new AccountGuardian(guardian, accountLock, account);
-        guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
-
         return account;
     }
 

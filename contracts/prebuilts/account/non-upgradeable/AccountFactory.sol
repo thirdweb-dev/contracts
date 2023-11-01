@@ -15,6 +15,7 @@ import "../interface/IEntrypoint.sol";
 
 // Smart wallet implementation
 import { Account } from "./Account.sol";
+import { Guardian } from "../utils/Guardian.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -26,13 +27,15 @@ import { Account } from "./Account.sol";
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
+    Guardian guardian = new Guardian();
+
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(
         IEntryPoint _entrypoint
-    ) BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint)) {
+    ) BaseAccountFactory(address(new Account(_entrypoint, address(this), guardian)), address(_entrypoint)) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -42,7 +45,7 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
     function _initializeAccount(address _account, address _admin, bytes calldata _data) internal override {
-        Account(payable(_account)).initialize(_admin, _data);
+        Account(payable(_account)).initialize(_admin, _data, _account);
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.

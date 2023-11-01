@@ -56,10 +56,12 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
+    function initialize(address _defaultAdmin, bytes calldata, address _accountClone) public virtual initializer {
         // This is passed as data in the `_registerOnFactory()` call in `AccountExtension` / `Account`.
         AccountCoreStorage.data().firstAdmin = _defaultAdmin;
         _setAdmin(_defaultAdmin, true);
+
+        deployAccountUtilContracts(_accountClone);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -249,4 +251,5 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         }
     }
 
+    function deployAccountUtilContracts(address _accountClone) public virtual {}
 }

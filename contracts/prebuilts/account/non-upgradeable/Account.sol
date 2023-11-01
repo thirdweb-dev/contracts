@@ -20,6 +20,10 @@ import "../utils/Helpers.sol";
 import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 import "../utils/BaseAccountFactory.sol";
 
+import { Guardian } from "../utils/Guardian.sol";
+import { AccountLock } from "../utils/AccountLock.sol";
+import { AccountGuardian } from "../utils/AccountGuardian.sol";
+
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
 // $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
@@ -33,13 +37,17 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
     bool public paused;
+    Guardian guardian;
+    AccountLock accountLock;
+    AccountGuardian accountGuardian;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {
+    constructor(IEntryPoint _entrypoint, address _factory, Guardian _guardian) AccountCore(_entrypoint, _factory) {
         paused = false;
+        guardian = _guardian;
     }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
@@ -123,6 +131,12 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
 
     function setPaused(bool pauseStatus) external {
         paused = pauseStatus;
+    }
+
+    function deployAccountUtilContracts(address accountClone) public override {
+        accountLock = new AccountLock(guardian);
+        accountGuardian = new AccountGuardian(guardian, accountLock, accountClone);
+        guardian.linkAccountToAccountGuardian(accountClone, address(accountGuardian));
     }
 
     /*///////////////////////////////////////////////////////////////
