@@ -6,6 +6,7 @@ import "../utils/BaseTest.sol";
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
 import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Target
 import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
@@ -73,7 +74,7 @@ contract SimpleAccountVulnPOCTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xBB956D56140CA3f3060986586A2631922a4B347E;
+    address private sender = 0xDD1d01438DcF28eb45a611c7faBD716B0dECE259;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
@@ -212,7 +213,17 @@ contract SimpleAccountVulnPOCTest is BaseTest {
         // Setup contracts
         entrypoint = new EntryPoint();
         // deploy account factory
-        accountFactory = new AccountFactory(deployer, IEntryPoint(payable(address(entrypoint))));
+        address factoryImpl = address(new AccountFactory(IEntryPoint(payable(address(entrypoint)))));
+        accountFactory = AccountFactory(
+            address(
+                payable(
+                    new TWProxy(
+                        factoryImpl,
+                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
+                    )
+                )
+            )
+        );
         // deploy dummy contract
         numberContract = new Number();
     }
