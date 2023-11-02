@@ -35,7 +35,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     address public immutable accountImplementation;
     address public immutable entrypoint;
-    Guardian public guardian;
     AccountLock public accountLock;
 
     EnumerableSet.AddressSet private allAccounts;
@@ -45,11 +44,10 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _accountImpl, address _entrypoint) {
+    constructor(address _accountImpl, address _entrypoint, Guardian _guardian) {
         accountImplementation = _accountImpl;
         entrypoint = _entrypoint;
-        guardian = new Guardian();
-        accountLock = new AccountLock(guardian);
+        accountLock = new AccountLock(_guardian);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -72,14 +70,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
             require(allAccounts.add(account), "AccountFactory: account already registered");
         }
 
-        _initializeAccount(account, _admin, _data);
-
+        _initializeAccount(account, _admin, _data, accountLock);
         emit AccountCreated(account, _admin);
-
-        // Deploying AccountGuardian for this account
-        AccountGuardian accountGuardian = new AccountGuardian(guardian, accountLock, account);
-        guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
-
         return account;
     }
 
@@ -165,5 +157,10 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal virtual;
+    function _initializeAccount(
+        address _account,
+        address _admin,
+        bytes calldata _data,
+        AccountLock _accountLock
+    ) internal virtual;
 }

@@ -21,6 +21,7 @@ import { AccountExtension } from "./AccountExtension.sol";
 import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 
 import "../interface/IAccountCore.sol";
+import { AccountLock } from "./AccountLock.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -56,10 +57,17 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin, bytes calldata) public virtual initializer {
+    function initialize(
+        address _defaultAdmin,
+        bytes calldata,
+        address _accountClone,
+        AccountLock _accountLock
+    ) public virtual initializer {
         // This is passed as data in the `_registerOnFactory()` call in `AccountExtension` / `Account`.
         AccountCoreStorage.data().firstAdmin = _defaultAdmin;
         _setAdmin(_defaultAdmin, true);
+
+        deployAccountGuardian(_accountClone, _accountLock);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -249,4 +257,5 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         }
     }
 
+    function deployAccountGuardian(address _accountClone, AccountLock _accountLock) public virtual {}
 }
