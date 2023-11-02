@@ -133,8 +133,9 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         paused = pauseStatus;
     }
 
-    function deployAccountUtilContracts(address accountClone) public override {
-        accountLock = new AccountLock(guardian);
+    function deployAccountGuardian(address accountClone, AccountLock _accountLock) public override {
+        accountLock = _accountLock;
+
         accountGuardian = new AccountGuardian(guardian, accountLock, accountClone);
         guardian.linkAccountToAccountGuardian(accountClone, address(accountGuardian));
     }
