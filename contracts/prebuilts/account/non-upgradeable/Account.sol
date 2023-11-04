@@ -45,9 +45,8 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint, address _factory, Guardian _guardian) AccountCore(_entrypoint, _factory) {
+    constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {
         paused = false;
-        guardian = _guardian;
     }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
@@ -133,12 +132,12 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         paused = pauseStatus;
     }
 
-    function deployAccountGuardian(address accountClone, AccountLock _accountLock) public override {
-        accountLock = _accountLock;
+    // function deployAccountGuardian(address accountClone, AccountLock _accountLock) public override {
+    //     accountLock = _accountLock;
 
-        accountGuardian = new AccountGuardian(guardian, accountLock, accountClone);
-        guardian.linkAccountToAccountGuardian(accountClone, address(accountGuardian));
-    }
+    //     accountGuardian = new AccountGuardian(guardian, accountLock, accountClone);
+    //     guardian.linkAccountToAccountGuardian(accountClone, address(accountGuardian));
+    // }
 
     /*///////////////////////////////////////////////////////////////
                         Internal functions

@@ -141,9 +141,9 @@ contract AccountLock is IAccountLock, AutomationCompatibleInterface {
                 }
 
                 lockRequestEvaluationStatus[lockRequest] = true;
-                if (validGuardianSignatures > (guardianCount / 2)) {
-                    _lockAccount(payable(account));
-                }
+                // if (validGuardianSignatures > (guardianCount / 2)) {
+                //     _lockAccount(payable(account));
+                // }
             }
         }
     }
@@ -224,18 +224,18 @@ contract AccountLock is IAccountLock, AutomationCompatibleInterface {
         return false;
     }
 
-    /**
-     * @notice Will lock all account assets and transactions
-     * @param account The account to be locked
-     */
-    function _lockAccount(address payable account) internal {
-        Account(account).setPaused(true);
-    }
+    // /**
+    //  * @notice Will lock all account assets and transactions
+    //  * @param account The account to be locked
+    //  */
+    // function _lockAccount(address payable account) internal {
+    //     Account(account).setPaused(true);
+    // }
 
     function _verifyLockRequestSignature(
         bytes32 lockRequest,
         bytes memory guardianSignature
-    ) internal returns (address) {
+    ) internal pure returns (address) {
         // verify
         address recoveredGuardian = ECDSA.recover(lockRequest, guardianSignature);
 
