@@ -99,8 +99,6 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
             _accountPermissionsStorage().approvedTargets[targetSigner].add(_req.approvedTargets[i]);
         }
 
-        _afterSignerPermissionsUpdate(_req);
-
         emit SignerPermissionsUpdated(signer, targetSigner, _req);
     }
 
@@ -209,9 +207,6 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice Runs after every `changeRole` run.
-    function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual;
 
     /// @notice Makes the given account an admin.
     function _setAdmin(address _account, bool _isAdmin) internal virtual {

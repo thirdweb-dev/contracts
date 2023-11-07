@@ -54,23 +54,16 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     /// @notice Initializes the smart contract wallet.
     function initialize(
         address _defaultAdmin,
-        address _factory,
-        bytes calldata _data
+        address, /*_factory*/
+        bytes calldata /*_data*/
     ) public virtual initializer {
         // This is passed as data in the `_registerOnFactory()` call in `AccountExtension` / `Account`.
-        AccountCoreStorage.data().creationSalt = _generateSalt(_defaultAdmin, _data);
-        AccountCoreStorage.data().factory = _factory;
         _setAdmin(_defaultAdmin, true);
     }
 
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice Returns the address of the account factory.
-    function factory() public view virtual override returns (address) {
-        return AccountCoreStorage.data().factory;
-    }
 
     /// @notice Returns the EIP 4337 entrypoint contract.
     function entryPoint() public view virtual override returns (IEntryPoint) {
@@ -236,27 +229,5 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         uint48 validUntil = uint48(permissions.endTimestamp);
 
         return _packValidationData(ValidationData(address(0), validAfter, validUntil));
-    }
-
-    /// @notice Makes the given account an admin.
-    function _setAdmin(address _account, bool _isAdmin) internal virtual override {
-        super._setAdmin(_account, _isAdmin);
-
-        address factoryAddr = factory();
-        if (factoryAddr.code.length > 0) {
-            if (_isAdmin) {
-                BaseAccountFactory(factoryAddr).onSignerAdded(_account, AccountCoreStorage.data().creationSalt);
-            } else {
-                BaseAccountFactory(factoryAddr).onSignerRemoved(_account, AccountCoreStorage.data().creationSalt);
-            }
-        }
-    }
-
-    /// @notice Runs after every `changeRole` run.
-    function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {
-        address factoryAddr = factory();
-        if (factoryAddr.code.length > 0) {
-            BaseAccountFactory(factoryAddr).onSignerAdded(_req.signer, AccountCoreStorage.data().creationSalt);
-        }
     }
 }

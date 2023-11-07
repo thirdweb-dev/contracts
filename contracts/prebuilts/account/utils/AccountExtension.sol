@@ -148,6 +148,4 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
     function _canSetContractURI() internal view virtual override returns (bool) {
         return isAdmin(msg.sender) || msg.sender == address(this);
     }
-
-    function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {}
 }

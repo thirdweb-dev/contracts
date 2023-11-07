@@ -22,6 +22,7 @@ contract ManagedAccount is AccountCore, Router, IRouterState {
     constructor(IEntryPoint _entrypoint) AccountCore(_entrypoint) {}
 
     /// @notice Returns the implementation contract address for a given function signature.
+    //TODO RESTRUCTURE TO ALLOW REMOVAL OF FACTORY FROM ACCOUNTCORE
     function getImplementationForFunction(bytes4 _functionSelector) public view virtual override returns (address) {
         return Router(payable(AccountCoreStorage.data().factory)).getImplementationForFunction(_functionSelector);
     }
