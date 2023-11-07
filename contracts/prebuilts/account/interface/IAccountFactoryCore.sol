@@ -29,12 +29,6 @@ interface IAccountFactoryCore {
     /// @notice Returns the address of the Account implementation.
     function accountImplementation() external view returns (address);
 
-    /// @notice Returns all accounts created on the factory.
-    function getAllAccounts() external view returns (address[] memory);
-
     /// @notice Returns the address of an Account that would be deployed with the given admin signer.
     function getAddress(address adminSigner, bytes calldata data) external view returns (address);
-
-    /// @notice Returns all accounts on which a signer has (active or inactive) permissions.
-    function getAccountsOfSigner(address signer) external view returns (address[] memory accounts);
 }

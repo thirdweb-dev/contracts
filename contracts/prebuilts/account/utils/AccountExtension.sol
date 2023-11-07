@@ -99,7 +99,6 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         uint256 _value,
         bytes calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
-        _registerOnFactory();
         _call(_target, _value, _calldata);
     }
 
@@ -109,7 +108,6 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         uint256[] calldata _value,
         bytes[] calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
-        _registerOnFactory();
         require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
         for (uint256 i = 0; i < _target.length; i++) {
             _call(_target[i], _value[i], _calldata[i]);
@@ -130,15 +128,6 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev Registers the account on the factory if it hasn't been registered yet.
-    function _registerOnFactory() internal virtual {
-        address factory = AccountCore(payable(address(this))).factory();
-        BaseAccountFactory factoryContract = BaseAccountFactory(factory);
-        if (!factoryContract.isRegistered(address(this))) {
-            factoryContract.onRegister(AccountCoreStorage.data().creationSalt);
-        }
-    }
 
     /// @dev Calls a target contract and reverts if it fails.
     function _call(

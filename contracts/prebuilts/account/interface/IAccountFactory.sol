@@ -7,10 +7,4 @@ interface IAccountFactory is IAccountFactoryCore {
     /*///////////////////////////////////////////////////////////////
                         Callback Functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice Callback function for an Account to register its signers.
-    function onSignerAdded(address signer, bytes32 salt) external;
-
-    /// @notice Callback function for an Account to un-register its signers.
-    function onSignerRemoved(address signer, bytes32 salt) external;
 }

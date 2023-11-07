@@ -292,10 +292,6 @@ contract SimpleAccountTest is BaseTest {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
         accountFactory.createAccount(accountAdmin, bytes(""));
-
-        address[] memory allAccounts = accountFactory.getAllAccounts();
-        assertEq(allAccounts.length, 1);
-        assertEq(allAccounts[0], sender);
     }
 
     /// @dev Create an account via Entrypoint.
@@ -314,29 +310,10 @@ contract SimpleAccountTest is BaseTest {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
-
-        address[] memory allAccounts = accountFactory.getAllAccounts();
-        assertEq(allAccounts.length, 1);
-        assertEq(allAccounts[0], sender);
-    }
-
-    /// @dev Try registering with factory with a contract not deployed by factory.
-    function test_revert_onRegister_nonFactoryChildContract() public {
-        vm.prank(address(0x12345));
-        vm.expectRevert("AccountFactory: not an account.");
-        accountFactory.onRegister(_generateSalt(accountAdmin, ""));
     }
 
     /// @dev Create more than one accounts with the same admin.
     function test_state_createAccount_viaEntrypoint_multipleAccountSameAdmin() public {
-        uint256 start = 0;
-        uint256 end = 0;
-
-        assertEq(accountFactory.totalAccounts(), 0);
-
-        vm.expectRevert("BaseAccountFactory: invalid indices");
-        address[] memory accs = accountFactory.getAccounts(start, end);
-
         uint256 amount = 100;
 
         for (uint256 i = 0; i < amount; i += 1) {
@@ -365,65 +342,6 @@ contract SimpleAccountTest is BaseTest {
             emit AccountCreated(expectedSenderAddress, accountAdmin);
             EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
         }
-
-        address[] memory allAccounts = accountFactory.getAllAccounts();
-        assertEq(allAccounts.length, amount);
-        assertEq(accountFactory.totalAccounts(), amount);
-
-        for (uint256 i = 0; i < amount; i += 1) {
-            assertEq(
-                allAccounts[i],
-                Clones.predictDeterministicAddress(
-                    accountFactory.accountImplementation(),
-                    _generateSalt(accountAdmin, bytes(abi.encode(i))),
-                    address(accountFactory)
-                )
-            );
-        }
-
-        start = 25;
-        end = 75;
-
-        address[] memory accountsPaginatedOne = accountFactory.getAccounts(start, end);
-
-        for (uint256 i = 0; i < (end - start); i += 1) {
-            assertEq(
-                accountsPaginatedOne[i],
-                Clones.predictDeterministicAddress(
-                    accountFactory.accountImplementation(),
-                    _generateSalt(accountAdmin, bytes(abi.encode(start + i))),
-                    address(accountFactory)
-                )
-            );
-        }
-
-        start = 0;
-        end = amount;
-
-        address[] memory accountsPaginatedTwo = accountFactory.getAccounts(start, end);
-
-        for (uint256 i = 0; i < (end - start); i += 1) {
-            assertEq(
-                accountsPaginatedTwo[i],
-                Clones.predictDeterministicAddress(
-                    accountFactory.accountImplementation(),
-                    _generateSalt(accountAdmin, bytes(abi.encode(start + i))),
-                    address(accountFactory)
-                )
-            );
-        }
-
-        start = 75;
-        end = 25;
-
-        vm.expectRevert("BaseAccountFactory: invalid indices");
-        accs = accountFactory.getAccounts(start, end);
-
-        start = 25;
-        end = amount + 1;
-
-        vm.expectRevert("BaseAccountFactory: invalid indices");
-        accs = accountFactory.getAccounts(start, end);
     }
 
     /*///////////////////////////////////////////////////////////////

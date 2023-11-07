@@ -58,26 +58,11 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
         account = Clones.cloneDeterministic(impl, salt);
 
-        if (msg.sender != entrypoint) {
-            require(
-                _baseAccountFactoryStorage().allAccounts.add(account),
-                "AccountFactory: account already registered"
-            );
-        }
-
         _initializeAccount(account, _admin, _data);
 
         emit AccountCreated(account, _admin);
 
         return account;
-    }
-
-    /// @notice Callback function for an Account to register itself on the factory.
-    function onRegister(bytes32 _salt) external {
-        address account = msg.sender;
-        require(_isAccountOfFactory(account, _salt), "AccountFactory: not an account.");
-
-        require(_baseAccountFactoryStorage().allAccounts.add(account), "AccountFactory: account already registered");
     }
 
     function onSignerAdded(address _signer, bytes32 _salt) external {
@@ -106,36 +91,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice Returns whether an account is registered on this factory.
-    function isRegistered(address _account) external view returns (bool) {
-        return _baseAccountFactoryStorage().allAccounts.contains(_account);
-    }
-
-    /// @notice Returns the total number of accounts.
-    function totalAccounts() external view returns (uint256) {
-        return _baseAccountFactoryStorage().allAccounts.length();
-    }
-
-    /// @notice Returns all accounts between the given indices.
-    function getAccounts(uint256 _start, uint256 _end) external view returns (address[] memory accounts) {
-        require(
-            _start < _end && _end <= _baseAccountFactoryStorage().allAccounts.length(),
-            "BaseAccountFactory: invalid indices"
-        );
-
-        uint256 len = _end - _start;
-        accounts = new address[](_end - _start);
-
-        for (uint256 i = 0; i < len; i += 1) {
-            accounts[i] = _baseAccountFactoryStorage().allAccounts.at(i + _start);
-        }
-    }
-
-    /// @notice Returns all accounts created on the factory.
-    function getAllAccounts() external view returns (address[] memory) {
-        return _baseAccountFactoryStorage().allAccounts.values();
-    }
 
     /// @notice Returns the address of an Account that would be deployed with the given admin signer.
     function getAddress(address _adminSigner, bytes calldata _data) public view returns (address) {

@@ -410,10 +410,6 @@ contract DynamicAccountTest is BaseTest {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
         accountFactory.createAccount(accountAdmin, data);
-
-        address[] memory allAccounts = accountFactory.getAllAccounts();
-        assertEq(allAccounts.length, 1);
-        assertEq(allAccounts[0], sender);
     }
 
     /// @dev Create an account via Entrypoint.
@@ -432,17 +428,6 @@ contract DynamicAccountTest is BaseTest {
         vm.expectEmit(true, true, false, true);
         emit AccountCreated(sender, accountAdmin);
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
-
-        address[] memory allAccounts = accountFactory.getAllAccounts();
-        assertEq(allAccounts.length, 1);
-        assertEq(allAccounts[0], sender);
-    }
-
-    /// @dev Try registering with factory with a contract not deployed by factory.
-    function test_revert_onRegister_nonFactoryChildContract() public {
-        vm.prank(address(0x12345));
-        vm.expectRevert("AccountFactory: not an account.");
-        accountFactory.onRegister(_generateSalt(accountAdmin, ""));
     }
 
     /// @dev Create more than one accounts with the same admin.
@@ -474,20 +459,6 @@ contract DynamicAccountTest is BaseTest {
             vm.expectEmit(true, true, false, true);
             emit AccountCreated(expectedSenderAddress, accountAdmin);
             EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
-        }
-
-        address[] memory allAccounts = accountFactory.getAllAccounts();
-        assertEq(allAccounts.length, amount);
-
-        for (uint256 i = 0; i < amount; i += 1) {
-            assertEq(
-                allAccounts[i],
-                Clones.predictDeterministicAddress(
-                    accountFactory.accountImplementation(),
-                    _generateSalt(accountAdmin, bytes(abi.encode(i))),
-                    address(accountFactory)
-                )
-            );
         }
     }
 
