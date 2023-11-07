@@ -65,29 +65,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         return account;
     }
 
-    function onSignerAdded(address _signer, bytes32 _salt) external {
-        address account = msg.sender;
-        require(_isAccountOfFactory(account, _salt), "AccountFactory: not an account.");
-
-        bool isNewSigner = _baseAccountFactoryStorage().accountsOfSigner[_signer].add(account);
-
-        if (isNewSigner) {
-            emit SignerAdded(account, _signer);
-        }
-    }
-
-    /// @notice Callback function for an Account to un-register its signers.
-    function onSignerRemoved(address _signer, bytes32 _salt) external {
-        address account = msg.sender;
-        require(_isAccountOfFactory(account, _salt), "AccountFactory: not an account.");
-
-        bool isAccount = _baseAccountFactoryStorage().accountsOfSigner[_signer].remove(account);
-
-        if (isAccount) {
-            emit SignerRemoved(account, _signer);
-        }
-    }
-
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
@@ -96,11 +73,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     function getAddress(address _adminSigner, bytes calldata _data) public view returns (address) {
         bytes32 salt = _generateSalt(_adminSigner, _data);
         return Clones.predictDeterministicAddress(accountImplementation, salt);
-    }
-
-    /// @notice Returns all accounts that the given address is a signer of.
-    function getAccountsOfSigner(address signer) external view returns (address[] memory accounts) {
-        return _baseAccountFactoryStorage().accountsOfSigner[signer].values();
     }
 
     /*///////////////////////////////////////////////////////////////

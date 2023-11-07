@@ -4,7 +4,4 @@ pragma solidity ^0.8.12;
 import "./IAccountFactoryCore.sol";
 
 interface IAccountFactory is IAccountFactoryCore {
-    /*///////////////////////////////////////////////////////////////
-                        Callback Functions
-    //////////////////////////////////////////////////////////////*/
 }
