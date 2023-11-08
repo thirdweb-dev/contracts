@@ -35,7 +35,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     address public immutable accountImplementation;
     address public immutable entrypoint;
-    Guardian guardian;
+    Guardian public guardian;
     AccountLock public accountLock;
 
     EnumerableSet.AddressSet private allAccounts;
@@ -48,8 +48,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     constructor(address _accountImpl, address _entrypoint) {
         accountImplementation = _accountImpl;
         entrypoint = _entrypoint;
-        // guardian = new Guardian();
-        // accountLock = new AccountLock(guardian);
+        guardian = new Guardian();
+        accountLock = new AccountLock(guardian);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -75,8 +75,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         _initializeAccount(account, _admin, _data);
         emit AccountCreated(account, _admin);
 
-        // AccountGuardian accountGuardian = new AccountGuardian(guardian, accountLock, account);
-        // guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
+        AccountGuardian accountGuardian = new AccountGuardian(guardian, accountLock, account);
+        guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
 
         return account;
     }

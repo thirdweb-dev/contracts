@@ -22,7 +22,6 @@ import "../utils/BaseAccountFactory.sol";
 
 import { Guardian } from "../utils/Guardian.sol";
 import { AccountLock } from "../utils/AccountLock.sol";
-import { AccountGuardian } from "../utils/AccountGuardian.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -39,7 +38,6 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     bool public paused;
     Guardian guardian;
     AccountLock accountLock;
-    AccountGuardian accountGuardian;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
@@ -131,13 +129,6 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     function setPaused(bool pauseStatus) external {
         paused = pauseStatus;
     }
-
-    // function deployAccountGuardian(address accountClone, AccountLock _accountLock) public override {
-    //     accountLock = _accountLock;
-
-    //     accountGuardian = new AccountGuardian(guardian, accountLock, accountClone);
-    //     guardian.linkAccountToAccountGuardian(accountClone, address(accountGuardian));
-    // }
 
     /*///////////////////////////////////////////////////////////////
                         Internal functions
