@@ -33,7 +33,7 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
 
     constructor(
         IEntryPoint _entrypoint
-    ) BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint)) {
+    ) BaseAccountFactory(address(new Account(_entrypoint, address(this), address(accountLock))), address(_entrypoint)) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
