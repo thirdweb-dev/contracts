@@ -14,6 +14,7 @@ contract AccountGuardianTest is Test {
     AccountGuardian accountGuardian;
     Guardian public guardianContract;
     AccountLock public accountLock;
+    address owner = makeAddr("owner");
     address randomUser = makeAddr("randomUser");
     address guardian = makeAddr("guardian");
 
@@ -27,9 +28,10 @@ contract AccountGuardianTest is Test {
         guardianContract = accountFactory.guardian();
         accountLock = accountFactory.accountLock();
 
-        address account = accountFactory.createAccount(address(this), "");
+        address account = accountFactory.createAccount(address(this), ""); // this should deploy AccountGuardian for this account
+        owner = account;
 
-        accountGuardian = new AccountGuardian(guardianContract, accountLock, account);
+        accountGuardian = accountFactory.accountGuardian();
     }
 
     modifier addVerifiedGuardian() {
@@ -43,11 +45,12 @@ contract AccountGuardianTest is Test {
     //////////////////////////
     function testRevertIfGuardianAddedNotByOwner() public {
         vm.prank(randomUser);
-        vm.expectRevert(AccountGuardian.NotOwnerOrAccountLock.selector);
+        vm.expectRevert(abi.encodeWithSelector(AccountGuardian.NotOwnerOrAccountLock.selector, owner, randomUser));
         accountGuardian.addGuardian(randomUser);
     }
 
     function testRevertOnAddingUnverifiedGuardian() public {
+        vm.prank(owner);
         vm.expectRevert(abi.encodeWithSelector(IAccountGuardian.GuardianNotVerified.selector, randomUser));
 
         accountGuardian.addGuardian(randomUser);
@@ -55,9 +58,11 @@ contract AccountGuardianTest is Test {
 
     function testAddGuardianAddsGuardianToList() public addVerifiedGuardian {
         // ACT
+        vm.startPrank(owner);
         accountGuardian.addGuardian(guardian);
 
         address[] memory accountGuardians = accountGuardian.getAllGuardians();
+        vm.stopPrank();
 
         assertEq(accountGuardians.length, 1);
         assertEq(accountGuardians[0], guardian);
@@ -69,17 +74,19 @@ contract AccountGuardianTest is Test {
 
     function testRevertRemoveGuardianNotByOwner() external {
         vm.prank(randomUser);
-        vm.expectRevert(AccountGuardian.NotOwnerOrAccountLock.selector);
+        vm.expectRevert(abi.encodeWithSelector(AccountGuardian.NotOwnerOrAccountLock.selector, owner, randomUser));
         accountGuardian.removeGuardian(guardian);
     }
 
     function testRevertIfRemovingGuardianThatDoesNotExist() external {
+        vm.prank(owner);
         vm.expectRevert(abi.encodeWithSelector(IAccountGuardian.NotAGuardian.selector, guardian));
         accountGuardian.removeGuardian(guardian);
     }
 
     function testRemoveGuardianRemovesGuardianFromList() external addVerifiedGuardian {
         // SETUP
+        vm.startPrank(owner);
         accountGuardian.addGuardian(guardian);
 
         // Act
@@ -89,6 +96,7 @@ contract AccountGuardianTest is Test {
 
         // ASSERT
         address[] memory accountGuardians = accountGuardian.getAllGuardians();
+        vm.stopPrank();
         assertEq(accountGuardians[0], address(0)); // the delete function in `removeGuardian()` will remove the guardian address but replace it with a zero address rather than removing the entry.
     }
 
@@ -98,16 +106,18 @@ contract AccountGuardianTest is Test {
 
     function testRevertIfNotOwnerTriesToGetGuardians() external {
         vm.prank(randomUser);
-        vm.expectRevert(AccountGuardian.NotOwnerOrAccountLock.selector);
+        vm.expectRevert(abi.encodeWithSelector(AccountGuardian.NotOwnerOrAccountLock.selector, owner, randomUser));
         accountGuardian.getAllGuardians();
     }
 
     function testGetAllGuardians() external addVerifiedGuardian {
         // SETUP
+        vm.startPrank(owner);
         accountGuardian.addGuardian(guardian);
 
         // ACT
         address[] memory accountGuardians = accountGuardian.getAllGuardians();
+        vm.stopPrank();
 
         // Assert
         assertEq(accountGuardians[0], guardian);
