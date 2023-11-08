@@ -35,6 +35,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     address public immutable accountImplementation;
     address public immutable entrypoint;
+    Guardian public guardian;
     AccountLock public accountLock;
 
     EnumerableSet.AddressSet private allAccounts;
@@ -44,10 +45,11 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _accountImpl, address _entrypoint, Guardian _guardian) {
+    constructor(address _accountImpl, address _entrypoint) {
         accountImplementation = _accountImpl;
         entrypoint = _entrypoint;
-        accountLock = new AccountLock(_guardian);
+        guardian = new Guardian();
+        accountLock = new AccountLock(guardian);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -70,8 +72,12 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
             require(allAccounts.add(account), "AccountFactory: account already registered");
         }
 
-        _initializeAccount(account, _admin, _data, accountLock);
+        _initializeAccount(account, _admin, _data);
         emit AccountCreated(account, _admin);
+
+        AccountGuardian accountGuardian = new AccountGuardian(guardian, accountLock, account);
+        guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
+
         return account;
     }
 
@@ -157,10 +163,5 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(
-        address _account,
-        address _admin,
-        bytes calldata _data,
-        AccountLock _accountLock
-    ) internal virtual;
+    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal virtual;
 }

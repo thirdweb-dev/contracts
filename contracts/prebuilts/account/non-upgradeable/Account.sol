@@ -22,7 +22,6 @@ import "../utils/BaseAccountFactory.sol";
 
 import { Guardian } from "../utils/Guardian.sol";
 import { AccountLock } from "../utils/AccountLock.sol";
-import { AccountGuardian } from "../utils/AccountGuardian.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -38,21 +37,30 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     using EnumerableSet for EnumerableSet.AddressSet;
     bool public paused;
     Guardian guardian;
-    AccountLock accountLock;
-    AccountGuardian accountGuardian;
+    address accountLock;
+
+    error NotAuthorizedToLock(address locker);
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint, address _factory, Guardian _guardian) AccountCore(_entrypoint, _factory) {
+    constructor(IEntryPoint _entrypoint, address _factory, address _accountLock) AccountCore(_entrypoint, _factory) {
         paused = false;
-        guardian = _guardian;
+        accountLock = _accountLock;
     }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
         require(msg.sender == address(entryPoint()) || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
+        _;
+    }
+
+    /// @notice The account can be paused only by the AccountLock contract
+    modifier onlyAccountLock(address locker) {
+        if (locker != accountLock) {
+            revert NotAuthorizedToLock(locker);
+        }
         _;
     }
 
@@ -129,15 +137,8 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         }
     }
 
-    function setPaused(bool pauseStatus) external {
+    function setPaused(bool pauseStatus) external onlyAccountLock(msg.sender) {
         paused = pauseStatus;
-    }
-
-    function deployAccountGuardian(address accountClone, AccountLock _accountLock) public override {
-        accountLock = _accountLock;
-
-        accountGuardian = new AccountGuardian(guardian, accountLock, accountClone);
-        guardian.linkAccountToAccountGuardian(accountClone, address(accountGuardian));
     }
 
     /*///////////////////////////////////////////////////////////////

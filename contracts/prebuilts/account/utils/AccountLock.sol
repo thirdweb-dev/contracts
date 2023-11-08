@@ -3,7 +3,6 @@
 pragma solidity ^0.8.12;
 
 import { IAccountLock } from "../interface/IAccountLock.sol";
-import { Account } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
 import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
 import { AccountGuardian } from "contracts/prebuilts/account/utils/AccountGuardian.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
@@ -103,7 +102,7 @@ contract AccountLock is IAccountLock, AutomationCompatibleInterface {
             revert ActiveLockRequestFound();
         }
 
-        bytes32 lockRequestHash = keccak256(abi.encodePacked("_lockRequest(address account)", account));
+        bytes32 lockRequestHash = keccak256(abi.encodePacked("_lockAccount(address account)", account));
 
         accountToLockRequest[account] = lockRequestHash;
         lockRequestToCreationTime[lockRequestHash] = block.timestamp;
@@ -229,13 +228,15 @@ contract AccountLock is IAccountLock, AutomationCompatibleInterface {
      * @param account The account to be locked
      */
     function _lockAccount(address payable account) internal {
-        Account(account).setPaused(true);
+        (bool success, ) = account.call(abi.encodeWithSignature("setPaused(bool)", true));
+
+        require(success, "Locking account failed");
     }
 
     function _verifyLockRequestSignature(
         bytes32 lockRequest,
         bytes memory guardianSignature
-    ) internal returns (address) {
+    ) internal pure returns (address) {
         // verify
         address recoveredGuardian = ECDSA.recover(lockRequest, guardianSignature);
 
