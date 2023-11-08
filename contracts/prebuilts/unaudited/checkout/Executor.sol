@@ -51,6 +51,9 @@ contract Executor is Initializable, PermissionsEnumerable, IExecutor {
         require(success, "Execution failed");
     }
 
+    // TODO: rethink design and interface here
+    function swapAndExecute(UserOp calldata op) external {}
+
     function _canExecute() internal view returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }

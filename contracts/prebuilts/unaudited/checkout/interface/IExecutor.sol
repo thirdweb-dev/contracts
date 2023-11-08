@@ -27,4 +27,6 @@ interface IExecutor {
     }
 
     function execute(UserOp calldata op) external;
+
+    function swapAndExecute(UserOp calldata op) external; // TODO: rethink design and interface here
 }
