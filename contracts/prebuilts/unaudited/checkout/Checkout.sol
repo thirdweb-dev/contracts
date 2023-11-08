@@ -51,6 +51,8 @@ contract Checkout is PermissionsEnumerable, ICheckout {
 
         isVaultRegistered[vault] = true;
 
+        emit VaultCreated(vault, _vaultAdmin);
+
         return vault;
     }
 
@@ -64,6 +66,8 @@ contract Checkout is PermissionsEnumerable, ICheckout {
 
         isExecutorRegistered[executor] = true;
 
+        emit ExecutorCreated(executor, _executorAdmin);
+
         return executor;
     }
 
@@ -72,5 +76,7 @@ contract Checkout is PermissionsEnumerable, ICheckout {
         require(isExecutorRegistered[_executor], "Executor not found");
 
         IVault(_vault).setExecutor(_executor);
+
+        emit VaultAuthorizedToExecutor(_vault, _executor);
     }
 }

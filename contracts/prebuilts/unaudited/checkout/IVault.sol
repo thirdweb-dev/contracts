@@ -11,6 +11,10 @@ interface IVault {
     /// @dev Emitted when executor contract withdraws tokens.
     event TokensTransferredToExecutor(address indexed _executor, address _token, uint256 _amount);
 
+    function deposit(address _token, uint256 _amount) external payable;
+
+    function withdraw(address _token, uint256 _amount) external;
+
     function transferTokensToExecutor(address _token, uint256 _amount) external;
 
     function setExecutor(address _executor) external;
