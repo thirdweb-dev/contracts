@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "./IExecutor.sol";
-import "./IVault.sol";
+import "./interface/IExecutor.sol";
+import "./interface/IVault.sol";
 
 import "../../../lib/CurrencyTransferLib.sol";
 import "../../../eip/interface/IERC20.sol";

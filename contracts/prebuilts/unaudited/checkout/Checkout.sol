@@ -3,7 +3,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
-import "./ICheckout.sol";
+import "./interface/ICheckout.sol";
 import "./Vault.sol";
 import "./Executor.sol";
 
