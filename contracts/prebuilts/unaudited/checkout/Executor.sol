@@ -20,11 +20,15 @@ import "../../../extension/Initializable.sol";
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract Executor is Initializable, PermissionsEnumerable, IExecutor {
+    /// @dev Address of the Checkout entrypoint.
+    address public checkout;
+
     constructor() {
         _disableInitializers();
     }
 
     function initialize(address _defaultAdmin) external initializer {
+        checkout = msg.sender;
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 

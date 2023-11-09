@@ -28,7 +28,7 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
     /// @dev Address of the Checkout entrypoint.
     address public checkout;
 
-    address public swapToken;
+    address public immutable swapToken;
 
     constructor(address _swapToken) {
         swapToken = _swapToken;
@@ -131,11 +131,11 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
         executor = _executor;
     }
 
-    function setSwapToken(address _swapToken) external {
-        require(_canSetSwapToken(), "Not authorized");
+    // function setSwapToken(address _swapToken) external {
+    //     require(_canSetSwapToken(), "Not authorized");
 
-        swapToken = _swapToken;
-    }
+    //     swapToken = _swapToken;
+    // }
 
     // =================================================
     // =============== Role checks =====================
