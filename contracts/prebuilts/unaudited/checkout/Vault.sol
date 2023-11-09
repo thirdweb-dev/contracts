@@ -40,6 +40,10 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
     }
 
+    // =================================================
+    // =============== Deposit and Withdraw ============
+    // =================================================
+
     function deposit(address _token, uint256 _amount) external payable {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Not authorized");
 
@@ -73,6 +77,10 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
         emit TokensWithdrawn(_token, _amount);
     }
 
+    // =================================================
+    // =============== Executor functions ==============
+    // =================================================
+
     function transferTokensToExecutor(address _token, uint256 _amount) external {
         require(_canTransferTokens(), "Not authorized");
 
@@ -101,11 +109,21 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
         emit TokensTransferredToExecutor(msg.sender, _token, _amount);
     }
 
+    // =================================================
+    // =============== Swap functionality ==============
+    // =================================================
+
     function swap() external {
         require(_canSwap(), "Not authorized");
 
         _swap();
     }
+
+    function _swap() internal {}
+
+    // =================================================
+    // =============== Setter functions ================
+    // =================================================
 
     function setExecutor(address _executor) external {
         require(_canSetExecutor(), "Not authorized");
@@ -119,11 +137,13 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
         swapToken = _swapToken;
     }
 
+    // =================================================
+    // =============== Role checks =====================
+    // =================================================
+
     function canAuthorizeVaultToExecutor(address _expectedAdmin) external view returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, _expectedAdmin);
     }
-
-    function _swap() internal {}
 
     function _canSetExecutor() internal view returns (bool) {
         return msg.sender == checkout;
