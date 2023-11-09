@@ -33,6 +33,8 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    bytes32 private constant MSG_TYPEHASH = keccak256("AccountMessage(bytes message)");
+
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
@@ -61,14 +63,17 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     }
 
     /// @notice See EIP-1271
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
+    function isValidSignature(bytes32 _message, bytes memory _signature)
         public
         view
         virtual
         override
         returns (bytes4 magicValue)
     {
-        address signer = _hash.recover(_signature);
+        bytes memory messageData = encodeMessageData(abi.encode(_message));
+        bytes32 messageHash = keccak256(messageData);
+
+        address signer = messageHash.recover(_signature);
 
         if (isAdmin(signer)) {
             return MAGICVALUE;
@@ -85,6 +90,15 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         if (isActiveSigner(signer)) {
             magicValue = MAGICVALUE;
         }
+    }
+
+    function getMessageHash(bytes memory message) public view returns (bytes32) {
+        return keccak256(encodeMessageData(message));
+    }
+
+    function encodeMessageData(bytes memory message) public view returns (bytes memory) {
+        bytes32 messageHash = keccak256(abi.encode(MSG_TYPEHASH, keccak256(message)));
+        return abi.encodePacked("\x19\x01", _domainSeparatorV4(), messageHash);
     }
 
     /*///////////////////////////////////////////////////////////////
