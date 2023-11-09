@@ -17,6 +17,8 @@ interface IVault {
 
     function transferTokensToExecutor(address _token, uint256 _amount) external;
 
+    function swapAndTransferTokensToExecutor(address _token, uint256 _amount) external;
+
     function setExecutor(address _executor) external;
 
     function canAuthorizeVaultToExecutor(address _expectedAdmin) external view returns (bool);

@@ -28,7 +28,10 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
     /// @dev Address of the Checkout entrypoint.
     address public checkout;
 
-    constructor() {
+    address public swapToken;
+
+    constructor(address _swapToken) {
+        swapToken = _swapToken;
         _disableInitializers();
     }
 
@@ -83,15 +86,44 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
         emit TokensTransferredToExecutor(msg.sender, _token, _amount);
     }
 
+    function swapAndTransferTokensToExecutor(address _token, uint256 _amount) external {
+        require(_canTransferTokens(), "Not authorized");
+
+        _swap();
+
+        uint256 balance = tokenBalance[_token];
+        require(balance >= _amount, "Not enough balance");
+
+        tokenBalance[_token] -= _amount;
+
+        CurrencyTransferLib.transferCurrency(_token, address(this), msg.sender, _amount);
+
+        emit TokensTransferredToExecutor(msg.sender, _token, _amount);
+    }
+
+    function swap() external {
+        require(_canSwap(), "Not authorized");
+
+        _swap();
+    }
+
     function setExecutor(address _executor) external {
         require(_canSetExecutor(), "Not authorized");
 
         executor = _executor;
     }
 
+    function setSwapToken(address _swapToken) external {
+        require(_canSetSwapToken(), "Not authorized");
+
+        swapToken = _swapToken;
+    }
+
     function canAuthorizeVaultToExecutor(address _expectedAdmin) external view returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, _expectedAdmin);
     }
+
+    function _swap() internal {}
 
     function _canSetExecutor() internal view returns (bool) {
         return msg.sender == checkout;
@@ -99,5 +131,13 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
 
     function _canTransferTokens() internal view returns (bool) {
         return msg.sender == executor;
+    }
+
+    function _canSwap() internal view returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    function _canSetSwapToken() internal view returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }

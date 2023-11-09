@@ -13,6 +13,8 @@ interface IExecutor {
      *
      *  @param approvalRequired  If need to approve erc20 to the target contract
      *
+     *  @param swap              If need to swap first
+     *
      *  @param valueToSend       Transaction value to send - both native and erc20
      *
      *  @param data              Transaction calldata
@@ -22,6 +24,7 @@ interface IExecutor {
         address currency;
         address vault;
         bool approvalRequired;
+        bool swap;
         uint256 valueToSend;
         bytes data;
     }

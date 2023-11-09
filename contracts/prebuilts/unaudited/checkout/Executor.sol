@@ -34,7 +34,11 @@ contract Executor is Initializable, PermissionsEnumerable, IExecutor {
         require(_canExecute(), "Not authorized");
 
         if (op.valueToSend != 0) {
-            IVault(op.vault).transferTokensToExecutor(op.currency, op.valueToSend);
+            if (op.swap) {
+                IVault(op.vault).swapAndTransferTokensToExecutor(op.currency, op.valueToSend);
+            } else {
+                IVault(op.vault).transferTokensToExecutor(op.currency, op.valueToSend);
+            }
         }
 
         bool success;
