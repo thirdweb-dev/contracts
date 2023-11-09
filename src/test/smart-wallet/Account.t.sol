@@ -14,6 +14,14 @@ import { IAccountPermissions } from "contracts/extension/interface/IAccountPermi
 import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
 import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
 
+library GPv2EIP1271 {
+    bytes4 internal constant MAGICVALUE = 0x1626ba7e;
+}
+
+interface EIP1271Verifier {
+    function isValidSignature(bytes32 _hash, bytes memory _signature) external view returns (bytes4 magicValue);
+}
+
 /// @dev This is a dummy contract to test contract interactions with Account.
 contract Number {
     uint256 public num;
@@ -28,6 +36,20 @@ contract Number {
 
     function incrementNum() public {
         num += 1;
+    }
+
+    function setNumBySignature(address owner, uint256 newNum, bytes calldata signature) public {
+        if (owner.code.length == 0) {
+            // Signature verification by ECDSA
+        } else {
+            // Signature verfication by EIP1271
+            bytes32 digest = bytes32(newNum);
+            require(
+                EIP1271Verifier(owner).isValidSignature(digest, signature) == GPv2EIP1271.MAGICVALUE,
+                "invalid eip1271 signature"
+            );
+            num = newNum;
+        }
     }
 }
 
@@ -59,11 +81,9 @@ contract SimpleAccountTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes32 typedDataHash)
-    {
+    function _prepareSignature(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes32 typedDataHash) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -94,11 +114,9 @@ contract SimpleAccountTest is BaseTest {
         typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
@@ -824,5 +842,41 @@ contract SimpleAccountTest is BaseTest {
 
         vm.expectRevert();
         EntryPoint(entrypoint).handleOps(userOpViaSigner, beneficiary);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                Test: 1271 Signature Verification
+    //////////////////////////////////////////////////////////////*/
+
+    function test_isValidSignature_validContractSignature() public {
+        address account = accountFactory.createAccount(accountAdmin, bytes(""));
+        vm.startPrank(accountAdmin);
+
+        bytes memory message = abi.encode(42);
+        bytes32 messageHash = SimpleAccount(payable(account)).getMessageHash(message);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, messageHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        numberContract.setNumBySignature(account, 42, signature);
+        assertEq(numberContract.num(), 0);
+    }
+
+    function test_isValidSignature_revert_incorrectContract() public {
+        address account = accountFactory.createAccount(accountAdmin, bytes(""));
+        address account2 = accountFactory.createAccount(accountAdmin, bytes("1"));
+        vm.startPrank(accountAdmin);
+
+        bytes memory message = abi.encode(42);
+        bytes32 messageHash = SimpleAccount(payable(account)).getMessageHash(message);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, messageHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        address[] memory approvedTargets = new address[](1);
+        approvedTargets[0] = address(numberContract);
+
+        vm.expectRevert("Account: caller not approved target.");
+        numberContract.setNumBySignature(account2, 42, signature);
     }
 }
