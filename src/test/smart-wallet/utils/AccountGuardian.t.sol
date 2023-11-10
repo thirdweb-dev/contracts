@@ -3,12 +3,11 @@ pragma solidity ^0.8.12;
 
 import { Test } from "forge-std/Test.sol";
 import { EntryPoint } from "contracts/prebuilts/account/utils/EntryPoint.sol";
-import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
 import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
 import { AccountGuardian } from "contracts/prebuilts/account/utils/AccountGuardian.sol";
 import { AccountLock } from "contracts/prebuilts/account/utils/AccountLock.sol";
-import { DeployGuardian } from "scripts/DeployGuardian.s.sol";
 import { IAccountGuardian } from "contracts/prebuilts/account/interface/IAccountGuardian.sol";
+import { DeploySmartAccountUtilContracts } from "scripts/DeploySmartAccountUtilContracts.s.sol";
 
 contract AccountGuardianTest is Test {
     AccountGuardian accountGuardian;
@@ -21,17 +20,8 @@ contract AccountGuardianTest is Test {
     event GuardianRemoved(address indexed guardian);
 
     function setUp() public {
-        EntryPoint entryPoint = new EntryPoint();
-
-        AccountFactory accountFactory = new AccountFactory(entryPoint);
-
-        guardianContract = accountFactory.guardian();
-        accountLock = accountFactory.accountLock();
-
-        address account = accountFactory.createAccount(address(this), ""); // this should deploy AccountGuardian for this account
-        owner = account;
-
-        accountGuardian = accountFactory.accountGuardian();
+        DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
+        (, , guardianContract, accountLock, accountGuardian) = deployer.run();
     }
 
     modifier addVerifiedGuardian() {
@@ -121,5 +111,21 @@ contract AccountGuardianTest is Test {
 
         // Assert
         assertEq(accountGuardians[0], guardian);
+    }
+
+    ////////////////////////////////
+    /// isAccountGuardain() tests///
+    ////////////////////////////////
+
+    function testIsAccountGuardian() external addVerifiedGuardian {
+        //SETUP
+        vm.startPrank(owner);
+        accountGuardian.addGuardian(guardian);
+
+        // Assert
+        bool isAccountGuardian = accountGuardian.isAccountGuardian(guardian);
+        vm.stopPrank();
+
+        assertEq(isAccountGuardian, true);
     }
 }
