@@ -10,23 +10,17 @@ import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
 import { AccountGuardian } from "contracts/prebuilts/account/utils/AccountGuardian.sol";
 
 contract DeploySmartAccountUtilContracts is Script {
-    address user = makeAddr("user");
+    address admin = makeAddr("admin");
 
-    function run() external returns (AccountFactory, address, AccountGuardian, Guardian, AccountLock) {
+    function run() external returns (AccountFactory, address, Guardian, AccountLock, AccountGuardian) {
         EntryPoint entryPoint = new EntryPoint();
-
-        /// @dev AccountFactory create a new Account instance and passes the address to BaseFactory to be used in the `createAccount(..)` function for adding salt, and some processing before the processed Account addresss is returned.
-
         AccountFactory accountFactory = new AccountFactory(entryPoint);
-
-        /// @dev As pointed out in the previous Natspec, the returned address will not be a processed Account address, hence calling `BaseAccountFactory.getAllAccounts()` returned by BaseAccountFactory.
-        address[] memory accounts = accountFactory.getAllAccounts();
-        address account = accounts[0]; // processed account address by BaseAccountFactory
+        address account = accountFactory.createAccount(admin, "");
 
         Guardian guardianContract = accountFactory.guardian();
         AccountLock accountLock = accountFactory.accountLock();
-        // AccountGuardian accountGuardian = accountFactory.accountGuardian();
+        AccountGuardian accountGuardian = accountFactory.accountGuardian();
 
-        return (accountFactory, account, guardianContract, accountLock);
+        return (accountFactory, account, guardianContract, accountLock, accountGuardian);
     }
 }

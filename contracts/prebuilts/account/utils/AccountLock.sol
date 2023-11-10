@@ -90,8 +90,9 @@ contract AccountLock is IAccountLock, AutomationCompatibleInterface {
          **/
 
         address accountGuardian = guardianContract.getAccountGuardian(account);
+
         if (!AccountGuardian(accountGuardian).isAccountGuardian(msg.sender)) {
-            revert NotAGuardian(account);
+            revert NotAGuardian(msg.sender);
         }
 
         if (_isLocked(account)) {

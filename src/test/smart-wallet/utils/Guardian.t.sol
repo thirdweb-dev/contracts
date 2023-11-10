@@ -3,18 +3,21 @@ pragma solidity ^0.8.12;
 
 import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
 import { IGuardian } from "contracts/prebuilts/account/interface/IGuardian.sol";
-import { DeployGuardian } from "scripts/DeployGuardian.s.sol";
+import { AccountGuardian } from "contracts/prebuilts/account/utils/AccountGuardian.sol";
 import { Test } from "forge-std/Test.sol";
+import { DeploySmartAccountUtilContracts } from "scripts/DeploySmartAccountUtilContracts.s.sol";
 
 contract GuardianTest is Test {
     Guardian public guardian;
+    AccountGuardian public accountGuardian;
+    address account;
     address public user = makeAddr("guardianUser");
     address public owner = msg.sender;
     uint256 public STARTING_USER_BALANCE = 10 ether;
 
     function setUp() external {
-        DeployGuardian deployer = new DeployGuardian();
-        guardian = deployer.run();
+        DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
+        (, account, guardian, , accountGuardian) = deployer.run();
         vm.deal(user, STARTING_USER_BALANCE);
     }
 
@@ -100,5 +103,16 @@ contract GuardianTest is Test {
         vm.prank(user);
         vm.expectRevert(Guardian.NotOwner.selector);
         guardian.getVerifiedGuardians();
+    }
+
+    /////////////////////////////////////////////
+    ///// linkAccountToAccountGuardian() test ////
+    //////////////////////////////////////////////
+
+    function testLinkingAccountToAccountGuardian() external {
+        // Setup
+        guardian.linkAccountToAccountGuardian(address(account), address(accountGuardian));
+
+        assertEq(guardian.getAccountGuardian(account), address(accountGuardian));
     }
 }

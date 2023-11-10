@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.12;
 
-import {IGuardian} from "../interface/IGuardian.sol";
+import { IGuardian } from "../interface/IGuardian.sol";
 
 contract Guardian is IGuardian {
     address[] private verifiedGuardians;
@@ -16,18 +16,18 @@ contract Guardian is IGuardian {
     }
 
     modifier onlyOwner() {
-        if(msg.sender != owner) {
+        if (msg.sender != owner) {
             revert NotOwner();
         }
         _;
     }
-    
+
     function addVerifiedGuardian() external {
         address guardian = msg.sender;
         require(guardian != address(0), "Cannot be a zero address");
-        
-        for(uint256 g = 0; g < verifiedGuardians.length; g++) {
-            if(verifiedGuardians[g] == guardian) {
+
+        for (uint256 g = 0; g < verifiedGuardians.length; g++) {
+            if (verifiedGuardians[g] == guardian) {
                 revert GuardianAlreadyExists(guardian);
             }
         }
@@ -35,9 +35,9 @@ contract Guardian is IGuardian {
         verifiedGuardians.push(guardian);
     }
 
-    function isVerifiedGuardian(address isVerified) public view returns(bool) {
-        for(uint256 g = 0; g < verifiedGuardians.length; g++){
-            if(verifiedGuardians[g] == isVerified) {
+    function isVerifiedGuardian(address isVerified) public view returns (bool) {
+        for (uint256 g = 0; g < verifiedGuardians.length; g++) {
+            if (verifiedGuardians[g] == isVerified) {
                 return true;
             }
         }
@@ -48,20 +48,20 @@ contract Guardian is IGuardian {
         address guardian = msg.sender;
         bool guardianFound = false;
 
-        for(uint256 g = 0; g < verifiedGuardians.length; g++){
-            if(verifiedGuardians[g] == guardian ) {
+        for (uint256 g = 0; g < verifiedGuardians.length; g++) {
+            if (verifiedGuardians[g] == guardian) {
                 // remove the guardian
                 guardianFound = true;
                 delete verifiedGuardians[g];
                 emit GuardianRemoved(guardian);
             }
         }
-        if(!guardianFound){
+        if (!guardianFound) {
             revert NotAGuardian(guardian);
         }
     }
 
-    function linkAccountToAccountGuardian(address accountGuardian, address account) external {
+    function linkAccountToAccountGuardian(address account, address accountGuardian) external {
         accountToAccountGuardian[account] = accountGuardian;
     }
 
@@ -73,24 +73,20 @@ contract Guardian is IGuardian {
     ///// Getter Functions ///////
     ///////////////////////////////
 
-
-    function getVerifiedGuardians() external view onlyOwner returns(address[] memory) {
+    function getVerifiedGuardians() external view onlyOwner returns (address[] memory) {
         return verifiedGuardians;
     }
 
-    function getAccountGuardian(address account) external view returns(address) {
+    function getAccountGuardian(address account) external view returns (address) {
         return accountToAccountGuardian[account];
     }
 
-// TODO: Refactor this functions with the POV of access modifiers
-    function getAccountsTheGuardianIsGuarding(address guardian) external view returns(address[] memory) {
-
-        if(!isVerifiedGuardian(guardian)) {
+    // TODO: Refactor this functions with the POV of access modifiers
+    function getAccountsTheGuardianIsGuarding(address guardian) external view returns (address[] memory) {
+        if (!isVerifiedGuardian(guardian)) {
             revert NotAGuardian(guardian);
         }
 
         return guardianToAccounts[guardian];
     }
-
-    
 }

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.12;
 
 interface IAccountLock {
-     /*///////////////////////////////////////////////////////////////
+    /*///////////////////////////////////////////////////////////////
                         Events
     //////////////////////////////////////////////////////////////*/
 
@@ -32,7 +32,7 @@ interface IAccountLock {
      */
     event AccountLockRequestRejected(bytes32 indexed lockRequest, address indexed guardian);
 
-     /*///////////////////////////////////////////////////////////////
+    /*///////////////////////////////////////////////////////////////
                         Errors
     //////////////////////////////////////////////////////////////*/
 
@@ -45,11 +45,11 @@ interface IAccountLock {
     /**
      * This error is thrown when a non-guardian tries to create a recovery
      * request of a smart wallet account.
-     * @param account address of the smart wallet being recovered
+     * @param sender address of the caller
      */
-    error NotAGuardian(address account);
+    error NotAGuardian(address sender);
 
-     /**
+    /**
      * Error thrown when a lock request is created for an already locked smart-wallet
      * @param account address of the smart wallet being unlocked
      */
@@ -59,34 +59,32 @@ interface IAccountLock {
      * Error returned when creating a account lock request for which lock reques already exists.
      */
     error ActiveLockRequestFound();
-    
+
     /**
      * Error thrown when a unlock request is created for an already unlocked smart-wallet
      * @param account address of the smart wallet being unlocked
      */
     error AccountAlreadyUnlocked(address account);
 
-     /*///////////////////////////////////////////////////////////////
+    /*///////////////////////////////////////////////////////////////
                         External Functions
     //////////////////////////////////////////////////////////////*/
-
 
     /**
      * @dev Triggered by a guardian to create a lock request.
      * @param account address of the smart wallet to be recovered
      */
 
-    function createLockRequest(address account) external returns(bytes32);
+    function createLockRequest(address account) external returns (bytes32);
 
     /**
-     * @notice Records guardian's signature on a lock request by 
+     * @notice Records guardian's signature on a lock request by
      * updating `lockRequestToGuardianToSignature` mapping
      * @param lockRequest Lock request of an account
-     * @param signature Guardian's signature on the lock request 
+     * @param signature Guardian's signature on the lock request
      */
     function recordSignatureOnLockRequest(bytes32 lockRequest, bytes calldata signature) external;
 
- 
     /**
      * @dev This function is used to evaluate if the lockRequest was accepted or rejected by the guardians.
      * @param lockRequest The lockRequest to evaluate
@@ -109,15 +107,14 @@ interface IAccountLock {
     // function createUnLockRequest(address account) external returns(bytes memory);
 
     /**
-     * @dev This function is called when a guardian makes his choice of 
+     * @dev This function is called when a guardian makes his choice of
      * signing or not signing the account unlocking request.
      * @param unlockRequest type hash of the unlock request
      * @return Request signature incase the guardian accepts the request else returns null.
      */
     // function unlockRequestAccepted(bytes32 unlockRequest) external returns(bytes memory);
 
-
-/*///////////////////////////////////////////////////////////////
+    /*///////////////////////////////////////////////////////////////
                         View Functions
     //////////////////////////////////////////////////////////////*/
 
@@ -125,10 +122,10 @@ interface IAccountLock {
      * @notice Returns a bool indicating if a lock request for the account already exists
      * @param account Account for which active lock request has to be checked
      */
-    function activeLockRequestExists(address account) external view returns(bool);
+    function activeLockRequestExists(address account) external view returns (bool);
 
     /**
      * @notice Returns all the lock request of a guardian
      */
-    function getLockRequests() external view returns(bytes32[] memory);
+    function getLockRequests() external view returns (bytes32[] memory);
 }
