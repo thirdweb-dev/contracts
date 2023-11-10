@@ -22,10 +22,10 @@ import "../../../extension/PermissionsEnumerable.sol";
 
 contract Checkout is PermissionsEnumerable, ICheckout {
     /// @dev Registry of vaults created through this Checkout
-    mapping(address => bool) isVaultRegistered;
+    mapping(address => bool) public isVaultRegistered;
 
     /// @dev Registry of executors created through this Checkout
-    mapping(address => bool) isExecutorRegistered;
+    mapping(address => bool) public isExecutorRegistered;
 
     address public immutable vaultImplementation;
     address public immutable executorImplementation;

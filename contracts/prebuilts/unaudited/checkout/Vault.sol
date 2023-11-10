@@ -127,6 +127,9 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
 
     function setExecutor(address _executor) external {
         require(_canSetExecutor(), "Not authorized");
+        if (_executor == executor) {
+            revert("Executor already set");
+        }
 
         executor = _executor;
     }
