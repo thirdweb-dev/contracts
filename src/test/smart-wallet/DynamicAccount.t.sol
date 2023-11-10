@@ -17,6 +17,14 @@ import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.s
 import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
 import { DynamicAccountFactory, DynamicAccount } from "contracts/prebuilts/account/dynamic/DynamicAccountFactory.sol";
 
+library GPv2EIP1271 {
+    bytes4 internal constant MAGICVALUE = 0x1626ba7e;
+}
+
+interface EIP1271Verifier {
+    function isValidSignature(bytes32 _hash, bytes memory _signature) external view returns (bytes4 magicValue);
+}
+
 /// @dev This is a dummy contract to test contract interactions with Account.
 contract Number {
     uint256 public num;
@@ -31,6 +39,20 @@ contract Number {
 
     function incrementNum() public {
         num += 1;
+    }
+
+    function setNumBySignature(address owner, uint256 newNum, bytes calldata signature) public {
+        if (owner.code.length == 0) {
+            // Signature verification by ECDSA
+        } else {
+            // Signature verfication by EIP1271
+            bytes32 digest = bytes32(newNum);
+            require(
+                EIP1271Verifier(owner).isValidSignature(digest, signature) == GPv2EIP1271.MAGICVALUE,
+                "invalid eip1271 signature"
+            );
+            num = newNum;
+        }
     }
 }
 
@@ -279,7 +301,7 @@ contract DynamicAccountTest is BaseTest {
             implementation: address(new AccountExtension())
         });
 
-        defaultExtension.functions = new IExtension.ExtensionFunction[](9);
+        defaultExtension.functions = new IExtension.ExtensionFunction[](11);
 
         defaultExtension.functions[0] = IExtension.ExtensionFunction(
             AccountExtension.supportsInterface.selector,
@@ -316,6 +338,14 @@ contract DynamicAccountTest is BaseTest {
         defaultExtension.functions[8] = IExtension.ExtensionFunction(
             AccountExtension.withdrawDepositTo.selector,
             "withdrawDepositTo(address,uint256)"
+        );
+        defaultExtension.functions[9] = IExtension.ExtensionFunction(
+            AccountExtension.getMessageHash.selector,
+            "getMessageHash(bytes)"
+        );
+        defaultExtension.functions[10] = IExtension.ExtensionFunction(
+            AccountExtension.encodeMessageData.selector,
+            "encodeMessageData(bytes)"
         );
 
         IExtension.Extension[] memory extensions = new IExtension.Extension[](1);
@@ -883,5 +913,68 @@ contract DynamicAccountTest is BaseTest {
         vm.prank(accountSigner);
         vm.expectRevert("NFTs not accepted");
         erc721.safeTransferFrom(accountSigner, account, 1);
+    }
+
+    /*///////////////////////////////////////////////////////////////
+                Test: 1271 Signature Verification
+    //////////////////////////////////////////////////////////////*/
+
+    function test_isValidSignature_validContractSignature() public {
+        address account = accountFactory.createAccount(accountAdmin, bytes(""));
+        vm.startPrank(accountAdmin);
+
+        bytes memory message = abi.encode(42);
+        bytes32 messageHash = SimpleAccount(payable(account)).getMessageHash(message);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, messageHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        numberContract.setNumBySignature(account, 42, signature);
+        assertEq(numberContract.num(), 42);
+    }
+
+    function test_isValidSignature_revert_incorrectContract() public {
+        address account = accountFactory.createAccount(accountAdmin, bytes(""));
+        address account2 = accountFactory.createAccount(accountAdmin, bytes("1"));
+        vm.startPrank(accountAdmin);
+
+        bytes memory message = abi.encode(42);
+        bytes32 messageHash = SimpleAccount(payable(account)).getMessageHash(message);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, messageHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        vm.expectRevert("Account: caller not approved target.");
+        numberContract.setNumBySignature(account2, 42, signature);
+    }
+
+    function test_isValidSignature_revert_incorrectChainId() public {
+        address account = accountFactory.createAccount(accountAdmin, bytes(""));
+
+        bytes memory signature;
+
+        {
+            bytes memory message = abi.encode(42);
+            bytes32 typehash = keccak256("AccountMessage(bytes message)");
+            bytes32 messageHash = keccak256(abi.encode(typehash, keccak256(message)));
+            bytes32 domainSeperator = keccak256(
+                abi.encode(
+                    keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
+                    keccak256(bytes("Account")),
+                    keccak256(bytes("1")),
+                    999,
+                    account
+                )
+            );
+            bytes memory encodedMessage = abi.encodePacked("\x19\x01", domainSeperator, messageHash);
+            bytes32 finalHash = keccak256(encodedMessage);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, finalHash);
+            signature = abi.encodePacked(r, s, v);
+        }
+
+        vm.startPrank(accountAdmin);
+
+        vm.expectRevert("Account: caller not approved target.");
+        numberContract.setNumBySignature(account, 42, signature);
     }
 }

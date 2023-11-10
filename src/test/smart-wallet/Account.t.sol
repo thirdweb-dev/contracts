@@ -859,7 +859,7 @@ contract SimpleAccountTest is BaseTest {
         bytes memory signature = abi.encodePacked(r, s, v);
 
         numberContract.setNumBySignature(account, 42, signature);
-        assertEq(numberContract.num(), 0);
+        assertEq(numberContract.num(), 42);
     }
 
     function test_isValidSignature_revert_incorrectContract() public {
