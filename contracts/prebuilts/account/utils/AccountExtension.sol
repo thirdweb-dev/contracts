@@ -72,9 +72,7 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         override
         returns (bytes4 magicValue)
     {
-        bytes memory messageData = encodeMessageData(abi.encode(_message));
-        bytes32 messageHash = keccak256(messageData);
-
+        bytes32 messageHash = getMessageHash(abi.encode(_message));
         address signer = messageHash.recover(_signature);
 
         if (isAdmin(signer)) {
@@ -96,21 +94,12 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
 
     /**
      * @notice Returns the hash of message that should be signed for EIP1271 verification.
-     * @param message Message to be hashed
+     * @param message Message to be hashed i.e. `keccak256(abi.encode(data))`
      * @return Hashed message
      */
     function getMessageHash(bytes memory message) public view returns (bytes32) {
-        return keccak256(encodeMessageData(message));
-    }
-
-    /**
-     * @notice Returns encoded message to be hashed
-     * @param message Message to be encoded
-     * @return Encoded message to be hashed
-     */
-    function encodeMessageData(bytes memory message) public view returns (bytes memory) {
         bytes32 messageHash = keccak256(abi.encode(MSG_TYPEHASH, keccak256(message)));
-        return abi.encodePacked("\x19\x01", _domainSeparatorV4(), messageHash);
+        return keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), messageHash));
     }
 
     /*///////////////////////////////////////////////////////////////
