@@ -9,17 +9,6 @@ interface ITeamsManager is IERC1155 {
     //////////////////////////////////////////////////////////////*/
 
     /**
-     *  @notice The parameters required to create a team
-     *
-     *  @param owner The owner of the team. This address is the super-admin of the team and will be able to add or remove members.
-     *  @param metadataURI The NFT metadata URI of the team.
-     */
-    struct CreateTeamParams {
-        address owner;
-        string metadataURI;
-    }
-
-    /**
      *  @notice The status of a member in a team.
      *
      *  @param OWNER The owner of the team. This address is the super-admin. An owner can invite admins or non-admins to the team.
@@ -60,12 +49,10 @@ interface ITeamsManager is IERC1155 {
     /**
      *  @notice Create a team. Mints an ERC-1155 token representing the team.
      *
-     *  @param parameters The parameters required to create a team.
-     *  @param signature The signature of the contract owner authorizing team creation.
+     *  @param owner The owner of the team.
+     *  @param metadataURI The NFT metadata URI of the team.
      */
-    function createTeam(CreateTeamParams calldata parameters, bytes calldata signature)
-        external
-        returns (uint256 teamId);
+    function createTeam(address owner, string calldata metadataURI) external returns (uint256 teamId);
 
     /**
      *  @notice Transfer a team's ownership to another address. The caller must be the owner of the team.
