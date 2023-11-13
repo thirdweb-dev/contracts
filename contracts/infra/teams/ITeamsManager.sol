@@ -103,6 +103,13 @@ interface ITeamsManager is IERC1155 {
      */
     function leave(uint256 teamId) external;
 
+    /**
+     *  @notice Deletes a team. The caller must be the owner of the team.
+     *
+     *  @param teamId The ID of the team.
+     */
+    function deleteTeam(uint256 teamId) external;
+
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
