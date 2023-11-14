@@ -34,7 +34,7 @@ contract AccountLock is IAccountLock {
     uint96 public constant FUND_UPKEEP_LINK_TOKEN = 5e18;
     uint256 public constant LOCK_REQUEST_TIME_TO_EVALUATION = 604800; // 7 days
     address[] public lockedAccounts;
-    mapping(address => bytes32) private accountToLockRequest;
+    mapping(address => bytes32) public accountToLockRequest;
     mapping(bytes32 => uint256) private lockRequestToCreationTime;
     mapping(bytes32 => bool) private lockRequestEvaluationStatus;
     mapping(bytes32 => mapping(address => bytes)) public lockRequestToGuardianToSignature;
@@ -109,7 +109,7 @@ contract AccountLock is IAccountLock {
         lockRequestToCreationTime[lockRequestHash] = block.timestamp;
         lockRequestEvaluationStatus[lockRequestHash] = false;
 
-        bytes memory chainlinkUpkeepCheckData = abi.encode(lockRequestHash, account);
+        // bytes memory chainlinkUpkeepCheckData = abi.encode(lockRequestHash, account);
 
         // _registerAndFundUpKeepForEvaluationUsingTimeBasedTrigger(chainlinkUpkeepCheckData);
         return lockRequestHash;
@@ -199,6 +199,7 @@ contract AccountLock is IAccountLock {
         }
     }
 
+    /// @dev Returns all lock request for a guardian
     function getLockRequests() external view returns (bytes32[] memory) {
         if (!guardianContract.isVerifiedGuardian(msg.sender)) {
             revert NotAGuardian(msg.sender);
