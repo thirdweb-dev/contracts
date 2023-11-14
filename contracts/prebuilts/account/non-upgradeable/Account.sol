@@ -19,7 +19,7 @@ import "../../../eip/ERC1271.sol";
 import "../utils/Helpers.sol";
 import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 import "../utils/BaseAccountFactory.sol";
-
+import "forge-std/console.sol";
 import { Guardian } from "../utils/Guardian.sol";
 import { AccountLock } from "../utils/AccountLock.sol";
 
@@ -37,17 +37,15 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     using EnumerableSet for EnumerableSet.AddressSet;
     bool public paused;
     Guardian guardian;
-    address accountLock;
 
-    error NotAuthorizedToLock(address locker);
+    error NotAuthorizedToLock(address locker, address accountLock);
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint, address _factory, address _accountLock) AccountCore(_entrypoint, _factory) {
+    constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {
         paused = false;
-        accountLock = _accountLock;
     }
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
@@ -58,8 +56,9 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
 
     /// @notice The account can be paused only by the AccountLock contract
     modifier onlyAccountLock(address locker) {
+        console.log("AccountLock address in Account.sol", accountLock);
         if (locker != accountLock) {
-            revert NotAuthorizedToLock(locker);
+            revert NotAuthorizedToLock(locker, accountLock);
         }
         _;
     }
@@ -139,6 +138,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
 
     function setPaused(bool pauseStatus) external onlyAccountLock(msg.sender) {
         paused = pauseStatus;
+        AccountLock(accountLock).addLockAccountToList(address(this));
     }
 
     /*///////////////////////////////////////////////////////////////

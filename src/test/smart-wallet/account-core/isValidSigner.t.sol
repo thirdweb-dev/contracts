@@ -35,9 +35,10 @@ contract Number {
 contract MyDynamicAccount is DynamicAccount {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
-        DynamicAccount(_entrypoint, _defaultExtensions)
-    {}
+    constructor(
+        IEntryPoint _entrypoint,
+        Extension[] memory _defaultExtensions
+    ) DynamicAccount(_entrypoint, _defaultExtensions) {}
 
     function setPermissionsForSigner(
         address _signer,
@@ -165,10 +166,10 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint);
     }
 
-    function _setupUserOpInvalidFunction(uint256 _signerPKey, bytes memory _initCode)
-        internal
-        returns (UserOperation memory)
-    {
+    function _setupUserOpInvalidFunction(
+        uint256 _signerPKey,
+        bytes memory _initCode
+    ) internal returns (UserOperation memory) {
         bytes memory callDataForEntrypoint = abi.encodeWithSignature("invalidFunction()");
 
         return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint);
@@ -197,7 +198,7 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         address accountImpl = address(new MyDynamicAccount(IEntryPoint(payable(address(entrypoint))), extensions));
         address _account = Clones.cloneDeterministic(accountImpl, "salt");
         account = MyDynamicAccount(payable(_account));
-        account.initialize(accountAdmin, "");
+        account.initialize(accountAdmin, "", address(0));
     }
 
     function test_isValidSigner_whenSignerIsAdmin() public {
