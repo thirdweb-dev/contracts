@@ -17,6 +17,8 @@ import "../interface/IEntrypoint.sol";
 import { Account } from "./Account.sol";
 import { Guardian } from "../utils/Guardian.sol";
 
+import "forge-std/console.sol";
+
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
 // $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
@@ -33,7 +35,7 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
 
     constructor(
         IEntryPoint _entrypoint
-    ) BaseAccountFactory(address(new Account(_entrypoint, address(this), address(accountLock))), address(_entrypoint)) {
+    ) BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint)) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -43,7 +45,9 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
     function _initializeAccount(address _account, address _admin, bytes calldata _data) internal override {
-        Account(payable(_account)).initialize(_admin, _data);
+        console.log("AccountLock address in AccountFactory used to initialize account clone", address(accountLock));
+
+        Account(payable(_account)).initialize(_admin, _data, address(accountLock));
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
