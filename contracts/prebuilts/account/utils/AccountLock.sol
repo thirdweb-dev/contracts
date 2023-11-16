@@ -12,6 +12,7 @@ import { AutomationCompatibleInterface } from "@chainlink/contracts/src/v0.8/int
 import { KeeperRegistryBase2_0Mock } from "@chainlink/contracts/src/v0.8/mocks/KeeperRegistryBase2_0Mock.sol";
 import { KeeperRegistry2_0Mock } from "@chainlink/contracts/src/v0.8/mocks/KeeperRegistry2_0Mock.sol";
 import { KeeperRegistrar2_0Mock } from "@chainlink/contracts/src/v0.8/mocks/KeeperRegistrar2_0Mock.sol";
+import "forge-std/console.sol";
 
 struct RegistrationParams {
     string name;
@@ -34,9 +35,9 @@ contract AccountLock is IAccountLock {
     uint96 public constant FUND_UPKEEP_LINK_TOKEN = 5e18;
     uint256 public constant LOCK_REQUEST_TIME_TO_EVALUATION = 604800; // 7 days
     address[] public lockedAccounts;
-    mapping(address => bytes32) private accountToLockRequest;
+    mapping(address => bytes32) public accountToLockRequest;
     mapping(bytes32 => uint256) private lockRequestToCreationTime;
-    mapping(bytes32 => bool) private lockRequestEvaluationStatus;
+    mapping(bytes32 => bool) private lockRequestConcensysEvaluationStatus;
     mapping(bytes32 => mapping(address => bytes)) public lockRequestToGuardianToSignature;
     mapping(bytes32 => mapping(address => bool)) lockRequestToGuardianToSignatureValid;
 
@@ -74,11 +75,20 @@ contract AccountLock is IAccountLock {
         guardianContract = _guardian;
     }
 
+    modifier onlyVerifiedAccountGuardian(address account) {
+        address accountGuardian = guardianContract.getAccountGuardian(account);
+
+        if (!AccountGuardian(accountGuardian).isAccountGuardian(msg.sender)) {
+            revert NotAGuardian(msg.sender);
+        }
+        _;
+    }
+
     /////////////////////////////////
     /////// External Func ///////////
     /////////////////////////////////
 
-    function createLockRequest(address account) external returns (bytes32) {
+    function createLockRequest(address account) external onlyVerifiedAccountGuardian(account) returns (bytes32) {
         /**
          * Step 1: check if the msg.sender is the guardian of the smartWallet account
          *
@@ -89,12 +99,6 @@ contract AccountLock is IAccountLock {
          * Step 4: Send request to all other guardians of this smart account
          **/
 
-        address accountGuardian = guardianContract.getAccountGuardian(account);
-
-        if (!AccountGuardian(accountGuardian).isAccountGuardian(msg.sender)) {
-            revert NotAGuardian(msg.sender);
-        }
-
         if (_isLocked(account)) {
             revert AccountAlreadyLocked(account);
         }
@@ -103,24 +107,40 @@ contract AccountLock is IAccountLock {
             revert ActiveLockRequestFound();
         }
 
-        bytes32 lockRequestHash = keccak256(abi.encodePacked("_lockAccount(address account)", account));
+        bytes32 lockRequestHash = keccak256(abi.encodeWithSignature("_lockAccount(address account)", account));
+
+        // TODO: See if we have to make it into an ETHSignedMsgHash (Ref: Openzeppelin ECDSA.sol::toEthSignedMsgHash)
 
         accountToLockRequest[account] = lockRequestHash;
         lockRequestToCreationTime[lockRequestHash] = block.timestamp;
-        lockRequestEvaluationStatus[lockRequestHash] = false;
+        lockRequestConcensysEvaluationStatus[lockRequestHash] = false;
 
-        bytes memory chainlinkUpkeepCheckData = abi.encode(lockRequestHash, account);
+        // bytes memory chainlinkUpkeepCheckData = abi.encode(lockRequestHash, account);
 
         // _registerAndFundUpKeepForEvaluationUsingTimeBasedTrigger(chainlinkUpkeepCheckData);
         return lockRequestHash;
     }
 
     function recordSignatureOnLockRequest(bytes32 lockRequest, bytes calldata signature) external {
-        lockRequestToGuardianToSignature[lockRequest][msg.sender] = signature;
+        address guardian = msg.sender;
+
+        if (!guardianContract.isVerifiedGuardian(guardian)) {
+            revert NotAGuardian(guardian);
+        }
+
+        lockRequestToGuardianToSignature[lockRequest][guardian] = signature;
     }
 
     //TODO: Add trigger to this function once lock request is created, using Chainlink Time based automation (Ref: https://docs.chain.link/chainlink-automation/overview/getting-started)
-    function lockRequestEvaluation(bytes32 lockRequest, address account) public {
+    function lockRequestConcensysEvaluation(
+        address account
+    ) public onlyVerifiedAccountGuardian(account) returns (bool) {
+        bytes32 accountLockRequest = accountToLockRequest[account];
+
+        if (accountLockRequest == bytes32(0)) {
+            revert AccountLockRequestNotFound(account);
+        }
+
         uint256 validGuardianSignatures = 0;
         address accountGuardian = guardianContract.getAccountGuardian(account);
         address[] memory guardians = AccountGuardian(accountGuardian).getAllGuardians();
@@ -128,23 +148,30 @@ contract AccountLock is IAccountLock {
 
         for (uint256 g = 0; g < guardians.length; g++) {
             address guardian = guardians[g];
-            bytes memory guardianSignature = lockRequestToGuardianToSignature[lockRequest][guardian];
+
+            bytes memory guardianSignature = lockRequestToGuardianToSignature[accountLockRequest][guardian];
+
             // checking if this guardian has signed the request
             if (guardianSignature.length > 0) {
-                address recoveredGuardian = _verifyLockRequestSignature(lockRequest, guardianSignature);
+                address recoveredGuardian = _recoverSigner(accountLockRequest, guardianSignature);
+                console.log("Recovered guardian", recoveredGuardian);
 
                 if (recoveredGuardian == guardian) {
-                    lockRequestToGuardianToSignatureValid[lockRequest][guardian] = true;
+                    lockRequestToGuardianToSignatureValid[accountLockRequest][guardian] = true;
+
                     validGuardianSignatures++;
                 } else {
-                    lockRequestToGuardianToSignatureValid[lockRequest][guardian] = false;
-                }
-
-                lockRequestEvaluationStatus[lockRequest] = true;
-                if (validGuardianSignatures > (guardianCount / 2)) {
-                    _lockAccount(payable(account));
+                    lockRequestToGuardianToSignatureValid[accountLockRequest][guardian] = false;
                 }
             }
+        }
+
+        lockRequestConcensysEvaluationStatus[accountLockRequest] = true;
+        if (validGuardianSignatures > (guardianCount / 2)) {
+            _lockAccount(payable(account));
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -164,7 +191,7 @@ contract AccountLock is IAccountLock {
 
     //     (bytes32 lockRequest, address account) = abi.decode(checkData, (bytes32, address));
 
-    //     if (lockRequestEvaluationStatus[lockRequest]) {
+    //     if (lockRequestConcensysEvaluationStatus[lockRequest]) {
     //         return (false, checkData);
     //     }
 
@@ -184,7 +211,7 @@ contract AccountLock is IAccountLock {
     //         // retrieving the lockRequest and account address from performData
     //         (bytes32 lockRequest, address account) = abi.decode(performData, (bytes32, address));
 
-    //         lockRequestEvaluation(lockRequest, account);
+    //         lockRequestConcensysEvaluation(lockRequest, account);
     //     }
     // }
 
@@ -199,6 +226,7 @@ contract AccountLock is IAccountLock {
         }
     }
 
+    /// @dev Returns all lock request for a guardian
     function getLockRequests() external view returns (bytes32[] memory) {
         if (!guardianContract.isVerifiedGuardian(msg.sender)) {
             revert NotAGuardian(msg.sender);
@@ -238,10 +266,7 @@ contract AccountLock is IAccountLock {
         require(success, "Locking account failed");
     }
 
-    function _verifyLockRequestSignature(
-        bytes32 lockRequest,
-        bytes memory guardianSignature
-    ) internal pure returns (address) {
+    function _recoverSigner(bytes32 lockRequest, bytes memory guardianSignature) internal pure returns (address) {
         // verify
         address recoveredGuardian = ECDSA.recover(lockRequest, guardianSignature);
 

@@ -10,7 +10,7 @@ import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
 import { AccountGuardian } from "contracts/prebuilts/account/utils/AccountGuardian.sol";
 
 contract DeploySmartAccountUtilContracts is Script {
-    address admin = makeAddr("admin");
+    address public admin = makeAddr("admin");
 
     function run() external returns (AccountFactory, address, Guardian, AccountLock, AccountGuardian) {
         EntryPoint entryPoint = new EntryPoint();
