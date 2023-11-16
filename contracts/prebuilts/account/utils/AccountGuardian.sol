@@ -43,6 +43,8 @@ contract AccountGuardian is IAccountGuardian {
     }
 
     function removeGuardian(address guardian) external onlyOwnerOrAccountLock {
+        require(guardian != address(0), "guardian address being removed cannot be a zero address");
+
         bool guardianFound = false;
         for (uint256 g = 0; g < accountGuardians.length; g++) {
             if (accountGuardians[g] == guardian) {

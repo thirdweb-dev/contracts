@@ -61,6 +61,12 @@ interface IAccountLock {
     error ActiveLockRequestFound();
 
     /**
+     * Error thrown when trying to evaluate concensys for lock request that is not connected to the account sent
+     * @param account account whose lock req concensys is being evaluated
+     */
+    error AccountLockRequestNotFound(address account);
+
+    /**
      * Error thrown when a unlock request is created for an already unlocked smart-wallet
      * @param account address of the smart wallet being unlocked
      */
@@ -87,11 +93,10 @@ interface IAccountLock {
 
     /**
      * @dev This function is used to evaluate if the lockRequest was accepted or rejected by the guardians.
-     * @param lockRequest The lockRequest to evaluate
      * @param account Account to which the lock request belongs.
      */
 
-    function lockRequestEvaluation(bytes32 lockRequest, address account) external;
+    function lockRequestConcensysEvaluation(address account) external returns (bool);
 
     /**
      * Will be called to execute the lock request on an account

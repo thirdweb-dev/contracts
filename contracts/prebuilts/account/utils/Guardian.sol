@@ -36,6 +36,8 @@ contract Guardian is IGuardian {
     }
 
     function isVerifiedGuardian(address isVerified) public view returns (bool) {
+        require(isVerified != address(0), "Guardian address cannot be a zero address");
+
         for (uint256 g = 0; g < verifiedGuardians.length; g++) {
             if (verifiedGuardians[g] == isVerified) {
                 return true;

@@ -4,6 +4,7 @@ pragma solidity ^0.8.12;
 
 import { Test } from "forge-std/Test.sol";
 import { EntryPoint } from "contracts/prebuilts/account/utils/EntryPoint.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import { Account } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
 import { AccountLock } from "contracts/prebuilts/account/utils/AccountLock.sol";
 import { IAccountLock } from "contracts/prebuilts/account/interface/IAccountLock.sol";
@@ -14,18 +15,27 @@ import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/Acco
 import { DeploySmartAccountUtilContracts } from "scripts/DeploySmartAccountUtilContracts.s.sol";
 
 contract AccountLockTest is Test {
+    AccountFactory public accountFactory;
     address public account;
     Guardian public guardianContract;
     AccountLock public accountLock;
     AccountGuardian public accountGuardian;
+    DeploySmartAccountUtilContracts deployer;
     address owner = makeAddr("owner");
-    address guardian = makeAddr("guardian");
-    address randomUser = makeAddr("random");
+    address public guardian;
+    uint256 private guardianPK;
+    address public randomUser;
+    uint256 private randomUserPK;
+
     uint256 constant GUARDIAN_STARTING_BALANCE = 10 ether;
 
     function setUp() external {
-        DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
-        (, account, guardianContract, accountLock, accountGuardian) = deployer.run();
+        (guardian, guardianPK) = makeAddrAndKey("guardian");
+        (randomUser, randomUserPK) = makeAddrAndKey("random");
+
+        deployer = new DeploySmartAccountUtilContracts();
+
+        (accountFactory, account, guardianContract, accountLock, accountGuardian) = deployer.run();
 
         vm.deal(guardian, GUARDIAN_STARTING_BALANCE);
     }
@@ -104,5 +114,113 @@ contract AccountLockTest is Test {
         assert(lockReqHash != bytes32(0));
         assertEq(accountLock.activeLockRequestExists(account), true);
         assertEq(lockRequests[0], lockReqHash);
+    }
+
+    ////////////////////////////////////////////
+    ////// recordSignatureOnLockReq tests //////
+    ///////////////////////////////////////////
+    function testRevertWhenNonVerifiedGuardianSignatureIsSent()
+        external
+        addVerifiedGuardian
+        addVerifiedGuardianAsAccountGuardian
+    {
+        // Setup
+        vm.prank(guardian);
+        bytes32 lockReqHash = accountLock.createLockRequest(account);
+
+        vm.startPrank(randomUser);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(randomUserPK, lockReqHash);
+        bytes memory randomUserSignature = abi.encodePacked(v, r, s);
+
+        // Assert
+        vm.expectRevert(abi.encodeWithSelector(IAccountLock.NotAGuardian.selector, randomUser));
+        accountLock.recordSignatureOnLockRequest(lockReqHash, randomUserSignature);
+        vm.stopPrank();
+    }
+
+    function testRecordSignatureOnLockRequest() external addVerifiedGuardian addVerifiedGuardianAsAccountGuardian {
+        // SETUP
+        vm.startPrank(guardian);
+        bytes32 lockReqHash = accountLock.createLockRequest(account);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(guardianPK, lockReqHash);
+
+        bytes memory signature = abi.encodePacked(v, r, s);
+
+        // ACT
+        accountLock.recordSignatureOnLockRequest(lockReqHash, signature);
+
+        // Assert
+        assertEq(accountLock.lockRequestToGuardianToSignature(lockReqHash, guardian), signature);
+
+        vm.stopPrank();
+    }
+
+    /////////////////////////////////////////
+    ////// lockRequestConcensysEvaluation tests //////
+    ////////////////////////////////////////
+
+    function testRevertWhenAccountLockRequestNotFound()
+        external
+        addVerifiedGuardian
+        addVerifiedGuardianAsAccountGuardian
+    {
+        vm.startPrank(guardian);
+        vm.expectRevert(abi.encodeWithSelector(IAccountLock.AccountLockRequestNotFound.selector, account));
+        accountLock.lockRequestConcensysEvaluation(account);
+    }
+
+    function testRevertWhenNonGuardianInitiatingLockReqConcensysEvalaution()
+        external
+        addVerifiedGuardian
+        addVerifiedGuardianAsAccountGuardian
+    {
+        // SETUP
+        vm.prank(guardian);
+        accountLock.createLockRequest(account);
+
+        // Act/assert
+        vm.prank(randomUser);
+        vm.expectRevert(abi.encodeWithSelector(IAccountLock.NotAGuardian.selector, randomUser));
+        accountLock.lockRequestConcensysEvaluation(account);
+    }
+
+    function testLockReqConcensysEvaluationWhenNoGuardianSigned()
+        external
+        addVerifiedGuardian
+        addVerifiedGuardianAsAccountGuardian
+    {
+        vm.startPrank(guardian);
+        accountLock.createLockRequest(account);
+
+        bool lockReqConcensysResult = accountLock.lockRequestConcensysEvaluation(account);
+        vm.stopPrank();
+
+        assertEq(lockReqConcensysResult, false);
+    }
+
+    function testLockRequestConcensysEvaluation() external addVerifiedGuardian addVerifiedGuardianAsAccountGuardian {
+        // SETUP
+        vm.startPrank(guardian);
+
+        bytes32 lockRequest = accountLock.createLockRequest(account);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(guardianPK, lockRequest);
+        bytes memory signature = abi.encodePacked(v, r, s);
+
+        address guardianRecovered = ECDSA.recover(lockRequest, signature); // throws error "ECDSA: invalid signature 'v' value"
+
+        // address guardianRecovered = ECDSA.recover(lockRequest, v, r, s); // works fine!
+
+        assertEq(guardian, guardianRecovered);
+
+        // if ECDSA.recover(lockRequest, signature) doesn't work, we might have to send the (v, r, s) tuple instead of the signature object to `recordSignatureOnLockRequest(..)`
+        accountLock.recordSignatureOnLockRequest(lockRequest, signature);
+
+        // ACT
+        bool lockReqConcensysResult = accountLock.lockRequestConcensysEvaluation(account);
+
+        // Assert
+        assertEq(lockReqConcensysResult, true);
     }
 }
