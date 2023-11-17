@@ -32,7 +32,7 @@ contract Number {
     }
 }
 
-contract ModularAccounTest is BaseTest {
+contract ModularAccountTest is BaseTest {
     // Target contracts
     EntryPoint private entrypoint;
     ModularAccountFactory private accountFactory;
@@ -61,9 +61,11 @@ contract ModularAccounTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _prepareSignature(
-        IAccountPermissions.SignerPermissionRequest memory _req
-    ) internal view returns (bytes32 typedDataHash) {
+    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
+        internal
+        view
+        returns (bytes32 typedDataHash)
+    {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -94,9 +96,11 @@ contract ModularAccounTest is BaseTest {
         typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function _signSignerPermissionRequest(
-        IAccountPermissions.SignerPermissionRequest memory _req
-    ) internal view returns (bytes memory signature) {
+    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
+        internal
+        view
+        returns (bytes memory signature)
+    {
         bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
@@ -253,7 +257,7 @@ contract ModularAccounTest is BaseTest {
 
         validator = new SingleOwnerValidator();
         // deploy account factory
-        factoryImpl = address(new ModularAccountFactory(IEntryPoint(payable(address(entrypoint)))));
+        factoryImpl = address(new ModularAccountFactory(payable(address(entrypoint))));
         accountFactory = ModularAccountFactory(
             address(
                 payable(
@@ -298,6 +302,10 @@ contract ModularAccounTest is BaseTest {
         address[] memory allAccounts = accountFactory.getAllAccounts();
         assertEq(allAccounts.length, 1);
         assertEq(allAccounts[0], sender);
+
+        address[] memory signers = accountFactory.getAccountsOfSigner(accountAdmin);
+        assertEq(signers.length, 1);
+        assertEq(signers[0], sender);
     }
 
     /// @dev Create an account via Entrypoint.
@@ -324,509 +332,124 @@ contract ModularAccounTest is BaseTest {
         assertEq(allAccounts[0], sender);
     }
 
-        /// @dev Try registering with factory with a contract not deployed by factory.
-        function test_revert_onRegister_nonFactoryChildContract() public {
-            vm.prank(address(0x12345));
-            vm.expectRevert("AccountFactory: not an account.");
-            accountFactory.onRegister(_generateSalt(accountAdmin, ""));
-        }
-
-        // /// @dev Create more than one accounts with the same admin.
-        // function test_state_createAccount_viaEntrypoint_multipleAccountSameAdmin() public {
-        //     uint256 start = 0;
-        //     uint256 end = 0;
-
-        //     assertEq(accountFactory.totalAccounts(), 0);
-
-        //     vm.expectRevert("BaseAccountFactory: invalid indices");
-        //     address[] memory accs = accountFactory.getAccounts(start, end);
-
-        //     uint256 amount = 100;
-
-        //     for (uint256 i = 0; i < amount; i += 1) {
-        //         bytes memory initCallData = abi.encodeWithSignature(
-        //             "createAccount(address,bytes)",
-        //             accountAdmin,
-        //             bytes(abi.encode(i))
-        //         );
-        //         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
-
-        //         address expectedSenderAddress = Clones.predictDeterministicAddress(
-        //             accountFactory.accountImplementation(),
-        //             _generateSalt(accountAdmin, bytes(abi.encode(i))),
-        //             address(accountFactory)
-        //         );
-
-        //         UserOperation[] memory userOpCreateAccount = _setupUserOpExecuteWithSender(
-        //             initCode,
-        //             address(0),
-        //             0,
-        //             bytes(abi.encode(i)),
-        //             expectedSenderAddress
-        //         );
-
-        //         vm.expectEmit(true, true, false, true);
-        //         emit AccountCreated(expectedSenderAddress, accountAdmin);
-        //         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
-        //     }
-
-        //     address[] memory allAccounts = accountFactory.getAllAccounts();
-        //     assertEq(allAccounts.length, amount);
-        //     assertEq(accountFactory.totalAccounts(), amount);
-
-        //     for (uint256 i = 0; i < amount; i += 1) {
-        //         assertEq(
-        //             allAccounts[i],
-        //             Clones.predictDeterministicAddress(
-        //                 accountFactory.accountImplementation(),
-        //                 _generateSalt(accountAdmin, bytes(abi.encode(i))),
-        //                 address(accountFactory)
-        //             )
-        //         );
-        //     }
-
-        //     start = 25;
-        //     end = 75;
-
-        //     address[] memory accountsPaginatedOne = accountFactory.getAccounts(start, end);
-
-        //     for (uint256 i = 0; i < (end - start); i += 1) {
-        //         assertEq(
-        //             accountsPaginatedOne[i],
-        //             Clones.predictDeterministicAddress(
-        //                 accountFactory.accountImplementation(),
-        //                 _generateSalt(accountAdmin, bytes(abi.encode(start + i))),
-        //                 address(accountFactory)
-        //             )
-        //         );
-        //     }
-
-        //     start = 0;
-        //     end = amount;
-
-        //     address[] memory accountsPaginatedTwo = accountFactory.getAccounts(start, end);
-
-        //     for (uint256 i = 0; i < (end - start); i += 1) {
-        //         assertEq(
-        //             accountsPaginatedTwo[i],
-        //             Clones.predictDeterministicAddress(
-        //                 accountFactory.accountImplementation(),
-        //                 _generateSalt(accountAdmin, bytes(abi.encode(start + i))),
-        //                 address(accountFactory)
-        //             )
-        //         );
-        //     }
-
-        //     start = 75;
-        //     end = 25;
-
-        //     vm.expectRevert("BaseAccountFactory: invalid indices");
-        //     accs = accountFactory.getAccounts(start, end);
-
-        //     start = 25;
-        //     end = amount + 1;
-
-        //     vm.expectRevert("BaseAccountFactory: invalid indices");
-        //     accs = accountFactory.getAccounts(start, end);
-        // }
+    /// @dev Try registering with factory with a contract not deployed by factory.
+    function test_revert_onRegister_nonFactoryChildContract() public {
+        vm.prank(address(0x12345));
+        vm.expectRevert("AccountFactory: not an account.");
+        accountFactory.onRegister(_generateSalt(accountAdmin, ""));
+    }
 
     //     /*///////////////////////////////////////////////////////////////
     //                     Test: performing a contract call
     //     //////////////////////////////////////////////////////////////*/
 
-    //     function _setup_executeTransaction() internal {
-    //         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
-    //         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
-
-    //         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
-    //             accountAdminPKey,
-    //             initCode,
-    //             address(0),
-    //             0,
-    //             bytes("")
-    //         );
-
-    //         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
-    //     }
-
-    //     /// @dev Perform a state changing transaction directly via account.
-    //     function test_state_executeTransaction() public {
-    //         _setup_executeTransaction();
-
-    //         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-
-    //         assertEq(numberContract.num(), 0);
-
-    //         vm.prank(accountAdmin);
-    //         ModularAccount(payable(account)).execute(
-    //             address(numberContract),
-    //             0,
-    //             abi.encodeWithSignature("setNum(uint256)", 42)
-    //         );
-
-    //         assertEq(numberContract.num(), 42);
-    //     }
-
-    //     /// @dev Perform many state changing transactions in a batch directly via account.
-    //     function test_state_executeBatchTransaction() public {
-    //         _setup_executeTransaction();
-
-    //         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-
-    //         assertEq(numberContract.num(), 0);
-
-    //         uint256 count = 3;
-    //         address[] memory targets = new address[](count);
-    //         uint256[] memory values = new uint256[](count);
-    //         bytes[] memory callData = new bytes[](count);
-
-    //         for (uint256 i = 0; i < count; i += 1) {
-    //             targets[i] = address(numberContract);
-    //             values[i] = 0;
-    //             callData[i] = abi.encodeWithSignature("incrementNum()", i);
-    //         }
-
-    //         vm.prank(accountAdmin);
-    //         ModularAccount(payable(account)).executeBatch(targets, values, callData);
-
-    //         assertEq(numberContract.num(), count);
-    //     }
-
-    //     /// @dev Perform a state changing transaction via Entrypoint.
-    //     function test_state_executeTransaction_viaEntrypoint() public {
-    //         _setup_executeTransaction();
-
-    //         assertEq(numberContract.num(), 0);
-
-    //         UserOperation[] memory userOp = _setupUserOpExecute(
-    //             accountAdminPKey,
-    //             bytes(""),
-    //             address(numberContract),
-    //             0,
-    //             abi.encodeWithSignature("setNum(uint256)", 42)
-    //         );
-
-    //         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
-
-    //         assertEq(numberContract.num(), 42);
-    //     }
-
-    //     /// @dev Perform many state changing transactions in a batch via Entrypoint.
-    //     function test_state_executeBatchTransaction_viaEntrypoint() public {
-    //         _setup_executeTransaction();
-
-    //         assertEq(numberContract.num(), 0);
-
-    //         uint256 count = 3;
-    //         address[] memory targets = new address[](count);
-    //         uint256[] memory values = new uint256[](count);
-    //         bytes[] memory callData = new bytes[](count);
-
-    //         for (uint256 i = 0; i < count; i += 1) {
-    //             targets[i] = address(numberContract);
-    //             values[i] = 0;
-    //             callData[i] = abi.encodeWithSignature("incrementNum()", i);
-    //         }
-
-    //         UserOperation[] memory userOp = _setupUserOpExecuteBatch(
-    //             accountAdminPKey,
-    //             bytes(""),
-    //             targets,
-    //             values,
-    //             callData
-    //         );
-
-    //         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
-
-    //         assertEq(numberContract.num(), count);
-    //     }
-
-    //     /// @dev Perform many state changing transactions in a batch via Entrypoint.
-    //     function test_state_executeBatchTransaction_viaAccountSigner() public {
-    //         _setup_executeTransaction();
-
-    //         assertEq(numberContract.num(), 0);
-
-    //         uint256 count = 3;
-    //         address[] memory targets = new address[](count);
-    //         uint256[] memory values = new uint256[](count);
-    //         bytes[] memory callData = new bytes[](count);
-
-    //         for (uint256 i = 0; i < count; i += 1) {
-    //             targets[i] = address(numberContract);
-    //             values[i] = 0;
-    //             callData[i] = abi.encodeWithSignature("incrementNum()", i);
-    //         }
-
-    //         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-
-    //         address[] memory approvedTargets = new address[](1);
-    //         approvedTargets[0] = address(numberContract);
-
-    //         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
-    //             accountSigner,
-    //             0,
-    //             approvedTargets,
-    //             1 ether,
-    //             0,
-    //             type(uint128).max,
-    //             0,
-    //             type(uint128).max,
-    //             uidCache
-    //         );
-
-    //         vm.prank(accountAdmin);
-    //         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
-    //         ModularAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
-
-    //         UserOperation[] memory userOp = _setupUserOpExecuteBatch(
-    //             accountSignerPKey,
-    //             bytes(""),
-    //             targets,
-    //             values,
-    //             callData
-    //         );
-
-    //         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
-
-    //         assertEq(numberContract.num(), count);
-    //     }
-
-    //     /// @dev Perform a state changing transaction via Entrypoint and a SIGNER_ROLE holder.
-    //     function test_state_executeTransaction_viaAccountSigner() public {
-    //         _setup_executeTransaction();
-
-    //         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-
-    //         address[] memory approvedTargets = new address[](1);
-    //         approvedTargets[0] = address(numberContract);
-
-    //         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
-    //             accountSigner,
-    //             0,
-    //             approvedTargets,
-    //             1 ether,
-    //             0,
-    //             type(uint128).max,
-    //             0,
-    //             type(uint128).max,
-    //             uidCache
-    //         );
-
-    //         vm.prank(accountAdmin);
-    //         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
-    //         ModularAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
-
-    //         assertEq(numberContract.num(), 0);
-
-    //         UserOperation[] memory userOp = _setupUserOpExecute(
-    //             accountSignerPKey,
-    //             bytes(""),
-    //             address(numberContract),
-    //             0,
-    //             abi.encodeWithSignature("setNum(uint256)", 42)
-    //         );
-
-    //         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
-
-    //         assertEq(numberContract.num(), 42);
-    //     }
-
-    //     /// @dev Revert: perform a state changing transaction via Entrypoint without appropriate permissions.
-    //     function test_revert_executeTransaction_nonSigner_viaEntrypoint() public {
-    //         _setup_executeTransaction();
-
-    //         assertEq(numberContract.num(), 0);
-
-    //         UserOperation[] memory userOp = _setupUserOpExecute(
-    //             accountSignerPKey,
-    //             bytes(""),
-    //             address(numberContract),
-    //             0,
-    //             abi.encodeWithSignature("setNum(uint256)", 42)
-    //         );
-
-    //         vm.expectRevert();
-    //         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
-    //     }
-
-    //     /// @dev Revert: non-admin performs a state changing transaction directly via account contract.
-    //     function test_revert_executeTransaction_nonSigner_viaDirectCall() public {
-    //         _setup_executeTransaction();
-
-    //         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-    //         address[] memory approvedTargets = new address[](1);
-    //         approvedTargets[0] = address(numberContract);
-    //         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
-    //             accountSigner,
-    //             0,
-    //             approvedTargets,
-    //             1 ether,
-    //             0,
-    //             type(uint128).max,
-    //             0,
-    //             type(uint128).max,
-    //             uidCache
-    //         );
-
-    //         vm.prank(accountAdmin);
-    //         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
-    //         ModularAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
-
-    //         assertEq(numberContract.num(), 0);
-
-    //         vm.prank(accountSigner);
-    //         vm.expectRevert("Account: not admin or EntryPoint.");
-    //         ModularAccount(payable(account)).execute(
-    //             address(numberContract),
-    //             0,
-    //             abi.encodeWithSignature("setNum(uint256)", 42)
-    //         );
-    //     }
-
-    //     /*///////////////////////////////////////////////////////////////
-    //                 Test: receiving and sending native tokens
-    //     //////////////////////////////////////////////////////////////*/
-
-    //     /// @dev Send native tokens to an account.
-    //     function test_state_accountReceivesNativeTokens() public {
-    //         _setup_executeTransaction();
-
-    //         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-
-    //         assertEq(address(account).balance, 0);
-
-    //         vm.prank(accountAdmin);
-    //         // solhint-disable-next-line avoid-low-level-calls
-    //         (bool success, bytes memory data) = payable(account).call{ value: 1000 }("");
-
-    //         // Silence warning: Return value of low-level calls not used.
-    //         (success, data) = (success, data);
-
-    //         assertEq(address(account).balance, 1000);
-    //     }
-
-    //     /// @dev Transfer native tokens out of an account.
-    //     function test_state_transferOutsNativeTokens() public {
-    //         _setup_executeTransaction();
-
-    //         uint256 value = 1000;
-
-    //         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-    //         vm.prank(accountAdmin);
-    //         // solhint-disable-next-line avoid-low-level-calls
-    //         (bool success, bytes memory data) = payable(account).call{ value: value }("");
-    //         assertEq(address(account).balance, value);
-
-    //         // Silence warning: Return value of low-level calls not used.
-    //         (success, data) = (success, data);
-
-    //         address recipient = address(0x3456);
-
-    //         UserOperation[] memory userOp = _setupUserOpExecute(accountAdminPKey, bytes(""), recipient, value, bytes(""));
-
-    //         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
-    //         assertEq(address(account).balance, 0);
-    //         assertEq(recipient.balance, value);
-    //     }
-
-    //     /// @dev Add and remove a deposit for the account from the Entrypoint.
-
-    //     function test_state_addAndWithdrawDeposit() public {
-    //         _setup_executeTransaction();
-
-    //         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-
-    //         assertEq(EntryPoint(entrypoint).balanceOf(account), 0);
-
-    //         vm.prank(accountAdmin);
-    //         ModularAccount(payable(account)).addDeposit{ value: 1000 }();
-    //         assertEq(EntryPoint(entrypoint).balanceOf(account), 1000);
-
-    //         vm.prank(accountAdmin);
-    //         ModularAccount(payable(account)).withdrawDepositTo(payable(accountSigner), 500);
-    //         assertEq(EntryPoint(entrypoint).balanceOf(account), 500);
-    //     }
-
-    //     /*///////////////////////////////////////////////////////////////
-    //                 Test: receiving ERC-721 and ERC-1155 NFTs
-    //     //////////////////////////////////////////////////////////////*/
-
-    //     /// @dev Send an ERC-721 NFT to an account.
-    //     function test_state_receiveERC721NFT() public {
-    //         _setup_executeTransaction();
-    //         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-
-    //         assertEq(erc721.balanceOf(account), 0);
-
-    //         erc721.mint(account, 1);
-
-    //         assertEq(erc721.balanceOf(account), 1);
-    //     }
-
-    //     /// @dev Send an ERC-1155 NFT to an account.
-    //     function test_state_receiveERC1155NFT() public {
-    //         _setup_executeTransaction();
-    //         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-
-    //         assertEq(erc1155.balanceOf(account, 0), 0);
-
-    //         erc1155.mint(account, 0, 1);
-
-    //         assertEq(erc1155.balanceOf(account, 0), 1);
-    //     }
-
-    //     /*///////////////////////////////////////////////////////////////
-    //                 Test: setting contract metadata
-    //     //////////////////////////////////////////////////////////////*/
-
-    //     /// @dev Set contract metadata via admin or entrypoint.
-    //     function test_state_contractMetadata() public {
-    //         _setup_executeTransaction();
-    //         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-
-    //         vm.prank(accountAdmin);
-    //         ModularAccount(payable(account)).setContractURI("https://example.com");
-    //         assertEq(ModularAccount(payable(account)).contractURI(), "https://example.com");
-
-    //         UserOperation[] memory userOp = _setupUserOpExecute(
-    //             accountAdminPKey,
-    //             bytes(""),
-    //             address(account),
-    //             0,
-    //             abi.encodeWithSignature("setContractURI(string)", "https://thirdweb.com")
-    //         );
-
-    //         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
-    //         assertEq(ModularAccount(payable(account)).contractURI(), "https://thirdweb.com");
-
-    //         address[] memory approvedTargets = new address[](0);
-
-    //         IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
-    //             accountSigner,
-    //             0,
-    //             approvedTargets,
-    //             1 ether,
-    //             0,
-    //             type(uint128).max,
-    //             0,
-    //             type(uint128).max,
-    //             uidCache
-    //         );
-
-    //         vm.prank(accountAdmin);
-    //         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
-    //         ModularAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
-
-    //         UserOperation[] memory userOpViaSigner = _setupUserOpExecute(
-    //             accountSignerPKey,
-    //             bytes(""),
-    //             address(account),
-    //             0,
-    //             abi.encodeWithSignature("setContractURI(string)", "https://thirdweb.com")
-    //         );
-
-    //         vm.expectRevert();
-    //         EntryPoint(entrypoint).handleOps(userOpViaSigner, beneficiary);
-    //     }
+    function _setup_executeTransaction() internal {
+        bytes memory initData = abi.encode(accountAdmin, address(validator));
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, initData);
+        bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
+
+        UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
+            accountAdminPKey,
+            initCode,
+            address(0),
+            0,
+            bytes("")
+        );
+
+        EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
+    }
+
+    /// @dev Perform a state changing transaction directly via account.
+    function test_state_executeTransaction() public {
+        _setup_executeTransaction();
+
+        bytes memory initData = abi.encode(accountAdmin, address(validator));
+        address account = accountFactory.getAddress(accountAdmin, initData);
+
+        assertEq(numberContract.num(), 0);
+
+        vm.prank(accountAdmin);
+        ModularAccount(payable(account)).execute(
+            address(numberContract),
+            0,
+            abi.encodeWithSignature("setNum(uint256)", 42)
+        );
+
+        assertEq(numberContract.num(), 42);
+    }
+
+    /// @dev Perform many state changing transactions in a batch directly via account.
+    function test_state_executeBatchTransaction() public {
+        _setup_executeTransaction();
+
+        bytes memory initData = abi.encode(accountAdmin, address(validator));
+        address account = accountFactory.getAddress(accountAdmin, initData);
+
+        assertEq(numberContract.num(), 0);
+
+        uint256 count = 3;
+        address[] memory targets = new address[](count);
+        uint256[] memory values = new uint256[](count);
+        bytes[] memory callData = new bytes[](count);
+
+        for (uint256 i = 0; i < count; i += 1) {
+            targets[i] = address(numberContract);
+            values[i] = 0;
+            callData[i] = abi.encodeWithSignature("incrementNum()", i);
+        }
+
+        vm.prank(accountAdmin);
+        ModularAccount(payable(account)).executeBatch(targets, values, callData);
+
+        assertEq(numberContract.num(), count);
+    }
+
+    /// @dev Perform a state changing transaction via Entrypoint.
+    function test_state_executeTransaction_viaEntrypoint() public {
+        _setup_executeTransaction();
+
+        assertEq(numberContract.num(), 0);
+
+        UserOperation[] memory userOp = _setupUserOpExecute(
+            accountAdminPKey,
+            bytes(""),
+            address(numberContract),
+            0,
+            abi.encodeWithSignature("setNum(uint256)", 42)
+        );
+
+        EntryPoint(entrypoint).handleOps(userOp, beneficiary);
+
+        assertEq(numberContract.num(), 42);
+    }
+
+    /// @dev Perform many state changing transactions in a batch via Entrypoint.
+    function test_state_executeBatchTransaction_viaEntrypoint() public {
+        _setup_executeTransaction();
+
+        assertEq(numberContract.num(), 0);
+
+        uint256 count = 3;
+        address[] memory targets = new address[](count);
+        uint256[] memory values = new uint256[](count);
+        bytes[] memory callData = new bytes[](count);
+
+        for (uint256 i = 0; i < count; i += 1) {
+            targets[i] = address(numberContract);
+            values[i] = 0;
+            callData[i] = abi.encodeWithSignature("incrementNum()", i);
+        }
+
+        UserOperation[] memory userOp = _setupUserOpExecuteBatch(
+            accountAdminPKey,
+            bytes(""),
+            targets,
+            values,
+            callData
+        );
+
+        EntryPoint(entrypoint).handleOps(userOp, beneficiary);
+
+        assertEq(numberContract.num(), count);
+    }
 }

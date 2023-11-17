@@ -11,16 +11,19 @@ import "../utils/BaseAccount.sol";
 // Extensions
 import "../../../external-deps/openzeppelin/token/ERC721/utils/ERC721Holder.sol";
 import "../../../external-deps/openzeppelin/token/ERC1155/utils/ERC1155Holder.sol";
-import "../../../extension/Initializable.sol";
+import "../../../extension/upgradeable/Initializable.sol";
+import "../../../extension/upgradeable/ContractMetadata.sol";
+import "../../../extension/Multicall.sol";
 
 // Utils
 import "../../../eip/ERC1271.sol";
 import "../utils/Helpers.sol";
 import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
+import "../utils/BaseAccountFactory.sol";
+import "./ModularAccountStorage.sol";
 
 import "./Interfaces/IValidator.sol";
-
-import "forge-std/console.sol";
+import "./Interfaces/IModularAccount.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -31,12 +34,18 @@ import "forge-std/console.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract ModularAccount is Initializable, ERC1271, ERC721Holder, ERC1155Holder, BaseAccount {
-    using ECDSA for bytes32;
-
-    address public factory;
-    IEntryPoint public immutable entrypointcontract;
-    IValidator public validator;
+contract ModularAccount is
+    IModularAccount,
+    Initializable,
+    ERC1271,
+    ERC721Holder,
+    ERC1155Holder,
+    BaseAccount,
+    Multicall,
+    ContractMetadata
+{
+    /// @notice EIP 4337 Entrypoint contract.
+    IEntryPoint private immutable entrypointContract;
 
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
@@ -44,14 +53,19 @@ contract ModularAccount is Initializable, ERC1271, ERC721Holder, ERC1155Holder, 
 
     constructor(IEntryPoint _entrypoint) {
         _disableInitializers();
-        entrypointcontract = _entrypoint;
+        entrypointContract = _entrypoint;
     }
 
-    function initialize(address /*_defaultAdmin*/, address _factory, bytes calldata _data) public virtual initializer {
-        factory = _factory;
+    function initialize(
+        address _defaultAdmin,
+        address _factory,
+        bytes calldata _data
+    ) public virtual initializer {
+        ModularAccountStorage.data().factory = _factory;
+        ModularAccountStorage.data().creationSalt = _generateSalt(_defaultAdmin, _data);
         (, address _validator) = abi.decode(_data, (address, address));
-        validator = IValidator(_validator);
-        validator.enable(_data);
+        ModularAccountStorage.data().validator = _validator;
+        IValidator(_validator).activate(_data);
     }
 
     /// @notice Lets the account receive native tokens.
@@ -62,10 +76,13 @@ contract ModularAccount is Initializable, ERC1271, ERC721Holder, ERC1155Holder, 
     //////////////////////////////////////////////////////////////*/
 
     /// @notice See EIP-1271
-    function isValidSignature(
-        bytes32 _hash,
-        bytes calldata _signature
-    ) public view virtual override returns (bytes4 magicValue) {
+    function isValidSignature(bytes32 _hash, bytes calldata _signature)
+        public
+        view
+        virtual
+        override
+        returns (bytes4 magicValue)
+    {
         ValidationData memory _validationData = _parseValidationData(validateSignature(_hash, _signature));
         if (_validationData.validAfter > block.timestamp) revert();
         if (_validationData.validUntil < block.timestamp) revert();
@@ -74,35 +91,45 @@ contract ModularAccount is Initializable, ERC1271, ERC721Holder, ERC1155Holder, 
         return MAGICVALUE;
     }
 
+    /// @notice See {IERC165-supportsInterface}.
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Receiver) returns (bool) {
+        return
+            interfaceId == type(IERC1155Receiver).interfaceId ||
+            interfaceId == type(IERC721Receiver).interfaceId ||
+            super.supportsInterface(interfaceId);
+    }
+
     function validateSignature(bytes32 hash, bytes calldata signature) public view returns (uint256 validationData) {
-        return _validateSignature(hash, signature);
+        return IValidator(ModularAccountStorage.data().validator).validateSignature(signature, hash);
     }
 
-    function _validateSignature(bytes32 _hash, bytes calldata _signature) internal view virtual returns (uint256) {
-        return IValidator(validator).validateSignature(_signature, _hash);
-    }
-
-    function _validCaller(address _caller, bytes calldata _data) internal view virtual returns (bool) {
-        return IValidator(validator).validCaller(_caller, _data);
+    function entryPoint() public view virtual override returns (IEntryPoint) {
+        return entrypointContract;
     }
 
     /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual {
+    /// @notice Executes a transaction (called directly from a valid caller, or by entryPoint)
+    function execute(
+        address _target,
+        uint256 _value,
+        bytes calldata _calldata
+    ) external virtual {
         _onlyEntryPointOrValidCaller();
+        _registerOnFactory();
         _call(_target, _value, _calldata);
     }
 
-    /// @notice Executes a sequence transaction (called directly from an admin, or by entryPoint)
+    /// @notice Executes a sequence transaction (called directly from a valid caller, or by entryPoint)
     function executeBatch(
         address[] calldata _target,
         uint256[] calldata _value,
         bytes[] calldata _calldata
     ) external virtual {
         _onlyEntryPointOrValidCaller();
+        _registerOnFactory();
 
         require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
         for (uint256 i = 0; i < _target.length; i++) {
@@ -110,17 +137,26 @@ contract ModularAccount is Initializable, ERC1271, ERC721Holder, ERC1155Holder, 
         }
     }
 
-    function _onlyEntryPointOrValidCaller() internal view virtual {
-        if (msg.sender != address(entryPoint()) || !_validCaller(msg.sender, msg.data)) {
-            revert(); //add revert
-        }
+    function validateUserOp(
+        UserOperation calldata userOp,
+        bytes32 userOpHash,
+        uint256 missingAccountFunds
+    ) external virtual override(BaseAccount, IAccount) returns (uint256 validationData) {
+        _requireFromEntryPoint();
+        validationData = IValidator(ModularAccountStorage.data().validator).validateUserOp(
+            userOp,
+            userOpHash,
+            missingAccountFunds
+        );
+        _validateNonce(userOp.nonce);
+        _payPrefund(missingAccountFunds);
     }
 
-    function setValidator(IValidator _validator) external virtual {
-        if (!_validCaller(msg.sender, msg.data)) {
-            revert(); //add revert
+    function setValidator(address _validator) external {
+        if (!_validateCaller(msg.sender, msg.data)) {
+            revert("not valid caller"); //add revert
         }
-        validator = _validator;
+        ModularAccountStorage.data().validator = _validator;
     }
 
     function addDeposit() public payable {
@@ -129,17 +165,28 @@ contract ModularAccount is Initializable, ERC1271, ERC721Holder, ERC1155Holder, 
 
     /// @notice Withdraw funds for this account from Entrypoint.
     function withdrawDepositTo(address payable withdrawAddress, uint256 amount) public {
-        if (!_validCaller(msg.sender, msg.data)) {
+        if (!_validateCaller(msg.sender, msg.data)) {
             revert(); //add revert
         }
         entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
+    function factory() public view returns (address) {
+        return ModularAccountStorage.data().factory;
+    }
+
+    function updateSignerOnFactory(address _signer, bool _status) external {
+        _onlyValidator();
+        if (_status) {
+            BaseAccountFactory(factory()).onSignerAdded(_signer, ModularAccountStorage.data().creationSalt);
+        } else {
+            BaseAccountFactory(factory()).onSignerRemoved(_signer, ModularAccountStorage.data().creationSalt);
+        }
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev Registers the account on the factory if it hasn't been registered yet.
 
     /// @dev Calls a target contract and reverts if it fails.
     function _call(
@@ -156,40 +203,43 @@ contract ModularAccount is Initializable, ERC1271, ERC721Holder, ERC1155Holder, 
         }
     }
 
-    function entryPoint() public view virtual override returns (IEntryPoint) {
-        return entrypointcontract;
+    /// @dev Returns the salt used when deploying an Account.
+    function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
+        return keccak256(abi.encode(_admin, _data));
     }
 
-    function validateUserOp(
-        UserOperation calldata userOp,
-        bytes32 userOpHash,
-        uint256 missingAccountFunds
-    ) external virtual override returns (uint256 validationData) {
-        _requireFromEntryPoint();
-        validationData = _validateUserOp(userOp, userOpHash, missingAccountFunds);
-        _validateNonce(userOp.nonce);
-        _payPrefund(missingAccountFunds);
+    /// @dev Registers the account on the factory if it hasn't been registered yet.
+    function _registerOnFactory() internal virtual {
+        BaseAccountFactory factoryContract = BaseAccountFactory(factory());
+        if (!factoryContract.isRegistered(address(this))) {
+            factoryContract.onRegister(ModularAccountStorage.data().creationSalt);
+        }
     }
 
-    function _validateSignature(
-        bytes memory signature,
-        bytes32 hash
-    ) internal virtual returns (uint256 validationData) {
-        return validator.validateSignature(signature, hash);
+    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
+        internal
+        view
+        override
+        returns (uint256 validationData)
+    {
+        return IValidator(ModularAccountStorage.data().validator).validateSignature(userOp.signature, userOpHash);
     }
 
-    function _validateUserOp(
-        UserOperation calldata userOp,
-        bytes32 userOpHash,
-        uint256 missingAccountFunds
-    ) internal virtual returns (uint256 validationData) {
-        return validator.validateUserOp(userOp, userOpHash, missingAccountFunds);
+    function _validateCaller(address _caller, bytes calldata _data) internal view virtual returns (bool) {
+        return IValidator(ModularAccountStorage.data().validator).validateCaller(_caller, _data);
     }
 
-    function _validateSignature(
-        UserOperation calldata userOp,
-        bytes32 userOpHash
-    ) internal virtual override returns (uint256 validationData) {
-        return validator.validateSignature(userOp.signature, userOpHash);
+    function _onlyEntryPointOrValidCaller() internal view virtual {
+        if (msg.sender != address(entryPoint()) && !_validateCaller(msg.sender, msg.data)) {
+            revert("not entrypoint or valid caller");
+        }
+    }
+
+    function _onlyValidator() internal view virtual {
+        require(msg.sender == ModularAccountStorage.data().validator, "sender must be validator");
+    }
+
+    function _canSetContractURI() internal view virtual override returns (bool) {
+        return _validateCaller(msg.sender, msg.data);
     }
 }

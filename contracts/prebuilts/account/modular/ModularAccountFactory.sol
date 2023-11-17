@@ -31,7 +31,9 @@ contract ModularAccountFactory is Initializable, BaseAccountFactory, ContractMet
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint) BaseAccountFactory(address(new ModularAccount(_entrypoint)), address(_entrypoint)) {
+    constructor(address _entrypoint)
+        BaseAccountFactory(address(new ModularAccount(IEntryPoint(_entrypoint))), _entrypoint)
+    {
         _disableInitializers();
     }
 
