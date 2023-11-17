@@ -23,6 +23,16 @@
     chalk "^2.0.0"
     js-tokens "^4.0.0"
 
+"@chainlink/contracts-ccip@^0.7.6":
+  version "0.7.6"
+  resolved "https://registry.yarnpkg.com/@chainlink/contracts-ccip/-/contracts-ccip-0.7.6.tgz#5bf4568a0bbf4e29d2e8c32348e5ecc6ced006d2"
+  integrity sha512-yNbCBFpLs3R+ALymto9dQYKz3vatnjqYGu1pnMD0i2fHEMthiXe0+otaNCGNht6n8k7ruNaA0DNpz3F+2jHQXw==
+  dependencies:
+    "@eth-optimism/contracts" "^0.5.21"
+    "@openzeppelin/contracts" "~4.3.3"
+    "@openzeppelin/contracts-upgradeable-4.7.3" "npm:@openzeppelin/contracts-upgradeable@v4.7.3"
+    "@openzeppelin/contracts-v0.7" "npm:@openzeppelin/contracts@v3.4.2"
+
 "@chainlink/contracts@^0.6.1":
   version "0.6.1"
   resolved "https://registry.yarnpkg.com/@chainlink/contracts/-/contracts-0.6.1.tgz#8842b57e755793cbdbcbc45277fb5d179c993e19"
@@ -31,6 +41,16 @@
     "@eth-optimism/contracts" "^0.5.21"
     "@openzeppelin/contracts" "~4.3.3"
     "@openzeppelin/contracts-upgradeable" "^4.7.3"
+    "@openzeppelin/contracts-v0.7" "npm:@openzeppelin/contracts@v3.4.2"
+
+"@chainlink/contracts@^0.8.0":
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/@chainlink/contracts/-/contracts-0.8.0.tgz#4050c83c8b1603ffb0fd6ab99f1d9ea9db2c37de"
+  integrity sha512-nUv1Uxw5Mn92wgLs2bgPYmo8hpdQ3s9jB/lcbdU0LmNOVu0hbfmouVnqwRLa28Ll50q6GczUA+eO0ikNIKLZsA==
+  dependencies:
+    "@eth-optimism/contracts" "^0.5.21"
+    "@openzeppelin/contracts" "~4.3.3"
+    "@openzeppelin/contracts-upgradeable-4.7.3" "npm:@openzeppelin/contracts-upgradeable@v4.7.3"
     "@openzeppelin/contracts-v0.7" "npm:@openzeppelin/contracts@v3.4.2"
 
 "@cspotcode/source-map-consumer@0.8.0":
@@ -473,7 +493,8 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@openzeppelin/contracts-upgradeable@4.7.3":
+"@openzeppelin/contracts-upgradeable-4.7.3@npm:@openzeppelin/contracts-upgradeable@v4.7.3", "@openzeppelin/contracts-upgradeable@4.7.3":
+  name "@openzeppelin/contracts-upgradeable-4.7.3"
   version "4.7.3"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.7.3.tgz#f1d606e2827d409053f3e908ba4eb8adb1dd6995"
   integrity sha512-+wuegAMaLcZnLCJIvrVUDzA9z/Wp93f0Dla/4jJvIhijRrPabjQbZe6fWiECLaJyfn5ci9fqf9vTw3xpQOad2A==
