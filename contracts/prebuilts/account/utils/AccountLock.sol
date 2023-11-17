@@ -109,16 +109,16 @@ contract AccountLock is IAccountLock {
 
         bytes32 lockRequestHash = keccak256(abi.encodeWithSignature("_lockAccount(address account)", account));
 
-        // TODO: See if we have to make it into an ETHSignedMsgHash (Ref: Openzeppelin ECDSA.sol::toEthSignedMsgHash)
+        bytes32 ethSignedLockRequestHash = ECDSA.toEthSignedMessageHash(lockRequestHash);
 
-        accountToLockRequest[account] = lockRequestHash;
-        lockRequestToCreationTime[lockRequestHash] = block.timestamp;
-        lockRequestConcensysEvaluationStatus[lockRequestHash] = false;
+        accountToLockRequest[account] = ethSignedLockRequestHash;
+        lockRequestToCreationTime[ethSignedLockRequestHash] = block.timestamp;
+        lockRequestConcensysEvaluationStatus[ethSignedLockRequestHash] = false;
 
         // bytes memory chainlinkUpkeepCheckData = abi.encode(lockRequestHash, account);
 
         // _registerAndFundUpKeepForEvaluationUsingTimeBasedTrigger(chainlinkUpkeepCheckData);
-        return lockRequestHash;
+        return ethSignedLockRequestHash;
     }
 
     function recordSignatureOnLockRequest(bytes32 lockRequest, bytes calldata signature) external {

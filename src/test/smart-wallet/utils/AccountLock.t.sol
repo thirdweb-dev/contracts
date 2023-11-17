@@ -199,22 +199,19 @@ contract AccountLockTest is Test {
         assertEq(lockReqConcensysResult, false);
     }
 
-    function testLockRequestConcensysEvaluation() external addVerifiedGuardian addVerifiedGuardianAsAccountGuardian {
+    function testLockRequestConcensysEvaluationPass()
+        external
+        addVerifiedGuardian
+        addVerifiedGuardianAsAccountGuardian
+    {
         // SETUP
         vm.startPrank(guardian);
 
         bytes32 lockRequest = accountLock.createLockRequest(account);
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(guardianPK, lockRequest);
-        bytes memory signature = abi.encodePacked(v, r, s);
+        bytes memory signature = abi.encodePacked(r, s, v);
 
-        address guardianRecovered = ECDSA.recover(lockRequest, signature); // throws error "ECDSA: invalid signature 'v' value"
-
-        // address guardianRecovered = ECDSA.recover(lockRequest, v, r, s); // works fine!
-
-        assertEq(guardian, guardianRecovered);
-
-        // if ECDSA.recover(lockRequest, signature) doesn't work, we might have to send the (v, r, s) tuple instead of the signature object to `recordSignatureOnLockRequest(..)`
         accountLock.recordSignatureOnLockRequest(lockRequest, signature);
 
         // ACT
@@ -222,5 +219,22 @@ contract AccountLockTest is Test {
 
         // Assert
         assertEq(lockReqConcensysResult, true);
+    }
+
+    function testLockRequestConcensysEvaluationFail()
+        external
+        addVerifiedGuardian
+        addVerifiedGuardianAsAccountGuardian
+    {
+        // SETUP
+        vm.startPrank(guardian);
+
+        accountLock.createLockRequest(account);
+
+        // ACT
+        bool lockReqConcensysResult = accountLock.lockRequestConcensysEvaluation(account);
+
+        // Assert
+        assertEq(lockReqConcensysResult, false);
     }
 }
