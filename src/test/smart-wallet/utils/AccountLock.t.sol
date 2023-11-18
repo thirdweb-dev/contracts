@@ -116,6 +116,55 @@ contract AccountLockTest is Test {
         assertEq(lockRequests[0], lockReqHash);
     }
 
+    ////////////////////////////////////
+    /// createUnLockRequest() tests //////
+    ////////////////////////////////////
+
+    function testRevertWhenCreatingLockReqForAlreadyUnLockedAccount()
+        external
+        addVerifiedGuardian
+        addVerifiedGuardianAsAccountGuardian
+    {
+        // Act
+        vm.prank(guardian);
+        vm.expectRevert(abi.encodeWithSelector(IAccountLock.AccountAlreadyUnLocked.selector, account));
+
+        accountLock.createUnLockRequest(account);
+    }
+
+    function testRevertWhenActiveUnLockRequestExists()
+        external
+        addVerifiedGuardian
+        addVerifiedGuardianAsAccountGuardian
+    {
+        // Setup
+        vm.prank(address(accountLock));
+        account.call(abi.encodeWithSignature("setPaused(bool)", true));
+
+        vm.startPrank(guardian);
+        accountLock.createUnLockRequest(account);
+
+        // Assert
+        vm.expectRevert(IAccountLock.ActiveUnLockRequestFound.selector);
+        accountLock.createUnLockRequest(account);
+        vm.stopPrank();
+    }
+
+    function testUnLockRequestCreation() external addVerifiedGuardian addVerifiedGuardianAsAccountGuardian {
+        // Setup
+        vm.prank(address(accountLock));
+        account.call(abi.encodeWithSignature("setPaused(bool)", true));
+
+        vm.startPrank(guardian);
+        accountLock.createUnLockRequest(account);
+
+        bool unLockRequestExists = accountLock.activeUnLockRequestExists(account);
+        vm.stopPrank();
+
+        // Assert
+        assertEq(unLockRequestExists, true);
+    }
+
     ////////////////////////////////////////////
     ////// recordSignatureOnLockReq tests //////
     ///////////////////////////////////////////
@@ -145,7 +194,7 @@ contract AccountLockTest is Test {
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(guardianPK, lockReqHash);
 
-        bytes memory signature = abi.encodePacked(v, r, s);
+        bytes memory signature = abi.encodePacked(r, s, v);
 
         // ACT
         accountLock.recordSignatureOnLockRequest(lockReqHash, signature);
@@ -156,9 +205,32 @@ contract AccountLockTest is Test {
         vm.stopPrank();
     }
 
-    /////////////////////////////////////////
-    ////// accountRequestConcensysEvaluation tests //////
-    ////////////////////////////////////////
+    ///////////////////////////////////////////////
+    //// test recordSignatureOnUnLockRequest() ////
+    ///////////////////////////////////////////////
+    function testRecordSignatureOnUnLockRequest() external addVerifiedGuardian addVerifiedGuardianAsAccountGuardian {
+        // SETUP
+        vm.prank(address(accountLock));
+        account.call(abi.encodeWithSignature("setPaused(bool)", true));
+
+        vm.startPrank(guardian);
+        bytes32 unLockReqHash = accountLock.createUnLockRequest(account);
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(guardianPK, unLockReqHash);
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        // ACT
+        accountLock.recordSignatureOnUnLockRequest(unLockReqHash, signature);
+
+        // Assert
+        assertEq(accountLock.unLockRequestToGuardianToSignature(unLockReqHash, guardian), signature);
+
+        vm.stopPrank();
+    }
+
+    ///////////////////////////////////////////////////
+    ////// accountRequestConcensusEvaluation tests ////
+    //////////////////////////////////////////////////
 
     function testRevertWhenNoActiveRequestFoundForAccount()
         external
@@ -167,10 +239,10 @@ contract AccountLockTest is Test {
     {
         vm.startPrank(guardian);
         vm.expectRevert(abi.encodeWithSelector(IAccountLock.NoActiveRequestFoundForAccount.selector, account));
-        accountLock.accountRequestConcensysEvaluation(account);
+        accountLock.accountRequestConcensusEvaluation(account);
     }
 
-    function testRevertWhenNonGuardianInitiatingLockReqConcensysEvalaution()
+    function testRevertWhenNonGuardianInitiatingAccountReqConcensusEvalaution()
         external
         addVerifiedGuardian
         addVerifiedGuardianAsAccountGuardian
@@ -182,10 +254,10 @@ contract AccountLockTest is Test {
         // Act/assert
         vm.prank(randomUser);
         vm.expectRevert(abi.encodeWithSelector(IAccountLock.NotAGuardian.selector, randomUser));
-        accountLock.accountRequestConcensysEvaluation(account);
+        accountLock.accountRequestConcensusEvaluation(account);
     }
 
-    function testLockReqConcensysEvaluationWhenNoGuardianSigned()
+    function testLockReqConcensusEvaluationWhenNoGuardianSigned()
         external
         addVerifiedGuardian
         addVerifiedGuardianAsAccountGuardian
@@ -193,13 +265,15 @@ contract AccountLockTest is Test {
         vm.startPrank(guardian);
         accountLock.createLockRequest(account);
 
-        bool lockReqConcensysResult = accountLock.accountRequestConcensysEvaluation(account);
+        // no guardian signed
+
+        bool lockReqConcensusResult = accountLock.accountRequestConcensusEvaluation(account);
         vm.stopPrank();
 
-        assertEq(lockReqConcensysResult, false);
+        assertEq(lockReqConcensusResult, false);
     }
 
-    function testaccountRequestConcensysEvaluationPass()
+    function testaccountRequestConcensusEvaluationPass()
         external
         addVerifiedGuardian
         addVerifiedGuardianAsAccountGuardian
@@ -215,13 +289,13 @@ contract AccountLockTest is Test {
         accountLock.recordSignatureOnLockRequest(lockRequest, signature);
 
         // ACT
-        bool lockReqConcensysResult = accountLock.accountRequestConcensysEvaluation(account);
+        bool lockReqConcensusResult = accountLock.accountRequestConcensusEvaluation(account);
 
         // Assert
-        assertEq(lockReqConcensysResult, true);
+        assertEq(lockReqConcensusResult, true);
     }
 
-    function testaccountRequestConcensysEvaluationFail()
+    function testaccountRequestConcensusEvaluationFail()
         external
         addVerifiedGuardian
         addVerifiedGuardianAsAccountGuardian
@@ -232,9 +306,9 @@ contract AccountLockTest is Test {
         accountLock.createLockRequest(account);
 
         // ACT
-        bool lockReqConcensysResult = accountLock.accountRequestConcensysEvaluation(account);
+        bool lockReqConcensusResult = accountLock.accountRequestConcensusEvaluation(account);
 
         // Assert
-        assertEq(lockReqConcensysResult, false);
+        assertEq(lockReqConcensusResult, false);
     }
 }

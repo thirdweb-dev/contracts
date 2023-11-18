@@ -38,8 +38,8 @@ contract AccountLock is IAccountLock {
     mapping(address => bytes32) private accountToLockRequest;
     mapping(address => bytes32) private accountToUnLockRequest;
     // mapping(bytes32 => uint256) private lockRequestToCreationTime;
-    // mapping(bytes32 => bool) private accountRequestConcensysEvaluationStatus;
-    mapping(bytes32 => bool) private unaccountRequestConcensysEvaluationStatus;
+    // mapping(bytes32 => bool) private accountRequestConcensusEvaluationStatus;
+    mapping(bytes32 => bool) private unaccountRequestConcensusEvaluationStatus;
     mapping(bytes32 => mapping(address => bytes)) public lockRequestToGuardianToSignature;
     mapping(bytes32 => mapping(address => bytes)) public unLockRequestToGuardianToSignature;
     mapping(bytes32 => mapping(address => bool)) lockRequestToGuardianToSignatureValid;
@@ -117,7 +117,7 @@ contract AccountLock is IAccountLock {
 
         accountToLockRequest[account] = ethSignedLockRequestHash;
         // lockRequestToCreationTime[ethSignedLockRequestHash] = block.timestamp;
-        // accountRequestConcensysEvaluationStatus[ethSignedLockRequestHash] = false;
+        // accountRequestConcensusEvaluationStatus[ethSignedLockRequestHash] = false;
 
         // bytes memory chainlinkUpkeepCheckData = abi.encode(lockRequestHash, account);
 
@@ -139,7 +139,7 @@ contract AccountLock is IAccountLock {
         bytes32 ethSignedUnLockRequestHash = ECDSA.toEthSignedMessageHash(unLockRequestHash);
 
         accountToUnLockRequest[account] = ethSignedUnLockRequestHash;
-        unaccountRequestConcensysEvaluationStatus[ethSignedUnLockRequestHash] = false;
+        unaccountRequestConcensusEvaluationStatus[ethSignedUnLockRequestHash] = false;
 
         return ethSignedUnLockRequestHash;
     }
@@ -165,7 +165,7 @@ contract AccountLock is IAccountLock {
     }
 
     //TODO: Add trigger to this function once lock request is created, using Chainlink Time based automation (Ref: https://docs.chain.link/chainlink-automation/overview/getting-started)
-    function accountRequestConcensysEvaluation(
+    function accountRequestConcensusEvaluation(
         address account
     ) public onlyVerifiedAccountGuardian(account) returns (bool) {
         bytes32 request;
@@ -218,7 +218,7 @@ contract AccountLock is IAccountLock {
             }
         }
 
-        // accountRequestConcensysEvaluationStatus[request] = true;
+        // accountRequestConcensusEvaluationStatus[request] = true;
 
         if (validGuardianSignatures > (guardianCount / 2)) {
             if (_isLocked(account)) {
@@ -226,10 +226,10 @@ contract AccountLock is IAccountLock {
             } else {
                 _lockAccount(payable(account));
             }
-            emit RequestConcensysAchieved(account);
+            emit RequestConcensusAchieved(account);
             return true;
         } else {
-            emit RequestConcensysCouldNotBeAchieved(account);
+            emit RequestConcensusCouldNotBeAchieved(account);
             return false;
         }
     }
@@ -250,7 +250,7 @@ contract AccountLock is IAccountLock {
 
     //     (bytes32 lockRequest, address account) = abi.decode(checkData, (bytes32, address));
 
-    //     if (accountRequestConcensysEvaluationStatus[lockRequest]) {
+    //     if (accountRequestConcensusEvaluationStatus[lockRequest]) {
     //         return (false, checkData);
     //     }
 
@@ -270,7 +270,7 @@ contract AccountLock is IAccountLock {
     //         // retrieving the lockRequest and account address from performData
     //         (bytes32 lockRequest, address account) = abi.decode(performData, (bytes32, address));
 
-    //         accountRequestConcensysEvaluation(lockRequest, account);
+    //         accountRequestConcensusEvaluation(lockRequest, account);
     //     }
     // }
 
@@ -300,6 +300,7 @@ contract AccountLock is IAccountLock {
         }
 
         address[] memory accounts = guardianContract.getAccountsTheGuardianIsGuarding(msg.sender);
+
         bytes32[] memory lockRequests = new bytes32[](accounts.length); // predefining the array length because it's stored in memory.
 
         // get lock req. of each account the guardian is guarding and return
