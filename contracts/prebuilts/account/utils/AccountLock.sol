@@ -35,11 +35,15 @@ contract AccountLock is IAccountLock {
     uint96 public constant FUND_UPKEEP_LINK_TOKEN = 5e18;
     uint256 public constant LOCK_REQUEST_TIME_TO_EVALUATION = 604800; // 7 days
     address[] public lockedAccounts;
-    mapping(address => bytes32) public accountToLockRequest;
-    mapping(bytes32 => uint256) private lockRequestToCreationTime;
-    mapping(bytes32 => bool) private lockRequestConcensysEvaluationStatus;
+    mapping(address => bytes32) private accountToLockRequest;
+    mapping(address => bytes32) private accountToUnLockRequest;
+    // mapping(bytes32 => uint256) private lockRequestToCreationTime;
+    // mapping(bytes32 => bool) private accountRequestConcensysEvaluationStatus;
+    mapping(bytes32 => bool) private unaccountRequestConcensysEvaluationStatus;
     mapping(bytes32 => mapping(address => bytes)) public lockRequestToGuardianToSignature;
+    mapping(bytes32 => mapping(address => bytes)) public unLockRequestToGuardianToSignature;
     mapping(bytes32 => mapping(address => bool)) lockRequestToGuardianToSignatureValid;
+    mapping(bytes32 => mapping(address => bool)) unLockRequestToGuardianToSignatureValid;
 
     ///////////////////////////////////////////
     ///// MOCKS  //////////////////////////////
@@ -112,13 +116,32 @@ contract AccountLock is IAccountLock {
         bytes32 ethSignedLockRequestHash = ECDSA.toEthSignedMessageHash(lockRequestHash);
 
         accountToLockRequest[account] = ethSignedLockRequestHash;
-        lockRequestToCreationTime[ethSignedLockRequestHash] = block.timestamp;
-        lockRequestConcensysEvaluationStatus[ethSignedLockRequestHash] = false;
+        // lockRequestToCreationTime[ethSignedLockRequestHash] = block.timestamp;
+        // accountRequestConcensysEvaluationStatus[ethSignedLockRequestHash] = false;
 
         // bytes memory chainlinkUpkeepCheckData = abi.encode(lockRequestHash, account);
 
         // _registerAndFundUpKeepForEvaluationUsingTimeBasedTrigger(chainlinkUpkeepCheckData);
         return ethSignedLockRequestHash;
+    }
+
+    function createUnLockRequest(address account) external onlyVerifiedAccountGuardian(account) returns (bytes32) {
+        if (!_isLocked(account)) {
+            revert AccountAlreadyUnLocked(account);
+        }
+
+        if (activeUnLockRequestExists(account)) {
+            revert ActiveUnLockRequestFound();
+        }
+
+        bytes32 unLockRequestHash = keccak256(abi.encodeWithSignature("_unLockAccount(address account)", account));
+
+        bytes32 ethSignedUnLockRequestHash = ECDSA.toEthSignedMessageHash(unLockRequestHash);
+
+        accountToUnLockRequest[account] = ethSignedUnLockRequestHash;
+        unaccountRequestConcensysEvaluationStatus[ethSignedUnLockRequestHash] = false;
+
+        return ethSignedUnLockRequestHash;
     }
 
     function recordSignatureOnLockRequest(bytes32 lockRequest, bytes calldata signature) external {
@@ -131,14 +154,30 @@ contract AccountLock is IAccountLock {
         lockRequestToGuardianToSignature[lockRequest][guardian] = signature;
     }
 
+    function recordSignatureOnUnLockRequest(bytes32 unLockRequest, bytes calldata signature) external {
+        address guardian = msg.sender;
+
+        if (!guardianContract.isVerifiedGuardian(guardian)) {
+            revert NotAGuardian(guardian);
+        }
+
+        unLockRequestToGuardianToSignature[unLockRequest][guardian] = signature;
+    }
+
     //TODO: Add trigger to this function once lock request is created, using Chainlink Time based automation (Ref: https://docs.chain.link/chainlink-automation/overview/getting-started)
-    function lockRequestConcensysEvaluation(
+    function accountRequestConcensysEvaluation(
         address account
     ) public onlyVerifiedAccountGuardian(account) returns (bool) {
-        bytes32 accountLockRequest = accountToLockRequest[account];
+        bytes32 request;
 
-        if (accountLockRequest == bytes32(0)) {
-            revert AccountLockRequestNotFound(account);
+        if (_isLocked(account)) {
+            request = accountToUnLockRequest[account];
+        } else {
+            request = accountToLockRequest[account];
+        }
+
+        if (request == bytes32(0)) {
+            revert NoActiveRequestFoundForAccount(account);
         }
 
         uint256 validGuardianSignatures = 0;
@@ -148,29 +187,49 @@ contract AccountLock is IAccountLock {
 
         for (uint256 g = 0; g < guardians.length; g++) {
             address guardian = guardians[g];
+            bytes memory guardianSignature;
 
-            bytes memory guardianSignature = lockRequestToGuardianToSignature[accountLockRequest][guardian];
+            if (_isLocked(account)) {
+                guardianSignature = unLockRequestToGuardianToSignature[request][guardian];
+            } else {
+                guardianSignature = lockRequestToGuardianToSignature[request][guardian];
+            }
 
             // checking if this guardian has signed the request
             if (guardianSignature.length > 0) {
-                address recoveredGuardian = _recoverSigner(accountLockRequest, guardianSignature);
+                address recoveredGuardian = _recoverSigner(request, guardianSignature);
                 console.log("Recovered guardian", recoveredGuardian);
 
                 if (recoveredGuardian == guardian) {
-                    lockRequestToGuardianToSignatureValid[accountLockRequest][guardian] = true;
+                    if (_isLocked(account)) {
+                        unLockRequestToGuardianToSignatureValid[request][guardian] = true;
+                    } else {
+                        lockRequestToGuardianToSignatureValid[request][guardian] = true;
+                    }
 
                     validGuardianSignatures++;
                 } else {
-                    lockRequestToGuardianToSignatureValid[accountLockRequest][guardian] = false;
+                    if (_isLocked(account)) {
+                        unLockRequestToGuardianToSignatureValid[request][guardian] = false;
+                    } else {
+                        lockRequestToGuardianToSignatureValid[request][guardian] = false;
+                    }
                 }
             }
         }
 
-        lockRequestConcensysEvaluationStatus[accountLockRequest] = true;
+        // accountRequestConcensysEvaluationStatus[request] = true;
+
         if (validGuardianSignatures > (guardianCount / 2)) {
-            _lockAccount(payable(account));
+            if (_isLocked(account)) {
+                _unLockAccount(payable(account));
+            } else {
+                _lockAccount(payable(account));
+            }
+            emit RequestConcensysAchieved(account);
             return true;
         } else {
+            emit RequestConcensysCouldNotBeAchieved(account);
             return false;
         }
     }
@@ -191,7 +250,7 @@ contract AccountLock is IAccountLock {
 
     //     (bytes32 lockRequest, address account) = abi.decode(checkData, (bytes32, address));
 
-    //     if (lockRequestConcensysEvaluationStatus[lockRequest]) {
+    //     if (accountRequestConcensysEvaluationStatus[lockRequest]) {
     //         return (false, checkData);
     //     }
 
@@ -211,7 +270,7 @@ contract AccountLock is IAccountLock {
     //         // retrieving the lockRequest and account address from performData
     //         (bytes32 lockRequest, address account) = abi.decode(performData, (bytes32, address));
 
-    //         lockRequestConcensysEvaluation(lockRequest, account);
+    //         accountRequestConcensysEvaluation(lockRequest, account);
     //     }
     // }
 
@@ -220,6 +279,14 @@ contract AccountLock is IAccountLock {
     ////////////////////////////////
     function activeLockRequestExists(address account) public view returns (bool) {
         if (accountToLockRequest[account] != bytes32(0)) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    function activeUnLockRequestExists(address account) public view returns (bool) {
+        if (accountToUnLockRequest[account] != bytes32(0)) {
             return true;
         } else {
             return false;
@@ -262,6 +329,16 @@ contract AccountLock is IAccountLock {
      */
     function _lockAccount(address payable account) internal {
         (bool success, ) = account.call(abi.encodeWithSignature("setPaused(bool)", true));
+
+        require(success, "Locking account failed");
+    }
+
+    /**
+     * @notice Will unlock all account assets and transactions
+     * @param account The account to be unlocked
+     */
+    function _unLockAccount(address payable account) internal {
+        (bool success, ) = account.call(abi.encodeWithSignature("setPaused(bool)", false));
 
         require(success, "Locking account failed");
     }

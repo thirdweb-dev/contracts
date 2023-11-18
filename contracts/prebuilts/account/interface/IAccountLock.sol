@@ -19,18 +19,16 @@ interface IAccountLock {
     event AccountUnLockRequestCreated(address indexed account);
 
     /**
-     * An event emitted when a guardian accepts a lock request.
-     * @param lockRequest type hash of the lock request
-     * @param guardian address of guardian who accepted the request
+     * @notice Event emitted when request concensys achieved
+     * @param account Address of the account
      */
-    event AccountLockRequestAccepted(bytes32 indexed lockRequest, address indexed guardian);
+    event RequestConcensysAchieved(address indexed account);
 
     /**
-     * @notice An event emitted when a guardian declines a lock request.
-     * @param lockRequest type hash of the lock request
-     * @param guardian address of guardian who accepted the request
+     * @notice Event emitted when request concensys could not be achieved
+     * @param account Address of the account
      */
-    event AccountLockRequestRejected(bytes32 indexed lockRequest, address indexed guardian);
+    event RequestConcensysCouldNotBeAchieved(address indexed account);
 
     /*///////////////////////////////////////////////////////////////
                         Errors
@@ -56,21 +54,26 @@ interface IAccountLock {
     error AccountAlreadyLocked(address account);
 
     /**
-     * Error returned when creating a account lock request for which lock reques already exists.
+     * Error thrown when a unlock request is created for an already unlocked smart-wallet
+     * @param account address of the smart wallet being unlocked
+     */
+    error AccountAlreadyUnLocked(address account);
+
+    /**
+     * Error returned when creating a account lock request for which lock request already exists.
      */
     error ActiveLockRequestFound();
+
+    /**
+     * Error returned when creating a account unlock request for which an unlock request already exists.
+     */
+    error ActiveUnLockRequestFound();
 
     /**
      * Error thrown when trying to evaluate concensys for lock request that is not connected to the account sent
      * @param account account whose lock req concensys is being evaluated
      */
-    error AccountLockRequestNotFound(address account);
-
-    /**
-     * Error thrown when a unlock request is created for an already unlocked smart-wallet
-     * @param account address of the smart wallet being unlocked
-     */
-    error AccountAlreadyUnlocked(address account);
+    error NoActiveRequestFoundForAccount(address account);
 
     /*///////////////////////////////////////////////////////////////
                         External Functions
@@ -96,7 +99,7 @@ interface IAccountLock {
      * @param account Account to which the lock request belongs.
      */
 
-    function lockRequestConcensysEvaluation(address account) external returns (bool);
+    function accountRequestConcensysEvaluation(address account) external returns (bool);
 
     /**
      * Will be called to execute the lock request on an account

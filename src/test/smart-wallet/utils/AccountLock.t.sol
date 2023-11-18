@@ -157,17 +157,17 @@ contract AccountLockTest is Test {
     }
 
     /////////////////////////////////////////
-    ////// lockRequestConcensysEvaluation tests //////
+    ////// accountRequestConcensysEvaluation tests //////
     ////////////////////////////////////////
 
-    function testRevertWhenAccountLockRequestNotFound()
+    function testRevertWhenNoActiveRequestFoundForAccount()
         external
         addVerifiedGuardian
         addVerifiedGuardianAsAccountGuardian
     {
         vm.startPrank(guardian);
-        vm.expectRevert(abi.encodeWithSelector(IAccountLock.AccountLockRequestNotFound.selector, account));
-        accountLock.lockRequestConcensysEvaluation(account);
+        vm.expectRevert(abi.encodeWithSelector(IAccountLock.NoActiveRequestFoundForAccount.selector, account));
+        accountLock.accountRequestConcensysEvaluation(account);
     }
 
     function testRevertWhenNonGuardianInitiatingLockReqConcensysEvalaution()
@@ -182,7 +182,7 @@ contract AccountLockTest is Test {
         // Act/assert
         vm.prank(randomUser);
         vm.expectRevert(abi.encodeWithSelector(IAccountLock.NotAGuardian.selector, randomUser));
-        accountLock.lockRequestConcensysEvaluation(account);
+        accountLock.accountRequestConcensysEvaluation(account);
     }
 
     function testLockReqConcensysEvaluationWhenNoGuardianSigned()
@@ -193,13 +193,13 @@ contract AccountLockTest is Test {
         vm.startPrank(guardian);
         accountLock.createLockRequest(account);
 
-        bool lockReqConcensysResult = accountLock.lockRequestConcensysEvaluation(account);
+        bool lockReqConcensysResult = accountLock.accountRequestConcensysEvaluation(account);
         vm.stopPrank();
 
         assertEq(lockReqConcensysResult, false);
     }
 
-    function testLockRequestConcensysEvaluationPass()
+    function testaccountRequestConcensysEvaluationPass()
         external
         addVerifiedGuardian
         addVerifiedGuardianAsAccountGuardian
@@ -215,13 +215,13 @@ contract AccountLockTest is Test {
         accountLock.recordSignatureOnLockRequest(lockRequest, signature);
 
         // ACT
-        bool lockReqConcensysResult = accountLock.lockRequestConcensysEvaluation(account);
+        bool lockReqConcensysResult = accountLock.accountRequestConcensysEvaluation(account);
 
         // Assert
         assertEq(lockReqConcensysResult, true);
     }
 
-    function testLockRequestConcensysEvaluationFail()
+    function testaccountRequestConcensysEvaluationFail()
         external
         addVerifiedGuardian
         addVerifiedGuardianAsAccountGuardian
@@ -232,7 +232,7 @@ contract AccountLockTest is Test {
         accountLock.createLockRequest(account);
 
         // ACT
-        bool lockReqConcensysResult = accountLock.lockRequestConcensysEvaluation(account);
+        bool lockReqConcensysResult = accountLock.accountRequestConcensysEvaluation(account);
 
         // Assert
         assertEq(lockReqConcensysResult, false);
