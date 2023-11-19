@@ -19,16 +19,16 @@ interface IAccountLock {
     event AccountUnLockRequestCreated(address indexed account);
 
     /**
-     * @notice Event emitted when request concensys achieved
+     * @notice Event emitted when request Concensus achieved
      * @param account Address of the account
      */
-    event RequestConcensysAchieved(address indexed account);
+    event RequestConcensusAchieved(address indexed account);
 
     /**
-     * @notice Event emitted when request concensys could not be achieved
+     * @notice Event emitted when request Concensus could not be achieved
      * @param account Address of the account
      */
-    event RequestConcensysCouldNotBeAchieved(address indexed account);
+    event RequestConcensusCouldNotBeAchieved(address indexed account);
 
     /*///////////////////////////////////////////////////////////////
                         Errors
@@ -70,8 +70,8 @@ interface IAccountLock {
     error ActiveUnLockRequestFound();
 
     /**
-     * Error thrown when trying to evaluate concensys for lock request that is not connected to the account sent
-     * @param account account whose lock req concensys is being evaluated
+     * Error thrown when trying to evaluate Concensus for lock request that is not connected to the account sent
+     * @param account account whose lock req Concensus is being evaluated
      */
     error NoActiveRequestFoundForAccount(address account);
 
@@ -99,7 +99,7 @@ interface IAccountLock {
      * @param account Account to which the lock request belongs.
      */
 
-    function accountRequestConcensysEvaluation(address account) external returns (bool);
+    function accountRequestConcensusEvaluation(address account) external returns (bool);
 
     /**
      * Will be called to execute the lock request on an account
