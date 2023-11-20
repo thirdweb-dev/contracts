@@ -1,6 +1,6 @@
 pragma solidity ^0.8.0;
 
-import { IEntryPoint } from "contracts/prebuilts/account/interface/IEntryPoint.sol";
+import { IEntryPoint } from "contracts/prebuilts/account/interface/IEntrypoint.sol";
 import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.sol";
 import { IAccount } from "contracts/prebuilts/account/interface/IAccount.sol";
 import { VERIFYINGPAYMASTER_BYTECODE, VERIFYINGPAYMASTER_ADDRESS, ENTRYPOINT_0_6_BYTECODE, CREATOR_0_6_BYTECODE } from "./AATestArtifacts.sol";
