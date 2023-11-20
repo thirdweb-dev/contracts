@@ -133,8 +133,7 @@ contract CheckoutPrototypeTest is BaseTest {
 
         // deposit currencies in vault
         vm.startPrank(address(vaultAdminOne));
-        mainCurrency.approve(address(vaultOne), type(uint256).max);
-        vaultOne.deposit(address(mainCurrency), 10 ether);
+        mainCurrency.transfer(address(vaultOne), 10 ether);
         vm.stopPrank();
 
         // create user op -- claim tokens on targetDrop

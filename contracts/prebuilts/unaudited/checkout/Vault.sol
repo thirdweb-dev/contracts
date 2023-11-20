@@ -19,17 +19,13 @@ import "../../../extension/Initializable.sol";
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract Vault is Initializable, PermissionsEnumerable, IVault {
-    /// @dev Mapping from token address to total balance in the vault.
-    mapping(address => uint256) public tokenBalance;
-
     /// @dev Address of the executor for this vault.
     address public executor;
 
     /// @dev Address of the Checkout entrypoint.
     address public checkout;
 
-    address public swapToken;
-    address public swapRouter;
+    mapping(address => bool) public isApprovedRouter;
 
     constructor() {
         _disableInitializers();
@@ -41,36 +37,11 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
     }
 
     // =================================================
-    // =============== Deposit and Withdraw ============
+    // =============== Withdraw ========================
     // =================================================
-
-    function deposit(address _token, uint256 _amount) external payable {
-        require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Not authorized");
-
-        uint256 _actualAmount;
-
-        if (_token == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == _amount, "!Amount");
-            _actualAmount = _amount;
-
-            tokenBalance[_token] += _actualAmount;
-        } else {
-            uint256 balanceBefore = IERC20(_token).balanceOf(address(this));
-            CurrencyTransferLib.safeTransferERC20(_token, msg.sender, address(this), _amount);
-            _actualAmount = IERC20(_token).balanceOf(address(this)) - balanceBefore;
-
-            tokenBalance[_token] += _actualAmount;
-        }
-
-        emit TokensDeposited(_token, _actualAmount);
-    }
 
     function withdraw(address _token, uint256 _amount) external {
         require(hasRole(DEFAULT_ADMIN_ROLE, msg.sender), "Not authorized");
-
-        uint256 balance = tokenBalance[_token];
-        // to prevent locking of direct-transferred tokens
-        tokenBalance[_token] = _amount > balance ? 0 : balance - _amount;
 
         CurrencyTransferLib.transferCurrency(_token, address(this), msg.sender, _amount);
 
@@ -84,10 +55,11 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
     function transferTokensToExecutor(address _token, uint256 _amount) external {
         require(_canTransferTokens(), "Not authorized");
 
-        uint256 balance = tokenBalance[_token];
-        require(balance >= _amount, "Not enough balance");
+        uint256 balance = _token == CurrencyTransferLib.NATIVE_TOKEN
+            ? address(this).balance
+            : IERC20(_token).balanceOf(address(this));
 
-        tokenBalance[_token] -= _amount;
+        require(balance >= _amount, "Not enough balance");
 
         CurrencyTransferLib.transferCurrency(_token, address(this), msg.sender, _amount);
 
@@ -100,13 +72,15 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
         SwapOp memory _swapOp
     ) external {
         require(_canTransferTokens(), "Not authorized");
+        require(isApprovedRouter[_swapOp.router], "Invalid router address");
 
         _swap(_swapOp);
 
-        uint256 balance = tokenBalance[_token];
-        require(balance >= _amount, "Not enough balance");
+        uint256 balance = _token == CurrencyTransferLib.NATIVE_TOKEN
+            ? address(this).balance
+            : IERC20(_token).balanceOf(address(this));
 
-        tokenBalance[_token] -= _amount;
+        require(balance >= _amount, "Not enough balance");
 
         CurrencyTransferLib.transferCurrency(_token, address(this), msg.sender, _amount);
 
@@ -124,18 +98,29 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
     }
 
     function _swap(SwapOp memory _swapOp) internal {
-        address _swapRouter = swapRouter;
-        uint256 balanceBefore = IERC20(_swapOp.tokenIn).balanceOf(address(this));
+        address _tokenOut = _swapOp.tokenOut;
+        address _tokenIn = _swapOp.tokenIn;
+        address _router = _swapOp.router;
 
-        IERC20(_swapOp.tokenOut).approve(_swapRouter, type(uint256).max);
-        (bool success, ) = _swapRouter.call(_swapOp.swapCalldata);
+        // get quote for amountIn
+        (, bytes memory quoteData) = _router.staticcall(_swapOp.quoteCalldata);
+        uint256 amountIn;
+        uint256 offset = _swapOp.amountInOffset;
+
+        assembly {
+            amountIn := mload(add(add(quoteData, 32), offset))
+        }
+
+        // perform swap
+        bool success;
+        if (_tokenIn == CurrencyTransferLib.NATIVE_TOKEN) {
+            (success, ) = _router.call{ value: amountIn }(_swapOp.swapCalldata);
+        } else {
+            IERC20(_tokenIn).approve(_swapOp.router, amountIn);
+            (success, ) = _router.call(_swapOp.swapCalldata);
+        }
+
         require(success, "Swap failed");
-        IERC20(_swapOp.tokenOut).approve(_swapRouter, 0);
-
-        tokenBalance[_swapOp.tokenOut] = IERC20(_swapOp.tokenOut).balanceOf(address(this));
-
-        uint256 balanceAfter = IERC20(_swapOp.tokenIn).balanceOf(address(this));
-        require(_swapOp.amountIn == (balanceAfter - balanceBefore), "Incorrect amount received from swap");
     }
 
     // =================================================
@@ -151,17 +136,11 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
         executor = _executor;
     }
 
-    function setSwapToken(address _swapToken) external {
-        require(_canSetSwap(), "Not authorized");
-
-        swapToken = _swapToken;
-    }
-
-    function setSwapRouter(address _swapRouter) external {
+    function approveSwapRouter(address _swapRouter, bool _toApprove) external {
         require(_canSetSwap(), "Not authorized");
         require(_swapRouter != address(0), "Zero address");
 
-        swapRouter = _swapRouter;
+        isApprovedRouter[_swapRouter] = _toApprove;
     }
 
     // =================================================
@@ -181,7 +160,7 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
     }
 
     function _canSwap() internal view returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || msg.sender == executor;
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function _canSetSwap() internal view returns (bool) {
