@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-interface IExecutor {
+import "./ISwap.sol";
+
+interface IExecutor is ISwap {
     /**
      *  @notice Details of the transaction to execute on target contract.
      *
@@ -24,12 +26,11 @@ interface IExecutor {
         address currency;
         address vault;
         bool approvalRequired;
-        bool swap;
         uint256 valueToSend;
         bytes data;
     }
 
     function execute(UserOp calldata op) external;
 
-    function swapAndExecute(UserOp calldata op) external; // TODO: rethink design and interface here
+    function swapAndExecute(UserOp calldata op, SwapOp memory swapOp) external;
 }

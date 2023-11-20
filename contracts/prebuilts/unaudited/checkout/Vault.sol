@@ -28,10 +28,10 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
     /// @dev Address of the Checkout entrypoint.
     address public checkout;
 
-    address public immutable swapToken;
+    address public swapToken;
+    address public swapRouter;
 
-    constructor(address _swapToken) {
-        swapToken = _swapToken;
+    constructor() {
         _disableInitializers();
     }
 
@@ -94,10 +94,14 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
         emit TokensTransferredToExecutor(msg.sender, _token, _amount);
     }
 
-    function swapAndTransferTokensToExecutor(address _token, uint256 _amount) external {
+    function swapAndTransferTokensToExecutor(
+        address _token,
+        uint256 _amount,
+        SwapOp memory _swapOp
+    ) external {
         require(_canTransferTokens(), "Not authorized");
 
-        _swap();
+        _swap(_swapOp);
 
         uint256 balance = tokenBalance[_token];
         require(balance >= _amount, "Not enough balance");
@@ -113,13 +117,26 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
     // =============== Swap functionality ==============
     // =================================================
 
-    function swap() external {
+    function swap(SwapOp memory _swapOp) external {
         require(_canSwap(), "Not authorized");
 
-        _swap();
+        _swap(_swapOp);
     }
 
-    function _swap() internal {}
+    function _swap(SwapOp memory _swapOp) internal {
+        address _swapRouter = swapRouter;
+        uint256 balanceBefore = IERC20(_swapOp.tokenIn).balanceOf(address(this));
+
+        IERC20(_swapOp.tokenOut).approve(_swapRouter, type(uint256).max);
+        (bool success, ) = _swapRouter.call(_swapOp.swapCalldata);
+        require(success, "Swap failed");
+        IERC20(_swapOp.tokenOut).approve(_swapRouter, 0);
+
+        tokenBalance[_swapOp.tokenOut] = IERC20(_swapOp.tokenOut).balanceOf(address(this));
+
+        uint256 balanceAfter = IERC20(_swapOp.tokenIn).balanceOf(address(this));
+        require(_swapOp.amountIn == (balanceAfter - balanceBefore), "Incorrect amount received from swap");
+    }
 
     // =================================================
     // =============== Setter functions ================
@@ -134,11 +151,18 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
         executor = _executor;
     }
 
-    // function setSwapToken(address _swapToken) external {
-    //     require(_canSetSwapToken(), "Not authorized");
+    function setSwapToken(address _swapToken) external {
+        require(_canSetSwap(), "Not authorized");
 
-    //     swapToken = _swapToken;
-    // }
+        swapToken = _swapToken;
+    }
+
+    function setSwapRouter(address _swapRouter) external {
+        require(_canSetSwap(), "Not authorized");
+        require(_swapRouter != address(0), "Zero address");
+
+        swapRouter = _swapRouter;
+    }
 
     // =================================================
     // =============== Role checks =====================
@@ -157,10 +181,10 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
     }
 
     function _canSwap() internal view returns (bool) {
-        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        return hasRole(DEFAULT_ADMIN_ROLE, msg.sender) || msg.sender == executor;
     }
 
-    function _canSetSwapToken() internal view returns (bool) {
+    function _canSetSwap() internal view returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 }

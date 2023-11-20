@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-interface IVault {
+import "./ISwap.sol";
+
+interface IVault is ISwap {
     /// @dev Emitted when contract admin withdraws tokens.
     event TokensWithdrawn(address _token, uint256 _amount);
 
@@ -17,7 +19,11 @@ interface IVault {
 
     function transferTokensToExecutor(address _token, uint256 _amount) external;
 
-    function swapAndTransferTokensToExecutor(address _token, uint256 _amount) external;
+    function swapAndTransferTokensToExecutor(
+        address _token,
+        uint256 _amount,
+        SwapOp memory _swapOp
+    ) external;
 
     function setExecutor(address _executor) external;
 

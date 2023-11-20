@@ -73,7 +73,7 @@ contract CheckoutPrototypeTest is BaseTest {
         setClaimConditionCurrency(targetDrop, address(mainCurrency));
 
         // deploy vault and executor implementations
-        vaultImplementation = address(new Vault(address(mainCurrency)));
+        vaultImplementation = address(new Vault());
         executorImplementation = address(new Executor());
 
         // deploy checkout
@@ -155,7 +155,6 @@ contract CheckoutPrototypeTest is BaseTest {
             currency: address(mainCurrency),
             vault: address(vaultOne),
             approvalRequired: true,
-            swap: false,
             valueToSend: _totalPrice,
             data: callData
         });

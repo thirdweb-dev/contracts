@@ -38,11 +38,7 @@ contract Executor is Initializable, PermissionsEnumerable, IExecutor {
         require(_canExecute(), "Not authorized");
 
         if (op.valueToSend != 0) {
-            if (op.swap) {
-                IVault(op.vault).swapAndTransferTokensToExecutor(op.currency, op.valueToSend);
-            } else {
-                IVault(op.vault).transferTokensToExecutor(op.currency, op.valueToSend);
-            }
+            IVault(op.vault).transferTokensToExecutor(op.currency, op.valueToSend);
         }
 
         bool success;
@@ -60,7 +56,10 @@ contract Executor is Initializable, PermissionsEnumerable, IExecutor {
     }
 
     // TODO: rethink design and interface here
-    function swapAndExecute(UserOp calldata op) external {}
+    function swapAndExecute(UserOp calldata op, SwapOp calldata swap) external {
+        require(_canExecute(), "Not authorized");
+        IVault(op.vault).swapAndTransferTokensToExecutor(op.currency, op.valueToSend, swap);
+    }
 
     function _canExecute() internal view returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
