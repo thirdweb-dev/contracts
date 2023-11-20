@@ -9,7 +9,8 @@ library AccountCoreStorage {
 
     struct Data {
         address entrypointOverride;
-        address firstAdmin;
+        address factory;
+        bytes32 creationSalt;
     }
 
     function data() internal pure returns (Data storage acountCoreData) {

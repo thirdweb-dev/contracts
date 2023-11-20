@@ -7,6 +7,7 @@ import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountPermissions } from "contracts/extension/upgradeable/AccountPermissions.sol";
 import { AccountExtension } from "contracts/prebuilts/account/utils/AccountExtension.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
@@ -54,7 +55,7 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
     );
 
     // Target contracts
-    EntryPoint private entrypoint;
+    EntryPoint private constant entrypoint = EntryPoint(payable(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789));
     DynamicAccountFactory private accountFactory;
 
     // Mocks
@@ -73,7 +74,7 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
     bytes internal data = bytes("");
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xbC12AEae5E1b1a80401dd20A6728f7a01a3A6166;
+    address private sender = 0x96b1d554981298ED415f2D5788A6D093A39eECfF;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
@@ -220,7 +221,8 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         nonSigner = vm.addr(nonSignerPKey);
 
         // Setup contracts
-        entrypoint = new EntryPoint();
+        address _deployedEntrypoint = address(new EntryPoint());
+        vm.etch(address(entrypoint), bytes(_deployedEntrypoint.code));
 
         // Setting up default extension.
         IExtension.Extension memory defaultExtension;
@@ -266,7 +268,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         extensions[0] = defaultExtension;
 
         // deploy account factory
-        accountFactory = new DynamicAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
+        address factoryImpl = address(new DynamicAccountFactory(extensions));
+        accountFactory = DynamicAccountFactory(
+            address(
+                payable(
+                    new TWProxy(
+                        factoryImpl,
+                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
+                    )
+                )
+            )
+        );
         // deploy dummy contract
         numberContract = new Number();
     }
