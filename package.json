@@ -13,7 +13,7 @@
     "@openzeppelin/contracts-upgradeable": "4.7.3",
     "@thirdweb-dev/chains": "^0.1.54",
     "@thirdweb-dev/dynamic-contracts": "^1.1.2",
-    "@thirdweb-dev/sdk": "^4.0.4",
+    "@thirdweb-dev/sdk": "^4.0.14",
     "@typechain/ethers-v5": "^10.0.0",
     "@types/fs-extra": "^9.0.13",
     "@types/mocha": "^9.1.0",
