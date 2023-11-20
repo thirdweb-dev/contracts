@@ -59,7 +59,8 @@
     "forge:build": "forge build",
     "forge:test": "forge test",
     "gas": "forge test --mc Benchmark --gas-report > gasreport.txt",
-    "forge:snapshot": "forge snapshot --check"
+    "forge:snapshot": "forge snapshot --check",
+    "aabenchmark": "forge test --mc AABenchmarkPrepare && forge test --mc ProfileThirdwebAccount -vvv"
   },
   "dependencies": {}
 }
