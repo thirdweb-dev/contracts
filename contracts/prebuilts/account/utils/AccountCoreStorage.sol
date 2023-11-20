@@ -9,7 +9,6 @@ library AccountCoreStorage {
 
     struct Data {
         address entrypointOverride;
-        address factory;
         bytes32 creationSalt;
     }
 

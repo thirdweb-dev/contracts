@@ -2,7 +2,6 @@
 pragma solidity ^0.8.12;
 
 // Utils
-import "./BaseAccountFactoryStorage.sol";
 import "../../../extension/Multicall.sol";
 import "../../../external-deps/openzeppelin/proxy/Clones.sol";
 import "../../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
@@ -33,6 +32,9 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     address public immutable accountImplementation;
     address public immutable entrypoint;
 
+    EnumerableSet.AddressSet private allAccounts;
+    mapping(address => EnumerableSet.AddressSet) internal accountsOfSigner;
+
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -59,10 +61,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         account = Clones.cloneDeterministic(impl, salt);
 
         if (msg.sender != entrypoint) {
-            require(
-                _baseAccountFactoryStorage().allAccounts.add(account),
-                "AccountFactory: account already registered"
-            );
+            require(allAccounts.add(account), "AccountFactory: account already registered");
         }
 
         _initializeAccount(account, _admin, _data);
@@ -77,14 +76,14 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         address account = msg.sender;
         require(_isAccountOfFactory(account, _salt), "AccountFactory: not an account.");
 
-        require(_baseAccountFactoryStorage().allAccounts.add(account), "AccountFactory: account already registered");
+        require(allAccounts.add(account), "AccountFactory: account already registered");
     }
 
     function onSignerAdded(address _signer, bytes32 _salt) external {
         address account = msg.sender;
         require(_isAccountOfFactory(account, _salt), "AccountFactory: not an account.");
 
-        bool isNewSigner = _baseAccountFactoryStorage().accountsOfSigner[_signer].add(account);
+        bool isNewSigner = accountsOfSigner[_signer].add(account);
 
         if (isNewSigner) {
             emit SignerAdded(account, _signer);
@@ -96,7 +95,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         address account = msg.sender;
         require(_isAccountOfFactory(account, _salt), "AccountFactory: not an account.");
 
-        bool isAccount = _baseAccountFactoryStorage().accountsOfSigner[_signer].remove(account);
+        bool isAccount = accountsOfSigner[_signer].remove(account);
 
         if (isAccount) {
             emit SignerRemoved(account, _signer);
@@ -109,32 +108,29 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     /// @notice Returns whether an account is registered on this factory.
     function isRegistered(address _account) external view returns (bool) {
-        return _baseAccountFactoryStorage().allAccounts.contains(_account);
+        return allAccounts.contains(_account);
     }
 
     /// @notice Returns the total number of accounts.
     function totalAccounts() external view returns (uint256) {
-        return _baseAccountFactoryStorage().allAccounts.length();
+        return allAccounts.length();
     }
 
     /// @notice Returns all accounts between the given indices.
     function getAccounts(uint256 _start, uint256 _end) external view returns (address[] memory accounts) {
-        require(
-            _start < _end && _end <= _baseAccountFactoryStorage().allAccounts.length(),
-            "BaseAccountFactory: invalid indices"
-        );
+        require(_start < _end && _end <= allAccounts.length(), "BaseAccountFactory: invalid indices");
 
         uint256 len = _end - _start;
         accounts = new address[](_end - _start);
 
         for (uint256 i = 0; i < len; i += 1) {
-            accounts[i] = _baseAccountFactoryStorage().allAccounts.at(i + _start);
+            accounts[i] = allAccounts.at(i + _start);
         }
     }
 
     /// @notice Returns all accounts created on the factory.
     function getAllAccounts() external view returns (address[] memory) {
-        return _baseAccountFactoryStorage().allAccounts.values();
+        return allAccounts.values();
     }
 
     /// @notice Returns the address of an Account that would be deployed with the given admin signer.
@@ -145,7 +141,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     /// @notice Returns all accounts that the given address is a signer of.
     function getAccountsOfSigner(address signer) external view returns (address[] memory accounts) {
-        return _baseAccountFactoryStorage().accountsOfSigner[signer].values();
+        return accountsOfSigner[signer].values();
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -166,11 +162,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     /// @dev Returns the salt used when deploying an Account.
     function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
         return keccak256(abi.encode(_admin, _data));
-    }
-
-    /// @dev Returns the BaseAccountFactory contract's storage.
-    function _baseAccountFactoryStorage() internal pure returns (BaseAccountFactoryStorage.Data storage) {
-        return BaseAccountFactoryStorage.data();
     }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.

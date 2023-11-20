@@ -7,7 +7,6 @@ import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountPermissions } from "contracts/extension/upgradeable/AccountPermissions.sol";
 import { AccountExtension } from "contracts/prebuilts/account/utils/AccountExtension.sol";
-import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
@@ -66,12 +65,10 @@ contract DynamicAccountTest is BaseTest {
     bytes internal data = bytes("");
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0x96b1d554981298ED415f2D5788A6D093A39eECfF;
+    address private sender = 0x78b942FBC9126b4Ed8384Bb9dd1420Ea865be91a;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
-
-    address internal factoryImpl;
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
@@ -322,17 +319,7 @@ contract DynamicAccountTest is BaseTest {
         extensions[0] = defaultExtension;
 
         // deploy account factory
-        factoryImpl = address(new DynamicAccountFactory(extensions));
-        accountFactory = DynamicAccountFactory(
-            address(
-                payable(
-                    new TWProxy(
-                        factoryImpl,
-                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
-                    )
-                )
-            )
-        );
+        accountFactory = new DynamicAccountFactory(deployer, extensions);
         // deploy dummy contract
         numberContract = new Number();
     }
@@ -340,11 +327,6 @@ contract DynamicAccountTest is BaseTest {
     /*///////////////////////////////////////////////////////////////
                         Test: creating an account
     //////////////////////////////////////////////////////////////*/
-
-    function test_revert_initializeImplementation() public {
-        vm.expectRevert("Initializable: contract is already initialized");
-        DynamicAccountFactory(factoryImpl).initialize(deployer, "https://example.com");
-    }
 
     /// @dev benchmark test for deployment gas cost
     function test_deploy_dynamicAccount() public {
@@ -392,17 +374,7 @@ contract DynamicAccountTest is BaseTest {
         extensions[0] = defaultExtension;
 
         // deploy account factory
-        address factoryImplementation = address(new DynamicAccountFactory(extensions));
-        DynamicAccountFactory factory = DynamicAccountFactory(
-            address(
-                payable(
-                    new TWProxy(
-                        factoryImplementation,
-                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
-                    )
-                )
-            )
-        );
+        DynamicAccountFactory factory = new DynamicAccountFactory(deployer, extensions);
     }
 
     /// @dev Create an account by directly calling the factory.
@@ -417,7 +389,7 @@ contract DynamicAccountTest is BaseTest {
     }
 
     /// @dev Create an account via Entrypoint.
-    function test_state_createAccount_viaEntrypointSingle() public {
+    function test_state_createAccount_viaEntrypoint() public {
         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
