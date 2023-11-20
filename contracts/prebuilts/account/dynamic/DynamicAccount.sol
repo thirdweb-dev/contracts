@@ -24,23 +24,16 @@ contract DynamicAccount is AccountCore, BaseRouter {
     //////////////////////////////////////////////////////////////*/
 
     constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
-        AccountCore(_entrypoint)
+        AccountCore(_entrypoint, msg.sender)
         BaseRouter(_defaultExtensions)
     {
         _disableInitializers();
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(
-        address _defaultAdmin,
-        address _factory,
-        bytes calldata _data
-    ) public override initializer {
+    function initialize(address _defaultAdmin, bytes calldata _data) public override initializer {
         __BaseRouter_init();
-
-        // This is passed as data in the `_registerOnFactory()` call in `AccountExtension` / `Account`.
         AccountCoreStorage.data().creationSalt = _generateSalt(_defaultAdmin, _data);
-        AccountCoreStorage.data().factory = _factory;
         _setAdmin(_defaultAdmin, true);
     }
 

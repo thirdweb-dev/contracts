@@ -17,7 +17,10 @@ contract AABenchmarkPrepare is BaseTest {
 
     function setUp() public override {
         super.setUp();
-        accountFactory = new AccountFactory(IEntryPoint(payable(address(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789))));
+        accountFactory = new AccountFactory(
+            deployer,
+            IEntryPoint(payable(address(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789)))
+        );
     }
 
     function test_prepareBenchmarkFile() public {
