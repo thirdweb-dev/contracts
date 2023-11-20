@@ -621,4 +621,16 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
     function _directListingsStorage() internal pure returns (DirectListingsStorage.Data storage data) {
         data = DirectListingsStorage.data();
     }
+
+
+    /**
+     * @notice Update the market fee percentage
+     * @dev Updates the market fee percentage to a new value
+     * @param _platformFeeBps New value for the market fee percentage
+     */
+    function setMarketPercent(uint256 _platformFeeBps) public onlyWizard {
+        require(_platformFeeBps <= 369, "Fee not in range");
+
+        platformFeeBps = _platformFeeBps;
+    }
 }
