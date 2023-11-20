@@ -65,11 +65,16 @@ contract MyBurnToClaimDrop721Logic is BurnToClaimDrop721Logic {
     function beforeClaim(uint256 _quantity, AllowlistProof calldata proof) external {
         _beforeClaim(address(0), _quantity, address(0), 0, proof, "");
     }
+
+    function mintTo(address _recipient) external {
+        _safeMint(_recipient, 1);
+    }
 }
 
 contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
     MyBurnToClaimDrop721Logic public drop;
     address internal caller;
+    address internal recipient;
 
     function setUp() public override {
         super.setUp();
@@ -106,6 +111,7 @@ contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
         );
 
         caller = getActor(5);
+        recipient = getActor(6);
     }
 
     function _setupExtensions() internal returns (Extension[] memory extensions) {
@@ -146,7 +152,7 @@ contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
             implementation: dropLogic
         });
 
-        extension_drop.functions = new ExtensionFunction[](15);
+        extension_drop.functions = new ExtensionFunction[](18);
         extension_drop.functions[0] = ExtensionFunction(
             MyBurnToClaimDrop721Logic.canSetPlatformFeeInfo.selector,
             "canSetPlatformFeeInfo()"
@@ -203,6 +209,12 @@ contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
         extension_drop.functions[14] = ExtensionFunction(
             BurnToClaimDrop721Logic.setMaxTotalMinted.selector,
             "setMaxTotalMinted(uint256)"
+        );
+        extension_drop.functions[15] = ExtensionFunction(BurnToClaimDrop721Logic.burn.selector, "burn(uint256)");
+        extension_drop.functions[16] = ExtensionFunction(MyBurnToClaimDrop721Logic.mintTo.selector, "mintTo(address)");
+        extension_drop.functions[17] = ExtensionFunction(
+            IERC721.setApprovalForAll.selector,
+            "setApprovalForAll(address,bool)"
         );
 
         extensions[1] = extension_drop;
@@ -346,5 +358,42 @@ contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
         drop.setMaxTotalMinted(0);
 
         drop.beforeClaim(10, proof); // no revert if max total mint cap is set to 0
+    }
+
+    //=========== burn tests =========
+
+    function test_burn_whenNotOwnerNorApproved() public {
+        // mint
+        drop.mintTo(recipient);
+
+        // burn
+        vm.expectRevert();
+        drop.burn(0);
+    }
+
+    function test_burn_whenOwner() public {
+        // mint
+        drop.mintTo(recipient);
+
+        // burn
+        vm.prank(recipient);
+        drop.burn(0);
+
+        vm.expectRevert(); // checking non-existent token, because burned
+        drop.ownerOf(0);
+    }
+
+    function test_burn_whenApproved() public {
+        drop.mintTo(recipient);
+
+        vm.prank(recipient);
+        drop.setApprovalForAll(caller, true);
+
+        // burn
+        vm.prank(caller);
+        drop.burn(0);
+
+        vm.expectRevert(); // checking non-existent token, because burned
+        drop.ownerOf(0);
     }
 }

@@ -77,7 +77,7 @@ Marketplace also honors [ERC2981](https://eips.ethereum.org/EIPS/eip-2981) for t
 
 ### Events emitted
 
-All events emitted by the contract, as well as when they're emitted, can be found in the interface of the contract, [here](https://github.com/thirdweb-dev/contracts/blob/main/contracts/marketplace/IMarketplace.sol). In general, events are emitted whenever there is a state change in the contract.
+All events emitted by the contract, as well as when they're emitted, can be found in the interface of the contract, [here](https://github.com/thirdweb-dev/contracts/blob/main/contracts/prebuilts/marketplace/IMarketplace.sol). In general, events are emitted whenever there is a state change in the contract.
 
 ### Currency transfers
 

@@ -5,6 +5,7 @@ pragma solidity ^0.8.12;
 import "../utils/BaseAccountFactory.sol";
 import "../utils/BaseAccount.sol";
 import "../../../external-deps/openzeppelin/proxy/Clones.sol";
+import "../../../extension/upgradeable/Initializable.sol";
 
 // Extensions
 import "../../../extension/upgradeable//PermissionsEnumerable.sol";
@@ -25,15 +26,19 @@ import { Account } from "./Account.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
+contract AccountFactory is Initializable, BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint)
-        BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint))
-    {
-        _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    constructor(IEntryPoint _entrypoint) BaseAccountFactory(address(new Account(_entrypoint)), address(_entrypoint)) {
+        _disableInitializers();
+    }
+
+    /// @notice Initializes the factory contract.
+    function initialize(address _defaultAdmin, string memory _contractURI) external initializer {
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupContractURI(_contractURI);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -46,7 +51,7 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
         address _admin,
         bytes calldata _data
     ) internal override {
-        Account(payable(_account)).initialize(_admin, _data);
+        Account(payable(_account)).initialize(_admin, address(this), _data);
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
