@@ -8,8 +8,7 @@ import "../../utils/BaseTest.sol";
 import { IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
 
 import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
-
-import "solady/utils/LibString.sol";
+import "contracts/lib/TWStrings.sol";
 
 import "forge-std/Test.sol";
 
@@ -30,24 +29,24 @@ contract AABenchmarkPrepare is BaseTest {
 
         string memory accountFactoryAddressString = string.concat(
             "address constant THIRDWEB_ACCOUNT_FACTORY_ADDRESS = ",
-            LibString.toHexStringChecksummed(accountFactoryAddress),
+            TWStrings.toHexStringChecksummed(accountFactoryAddress),
             ";"
         );
         string memory accountFactoryBytecodeString = string.concat(
             'bytes constant THIRDWEB_ACCOUNT_FACTORY_BYTECODE = hex"',
-            LibString.toHexStringNoPrefix(accountFactoryBytecode),
+            TWStrings.toHexStringNoPrefix(accountFactoryBytecode),
             '"',
             ";"
         );
 
         string memory accountImplAddressString = string.concat(
             "address constant THIRDWEB_ACCOUNT_IMPL_ADDRESS = ",
-            LibString.toHexStringChecksummed(accountImplAddress),
+            TWStrings.toHexStringChecksummed(accountImplAddress),
             ";"
         );
         string memory accountImplBytecodeString = string.concat(
             'bytes constant THIRDWEB_ACCOUNT_IMPL_BYTECODE = hex"',
-            LibString.toHexStringNoPrefix(accountImplBytecode),
+            TWStrings.toHexStringNoPrefix(accountImplBytecode),
             '"',
             ";"
         );

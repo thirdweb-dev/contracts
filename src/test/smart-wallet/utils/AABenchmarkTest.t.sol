@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "aa-benchmark/src/TestBase.sol";
+import "./AATestBase.sol";
 import { ThirdwebAccountFactory, ThirdwebAccount, THIRDWEB_ACCOUNT_FACTORY_ADDRESS, THIRDWEB_ACCOUNT_IMPL_ADDRESS, THIRDWEB_ACCOUNT_FACTORY_BYTECODE, THIRDWEB_ACCOUNT_IMPL_BYTECODE } from "./AABenchmarkArtifacts.sol";
 
 contract ProfileThirdwebAccount is AAGasProfileBase {
