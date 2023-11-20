@@ -12,7 +12,7 @@ function approveCurrencyForListing(
         ├── when approving different price for listed currency
         │   └── it should revert ✅
         └── when not approving different price for listed currency
-            ├── when prive to approve for curreny is already approved
+            ├── when prive to approve for currency is already approved
             │   └── it should revert ✅
             └── when approving a new price for currency ✅
                 ├── it should update the approved price for currency

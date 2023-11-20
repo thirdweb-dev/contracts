@@ -9,4 +9,5 @@ node_modules/
 typechain/
 
 # files
+src/test/smart-wallet/utils/AABenchmarkArtifacts.sol
 coverage.json
