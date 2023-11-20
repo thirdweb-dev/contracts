@@ -44,7 +44,7 @@ contract Number {
         if (owner.code.length == 0) {
             // Signature verification by ECDSA
         } else {
-            // Signature verfication by EIP1271
+            // Signature verification by EIP1271
             bytes32 digest = keccak256(abi.encode(newNum));
             require(
                 EIP1271Verifier(owner).isValidSignature(digest, signature) == GPv2EIP1271.MAGICVALUE,
