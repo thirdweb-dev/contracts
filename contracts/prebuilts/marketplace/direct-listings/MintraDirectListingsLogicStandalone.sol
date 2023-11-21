@@ -23,7 +23,7 @@ import { CurrencyTransferLib } from "../../../lib/CurrencyTransferLib.sol";
 /**
  * @author  thirdweb.com
  */
-contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, ReentrancyGuard, ERC2771ContextConsumer {
+contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, ReentrancyGuard {
     /*///////////////////////////////////////////////////////////////
                         Mintra
     //////////////////////////////////////////////////////////////*/
@@ -32,9 +32,9 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         uint256 basisPoints;
     }
 
-    address public wizard;
-    address private mintTokenAddress;
-    address public platformFeeRecipient;
+    address public immutable wizard;
+    address private immutable mintTokenAddress;
+    address public immutable platformFeeRecipient;
     uint256 public platformFeeBps = 225;
     uint256 public platformFeeBpsMint = 150;
     mapping(address => Royalty) public royalties;
@@ -61,7 +61,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
     /// @dev Checks whether caller is a listing creator.
     modifier onlyListingCreator(uint256 _listingId) {
         require(
-            _directListingsStorage().listings[_listingId].listingCreator == _msgSender(),
+            _directListingsStorage().listings[_listingId].listingCreator == msg.sender,
             "Marketplace: not listing creator."
         );
         _;
@@ -102,7 +102,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         returns (uint256 listingId)
     {
         listingId = _getNextListingId();
-        address listingCreator = _msgSender();
+        address listingCreator = msg.sender;
         TokenType tokenType = _getTokenType(_params.assetContract);
 
         uint128 startTime = _params.startTimestamp;
@@ -137,6 +137,8 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         _directListingsStorage().listings[listingId] = listing;
 
         emit NewListing(listingCreator, listingId, _params.assetContract, listing);
+
+        return listingId;
     }
 
     /// @notice Update parameters of a listing of NFTs.
@@ -145,7 +147,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         onlyExistingListing(_listingId)
         onlyListingCreator(_listingId)
     {
-        address listingCreator = _msgSender();
+        address listingCreator = msg.sender;
         Listing memory listing = _directListingsStorage().listings[_listingId];
         TokenType tokenType = _getTokenType(_params.assetContract);
 
@@ -209,7 +211,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
     /// @notice Cancel a listing.
     function cancelListing(uint256 _listingId) external onlyExistingListing(_listingId) onlyListingCreator(_listingId) {
         _directListingsStorage().listings[_listingId].status = IDirectListings.Status.CANCELLED;
-        emit CancelledListing(_msgSender(), _listingId);
+        emit CancelledListing(msg.sender, _listingId);
     }
 
     /// @notice Approve a buyer to buy from a reserved listing.
@@ -255,7 +257,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         uint256 _expectedTotalPrice
     ) external payable nonReentrant onlyExistingListing(_listingId) {
         Listing memory listing = _directListingsStorage().listings[_listingId];
-        address buyer = _msgSender();
+        address buyer = msg.sender;
 
         require(
             !listing.reserved || _directListingsStorage().isBuyerApprovedForListing[_listingId][buyer],
@@ -423,7 +425,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
 
         require(
             _validateOwnershipAndApproval(
-                _msgSender(),
+                msg.sender,
                 _params.assetContract,
                 _params.tokenId,
                 _params.quantity,
@@ -628,7 +630,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
      * @dev Updates the market fee percentage to a new value
      * @param _platformFeeBps New value for the market fee percentage
      */
-    function setMarketPercent(uint256 _platformFeeBps) public onlyWizard {
+    function setPlatformFeeBps(uint256 _platformFeeBps) public onlyWizard {
         require(_platformFeeBps <= 369, "Fee not in range");
 
         platformFeeBps = _platformFeeBps;
