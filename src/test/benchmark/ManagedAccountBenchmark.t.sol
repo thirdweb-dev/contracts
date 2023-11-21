@@ -183,6 +183,11 @@ contract ManagedAccountTest is BaseTest {
         return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint);
     }
 
+    /// @dev Returns the salt used when deploying an Account.
+    function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
+        return keccak256(abi.encode(_admin, _data));
+    }
+
     function setUp() public override {
         super.setUp();
 
@@ -241,7 +246,11 @@ contract ManagedAccountTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        accountFactory = new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
+        accountFactory = new ManagedAccountFactory(
+            factoryDeployer,
+            IEntryPoint(payable(address(entrypoint))),
+            extensions
+        );
         // deploy dummy contract
         numberContract = new Number();
     }
@@ -296,6 +305,7 @@ contract ManagedAccountTest is BaseTest {
         // deploy account factory
         vm.prank(factoryDeployer);
         ManagedAccountFactory factory = new ManagedAccountFactory(
+            factoryDeployer,
             IEntryPoint(payable(address(entrypoint))),
             extensions
         );
@@ -339,7 +349,7 @@ contract ManagedAccountTest is BaseTest {
     function test_revert_onRegister_nonFactoryChildContract() public {
         vm.prank(address(0x12345));
         vm.expectRevert("AccountFactory: not an account.");
-        accountFactory.onRegister(accountAdmin, "");
+        accountFactory.onRegister(_generateSalt(accountAdmin, ""));
     }
 
     /*///////////////////////////////////////////////////////////////
