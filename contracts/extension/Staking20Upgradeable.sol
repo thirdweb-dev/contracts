@@ -278,7 +278,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     }
 
     /// @dev Set staking conditions.
-    function _setStakingCondition(
+    function  _setStakingCondition(
         uint80 _timeUnit,
         uint256 _numerator,
         uint256 _denominator

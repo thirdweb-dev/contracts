@@ -1,0 +1,46 @@
+function initialize(
+    address _defaultAdmin,
+    string memory _contractURI,
+    address[] memory _trustedForwarders,
+    address _rewardToken,
+    address _stakingToken,
+    uint80 _timeUnit,
+    uint256 _rewardRatioNumerator,
+    uint256 _rewardRatioDenominator
+)
+├── when _trustedForwarders.length > 0
+│   └── it should set _trustedForwarder[_trustedForwarders[i]] as true for each address in _trustedForwarders ✅
+├── when _rewardToken is the same as _stakingtoken
+│   └── it should revert ✅
+└── when _rewardToken is not the same as _stakingtoken
+    ├── it should set rewardToken as _rewardToken ✅
+    ├── when _stakingToken is equal to address(0)
+    │   └── it should revert ✅
+    └── when _stakingToken is not equal to address(0)
+        ├── when _stakingTokenDecimals is equal to 0
+        │   └── it should revert ✅
+        └── when _stakingTokenDecimals is not equal to 0
+            ├── when _rewardsTokenDecimals is equal to 0
+            │   └── it should revert ✅
+            └── when _rewardTokenDecimals is not equal to 0
+                ├── it should set stakingToken as _stakingtoken ✅
+                ├── when _stakingToken is equal to nativeToken
+                │   └── it should set staking token decimals as 18 ✅
+                ├── when _stakingToken is not equal to nativeToken
+                │   └── it should set staking token decimals as _stakingToken.decimals() ✅
+                ├── when _rewardToken is equal to nativeToken
+                │   └── it should set reward token decimals as 18 ✅
+                ├── when _rewardToken is not equal to nativeToken
+                │   └── it should set reward token decimals to _rewardtoken.decimals() ✅
+                ├── when _rewardRatioDenominator is equal to zero
+                │   └── it should revert ✅
+                └── when _rewardRatioDenominator is not equal to zero
+                    ├── when _timeUnit is equal to zero
+                    │   └── it should revert ✅
+                    └── when _timeUnit is not equal to zero
+                        ├── it should increment nextConditionId by 1
+                        ├── it should set stakingConditions[0] as a StakingCondition struct with params: _timeUnit, _numerator, _denominator, block.timestamp, 0 ✅
+                        ├── it should set contractURI as _contractURI ✅
+                        ├── it should emit ContractURIUpdated with the parameters: prevURI, _uri ✅
+                        ├── it should assign the role DEFAULT_ADMIN_ROLE to _defaultAdmin ✅
+                        └── it should emit RoleGranted with the parameters: DEFAULT_ADMIN_ROLE, _defaultAdmin, msg.sender ✅
