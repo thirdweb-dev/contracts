@@ -3,7 +3,6 @@ pragma solidity ^0.8.0;
 
 // Test utils
 import "../utils/BaseTest.sol";
-import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
@@ -50,12 +49,10 @@ contract SimpleAccountTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xDD1d01438DcF28eb45a611c7faBD716B0dECE259;
+    address private sender = 0x0df2C3523703d165Aa7fA1a552f3F0B56275DfC6;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
-
-    address internal factoryImpl;
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
@@ -253,34 +250,9 @@ contract SimpleAccountTest is BaseTest {
         // Setup contracts
         entrypoint = new EntryPoint();
         // deploy account factory
-        factoryImpl = address(new AccountFactory(IEntryPoint(payable(address(entrypoint)))));
-        accountFactory = AccountFactory(
-            address(
-                payable(
-                    new TWProxy(
-                        factoryImpl,
-                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
-                    )
-                )
-            )
-        );
+        accountFactory = new AccountFactory(deployer, IEntryPoint(payable(address(entrypoint))));
         // deploy dummy contract
         numberContract = new Number();
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Test: initial state
-    //////////////////////////////////////////////////////////////*/
-
-    function test_initialState() external {
-        assertEq(accountFactory.entrypoint(), address(entrypoint));
-        assertEq(accountFactory.contractURI(), "https://example.com");
-        assertEq(accountFactory.hasRole(0x00, deployer), true);
-    }
-
-    function test_revert_initializeImplementation() public {
-        vm.expectRevert("Initializable: contract is already initialized");
-        AccountFactory(factoryImpl).initialize(deployer, "https://example.com");
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -299,7 +271,7 @@ contract SimpleAccountTest is BaseTest {
     }
 
     /// @dev Create an account via Entrypoint.
-    function test_state_createAccount_viaEntrypointSingle() public {
+    function test_state_createAccount_viaEntrypoint() public {
         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
