@@ -34,12 +34,7 @@ contract Number {
 }
 
 contract NFTRejector {
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes memory
-    ) public virtual returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes memory) public virtual returns (bytes4) {
         revert("NFTs not accepted");
     }
 }
@@ -72,12 +67,10 @@ contract DynamicAccountBenchmarkTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
-       bytes32 typehashSignerPermissionRequest = keccak256(
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
+        bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
         bytes32 nameHash = keccak256(bytes("Account"));
@@ -102,8 +95,8 @@ contract DynamicAccountBenchmarkTest is BaseTest {
             _req.reqValidityEndTimestamp,
             _req.uid
         );
-        
-         bytes32 structHash = keccak256(bytes.concat(encodedRequestStart, encodedRequestEnd));
+
+        bytes32 structHash = keccak256(bytes.concat(encodedRequestStart, encodedRequestEnd));
         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
@@ -241,7 +234,7 @@ contract DynamicAccountBenchmarkTest is BaseTest {
         extensions[0] = defaultExtension;
 
         // deploy account factory
-        accountFactory = new DynamicAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
+        accountFactory = new DynamicAccountFactory(deployer, extensions);
         // deploy dummy contract
         numberContract = new Number();
     }
@@ -298,10 +291,7 @@ contract DynamicAccountBenchmarkTest is BaseTest {
 
         vm.resumeGasMetering();
         // deploy account factory
-        DynamicAccountFactory factory = new DynamicAccountFactory(
-            IEntryPoint(payable(address(entrypoint))),
-            extensions
-        );
+        DynamicAccountFactory factory = new DynamicAccountFactory(deployer, extensions);
     }
 
     /// @dev Create an account by directly calling the factory.
@@ -382,7 +372,7 @@ contract DynamicAccountBenchmarkTest is BaseTest {
             callData[i] = abi.encodeWithSignature("incrementNum()", i);
         }
 
-        vm.resumeGasMetering();            
+        vm.resumeGasMetering();
         vm.prank(accountAdmin);
         SimpleAccount(payable(account)).executeBatch(targets, values, callData);
     }
@@ -544,13 +534,13 @@ contract DynamicAccountBenchmarkTest is BaseTest {
         uint256 value = 1000;
 
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
-        
+
         vm.prank(accountAdmin);
         // solhint-disable-next-line avoid-low-level-calls
         (bool success, bytes memory ret) = payable(account).call{ value: value }("");
-        
+
         address recipient = address(0x3456);
-        
+
         vm.resumeGasMetering();
         UserOperation[] memory userOp = _setupUserOpExecute(accountAdminPKey, bytes(""), recipient, value, bytes(""));
 
@@ -608,7 +598,7 @@ contract DynamicAccountBenchmarkTest is BaseTest {
 
         // The account can initially receive NFTs.
         erc721.mint(account, 1);
-        
+
         // Make the account reject ERC-721 NFTs going forward.
         IExtension.Extension memory extension;
 
