@@ -62,7 +62,11 @@ contract ERC1155DelayedRevealTest is DSTest, Test {
         bytes memory encryptedBaseURI = base.encryptDecrypt(bytes(newBaseURI), newKey);
         bytes32 provenanceHash = keccak256(abi.encodePacked(newBaseURI, newKey, block.chainid));
         vm.prank(admin);
-        base.lazyMint(lazymintAmount, newPlaceholderURI, abi.encode(encryptedBaseURI, provenanceHash));
+        base.lazyMint(
+            lazymintAmount,
+            newPlaceholderURI,
+            abi.encode(encryptedBaseURI, provenanceHash)
+        );
 
         uint256 nextId = base.nextTokenIdToMint();
 

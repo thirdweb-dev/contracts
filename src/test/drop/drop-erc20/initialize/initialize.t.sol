@@ -42,7 +42,8 @@ contract DropERC20Test_initializer is BaseTest {
         );
 
         newDropContract = DropERC20(getContract("DropERC20"));
-        (address _platformFeeRecipient, uint128 _platformFeeBps) = newDropContract.getPlatformFeeInfo();
+        (address _platformFeeRecipient, uint128 _platformFeeBps) = newDropContract
+            .getPlatformFeeInfo();
         address _saleRecipient = newDropContract.primarySaleRecipient();
 
         for (uint256 i = 0; i < forwarders().length; i++) {

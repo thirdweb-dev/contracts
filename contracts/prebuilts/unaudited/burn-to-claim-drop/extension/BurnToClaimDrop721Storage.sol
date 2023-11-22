@@ -12,7 +12,11 @@ library BurnToClaimDrop721Storage {
         uint256 maxTotalMinted;
     }
 
-    function burnToClaimDrop721Storage() internal pure returns (Data storage burnToClaimDrop721Data) {
+    function burnToClaimDrop721Storage()
+        internal
+        pure
+        returns (Data storage burnToClaimDrop721Data)
+    {
         bytes32 position = BURN_TO_CLAIM_DROP_721_STORAGE_POSITION;
         assembly {
             burnToClaimDrop721Data.slot := position

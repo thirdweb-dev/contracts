@@ -42,7 +42,10 @@ contract SplitTest_ReleaseERC20 is BaseTest {
             address(
                 new TWProxy(
                     implementation,
-                    abi.encodeCall(Split.initialize, (deployer, CONTRACT_URI, forwarders(), payees, shares))
+                    abi.encodeCall(
+                        Split.initialize,
+                        (deployer, CONTRACT_URI, forwarders(), payees, shares)
+                    )
                 )
             )
         );
@@ -72,12 +75,18 @@ contract SplitTest_ReleaseERC20 is BaseTest {
 
     function test_release() public whenPendingPaymentNonZero {
         address _payeeOne = payees[1]; // select a payee from the array
-        uint256 pendingPayment = splitContract.releasable(IERC20Upgradeable(address(erc20)), _payeeOne);
+        uint256 pendingPayment = splitContract.releasable(
+            IERC20Upgradeable(address(erc20)),
+            _payeeOne
+        );
 
         splitContract.release(IERC20Upgradeable(address(erc20)), payable(_payeeOne));
 
         uint256 totalReleased = splitContract.totalReleased(IERC20Upgradeable(address(erc20)));
-        assertEq(splitContract.released(IERC20Upgradeable(address(erc20)), _payeeOne), pendingPayment);
+        assertEq(
+            splitContract.released(IERC20Upgradeable(address(erc20)), _payeeOne),
+            pendingPayment
+        );
         assertEq(totalReleased, pendingPayment);
         assertEq(erc20.balanceOf(_payeeOne), pendingPayment);
 
@@ -87,8 +96,14 @@ contract SplitTest_ReleaseERC20 is BaseTest {
 
         splitContract.release(IERC20Upgradeable(address(erc20)), payable(_payeeThree));
 
-        assertEq(splitContract.released(IERC20Upgradeable(address(erc20)), _payeeThree), pendingPayment);
-        assertEq(splitContract.totalReleased(IERC20Upgradeable(address(erc20))), totalReleased + pendingPayment);
+        assertEq(
+            splitContract.released(IERC20Upgradeable(address(erc20)), _payeeThree),
+            pendingPayment
+        );
+        assertEq(
+            splitContract.totalReleased(IERC20Upgradeable(address(erc20))),
+            totalReleased + pendingPayment
+        );
         assertEq(erc20.balanceOf(_payeeThree), pendingPayment);
 
         assertEq(
@@ -99,7 +114,10 @@ contract SplitTest_ReleaseERC20 is BaseTest {
 
     function test_release_event_PaymentReleased() public whenPendingPaymentNonZero {
         address _payeeOne = payees[1]; // select a payee from the array
-        uint256 pendingPayment = splitContract.releasable(IERC20Upgradeable(address(erc20)), _payeeOne);
+        uint256 pendingPayment = splitContract.releasable(
+            IERC20Upgradeable(address(erc20)),
+            _payeeOne
+        );
 
         vm.expectEmit(true, false, false, true);
         emit ERC20PaymentReleased(IERC20Upgradeable(address(erc20)), _payeeOne, pendingPayment);

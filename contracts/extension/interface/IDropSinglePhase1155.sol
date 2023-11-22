@@ -36,7 +36,11 @@ interface IDropSinglePhase1155 is IClaimCondition {
     );
 
     /// @notice Emitted when the contract's claim conditions are updated.
-    event ClaimConditionUpdated(uint256 indexed tokenId, ClaimCondition condition, bool resetEligibility);
+    event ClaimConditionUpdated(
+        uint256 indexed tokenId,
+        ClaimCondition condition,
+        bool resetEligibility
+    );
 
     /**
      *  @notice Lets an account claim a given quantity of NFTs.

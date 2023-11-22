@@ -44,7 +44,10 @@ contract ForwarderChainlessDomain is EIP712ChainlessDomain {
         return _nonces[from];
     }
 
-    function verify(ForwardRequest calldata req, bytes calldata signature) public view returns (bool) {
+    function verify(
+        ForwardRequest calldata req,
+        bytes calldata signature
+    ) public view returns (bool) {
         address signer = _hashTypedDataV4(
             keccak256(
                 abi.encode(
@@ -62,11 +65,10 @@ contract ForwarderChainlessDomain is EIP712ChainlessDomain {
         return _nonces[req.from] == req.nonce && signer == req.from;
     }
 
-    function execute(ForwardRequest calldata req, bytes calldata signature)
-        public
-        payable
-        returns (bool, bytes memory)
-    {
+    function execute(
+        ForwardRequest calldata req,
+        bytes calldata signature
+    ) public payable returns (bool, bytes memory) {
         // require(req.chainid == block.chainid, "MinimalForwarder: invalid chainId");
         require(verify(req, signature), "MinimalForwarder: signature does not match request");
         _nonces[req.from] = req.nonce + 1;

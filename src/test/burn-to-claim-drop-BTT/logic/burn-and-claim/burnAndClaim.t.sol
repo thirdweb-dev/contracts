@@ -146,7 +146,10 @@ contract BurnToClaimDropERC721Logic_BurnAndClaim is BaseTest, IExtension {
         });
 
         extension_drop.functions = new ExtensionFunction[](10);
-        extension_drop.functions[0] = ExtensionFunction(BurnToClaimDrop721Logic.tokenURI.selector, "tokenURI(uint256)");
+        extension_drop.functions[0] = ExtensionFunction(
+            BurnToClaimDrop721Logic.tokenURI.selector,
+            "tokenURI(uint256)"
+        );
         extension_drop.functions[1] = ExtensionFunction(
             BurnToClaimDrop721Logic.lazyMint.selector,
             "lazyMint(uint256,string,bytes)"
@@ -175,8 +178,14 @@ contract BurnToClaimDropERC721Logic_BurnAndClaim is BaseTest, IExtension {
             BurnToClaimDrop721Logic.nextTokenIdToClaim.selector,
             "nextTokenIdToClaim()"
         );
-        extension_drop.functions[8] = ExtensionFunction(ERC721AUpgradeable.balanceOf.selector, "balanceOf(address)");
-        extension_drop.functions[9] = ExtensionFunction(ERC721AUpgradeable.ownerOf.selector, "ownerOf(uint256)");
+        extension_drop.functions[8] = ExtensionFunction(
+            ERC721AUpgradeable.balanceOf.selector,
+            "balanceOf(address)"
+        );
+        extension_drop.functions[9] = ExtensionFunction(
+            ERC721AUpgradeable.ownerOf.selector,
+            "ownerOf(uint256)"
+        );
 
         extensions[1] = extension_drop;
     }
@@ -206,7 +215,11 @@ contract BurnToClaimDropERC721Logic_BurnAndClaim is BaseTest, IExtension {
         _;
     }
 
-    function test_burnAndClaim_burnToClaimInfoNotSet() public whenEnoughLazyMintedTokens whenNotExceedMaxTotalMinted {
+    function test_burnAndClaim_burnToClaimInfoNotSet()
+        public
+        whenEnoughLazyMintedTokens
+        whenNotExceedMaxTotalMinted
+    {
         // it will fail when verifyClaim tries to check owner/balance on nft contract which is still address(0)
         vm.expectRevert();
         drop.burnAndClaim(0, 1);

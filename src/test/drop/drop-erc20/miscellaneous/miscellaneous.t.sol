@@ -14,15 +14,14 @@ contract HarnessDropERC20Misc is DropERC20 {
         return _msgData();
     }
 
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed) public returns (uint256) {
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) public returns (uint256) {
         return _transferTokensOnClaim(_to, _quantityBeingClaimed);
     }
 
-    function beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) public {
+    function beforeTokenTransfer(address from, address to, uint256 amount) public {
         _beforeTokenTransfer(from, to, amount);
     }
 
@@ -48,7 +47,16 @@ contract DropERC20Test_misc is BaseTest {
 
         bytes memory initializeData = abi.encodeCall(
             DropERC20.initialize,
-            (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), saleRecipient, platformFeeRecipient, platformFeeBps)
+            (
+                deployer,
+                NAME,
+                SYMBOL,
+                CONTRACT_URI,
+                forwarders(),
+                saleRecipient,
+                platformFeeRecipient,
+                platformFeeBps
+            )
         );
 
         dropImp = address(new HarnessDropERC20Misc());

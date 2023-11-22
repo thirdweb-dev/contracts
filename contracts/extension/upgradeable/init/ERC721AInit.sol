@@ -9,7 +9,10 @@ contract ERC721AInit is Initializable {
         __ERC721A_init_unchained(name_, symbol_);
     }
 
-    function __ERC721A_init_unchained(string memory name_, string memory symbol_) internal onlyInitializing {
+    function __ERC721A_init_unchained(
+        string memory name_,
+        string memory symbol_
+    ) internal onlyInitializing {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
 
         data._name = name_;

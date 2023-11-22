@@ -20,11 +20,7 @@ import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 contract MockTransferAuctionTokens is EnglishAuctionsLogic {
     constructor(address _nativeTokenWrapper) EnglishAuctionsLogic(_nativeTokenWrapper) {}
 
-    function transferAuctionTokens(
-        address _from,
-        address _to,
-        Auction memory _auction
-    ) external {
+    function transferAuctionTokens(address _from, address _to, Auction memory _auction) external {
         _transferAuctionTokens(_from, _to, _auction);
     }
 }
@@ -64,7 +60,9 @@ contract TransferAuctionTokensTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+            new MarketplaceV3(
+                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
+            )
         );
 
         vm.prank(marketplaceDeployer);
@@ -73,7 +71,13 @@ contract TransferAuctionTokensTest is BaseTest, IExtension {
                 impl,
                 abi.encodeCall(
                     MarketplaceV3.initialize,
-                    (marketplaceDeployer, "", new address[](0), platformFeeRecipient, uint16(platformFeeBps))
+                    (
+                        marketplaceDeployer,
+                        "",
+                        new address[](0),
+                        platformFeeRecipient,
+                        uint16(platformFeeBps)
+                    )
                 )
             )
         );
@@ -179,23 +183,35 @@ contract TransferAuctionTokensTest is BaseTest, IExtension {
     }
 
     function test_transferAuctionTokens_erc1155() public {
-        IEnglishAuctions.Auction memory auction = EnglishAuctionsLogic(marketplace).getAuction(auctionId_erc1155);
+        IEnglishAuctions.Auction memory auction = EnglishAuctionsLogic(marketplace).getAuction(
+            auctionId_erc1155
+        );
 
         assertEq(erc1155.balanceOf(address(marketplace), auction.tokenId), 1);
         assertEq(erc1155.balanceOf(buyer, auction.tokenId), 0);
 
-        MockTransferAuctionTokens(marketplace).transferAuctionTokens(address(marketplace), buyer, auction);
+        MockTransferAuctionTokens(marketplace).transferAuctionTokens(
+            address(marketplace),
+            buyer,
+            auction
+        );
 
         assertEq(erc1155.balanceOf(address(marketplace), auction.tokenId), 0);
         assertEq(erc1155.balanceOf(buyer, auction.tokenId), 1);
     }
 
     function test_transferAuctionTokens_erc721() public {
-        IEnglishAuctions.Auction memory auction = EnglishAuctionsLogic(marketplace).getAuction(auctionId_erc721);
+        IEnglishAuctions.Auction memory auction = EnglishAuctionsLogic(marketplace).getAuction(
+            auctionId_erc721
+        );
 
         assertEq(erc721.ownerOf(auction.tokenId), address(marketplace));
 
-        MockTransferAuctionTokens(marketplace).transferAuctionTokens(address(marketplace), buyer, auction);
+        MockTransferAuctionTokens(marketplace).transferAuctionTokens(
+            address(marketplace),
+            buyer,
+            auction
+        );
 
         assertEq(erc721.ownerOf(auction.tokenId), buyer);
     }

@@ -84,7 +84,11 @@ contract MinimalFactoryTest is BaseTest {
         vm.prank(address(0x123456));
         address minimalFactory = address(new TWMinimalFactory(implementation, data, salt));
         bytes32 salthash = keccak256(abi.encodePacked(address(0x123456), salt));
-        address deployedProxy = Clones.predictDeterministicAddress(implementation, salthash, minimalFactory);
+        address deployedProxy = Clones.predictDeterministicAddress(
+            implementation,
+            salthash,
+            minimalFactory
+        );
 
         bytes32 contractType = TokenERC20(deployedProxy).contractType();
         assertEq(contractType, bytes32("TokenERC20"));

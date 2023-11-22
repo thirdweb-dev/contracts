@@ -93,7 +93,10 @@ contract Pack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper, address _trustedForwarder) TokenStore(_nativeTokenWrapper) initializer {
+    constructor(
+        address _nativeTokenWrapper,
+        address _trustedForwarder
+    ) TokenStore(_nativeTokenWrapper) initializer {
         forwarder = _trustedForwarder;
     }
 
@@ -183,13 +186,9 @@ contract Pack is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155Receiver, ERC1155Upgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155Receiver, ERC1155Upgradeable, IERC165) returns (bool) {
         return
             super.supportsInterface(interfaceId) ||
             type(IERC2981Upgradeable).interfaceId == interfaceId ||
@@ -209,7 +208,13 @@ contract Pack is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    ) external payable onlyRoleWithSwitch(minterRole) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
+    )
+        external
+        payable
+        onlyRoleWithSwitch(minterRole)
+        nonReentrant
+        returns (uint256 packId, uint256 packTotalSupply)
+    {
         require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
 
         if (!hasRole(assetRole, address(0))) {
@@ -265,7 +270,14 @@ contract Pack is
 
         uint256 amountPerOpen = packInfo[_packId].amountDistributedPerOpen;
 
-        newSupplyAdded = escrowPackContents(_contents, _numOfRewardUnits, "", _packId, amountPerOpen, true);
+        newSupplyAdded = escrowPackContents(
+            _contents,
+            _numOfRewardUnits,
+            "",
+            _packId,
+            amountPerOpen,
+            true
+        );
         packTotalSupply = totalSupply[_packId] + newSupplyAdded;
 
         _mint(_recipient, _packId, newSupplyAdded, "");
@@ -283,7 +295,12 @@ contract Pack is
         PackInfo memory pack = packInfo[_packId];
         require(pack.openStartTimestamp <= block.timestamp, "cant open");
 
-        Token[] memory rewardUnits = getRewardUnits(_packId, _amountToOpen, pack.amountDistributedPerOpen, pack);
+        Token[] memory rewardUnits = getRewardUnits(
+            _packId,
+            _amountToOpen,
+            pack.amountDistributedPerOpen,
+            pack
+        );
 
         _burn(opener, _packId, _amountToOpen);
 
@@ -308,7 +325,10 @@ contract Pack is
         for (uint256 i = 0; i < _contents.length; i += 1) {
             require(_contents[i].totalAmount != 0, "0 amt");
             require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "!R");
-            require(_contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1, "!R");
+            require(
+                _contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1,
+                "!R"
+            );
 
             sumOfRewardUnits += _numOfRewardUnits[i];
 
@@ -386,11 +406,9 @@ contract Pack is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the underlying contents of a pack.
-    function getPackContents(uint256 _packId)
-        public
-        view
-        returns (Token[] memory contents, uint256[] memory perUnitAmounts)
-    {
+    function getPackContents(
+        uint256 _packId
+    ) public view returns (Token[] memory contents, uint256[] memory perUnitAmounts) {
         PackInfo memory pack = packInfo[_packId];
         uint256 total = getTokenCountOfBundle(_packId);
         contents = new Token[](total);
@@ -429,7 +447,9 @@ contract Pack is
     //////////////////////////////////////////////////////////////*/
 
     function generateRandomValue() internal view returns (uint256 random) {
-        random = uint256(keccak256(abi.encodePacked(_msgSender(), blockhash(block.number - 1), block.difficulty)));
+        random = uint256(
+            keccak256(abi.encodePacked(_msgSender(), blockhash(block.number - 1), block.difficulty))
+        );
     }
 
     /**

@@ -108,13 +108,10 @@ contract TokenBoundAccount is
     }
 
     /// @notice See EIP-1271
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
-        public
-        view
-        virtual
-        override
-        returns (bytes4 magicValue)
-    {
+    function isValidSignature(
+        bytes32 _hash,
+        bytes memory _signature
+    ) public view virtual override returns (bytes4 magicValue) {
         address signer = _hash.recover(_signature);
 
         if (owner() == signer) {
@@ -139,17 +136,15 @@ contract TokenBoundAccount is
     function token()
         external
         view
-        returns (
-            uint256 chainId,
-            address tokenContract,
-            uint256 tokenId
-        )
+        returns (uint256 chainId, address tokenContract, uint256 tokenId)
     {
         return ERC6551AccountLib.token();
     }
 
     /// @notice See {IERC165-supportsInterface}.
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Receiver) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155Receiver) returns (bool) {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
@@ -181,7 +176,10 @@ contract TokenBoundAccount is
         uint256[] calldata _value,
         bytes[] calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
-        require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
+        require(
+            _target.length == _calldata.length && _target.length == _value.length,
+            "Account: wrong array lengths."
+        );
         for (uint256 i = 0; i < _target.length; i++) {
             _call(_target[i], _value[i], _calldata[i]);
         }
@@ -212,12 +210,10 @@ contract TokenBoundAccount is
     }
 
     /// @notice Validates the signature of a user operation.
-    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
-        internal
-        virtual
-        override
-        returns (uint256 validationData)
-    {
+    function _validateSignature(
+        UserOperation calldata userOp,
+        bytes32 userOpHash
+    ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         address signer = hash.recover(userOp.signature);
 
@@ -225,12 +221,16 @@ contract TokenBoundAccount is
         return 0;
     }
 
-    function getFunctionSignature(bytes calldata data) internal pure returns (bytes4 functionSelector) {
+    function getFunctionSignature(
+        bytes calldata data
+    ) internal pure returns (bytes4 functionSelector) {
         require(data.length >= 4, "Data too short");
         return bytes4(data[:4]);
     }
 
-    function decodeExecuteCalldata(bytes calldata data) internal pure returns (address _target, uint256 _value) {
+    function decodeExecuteCalldata(
+        bytes calldata data
+    ) internal pure returns (address _target, uint256 _value) {
         require(data.length >= 4 + 32 + 32, "Data too short");
 
         // Decode the address, which is bytes 4 to 35
@@ -240,14 +240,12 @@ contract TokenBoundAccount is
         _value = abi.decode(data[36:68], (uint256));
     }
 
-    function decodeExecuteBatchCalldata(bytes calldata data)
+    function decodeExecuteBatchCalldata(
+        bytes calldata data
+    )
         internal
         pure
-        returns (
-            address[] memory _targets,
-            uint256[] memory _values,
-            bytes[] memory _callData
-        )
+        returns (address[] memory _targets, uint256[] memory _values, bytes[] memory _callData)
     {
         require(data.length >= 4 + 32 + 32 + 32, "Data too short");
 
@@ -264,7 +262,10 @@ contract TokenBoundAccount is
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyAdminOrEntrypoint() {
-        require(msg.sender == address(entryPoint()) || msg.sender == owner(), "Account: not admin or EntryPoint.");
+        require(
+            msg.sender == address(entryPoint()) || msg.sender == owner(),
+            "Account: not admin or EntryPoint."
+        );
         _;
     }
 

@@ -47,12 +47,10 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
      *  @param _req       The payload / mint request.
      *  @param _signature The signature produced by an account signing the mint request.
      */
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        virtual
-        returns (address signer)
-    {
+    function mintWithSignature(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) external payable virtual returns (address signer) {
         require(_req.quantity > 0, "Minting zero tokens.");
 
         // Verify and process payload.
@@ -107,7 +105,9 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
             require(msg.value == 0, "msg value not zero");
         }
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0)
+            ? primarySaleRecipient()
+            : _primarySaleRecipient;
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, _price);
     }
 }

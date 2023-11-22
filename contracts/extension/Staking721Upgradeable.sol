@@ -135,12 +135,9 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
      *  @return _tokensStaked   List of token-ids staked by staker.
      *  @return _rewards        Available reward amount.
      */
-    function getStakeInfo(address _staker)
-        external
-        view
-        virtual
-        returns (uint256[] memory _tokensStaked, uint256 _rewards)
-    {
+    function getStakeInfo(
+        address _staker
+    ) external view virtual returns (uint256[] memory _tokensStaked, uint256 _rewards) {
         uint256[] memory _indexedTokens = indexedTokens;
         bool[] memory _isStakerToken = new bool[](_indexedTokens.length);
         uint256 indexedTokenCount = _indexedTokens.length;
@@ -240,7 +237,8 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
 
     /// @dev Logic for claiming rewards. Override to add custom logic.
     function _claimRewards() internal virtual {
-        uint256 rewards = stakers[_stakeMsgSender()].unclaimedRewards + _calculateRewards(_stakeMsgSender());
+        uint256 rewards = stakers[_stakeMsgSender()].unclaimedRewards +
+            _calculateRewards(_stakeMsgSender());
 
         require(rewards != 0, "No rewards");
 
@@ -298,14 +296,21 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
         for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
             StakingCondition memory condition = stakingConditions[i];
 
-            uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
-            uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
+            uint256 startTime = i != _stakerConditionId
+                ? condition.startTimestamp
+                : staker.timeOfLastUpdate;
+            uint256 endTime = condition.endTimestamp != 0
+                ? condition.endTimestamp
+                : block.timestamp;
 
             (bool noOverflowProduct, uint256 rewardsProduct) = SafeMath.tryMul(
                 (endTime - startTime) * staker.amountStaked,
                 condition.rewardsPerUnitTime
             );
-            (bool noOverflowSum, uint256 rewardsSum) = SafeMath.tryAdd(_rewards, rewardsProduct / condition.timeUnit);
+            (bool noOverflowSum, uint256 rewardsSum) = SafeMath.tryAdd(
+                _rewards,
+                rewardsProduct / condition.timeUnit
+            );
 
             _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
         }
@@ -328,7 +333,11 @@ abstract contract Staking721Upgradeable is ReentrancyGuardUpgradeable, IStaking7
      *  @notice View total rewards available in the staking contract.
      *
      */
-    function getRewardTokenBalance() external view virtual returns (uint256 _rewardsAvailableInContract);
+    function getRewardTokenBalance()
+        external
+        view
+        virtual
+        returns (uint256 _rewardsAvailableInContract);
 
     /**
      *  @dev    Mint/Transfer ERC20 rewards to the staker. Must override.

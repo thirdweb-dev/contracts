@@ -65,7 +65,9 @@ contract EvolvingNFTLogic is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId)
+    function tokenURI(
+        uint256 _tokenId
+    )
         public
         view
         virtual
@@ -104,14 +106,18 @@ contract EvolvingNFTLogic is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
         override(ERC721AUpgradeable, IERC721AUpgradeable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
+        return
+            super.supportsInterface(interfaceId) ||
+            type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     /// @dev The start token ID for the contract.
@@ -149,17 +155,18 @@ contract EvolvingNFTLogic is
         }
         require(validMsgValue, "!V");
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0)
+            ? primarySaleRecipient()
+            : _primarySaleRecipient;
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice);
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId_)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId_) {
         startTokenId_ = _nextTokenId();
         _safeMint(_to, _quantityBeingClaimed);
     }

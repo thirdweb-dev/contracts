@@ -74,7 +74,11 @@ contract VoteERC20 is
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
         __Governor_init(_name);
-        __GovernorSettings_init(_initialVotingDelay, _initialVotingPeriod, _initialProposalThreshold);
+        __GovernorSettings_init(
+            _initialVotingDelay,
+            _initialVotingPeriod,
+            _initialProposalThreshold
+        );
         __GovernorVotes_init(IVotesUpgradeable(_token));
         __GovernorVotesQuorumFraction_init(_initialVoteQuorumFraction);
 
@@ -142,7 +146,9 @@ contract VoteERC20 is
     }
 
     function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
-        return interfaceId == type(IERC721ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
+        return
+            interfaceId == type(IERC721ReceiverUpgradeable).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     function _msgSender()

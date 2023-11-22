@@ -2,11 +2,7 @@
 pragma solidity ^0.8.0;
 
 contract Link {
-    function transferAndCall(
-        address,
-        uint256,
-        bytes calldata
-    ) external returns (bool) {}
+    function transferAndCall(address, uint256, bytes calldata) external returns (bool) {}
 }
 
 contract VRFV2Wrapper {

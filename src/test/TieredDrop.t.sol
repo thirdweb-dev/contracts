@@ -59,7 +59,16 @@ contract TieredDropTest is BaseTest {
                     tieredDropImpl,
                     abi.encodeCall(
                         TieredDrop.initialize,
-                        (dropAdmin, "Tiered Drop", "TD", "ipfs://", new address[](0), dropAdmin, dropAdmin, 0)
+                        (
+                            dropAdmin,
+                            "Tiered Drop",
+                            "TD",
+                            "ipfs://",
+                            new address[](0),
+                            dropAdmin,
+                            dropAdmin,
+                            0
+                        )
                     )
                 )
             )
@@ -116,7 +125,9 @@ contract TieredDropTest is BaseTest {
         );
 
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
         claimSignature = abi.encodePacked(r, s, v);
@@ -295,10 +306,16 @@ contract TieredDropTest is BaseTest {
 
         for (uint256 i = 0; i < claimQuantity; i += 1) {
             if (i < 20) {
-                assertEq(tieredDrop.tokenURI(i), string(abi.encodePacked(baseURITier2, tier2Id.toString())));
+                assertEq(
+                    tieredDrop.tokenURI(i),
+                    string(abi.encodePacked(baseURITier2, tier2Id.toString()))
+                );
                 tier2Id += 1;
             } else {
-                assertEq(tieredDrop.tokenURI(i), string(abi.encodePacked(baseURITier1, tier1Id.toString())));
+                assertEq(
+                    tieredDrop.tokenURI(i),
+                    string(abi.encodePacked(baseURITier1, tier1Id.toString()))
+                );
                 tier1Id += 1;
             }
         }
@@ -454,7 +471,10 @@ contract TieredDropTest is BaseTest {
     //                                            //
     ////////////////////////////////////////////////
 
-    function _getProvenanceHash(string memory _revealURI, bytes memory _key) private view returns (bytes32) {
+    function _getProvenanceHash(
+        string memory _revealURI,
+        bytes memory _key
+    ) private view returns (bytes32) {
         return keccak256(abi.encodePacked(_revealURI, _key, block.chainid));
     }
 
@@ -522,10 +542,16 @@ contract TieredDropTest is BaseTest {
         for (uint256 i = 0; i < claimQuantity; i += 1) {
             // console.log(i);
             if (i < 20) {
-                assertEq(tieredDrop.tokenURI(i), string(abi.encodePacked(placeholderURITier2, uint256(0).toString())));
+                assertEq(
+                    tieredDrop.tokenURI(i),
+                    string(abi.encodePacked(placeholderURITier2, uint256(0).toString()))
+                );
                 tier2Id += 1;
             } else {
-                assertEq(tieredDrop.tokenURI(i), string(abi.encodePacked(placeholderURITier1, uint256(0).toString())));
+                assertEq(
+                    tieredDrop.tokenURI(i),
+                    string(abi.encodePacked(placeholderURITier1, uint256(0).toString()))
+                );
                 tier1Id += 1;
             }
         }
@@ -548,7 +574,9 @@ contract TieredDropTest is BaseTest {
 
             if (i < 20) {
                 for (uint256 j = tier2IdStart; j < tier2IdEnd; j += 1) {
-                    bytes32 expectedURIHash = keccak256(abi.encodePacked(baseURITier2, j.toString()));
+                    bytes32 expectedURIHash = keccak256(
+                        abi.encodePacked(baseURITier2, j.toString())
+                    );
 
                     if (tokenURIHash == expectedURIHash) {
                         detected = true;
@@ -560,7 +588,9 @@ contract TieredDropTest is BaseTest {
                 }
             } else {
                 for (uint256 k = tier1IdStart; k < tier1IdEnd; k += 1) {
-                    bytes32 expectedURIHash = keccak256(abi.encodePacked(baseURITier1, k.toString()));
+                    bytes32 expectedURIHash = keccak256(
+                        abi.encodePacked(baseURITier1, k.toString())
+                    );
 
                     if (tokenURIHash == expectedURIHash) {
                         detected = true;
@@ -991,7 +1021,16 @@ contract TieredDropBechmarkTest is BaseTest {
                     tieredDropImpl,
                     abi.encodeCall(
                         TieredDrop.initialize,
-                        (dropAdmin, "Tiered Drop", "TD", "ipfs://", new address[](0), dropAdmin, dropAdmin, 0)
+                        (
+                            dropAdmin,
+                            "Tiered Drop",
+                            "TD",
+                            "ipfs://",
+                            new address[](0),
+                            dropAdmin,
+                            dropAdmin,
+                            0
+                        )
                     )
                 )
             )
@@ -1079,7 +1118,9 @@ contract TieredDropBechmarkTest is BaseTest {
         );
 
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
         claimSignature = abi.encodePacked(r, s, v);

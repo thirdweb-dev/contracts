@@ -8,7 +8,11 @@ import "./interface/ISignatureMintERC721.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
-abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgradeable, ISignatureMintERC721 {
+abstract contract SignatureMintERC721Upgradeable is
+    Initializable,
+    EIP712Upgradeable,
+    ISignatureMintERC721
+{
     using ECDSAUpgradeable for bytes32;
 
     bytes32 private constant TYPEHASH =
@@ -26,12 +30,10 @@ abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgrade
     function __SignatureMintERC721_init_unchained() internal onlyInitializing {}
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(MintRequest calldata _req, bytes calldata _signature)
-        public
-        view
-        override
-        returns (bool success, address signer)
-    {
+    function verify(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) public view override returns (bool success, address signer) {
         signer = _recoverAddress(_req, _signature);
         success = !minted[_req.uid] && _isAuthorizedSigner(signer);
     }
@@ -40,7 +42,10 @@ abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgrade
     function _isAuthorizedSigner(address _signer) internal view virtual returns (bool);
 
     /// @dev Verifies a mint request and marks the request as minted.
-    function _processRequest(MintRequest calldata _req, bytes calldata _signature) internal returns (address signer) {
+    function _processRequest(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) internal returns (address signer) {
         bool success;
         (success, signer) = verify(_req, _signature);
 
@@ -48,7 +53,10 @@ abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgrade
             revert("Invalid req");
         }
 
-        if (_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) {
+        if (
+            _req.validityStartTimestamp > block.timestamp ||
+            block.timestamp > _req.validityEndTimestamp
+        ) {
             revert("Req expired");
         }
         require(_req.to != address(0), "recipient undefined");
@@ -58,7 +66,10 @@ abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgrade
     }
 
     /// @dev Returns the address of the signer of the mint request.
-    function _recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
+    function _recoverAddress(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) internal view returns (address) {
         return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
     }
 

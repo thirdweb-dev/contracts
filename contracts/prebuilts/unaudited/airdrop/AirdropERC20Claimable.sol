@@ -175,7 +175,10 @@ contract AirdropERC20Claimable is
         supplyClaimedByWallet[_msgSender()] += _quantityBeingClaimed;
         availableAmount -= _quantityBeingClaimed;
 
-        require(IERC20(airdropTokenAddress).transferFrom(tokenOwner, _to, _quantityBeingClaimed), "transfer failed");
+        require(
+            IERC20(airdropTokenAddress).transferFrom(tokenOwner, _to, _quantityBeingClaimed),
+            "transfer failed"
+        );
     }
 
     /*///////////////////////////////////////////////////////////////

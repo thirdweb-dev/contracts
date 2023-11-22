@@ -90,7 +90,9 @@ contract ERC721Drop is
      * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721A, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
             interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
@@ -138,7 +140,10 @@ contract ERC721Drop is
         bytes calldata _data
     ) public virtual override returns (uint256 batchId) {
         if (_data.length > 0) {
-            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(
+                _data,
+                (bytes, bytes32)
+            );
             if (encryptedURI.length != 0 && provenanceHash != "") {
                 _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
             }
@@ -167,7 +172,10 @@ contract ERC721Drop is
      *  @param _index The ID for the batch of delayed-reveal NFTs to reveal.
      *  @param _key   The key with which the base URI for the relevant batch of NFTs was encrypted.
      */
-    function reveal(uint256 _index, bytes calldata _key) public virtual override returns (string memory revealedURI) {
+    function reveal(
+        uint256 _index,
+        bytes calldata _key
+    ) public virtual override returns (string memory revealedURI) {
         require(_canReveal(), "Not authorized");
 
         uint256 batchId = getBatchIdAtIndex(_index);
@@ -244,7 +252,9 @@ contract ERC721Drop is
         }
         require(validMsgValue, "Invalid msg value");
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0)
+            ? primarySaleRecipient()
+            : _primarySaleRecipient;
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 
@@ -254,12 +264,10 @@ contract ERC721Drop is
      * @param _to                    The address to which the NFTs are being transferred.
      * @param _quantityBeingClaimed  The quantity of NFTs being claimed.
      */
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        override
-        returns (uint256 startTokenId)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal virtual override returns (uint256 startTokenId) {
         startTokenId = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
     }

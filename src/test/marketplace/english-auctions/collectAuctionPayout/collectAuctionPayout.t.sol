@@ -64,7 +64,9 @@ contract CollectAuctionPayoutTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+            new MarketplaceV3(
+                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
+            )
         );
 
         vm.prank(marketplaceDeployer);
@@ -231,7 +233,11 @@ contract CollectAuctionPayoutTest is BaseTest, IExtension {
         _;
     }
 
-    function test_collectAuctionPayout_whenNoWinningBid() public whenAuctionNotCancelled whenAuctionHasEnded {
+    function test_collectAuctionPayout_whenNoWinningBid()
+        public
+        whenAuctionNotCancelled
+        whenAuctionHasEnded
+    {
         vm.warp(auctionParams.endTimestamp + 1);
 
         vm.prank(seller);
@@ -284,7 +290,14 @@ contract CollectAuctionPayoutTest is BaseTest, IExtension {
 
         vm.prank(seller);
         vm.expectEmit(true, true, true, true);
-        emit AuctionClosed(auctionId, address(erc1155), seller, auctionParams.tokenId, seller, buyer);
+        emit AuctionClosed(
+            auctionId,
+            address(erc1155),
+            seller,
+            auctionParams.tokenId,
+            seller,
+            buyer
+        );
         EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
 
         assertEq(

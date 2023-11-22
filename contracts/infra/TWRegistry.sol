@@ -34,7 +34,10 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
 
     // slither-disable-next-line similar-names
     function add(address _deployer, address _deployment) external {
-        require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
+        require(
+            hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
+            "not operator or deployer."
+        );
 
         bool added = deployments[_deployer].add(_deployment);
         require(added, "failed to add");
@@ -44,7 +47,10 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
 
     // slither-disable-next-line similar-names
     function remove(address _deployer, address _deployment) external {
-        require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
+        require(
+            hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
+            "not operator or deployer."
+        );
 
         bool removed = deployments[_deployer].remove(_deployment);
         require(removed, "failed to remove");
@@ -60,11 +66,23 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
         return deployments[_deployer].length();
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (address sender)
+    {
         return ERC2771Context._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
         return ERC2771Context._msgData();
     }
 }

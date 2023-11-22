@@ -33,7 +33,14 @@ import "../lib/CurrencyTransferLib.sol";
  *
  */
 
-contract ERC20DropVote is ContractMetadata, Multicall, Ownable, ERC20Votes, PrimarySale, DropSinglePhase {
+contract ERC20DropVote is
+    ContractMetadata,
+    Multicall,
+    Ownable,
+    ERC20Votes,
+    PrimarySale,
+    DropSinglePhase
+{
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -90,17 +97,17 @@ contract ERC20DropVote is ContractMetadata, Multicall, Ownable, ERC20Votes, Prim
         }
         require(validMsgValue, "Invalid msg value");
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0)
+            ? primarySaleRecipient()
+            : _primarySaleRecipient;
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 
     /// @dev Transfers the tokens being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        override
-        returns (uint256)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal virtual override returns (uint256) {
         _mint(_to, _quantityBeingClaimed);
         return 0;
     }

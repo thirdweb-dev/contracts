@@ -65,7 +65,9 @@ contract DropERC721Test_misc is BaseTest {
         misc_revealedURI = "ipfs://revealed";
         misc_key = "key";
         misc_encryptedURI = drop.encryptDecrypt(bytes(misc_revealedURI), misc_key);
-        misc_provenanceHash = keccak256(abi.encodePacked(misc_revealedURI, misc_key, block.chainid));
+        misc_provenanceHash = keccak256(
+            abi.encodePacked(misc_revealedURI, misc_key, block.chainid)
+        );
         misc_data = abi.encode(misc_encryptedURI, misc_provenanceHash);
         vm.prank(deployer);
         drop.lazyMint(misc_amount, misc_baseURI, misc_data);
@@ -145,7 +147,12 @@ contract DropERC721Test_misc is BaseTest {
         assertEq(nextTokenIdToClaim, 10);
     }
 
-    function test_burn_revert_callerNotApproved() public lazyMintEncrypted tokenClaimed callerNotApproved {
+    function test_burn_revert_callerNotApproved()
+        public
+        lazyMintEncrypted
+        tokenClaimed
+        callerNotApproved
+    {
         vm.expectRevert(IERC721AUpgradeable.TransferCallerNotOwnerNorApproved.selector);
         drop.burn(0);
     }
@@ -158,7 +165,12 @@ contract DropERC721Test_misc is BaseTest {
         drop.ownerOf(0);
     }
 
-    function test_burn_revert_callerOwnerOfToken() public lazyMintEncrypted tokenClaimed callerOwner {
+    function test_burn_revert_callerOwnerOfToken()
+        public
+        lazyMintEncrypted
+        tokenClaimed
+        callerOwner
+    {
         drop.burn(0);
         uint256 totalSupply = drop.totalSupply();
         assertEq(totalSupply, 9);

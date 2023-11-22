@@ -14,7 +14,12 @@ contract SignatureDropBenchmarkTest is BaseTest {
     using StringsUpgradeable for uint256;
     using StringsUpgradeable for address;
 
-    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
+    event TokensLazyMinted(
+        uint256 indexed startTokenId,
+        uint256 endTokenId,
+        string baseURI,
+        bytes encryptedBaseURI
+    );
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
     event TokensMintedWithSignature(
         address indexed signer,
@@ -51,7 +56,9 @@ contract SignatureDropBenchmarkTest is BaseTest {
         typehashEip712 = keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
-        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(sigdrop)));
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(sigdrop))
+        );
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -133,7 +140,11 @@ contract SignatureDropBenchmarkTest is BaseTest {
         bytes32 provenanceHash = keccak256(abi.encodePacked(secretURI, key, block.chainid));
 
         vm.prank(deployerSigner);
-        sigdrop.lazyMint(amountToLazyMint, placeholderURI, abi.encode(encryptedURI, provenanceHash));
+        sigdrop.lazyMint(
+            amountToLazyMint,
+            placeholderURI,
+            abi.encode(encryptedURI, provenanceHash)
+        );
 
         vm.prank(deployerSigner);
         vm.resumeGasMetering();

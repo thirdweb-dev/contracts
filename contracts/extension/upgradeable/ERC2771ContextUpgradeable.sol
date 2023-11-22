@@ -34,7 +34,9 @@ abstract contract ERC2771ContextUpgradeable is Initializable {
         __ERC2771Context_init_unchained(trustedForwarder);
     }
 
-    function __ERC2771Context_init_unchained(address[] memory trustedForwarder) internal onlyInitializing {
+    function __ERC2771Context_init_unchained(
+        address[] memory trustedForwarder
+    ) internal onlyInitializing {
         for (uint256 i = 0; i < trustedForwarder.length; i++) {
             _erc2771ContextStorage().trustedForwarder[trustedForwarder[i]] = true;
         }
@@ -64,7 +66,11 @@ abstract contract ERC2771ContextUpgradeable is Initializable {
     }
 
     /// @dev Returns the ERC2771ContextStorage storage.
-    function _erc2771ContextStorage() internal pure returns (ERC2771ContextStorage.Data storage data) {
+    function _erc2771ContextStorage()
+        internal
+        pure
+        returns (ERC2771ContextStorage.Data storage data)
+    {
         data = ERC2771ContextStorage.data();
     }
 

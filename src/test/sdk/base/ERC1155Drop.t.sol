@@ -62,9 +62,8 @@ contract ERC1155DropTest is DSTest, Test {
         vm.prank(admin);
         base.setClaimConditions(targetTokenId, condition, true);
 
-        (, uint256 maxClaimable, , uint256 quantityLimitPerWallet, , , address currency, ) = base.claimCondition(
-            targetTokenId
-        );
+        (, uint256 maxClaimable, , uint256 quantityLimitPerWallet, , , address currency, ) = base
+            .claimCondition(targetTokenId);
 
         assertEq(maxClaimable, 100);
         assertEq(quantityLimitPerWallet, 5);
@@ -84,7 +83,15 @@ contract ERC1155DropTest is DSTest, Test {
         base.setClaimConditions(targetTokenId, condition, false);
 
         vm.prank(nftHolder, nftHolder);
-        base.claim(nftHolder, targetTokenId, 1, condition.currency, condition.pricePerToken, allowlistProof, "");
+        base.claim(
+            nftHolder,
+            targetTokenId,
+            1,
+            condition.currency,
+            condition.pricePerToken,
+            allowlistProof,
+            ""
+        );
 
         (, , uint256 supplyClaimedBefore, , , , , ) = base.claimCondition(targetTokenId);
         assertEq(supplyClaimedBefore, 1);

@@ -83,7 +83,13 @@ contract StakingExtensionTest is DSTest, Test {
         erc721.mint(stakerTwo, 5); // mint token id 5 to 9
 
         vm.prank(deployer);
-        ext = new MyStakingContract("Test Staking Contract", "TSC", address(erc721), timeUnit, rewardsPerUnitTime);
+        ext = new MyStakingContract(
+            "Test Staking Contract",
+            "TSC",
+            address(erc721),
+            timeUnit,
+            rewardsPerUnitTime
+        );
 
         // set approvals
         vm.prank(stakerOne);
@@ -133,7 +139,8 @@ contract StakingExtensionTest is DSTest, Test {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) * rewardsPerUnitTime) / timeUnit)
+            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) *
+                rewardsPerUnitTime) / timeUnit)
         );
 
         //================ second staker ======================
@@ -171,7 +178,8 @@ contract StakingExtensionTest is DSTest, Test {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) * rewardsPerUnitTime) / timeUnit)
+            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) *
+                rewardsPerUnitTime) / timeUnit)
         );
 
         // check available rewards for stakerTwo
@@ -179,7 +187,8 @@ contract StakingExtensionTest is DSTest, Test {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate_two) * _tokenIdsTwo.length) * rewardsPerUnitTime) / timeUnit)
+            ((((block.timestamp - timeOfLastUpdate_two) * _tokenIdsTwo.length) *
+                rewardsPerUnitTime) / timeUnit)
         );
     }
 
@@ -229,7 +238,8 @@ contract StakingExtensionTest is DSTest, Test {
         // check reward balances
         assertEq(
             ext.balanceOf(stakerOne),
-            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) * rewardsPerUnitTime) / timeUnit)
+            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) *
+                rewardsPerUnitTime) / timeUnit)
         );
 
         // check available rewards after claiming
@@ -311,7 +321,8 @@ contract StakingExtensionTest is DSTest, Test {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate) * _tokenIdsOne.length) * newRewardsPerUnitTime) / timeUnit)
+            ((((block.timestamp - timeOfLastUpdate) * _tokenIdsOne.length) *
+                newRewardsPerUnitTime) / timeUnit)
         );
 
         //====== check rewards after some time
@@ -322,7 +333,8 @@ contract StakingExtensionTest is DSTest, Test {
 
         assertEq(
             _newRewards,
-            _availableRewards + ((((block.timestamp - newTimeOfLastUpdate) * _tokenIdsOne.length) * 200) / timeUnit)
+            _availableRewards +
+                ((((block.timestamp - newTimeOfLastUpdate) * _tokenIdsOne.length) * 200) / timeUnit)
         );
     }
 
@@ -367,7 +379,8 @@ contract StakingExtensionTest is DSTest, Test {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate) * _tokenIdsOne.length) * rewardsPerUnitTime) / newTimeUnit)
+            ((((block.timestamp - timeOfLastUpdate) * _tokenIdsOne.length) * rewardsPerUnitTime) /
+                newTimeUnit)
         );
 
         //====== check rewards after some time
@@ -379,7 +392,8 @@ contract StakingExtensionTest is DSTest, Test {
         assertEq(
             _newRewards,
             _availableRewards +
-                ((((block.timestamp - newTimeOfLastUpdate) * _tokenIdsOne.length) * rewardsPerUnitTime) / (1 seconds))
+                ((((block.timestamp - newTimeOfLastUpdate) * _tokenIdsOne.length) *
+                    rewardsPerUnitTime) / (1 seconds))
         );
     }
 
@@ -442,7 +456,10 @@ contract StakingExtensionTest is DSTest, Test {
 
         // check available rewards after withdraw
         (, _availableRewards) = ext.getStakeInfo(stakerOne);
-        assertEq(_availableRewards, ((((block.timestamp - timeOfLastUpdate) * 3) * rewardsPerUnitTime) / timeUnit));
+        assertEq(
+            _availableRewards,
+            ((((block.timestamp - timeOfLastUpdate) * 3) * rewardsPerUnitTime) / timeUnit)
+        );
 
         uint256 timeOfLastUpdateLatest = block.timestamp;
 
@@ -454,8 +471,10 @@ contract StakingExtensionTest is DSTest, Test {
 
         assertEq(
             _availableRewards,
-            (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 3)) * rewardsPerUnitTime) / timeUnit) +
-                (((((block.timestamp - timeOfLastUpdateLatest) * 1)) * rewardsPerUnitTime) / timeUnit)
+            (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 3)) * rewardsPerUnitTime) /
+                timeUnit) +
+                (((((block.timestamp - timeOfLastUpdateLatest) * 1)) * rewardsPerUnitTime) /
+                    timeUnit)
         );
     }
 

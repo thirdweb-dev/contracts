@@ -6,7 +6,11 @@ interface IContractDeployer {
     event Paused(bool isPaused);
 
     /// @dev Emitted when a contract is deployed.
-    event ContractDeployed(address indexed deployer, address indexed publisher, address deployedContract);
+    event ContractDeployed(
+        address indexed deployer,
+        address indexed publisher,
+        address deployedContract
+    );
 
     /**
      *  @notice Deploys an instance of a published contract directly.

@@ -15,11 +15,10 @@ contract MyDrop is Drop {
         uint256 _pricePerToken
     ) internal override {}
 
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId)
-    {}
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId) {}
 
     function _canSetClaimConditions() internal view override returns (bool) {
         return true;
@@ -99,7 +98,11 @@ contract Drop_GetActiveClaimConditionId is ExtensionUtilTest {
         _;
     }
 
-    function test_getActiveClaimConditionId_activeConditions() public whenConditionsAreSet whenActiveConditions {
+    function test_getActiveClaimConditionId_activeConditions()
+        public
+        whenConditionsAreSet
+        whenActiveConditions
+    {
         vm.warp(claimConditions[0].startTimestamp);
 
         uint256 id = ext.getActiveClaimConditionId();

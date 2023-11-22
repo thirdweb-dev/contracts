@@ -12,7 +12,12 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract TokenERC1155Test is BaseTest {
     using StringsUpgradeable for uint256;
 
-    event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri, uint256 quantityMinted);
+    event TokensMinted(
+        address indexed mintedTo,
+        uint256 indexed tokenIdMinted,
+        string uri,
+        uint256 quantityMinted
+    );
     event TokensMintedWithSignature(
         address indexed signer,
         address indexed mintedTo,
@@ -21,7 +26,11 @@ contract TokenERC1155Test is BaseTest {
     );
     event OwnerUpdated(address indexed prevOwner, address indexed newOwner);
     event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);
-    event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps);
+    event RoyaltyForToken(
+        uint256 indexed tokenId,
+        address indexed royaltyRecipient,
+        uint256 royaltyBps
+    );
     event PrimarySaleRecipientUpdated(address indexed recipient);
     event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
 
@@ -83,11 +92,10 @@ contract TokenERC1155Test is BaseTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(TokenERC1155.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        TokenERC1155.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = bytes.concat(
             abi.encode(
                 typehashMintRequest,
@@ -108,7 +116,9 @@ contract TokenERC1155Test is BaseTest {
             )
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -150,10 +160,14 @@ contract TokenERC1155Test is BaseTest {
             )
         );
         bytes32 structHashOne = keccak256(encodedRequestOne);
-        bytes32 typedDataHashOne = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHashOne));
+        bytes32 typedDataHashOne = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHashOne)
+        );
 
         bytes32 structHashTwo = keccak256(encodedRequestTwo);
-        bytes32 typedDataHashTwo = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHashTwo));
+        bytes32 typedDataHashTwo = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHashTwo)
+        );
 
         assertEq(structHashOne, structHashTwo);
         assertEq(typedDataHashOne, typedDataHashTwo);
@@ -181,7 +195,10 @@ contract TokenERC1155Test is BaseTest {
         // check state after minting
         assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
         assertEq(tokenContract.uri(nextTokenId), string(_mintrequest.uri));
-        assertEq(tokenContract.balanceOf(recipient, nextTokenId), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            tokenContract.balanceOf(recipient, nextTokenId),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
     }
 
     function test_state_mintWithSignature_ExistingTokenId() public {
@@ -208,7 +225,10 @@ contract TokenERC1155Test is BaseTest {
         // check state after minting
         assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
         assertEq(tokenContract.uri(nextTokenId), string(_mintrequest.uri));
-        assertEq(tokenContract.balanceOf(recipient, nextTokenId), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            tokenContract.balanceOf(recipient, nextTokenId),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
     }
 
     function test_revert_mintWithSignature_InvalidTokenId() public {
@@ -250,17 +270,23 @@ contract TokenERC1155Test is BaseTest {
         // check state after minting
         assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
         assertEq(tokenContract.uri(nextTokenId), string(_mintrequest.uri));
-        assertEq(tokenContract.balanceOf(recipient, nextTokenId), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            tokenContract.balanceOf(recipient, nextTokenId),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
 
         // check erc20 balances after minting
-        uint256 _platformFees = ((_mintrequest.pricePerToken * _mintrequest.quantity) * platformFeeBps) / MAX_BPS;
+        uint256 _platformFees = ((_mintrequest.pricePerToken * _mintrequest.quantity) *
+            platformFeeBps) / MAX_BPS;
         assertEq(
             erc20.balanceOf(recipient),
             erc20BalanceOfRecipient - (_mintrequest.pricePerToken * _mintrequest.quantity)
         );
         assertEq(
             erc20.balanceOf(address(saleRecipient)),
-            erc20BalanceOfSeller + (_mintrequest.pricePerToken * _mintrequest.quantity) - _platformFees
+            erc20BalanceOfSeller +
+                (_mintrequest.pricePerToken * _mintrequest.quantity) -
+                _platformFees
         );
     }
 
@@ -281,25 +307,30 @@ contract TokenERC1155Test is BaseTest {
 
         // mint with signature
         vm.prank(recipient);
-        tokenContract.mintWithSignature{ value: _mintrequest.pricePerToken * _mintrequest.quantity }(
-            _mintrequest,
-            _signature
-        );
+        tokenContract.mintWithSignature{
+            value: _mintrequest.pricePerToken * _mintrequest.quantity
+        }(_mintrequest, _signature);
 
         // check state after minting
         assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
         assertEq(tokenContract.uri(nextTokenId), string(_mintrequest.uri));
-        assertEq(tokenContract.balanceOf(recipient, nextTokenId), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            tokenContract.balanceOf(recipient, nextTokenId),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
 
         // check balances after minting
-        uint256 _platformFees = ((_mintrequest.pricePerToken * _mintrequest.quantity) * platformFeeBps) / MAX_BPS;
+        uint256 _platformFees = ((_mintrequest.pricePerToken * _mintrequest.quantity) *
+            platformFeeBps) / MAX_BPS;
         assertEq(
             address(recipient).balance,
             etherBalanceOfRecipient - (_mintrequest.pricePerToken * _mintrequest.quantity)
         );
         assertEq(
             address(saleRecipient).balance,
-            etherBalanceOfSeller + (_mintrequest.pricePerToken * _mintrequest.quantity) - _platformFees
+            etherBalanceOfSeller +
+                (_mintrequest.pricePerToken * _mintrequest.quantity) -
+                _platformFees
         );
     }
 
@@ -399,7 +430,10 @@ contract TokenERC1155Test is BaseTest {
 
         assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
         assertEq(tokenContract.uri(nextTokenId), _tokenURI);
-        assertEq(tokenContract.balanceOf(recipient, nextTokenId), currentBalanceOfRecipient + _amount);
+        assertEq(
+            tokenContract.balanceOf(recipient, nextTokenId),
+            currentBalanceOfRecipient + _amount
+        );
     }
 
     function test_revert_mintTo_NotAuthorized() public {
@@ -537,7 +571,8 @@ contract TokenERC1155Test is BaseTest {
         vm.prank(deployerSigner);
         tokenContract.setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
 
-        (address newRoyaltyRecipient, uint256 newRoyaltyBps) = tokenContract.getDefaultRoyaltyInfo();
+        (address newRoyaltyRecipient, uint256 newRoyaltyBps) = tokenContract
+            .getDefaultRoyaltyInfo();
         assertEq(newRoyaltyRecipient, _royaltyRecipient);
         assertEq(newRoyaltyBps, _royaltyBps);
 
@@ -712,7 +747,10 @@ contract TokenERC1155Test is BaseTest {
         // check state after minting
         assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
         assertEq(tokenContract.uri(nextTokenId), string(_mintrequest.uri));
-        assertEq(tokenContract.balanceOf(recipient, nextTokenId), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            tokenContract.balanceOf(recipient, nextTokenId),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
 
         // check erc20 balances after minting
         assertEq(
@@ -721,7 +759,9 @@ contract TokenERC1155Test is BaseTest {
         );
         assertEq(
             erc20.balanceOf(address(saleRecipient)),
-            erc20BalanceOfSeller + (_mintrequest.pricePerToken * _mintrequest.quantity) - flatPlatformFee
+            erc20BalanceOfSeller +
+                (_mintrequest.pricePerToken * _mintrequest.quantity) -
+                flatPlatformFee
         );
     }
 
@@ -748,15 +788,17 @@ contract TokenERC1155Test is BaseTest {
 
         // mint with signature
         vm.prank(recipient);
-        tokenContract.mintWithSignature{ value: _mintrequest.pricePerToken * _mintrequest.quantity }(
-            _mintrequest,
-            _signature
-        );
+        tokenContract.mintWithSignature{
+            value: _mintrequest.pricePerToken * _mintrequest.quantity
+        }(_mintrequest, _signature);
 
         // check state after minting
         assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);
         assertEq(tokenContract.uri(nextTokenId), string(_mintrequest.uri));
-        assertEq(tokenContract.balanceOf(recipient, nextTokenId), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            tokenContract.balanceOf(recipient, nextTokenId),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
 
         // check balances after minting
         assertEq(
@@ -765,7 +807,9 @@ contract TokenERC1155Test is BaseTest {
         );
         assertEq(
             address(saleRecipient).balance,
-            etherBalanceOfSeller + (_mintrequest.pricePerToken * _mintrequest.quantity) - flatPlatformFee
+            etherBalanceOfSeller +
+                (_mintrequest.pricePerToken * _mintrequest.quantity) -
+                flatPlatformFee
         );
     }
 

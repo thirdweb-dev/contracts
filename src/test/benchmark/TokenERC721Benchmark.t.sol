@@ -21,7 +21,11 @@ contract TokenERC721BenchmarkTest is BaseTest {
     );
     event OwnerUpdated(address indexed prevOwner, address indexed newOwner);
     event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);
-    event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps);
+    event RoyaltyForToken(
+        uint256 indexed tokenId,
+        address indexed royaltyRecipient,
+        uint256 royaltyBps
+    );
     event PrimarySaleRecipientUpdated(address indexed recipient);
     event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
 
@@ -81,11 +85,10 @@ contract TokenERC721BenchmarkTest is BaseTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(TokenERC721.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        TokenERC721.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,
@@ -100,7 +103,9 @@ contract TokenERC721BenchmarkTest is BaseTest {
             _request.uid
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);

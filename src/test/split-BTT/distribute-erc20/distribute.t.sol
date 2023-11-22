@@ -42,7 +42,10 @@ contract SplitTest_DistributeERC20 is BaseTest {
             address(
                 new TWProxy(
                     implementation,
-                    abi.encodeCall(Split.initialize, (deployer, CONTRACT_URI, forwarders(), payees, shares))
+                    abi.encodeCall(
+                        Split.initialize,
+                        (deployer, CONTRACT_URI, forwarders(), payees, shares)
+                    )
                 )
             )
         );
@@ -58,7 +61,10 @@ contract SplitTest_DistributeERC20 is BaseTest {
 
         // get pending payments
         for (uint256 i = 0; i < 5; i++) {
-            pendingAmounts[i] = splitContract.releasable(IERC20Upgradeable(address(erc20)), payees[i]);
+            pendingAmounts[i] = splitContract.releasable(
+                IERC20Upgradeable(address(erc20)),
+                payees[i]
+            );
         }
 
         // distribute
@@ -68,7 +74,10 @@ contract SplitTest_DistributeERC20 is BaseTest {
         for (uint256 i = 0; i < 5; i++) {
             totalPaid += pendingAmounts[i];
 
-            assertEq(splitContract.released(IERC20Upgradeable(address(erc20)), payees[i]), pendingAmounts[i]);
+            assertEq(
+                splitContract.released(IERC20Upgradeable(address(erc20)), payees[i]),
+                pendingAmounts[i]
+            );
             assertEq(erc20.balanceOf(payees[i]), pendingAmounts[i]);
         }
         assertEq(splitContract.totalReleased(IERC20Upgradeable(address(erc20))), totalPaid);

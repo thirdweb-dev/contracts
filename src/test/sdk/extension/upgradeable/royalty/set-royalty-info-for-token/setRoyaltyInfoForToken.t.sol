@@ -32,7 +32,11 @@ contract UpgradeableRoyalty_SetRoyaltyInfoForToken is ExtensionUtilTest {
     uint256 internal royaltyBpsForToken;
     uint256 internal tokenId;
 
-    event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps);
+    event RoyaltyForToken(
+        uint256 indexed tokenId,
+        address indexed royaltyRecipient,
+        uint256 royaltyBps
+    );
 
     function setUp() public override {
         super.setUp();
@@ -83,7 +87,8 @@ contract UpgradeableRoyalty_SetRoyaltyInfoForToken is ExtensionUtilTest {
         assertEq(_defaultRoyaltyBps, uint16(defaultRoyaltyBps));
 
         // get royalty info for token
-        (address _royaltyRecipientForToken, uint16 _royaltyBpsForToken) = ext.getRoyaltyInfoForToken(tokenId);
+        (address _royaltyRecipientForToken, uint16 _royaltyBpsForToken) = ext
+            .getRoyaltyInfoForToken(tokenId);
         assertEq(_royaltyRecipientForToken, royaltyRecipientForToken);
         assertEq(_royaltyBpsForToken, uint16(royaltyBpsForToken));
 

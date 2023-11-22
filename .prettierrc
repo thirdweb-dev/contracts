@@ -2,7 +2,7 @@
   "arrowParens": "avoid",
   "bracketSpacing": true,
   "endOfLine":"auto",
-  "printWidth": 120,
+  "printWidth": 100,
   "useTabs": false,
   "singleQuote": false,
   "tabWidth": 2,
@@ -12,7 +12,6 @@
       "files": "*.sol",
       "options": {
         "tabWidth": 4,
-        "explicitTypes": "always"
       }
     }
   ]

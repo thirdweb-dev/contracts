@@ -40,7 +40,9 @@ contract UpdateListingTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+            new MarketplaceV3(
+                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
+            )
         );
 
         vm.prank(marketplaceDeployer);
@@ -199,7 +201,11 @@ contract UpdateListingTest is BaseTest, IExtension {
         _;
     }
 
-    function test_updateListing_whenCallerIsNotListingCreator() public whenListingExists whenAssetHasAssetRole {
+    function test_updateListing_whenCallerIsNotListingCreator()
+        public
+        whenListingExists
+        whenAssetHasAssetRole
+    {
         vm.prank(address(0x4567));
         vm.expectRevert("Marketplace: not listing creator.");
         DirectListingsLogic(marketplace).updateListing(listingId, listingParams);
@@ -338,7 +344,11 @@ contract UpdateListingTest is BaseTest, IExtension {
         whenUpdatedStartIsWithinPastHour
     {
         vm.prank(seller);
-        DirectListingsLogic(marketplace).approveCurrencyForListing(listingId, address(weth), 2 ether);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            address(weth),
+            2 ether
+        );
 
         listingParams.currency = address(weth);
 
@@ -401,7 +411,9 @@ contract UpdateListingTest is BaseTest, IExtension {
         emit UpdatedListing(seller, listingId, listingParams.assetContract, listing);
         DirectListingsLogic(marketplace).updateListing(listingId, listingParams);
 
-        IDirectListings.Listing memory updatedListing = DirectListingsLogic(marketplace).getListing(listingId);
+        IDirectListings.Listing memory updatedListing = DirectListingsLogic(marketplace).getListing(
+            listingId
+        );
 
         assertEq(updatedListing.assetContract, listingParams.assetContract);
         assertEq(updatedListing.tokenId, listingParams.tokenId);
@@ -432,7 +444,11 @@ contract UpdateListingTest is BaseTest, IExtension {
         whenUpdatedStartIsSameAsCurrentStart
     {
         vm.prank(seller);
-        DirectListingsLogic(marketplace).approveCurrencyForListing(listingId, address(weth), 2 ether);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            address(weth),
+            2 ether
+        );
 
         listingParams.currency = address(weth);
 
@@ -485,7 +501,9 @@ contract UpdateListingTest is BaseTest, IExtension {
         emit UpdatedListing(seller, listingId, listingParams.assetContract, listing);
         DirectListingsLogic(marketplace).updateListing(listingId, listingParams);
 
-        IDirectListings.Listing memory updatedListing = DirectListingsLogic(marketplace).getListing(listingId);
+        IDirectListings.Listing memory updatedListing = DirectListingsLogic(marketplace).getListing(
+            listingId
+        );
 
         assertEq(updatedListing.assetContract, listingParams.assetContract);
         assertEq(updatedListing.tokenId, listingParams.tokenId);

@@ -65,7 +65,9 @@ contract DropERC721Test_reveal is BaseTest {
         reveal_revealedURI = "ipfs://revealed";
         reveal_key = "key";
         reveal_encryptedURI = drop.encryptDecrypt(bytes(reveal_revealedURI), reveal_key);
-        reveal_provenanceHash = keccak256(abi.encodePacked(reveal_revealedURI, reveal_key, block.chainid));
+        reveal_provenanceHash = keccak256(
+            abi.encodePacked(reveal_revealedURI, reveal_key, block.chainid)
+        );
         reveal_data = abi.encode(reveal_encryptedURI, reveal_provenanceHash);
         vm.prank(deployer);
         drop.lazyMint(reveal_amount, reveal_baseURI, reveal_data);
@@ -116,17 +118,33 @@ contract DropERC721Test_reveal is BaseTest {
         drop.reveal(reveal_index, reveal_key);
     }
 
-    function test_revert_InvalidIndex() public invalidIndex lazyMintEncrypted callerWithMetadataRole {
+    function test_revert_InvalidIndex()
+        public
+        invalidIndex
+        lazyMintEncrypted
+        callerWithMetadataRole
+    {
         vm.expectRevert("Invalid index");
         drop.reveal(reveal_index, reveal_key);
     }
 
-    function test_revert_InvalidKey() public validIndex lazyMintEncrypted invalidKey callerWithMetadataRole {
+    function test_revert_InvalidKey()
+        public
+        validIndex
+        lazyMintEncrypted
+        invalidKey
+        callerWithMetadataRole
+    {
         vm.expectRevert("Incorrect key");
         drop.reveal(reveal_index, reveal_key);
     }
 
-    function test_revert_NoEncryptedData() public validIndex lazyMintUnEncrypted callerWithMetadataRole {
+    function test_revert_NoEncryptedData()
+        public
+        validIndex
+        lazyMintUnEncrypted
+        callerWithMetadataRole
+    {
         vm.expectRevert("Nothing to reveal");
         drop.reveal(reveal_index, reveal_key);
     }

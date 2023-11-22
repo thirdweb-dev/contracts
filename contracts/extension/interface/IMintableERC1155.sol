@@ -9,7 +9,12 @@ pragma solidity ^0.8.0;
  */
 interface IMintableERC1155 {
     /// @dev Emitted when an account with MINTER_ROLE mints an NFT.
-    event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri, uint256 quantityMinted);
+    event TokensMinted(
+        address indexed mintedTo,
+        uint256 indexed tokenIdMinted,
+        string uri,
+        uint256 quantityMinted
+    );
 
     /**
      *  @notice Lets an account with MINTER_ROLE mint an NFT.
@@ -20,10 +25,5 @@ interface IMintableERC1155 {
      *  @param amount The number of copies of the NFT to mint.
      *
      */
-    function mintTo(
-        address to,
-        uint256 tokenId,
-        string calldata uri,
-        uint256 amount
-    ) external;
+    function mintTo(address to, uint256 tokenId, string calldata uri, uint256 amount) external;
 }

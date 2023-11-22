@@ -21,7 +21,12 @@ contract BurnToClaimDropERC721Logic_LazyMint is BaseTest, IExtension {
     using TWStrings for uint256;
     using TWStrings for address;
 
-    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
+    event TokensLazyMinted(
+        uint256 indexed startTokenId,
+        uint256 endTokenId,
+        string baseURI,
+        bytes encryptedBaseURI
+    );
 
     BurnToClaimDrop721Logic public drop;
     uint256 internal startId;
@@ -121,7 +126,10 @@ contract BurnToClaimDropERC721Logic_LazyMint is BaseTest, IExtension {
         });
 
         extension_drop.functions = new ExtensionFunction[](6);
-        extension_drop.functions[0] = ExtensionFunction(BurnToClaimDrop721Logic.tokenURI.selector, "tokenURI(uint256)");
+        extension_drop.functions[0] = ExtensionFunction(
+            BurnToClaimDrop721Logic.tokenURI.selector,
+            "tokenURI(uint256)"
+        );
         extension_drop.functions[1] = ExtensionFunction(
             BurnToClaimDrop721Logic.lazyMint.selector,
             "lazyMint(uint256,string,bytes)"
@@ -199,7 +207,12 @@ contract BurnToClaimDropERC721Logic_LazyMint is BaseTest, IExtension {
         // lazy mint next batch
         vm.prank(address(caller));
         vm.expectEmit(true, false, false, true);
-        emit TokensLazyMinted(_nextTokenIdToLazyMintOld, _nextTokenIdToLazyMintOld + amount - 1, baseURI, "");
+        emit TokensLazyMinted(
+            _nextTokenIdToLazyMintOld,
+            _nextTokenIdToLazyMintOld + amount - 1,
+            baseURI,
+            ""
+        );
         drop.lazyMint(amount, baseURI, "");
     }
 
@@ -231,7 +244,12 @@ contract BurnToClaimDropERC721Logic_LazyMint is BaseTest, IExtension {
         _;
     }
 
-    function test_lazyMint_withData() public whenCallerAuthorized whenAmountNotZero whenCorrectEncodingOfData {
+    function test_lazyMint_withData()
+        public
+        whenCallerAuthorized
+        whenAmountNotZero
+        whenCorrectEncodingOfData
+    {
         // check previous state
         uint256 _nextTokenIdToLazyMintOld = drop.nextTokenIdToMint();
         assertEq(_nextTokenIdToLazyMintOld, batchIds[4]);
@@ -252,14 +270,24 @@ contract BurnToClaimDropERC721Logic_LazyMint is BaseTest, IExtension {
         assertEq(drop.getBaseURICount(), batchIds.length + 1);
     }
 
-    function test_lazyMint_withData_event() public whenCallerAuthorized whenAmountNotZero whenCorrectEncodingOfData {
+    function test_lazyMint_withData_event()
+        public
+        whenCallerAuthorized
+        whenAmountNotZero
+        whenCorrectEncodingOfData
+    {
         string memory placeholderURI = "ipfs://placeholderURI";
         uint256 _nextTokenIdToLazyMintOld = drop.nextTokenIdToMint();
 
         // lazy mint next batch
         vm.prank(address(caller));
         vm.expectEmit(true, false, false, true);
-        emit TokensLazyMinted(_nextTokenIdToLazyMintOld, _nextTokenIdToLazyMintOld + amount - 1, placeholderURI, data);
+        emit TokensLazyMinted(
+            _nextTokenIdToLazyMintOld,
+            _nextTokenIdToLazyMintOld + amount - 1,
+            placeholderURI,
+            data
+        );
         drop.lazyMint(amount, placeholderURI, data);
     }
 }

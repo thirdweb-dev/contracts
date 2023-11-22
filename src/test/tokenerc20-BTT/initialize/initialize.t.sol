@@ -104,7 +104,12 @@ contract TokenERC20Test_Initialize is BaseTest {
         _;
     }
 
-    function test_initialize() public whenNotImplementation whenProxyNotInitialized whenPlatformFeeBpsWithinMaxBps {
+    function test_initialize()
+        public
+        whenNotImplementation
+        whenProxyNotInitialized
+        whenPlatformFeeBpsWithinMaxBps
+    {
         MyTokenERC20(proxy).initialize(
             deployer,
             NAME,
@@ -131,7 +136,8 @@ contract TokenERC20Test_Initialize is BaseTest {
         assertEq(tokenContract.symbol(), SYMBOL);
         assertEq(tokenContract.contractURI(), CONTRACT_URI);
 
-        (address _platformFeeRecipient, uint16 _platformFeeBps) = tokenContract.getPlatformFeeInfo();
+        (address _platformFeeRecipient, uint16 _platformFeeBps) = tokenContract
+            .getPlatformFeeInfo();
         assertEq(_platformFeeBps, platformFeeBps);
         assertEq(_platformFeeRecipient, platformFeeRecipient);
 

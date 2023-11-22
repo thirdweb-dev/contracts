@@ -78,11 +78,10 @@ contract LoyaltyPointsTest is BaseTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(LoyaltyPoints.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        LoyaltyPoints.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,
@@ -95,7 +94,9 @@ contract LoyaltyPointsTest is BaseTest {
             _request.uid
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -195,7 +196,10 @@ contract LoyaltyPointsTest is BaseTest {
         loyaltyPoints.mintWithSignature(_mintrequest, _signature);
 
         assertEq(loyaltyPoints.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(loyaltyPoints.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            loyaltyPoints.balanceOf(recipient),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
     }
 
     function test_state_mintWithSignature_NonZeroPrice_ERC20() public {
@@ -216,7 +220,10 @@ contract LoyaltyPointsTest is BaseTest {
         loyaltyPoints.mintWithSignature(_mintrequest, _signature);
 
         assertEq(loyaltyPoints.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(loyaltyPoints.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            loyaltyPoints.balanceOf(recipient),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
         assertEq(erc20.balanceOf(recipient), currentCurrencyBalOfRecipient - _mintrequest.price);
     }
 
@@ -237,7 +244,10 @@ contract LoyaltyPointsTest is BaseTest {
         loyaltyPoints.mintWithSignature{ value: 1 }(_mintrequest, _signature);
 
         assertEq(loyaltyPoints.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(loyaltyPoints.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            loyaltyPoints.balanceOf(recipient),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
         assertEq(recipient.balance, currentCurrencyBalOfRecipient - _mintrequest.price);
     }
 

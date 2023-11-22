@@ -61,7 +61,11 @@ abstract contract DropSinglePhase_V1 is IDropSinglePhase_V1 {
          */
 
         // Verify inclusion in allowlist.
-        (bool validMerkleProof, ) = verifyClaimMerkleProof(_dropMsgSender(), _quantity, _allowlistProof);
+        (bool validMerkleProof, ) = verifyClaimMerkleProof(
+            _dropMsgSender(),
+            _quantity,
+            _allowlistProof
+        );
 
         // Verify claim validity. If not valid, revert.
         // when there's allowlist present --> verifyClaimMerkleProof will verify the maxQuantityInAllowlist value with hashed leaf in the allowlist
@@ -69,7 +73,13 @@ abstract contract DropSinglePhase_V1 is IDropSinglePhase_V1 {
         bool toVerifyMaxQuantityPerTransaction = _allowlistProof.maxQuantityInAllowlist == 0 ||
             claimCondition.merkleRoot == bytes32(0);
 
-        verifyClaim(_dropMsgSender(), _quantity, _currency, _pricePerToken, toVerifyMaxQuantityPerTransaction);
+        verifyClaim(
+            _dropMsgSender(),
+            _quantity,
+            _currency,
+            _pricePerToken,
+            toVerifyMaxQuantityPerTransaction
+        );
 
         if (validMerkleProof && _allowlistProof.maxQuantityInAllowlist > 0) {
             /**
@@ -95,7 +105,10 @@ abstract contract DropSinglePhase_V1 is IDropSinglePhase_V1 {
     }
 
     /// @dev Lets a contract admin set claim conditions.
-    function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility) external override {
+    function setClaimConditions(
+        ClaimCondition calldata _condition,
+        bool _resetClaimEligibility
+    ) external override {
         if (!_canSetClaimConditions()) {
             revert("Not authorized");
         }
@@ -137,14 +150,18 @@ abstract contract DropSinglePhase_V1 is IDropSinglePhase_V1 {
     ) public view {
         ClaimCondition memory currentClaimPhase = claimCondition;
 
-        if (_currency != currentClaimPhase.currency || _pricePerToken != currentClaimPhase.pricePerToken) {
+        if (
+            _currency != currentClaimPhase.currency ||
+            _pricePerToken != currentClaimPhase.pricePerToken
+        ) {
             revert("Invalid price or currency");
         }
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         if (
             _quantity == 0 ||
-            (verifyMaxQuantityPerTransaction && _quantity > currentClaimPhase.quantityLimitPerTransaction)
+            (verifyMaxQuantityPerTransaction &&
+                _quantity > currentClaimPhase.quantityLimitPerTransaction)
         ) {
             revert("Invalid quantity");
         }
@@ -184,18 +201,19 @@ abstract contract DropSinglePhase_V1 is IDropSinglePhase_V1 {
                 revert("proof claimed");
             }
 
-            if (_allowlistProof.maxQuantityInAllowlist != 0 && _quantity > _allowlistProof.maxQuantityInAllowlist) {
+            if (
+                _allowlistProof.maxQuantityInAllowlist != 0 &&
+                _quantity > _allowlistProof.maxQuantityInAllowlist
+            ) {
                 revert("Invalid qty proof");
             }
         }
     }
 
     /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
-    function getClaimTimestamp(address _claimer)
-        public
-        view
-        returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
-    {
+    function getClaimTimestamp(
+        address _claimer
+    ) public view returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) {
         lastClaimedAt = lastClaimTimestamp[conditionId][_claimer];
 
         unchecked {
@@ -245,10 +263,10 @@ abstract contract DropSinglePhase_V1 is IDropSinglePhase_V1 {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        returns (uint256 startTokenId);
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal virtual returns (uint256 startTokenId);
 
     function _canSetClaimConditions() internal view virtual returns (bool);
 }

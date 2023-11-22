@@ -35,9 +35,10 @@ contract Number {
 contract MyDynamicAccount is DynamicAccount {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
-        DynamicAccount(_entrypoint, _defaultExtensions)
-    {}
+    constructor(
+        IEntryPoint _entrypoint,
+        Extension[] memory _defaultExtensions
+    ) DynamicAccount(_entrypoint, _defaultExtensions) {}
 
     function setPermissionsForSigner(
         address _signer,
@@ -52,7 +53,10 @@ contract MyDynamicAccount is DynamicAccount {
         );
     }
 
-    function setApprovedTargetsForSigner(address _signer, address[] memory _approvedTargets) public {
+    function setApprovedTargetsForSigner(
+        address _signer,
+        address[] memory _approvedTargets
+    ) public {
         uint256 len = _approvedTargets.length;
         for (uint256 i = 0; i < len; i += 1) {
             _accountPermissionsStorage().approvedTargets[_signer].add(_approvedTargets[i]);
@@ -165,10 +169,10 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint);
     }
 
-    function _setupUserOpInvalidFunction(uint256 _signerPKey, bytes memory _initCode)
-        internal
-        returns (UserOperation memory)
-    {
+    function _setupUserOpInvalidFunction(
+        uint256 _signerPKey,
+        bytes memory _initCode
+    ) internal returns (UserOperation memory) {
         bytes memory callDataForEntrypoint = abi.encodeWithSignature("invalidFunction()");
 
         return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint);
@@ -194,7 +198,9 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         // deploy dummy contract
         numberContract = new Number();
 
-        address accountImpl = address(new MyDynamicAccount(IEntryPoint(payable(address(entrypoint))), extensions));
+        address accountImpl = address(
+            new MyDynamicAccount(IEntryPoint(payable(address(entrypoint))), extensions)
+        );
         address _account = Clones.cloneDeterministic(accountImpl, "salt");
         account = MyDynamicAccount(payable(_account));
         account.initialize(accountAdmin, "");
@@ -257,7 +263,11 @@ contract AccountCoreTest_isValidSigner is BaseTest {
     // ======= Test branch: wildcard
     // ==================
 
-    function test_isValidSigner_wildcardExecute_breachNativeTokenLimit() public whenNotAdmin whenValidTimestamps {
+    function test_isValidSigner_wildcardExecute_breachNativeTokenLimit()
+        public
+        whenNotAdmin
+        whenValidTimestamps
+    {
         // set wildcard
         address[] memory _approvedTargets = new address[](1);
         _approvedTargets[0] = address(0);
@@ -273,7 +283,11 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         assertFalse(isValid);
     }
 
-    function test_isValidSigner_wildcardExecuteBatch_breachNativeTokenLimit() public whenNotAdmin whenValidTimestamps {
+    function test_isValidSigner_wildcardExecuteBatch_breachNativeTokenLimit()
+        public
+        whenNotAdmin
+        whenValidTimestamps
+    {
         // set wildcard
         address[] memory _approvedTargets = new address[](1);
         _approvedTargets[0] = address(0);
@@ -305,7 +319,12 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         _;
     }
 
-    function test_isValidSigner_wildcardExecute() public whenNotAdmin whenValidTimestamps whenWithinNativeTokenLimit {
+    function test_isValidSigner_wildcardExecute()
+        public
+        whenNotAdmin
+        whenValidTimestamps
+        whenWithinNativeTokenLimit
+    {
         // set wildcard
         address[] memory _approvedTargets = new address[](1);
         _approvedTargets[0] = address(0);
@@ -448,7 +467,13 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         account.setApprovedTargetsForSigner(opSigner, _approvedTargets);
 
         // user op execute
-        op = _setupUserOpExecute(accountSignerPKey, bytes(""), address(numberContract), 10, bytes(""));
+        op = _setupUserOpExecute(
+            accountSignerPKey,
+            bytes(""),
+            address(numberContract),
+            10,
+            bytes("")
+        );
 
         account.setPermissionsForSigner(opSigner, nativeTokenLimit, startTimestamp, endTimestamp);
 
@@ -502,7 +527,13 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         account.setApprovedTargetsForSigner(opSigner, _approvedTargets);
 
         // user op execute
-        op = _setupUserOpExecute(accountSignerPKey, bytes(""), address(numberContract), 10, bytes(""));
+        op = _setupUserOpExecute(
+            accountSignerPKey,
+            bytes(""),
+            address(numberContract),
+            10,
+            bytes("")
+        );
 
         account.setPermissionsForSigner(opSigner, nativeTokenLimit, startTimestamp, endTimestamp);
 
@@ -544,7 +575,12 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         assertTrue(isValid);
     }
 
-    function test_isValidSigner_invalidFunction() public whenNotAdmin whenValidTimestamps whenWithinNativeTokenLimit {
+    function test_isValidSigner_invalidFunction()
+        public
+        whenNotAdmin
+        whenValidTimestamps
+        whenWithinNativeTokenLimit
+    {
         // set wildcard
         address[] memory _approvedTargets = new address[](1);
         _approvedTargets[0] = address(numberContract);

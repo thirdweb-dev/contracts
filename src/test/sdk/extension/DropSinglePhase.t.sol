@@ -25,11 +25,10 @@ contract MyDropSinglePhase is DropSinglePhase {
         uint256 _pricePerToken
     ) internal override {}
 
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId)
-    {}
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId) {}
 }
 
 contract ExtensionDropSinglePhase is DSTest, Test {
@@ -67,7 +66,8 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         MyDropSinglePhase.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
+        MyDropSinglePhase.ClaimCondition[]
+            memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -97,7 +97,8 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         alp.proof = proofs;
         alp.quantityLimitPerWallet = x;
 
-        MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
+        MyDropSinglePhase.ClaimCondition[]
+            memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -147,7 +148,8 @@ contract ExtensionDropSinglePhase is DSTest, Test {
 
         // bytes32[] memory proofs = new bytes32[](0);
 
-        MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
+        MyDropSinglePhase.ClaimCondition[]
+            memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = x;
         conditions[0].quantityLimitPerWallet = 1;
         conditions[0].merkleRoot = root;
@@ -186,7 +188,8 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         MyDropSinglePhase.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
+        MyDropSinglePhase.ClaimCondition[]
+            memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -210,7 +213,8 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         MyDropSinglePhase.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        MyDropSinglePhase.ClaimCondition[] memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
+        MyDropSinglePhase.ClaimCondition[]
+            memory conditions = new MyDropSinglePhase.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 

@@ -61,7 +61,10 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     }
 
     /// @dev Lets a contract admin set claim conditions.
-    function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility) external override {
+    function setClaimConditions(
+        ClaimCondition calldata _condition,
+        bool _resetClaimEligibility
+    ) external override {
         if (!_canSetClaimConditions()) {
             revert("Not authorized");
         }
@@ -128,7 +131,8 @@ abstract contract DropSinglePhase is IDropSinglePhase {
             claimPrice = _allowlistProof.pricePerToken != type(uint256).max
                 ? _allowlistProof.pricePerToken
                 : claimPrice;
-            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0)
+            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max &&
+                _allowlistProof.currency != address(0)
                 ? _allowlistProof.currency
                 : claimCurrency;
         }
@@ -195,10 +199,10 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        returns (uint256 startTokenId);
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal virtual returns (uint256 startTokenId);
 
     function _canSetClaimConditions() internal view virtual returns (bool);
 }

@@ -42,7 +42,12 @@ interface IEntryPoint is IStakeManager, INonceManager {
      * @param factory the factory used to deploy this account (in the initCode)
      * @param paymaster the paymaster used by this UserOp
      */
-    event AccountDeployed(bytes32 indexed userOpHash, address indexed sender, address factory, address paymaster);
+    event AccountDeployed(
+        bytes32 indexed userOpHash,
+        address indexed sender,
+        address factory,
+        address paymaster
+    );
 
     /**
      * An event emitted if the UserOperation "callData" reverted with non-zero length
@@ -93,7 +98,12 @@ interface IEntryPoint is IStakeManager, INonceManager {
      * @param factoryInfo stake information about the factory (if any)
      * @param paymasterInfo stake information about the paymaster (if any)
      */
-    error ValidationResult(ReturnInfo returnInfo, StakeInfo senderInfo, StakeInfo factoryInfo, StakeInfo paymasterInfo);
+    error ValidationResult(
+        ReturnInfo returnInfo,
+        StakeInfo senderInfo,
+        StakeInfo factoryInfo,
+        StakeInfo paymasterInfo
+    );
 
     /**
      * Successful result from simulateValidation, if the account returns a signature aggregator
@@ -153,8 +163,10 @@ interface IEntryPoint is IStakeManager, INonceManager {
      * @param opsPerAggregator the operations to execute, grouped by aggregator (or address(0) for no-aggregator accounts)
      * @param beneficiary the address to receive the fees
      */
-    function handleAggregatedOps(UserOpsPerAggregator[] calldata opsPerAggregator, address payable beneficiary)
-        external;
+    function handleAggregatedOps(
+        UserOpsPerAggregator[] calldata opsPerAggregator,
+        address payable beneficiary
+    ) external;
 
     /**
      * generate a request Id - unique identifier for this request.

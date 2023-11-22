@@ -48,13 +48,9 @@ abstract contract ERC721AQueryableUpgradeable is
      * - `burned = false`
      * - `extraData = <Extra data at start of ownership>`
      */
-    function explicitOwnershipOf(uint256 tokenId)
-        public
-        view
-        virtual
-        override
-        returns (TokenOwnership memory ownership)
-    {
+    function explicitOwnershipOf(
+        uint256 tokenId
+    ) public view virtual override returns (TokenOwnership memory ownership) {
         unchecked {
             if (tokenId >= _startTokenId()) {
                 if (tokenId < _nextTokenId()) {
@@ -97,7 +93,9 @@ abstract contract ERC721AQueryableUpgradeable is
      * multiple smaller scans if the collection is large enough to cause
      * an out-of-gas error (10K collections should be fine).
      */
-    function tokensOfOwner(address owner) external view virtual override returns (uint256[] memory) {
+    function tokensOfOwner(
+        address owner
+    ) external view virtual override returns (uint256[] memory) {
         uint256 start = _startTokenId();
         uint256 stop = _nextTokenId();
         uint256[] memory tokenIds;

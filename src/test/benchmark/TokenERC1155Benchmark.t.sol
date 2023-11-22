@@ -12,7 +12,12 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 contract TokenERC1155BenchmarkTest is BaseTest {
     using StringsUpgradeable for uint256;
 
-    event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri, uint256 quantityMinted);
+    event TokensMinted(
+        address indexed mintedTo,
+        uint256 indexed tokenIdMinted,
+        string uri,
+        uint256 quantityMinted
+    );
     event TokensMintedWithSignature(
         address indexed signer,
         address indexed mintedTo,
@@ -21,7 +26,11 @@ contract TokenERC1155BenchmarkTest is BaseTest {
     );
     event OwnerUpdated(address indexed prevOwner, address indexed newOwner);
     event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);
-    event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps);
+    event RoyaltyForToken(
+        uint256 indexed tokenId,
+        address indexed royaltyRecipient,
+        uint256 royaltyBps
+    );
     event PrimarySaleRecipientUpdated(address indexed recipient);
     event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
 
@@ -83,11 +92,10 @@ contract TokenERC1155BenchmarkTest is BaseTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(TokenERC1155.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        TokenERC1155.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = bytes.concat(
             abi.encode(
                 typehashMintRequest,
@@ -108,7 +116,9 @@ contract TokenERC1155BenchmarkTest is BaseTest {
             )
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -151,10 +161,9 @@ contract TokenERC1155BenchmarkTest is BaseTest {
         // mint with signature
         vm.prank(recipient);
         vm.resumeGasMetering();
-        tokenContract.mintWithSignature{ value: _mintrequest.pricePerToken * _mintrequest.quantity }(
-            _mintrequest,
-            _signature
-        );
+        tokenContract.mintWithSignature{
+            value: _mintrequest.pricePerToken * _mintrequest.quantity
+        }(_mintrequest, _signature);
     }
 
     function test_benchmark_tokenERC1155_mintTo() public {

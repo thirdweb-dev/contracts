@@ -32,7 +32,11 @@ library PermissionsEnumerableStorage {
         mapping(bytes32 => RoleMembers) roleMembers;
     }
 
-    function permissionsEnumerableStorage() internal pure returns (Data storage permissionsEnumerableData) {
+    function permissionsEnumerableStorage()
+        internal
+        pure
+        returns (Data storage permissionsEnumerableData)
+    {
         bytes32 position = PERMISSIONS_ENUMERABLE_STORAGE_POSITION;
         assembly {
             permissionsEnumerableData.slot := position

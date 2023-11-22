@@ -20,7 +20,11 @@ contract TokenERC1155Test_SetRoyaltyInfoForToken is BaseTest {
     uint256 internal royaltyBpsForToken;
     uint256 internal tokenId;
 
-    event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps);
+    event RoyaltyForToken(
+        uint256 indexed tokenId,
+        address indexed royaltyRecipient,
+        uint256 royaltyBps
+    );
 
     function setUp() public override {
         super.setUp();
@@ -99,18 +103,23 @@ contract TokenERC1155Test_SetRoyaltyInfoForToken is BaseTest {
         tokenContract.setRoyaltyInfoForToken(tokenId, royaltyRecipientForToken, royaltyBpsForToken);
 
         // get default royalty info
-        (address _defaultRecipient, uint16 _defaultRoyaltyBps) = tokenContract.getDefaultRoyaltyInfo();
+        (address _defaultRecipient, uint16 _defaultRoyaltyBps) = tokenContract
+            .getDefaultRoyaltyInfo();
         assertEq(_defaultRecipient, defaultRoyaltyRecipient);
         assertEq(_defaultRoyaltyBps, uint16(defaultRoyaltyBps));
 
         // get royalty info for token
-        (address _royaltyRecipientForToken, uint16 _royaltyBpsForToken) = tokenContract.getRoyaltyInfoForToken(tokenId);
+        (address _royaltyRecipientForToken, uint16 _royaltyBpsForToken) = tokenContract
+            .getRoyaltyInfoForToken(tokenId);
         assertEq(_royaltyRecipientForToken, royaltyRecipientForToken);
         assertEq(_royaltyBpsForToken, uint16(royaltyBpsForToken));
 
         // royaltyInfo - ERC2981: calculate for default
         uint256 salePrice = 1000;
-        (address _royaltyRecipient, uint256 _royaltyAmount) = tokenContract.royaltyInfo(0, salePrice);
+        (address _royaltyRecipient, uint256 _royaltyAmount) = tokenContract.royaltyInfo(
+            0,
+            salePrice
+        );
         assertEq(_royaltyRecipient, defaultRoyaltyRecipient);
         assertEq(_royaltyAmount, (salePrice * defaultRoyaltyBps) / 10_000);
 

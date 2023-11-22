@@ -45,7 +45,10 @@ library PlatformFeeStorage {
 abstract contract PlatformFee is IPlatformFee {
     /// @dev Returns the platform fee recipient and bps.
     function getPlatformFeeInfo() public view override returns (address, uint16) {
-        return (_platformFeeStorage().platformFeeRecipient, uint16(_platformFeeStorage().platformFeeBps));
+        return (
+            _platformFeeStorage().platformFeeRecipient,
+            uint16(_platformFeeStorage().platformFeeBps)
+        );
     }
 
     /// @dev Returns the platform fee bps and recipient.
@@ -67,7 +70,10 @@ abstract contract PlatformFee is IPlatformFee {
      *  @param _platformFeeRecipient   Address to be set as new platformFeeRecipient.
      *  @param _platformFeeBps         Updated platformFeeBps.
      */
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external override {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external override {
         if (!_canSetPlatformFeeInfo()) {
             revert("Not authorized");
         }
@@ -75,7 +81,10 @@ abstract contract PlatformFee is IPlatformFee {
     }
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
-    function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
+    function _setupPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) internal {
         if (_platformFeeBps > 10_000) {
             revert("Exceeds max bps");
         }

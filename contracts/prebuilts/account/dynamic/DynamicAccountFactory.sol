@@ -28,9 +28,14 @@ contract DynamicAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _defaultAdmin, IExtension.Extension[] memory _defaultExtensions)
+    constructor(
+        address _defaultAdmin,
+        IExtension.Extension[] memory _defaultExtensions
+    )
         BaseAccountFactory(
-            payable(address(new DynamicAccount(IEntryPoint(ENTRYPOINT_ADDRESS), _defaultExtensions))),
+            payable(
+                address(new DynamicAccount(IEntryPoint(ENTRYPOINT_ADDRESS), _defaultExtensions))
+            ),
             ENTRYPOINT_ADDRESS
         )
     {

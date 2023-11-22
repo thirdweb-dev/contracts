@@ -18,7 +18,8 @@ import "../interface/IContractMetadata.sol";
 abstract contract ContractMetadataLogic is IContractMetadata {
     /// @dev Returns the metadata URI of the contract.
     function contractURI() public view returns (string memory) {
-        ContractMetadataStorage.Data storage data = ContractMetadataStorage.contractMetadataStorage();
+        ContractMetadataStorage.Data storage data = ContractMetadataStorage
+            .contractMetadataStorage();
         return data.contractURI;
     }
 
@@ -40,7 +41,8 @@ abstract contract ContractMetadataLogic is IContractMetadata {
 
     /// @dev Lets a contract admin set the URI for contract-level metadata.
     function _setupContractURI(string memory _uri) internal {
-        ContractMetadataStorage.Data storage data = ContractMetadataStorage.contractMetadataStorage();
+        ContractMetadataStorage.Data storage data = ContractMetadataStorage
+            .contractMetadataStorage();
         string memory prevURI = data.contractURI;
         data.contractURI = _uri;
 

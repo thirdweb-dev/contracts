@@ -35,7 +35,9 @@ contract CancelListingTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+            new MarketplaceV3(
+                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
+            )
         );
 
         vm.prank(marketplaceDeployer);

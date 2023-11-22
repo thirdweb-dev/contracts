@@ -45,7 +45,9 @@ contract PayoutTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+            new MarketplaceV3(
+                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
+            )
         );
 
         vm.prank(marketplaceDeployer);
@@ -54,7 +56,13 @@ contract PayoutTest is BaseTest, IExtension {
                 impl,
                 abi.encodeCall(
                     MarketplaceV3.initialize,
-                    (marketplaceDeployer, "", new address[](0), platformFeeRecipient, uint16(platformFeeBps))
+                    (
+                        marketplaceDeployer,
+                        "",
+                        new address[](0),
+                        platformFeeRecipient,
+                        uint16(platformFeeBps)
+                    )
                 )
             )
         );
@@ -176,7 +184,9 @@ contract PayoutTest is BaseTest, IExtension {
         royaltyEngine = new MockRoyaltyEngineV1(mockRecipients, mockAmounts);
     }
 
-    function _setupListingForRoyaltyTests(address erc721TokenAddress) private returns (uint256 _listingId) {
+    function _setupListingForRoyaltyTests(
+        address erc721TokenAddress
+    ) private returns (uint256 _listingId) {
         // Sample listing parameters.
         address assetContract = erc721TokenAddress;
         uint256 tokenId = 0;
@@ -192,23 +202,28 @@ contract PayoutTest is BaseTest, IExtension {
         IERC721(erc721TokenAddress).setApprovalForAll(marketplace, true);
 
         // List tokens.
-        IDirectListings.ListingParameters memory listingParameters = IDirectListings.ListingParameters(
-            assetContract,
-            tokenId,
-            quantity,
-            currency,
-            pricePerToken,
-            startTimestamp,
-            endTimestamp,
-            reserved
-        );
+        IDirectListings.ListingParameters memory listingParameters = IDirectListings
+            .ListingParameters(
+                assetContract,
+                tokenId,
+                quantity,
+                currency,
+                pricePerToken,
+                startTimestamp,
+                endTimestamp,
+                reserved
+            );
 
         vm.prank(seller);
         _listingId = DirectListingsLogic(marketplace).createListing(listingParameters);
     }
 
-    function _buyFromListingForRoyaltyTests(uint256 _listingId) private returns (uint256 totalPrice) {
-        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(_listingId);
+    function _buyFromListingForRoyaltyTests(
+        uint256 _listingId
+    ) private returns (uint256 totalPrice) {
+        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(
+            _listingId
+        );
 
         address buyFor = buyer;
         uint256 quantityToBuy = listing.quantity;
@@ -226,7 +241,13 @@ contract PayoutTest is BaseTest, IExtension {
         // Buy tokens from listing.
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
-        DirectListingsLogic(marketplace).buyFromListing(_listingId, buyFor, quantityToBuy, currency, totalPrice);
+        DirectListingsLogic(marketplace).buyFromListing(
+            _listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
+        );
     }
 
     function test_payout_whenZeroRoyaltyRecipients() public {
@@ -281,7 +302,10 @@ contract PayoutTest is BaseTest, IExtension {
         _;
     }
 
-    function test_payout_whenInsufficientFundsToPayRoyaltyAfterPlatformFeePayout() public whenNonZeroRoyaltyRecipients {
+    function test_payout_whenInsufficientFundsToPayRoyaltyAfterPlatformFeePayout()
+        public
+        whenNonZeroRoyaltyRecipients
+    {
         vm.prank(marketplaceDeployer);
         PlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, 9999); // 99.99% fees
 
@@ -289,7 +313,9 @@ contract PayoutTest is BaseTest, IExtension {
         erc721.mint(seller, 1);
         listingId = _setupListingForRoyaltyTests(address(erc721));
 
-        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(listingId);
+        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(
+            listingId
+        );
 
         address buyFor = buyer;
         uint256 quantityToBuy = listing.quantity;
@@ -308,11 +334,23 @@ contract PayoutTest is BaseTest, IExtension {
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         vm.expectRevert("fees exceed the price");
-        DirectListingsLogic(marketplace).buyFromListing(listingId, buyFor, quantityToBuy, currency, totalPrice);
+        DirectListingsLogic(marketplace).buyFromListing(
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
+        );
     }
 
-    function test_payout_whenSufficientFundsToPayRoyaltyAfterPlatformFeePayout() public whenNonZeroRoyaltyRecipients {
-        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
+    function test_payout_whenSufficientFundsToPayRoyaltyAfterPlatformFeePayout()
+        public
+        whenNonZeroRoyaltyRecipients
+    {
+        assertEq(
+            RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(),
+            address(royaltyEngine)
+        );
 
         // 1. ========= Create listing =========
 
@@ -337,7 +375,11 @@ contract PayoutTest is BaseTest, IExtension {
             assertBalERC20Eq(address(erc20), platformFeeRecipient, platformFees);
 
             // Seller gets total price minus royalty amounts
-            assertBalERC20Eq(address(erc20), seller, totalPrice - mockAmounts[0] - mockAmounts[1] - platformFees);
+            assertBalERC20Eq(
+                address(erc20),
+                seller,
+                totalPrice - mockAmounts[0] - mockAmounts[1] - platformFees
+            );
         }
     }
 }

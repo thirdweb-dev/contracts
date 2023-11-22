@@ -33,7 +33,11 @@ contract IContractPublisherData {
     );
 
     /// @dev Emitted when a contract is unpublished.
-    event ContractUnpublished(address indexed operator, address indexed publisher, string indexed contractId);
+    event ContractUnpublished(
+        address indexed operator,
+        address indexed publisher,
+        string indexed contractId
+    );
 
     /// @dev Emitted when a published contract is added to the public list.
     event AddedContractToPublicList(address indexed publisher, string indexed contractId);
@@ -182,7 +186,8 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
     }
 
     function test_read_from_linked_publisher() public {
-        IContractPublisher.CustomContractInstance[] memory contracts = byoc.getAllPublishedContracts(publisher);
+        IContractPublisher.CustomContractInstance[] memory contracts = byoc
+            .getAllPublishedContracts(publisher);
         assertEq(contracts.length, 1);
         assertEq(contracts[0].contractId, "MockContract");
 
@@ -196,7 +201,8 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
             keccak256(type(MockCustomContract).creationCode),
             address(0)
         );
-        IContractPublisher.CustomContractInstance[] memory contracts2 = byoc.getAllPublishedContracts(publisher);
+        IContractPublisher.CustomContractInstance[] memory contracts2 = byoc
+            .getAllPublishedContracts(publisher);
         assertEq(contracts2.length, 2);
         assertEq(contracts2[0].contractId, "MockContract");
         assertEq(contracts2[1].contractId, "MyContract");

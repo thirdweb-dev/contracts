@@ -45,7 +45,10 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
 
     /// @dev Checks whether the caller has LISTER_ROLE.
     modifier onlyListerRole() {
-        require(Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
+        require(
+            Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()),
+            "!LISTER_ROLE"
+        );
         _;
     }
 
@@ -86,12 +89,9 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     //////////////////////////////////////////////////////////////*/
 
     /// @notice List NFTs (ERC721 or ERC1155) for sale at a fixed price.
-    function createListing(ListingParameters calldata _params)
-        external
-        onlyListerRole
-        onlyAssetRole(_params.assetContract)
-        returns (uint256 listingId)
-    {
+    function createListing(
+        ListingParameters calldata _params
+    ) external onlyListerRole onlyAssetRole(_params.assetContract) returns (uint256 listingId) {
         listingId = _getNextListingId();
         address listingCreator = _msgSender();
         TokenType tokenType = _getTokenType(_params.assetContract);
@@ -100,7 +100,10 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
         uint128 endTime = _params.endTimestamp;
         require(startTime < endTime, "Marketplace: endTimestamp not greater than startTimestamp.");
         if (startTime < block.timestamp) {
-            require(startTime + 60 minutes >= block.timestamp, "Marketplace: invalid startTimestamp.");
+            require(
+                startTime + 60 minutes >= block.timestamp,
+                "Marketplace: invalid startTimestamp."
+            );
 
             startTime = uint128(block.timestamp);
             endTime = endTime == type(uint128).max
@@ -131,7 +134,10 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     }
 
     /// @notice Update parameters of a listing of NFTs.
-    function updateListing(uint256 _listingId, ListingParameters memory _params)
+    function updateListing(
+        uint256 _listingId,
+        ListingParameters memory _params
+    )
         external
         onlyExistingListing(_listingId)
         onlyAssetRole(_params.assetContract)
@@ -157,7 +163,10 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
             "Marketplace: listing already active."
         );
         if (startTime != listing.startTimestamp && startTime < block.timestamp) {
-            require(startTime + 60 minutes >= block.timestamp, "Marketplace: invalid startTimestamp.");
+            require(
+                startTime + 60 minutes >= block.timestamp,
+                "Marketplace: invalid startTimestamp."
+            );
 
             startTime = uint128(block.timestamp);
 
@@ -167,9 +176,9 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
         }
 
         {
-            uint256 _approvedCurrencyPrice = _directListingsStorage().currencyPriceForListing[_listingId][
-                _params.currency
-            ];
+            uint256 _approvedCurrencyPrice = _directListingsStorage().currencyPriceForListing[
+                _listingId
+            ][_params.currency];
             require(
                 _approvedCurrencyPrice == 0 || _params.pricePerToken == _approvedCurrencyPrice,
                 "Marketplace: price different from approved price"
@@ -199,7 +208,9 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     }
 
     /// @notice Cancel a listing.
-    function cancelListing(uint256 _listingId) external onlyExistingListing(_listingId) onlyListingCreator(_listingId) {
+    function cancelListing(
+        uint256 _listingId
+    ) external onlyExistingListing(_listingId) onlyListingCreator(_listingId) {
         _directListingsStorage().listings[_listingId].status = IDirectListings.Status.CANCELLED;
         emit CancelledListing(_msgSender(), _listingId);
     }
@@ -210,7 +221,10 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
         address _buyer,
         bool _toApprove
     ) external onlyExistingListing(_listingId) onlyListingCreator(_listingId) {
-        require(_directListingsStorage().listings[_listingId].reserved, "Marketplace: listing not reserved.");
+        require(
+            _directListingsStorage().listings[_listingId].reserved,
+            "Marketplace: listing not reserved."
+        );
 
         _directListingsStorage().isBuyerApprovedForListing[_listingId][_buyer] = _toApprove;
 
@@ -229,11 +243,14 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
             "Marketplace: approving listing currency with different price."
         );
         require(
-            _directListingsStorage().currencyPriceForListing[_listingId][_currency] != _pricePerTokenInCurrency,
+            _directListingsStorage().currencyPriceForListing[_listingId][_currency] !=
+                _pricePerTokenInCurrency,
             "Marketplace: price unchanged."
         );
 
-        _directListingsStorage().currencyPriceForListing[_listingId][_currency] = _pricePerTokenInCurrency;
+        _directListingsStorage().currencyPriceForListing[_listingId][
+            _currency
+        ] = _pricePerTokenInCurrency;
 
         emit CurrencyApprovedForListing(_listingId, _currency, _pricePerTokenInCurrency);
     }
@@ -250,7 +267,8 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
         address buyer = _msgSender();
 
         require(
-            !listing.reserved || _directListingsStorage().isBuyerApprovedForListing[_listingId][buyer],
+            !listing.reserved ||
+                _directListingsStorage().isBuyerApprovedForListing[_listingId][buyer],
             "buyer not approved"
         );
         require(_quantity > 0 && _quantity <= listing.quantity, "Buying invalid quantity");
@@ -273,7 +291,9 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
         uint256 targetTotalPrice;
 
         if (_directListingsStorage().currencyPriceForListing[_listingId][_currency] > 0) {
-            targetTotalPrice = _quantity * _directListingsStorage().currencyPriceForListing[_listingId][_currency];
+            targetTotalPrice =
+                _quantity *
+                _directListingsStorage().currencyPriceForListing[_listingId][_currency];
         } else {
             require(_currency == listing.currency, "Paying in invalid currency.");
             targetTotalPrice = _quantity * listing.pricePerToken;
@@ -283,7 +303,10 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
 
         // Check: buyer owns and has approved sufficient currency for sale.
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == targetTotalPrice, "Marketplace: msg.value must exactly be the total price.");
+            require(
+                msg.value == targetTotalPrice,
+                "Marketplace: msg.value must exactly be the total price."
+            );
         } else {
             require(msg.value == 0, "Marketplace: invalid native tokens sent.");
             _validateERC20BalAndAllowance(buyer, _currency, targetTotalPrice);
@@ -321,17 +344,26 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     }
 
     /// @notice Returns whether a buyer is approved for a listing.
-    function isBuyerApprovedForListing(uint256 _listingId, address _buyer) external view returns (bool) {
+    function isBuyerApprovedForListing(
+        uint256 _listingId,
+        address _buyer
+    ) external view returns (bool) {
         return _directListingsStorage().isBuyerApprovedForListing[_listingId][_buyer];
     }
 
     /// @notice Returns whether a currency is approved for a listing.
-    function isCurrencyApprovedForListing(uint256 _listingId, address _currency) external view returns (bool) {
+    function isCurrencyApprovedForListing(
+        uint256 _listingId,
+        address _currency
+    ) external view returns (bool) {
         return _directListingsStorage().currencyPriceForListing[_listingId][_currency] > 0;
     }
 
     /// @notice Returns the price per token for a listing, in the given currency.
-    function currencyPriceForListing(uint256 _listingId, address _currency) external view returns (uint256) {
+    function currencyPriceForListing(
+        uint256 _listingId,
+        address _currency
+    ) external view returns (uint256) {
         if (_directListingsStorage().currencyPriceForListing[_listingId][_currency] == 0) {
             revert("Currency not approved for listing");
         }
@@ -340,8 +372,14 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     }
 
     /// @notice Returns all non-cancelled listings.
-    function getAllListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory _allListings) {
-        require(_startId <= _endId && _endId < _directListingsStorage().totalListings, "invalid range");
+    function getAllListings(
+        uint256 _startId,
+        uint256 _endId
+    ) external view returns (Listing[] memory _allListings) {
+        require(
+            _startId <= _endId && _endId < _directListingsStorage().totalListings,
+            "invalid range"
+        );
 
         _allListings = new Listing[](_endId - _startId + 1);
 
@@ -355,12 +393,14 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
      *          A valid listing is where the listing creator still owns and has approved Marketplace
      *          to transfer the listed NFTs.
      */
-    function getAllValidListings(uint256 _startId, uint256 _endId)
-        external
-        view
-        returns (Listing[] memory _validListings)
-    {
-        require(_startId <= _endId && _endId < _directListingsStorage().totalListings, "invalid range");
+    function getAllValidListings(
+        uint256 _startId,
+        uint256 _endId
+    ) external view returns (Listing[] memory _validListings) {
+        require(
+            _startId <= _endId && _endId < _directListingsStorage().totalListings,
+            "invalid range"
+        );
 
         Listing[] memory _listings = new Listing[](_endId - _startId + 1);
         uint256 _listingCount;
@@ -409,9 +449,15 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     }
 
     /// @dev Checks whether the listing creator owns and has approved marketplace to transfer listed tokens.
-    function _validateNewListing(ListingParameters memory _params, TokenType _tokenType) internal view {
+    function _validateNewListing(
+        ListingParameters memory _params,
+        TokenType _tokenType
+    ) internal view {
         require(_params.quantity > 0, "Marketplace: listing zero quantity.");
-        require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "Marketplace: listing invalid quantity.");
+        require(
+            _params.quantity == 1 || _tokenType == TokenType.ERC1155,
+            "Marketplace: listing invalid quantity."
+        );
 
         require(
             _validateOwnershipAndApproval(
@@ -426,7 +472,9 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     }
 
     /// @dev Checks whether the listing exists, is active, and if the lister has sufficient balance.
-    function _validateExistingListing(Listing memory _targetListing) internal view returns (bool isValid) {
+    function _validateExistingListing(
+        Listing memory _targetListing
+    ) internal view returns (bool isValid) {
         isValid =
             _targetListing.startTimestamp <= block.timestamp &&
             _targetListing.endTimestamp > block.timestamp &&
@@ -471,7 +519,8 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
 
             isValid =
                 owner == _tokenOwner &&
-                (operator == market || IERC721(_assetContract).isApprovedForAll(_tokenOwner, market));
+                (operator == market ||
+                    IERC721(_assetContract).isApprovedForAll(_tokenOwner, market));
         }
     }
 
@@ -496,7 +545,13 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
         Listing memory _listing
     ) internal {
         if (_listing.tokenType == TokenType.ERC1155) {
-            IERC1155(_listing.assetContract).safeTransferFrom(_from, _to, _listing.tokenId, _quantity, "");
+            IERC1155(_listing.assetContract).safeTransferFrom(
+                _from,
+                _to,
+                _listing.tokenId,
+                _quantity,
+                ""
+            );
         } else if (_listing.tokenType == TokenType.ERC721) {
             IERC721(_listing.assetContract).safeTransferFrom(_from, _to, _listing.tokenId, "");
         }
@@ -515,7 +570,8 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
 
         // Payout platform fee
         {
-            (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
+            (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this))
+                .getPlatformFeeInfo();
             uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
             // Transfer platform fee
@@ -533,8 +589,9 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
         // Payout royalties
         {
             // Get royalty recipients and amounts
-            (address payable[] memory recipients, uint256[] memory amounts) = RoyaltyPaymentsLogic(address(this))
-                .getRoyalty(_listing.assetContract, _listing.tokenId, _totalPayoutAmount);
+            (address payable[] memory recipients, uint256[] memory amounts) = RoyaltyPaymentsLogic(
+                address(this)
+            ).getRoyalty(_listing.assetContract, _listing.tokenId, _totalPayoutAmount);
 
             uint256 royaltyRecipientCount = recipients.length;
 
@@ -577,7 +634,11 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     }
 
     /// @dev Returns the DirectListings storage.
-    function _directListingsStorage() internal pure returns (DirectListingsStorage.Data storage data) {
+    function _directListingsStorage()
+        internal
+        pure
+        returns (DirectListingsStorage.Data storage data)
+    {
         data = DirectListingsStorage.data();
     }
 }

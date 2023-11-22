@@ -197,7 +197,8 @@ contract DropERC721_V3 is
                 if (encryptedData[baseURIIndices[i]].length != 0) {
                     return string(abi.encodePacked(baseURI[baseURIIndices[i]], "0"));
                 } else {
-                    return string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
+                    return
+                        string(abi.encodePacked(baseURI[baseURIIndices[i]], _tokenId.toString()));
                 }
             }
         }
@@ -206,23 +207,30 @@ contract DropERC721_V3 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
-        override(ERC721EnumerableUpgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable, IERC165)
+        override(
+            ERC721EnumerableUpgradeable,
+            AccessControlEnumerableUpgradeable,
+            IERC165Upgradeable,
+            IERC165
+        )
         returns (bool)
     {
-        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
+        return
+            super.supportsInterface(interfaceId) ||
+            type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     /// @dev Returns the royalty recipient and amount, given a tokenId and sale price.
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view virtual returns (address receiver, uint256 royaltyAmount) {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
@@ -249,7 +257,10 @@ contract DropERC721_V3 is
         baseURIIndices.push(baseURIIndex);
 
         if (_data.length > 0) {
-            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(
+                _data,
+                (bytes, bytes32)
+            );
 
             if (encryptedURI.length != 0 && provenanceHash != "") {
                 encryptedData[baseURIIndex] = _data;
@@ -260,11 +271,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 index, bytes calldata _key)
-        external
-        onlyRole(MINTER_ROLE)
-        returns (string memory revealedURI)
-    {
+    function reveal(
+        uint256 index,
+        bytes calldata _key
+    ) external onlyRole(MINTER_ROLE) returns (string memory revealedURI) {
         require(index < baseURIIndices.length, "invalid index.");
 
         uint256 _index = baseURIIndices[index];
@@ -275,7 +285,10 @@ contract DropERC721_V3 is
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
 
-        require(keccak256(abi.encodePacked(revealedURI, _key, block.chainid)) == provenanceHash, "Incorrect key");
+        require(
+            keccak256(abi.encodePacked(revealedURI, _key, block.chainid)) == provenanceHash,
+            "Incorrect key"
+        );
 
         baseURI[_index] = revealedURI;
         delete encryptedData[_index];
@@ -286,7 +299,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev See: https://ethereum.stackexchange.com/questions/69825/decrypt-message-on-chain
-    function encryptDecrypt(bytes memory data, bytes calldata key) public pure returns (bytes memory result) {
+    function encryptDecrypt(
+        bytes memory data,
+        bytes calldata key
+    ) public pure returns (bytes memory result) {
         // Store data length on stack for later use
         uint256 length = data.length;
 
@@ -376,7 +392,9 @@ contract DropERC721_V3 is
              *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
              *  can be used only once.
              */
-            claimCondition.limitMerkleProofClaim[activeConditionId].set(uint256(uint160(_msgSender())));
+            claimCondition.limitMerkleProofClaim[activeConditionId].set(
+                uint256(uint160(_msgSender()))
+            );
         }
 
         // If there's a price, collect price.
@@ -389,10 +407,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
-    function setClaimConditions(ClaimCondition[] calldata _phases, bool _resetClaimEligibility)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setClaimConditions(
+        ClaimCondition[] calldata _phases,
+        bool _resetClaimEligibility
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 existingStartIndex = claimCondition.currentStartId;
         uint256 existingPhaseCount = claimCondition.count;
 
@@ -417,7 +435,10 @@ contract DropERC721_V3 is
             require(i == 0 || lastConditionStartTimestamp < _phases[i].startTimestamp, "ST");
 
             uint256 supplyClaimedAlready = claimCondition.phases[newStartIndex + i].supplyClaimed;
-            require(supplyClaimedAlready <= _phases[i].maxClaimableSupply, "max supply claimed already");
+            require(
+                supplyClaimedAlready <= _phases[i].maxClaimableSupply,
+                "max supply claimed already"
+            );
 
             claimCondition.phases[newStartIndex + i] = _phases[i];
             claimCondition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
@@ -469,8 +490,18 @@ contract DropERC721_V3 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), primarySaleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            _msgSender(),
+            platformFeeRecipient,
+            platformFees
+        );
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            _msgSender(),
+            primarySaleRecipient,
+            totalPrice - platformFees
+        );
     }
 
     /// @dev Transfers the NFTs being claimed.
@@ -509,14 +540,16 @@ contract DropERC721_V3 is
         ClaimCondition memory currentClaimPhase = claimCondition.phases[_conditionId];
 
         require(
-            _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
+            _currency == currentClaimPhase.currency &&
+                _pricePerToken == currentClaimPhase.pricePerToken,
             "invalid currency or price."
         );
 
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
             _quantity > 0 &&
-                (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
+                (!verifyMaxQuantityPerTransaction ||
+                    _quantity <= currentClaimPhase.quantityLimitPerTransaction),
             "invalid quantity."
         );
         require(
@@ -524,14 +557,24 @@ contract DropERC721_V3 is
             "exceed max claimable supply."
         );
         require(nextTokenIdToClaim + _quantity <= nextTokenIdToMint, "not enough minted tokens.");
-        require(maxTotalSupply == 0 || nextTokenIdToClaim + _quantity <= maxTotalSupply, "exceed max total supply.");
         require(
-            maxWalletClaimCount == 0 || walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
+            maxTotalSupply == 0 || nextTokenIdToClaim + _quantity <= maxTotalSupply,
+            "exceed max total supply."
+        );
+        require(
+            maxWalletClaimCount == 0 ||
+                walletClaimCount[_claimer] + _quantity <= maxWalletClaimCount,
             "exceed claim limit"
         );
 
-        (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(_conditionId, _claimer);
-        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim.");
+        (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) = getClaimTimestamp(
+            _conditionId,
+            _claimer
+        );
+        require(
+            lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp,
+            "cannot claim."
+        );
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -556,7 +599,8 @@ contract DropERC721_V3 is
                 "proof claimed."
             );
             require(
-                _proofMaxQuantityPerTransaction == 0 || _quantity <= _proofMaxQuantityPerTransaction,
+                _proofMaxQuantityPerTransaction == 0 ||
+                    _quantity <= _proofMaxQuantityPerTransaction,
                 "invalid quantity proof."
             );
         }
@@ -568,7 +612,11 @@ contract DropERC721_V3 is
 
     /// @dev At any given moment, returns the uid for the active claim condition.
     function getActiveClaimConditionId() public view returns (uint256) {
-        for (uint256 i = claimCondition.currentStartId + claimCondition.count; i > claimCondition.currentStartId; i--) {
+        for (
+            uint256 i = claimCondition.currentStartId + claimCondition.count;
+            i > claimCondition.currentStartId;
+            i--
+        ) {
             if (block.timestamp >= claimCondition.phases[i - 1].startTimestamp) {
                 return i - 1;
             }
@@ -598,11 +646,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
-    function getClaimTimestamp(uint256 _conditionId, address _claimer)
-        public
-        view
-        returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
-    {
+    function getClaimTimestamp(
+        uint256 _conditionId,
+        address _claimer
+    ) public view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) {
         lastClaimTimestamp = claimCondition.limitLastClaimTimestamp[_conditionId][_claimer];
 
         unchecked {
@@ -617,7 +664,9 @@ contract DropERC721_V3 is
     }
 
     /// @dev Returns the claim condition at the given uid.
-    function getClaimConditionById(uint256 _conditionId) external view returns (ClaimCondition memory condition) {
+    function getClaimConditionById(
+        uint256 _conditionId
+    ) external view returns (ClaimCondition memory condition) {
         condition = claimCondition.phases[_conditionId];
     }
 
@@ -631,7 +680,10 @@ contract DropERC721_V3 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a contract admin set a claim count for a wallet.
-    function setWalletClaimCount(address _claimer, uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setWalletClaimCount(
+        address _claimer,
+        uint256 _count
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         walletClaimCount[_claimer] = _count;
         emit WalletClaimCountUpdated(_claimer, _count);
     }
@@ -655,10 +707,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setDefaultRoyaltyInfo(
+        address _royaltyRecipient,
+        uint256 _royaltyBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_royaltyBps <= MAX_BPS, "> MAX_BPS");
 
         royaltyRecipient = _royaltyRecipient;
@@ -681,10 +733,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFeeBps <= MAX_BPS, "> MAX_BPS.");
 
         platformFeeBps = uint16(_platformFeeBps);

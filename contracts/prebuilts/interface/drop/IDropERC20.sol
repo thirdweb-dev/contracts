@@ -64,5 +64,8 @@ interface IDropERC20 is IERC20Upgradeable, IDropClaimCondition {
      *                               `limitMerkleProofClaim` values when setting new
      *                               claim conditions.
      */
-    function setClaimConditions(ClaimCondition[] calldata phases, bool resetClaimEligibility) external;
+    function setClaimConditions(
+        ClaimCondition[] calldata phases,
+        bool resetClaimEligibility
+    ) external;
 }

@@ -13,7 +13,11 @@ contract MyBatchMintMetadataUpg is BatchMintMetadata {
         uint256 _amountToMint,
         string memory _baseURIForTokens
     ) external returns (uint256 nextTokenIdToMint, uint256 batchId) {
-        (nextTokenIdToMint, batchId) = _batchMintMetadata(_startId, _amountToMint, _baseURIForTokens);
+        (nextTokenIdToMint, batchId) = _batchMintMetadata(
+            _startId,
+            _amountToMint,
+            _baseURIForTokens
+        );
     }
 
     function getBatchStartId(uint256 _batchId) external view returns (uint256) {

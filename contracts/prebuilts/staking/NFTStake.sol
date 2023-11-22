@@ -97,7 +97,9 @@ contract NFTStake is
     function depositRewardTokens(uint256 _amount) external payable nonReentrant {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
-        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : rewardToken;
+        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN
+            ? nativeTokenWrapper
+            : rewardToken;
 
         uint256 balanceBefore = IERC20(_rewardToken).balanceOf(address(this));
         CurrencyTransferLib.transferCurrencyWithWrapper(
@@ -152,7 +154,9 @@ contract NFTStake is
     }
 
     function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
-        return interfaceId == type(IERC721ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
+        return
+            interfaceId == type(IERC721ReceiverUpgradeable).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     /*///////////////////////////////////////////////////////////////

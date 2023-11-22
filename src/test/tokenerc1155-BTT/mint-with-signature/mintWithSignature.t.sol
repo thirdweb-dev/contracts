@@ -145,11 +145,10 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         vm.stopPrank();
     }
 
-    function signMintRequest(TokenERC1155.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        TokenERC1155.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = bytes.concat(
             abi.encode(
                 typehashMintRequest,
@@ -170,7 +169,9 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
             )
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -226,7 +227,12 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         _;
     }
 
-    function test_mintWithSignature_invalidEndTimestamp() public whenMinterRole whenUidNotUsed whenValidStartTimestamp {
+    function test_mintWithSignature_invalidEndTimestamp()
+        public
+        whenMinterRole
+        whenUidNotUsed
+        whenValidStartTimestamp
+    {
         _mintrequest.validityEndTimestamp = uint128(block.timestamp - 1);
 
         bytes memory _signature = signMintRequest(_mintrequest, privateKey);
@@ -557,10 +563,9 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         vm.prank(caller);
         vm.expectEmit(false, false, false, true);
         emit MetadataUpdate(_tokenIdToMint);
-        tokenContract.mintWithSignature{ value: _mintrequest.pricePerToken * _mintrequest.quantity }(
-            _mintrequest,
-            _signature
-        );
+        tokenContract.mintWithSignature{
+            value: _mintrequest.pricePerToken * _mintrequest.quantity
+        }(_mintrequest, _signature);
     }
 
     function test_mintWithSignature_nonZeroPrice_nativeToken_TokensMintedWithSignatureEvent()
@@ -582,10 +587,9 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         vm.prank(caller);
         vm.expectEmit(true, true, true, true);
         emit TokensMintedWithSignature(signer, _mintrequest.to, _tokenIdToMint, _mintrequest);
-        tokenContract.mintWithSignature{ value: _mintrequest.pricePerToken * _mintrequest.quantity }(
-            _mintrequest,
-            _signature
-        );
+        tokenContract.mintWithSignature{
+            value: _mintrequest.pricePerToken * _mintrequest.quantity
+        }(_mintrequest, _signature);
     }
 
     function test_mintWithSignature_nonZeroPrice_ERC20_nonZeroMsgValue()
@@ -729,7 +733,8 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         tokenContract.mintWithSignature(_mintrequest, _signature);
 
         (address _royaltyRecipient, uint16 _royaltyBps) = tokenContract.getRoyaltyInfoForToken(0);
-        (address _defaultRoyaltyRecipient, uint16 _defaultRoyaltyBps) = tokenContract.getDefaultRoyaltyInfo();
+        (address _defaultRoyaltyRecipient, uint16 _defaultRoyaltyBps) = tokenContract
+            .getDefaultRoyaltyInfo();
         assertEq(_royaltyRecipient, _defaultRoyaltyRecipient);
         assertEq(_royaltyBps, _defaultRoyaltyBps);
     }

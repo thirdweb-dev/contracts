@@ -34,11 +34,15 @@ contract AirdropERC20BenchmarkTest is BaseTest {
         countTwo = 200;
 
         for (uint256 i = 0; i < countOne; i++) {
-            _contentsOne.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
+            _contentsOne.push(
+                IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether })
+            );
         }
 
         for (uint256 i = countOne; i < countOne + countTwo; i++) {
-            _contentsTwo.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
+            _contentsTwo.push(
+                IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether })
+            );
         }
     }
 

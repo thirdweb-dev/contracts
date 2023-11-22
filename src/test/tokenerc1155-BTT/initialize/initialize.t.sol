@@ -21,7 +21,11 @@ contract TokenERC1155Test_Initialize is BaseTest {
     address public proxy;
 
     event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
-    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
+    event RoleAdminChanged(
+        bytes32 indexed role,
+        bytes32 indexed previousAdminRole,
+        bytes32 indexed newAdminRole
+    );
 
     function setUp() public override {
         super.setUp();
@@ -114,7 +118,12 @@ contract TokenERC1155Test_Initialize is BaseTest {
         _;
     }
 
-    function test_initialize() public whenNotImplementation whenProxyNotInitialized whenPlatformFeeBpsWithinMaxBps {
+    function test_initialize()
+        public
+        whenNotImplementation
+        whenProxyNotInitialized
+        whenPlatformFeeBpsWithinMaxBps
+    {
         MyTokenERC1155(proxy).initialize(
             deployer,
             NAME,
@@ -143,14 +152,19 @@ contract TokenERC1155Test_Initialize is BaseTest {
         assertEq(tokenContract.symbol(), SYMBOL);
         assertEq(tokenContract.contractURI(), CONTRACT_URI);
 
-        (address _platformFeeRecipient, uint16 _platformFeeBps) = tokenContract.getPlatformFeeInfo();
+        (address _platformFeeRecipient, uint16 _platformFeeBps) = tokenContract
+            .getPlatformFeeInfo();
         assertEq(_platformFeeBps, platformFeeBps);
         assertEq(_platformFeeRecipient, platformFeeRecipient);
         assertEq(tokenContract.platformFeeRecipient(), platformFeeRecipient);
-        assertEq(uint8(tokenContract.getPlatformFeeType()), uint8(IPlatformFee.PlatformFeeType.Bps));
+        assertEq(
+            uint8(tokenContract.getPlatformFeeType()),
+            uint8(IPlatformFee.PlatformFeeType.Bps)
+        );
 
         (address _royaltyRecipient, uint16 _royaltyBps) = tokenContract.getDefaultRoyaltyInfo();
-        (address _royaltyRecipientForToken, uint16 _royaltyBpsForToken) = tokenContract.getRoyaltyInfoForToken(1); // random tokenId
+        (address _royaltyRecipientForToken, uint16 _royaltyBpsForToken) = tokenContract
+            .getRoyaltyInfoForToken(1); // random tokenId
         assertEq(_royaltyBps, royaltyBps);
         assertEq(_royaltyRecipient, royaltyRecipient);
         assertEq(_royaltyRecipient, _royaltyRecipientForToken);
@@ -164,7 +178,10 @@ contract TokenERC1155Test_Initialize is BaseTest {
         assertTrue(tokenContract.hasRole(keccak256("TRANSFER_ROLE"), address(0)));
         assertTrue(tokenContract.hasRole(keccak256("MINTER_ROLE"), deployer));
         assertTrue(tokenContract.hasRole(keccak256("METADATA_ROLE"), deployer));
-        assertEq(tokenContract.getRoleAdmin(keccak256("METADATA_ROLE")), keccak256("METADATA_ROLE"));
+        assertEq(
+            tokenContract.getRoleAdmin(keccak256("METADATA_ROLE")),
+            keccak256("METADATA_ROLE")
+        );
     }
 
     function test_initialize_event_RoleGranted_DefaultAdmin()

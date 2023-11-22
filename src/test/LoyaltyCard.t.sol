@@ -83,11 +83,10 @@ contract LoyaltyCardTest is BaseTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(LoyaltyCard.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        LoyaltyCard.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,
@@ -103,7 +102,9 @@ contract LoyaltyCardTest is BaseTest {
             _request.uid
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -229,7 +230,10 @@ contract LoyaltyCardTest is BaseTest {
         assertEq(loyaltyCard.nextTokenIdToMint(), nextTokenId + _mintrequest.quantity);
         assertEq(loyaltyCard.tokenURI(nextTokenId), string(abi.encodePacked(_mintrequest.uri)));
         assertEq(loyaltyCard.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(loyaltyCard.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            loyaltyCard.balanceOf(recipient),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
         assertEq(loyaltyCard.ownerOf(nextTokenId), recipient);
     }
 
@@ -253,7 +257,10 @@ contract LoyaltyCardTest is BaseTest {
         assertEq(loyaltyCard.nextTokenIdToMint(), nextTokenId + _mintrequest.quantity);
         assertEq(loyaltyCard.tokenURI(nextTokenId), string(abi.encodePacked(_mintrequest.uri)));
         assertEq(loyaltyCard.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(loyaltyCard.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            loyaltyCard.balanceOf(recipient),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
         assertEq(loyaltyCard.ownerOf(nextTokenId), recipient);
     }
 
@@ -276,7 +283,10 @@ contract LoyaltyCardTest is BaseTest {
         assertEq(loyaltyCard.nextTokenIdToMint(), nextTokenId + _mintrequest.quantity);
         assertEq(loyaltyCard.tokenURI(nextTokenId), string(abi.encodePacked(_mintrequest.uri)));
         assertEq(loyaltyCard.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(loyaltyCard.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            loyaltyCard.balanceOf(recipient),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
         assertEq(loyaltyCard.ownerOf(nextTokenId), recipient);
     }
 

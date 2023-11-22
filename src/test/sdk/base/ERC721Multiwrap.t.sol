@@ -70,7 +70,9 @@ contract BaseERC721MultiwrapTest is BaseUtilTest {
         base.grantRole(keccak256("MINTER_ROLE"), address(tokenOwner));
     }
 
-    function getWrappedContents(uint256 _tokenId) public view returns (ITokenBundle.Token[] memory contents) {
+    function getWrappedContents(
+        uint256 _tokenId
+    ) public view returns (ITokenBundle.Token[] memory contents) {
         uint256 total = base.getTokenCountOfBundle(_tokenId);
         contents = new ITokenBundle.Token[](total);
 
@@ -92,11 +94,16 @@ contract BaseERC721MultiwrapTest is BaseUtilTest {
 
         assertEq(expectedIdForWrappedToken + 1, base.nextTokenIdToMint());
 
-        ITokenBundle.Token[] memory contentsOfWrappedToken = getWrappedContents(expectedIdForWrappedToken);
+        ITokenBundle.Token[] memory contentsOfWrappedToken = getWrappedContents(
+            expectedIdForWrappedToken
+        );
         assertEq(contentsOfWrappedToken.length, wrappedContent.length);
         for (uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
             assertEq(contentsOfWrappedToken[i].assetContract, wrappedContent[i].assetContract);
-            assertEq(uint256(contentsOfWrappedToken[i].tokenType), uint256(wrappedContent[i].tokenType));
+            assertEq(
+                uint256(contentsOfWrappedToken[i].tokenType),
+                uint256(wrappedContent[i].tokenType)
+            );
             assertEq(contentsOfWrappedToken[i].tokenId, wrappedContent[i].tokenId);
             assertEq(contentsOfWrappedToken[i].totalAmount, wrappedContent[i].totalAmount);
         }

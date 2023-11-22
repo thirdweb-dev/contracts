@@ -5,7 +5,12 @@ pragma solidity ^0.8.10;
 
 interface ISharedMetadata {
     /// @notice Emitted when shared metadata is lazy minted.
-    event SharedMetadataUpdated(string name, string description, string imageURI, string animationURI);
+    event SharedMetadataUpdated(
+        string name,
+        string description,
+        string imageURI,
+        string animationURI
+    );
 
     /**
      *  @notice Structure for metadata shared across all tokens

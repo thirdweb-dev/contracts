@@ -33,13 +33,10 @@ abstract contract Royalty is IRoyalty {
      *  @return receiver        Address of royalty recipient account.
      *  @return royaltyAmount   Royalty amount calculated at current royaltyBps value.
      */
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view virtual override returns (address receiver, uint256 royaltyAmount) {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / 10_000;
@@ -50,7 +47,9 @@ abstract contract Royalty is IRoyalty {
      *  @dev             Returns royalty recipient and bps for `_tokenId`.
      *  @param _tokenId  The tokenID of the NFT for which to query royalty info.
      */
-    function getRoyaltyInfoForToken(uint256 _tokenId) public view override returns (address, uint16) {
+    function getRoyaltyInfoForToken(
+        uint256 _tokenId
+    ) public view override returns (address, uint16) {
         RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
 
         return
@@ -75,7 +74,10 @@ abstract contract Royalty is IRoyalty {
      *  @param _royaltyRecipient   Address to be set as default royalty recipient.
      *  @param _royaltyBps         Updated royalty bps.
      */
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external override {
+    function setDefaultRoyaltyInfo(
+        address _royaltyRecipient,
+        uint256 _royaltyBps
+    ) external override {
         if (!_canSetRoyaltyInfo()) {
             revert("Not authorized");
         }

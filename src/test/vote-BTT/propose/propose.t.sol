@@ -158,7 +158,11 @@ contract VoteERC20Test_Propose is BaseTest {
         _;
     }
 
-    function test_propose_lengthMismatchTargetsValues() public hasThresholdVotes whenNotEmptyTargets {
+    function test_propose_lengthMismatchTargetsValues()
+        public
+        hasThresholdVotes
+        whenNotEmptyTargets
+    {
         _setupProposalTwo();
 
         uint256[] memory _values;
@@ -222,7 +226,10 @@ contract VoteERC20Test_Propose is BaseTest {
         vm.prank(caller);
         proposalIdTwo = voteContract.propose(targetsTwo, valuesTwo, calldatasTwo, descriptionTwo);
 
-        assertEq(voteContract.proposalSnapshot(proposalIdTwo), voteContract.votingDelay() + block.number);
+        assertEq(
+            voteContract.proposalSnapshot(proposalIdTwo),
+            voteContract.votingDelay() + block.number
+        );
         assertEq(
             voteContract.proposalDeadline(proposalIdTwo),
             voteContract.proposalSnapshot(proposalIdTwo) + voteContract.votingPeriod()

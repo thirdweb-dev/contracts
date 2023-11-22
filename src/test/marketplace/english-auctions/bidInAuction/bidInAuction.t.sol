@@ -64,7 +64,9 @@ contract BidInAuctionTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+            new MarketplaceV3(
+                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
+            )
         );
 
         vm.prank(marketplaceDeployer);
@@ -238,7 +240,11 @@ contract BidInAuctionTest is BaseTest, IExtension {
         _;
     }
 
-    function test_bidInAuction_whenAuctionIsNotActive() public whenCallIsNotReentrant whenAuctionExists {
+    function test_bidInAuction_whenAuctionIsNotActive()
+        public
+        whenCallIsNotReentrant
+        whenAuctionExists
+    {
         vm.prank(buyer);
         vm.expectRevert("Marketplace: inactive auction.");
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, bidAmount);
@@ -276,7 +282,10 @@ contract BidInAuctionTest is BaseTest, IExtension {
 
         vm.prank(buyer);
         vm.expectRevert("Marketplace: invalid native tokens sent.");
-        EnglishAuctionsLogic(marketplace).bidInAuction{ value: 1 }(auctionId, auctionParams.buyoutBidAmount);
+        EnglishAuctionsLogic(marketplace).bidInAuction{ value: 1 }(
+            auctionId,
+            auctionParams.buyoutBidAmount
+        );
     }
 
     function test_bidInAuction_whenBidAmountIsGtBuyoutPrice()
@@ -288,7 +297,10 @@ contract BidInAuctionTest is BaseTest, IExtension {
     {
         vm.prank(buyer);
         vm.expectRevert("Marketplace: Bidding above buyout price.");
-        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, auctionParams.buyoutBidAmount + 1);
+        EnglishAuctionsLogic(marketplace).bidInAuction(
+            auctionId,
+            auctionParams.buyoutBidAmount + 1
+        );
     }
 
     modifier whenBidAmountLtBuyoutPrice() {
@@ -309,7 +321,10 @@ contract BidInAuctionTest is BaseTest, IExtension {
         erc20.approve(marketplace, 100 ether);
 
         vm.prank(winningBidder);
-        EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, auctionParams.minimumBidAmount + 1);
+        EnglishAuctionsLogic(marketplace).bidInAuction(
+            auctionId,
+            auctionParams.minimumBidAmount + 1
+        );
         _;
     }
 
@@ -342,7 +357,10 @@ contract BidInAuctionTest is BaseTest, IExtension {
         vm.prank(buyer);
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, bidAmount);
 
-        assertEq(erc20.balanceOf(winningBidder), winningBidderBal + auctionParams.minimumBidAmount + 1);
+        assertEq(
+            erc20.balanceOf(winningBidder),
+            winningBidderBal + auctionParams.minimumBidAmount + 1
+        );
         assertEq(erc20.balanceOf(marketplace), bidAmount);
 
         assertEq(erc1155.balanceOf(marketplace, auctionParams.tokenId), 0);
@@ -401,7 +419,13 @@ contract BidInAuctionTest is BaseTest, IExtension {
         whenBidAmountIsNotZero
         whenBidAmountLtBuyoutPrice
     {
-        assertEq(EnglishAuctionsLogic(marketplace).isNewWinningBid(auctionId, auctionParams.minimumBidAmount), false);
+        assertEq(
+            EnglishAuctionsLogic(marketplace).isNewWinningBid(
+                auctionId,
+                auctionParams.minimumBidAmount
+            ),
+            false
+        );
 
         vm.prank(buyer);
         vm.expectRevert("Marketplace: not winning bid.");
@@ -442,8 +466,11 @@ contract BidInAuctionTest is BaseTest, IExtension {
             uint256(IEnglishAuctions.Status.CREATED)
         );
 
-        (address bidderBefore, address currencyBefore, uint256 bidAmountBefore) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (
+            address bidderBefore,
+            address currencyBefore,
+            uint256 bidAmountBefore
+        ) = EnglishAuctionsLogic(marketplace).getWinningBid(auctionId);
 
         assertEq(bidderBefore, winningBidder);
         assertEq(currencyBefore, address(erc20));
@@ -463,14 +490,18 @@ contract BidInAuctionTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, bidAmount);
         vm.stopPrank();
 
-        (address bidderAfter, address currencyAfter, uint256 bidAmountAfter) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidderAfter, address currencyAfter, uint256 bidAmountAfter) = EnglishAuctionsLogic(
+            marketplace
+        ).getWinningBid(auctionId);
 
         assertEq(bidderAfter, buyer);
         assertEq(currencyAfter, address(erc20));
         assertEq(bidAmountAfter, bidAmount);
 
-        assertEq(erc20.balanceOf(winningBidder), winningBidderBal + auctionParams.minimumBidAmount + 1);
+        assertEq(
+            erc20.balanceOf(winningBidder),
+            winningBidderBal + auctionParams.minimumBidAmount + 1
+        );
         assertEq(erc20.balanceOf(marketplace), bidAmount);
 
         assertEq(erc1155.balanceOf(marketplace, auctionParams.tokenId), 1);
@@ -505,8 +536,11 @@ contract BidInAuctionTest is BaseTest, IExtension {
             uint256(IEnglishAuctions.Status.CREATED)
         );
 
-        (address bidderBefore, address currencyBefore, uint256 bidAmountBefore) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (
+            address bidderBefore,
+            address currencyBefore,
+            uint256 bidAmountBefore
+        ) = EnglishAuctionsLogic(marketplace).getWinningBid(auctionId);
 
         assertEq(bidderBefore, address(0));
         assertEq(currencyBefore, address(erc20));
@@ -524,8 +558,9 @@ contract BidInAuctionTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, bidAmount);
         vm.stopPrank();
 
-        (address bidderAfter, address currencyAfter, uint256 bidAmountAfter) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidderAfter, address currencyAfter, uint256 bidAmountAfter) = EnglishAuctionsLogic(
+            marketplace
+        ).getWinningBid(auctionId);
 
         assertEq(bidderAfter, buyer);
         assertEq(currencyAfter, address(erc20));
@@ -567,14 +602,20 @@ contract BidInAuctionTest is BaseTest, IExtension {
             uint256(IEnglishAuctions.Status.CREATED)
         );
 
-        (address bidderBefore, address currencyBefore, uint256 bidAmountBefore) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (
+            address bidderBefore,
+            address currencyBefore,
+            uint256 bidAmountBefore
+        ) = EnglishAuctionsLogic(marketplace).getWinningBid(auctionId);
 
         assertEq(bidderBefore, winningBidder);
         assertEq(currencyBefore, address(erc20));
         assertEq(bidAmountBefore, auctionParams.minimumBidAmount + 1);
 
-        assertEq(EnglishAuctionsLogic(marketplace).getAuction(auctionId).endTimestamp, auctionParams.endTimestamp);
+        assertEq(
+            EnglishAuctionsLogic(marketplace).getAuction(auctionId).endTimestamp,
+            auctionParams.endTimestamp
+        );
 
         vm.startPrank(buyer);
         vm.expectEmit(true, true, true, false);
@@ -593,14 +634,18 @@ contract BidInAuctionTest is BaseTest, IExtension {
             auctionParams.endTimestamp + auctionParams.timeBufferInSeconds
         );
 
-        (address bidderAfter, address currencyAfter, uint256 bidAmountAfter) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidderAfter, address currencyAfter, uint256 bidAmountAfter) = EnglishAuctionsLogic(
+            marketplace
+        ).getWinningBid(auctionId);
 
         assertEq(bidderAfter, buyer);
         assertEq(currencyAfter, address(erc20));
         assertEq(bidAmountAfter, bidAmount);
 
-        assertEq(erc20.balanceOf(winningBidder), winningBidderBal + auctionParams.minimumBidAmount + 1);
+        assertEq(
+            erc20.balanceOf(winningBidder),
+            winningBidderBal + auctionParams.minimumBidAmount + 1
+        );
         assertEq(erc20.balanceOf(marketplace), bidAmount);
 
         assertEq(erc1155.balanceOf(marketplace, auctionParams.tokenId), 1);
@@ -636,14 +681,20 @@ contract BidInAuctionTest is BaseTest, IExtension {
             uint256(IEnglishAuctions.Status.CREATED)
         );
 
-        (address bidderBefore, address currencyBefore, uint256 bidAmountBefore) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (
+            address bidderBefore,
+            address currencyBefore,
+            uint256 bidAmountBefore
+        ) = EnglishAuctionsLogic(marketplace).getWinningBid(auctionId);
 
         assertEq(bidderBefore, address(0));
         assertEq(currencyBefore, address(erc20));
         assertEq(bidAmountBefore, 0);
 
-        assertEq(EnglishAuctionsLogic(marketplace).getAuction(auctionId).endTimestamp, auctionParams.endTimestamp);
+        assertEq(
+            EnglishAuctionsLogic(marketplace).getAuction(auctionId).endTimestamp,
+            auctionParams.endTimestamp
+        );
 
         vm.startPrank(buyer);
         vm.expectEmit(true, true, true, false);
@@ -662,8 +713,9 @@ contract BidInAuctionTest is BaseTest, IExtension {
             auctionParams.endTimestamp + auctionParams.timeBufferInSeconds
         );
 
-        (address bidderAfter, address currencyAfter, uint256 bidAmountAfter) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidderAfter, address currencyAfter, uint256 bidAmountAfter) = EnglishAuctionsLogic(
+            marketplace
+        ).getWinningBid(auctionId);
 
         assertEq(bidderAfter, buyer);
         assertEq(currencyAfter, address(erc20));

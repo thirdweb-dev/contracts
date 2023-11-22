@@ -129,11 +129,10 @@ contract TokenERC721Test_MintWithSignature is BaseTest {
         vm.stopPrank();
     }
 
-    function signMintRequest(TokenERC721.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        TokenERC721.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,
@@ -148,7 +147,9 @@ contract TokenERC721Test_MintWithSignature is BaseTest {
             _request.uid
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -200,7 +201,12 @@ contract TokenERC721Test_MintWithSignature is BaseTest {
         _;
     }
 
-    function test_mintWithSignature_invalidEndTimestamp() public whenMinterRole whenUidNotUsed whenValidStartTimestamp {
+    function test_mintWithSignature_invalidEndTimestamp()
+        public
+        whenMinterRole
+        whenUidNotUsed
+        whenValidStartTimestamp
+    {
         _mintrequest.validityEndTimestamp = uint128(block.timestamp - 1);
 
         bytes memory _signature = signMintRequest(_mintrequest, privateKey);
@@ -494,7 +500,10 @@ contract TokenERC721Test_MintWithSignature is BaseTest {
 
         // mint
         vm.prank(caller);
-        uint256 _tokenId = tokenContract.mintWithSignature{ value: _mintrequest.price }(_mintrequest, _signature);
+        uint256 _tokenId = tokenContract.mintWithSignature{ value: _mintrequest.price }(
+            _mintrequest,
+            _signature
+        );
 
         // check state after
         assertEq(_tokenId, _tokenIdToMint);
@@ -669,7 +678,9 @@ contract TokenERC721Test_MintWithSignature is BaseTest {
         vm.prank(caller);
         uint256 _tokenId = tokenContract.mintWithSignature(_mintrequest, _signature);
 
-        (address _royaltyRecipient, uint16 _royaltyBps) = tokenContract.getRoyaltyInfoForToken(_tokenId);
+        (address _royaltyRecipient, uint16 _royaltyBps) = tokenContract.getRoyaltyInfoForToken(
+            _tokenId
+        );
         assertEq(_royaltyRecipient, royaltyRecipient);
         assertEq(_royaltyBps, royaltyBps);
     }
@@ -691,8 +702,11 @@ contract TokenERC721Test_MintWithSignature is BaseTest {
         vm.prank(caller);
         uint256 _tokenId = tokenContract.mintWithSignature(_mintrequest, _signature);
 
-        (address _royaltyRecipient, uint16 _royaltyBps) = tokenContract.getRoyaltyInfoForToken(_tokenId);
-        (address _defaultRoyaltyRecipient, uint16 _defaultRoyaltyBps) = tokenContract.getDefaultRoyaltyInfo();
+        (address _royaltyRecipient, uint16 _royaltyBps) = tokenContract.getRoyaltyInfoForToken(
+            _tokenId
+        );
+        (address _defaultRoyaltyRecipient, uint16 _defaultRoyaltyBps) = tokenContract
+            .getDefaultRoyaltyInfo();
         assertEq(_royaltyRecipient, _defaultRoyaltyRecipient);
         assertEq(_royaltyBps, _defaultRoyaltyBps);
     }

@@ -175,11 +175,7 @@ interface IERC721AUpgradeable {
     /**
      * @dev Equivalent to `safeTransferFrom(from, to, tokenId, '')`.
      */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) external payable;
+    function safeTransferFrom(address from, address to, uint256 tokenId) external payable;
 
     /**
      * @dev Transfers `tokenId` from `from` to `to`.
@@ -197,11 +193,7 @@ interface IERC721AUpgradeable {
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(
-        address from,
-        address to,
-        uint256 tokenId
-    ) external payable;
+    function transferFrom(address from, address to, uint256 tokenId) external payable;
 
     /**
      * @dev Gives permission to `to` to transfer `tokenId` token to another account.
@@ -278,5 +270,10 @@ interface IERC721AUpgradeable {
      *
      * See {_mintERC2309} for more details.
      */
-    event ConsecutiveTransfer(uint256 indexed fromTokenId, uint256 toTokenId, address indexed from, address indexed to);
+    event ConsecutiveTransfer(
+        uint256 indexed fromTokenId,
+        uint256 toTokenId,
+        address indexed from,
+        address indexed to
+    );
 }

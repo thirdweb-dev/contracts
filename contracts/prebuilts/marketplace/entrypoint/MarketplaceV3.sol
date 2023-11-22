@@ -69,7 +69,9 @@ contract MarketplaceV3 is
         address nativeTokenWrapper;
     }
 
-    constructor(MarketplaceConstructorParams memory _marketplaceV3Params)
+    constructor(
+        MarketplaceConstructorParams memory _marketplaceV3Params
+    )
         BaseRouter(_marketplaceV3Params.extensions)
         RoyaltyPaymentsLogic(_marketplaceV3Params.royaltyEngineAddress)
     {
@@ -127,13 +129,9 @@ contract MarketplaceV3 is
                         ERC 165 / 721 / 1155 logic
     //////////////////////////////////////////////////////////////*/
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165, IERC165, ERC1155Receiver)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC165, IERC165, ERC1155Receiver) returns (bool) {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
@@ -172,11 +170,21 @@ contract MarketplaceV3 is
         return _hasRole(EXTENSION_ROLE, msg.sender);
     }
 
-    function _msgSender() internal view override(ERC2771ContextUpgradeable, Permissions) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        override(ERC2771ContextUpgradeable, Permissions)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData() internal view override(ERC2771ContextUpgradeable, Permissions) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        override(ERC2771ContextUpgradeable, Permissions)
+        returns (bytes calldata)
+    {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

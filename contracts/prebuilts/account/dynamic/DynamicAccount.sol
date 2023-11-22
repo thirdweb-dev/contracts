@@ -23,10 +23,10 @@ contract DynamicAccount is AccountCore, BaseRouter {
                     Constructor and Initializer
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
-        AccountCore(_entrypoint, msg.sender)
-        BaseRouter(_defaultExtensions)
-    {
+    constructor(
+        IEntryPoint _entrypoint,
+        Extension[] memory _defaultExtensions
+    ) AccountCore(_entrypoint, msg.sender) BaseRouter(_defaultExtensions) {
         _disableInitializers();
     }
 

@@ -56,7 +56,10 @@ contract MyBurnToClaimDrop721Logic is BurnToClaimDrop721Logic {
         _beforeTokenTransfers(from, to, startTokenId, quantity);
     }
 
-    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed) external returns (uint256 startTokenId) {
+    function transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) external returns (uint256 startTokenId) {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
         startTokenId = data._currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
@@ -189,7 +192,10 @@ contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
             MyBurnToClaimDrop721Logic.beforeTokenTransfers.selector,
             "beforeTokenTransfers(address,address,uint256,uint256)"
         );
-        extension_drop.functions[9] = ExtensionFunction(BurnToClaimDrop721Logic.totalMinted.selector, "totalMinted()");
+        extension_drop.functions[9] = ExtensionFunction(
+            BurnToClaimDrop721Logic.totalMinted.selector,
+            "totalMinted()"
+        );
         extension_drop.functions[10] = ExtensionFunction(
             MyBurnToClaimDrop721Logic.transferTokensOnClaim.selector,
             "transferTokensOnClaim(address,uint256)"
@@ -210,8 +216,14 @@ contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
             BurnToClaimDrop721Logic.setMaxTotalMinted.selector,
             "setMaxTotalMinted(uint256)"
         );
-        extension_drop.functions[15] = ExtensionFunction(BurnToClaimDrop721Logic.burn.selector, "burn(uint256)");
-        extension_drop.functions[16] = ExtensionFunction(MyBurnToClaimDrop721Logic.mintTo.selector, "mintTo(address)");
+        extension_drop.functions[15] = ExtensionFunction(
+            BurnToClaimDrop721Logic.burn.selector,
+            "burn(uint256)"
+        );
+        extension_drop.functions[16] = ExtensionFunction(
+            MyBurnToClaimDrop721Logic.mintTo.selector,
+            "mintTo(address)"
+        );
         extension_drop.functions[17] = ExtensionFunction(
             IERC721.setApprovalForAll.selector,
             "setApprovalForAll(address,bool)"
@@ -339,7 +351,12 @@ contract BurnToClaimDrop721Logic_OtherFunctions is BaseTest, IExtension {
 
     function test_beforeClaim() public {
         bytes32[] memory emptyBytes32Array = new bytes32[](0);
-        IDrop.AllowlistProof memory proof = IDrop.AllowlistProof(emptyBytes32Array, 0, 0, address(0));
+        IDrop.AllowlistProof memory proof = IDrop.AllowlistProof(
+            emptyBytes32Array,
+            0,
+            0,
+            address(0)
+        );
         drop.beforeClaim(0, proof);
 
         vm.expectRevert("!Tokens");

@@ -14,21 +14,19 @@ library ERC6551AccountLib {
         uint256 _salt
     ) internal pure returns (address) {
         bytes32 bytecodeHash = keccak256(
-            ERC6551BytecodeLib.getCreationCode(implementation, chainId, tokenContract, tokenId, _salt)
+            ERC6551BytecodeLib.getCreationCode(
+                implementation,
+                chainId,
+                tokenContract,
+                tokenId,
+                _salt
+            )
         );
 
         return Create2.computeAddress(bytes32(_salt), bytecodeHash, registry);
     }
 
-    function token()
-        internal
-        view
-        returns (
-            uint256,
-            address,
-            uint256
-        )
-    {
+    function token() internal view returns (uint256, address, uint256) {
         bytes memory footer = new bytes(0x60);
 
         assembly {

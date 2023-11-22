@@ -32,10 +32,10 @@ function _parseValidationData(uint256 validationData) pure returns (ValidationDa
 }
 
 // intersect account and paymaster ranges.
-function _intersectTimeRange(uint256 validationData, uint256 paymasterValidationData)
-    pure
-    returns (ValidationData memory)
-{
+function _intersectTimeRange(
+    uint256 validationData,
+    uint256 paymasterValidationData
+) pure returns (ValidationData memory) {
     ValidationData memory accountValidationData = _parseValidationData(validationData);
     ValidationData memory pmValidationData = _parseValidationData(paymasterValidationData);
     address aggregator = accountValidationData.aggregator;
@@ -57,7 +57,10 @@ function _intersectTimeRange(uint256 validationData, uint256 paymasterValidation
  * @param data - the ValidationData to pack
  */
 function _packValidationData(ValidationData memory data) pure returns (uint256) {
-    return uint160(data.aggregator) | (uint256(data.validUntil) << 160) | (uint256(data.validAfter) << (160 + 48));
+    return
+        uint160(data.aggregator) |
+        (uint256(data.validUntil) << 160) |
+        (uint256(data.validAfter) << (160 + 48));
 }
 
 /**

@@ -26,7 +26,15 @@ import "../extension/Multicall.sol";
  *
  */
 
-contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, ContractMetadata, Ownable, Royalty {
+contract ERC721Multiwrap is
+    Multicall,
+    TokenStore,
+    SoulboundERC721A,
+    ERC721A,
+    ContractMetadata,
+    Ownable,
+    Royalty
+{
     /*//////////////////////////////////////////////////////////////
                     Permission control roles
     //////////////////////////////////////////////////////////////*/
@@ -110,13 +118,9 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
      * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155Receiver, ERC721A, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155Receiver, ERC721A, IERC165) returns (bool) {
         return
             super.supportsInterface(interfaceId) ||
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -174,7 +178,10 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
      *  @param _tokenId   The token Id of the wrapped NFT to unwrap.
      *  @param _recipient The recipient of the underlying ERC1155, ERC721, ERC20 tokens of the wrapped NFT.
      */
-    function unwrap(uint256 _tokenId, address _recipient) public virtual onlyRoleWithSwitch(UNWRAP_ROLE) {
+    function unwrap(
+        uint256 _tokenId,
+        address _recipient
+    ) public virtual onlyRoleWithSwitch(UNWRAP_ROLE) {
         require(_tokenId < nextTokenIdToMint(), "wrapped NFT DNE.");
         require(isApprovedOrOwner(msg.sender, _tokenId), "caller not approved for unwrapping.");
 
@@ -201,12 +208,10 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
      *
      * @return isApprovedOrOwnerOf Whether `_operator` is approved to transfer `_tokenId`.
      */
-    function isApprovedOrOwner(address _operator, uint256 _tokenId)
-        public
-        view
-        virtual
-        returns (bool isApprovedOrOwnerOf)
-    {
+    function isApprovedOrOwner(
+        address _operator,
+        uint256 _tokenId
+    ) public view virtual returns (bool isApprovedOrOwnerOf) {
         address owner = ownerOf(_tokenId);
         isApprovedOrOwnerOf = (_operator == owner ||
             isApprovedForAll(owner, _operator) ||

@@ -168,7 +168,13 @@ contract AirdropERC1155Claimable is
         supplyClaimedByWallet[_tokenId][_msgSender()] += _quantityBeingClaimed;
         availableAmount[_tokenId] -= _quantityBeingClaimed;
 
-        IERC1155(airdropTokenAddress).safeTransferFrom(tokenOwner, _to, _tokenId, _quantityBeingClaimed, "");
+        IERC1155(airdropTokenAddress).safeTransferFrom(
+            tokenOwner,
+            _to,
+            _tokenId,
+            _quantityBeingClaimed,
+            ""
+        );
     }
 
     /// @dev Checks a request to claim tokens against the active claim condition's criteria.
@@ -198,7 +204,9 @@ contract AirdropERC1155Claimable is
         uint256 expTimestamp = expirationTimestamp;
         require(expTimestamp == 0 || block.timestamp < expTimestamp, "airdrop expired.");
 
-        uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : maxWalletClaimCount[_tokenId];
+        uint256 claimLimitForWallet = isOverride
+            ? _proofMaxQuantityForWallet
+            : maxWalletClaimCount[_tokenId];
         require(_quantity + supplyClaimedAlready <= claimLimitForWallet, "invalid quantity.");
     }
 

@@ -25,7 +25,11 @@ contract MapTest is BaseTest {
                 pluginAddresses.push(pluginAddress);
             }
             plugins.push(
-                IPluginMap.Plugin(bytes4(keccak256(abi.encodePacked(i.toString()))), i.toString(), pluginAddress)
+                IPluginMap.Plugin(
+                    bytes4(keccak256(abi.encodePacked(i.toString()))),
+                    i.toString(),
+                    pluginAddress
+                )
             );
         }
 

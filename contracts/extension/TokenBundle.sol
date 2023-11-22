@@ -94,13 +94,17 @@ abstract contract TokenBundle is ITokenBundle {
     /// @dev Checks if the type of asset-contract is same as the TokenType specified.
     function _checkTokenType(Token memory _token) internal view {
         if (_token.tokenType == TokenType.ERC721) {
-            try IERC165(_token.assetContract).supportsInterface(0x80ac58cd) returns (bool supported721) {
+            try IERC165(_token.assetContract).supportsInterface(0x80ac58cd) returns (
+                bool supported721
+            ) {
                 require(supported721, "!TokenType");
             } catch {
                 revert("!TokenType");
             }
         } else if (_token.tokenType == TokenType.ERC1155) {
-            try IERC165(_token.assetContract).supportsInterface(0xd9b67a26) returns (bool supported1155) {
+            try IERC165(_token.assetContract).supportsInterface(0xd9b67a26) returns (
+                bool supported1155
+            ) {
                 require(supported1155, "!TokenType");
             } catch {
                 revert("!TokenType");
@@ -108,10 +112,14 @@ abstract contract TokenBundle is ITokenBundle {
         } else if (_token.tokenType == TokenType.ERC20) {
             if (_token.assetContract != CurrencyTransferLib.NATIVE_TOKEN) {
                 // 0x36372b07
-                try IERC165(_token.assetContract).supportsInterface(0x80ac58cd) returns (bool supported721) {
+                try IERC165(_token.assetContract).supportsInterface(0x80ac58cd) returns (
+                    bool supported721
+                ) {
                     require(!supported721, "!TokenType");
 
-                    try IERC165(_token.assetContract).supportsInterface(0xd9b67a26) returns (bool supported1155) {
+                    try IERC165(_token.assetContract).supportsInterface(0xd9b67a26) returns (
+                        bool supported1155
+                    ) {
                         require(!supported1155, "!TokenType");
                     } catch Error(string memory) {} catch {}
                 } catch Error(string memory) {} catch {}

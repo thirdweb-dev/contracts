@@ -38,7 +38,11 @@ contract ProfileThirdwebAccount is AAGasProfileBase {
     }
 
     function getInitCode(address _owner) internal view override returns (bytes memory) {
-        return abi.encodePacked(address(factory), abi.encodeWithSelector(factory.createAccount.selector, _owner, ""));
+        return
+            abi.encodePacked(
+                address(factory),
+                abi.encodeWithSelector(factory.createAccount.selector, _owner, "")
+            );
     }
 
     function getDummySig(UserOperation memory _op) internal pure override returns (bytes memory) {

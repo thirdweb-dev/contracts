@@ -30,7 +30,14 @@ import "../lib/TWStrings.sol";
  *      - EIP 2981 compliance for royalty support on NFT marketplaces.
  */
 
-contract ERC721Base is ERC721AQueryable, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata {
+contract ERC721Base is
+    ERC721AQueryable,
+    ContractMetadata,
+    Multicall,
+    Ownable,
+    Royalty,
+    BatchMintMetadata
+{
     using TWStrings for uint256;
 
     /*//////////////////////////////////////////////////////////////
@@ -71,7 +78,9 @@ contract ERC721Base is ERC721AQueryable, ContractMetadata, Multicall, Ownable, R
      * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721A, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
             interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
@@ -89,7 +98,9 @@ contract ERC721Base is ERC721AQueryable, ContractMetadata, Multicall, Ownable, R
      *
      *  @param _tokenId The tokenId of an NFT.
      */
-    function tokenURI(uint256 _tokenId) public view virtual override(ERC721A, IERC721Metadata) returns (string memory) {
+    function tokenURI(
+        uint256 _tokenId
+    ) public view virtual override(ERC721A, IERC721Metadata) returns (string memory) {
         string memory fullUriForToken = fullURI[_tokenId];
         if (bytes(fullUriForToken).length > 0) {
             return fullUriForToken;
@@ -163,12 +174,10 @@ contract ERC721Base is ERC721AQueryable, ContractMetadata, Multicall, Ownable, R
      *
      * @return isApprovedOrOwnerOf Whether the given address is approved to transfer the given NFT.
      */
-    function isApprovedOrOwner(address _operator, uint256 _tokenId)
-        public
-        view
-        virtual
-        returns (bool isApprovedOrOwnerOf)
-    {
+    function isApprovedOrOwner(
+        address _operator,
+        uint256 _tokenId
+    ) public view virtual returns (bool isApprovedOrOwnerOf) {
         address owner = ownerOf(_tokenId);
         isApprovedOrOwnerOf = (_operator == owner ||
             isApprovedForAll(owner, _operator) ||

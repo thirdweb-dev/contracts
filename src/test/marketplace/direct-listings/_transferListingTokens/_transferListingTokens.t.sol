@@ -46,7 +46,9 @@ contract TransferListingTokensTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+            new MarketplaceV3(
+                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
+            )
         );
 
         vm.prank(marketplaceDeployer);
@@ -152,19 +154,28 @@ contract TransferListingTokensTest is BaseTest, IExtension {
     }
 
     function test_transferListingTokens_erc1155() public {
-        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(listingId_erc1155);
+        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(
+            listingId_erc1155
+        );
 
         assertEq(erc1155.balanceOf(seller, listing.tokenId), 100);
         assertEq(erc1155.balanceOf(recipient, listing.tokenId), 0);
 
-        MockTransferListingTokens(marketplace).transferListingTokens(seller, recipient, 100, listing);
+        MockTransferListingTokens(marketplace).transferListingTokens(
+            seller,
+            recipient,
+            100,
+            listing
+        );
 
         assertEq(erc1155.balanceOf(seller, listing.tokenId), 0);
         assertEq(erc1155.balanceOf(recipient, listing.tokenId), 100);
     }
 
     function test_transferListingTokens_erc721() public {
-        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(listingId_erc721);
+        IDirectListings.Listing memory listing = DirectListingsLogic(marketplace).getListing(
+            listingId_erc721
+        );
 
         assertEq(erc721.ownerOf(listing.tokenId), seller);
 

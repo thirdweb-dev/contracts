@@ -39,7 +39,12 @@ interface ITokenERC1155 is IERC1155Upgradeable {
     }
 
     /// @dev Emitted when an account with MINTER_ROLE mints an NFT.
-    event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri, uint256 quantityMinted);
+    event TokensMinted(
+        address indexed mintedTo,
+        uint256 indexed tokenIdMinted,
+        string uri,
+        uint256 quantityMinted
+    );
 
     /// @dev Emitted when tokens are minted.
     event TokensMintedWithSignature(
@@ -58,10 +63,10 @@ interface ITokenERC1155 is IERC1155Upgradeable {
      *
      *  returns (success, signer) Result of verification and the recovered address.
      */
-    function verify(MintRequest calldata req, bytes calldata signature)
-        external
-        view
-        returns (bool success, address signer);
+    function verify(
+        MintRequest calldata req,
+        bytes calldata signature
+    ) external view returns (bool success, address signer);
 
     /**
      *  @notice Lets an account with MINTER_ROLE mint an NFT.
@@ -72,12 +77,7 @@ interface ITokenERC1155 is IERC1155Upgradeable {
      *  @param amount The number of copies of the NFT to mint.
      *
      */
-    function mintTo(
-        address to,
-        uint256 tokenId,
-        string calldata uri,
-        uint256 amount
-    ) external;
+    function mintTo(address to, uint256 tokenId, string calldata uri, uint256 amount) external;
 
     /**
      *  @notice Mints an NFT according to the provided mint request.

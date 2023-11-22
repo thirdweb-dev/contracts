@@ -52,7 +52,9 @@ contract ValidateNewAuctionTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+            new MarketplaceV3(
+                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
+            )
         );
 
         vm.prank(marketplaceDeployer);
@@ -210,7 +212,11 @@ contract ValidateNewAuctionTest is BaseTest, IExtension {
         _;
     }
 
-    function test_validateNewAuction_whenTimeBufferIsZero() public whenNonZeroQuantity whenQtyOneOrAssetERC1155 {
+    function test_validateNewAuction_whenTimeBufferIsZero()
+        public
+        whenNonZeroQuantity
+        whenQtyOneOrAssetERC1155
+    {
         auctionParams.timeBufferInSeconds = 0;
 
         vm.prank(seller);

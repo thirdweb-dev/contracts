@@ -87,7 +87,9 @@ contract ERC721LazyMint is
      * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC721A, IERC165) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721A, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
             interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
@@ -129,7 +131,10 @@ contract ERC721LazyMint is
      *  @param _quantity  The number of NFTs to mint.
      */
     function claim(address _receiver, uint256 _quantity) public payable virtual nonReentrant {
-        require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "Not enough lazy minted tokens.");
+        require(
+            _currentIndex + _quantity <= nextTokenIdToLazyMint,
+            "Not enough lazy minted tokens."
+        );
         verifyClaim(msg.sender, _quantity); // Add your claim verification logic by overriding this function.
 
         uint256 startTokenId = _transferTokensOnClaim(_receiver, _quantity); // Mints tokens. Apply any state updates by overriding this function.
@@ -184,11 +189,10 @@ contract ERC721LazyMint is
      *
      * @return startTokenId The tokenId of the first NFT minted.
      */
-    function _transferTokensOnClaim(address _receiver, uint256 _quantity)
-        internal
-        virtual
-        returns (uint256 startTokenId)
-    {
+    function _transferTokensOnClaim(
+        address _receiver,
+        uint256 _quantity
+    ) internal virtual returns (uint256 startTokenId) {
         startTokenId = _currentIndex;
         _safeMint(_receiver, _quantity);
     }

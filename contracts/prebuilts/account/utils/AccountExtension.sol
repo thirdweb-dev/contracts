@@ -28,7 +28,13 @@ import "./AccountCoreStorage.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC721Holder, ERC1155Holder {
+contract AccountExtension is
+    ContractMetadata,
+    ERC1271,
+    AccountPermissions,
+    ERC721Holder,
+    ERC1155Holder
+{
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -41,7 +47,8 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
         require(
-            msg.sender == address(AccountCore(payable(address(this))).entryPoint()) || isAdmin(msg.sender),
+            msg.sender == address(AccountCore(payable(address(this))).entryPoint()) ||
+                isAdmin(msg.sender),
             "Account: not admin or EntryPoint."
         );
         _;
@@ -57,7 +64,9 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
     //////////////////////////////////////////////////////////////*/
 
     /// @notice See {IERC165-supportsInterface}.
-    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Receiver) returns (bool) {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155Receiver) returns (bool) {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
@@ -65,13 +74,10 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
     }
 
     /// @notice See EIP-1271
-    function isValidSignature(bytes32 _message, bytes memory _signature)
-        public
-        view
-        virtual
-        override
-        returns (bytes4 magicValue)
-    {
+    function isValidSignature(
+        bytes32 _message,
+        bytes memory _signature
+    ) public view virtual override returns (bytes4 magicValue) {
         bytes32 messageHash = getMessageHash(abi.encode(_message));
         address signer = messageHash.recover(_signature);
 
@@ -80,10 +86,12 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         }
 
         address caller = msg.sender;
-        EnumerableSet.AddressSet storage approvedTargets = _accountPermissionsStorage().approvedTargets[signer];
+        EnumerableSet.AddressSet storage approvedTargets = _accountPermissionsStorage()
+            .approvedTargets[signer];
 
         require(
-            approvedTargets.contains(caller) || (approvedTargets.length() == 1 && approvedTargets.at(0) == address(0)),
+            approvedTargets.contains(caller) ||
+                (approvedTargets.length() == 1 && approvedTargets.at(0) == address(0)),
             "Account: caller not approved target."
         );
 
@@ -123,7 +131,10 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         bytes[] calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
         _registerOnFactory();
-        require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
+        require(
+            _target.length == _calldata.length && _target.length == _value.length,
+            "Account: wrong array lengths."
+        );
         for (uint256 i = 0; i < _target.length; i++) {
             _call(_target[i], _value[i], _calldata[i]);
         }
@@ -131,7 +142,9 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
 
     /// @notice Deposit funds for this account in Entrypoint.
     function addDeposit() public payable {
-        AccountCore(payable(address(this))).entryPoint().depositTo{ value: msg.value }(address(this));
+        AccountCore(payable(address(this))).entryPoint().depositTo{ value: msg.value }(
+            address(this)
+        );
     }
 
     /// @notice Withdraw funds for this account from Entrypoint.
@@ -173,5 +186,7 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         return isAdmin(msg.sender) || msg.sender == address(this);
     }
 
-    function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {}
+    function _afterSignerPermissionsUpdate(
+        SignerPermissionRequest calldata _req
+    ) internal virtual override {}
 }

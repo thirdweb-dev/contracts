@@ -35,8 +35,12 @@ contract ForwarderChainlessDomainTest is BaseTest {
         );
         nameHash = keccak256(bytes("GSNv2 Forwarder"));
         versionHash = keccak256(bytes("0.0.1"));
-        typehashEip712 = keccak256("EIP712Domain(string name,string version,address verifyingContract)");
-        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, forwarderChainlessDomain));
+        typehashEip712 = keccak256(
+            "EIP712Domain(string name,string version,address verifyingContract)"
+        );
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, nameHash, versionHash, forwarderChainlessDomain)
+        );
 
         vm.label(user, "End user");
         vm.label(forwarder, "Forwarder");
@@ -48,11 +52,10 @@ contract ForwarderChainlessDomainTest is BaseTest {
        Updated `Forwarder`: chainId in ForwardRequest, not typehash.
     //////////////////////////////////////////////////////////////*/
 
-    function signForwarderRequest(ForwarderChainlessDomain.ForwardRequest memory forwardRequest, uint256 privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signForwarderRequest(
+        ForwarderChainlessDomain.ForwardRequest memory forwardRequest,
+        uint256 privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashForwardRequest,
             forwardRequest.from,
@@ -64,7 +67,9 @@ contract ForwarderChainlessDomainTest is BaseTest {
             forwardRequest.chainid
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
         bytes memory signature = abi.encodePacked(r, s, v);

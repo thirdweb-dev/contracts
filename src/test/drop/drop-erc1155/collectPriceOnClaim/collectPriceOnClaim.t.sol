@@ -15,7 +15,13 @@ contract HarnessDropERC1155 is DropERC1155 {
         address _currency,
         uint256 _pricePerToken
     ) public payable {
-        collectPriceOnClaim(_tokenId, _primarySaleRecipient, _quantityToClaim, _currency, _pricePerToken);
+        collectPriceOnClaim(
+            _tokenId,
+            _primarySaleRecipient,
+            _quantityToClaim,
+            _currency,
+            _pricePerToken
+        );
     }
 }
 
@@ -124,7 +130,11 @@ contract DropERC1155Test_collectPrice is BaseTest {
         );
     }
 
-    function test_revert_priceValueMismatchNativeCurrency() public nativeCurrency pricePerTokenNotZero {
+    function test_revert_priceValueMismatchNativeCurrency()
+        public
+        nativeCurrency
+        pricePerTokenNotZero
+    {
         vm.expectRevert();
         proxy.collectPriceOnClaimHarness{ value: collectPrice_msgValue }(
             0,
@@ -135,7 +145,12 @@ contract DropERC1155Test_collectPrice is BaseTest {
         );
     }
 
-    function test_transferNativeCurrencyToSaleRecipient() public nativeCurrency pricePerTokenNotZero msgValueNotZero {
+    function test_transferNativeCurrencyToSaleRecipient()
+        public
+        nativeCurrency
+        pricePerTokenNotZero
+        msgValueNotZero
+    {
         uint256 balanceSaleRecipientBefore = address(saleRecipient).balance;
         uint256 platformFeeRecipientBefore = address(platformFeeRecipient).balance;
         proxy.collectPriceOnClaimHarness{ value: collectPrice_msgValue }(
@@ -151,7 +166,10 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee;
 
-        assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
+        assertEq(
+            balanceSaleRecipientAfter - balanceSaleRecipientBefore,
+            expectedSaleRecipientProceed
+        );
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 
@@ -172,7 +190,10 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken - expectedPlatformFee;
 
-        assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
+        assertEq(
+            balanceSaleRecipientAfter - balanceSaleRecipientBefore,
+            expectedSaleRecipientProceed
+        );
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 
@@ -199,11 +220,19 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee;
 
-        assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
+        assertEq(
+            balanceSaleRecipientAfter - balanceSaleRecipientBefore,
+            expectedSaleRecipientProceed
+        );
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 
-    function test_transferERC20ToTokenIdSaleRecipient() public erc20Currency pricePerTokenNotZero saleRecipientSet {
+    function test_transferERC20ToTokenIdSaleRecipient()
+        public
+        erc20Currency
+        pricePerTokenNotZero
+        saleRecipientSet
+    {
         uint256 balanceSaleRecipientBefore = erc20.balanceOf(collectPrice_tokenSaleRecipient);
         uint256 platformFeeRecipientBefore = erc20.balanceOf(platformFeeRecipient);
         erc20.approve(address(proxy), collectPrice_pricePerToken);
@@ -220,7 +249,10 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken - expectedPlatformFee;
 
-        assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
+        assertEq(
+            balanceSaleRecipientAfter - balanceSaleRecipientBefore,
+            expectedSaleRecipientProceed
+        );
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 
@@ -245,7 +277,10 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee;
 
-        assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
+        assertEq(
+            balanceSaleRecipientAfter - balanceSaleRecipientBefore,
+            expectedSaleRecipientProceed
+        );
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 
@@ -266,7 +301,10 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken - expectedPlatformFee;
 
-        assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
+        assertEq(
+            balanceSaleRecipientAfter - balanceSaleRecipientBefore,
+            expectedSaleRecipientProceed
+        );
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 }

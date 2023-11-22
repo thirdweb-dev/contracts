@@ -52,7 +52,10 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
 
     /// @dev Checks whether an auction exists.
     modifier onlyExistingOffer(uint256 _offerId) {
-        require(_offersStorage().offers[_offerId].status == IOffers.Status.CREATED, "Marketplace: invalid offer.");
+        require(
+            _offersStorage().offers[_offerId].status == IOffers.Status.CREATED,
+            "Marketplace: invalid offer."
+        );
         _;
     }
 
@@ -66,11 +69,9 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    function makeOffer(OfferParams memory _params)
-        external
-        onlyAssetRole(_params.assetContract)
-        returns (uint256 _offerId)
-    {
+    function makeOffer(
+        OfferParams memory _params
+    ) external onlyAssetRole(_params.assetContract) returns (uint256 _offerId) {
         _offerId = _getNextOfferId();
         address _offeror = _msgSender();
         TokenType _tokenType = _getTokenType(_params.assetContract);
@@ -95,7 +96,9 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
         emit NewOffer(_offeror, _offerId, _params.assetContract, _offer);
     }
 
-    function cancelOffer(uint256 _offerId) external onlyExistingOffer(_offerId) onlyOfferor(_offerId) {
+    function cancelOffer(
+        uint256 _offerId
+    ) external onlyExistingOffer(_offerId) onlyOfferor(_offerId) {
         _offersStorage().offers[_offerId].status = IOffers.Status.CANCELLED;
 
         emit CancelledOffer(_msgSender(), _offerId);
@@ -107,7 +110,11 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
         require(_targetOffer.expirationTimestamp > block.timestamp, "EXPIRED");
 
         require(
-            _validateERC20BalAndAllowance(_targetOffer.offeror, _targetOffer.currency, _targetOffer.totalPrice),
+            _validateERC20BalAndAllowance(
+                _targetOffer.offeror,
+                _targetOffer.currency,
+                _targetOffer.totalPrice
+            ),
             "Marketplace: insufficient currency balance."
         );
 
@@ -121,8 +128,19 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
 
         _offersStorage().offers[_offerId].status = IOffers.Status.COMPLETED;
 
-        _payout(_targetOffer.offeror, _msgSender(), _targetOffer.currency, _targetOffer.totalPrice, _targetOffer);
-        _transferOfferTokens(_msgSender(), _targetOffer.offeror, _targetOffer.quantity, _targetOffer);
+        _payout(
+            _targetOffer.offeror,
+            _msgSender(),
+            _targetOffer.currency,
+            _targetOffer.totalPrice,
+            _targetOffer
+        );
+        _transferOfferTokens(
+            _msgSender(),
+            _targetOffer.offeror,
+            _targetOffer.quantity,
+            _targetOffer
+        );
 
         emit AcceptedOffer(
             _targetOffer.offeror,
@@ -150,7 +168,10 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     }
 
     /// @dev Returns all existing offers within the specified range.
-    function getAllOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _allOffers) {
+    function getAllOffers(
+        uint256 _startId,
+        uint256 _endId
+    ) external view returns (Offer[] memory _allOffers) {
         require(_startId <= _endId && _endId < _offersStorage().totalOffers, "invalid range");
 
         _allOffers = new Offer[](_endId - _startId + 1);
@@ -161,7 +182,10 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     }
 
     /// @dev Returns offers within the specified range, where offeror has sufficient balance.
-    function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory _validOffers) {
+    function getAllValidOffers(
+        uint256 _startId,
+        uint256 _endId
+    ) external view returns (Offer[] memory _validOffers) {
         require(_startId <= _endId && _endId < _offersStorage().totalOffers, "invalid range");
 
         Offer[] memory _offers = new Offer[](_endId - _startId + 1);
@@ -210,7 +234,10 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     function _validateNewOffer(OfferParams memory _params, TokenType _tokenType) internal view {
         require(_params.totalPrice > 0, "zero price.");
         require(_params.quantity > 0, "Marketplace: wanted zero tokens.");
-        require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "Marketplace: wanted invalid quantity.");
+        require(
+            _params.quantity == 1 || _tokenType == TokenType.ERC1155,
+            "Marketplace: wanted invalid quantity."
+        );
         require(
             _params.expirationTimestamp + 60 minutes > block.timestamp,
             "Marketplace: invalid expiration timestamp."
@@ -223,11 +250,17 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     }
 
     /// @dev Checks whether the offer exists, is active, and if the offeror has sufficient balance.
-    function _validateExistingOffer(Offer memory _targetOffer) internal view returns (bool isValid) {
+    function _validateExistingOffer(
+        Offer memory _targetOffer
+    ) internal view returns (bool isValid) {
         isValid =
             _targetOffer.expirationTimestamp > block.timestamp &&
             _targetOffer.status == IOffers.Status.CREATED &&
-            _validateERC20BalAndAllowance(_targetOffer.offeror, _targetOffer.currency, _targetOffer.totalPrice);
+            _validateERC20BalAndAllowance(
+                _targetOffer.offeror,
+                _targetOffer.currency,
+                _targetOffer.totalPrice
+            );
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Marketplace to transfer NFTs.
@@ -274,7 +307,13 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
         Offer memory _offer
     ) internal {
         if (_offer.tokenType == TokenType.ERC1155) {
-            IERC1155(_offer.assetContract).safeTransferFrom(_from, _to, _offer.tokenId, _quantity, "");
+            IERC1155(_offer.assetContract).safeTransferFrom(
+                _from,
+                _to,
+                _offer.tokenId,
+                _quantity,
+                ""
+            );
         } else if (_offer.tokenType == TokenType.ERC721) {
             IERC721(_offer.assetContract).safeTransferFrom(_from, _to, _offer.tokenId, "");
         }
@@ -292,7 +331,8 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
 
         // Payout platform fee
         {
-            (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
+            (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this))
+                .getPlatformFeeInfo();
             uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
             // Transfer platform fee
@@ -310,8 +350,9 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
         // Payout royalties
         {
             // Get royalty recipients and amounts
-            (address payable[] memory recipients, uint256[] memory amounts) = RoyaltyPaymentsLogic(address(this))
-                .getRoyalty(_offer.assetContract, _offer.tokenId, _totalPayoutAmount);
+            (address payable[] memory recipients, uint256[] memory amounts) = RoyaltyPaymentsLogic(
+                address(this)
+            ).getRoyalty(_offer.assetContract, _offer.tokenId, _totalPayoutAmount);
 
             uint256 royaltyRecipientCount = recipients.length;
 
@@ -344,7 +385,13 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
         }
 
         // Distribute price to token owner
-        CurrencyTransferLib.transferCurrencyWithWrapper(_currencyToUse, _payer, _payee, amountRemaining, address(0));
+        CurrencyTransferLib.transferCurrencyWithWrapper(
+            _currencyToUse,
+            _payer,
+            _payee,
+            amountRemaining,
+            address(0)
+        );
     }
 
     /// @dev Returns the Offers storage.

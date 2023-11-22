@@ -24,11 +24,7 @@ library TWBitMaps {
     /**
      * @dev Sets the bit at `index` to the boolean `value`.
      */
-    function setTo(
-        BitMap storage bitmap,
-        uint256 index,
-        bool value
-    ) internal {
+    function setTo(BitMap storage bitmap, uint256 index, bool value) internal {
         if (value) {
             set(bitmap, index);
         } else {

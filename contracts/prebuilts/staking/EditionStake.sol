@@ -97,7 +97,9 @@ contract EditionStake is
     function depositRewardTokens(uint256 _amount) external payable nonReentrant {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
-        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : rewardToken;
+        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN
+            ? nativeTokenWrapper
+            : rewardToken;
 
         uint256 balanceBefore = IERC20(_rewardToken).balanceOf(address(this));
         CurrencyTransferLib.transferCurrencyWithWrapper(
@@ -133,7 +135,12 @@ contract EditionStake is
     }
 
     /// @notice View total rewards available in the staking contract.
-    function getRewardTokenBalance() external view override returns (uint256 _rewardsAvailableInContract) {
+    function getRewardTokenBalance()
+        external
+        view
+        override
+        returns (uint256 _rewardsAvailableInContract)
+    {
         return rewardTokenBalance;
     }
 
@@ -160,13 +167,12 @@ contract EditionStake is
         bytes calldata data
     ) external returns (bytes4) {}
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC165Upgradeable, IERC165Upgradeable)
-        returns (bool)
-    {
-        return interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC165Upgradeable, IERC165Upgradeable) returns (bool) {
+        return
+            interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     /*///////////////////////////////////////////////////////////////

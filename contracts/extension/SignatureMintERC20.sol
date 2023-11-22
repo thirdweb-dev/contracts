@@ -20,12 +20,10 @@ abstract contract SignatureMintERC20 is EIP712, ISignatureMintERC20 {
     constructor() EIP712("SignatureMintERC20", "1") {}
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(MintRequest calldata _req, bytes calldata _signature)
-        public
-        view
-        override
-        returns (bool success, address signer)
-    {
+    function verify(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) public view override returns (bool success, address signer) {
         signer = _recoverAddress(_req, _signature);
         success = !minted[_req.uid] && _canSignMintRequest(signer);
     }
@@ -34,13 +32,17 @@ abstract contract SignatureMintERC20 is EIP712, ISignatureMintERC20 {
     function _canSignMintRequest(address _signer) internal view virtual returns (bool);
 
     /// @dev Verifies a mint request and marks the request as minted.
-    function _processRequest(MintRequest calldata _req, bytes calldata _signature) internal returns (address signer) {
+    function _processRequest(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) internal returns (address signer) {
         bool success;
         (success, signer) = verify(_req, _signature);
 
         require(success, "Invalid request");
         require(
-            _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
+            _req.validityStartTimestamp <= block.timestamp &&
+                block.timestamp <= _req.validityEndTimestamp,
             "Request expired"
         );
         require(_req.to != address(0), "recipient undefined");
@@ -50,7 +52,10 @@ abstract contract SignatureMintERC20 is EIP712, ISignatureMintERC20 {
     }
 
     /// @dev Returns the address of the signer of the mint request.
-    function _recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
+    function _recoverAddress(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) internal view returns (address) {
         return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
     }
 

@@ -18,11 +18,7 @@ contract MockERC20 is ERC20PresetMinterPauser, ERC20Permit {
         taxActive = !taxActive;
     }
 
-    function _transfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override {
+    function _transfer(address from, address to, uint256 amount) internal override {
         if (taxActive) {
             uint256 tax = (amount * 10) / 100;
             amount -= tax;

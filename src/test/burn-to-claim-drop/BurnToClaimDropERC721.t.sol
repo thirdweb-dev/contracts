@@ -21,7 +21,12 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
     using TWStrings for uint256;
     using TWStrings for address;
 
-    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
+    event TokensLazyMinted(
+        uint256 indexed startTokenId,
+        uint256 endTokenId,
+        string baseURI,
+        bytes encryptedBaseURI
+    );
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
     BurnToClaimDrop721Logic public drop;
@@ -123,7 +128,10 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         });
 
         extension_drop.functions = new ExtensionFunction[](32);
-        extension_drop.functions[0] = ExtensionFunction(BurnToClaimDrop721Logic.tokenURI.selector, "tokenURI(uint256)");
+        extension_drop.functions[0] = ExtensionFunction(
+            BurnToClaimDrop721Logic.tokenURI.selector,
+            "tokenURI(uint256)"
+        );
         extension_drop.functions[1] = ExtensionFunction(
             BurnToClaimDrop721Logic.lazyMint.selector,
             "lazyMint(uint256,string,bytes)"
@@ -132,7 +140,10 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
             BurnToClaimDrop721Logic.reveal.selector,
             "reveal(uint256,bytes)"
         );
-        extension_drop.functions[3] = ExtensionFunction(Drop.claimCondition.selector, "claimCondition()");
+        extension_drop.functions[3] = ExtensionFunction(
+            Drop.claimCondition.selector,
+            "claimCondition()"
+        );
         extension_drop.functions[4] = ExtensionFunction(
             BatchMintMetadata.getBaseURICount.selector,
             "getBaseURICount()"
@@ -157,7 +168,10 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
             Drop.getSupplyClaimedByWallet.selector,
             "getSupplyClaimedByWallet(uint256,address)"
         );
-        extension_drop.functions[10] = ExtensionFunction(BurnToClaimDrop721Logic.totalMinted.selector, "totalMinted()");
+        extension_drop.functions[10] = ExtensionFunction(
+            BurnToClaimDrop721Logic.totalMinted.selector,
+            "totalMinted()"
+        );
         extension_drop.functions[11] = ExtensionFunction(
             BurnToClaimDrop721Logic.nextTokenIdToMint.selector,
             "nextTokenIdToMint()"
@@ -174,7 +188,10 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
             IERC721Upgradeable.transferFrom.selector,
             "transferFrom(address,address,uint256)"
         );
-        extension_drop.functions[15] = ExtensionFunction(ERC721AUpgradeable.balanceOf.selector, "balanceOf(address)");
+        extension_drop.functions[15] = ExtensionFunction(
+            ERC721AUpgradeable.balanceOf.selector,
+            "balanceOf(address)"
+        );
         extension_drop.functions[16] = ExtensionFunction(
             DelayedReveal.encryptDecrypt.selector,
             "encryptDecrypt(bytes,bytes)"
@@ -183,7 +200,10 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
             BurnToClaimDrop721Logic.supportsInterface.selector,
             "supportsInterface(bytes4)"
         );
-        extension_drop.functions[18] = ExtensionFunction(Royalty.royaltyInfo.selector, "royaltyInfo(uint256,uint256)");
+        extension_drop.functions[18] = ExtensionFunction(
+            Royalty.royaltyInfo.selector,
+            "royaltyInfo(uint256,uint256)"
+        );
         extension_drop.functions[19] = ExtensionFunction(
             Royalty.getRoyaltyInfoForToken.selector,
             "getRoyaltyInfoForToken(uint256)"
@@ -200,8 +220,14 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
             Royalty.setRoyaltyInfoForToken.selector,
             "setRoyaltyInfoForToken(uint256,address,uint256)"
         );
-        extension_drop.functions[23] = ExtensionFunction(IERC721.ownerOf.selector, "ownerOf(uint256)");
-        extension_drop.functions[24] = ExtensionFunction(IERC1155.balanceOf.selector, "balanceOf(address,uint256)");
+        extension_drop.functions[23] = ExtensionFunction(
+            IERC721.ownerOf.selector,
+            "ownerOf(uint256)"
+        );
+        extension_drop.functions[24] = ExtensionFunction(
+            IERC1155.balanceOf.selector,
+            "balanceOf(address,uint256)"
+        );
         extension_drop.functions[25] = ExtensionFunction(
             BurnToClaim.setBurnToClaimInfo.selector,
             "setBurnToClaimInfo((address,uint8,uint256,uint256,address))"
@@ -408,7 +434,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         BurnToClaimDrop721Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -456,7 +483,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         BurnToClaimDrop721Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].startTimestamp = 100;
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
@@ -605,7 +633,11 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         uint256 nextTokenIdToMintBefore = drop.nextTokenIdToMint();
 
         vm.startPrank(deployer);
-        uint256 batchId = drop.lazyMint(amountToLazyMint, baseURI, abi.encode(encryptedBaseURI, provenanceHash));
+        uint256 batchId = drop.lazyMint(
+            amountToLazyMint,
+            baseURI,
+            abi.encode(encryptedBaseURI, provenanceHash)
+        );
 
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, drop.nextTokenIdToMint());
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
@@ -703,7 +735,11 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         uint256 nextTokenIdToMintBefore = drop.nextTokenIdToMint();
 
         vm.startPrank(deployer);
-        uint256 batchId = drop.lazyMint(amountToLazyMint, baseURI, abi.encode(encryptedBaseURI, provenanceHash));
+        uint256 batchId = drop.lazyMint(
+            amountToLazyMint,
+            baseURI,
+            abi.encode(encryptedBaseURI, provenanceHash)
+        );
 
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, drop.nextTokenIdToMint());
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
@@ -887,7 +923,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         BurnToClaimDrop721Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 200;
 
@@ -913,7 +950,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         BurnToClaimDrop721Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 200;
 
@@ -944,7 +982,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         alp.proof = proofs;
         alp.quantityLimitPerWallet = x;
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -1004,7 +1043,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -1054,7 +1094,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -1113,7 +1154,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -1168,7 +1210,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -1226,7 +1269,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         // bytes32[] memory proofs = new bytes32[](0);
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = x;
         conditions[0].quantityLimitPerWallet = 1;
         conditions[0].merkleRoot = root;
@@ -1268,7 +1312,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         BurnToClaimDrop721Logic.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -1304,7 +1349,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         uint256 currentStartId = 0;
         uint256 count = 0;
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](2);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](2);
         conditions[0].startTimestamp = 0;
         conditions[0].maxClaimableSupply = 10;
         conditions[1].startTimestamp = 1;
@@ -1336,7 +1382,8 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         uint256 activeConditionId = 0;
 
-        BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](3);
+        BurnToClaimDrop721Logic.ClaimCondition[]
+            memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](3);
         conditions[0].startTimestamp = 10;
         conditions[0].maxClaimableSupply = 11;
         conditions[0].quantityLimitPerWallet = 12;

@@ -67,7 +67,9 @@ contract BuyFromListingTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+            new MarketplaceV3(
+                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
+            )
         );
 
         vm.prank(marketplaceDeployer);
@@ -76,7 +78,13 @@ contract BuyFromListingTest is BaseTest, IExtension {
                 impl,
                 abi.encodeCall(
                     MarketplaceV3.initialize,
-                    (marketplaceDeployer, "", new address[](0), platformFeeRecipient, uint16(platformFeeBps))
+                    (
+                        marketplaceDeployer,
+                        "",
+                        new address[](0),
+                        platformFeeRecipient,
+                        uint16(platformFeeBps)
+                    )
                 )
             )
         );
@@ -116,11 +124,15 @@ contract BuyFromListingTest is BaseTest, IExtension {
 
         // 1. Native token, no special price
         listingParams.currency = NATIVE_TOKEN;
-        listingId_native_noSpecialPrice = DirectListingsLogic(marketplace).createListing(listingParams);
+        listingId_native_noSpecialPrice = DirectListingsLogic(marketplace).createListing(
+            listingParams
+        );
 
         // 2. Native token, special price
         listingParams.currency = address(erc20);
-        listingId_native_specialPrice = DirectListingsLogic(marketplace).createListing(listingParams);
+        listingId_native_specialPrice = DirectListingsLogic(marketplace).createListing(
+            listingParams
+        );
         DirectListingsLogic(marketplace).approveCurrencyForListing(
             listingId_native_specialPrice,
             NATIVE_TOKEN,
@@ -129,11 +141,15 @@ contract BuyFromListingTest is BaseTest, IExtension {
 
         // 3. ERC20 token, no special price
         listingParams.currency = address(erc20);
-        listingId_erc20_noSpecialPrice = DirectListingsLogic(marketplace).createListing(listingParams);
+        listingId_erc20_noSpecialPrice = DirectListingsLogic(marketplace).createListing(
+            listingParams
+        );
 
         // 4. ERC20 token, special price
         listingParams.currency = NATIVE_TOKEN;
-        listingId_erc20_specialPrice = DirectListingsLogic(marketplace).createListing(listingParams);
+        listingId_erc20_specialPrice = DirectListingsLogic(marketplace).createListing(
+            listingParams
+        );
         DirectListingsLogic(marketplace).approveCurrencyForListing(
             listingId_erc20_specialPrice,
             address(erc20),
@@ -244,7 +260,10 @@ contract BuyFromListingTest is BaseTest, IExtension {
 
     //////////// ASSUME NATIVE_TOKEN && SPECIAL_PRICE ////////////
 
-    function test_buyFromListing_whenCallIsReentrant() public whenListingHasSpecialPriceNativeToken {
+    function test_buyFromListing_whenCallIsReentrant()
+        public
+        whenListingHasSpecialPriceNativeToken
+    {
         vm.warp(listingParams.startTimestamp);
         address reentrantRecipient = address(new ReentrantRecipient());
 
@@ -271,7 +290,13 @@ contract BuyFromListingTest is BaseTest, IExtension {
         vm.warp(listingParams.startTimestamp);
         vm.prank(buyer);
         vm.expectRevert("Marketplace: invalid listing.");
-        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(100, buyer, 1, NATIVE_TOKEN, 2 ether);
+        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(
+            100,
+            buyer,
+            1,
+            NATIVE_TOKEN,
+            2 ether
+        );
     }
 
     modifier whenListingExists() {
@@ -294,7 +319,13 @@ contract BuyFromListingTest is BaseTest, IExtension {
 
         vm.prank(buyer);
         vm.expectRevert("buyer not approved");
-        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(listingId, buyer, 1, NATIVE_TOKEN, 2 ether);
+        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(
+            listingId,
+            buyer,
+            1,
+            NATIVE_TOKEN,
+            2 ether
+        );
     }
 
     modifier whenBuyerIsApprovedForListing(address _currency) {
@@ -320,7 +351,13 @@ contract BuyFromListingTest is BaseTest, IExtension {
 
         vm.prank(buyer);
         vm.expectRevert("Buying invalid quantity");
-        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(listingId, buyer, 0, NATIVE_TOKEN, 2 ether);
+        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(
+            listingId,
+            buyer,
+            0,
+            NATIVE_TOKEN,
+            2 ether
+        );
     }
 
     modifier whenQuantityToBuyIsValid() {
@@ -337,7 +374,13 @@ contract BuyFromListingTest is BaseTest, IExtension {
     {
         vm.prank(buyer);
         vm.expectRevert("not within sale window.");
-        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(listingId, buyer, 1, NATIVE_TOKEN, 2 ether);
+        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(
+            listingId,
+            buyer,
+            1,
+            NATIVE_TOKEN,
+            2 ether
+        );
     }
 
     modifier whenListingIsActive() {
@@ -360,7 +403,13 @@ contract BuyFromListingTest is BaseTest, IExtension {
 
         vm.prank(buyer);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(listingId, buyer, 1, NATIVE_TOKEN, 2 ether);
+        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(
+            listingId,
+            buyer,
+            1,
+            NATIVE_TOKEN,
+            2 ether
+        );
     }
 
     modifier whenListedAssetOwnedAndApproved() {
@@ -381,7 +430,13 @@ contract BuyFromListingTest is BaseTest, IExtension {
 
         vm.prank(buyer);
         vm.expectRevert("Unexpected total price");
-        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(listingId, buyer, 1, NATIVE_TOKEN, 1 ether);
+        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(
+            listingId,
+            buyer,
+            1,
+            NATIVE_TOKEN,
+            1 ether
+        );
     }
 
     modifier whenExpectedPriceIsActualPrice() {
@@ -403,7 +458,13 @@ contract BuyFromListingTest is BaseTest, IExtension {
 
         vm.prank(buyer);
         vm.expectRevert("Marketplace: msg.value must exactly be the total price.");
-        DirectListingsLogic(marketplace).buyFromListing{ value: 1 ether }(listingId, buyer, 1, NATIVE_TOKEN, 2 ether);
+        DirectListingsLogic(marketplace).buyFromListing{ value: 1 ether }(
+            listingId,
+            buyer,
+            1,
+            NATIVE_TOKEN,
+            2 ether
+        );
     }
 
     modifier whenMsgValueEqTotalPrice() {
@@ -468,7 +529,13 @@ contract BuyFromListingTest is BaseTest, IExtension {
 
         vm.warp(listingParams.startTimestamp);
         vm.prank(buyer);
-        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(listingId, buyer, 1, NATIVE_TOKEN, 2 ether);
+        DirectListingsLogic(marketplace).buyFromListing{ value: 2 ether }(
+            listingId,
+            buyer,
+            1,
+            NATIVE_TOKEN,
+            2 ether
+        );
 
         assertEq(erc1155.balanceOf(seller, listingParams.tokenId), 99);
         assertEq(erc1155.balanceOf(buyer, listingParams.tokenId), 1);
@@ -624,7 +691,13 @@ contract BuyFromListingTest is BaseTest, IExtension {
 
         vm.warp(listingParams.startTimestamp);
         vm.prank(buyer);
-        DirectListingsLogic(marketplace).buyFromListing(listingId, buyer, 1, address(erc20), 1 ether);
+        DirectListingsLogic(marketplace).buyFromListing(
+            listingId,
+            buyer,
+            1,
+            address(erc20),
+            1 ether
+        );
 
         assertEq(erc1155.balanceOf(seller, listingParams.tokenId), 99);
         assertEq(erc1155.balanceOf(buyer, listingParams.tokenId), 1);

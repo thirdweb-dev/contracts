@@ -34,7 +34,10 @@ contract SplitTest_Initialize is BaseTest {
             address(
                 new TWProxy(
                     implementation,
-                    abi.encodeCall(Split.initialize, (deployer, CONTRACT_URI, forwarders(), payees, shares))
+                    abi.encodeCall(
+                        Split.initialize,
+                        (deployer, CONTRACT_URI, forwarders(), payees, shares)
+                    )
                 )
             )
         );
@@ -59,7 +62,11 @@ contract SplitTest_Initialize is BaseTest {
         _;
     }
 
-    function test_initialize_payeeLengthZero() public whenNotImplementation whenProxyNotInitialized {
+    function test_initialize_payeeLengthZero()
+        public
+        whenNotImplementation
+        whenProxyNotInitialized
+    {
         address[] memory _payees;
         uint256[] memory _shares;
         vm.expectRevert("PaymentSplitter: no payees");

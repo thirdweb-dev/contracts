@@ -25,11 +25,7 @@ interface IERC6551Account {
     function token()
         external
         view
-        returns (
-            uint256 chainId,
-            address tokenContract,
-            uint256 tokenId
-        );
+        returns (uint256 chainId, address tokenContract, uint256 tokenId);
 
     /**
      * @dev Returns a value that SHOULD be modified each time the account changes state
@@ -54,5 +50,8 @@ interface IERC6551Account {
      * @param  context    Additional data used to determine whether the signer is valid
      * @return magicValue Magic value indicating whether the signer is valid
      */
-    function isValidSigner(address signer, bytes calldata context) external view returns (bytes4 magicValue);
+    function isValidSigner(
+        address signer,
+        bytes calldata context
+    ) external view returns (bytes4 magicValue);
 }

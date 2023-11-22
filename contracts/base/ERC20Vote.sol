@@ -26,7 +26,14 @@ import "../extension/interface/IBurnableERC20.sol";
  *                             presenting a message signed by the account.
  */
 
-contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes, IMintableERC20, IBurnableERC20 {
+contract ERC20Vote is
+    ContractMetadata,
+    Multicall,
+    Ownable,
+    ERC20Votes,
+    IMintableERC20,
+    IBurnableERC20
+{
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/

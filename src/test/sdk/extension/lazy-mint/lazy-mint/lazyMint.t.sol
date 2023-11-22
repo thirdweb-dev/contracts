@@ -39,7 +39,12 @@ contract LazyMint_LazyMint is ExtensionUtilTest {
     address internal admin;
     address internal caller;
 
-    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
+    event TokensLazyMinted(
+        uint256 indexed startTokenId,
+        uint256 endTokenId,
+        string baseURI,
+        bytes encryptedBaseURI
+    );
 
     function setUp() public override {
         super.setUp();
@@ -113,7 +118,12 @@ contract LazyMint_LazyMint is ExtensionUtilTest {
         // lazy mint next batch
         vm.prank(address(caller));
         vm.expectEmit();
-        emit TokensLazyMinted(_nextTokenIdToLazyMintOld, _nextTokenIdToLazyMintOld + amount - 1, baseURI, "");
+        emit TokensLazyMinted(
+            _nextTokenIdToLazyMintOld,
+            _nextTokenIdToLazyMintOld + amount - 1,
+            baseURI,
+            ""
+        );
         ext.lazyMint(amount, baseURI, "");
     }
 }

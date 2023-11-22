@@ -80,11 +80,10 @@ contract TokenERC20Test is BaseTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(TokenERC20.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        TokenERC20.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,
@@ -97,7 +96,9 @@ contract TokenERC20Test is BaseTest {
             _request.uid
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -122,7 +123,10 @@ contract TokenERC20Test is BaseTest {
 
         // check state after minting
         assertEq(tokenContract.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            tokenContract.balanceOf(recipient),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
     }
 
     function test_state_mintWithSignature_NonZeroPrice_ERC20() public {
@@ -150,12 +154,18 @@ contract TokenERC20Test is BaseTest {
 
         // check state after minting
         assertEq(tokenContract.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            tokenContract.balanceOf(recipient),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
 
         // check erc20 balances after minting
         uint256 _platformFees = (_mintrequest.price * platformFeeBps) / MAX_BPS;
         assertEq(erc20.balanceOf(recipient), erc20BalanceOfRecipient - _mintrequest.price);
-        assertEq(erc20.balanceOf(address(saleRecipient)), erc20BalanceOfSeller + _mintrequest.price - _platformFees);
+        assertEq(
+            erc20.balanceOf(address(saleRecipient)),
+            erc20BalanceOfSeller + _mintrequest.price - _platformFees
+        );
     }
 
     function test_state_mintWithSignature_NonZeroPrice_NativeToken() public {
@@ -179,12 +189,18 @@ contract TokenERC20Test is BaseTest {
 
         // check state after minting
         assertEq(tokenContract.totalSupply(), currentTotalSupply + _mintrequest.quantity);
-        assertEq(tokenContract.balanceOf(recipient), currentBalanceOfRecipient + _mintrequest.quantity);
+        assertEq(
+            tokenContract.balanceOf(recipient),
+            currentBalanceOfRecipient + _mintrequest.quantity
+        );
 
         // check balances after minting
         uint256 _platformFees = (_mintrequest.price * platformFeeBps) / MAX_BPS;
         assertEq(address(recipient).balance, etherBalanceOfRecipient - _mintrequest.price);
-        assertEq(address(saleRecipient).balance, etherBalanceOfSeller + _mintrequest.price - _platformFees);
+        assertEq(
+            address(saleRecipient).balance,
+            etherBalanceOfSeller + _mintrequest.price - _platformFees
+        );
     }
 
     function test_revert_mintWithSignature_MustSendTotalPrice() public {

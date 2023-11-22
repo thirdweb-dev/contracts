@@ -30,11 +30,10 @@ contract ERC1155SignatureMintTest is DSTest, Test {
 
     ERC1155SignatureMint.MintRequest req;
 
-    function signMintRequest(ERC1155SignatureMint.MintRequest memory _request, uint256 privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        ERC1155SignatureMint.MintRequest memory _request,
+        uint256 privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = bytes.concat(
             abi.encode(
                 typehashMintRequest,
@@ -55,7 +54,9 @@ contract ERC1155SignatureMintTest is DSTest, Test {
             )
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+        bytes32 typedDataHash = keccak256(
+            abi.encodePacked("\x19\x01", domainSeparator, structHash)
+        );
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -84,7 +85,9 @@ contract ERC1155SignatureMintTest is DSTest, Test {
         typehashEip712 = keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
-        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(base)));
+        domainSeparator = keccak256(
+            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(base))
+        );
     }
 
     function test_state_mintWithSignature_newNFTs() public {

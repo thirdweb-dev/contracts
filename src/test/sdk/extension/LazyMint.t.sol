@@ -20,7 +20,12 @@ contract MyLazyMint is LazyMint {
 
 contract ExtensionLazyMint is DSTest, Test {
     MyLazyMint internal ext;
-    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
+    event TokensLazyMinted(
+        uint256 indexed startTokenId,
+        uint256 endTokenId,
+        string baseURI,
+        bytes encryptedBaseURI
+    );
 
     function setUp() public {
         ext = new MyLazyMint();

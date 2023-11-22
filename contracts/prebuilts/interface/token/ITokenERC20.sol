@@ -31,7 +31,11 @@ interface ITokenERC20 is IERC20MetadataUpgradeable {
     event TokensMinted(address indexed mintedTo, uint256 quantityMinted);
 
     /// @dev Emitted when tokens are minted.
-    event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, MintRequest mintRequest);
+    event TokensMintedWithSignature(
+        address indexed signer,
+        address indexed mintedTo,
+        MintRequest mintRequest
+    );
 
     /**
      *  @notice Verifies that a mint request is signed by an account holding
@@ -42,10 +46,10 @@ interface ITokenERC20 is IERC20MetadataUpgradeable {
      *
      *  returns (success, signer) Result of verification and the recovered address.
      */
-    function verify(MintRequest calldata req, bytes calldata signature)
-        external
-        view
-        returns (bool success, address signer);
+    function verify(
+        MintRequest calldata req,
+        bytes calldata signature
+    ) external view returns (bool success, address signer);
 
     /**
      * @dev Creates `amount` new tokens for `to`.

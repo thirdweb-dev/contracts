@@ -41,7 +41,9 @@ contract PluginMap is IPluginMap {
     }
 
     /// @dev View all funtionality as list of function signatures.
-    function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] memory registered) {
+    function getAllFunctionsOfPlugin(
+        address _pluginAddress
+    ) external view returns (bytes4[] memory registered) {
         uint256 len = selectorsForPlugin[_pluginAddress].length();
         registered = new bytes4[](len);
 
@@ -69,7 +71,8 @@ contract PluginMap is IPluginMap {
     function _setPlugin(Plugin memory _plugin) internal {
         require(allSelectors.add(bytes32(_plugin.functionSelector)), "Map: Selector exists");
         require(
-            _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
+            _plugin.functionSelector ==
+                bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
             "Map: Incorrect selector"
         );
 

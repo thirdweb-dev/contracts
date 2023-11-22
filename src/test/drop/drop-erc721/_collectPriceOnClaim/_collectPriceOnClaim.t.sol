@@ -91,7 +91,11 @@ contract DropERC721Test_collectPrice is BaseTest {
         );
     }
 
-    function test_revert_priceValueMismatchNativeCurrency() public nativeCurrency pricePerTokenNotZero {
+    function test_revert_priceValueMismatchNativeCurrency()
+        public
+        nativeCurrency
+        pricePerTokenNotZero
+    {
         vm.expectRevert();
         proxy.collectionPriceOnClaim{ value: collectPrice_msgValue }(
             collectPrice_saleRecipient,
@@ -101,7 +105,12 @@ contract DropERC721Test_collectPrice is BaseTest {
         );
     }
 
-    function test_transferNativeCurrency() public nativeCurrency pricePerTokenNotZero msgValueNotZero {
+    function test_transferNativeCurrency()
+        public
+        nativeCurrency
+        pricePerTokenNotZero
+        msgValueNotZero
+    {
         uint256 balanceSaleRecipientBefore = address(saleRecipient).balance;
         uint256 platformFeeRecipientBefore = address(platformFeeRecipient).balance;
         proxy.collectionPriceOnClaim{ value: collectPrice_msgValue }(
@@ -116,7 +125,10 @@ contract DropERC721Test_collectPrice is BaseTest {
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee;
 
-        assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
+        assertEq(
+            balanceSaleRecipientAfter - balanceSaleRecipientBefore,
+            expectedSaleRecipientProceed
+        );
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 
@@ -136,7 +148,10 @@ contract DropERC721Test_collectPrice is BaseTest {
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken - expectedPlatformFee;
 
-        assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
+        assertEq(
+            balanceSaleRecipientAfter - balanceSaleRecipientBefore,
+            expectedSaleRecipientProceed
+        );
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 }

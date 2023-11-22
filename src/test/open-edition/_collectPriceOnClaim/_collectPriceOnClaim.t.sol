@@ -103,19 +103,46 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
         _;
     }
 
-    function test_revert_pricePerTokenZeroMsgValueNotZero() public pricePerTokenZero msgValueNotZero {
+    function test_revert_pricePerTokenZeroMsgValueNotZero()
+        public
+        pricePerTokenZero
+        msgValueNotZero
+    {
         vm.expectRevert("!Value");
-        openEdition.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
+        openEdition.collectPriceOnClaim{ value: msgValue }(
+            primarySaleRecipient,
+            qty,
+            currency,
+            pricePerToken
+        );
     }
 
-    function test_revert_nativeCurrencyValuePriceMismatch() public currencyNativeToken valuePriceMismatch {
+    function test_revert_nativeCurrencyValuePriceMismatch()
+        public
+        currencyNativeToken
+        valuePriceMismatch
+    {
         vm.expectRevert(bytes("!V"));
-        openEdition.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
+        openEdition.collectPriceOnClaim{ value: msgValue }(
+            primarySaleRecipient,
+            qty,
+            currency,
+            pricePerToken
+        );
     }
 
-    function test_revert_erc20ValuePriceMismatch() public currencyNotNativeToken valuePriceMismatch {
+    function test_revert_erc20ValuePriceMismatch()
+        public
+        currencyNotNativeToken
+        valuePriceMismatch
+    {
         vm.expectRevert(bytes("!V"));
-        openEdition.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
+        openEdition.collectPriceOnClaim{ value: msgValue }(
+            primarySaleRecipient,
+            qty,
+            currency,
+            pricePerToken
+        );
     }
 
     function test_state_nativeCurrency()
@@ -127,13 +154,21 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
     {
         uint256 beforeBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
 
-        openEdition.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
+        openEdition.collectPriceOnClaim{ value: msgValue }(
+            primarySaleRecipient,
+            qty,
+            currency,
+            pricePerToken
+        );
 
         uint256 afterBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
 
         uint256 primarySaleRecipientVal = msgValue;
 
-        assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(
+            beforeBalancePrimarySaleRecipient + primarySaleRecipientVal,
+            afterBalancePrimarySaleRecipient
+        );
     }
 
     function test_revert_erc20_msgValueNotZero()
@@ -143,10 +178,20 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
         primarySaleRecipientNotZeroAddress
     {
         vm.expectRevert("!Value");
-        openEdition.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
+        openEdition.collectPriceOnClaim{ value: msgValue }(
+            primarySaleRecipient,
+            qty,
+            currency,
+            pricePerToken
+        );
     }
 
-    function test_state_erc20() public currencyNotNativeToken pricePerTokenNotZero primarySaleRecipientNotZeroAddress {
+    function test_state_erc20()
+        public
+        currencyNotNativeToken
+        pricePerTokenNotZero
+        primarySaleRecipientNotZeroAddress
+    {
         erc20.mint(address(this), pricePerToken);
         ERC20(erc20).approve(address(openEdition), pricePerToken);
         uint256 beforeBalancePrimarySaleRecipient = erc20.balanceOf(primarySaleRecipient);
@@ -157,7 +202,10 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
 
         uint256 primarySaleRecipientVal = 1 ether;
 
-        assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(
+            beforeBalancePrimarySaleRecipient + primarySaleRecipientVal,
+            afterBalancePrimarySaleRecipient
+        );
     }
 
     function test_state_erc20StoredPrimarySaleRecipient()
@@ -178,7 +226,10 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
 
         uint256 primarySaleRecipientVal = 1 ether;
 
-        assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(
+            beforeBalancePrimarySaleRecipient + primarySaleRecipientVal,
+            afterBalancePrimarySaleRecipient
+        );
     }
 
     function test_state_nativeCurrencyStoredPrimarySaleRecipient()
@@ -192,12 +243,20 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
 
         uint256 beforeBalancePrimarySaleRecipient = address(storedPrimarySaleRecipient).balance;
 
-        openEdition.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
+        openEdition.collectPriceOnClaim{ value: msgValue }(
+            primarySaleRecipient,
+            qty,
+            currency,
+            pricePerToken
+        );
 
         uint256 afterBalancePrimarySaleRecipient = address(storedPrimarySaleRecipient).balance;
 
         uint256 primarySaleRecipientVal = msgValue;
 
-        assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(
+            beforeBalancePrimarySaleRecipient + primarySaleRecipientVal,
+            afterBalancePrimarySaleRecipient
+        );
     }
 }

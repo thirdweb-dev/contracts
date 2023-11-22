@@ -130,15 +130,24 @@ abstract contract Router is Multicall, ERC165, IRouter {
     function getPluginForFunction(bytes4 _selector) public view returns (address) {
         address pluginAddress = _getPluginForFunction(_selector);
 
-        return pluginAddress != address(0) ? pluginAddress : IPluginMap(pluginMap).getPluginForFunction(_selector);
+        return
+            pluginAddress != address(0)
+                ? pluginAddress
+                : IPluginMap(pluginMap).getPluginForFunction(_selector);
     }
 
     /// @dev View all funtionality as list of function signatures.
-    function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] memory registered) {
+    function getAllFunctionsOfPlugin(
+        address _pluginAddress
+    ) external view returns (bytes4[] memory registered) {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
 
-        EnumerableSet.Bytes32Set storage selectorsForPlugin = data.selectorsForPlugin[_pluginAddress];
-        bytes4[] memory defaultSelectors = IPluginMap(pluginMap).getAllFunctionsOfPlugin(_pluginAddress);
+        EnumerableSet.Bytes32Set storage selectorsForPlugin = data.selectorsForPlugin[
+            _pluginAddress
+        ];
+        bytes4[] memory defaultSelectors = IPluginMap(pluginMap).getAllFunctionsOfPlugin(
+            _pluginAddress
+        );
 
         uint256 len = defaultSelectors.length;
         uint256 count = selectorsForPlugin.length() + defaultSelectors.length;
@@ -222,11 +231,15 @@ abstract contract Router is Multicall, ERC165, IRouter {
         try IPluginMap(pluginMap).getPluginForFunction(_plugin.functionSelector) returns (address) {
             revert("Router: default plugin exists for function.");
         } catch {
-            require(data.allSelectors.add(bytes32(_plugin.functionSelector)), "Router: plugin exists for function.");
+            require(
+                data.allSelectors.add(bytes32(_plugin.functionSelector)),
+                "Router: plugin exists for function."
+            );
         }
 
         require(
-            _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
+            _plugin.functionSelector ==
+                bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
             "Router: fn selector and signature mismatch."
         );
 
@@ -240,7 +253,8 @@ abstract contract Router is Multicall, ERC165, IRouter {
     function _updatePlugin(Plugin memory _plugin) internal {
         address currentPlugin = getPluginForFunction(_plugin.functionSelector);
         require(
-            _plugin.functionSelector == bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
+            _plugin.functionSelector ==
+                bytes4(keccak256(abi.encodePacked(_plugin.functionSignature))),
             "Router: fn selector and signature mismatch."
         );
 

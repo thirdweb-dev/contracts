@@ -9,7 +9,12 @@ import "./mocks/MockThirdwebContract.sol";
 import "contracts/extension/interface/plugin/IPluginMap.sol";
 
 interface ITWMultichainRegistryData {
-    event Added(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid, string metadataUri);
+    event Added(
+        address indexed deployer,
+        address indexed moduleAddress,
+        uint256 indexed chainid,
+        string metadataUri
+    );
     event Deleted(address indexed deployer, address indexed moduleAddress, uint256 indexed chainid);
 }
 

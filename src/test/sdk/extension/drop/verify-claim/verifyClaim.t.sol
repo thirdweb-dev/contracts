@@ -15,11 +15,10 @@ contract MyDrop is Drop {
         uint256 _pricePerToken
     ) internal override {}
 
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId)
-    {}
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId) {}
 
     function _canSetClaimConditions() internal view override returns (bool) {
         return true;
@@ -125,7 +124,14 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         ext.setCondition(claimCondition, _conditionId);
 
         vm.expectRevert("!PriceOrCurrency");
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
     modifier whenValidCurrency_open() {
@@ -137,7 +143,14 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         ext.setCondition(claimCondition, _conditionId);
 
         vm.expectRevert("!PriceOrCurrency");
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
     modifier whenValidPrice_open() {
@@ -145,12 +158,23 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         _;
     }
 
-    function test_verifyClaim_noAllowlist_zeroQuantity() public whenValidCurrency_open whenValidPrice_open {
+    function test_verifyClaim_noAllowlist_zeroQuantity()
+        public
+        whenValidCurrency_open
+        whenValidPrice_open
+    {
         ext.setCondition(claimCondition, _conditionId);
 
         _quantity = 0;
         vm.expectRevert(bytes("!Qty"));
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
     modifier whenNonZeroQuantity() {
@@ -168,7 +192,14 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         ext.setSupplyClaimedByWallet(_conditionId, _claimer, claimCondition.quantityLimitPerWallet);
 
         vm.expectRevert(bytes("!Qty"));
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
     modifier whenValidQuantity_open() {
@@ -187,7 +218,14 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         ext.setCondition(claimCondition, _conditionId);
 
         vm.expectRevert("!MaxSupply");
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
     modifier whenQuantityWithinMaxLimit() {
@@ -205,7 +243,14 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         ext.setCondition(claimCondition, _conditionId);
 
         vm.expectRevert("cant claim yet");
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
     modifier whenValidTimestamp() {
@@ -224,7 +269,14 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
     {
         ext.setCondition(claimCondition, _conditionId);
 
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
     // ==================
@@ -235,22 +287,47 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         ext.setCondition(claimConditionWithAllowlist, _conditionId);
 
         vm.expectRevert("!PriceOrCurrency");
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
     function test_verifyClaim_incorrectProof_invalidPrice() public whenValidCurrency_open {
         ext.setCondition(claimConditionWithAllowlist, _conditionId);
 
         vm.expectRevert("!PriceOrCurrency");
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
-    function test_verifyClaim_incorrectProof_zeroQuantity() public whenValidCurrency_open whenValidPrice_open {
+    function test_verifyClaim_incorrectProof_zeroQuantity()
+        public
+        whenValidCurrency_open
+        whenValidPrice_open
+    {
         ext.setCondition(claimConditionWithAllowlist, _conditionId);
 
         _quantity = 0;
         vm.expectRevert(bytes("!Qty"));
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
     function test_verifyClaim_incorrectProof_nonZeroInvalidQuantity()
@@ -263,7 +340,14 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         ext.setSupplyClaimedByWallet(_conditionId, _claimer, claimCondition.quantityLimitPerWallet);
 
         vm.expectRevert(bytes("!Qty"));
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
     function test_verifyClaim_incorrectProof()
@@ -277,7 +361,14 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
     {
         ext.setCondition(claimConditionWithAllowlist, _conditionId);
 
-        ext.verifyClaim(_conditionId, _claimer, _quantity, _currency, _pricePerToken, _allowlistProofEmpty);
+        ext.verifyClaim(
+            _conditionId,
+            _claimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProofEmpty
+        );
     }
 
     // ==================
@@ -288,10 +379,19 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         ext.setCondition(claimConditionWithAllowlist, _conditionId);
 
         vm.expectRevert("!PriceOrCurrency");
-        ext.verifyClaim(_conditionId, _allowlistClaimer, _quantity, _currency, _pricePerToken, _allowlistProof);
+        ext.verifyClaim(
+            _conditionId,
+            _allowlistClaimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProof
+        );
     }
 
-    function test_verifyClaim_allowlist_defaultPriceNonDefaultCurrenct_invalidCurrencyParam() public {
+    function test_verifyClaim_allowlist_defaultPriceNonDefaultCurrenct_invalidCurrencyParam()
+        public
+    {
         (_allowlistProof, claimConditionWithAllowlist.merkleRoot) = _setAllowlistAndProofs(
             0, // default
             type(uint256).max, // default
@@ -300,7 +400,14 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         ext.setCondition(claimConditionWithAllowlist, _conditionId);
 
         vm.expectRevert("!PriceOrCurrency");
-        ext.verifyClaim(_conditionId, _allowlistClaimer, _quantity, _currency, _pricePerToken, _allowlistProof);
+        ext.verifyClaim(
+            _conditionId,
+            _allowlistClaimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProof
+        );
     }
 
     function test_verifyClaim_allowlist_nonDefaultPriceAndCurrency_invalidCurrencyParam() public {
@@ -312,7 +419,14 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         ext.setCondition(claimConditionWithAllowlist, _conditionId);
 
         vm.expectRevert("!PriceOrCurrency");
-        ext.verifyClaim(_conditionId, _allowlistClaimer, _quantity, _currency, _pricePerToken, _allowlistProof);
+        ext.verifyClaim(
+            _conditionId,
+            _allowlistClaimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProof
+        );
     }
 
     function test_verifyClaim_allowlist_defaultQuantity_invalidQuantityParam() public {
@@ -332,11 +446,22 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         _pricePerToken = 2;
         _quantity = 1;
         vm.expectRevert(bytes("!Qty"));
-        ext.verifyClaim(_conditionId, _allowlistClaimer, _quantity, _currency, _pricePerToken, _allowlistProof);
+        ext.verifyClaim(
+            _conditionId,
+            _allowlistClaimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProof
+        );
     }
 
     function test_verifyClaim_allowlist_nonDefaultQuantity_invalidQuantityParam() public {
-        (_allowlistProof, claimConditionWithAllowlist.merkleRoot) = _setAllowlistAndProofs(5, 2, address(weth));
+        (_allowlistProof, claimConditionWithAllowlist.merkleRoot) = _setAllowlistAndProofs(
+            5,
+            2,
+            address(weth)
+        );
         ext.setCondition(claimConditionWithAllowlist, _conditionId);
         ext.setSupplyClaimedByWallet(_conditionId, _allowlistClaimer, 5);
 
@@ -344,7 +469,14 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         _pricePerToken = 2;
         _quantity = 1;
         vm.expectRevert(bytes("!Qty"));
-        ext.verifyClaim(_conditionId, _allowlistClaimer, _quantity, _currency, _pricePerToken, _allowlistProof);
+        ext.verifyClaim(
+            _conditionId,
+            _allowlistClaimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProof
+        );
     }
 
     function test_verifyClaim_allowlist_defaultPrice_invalidPriceParam() public {
@@ -358,27 +490,56 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         _currency = address(weth);
         _quantity = 1;
         vm.expectRevert(bytes("!PriceOrCurrency"));
-        ext.verifyClaim(_conditionId, _allowlistClaimer, _quantity, _currency, _pricePerToken, _allowlistProof);
+        ext.verifyClaim(
+            _conditionId,
+            _allowlistClaimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProof
+        );
     }
 
     function test_verifyClaim_allowlist_nonDefaultPrice_invalidPriceParam() public {
-        (_allowlistProof, claimConditionWithAllowlist.merkleRoot) = _setAllowlistAndProofs(5, 1, address(weth));
+        (_allowlistProof, claimConditionWithAllowlist.merkleRoot) = _setAllowlistAndProofs(
+            5,
+            1,
+            address(weth)
+        );
         ext.setCondition(claimConditionWithAllowlist, _conditionId);
 
         _currency = address(weth);
         _quantity = 1;
         _pricePerToken = 2;
         vm.expectRevert(bytes("!PriceOrCurrency"));
-        ext.verifyClaim(_conditionId, _allowlistClaimer, _quantity, _currency, _pricePerToken, _allowlistProof);
+        ext.verifyClaim(
+            _conditionId,
+            _allowlistClaimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProof
+        );
     }
 
     function test_verifyClaim_allowlist() public whenQuantityWithinMaxLimit whenValidTimestamp {
-        (_allowlistProof, claimConditionWithAllowlist.merkleRoot) = _setAllowlistAndProofs(5, 1, address(weth));
+        (_allowlistProof, claimConditionWithAllowlist.merkleRoot) = _setAllowlistAndProofs(
+            5,
+            1,
+            address(weth)
+        );
         ext.setCondition(claimConditionWithAllowlist, _conditionId);
 
         _currency = address(weth);
         _quantity = 1;
         _pricePerToken = 1;
-        ext.verifyClaim(_conditionId, _allowlistClaimer, _quantity, _currency, _pricePerToken, _allowlistProof);
+        ext.verifyClaim(
+            _conditionId,
+            _allowlistClaimer,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProof
+        );
     }
 }

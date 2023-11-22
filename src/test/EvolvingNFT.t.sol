@@ -112,7 +112,10 @@ contract EvolvingNFTTest is BaseTest {
             IERC721Upgradeable.transferFrom.selector,
             "transferFrom(address,address,uint256)"
         );
-        evolvingNftExtension.functions[5] = IExtension.ExtensionFunction(IERC721.ownerOf.selector, "ownerOf(uint256)");
+        evolvingNftExtension.functions[5] = IExtension.ExtensionFunction(
+            IERC721.ownerOf.selector,
+            "ownerOf(uint256)"
+        );
         evolvingNftExtension.functions[6] = IExtension.ExtensionFunction(
             Drop.getSupplyClaimedByWallet.selector,
             "getSupplyClaimedByWallet(uint256,address)"
@@ -163,7 +166,16 @@ contract EvolvingNFTTest is BaseTest {
                 evolvingNftImpl,
                 abi.encodeCall(
                     EvolvingNFT.initialize,
-                    (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), saleRecipient, royaltyRecipient, royaltyBps)
+                    (
+                        deployer,
+                        NAME,
+                        SYMBOL,
+                        CONTRACT_URI,
+                        forwarders(),
+                        saleRecipient,
+                        royaltyRecipient,
+                        royaltyBps
+                    )
                 )
             )
         );
@@ -222,7 +234,10 @@ contract EvolvingNFTTest is BaseTest {
         // Set shared metadata
         vm.startPrank(deployer);
         SharedMetadataBatch(evolvingNFT).setSharedMetadata(sharedMetadataBatch[0], bytes32(0));
-        SharedMetadataBatch(evolvingNFT).setSharedMetadata(sharedMetadataBatch[score1], bytes32(score1));
+        SharedMetadataBatch(evolvingNFT).setSharedMetadata(
+            sharedMetadataBatch[score1],
+            bytes32(score1)
+        );
         SharedMetadataBatch(evolvingNFT).setSharedMetadata(
             sharedMetadataBatch[score1 + score2],
             bytes32(score1 + score2)
@@ -352,7 +367,10 @@ contract EvolvingNFTTest is BaseTest {
         // NFT should return 3rd tier of metadata.
         vm.prank(deployer);
         erc1155.mint(receiver, 3, 5, "");
-        assertEq(RulesEngine(evolvingNFT).getScore(receiver), uint256(bytes32(score1 + score2 + score3)));
+        assertEq(
+            RulesEngine(evolvingNFT).getScore(receiver),
+            uint256(bytes32(score1 + score2 + score3))
+        );
 
         string memory uri3 = EvolvingNFTLogic(evolvingNFT).tokenURI(1);
         assertEq(
@@ -744,7 +762,10 @@ contract EvolvingNFTTest is BaseTest {
         vm.prank(receiver, receiver);
         IDrop(evolvingNFT).claim(receiver, 100, address(erc20), 0, alp, ""); // claims for free, because allowlist price is 0
         assertEq(
-            Drop(evolvingNFT).getSupplyClaimedByWallet(Drop(evolvingNFT).getActiveClaimConditionId(), receiver),
+            Drop(evolvingNFT).getSupplyClaimedByWallet(
+                Drop(evolvingNFT).getActiveClaimConditionId(),
+                receiver
+            ),
             100
         );
     }
@@ -805,7 +826,10 @@ contract EvolvingNFTTest is BaseTest {
         vm.prank(receiver, receiver);
         IDrop(evolvingNFT).claim(receiver, 100, address(erc20), 5, alp, "");
         assertEq(
-            Drop(evolvingNFT).getSupplyClaimedByWallet(Drop(evolvingNFT).getActiveClaimConditionId(), receiver),
+            Drop(evolvingNFT).getSupplyClaimedByWallet(
+                Drop(evolvingNFT).getActiveClaimConditionId(),
+                receiver
+            ),
             100
         );
         assertEq(erc20.balanceOf(receiver), 10000 - 500);
@@ -863,7 +887,10 @@ contract EvolvingNFTTest is BaseTest {
         vm.prank(receiver, receiver);
         IDrop(evolvingNFT).claim(receiver, 100, address(erc20), 10, alp, "");
         assertEq(
-            Drop(evolvingNFT).getSupplyClaimedByWallet(Drop(evolvingNFT).getActiveClaimConditionId(), receiver),
+            Drop(evolvingNFT).getSupplyClaimedByWallet(
+                Drop(evolvingNFT).getActiveClaimConditionId(),
+                receiver
+            ),
             100
         );
         assertEq(erc20.balanceOf(receiver), 10000 - 1000);
@@ -926,7 +953,10 @@ contract EvolvingNFTTest is BaseTest {
         vm.prank(receiver, receiver);
         IDrop(evolvingNFT).claim(receiver, 10, address(erc20), 5, alp, "");
         assertEq(
-            Drop(evolvingNFT).getSupplyClaimedByWallet(Drop(evolvingNFT).getActiveClaimConditionId(), receiver),
+            Drop(evolvingNFT).getSupplyClaimedByWallet(
+                Drop(evolvingNFT).getActiveClaimConditionId(),
+                receiver
+            ),
             10
         );
         assertEq(erc20.balanceOf(receiver), 10000 - 50);
@@ -976,7 +1006,10 @@ contract EvolvingNFTTest is BaseTest {
         vm.prank(receiver, receiver);
         IDrop(evolvingNFT).claim(receiver, x - 5, address(0), 0, alp, "");
         assertEq(
-            Drop(evolvingNFT).getSupplyClaimedByWallet(Drop(evolvingNFT).getActiveClaimConditionId(), receiver),
+            Drop(evolvingNFT).getSupplyClaimedByWallet(
+                Drop(evolvingNFT).getActiveClaimConditionId(),
+                receiver
+            ),
             x - 5
         );
 
@@ -989,7 +1022,10 @@ contract EvolvingNFTTest is BaseTest {
         vm.prank(receiver, receiver);
         IDrop(evolvingNFT).claim(receiver, 5, address(0), 0, alp, "");
         assertEq(
-            Drop(evolvingNFT).getSupplyClaimedByWallet(Drop(evolvingNFT).getActiveClaimConditionId(), receiver),
+            Drop(evolvingNFT).getSupplyClaimedByWallet(
+                Drop(evolvingNFT).getActiveClaimConditionId(),
+                receiver
+            ),
             x
         );
 
@@ -1098,21 +1134,30 @@ contract EvolvingNFTTest is BaseTest {
         assertEq(activeConditionId, 0);
         assertEq(Drop(evolvingNFT).getClaimConditionById(activeConditionId).startTimestamp, 10);
         assertEq(Drop(evolvingNFT).getClaimConditionById(activeConditionId).maxClaimableSupply, 11);
-        assertEq(Drop(evolvingNFT).getClaimConditionById(activeConditionId).quantityLimitPerWallet, 12);
+        assertEq(
+            Drop(evolvingNFT).getClaimConditionById(activeConditionId).quantityLimitPerWallet,
+            12
+        );
 
         vm.warp(20);
         activeConditionId = Drop(evolvingNFT).getActiveClaimConditionId();
         assertEq(activeConditionId, 1);
         assertEq(Drop(evolvingNFT).getClaimConditionById(activeConditionId).startTimestamp, 20);
         assertEq(Drop(evolvingNFT).getClaimConditionById(activeConditionId).maxClaimableSupply, 21);
-        assertEq(Drop(evolvingNFT).getClaimConditionById(activeConditionId).quantityLimitPerWallet, 22);
+        assertEq(
+            Drop(evolvingNFT).getClaimConditionById(activeConditionId).quantityLimitPerWallet,
+            22
+        );
 
         vm.warp(30);
         activeConditionId = Drop(evolvingNFT).getActiveClaimConditionId();
         assertEq(activeConditionId, 2);
         assertEq(Drop(evolvingNFT).getClaimConditionById(activeConditionId).startTimestamp, 30);
         assertEq(Drop(evolvingNFT).getClaimConditionById(activeConditionId).maxClaimableSupply, 31);
-        assertEq(Drop(evolvingNFT).getClaimConditionById(activeConditionId).quantityLimitPerWallet, 32);
+        assertEq(
+            Drop(evolvingNFT).getClaimConditionById(activeConditionId).quantityLimitPerWallet,
+            32
+        );
 
         vm.warp(40);
         assertEq(Drop(evolvingNFT).getActiveClaimConditionId(), 2);
@@ -1126,7 +1171,10 @@ contract EvolvingNFTTest is BaseTest {
         // Set shared metadata
         vm.startPrank(deployer);
         SharedMetadataBatch(evolvingNFT).setSharedMetadata(sharedMetadataBatch[0], bytes32(0));
-        SharedMetadataBatch(evolvingNFT).setSharedMetadata(sharedMetadataBatch[score1], bytes32(score1));
+        SharedMetadataBatch(evolvingNFT).setSharedMetadata(
+            sharedMetadataBatch[score1],
+            bytes32(score1)
+        );
         SharedMetadataBatch(evolvingNFT).setSharedMetadata(
             sharedMetadataBatch[score1 + score2],
             bytes32(score1 + score2)

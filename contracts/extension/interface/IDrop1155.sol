@@ -37,7 +37,11 @@ interface IDrop1155 is IClaimConditionMultiPhase {
     );
 
     /// @notice Emitted when the contract's claim conditions are updated.
-    event ClaimConditionsUpdated(uint256 indexed tokenId, ClaimCondition[] claimConditions, bool resetEligibility);
+    event ClaimConditionsUpdated(
+        uint256 indexed tokenId,
+        ClaimCondition[] claimConditions,
+        bool resetEligibility
+    );
 
     /**
      *  @notice Lets an account claim a given quantity of NFTs.

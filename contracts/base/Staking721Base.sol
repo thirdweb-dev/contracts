@@ -44,7 +44,14 @@ import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 //        Additional functionality such as deposit functions, reward-minting, etc.
 //        must be implemented by the deployer of this contract, as needed for their use-case.
 
-contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC165, IERC721Receiver {
+contract Staking721Base is
+    ContractMetadata,
+    Multicall,
+    Ownable,
+    Staking721,
+    ERC165,
+    IERC721Receiver
+{
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
 
@@ -104,7 +111,9 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC
     }
 
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IERC721Receiver).interfaceId || super.supportsInterface(interfaceId);
+        return
+            interfaceId == type(IERC721Receiver).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -138,7 +147,9 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC
     function _depositRewardTokens(uint256 _amount) internal virtual {
         require(msg.sender == owner(), "Not authorized");
 
-        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : rewardToken;
+        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN
+            ? nativeTokenWrapper
+            : rewardToken;
 
         uint256 balanceBefore = IERC20(_rewardToken).balanceOf(address(this));
         CurrencyTransferLib.transferCurrencyWithWrapper(

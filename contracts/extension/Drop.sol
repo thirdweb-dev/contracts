@@ -31,7 +31,14 @@ abstract contract Drop is IDrop {
 
         uint256 activeConditionId = getActiveClaimConditionId();
 
-        verifyClaim(activeConditionId, _dropMsgSender(), _quantity, _currency, _pricePerToken, _allowlistProof);
+        verifyClaim(
+            activeConditionId,
+            _dropMsgSender(),
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProof
+        );
 
         // Update contract state.
         claimCondition.conditions[activeConditionId].supplyClaimed += _quantity;
@@ -49,11 +56,10 @@ abstract contract Drop is IDrop {
     }
 
     /// @dev Lets a contract admin set claim conditions.
-    function setClaimConditions(ClaimCondition[] calldata _conditions, bool _resetClaimEligibility)
-        external
-        virtual
-        override
-    {
+    function setClaimConditions(
+        ClaimCondition[] calldata _conditions,
+        bool _resetClaimEligibility
+    ) external virtual override {
         if (!_canSetClaimConditions()) {
             revert("Not authorized");
         }
@@ -80,7 +86,9 @@ abstract contract Drop is IDrop {
         for (uint256 i = 0; i < _conditions.length; i++) {
             require(i == 0 || lastConditionStartTimestamp < _conditions[i].startTimestamp, "ST");
 
-            uint256 supplyClaimedAlready = claimCondition.conditions[newStartIndex + i].supplyClaimed;
+            uint256 supplyClaimedAlready = claimCondition
+                .conditions[newStartIndex + i]
+                .supplyClaimed;
             if (supplyClaimedAlready > _conditions[i].maxClaimableSupply) {
                 revert("max supply claimed");
             }
@@ -152,12 +160,15 @@ abstract contract Drop is IDrop {
             claimPrice = _allowlistProof.pricePerToken != type(uint256).max
                 ? _allowlistProof.pricePerToken
                 : claimPrice;
-            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0)
+            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max &&
+                _allowlistProof.currency != address(0)
                 ? _allowlistProof.currency
                 : claimCurrency;
         }
 
-        uint256 supplyClaimedByWallet = claimCondition.supplyClaimedByWallet[_conditionId][_claimer];
+        uint256 supplyClaimedByWallet = claimCondition.supplyClaimedByWallet[_conditionId][
+            _claimer
+        ];
 
         if (_currency != claimCurrency || _pricePerToken != claimPrice) {
             revert("!PriceOrCurrency");
@@ -177,7 +188,11 @@ abstract contract Drop is IDrop {
 
     /// @dev At any given moment, returns the uid for the active claim condition.
     function getActiveClaimConditionId() public view returns (uint256) {
-        for (uint256 i = claimCondition.currentStartId + claimCondition.count; i > claimCondition.currentStartId; i--) {
+        for (
+            uint256 i = claimCondition.currentStartId + claimCondition.count;
+            i > claimCondition.currentStartId;
+            i--
+        ) {
             if (block.timestamp >= claimCondition.conditions[i - 1].startTimestamp) {
                 return i - 1;
             }
@@ -187,16 +202,17 @@ abstract contract Drop is IDrop {
     }
 
     /// @dev Returns the claim condition at the given uid.
-    function getClaimConditionById(uint256 _conditionId) external view returns (ClaimCondition memory condition) {
+    function getClaimConditionById(
+        uint256 _conditionId
+    ) external view returns (ClaimCondition memory condition) {
         condition = claimCondition.conditions[_conditionId];
     }
 
     /// @dev Returns the supply claimed by claimer for a given conditionId.
-    function getSupplyClaimedByWallet(uint256 _conditionId, address _claimer)
-        public
-        view
-        returns (uint256 supplyClaimedByWallet)
-    {
+    function getSupplyClaimedByWallet(
+        uint256 _conditionId,
+        address _claimer
+    ) public view returns (uint256 supplyClaimedByWallet) {
         supplyClaimedByWallet = claimCondition.supplyClaimedByWallet[_conditionId][_claimer];
     }
 
@@ -242,10 +258,10 @@ abstract contract Drop is IDrop {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        returns (uint256 startTokenId);
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal virtual returns (uint256 startTokenId);
 
     /// @dev Determine what wallet can update claim conditions
     function _canSetClaimConditions() internal view virtual returns (bool);

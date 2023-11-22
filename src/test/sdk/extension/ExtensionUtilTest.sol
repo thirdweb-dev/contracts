@@ -109,19 +109,11 @@ abstract contract ExtensionUtilTest is DSTest, Test {
         }
     }
 
-    function assertBalERC20Eq(
-        address _token,
-        address _owner,
-        uint256 _amount
-    ) internal {
+    function assertBalERC20Eq(address _token, address _owner, uint256 _amount) internal {
         assertEq(MockERC20(_token).balanceOf(_owner), _amount);
     }
 
-    function assertBalERC20Gte(
-        address _token,
-        address _owner,
-        uint256 _amount
-    ) internal {
+    function assertBalERC20Gte(address _token, address _owner, uint256 _amount) internal {
         assertTrue(MockERC20(_token).balanceOf(_owner) >= _amount);
     }
 

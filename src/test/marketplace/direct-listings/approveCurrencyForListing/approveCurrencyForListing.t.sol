@@ -24,7 +24,11 @@ contract ApproveCurrencyForListingTest is BaseTest, IExtension {
     // Events to test
 
     /// @notice Emitted when a currency is approved as a form of payment for the listing.
-    event CurrencyApprovedForListing(uint256 indexed listingId, address indexed currency, uint256 pricePerToken);
+    event CurrencyApprovedForListing(
+        uint256 indexed listingId,
+        address indexed currency,
+        uint256 pricePerToken
+    );
 
     function setUp() public override {
         super.setUp();
@@ -35,7 +39,9 @@ contract ApproveCurrencyForListingTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
+            new MarketplaceV3(
+                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
+            )
         );
 
         vm.prank(marketplaceDeployer);
@@ -162,7 +168,11 @@ contract ApproveCurrencyForListingTest is BaseTest, IExtension {
     function test_approveCurrencyForListing_listingDoesntExist() public {
         vm.prank(seller);
         vm.expectRevert("Marketplace: invalid listing.");
-        DirectListingsLogic(marketplace).approveCurrencyForListing(listingId, address(weth), 1 ether);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            address(weth),
+            1 ether
+        );
     }
 
     modifier whenListingExists() {
@@ -185,7 +195,11 @@ contract ApproveCurrencyForListingTest is BaseTest, IExtension {
     function test_approveCurrencyForListing_whenCallerNotListingCreator() public whenListingExists {
         vm.prank(address(0x4353));
         vm.expectRevert("Marketplace: not listing creator.");
-        DirectListingsLogic(marketplace).approveCurrencyForListing(listingId, address(weth), 1 ether);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            address(weth),
+            1 ether
+        );
     }
 
     modifier whenCallerIsListingCreator() {
@@ -212,11 +226,19 @@ contract ApproveCurrencyForListingTest is BaseTest, IExtension {
         whenCallerIsListingCreator
     {
         vm.prank(seller);
-        DirectListingsLogic(marketplace).approveCurrencyForListing(listingId, address(weth), 1 ether);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            address(weth),
+            1 ether
+        );
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: price unchanged.");
-        DirectListingsLogic(marketplace).approveCurrencyForListing(listingId, address(weth), 1 ether);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            address(weth),
+            1 ether
+        );
     }
 
     function test_approveCurrencyForListing_whenApprovedPriceForCurrencyIsDifferentThanIncumbent()
@@ -230,8 +252,15 @@ contract ApproveCurrencyForListingTest is BaseTest, IExtension {
         vm.prank(seller);
         vm.expectEmit(true, true, true, true);
         emit CurrencyApprovedForListing(listingId, address(weth), 1 ether);
-        DirectListingsLogic(marketplace).approveCurrencyForListing(listingId, address(weth), 1 ether);
+        DirectListingsLogic(marketplace).approveCurrencyForListing(
+            listingId,
+            address(weth),
+            1 ether
+        );
 
-        assertEq(DirectListingsLogic(marketplace).currencyPriceForListing(listingId, address(weth)), 1 ether);
+        assertEq(
+            DirectListingsLogic(marketplace).currencyPriceForListing(listingId, address(weth)),
+            1 ether
+        );
     }
 }

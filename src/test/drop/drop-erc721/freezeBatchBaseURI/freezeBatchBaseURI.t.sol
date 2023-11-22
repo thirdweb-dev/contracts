@@ -45,7 +45,9 @@ contract DropERC721Test_freezeBatchBaseURI is BaseTest {
         freeze_revealedURI = "ipfs://revealed";
         freeze_key = "key";
         freeze_encryptedURI = drop.encryptDecrypt(bytes(freeze_revealedURI), freeze_key);
-        freeze_provenanceHash = keccak256(abi.encodePacked(freeze_revealedURI, freeze_key, block.chainid));
+        freeze_provenanceHash = keccak256(
+            abi.encodePacked(freeze_revealedURI, freeze_key, block.chainid)
+        );
         freeze_data = abi.encode(freeze_encryptedURI, freeze_provenanceHash);
         vm.prank(deployer);
         drop.lazyMint(freeze_amount, freeze_baseURI, freeze_data);
@@ -86,7 +88,11 @@ contract DropERC721Test_freezeBatchBaseURI is BaseTest {
         drop.freezeBatchBaseURI(0);
     }
 
-    function test_revert_EmptyBaseURI() public lazyMintUnEncryptedEmptyBaseURI callerWithMetadataRole {
+    function test_revert_EmptyBaseURI()
+        public
+        lazyMintUnEncryptedEmptyBaseURI
+        callerWithMetadataRole
+    {
         vm.expectRevert("Invalid batch");
         drop.freezeBatchBaseURI(0);
     }

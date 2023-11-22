@@ -46,7 +46,8 @@ contract NFTRejector {
 
 contract DynamicAccountTest is BaseTest {
     // Target contracts
-    EntryPoint private constant entrypoint = EntryPoint(payable(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789));
+    EntryPoint private constant entrypoint =
+        EntryPoint(payable(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789));
     DynamicAccountFactory private accountFactory;
 
     // Mocks
@@ -72,11 +73,9 @@ contract DynamicAccountTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes32 typedDataHash)
-    {
+    function _prepareSignature(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes32 typedDataHash) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -85,7 +84,9 @@ contract DynamicAccountTest is BaseTest {
         bytes32 typehashEip712 = keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
-        bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
+        bytes32 domainSeparator = keccak256(
+            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender)
+        );
 
         bytes memory encodedRequestStart = abi.encode(
             typehashSignerPermissionRequest,
@@ -107,11 +108,9 @@ contract DynamicAccountTest is BaseTest {
         typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
@@ -249,7 +248,10 @@ contract DynamicAccountTest is BaseTest {
     }
 
     /// @dev Returns the salt used when deploying an Account.
-    function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
+    function _generateSalt(
+        address _admin,
+        bytes memory _data
+    ) internal view virtual returns (bytes32) {
         return keccak256(abi.encode(_admin, _data));
     }
 
@@ -390,8 +392,15 @@ contract DynamicAccountTest is BaseTest {
 
     /// @dev Create an account via Entrypoint.
     function test_state_createAccount_viaEntrypoint() public {
-        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
-        bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
+        bytes memory initCallData = abi.encodeWithSignature(
+            "createAccount(address,bytes)",
+            accountAdmin,
+            data
+        );
+        bytes memory initCode = abi.encodePacked(
+            abi.encodePacked(address(accountFactory)),
+            initCallData
+        );
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
             accountAdminPKey,
@@ -427,7 +436,10 @@ contract DynamicAccountTest is BaseTest {
                 accountAdmin,
                 bytes(abi.encode(i))
             );
-            bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
+            bytes memory initCode = abi.encodePacked(
+                abi.encodePacked(address(accountFactory)),
+                initCallData
+            );
 
             address expectedSenderAddress = Clones.predictDeterministicAddress(
                 accountFactory.accountImplementation(),
@@ -468,8 +480,15 @@ contract DynamicAccountTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function _setup_executeTransaction() internal {
-        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
-        bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
+        bytes memory initCallData = abi.encodeWithSignature(
+            "createAccount(address,bytes)",
+            accountAdmin,
+            data
+        );
+        bytes memory initCode = abi.encodePacked(
+            abi.encodePacked(address(accountFactory)),
+            initCallData
+        );
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
             accountAdminPKey,
@@ -596,17 +615,18 @@ contract DynamicAccountTest is BaseTest {
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(numberContract);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
-            accountSigner,
-            0,
-            approvedTargets,
-            1 ether,
-            0,
-            type(uint128).max,
-            0,
-            type(uint128).max,
-            uidCache
-        );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
+            .SignerPermissionRequest(
+                accountSigner,
+                0,
+                approvedTargets,
+                1 ether,
+                0,
+                type(uint128).max,
+                0,
+                type(uint128).max,
+                uidCache
+            );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -634,17 +654,18 @@ contract DynamicAccountTest is BaseTest {
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(numberContract);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
-            accountSigner,
-            0,
-            approvedTargets,
-            1 ether,
-            0,
-            type(uint128).max,
-            0,
-            type(uint128).max,
-            uidCache
-        );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
+            .SignerPermissionRequest(
+                accountSigner,
+                0,
+                approvedTargets,
+                1 ether,
+                0,
+                type(uint128).max,
+                0,
+                type(uint128).max,
+                uidCache
+            );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -692,17 +713,18 @@ contract DynamicAccountTest is BaseTest {
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(numberContract);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
-            accountSigner,
-            0,
-            approvedTargets,
-            1 ether,
-            0,
-            type(uint128).max,
-            0,
-            type(uint128).max,
-            uidCache
-        );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
+            .SignerPermissionRequest(
+                accountSigner,
+                0,
+                approvedTargets,
+                1 ether,
+                0,
+                type(uint128).max,
+                0,
+                type(uint128).max,
+                uidCache
+            );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -757,7 +779,13 @@ contract DynamicAccountTest is BaseTest {
 
         address recipient = address(0x3456);
 
-        UserOperation[] memory userOp = _setupUserOpExecute(accountAdminPKey, bytes(""), recipient, value, bytes(""));
+        UserOperation[] memory userOp = _setupUserOpExecute(
+            accountAdminPKey,
+            bytes(""),
+            recipient,
+            value,
+            bytes("")
+        );
 
         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
         assertEq(address(account).balance, 0);

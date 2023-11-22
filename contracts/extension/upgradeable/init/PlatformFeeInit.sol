@@ -7,7 +7,10 @@ contract PlatformFeeInit {
     event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
-    function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
+    function _setupPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) internal {
         if (_platformFeeBps > 10_000) {
             revert("Exceeds max bps");
         }

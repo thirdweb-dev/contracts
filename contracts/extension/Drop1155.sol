@@ -28,7 +28,15 @@ abstract contract Drop1155 is IDrop1155 {
         AllowlistProof calldata _allowlistProof,
         bytes memory _data
     ) public payable virtual override {
-        _beforeClaim(_tokenId, _receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
+        _beforeClaim(
+            _tokenId,
+            _receiver,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProof,
+            _data
+        );
 
         uint256 activeConditionId = getActiveClaimConditionId(_tokenId);
 
@@ -44,7 +52,9 @@ abstract contract Drop1155 is IDrop1155 {
 
         // Update contract state.
         claimCondition[_tokenId].conditions[activeConditionId].supplyClaimed += _quantity;
-        claimCondition[_tokenId].supplyClaimedByWallet[activeConditionId][_dropMsgSender()] += _quantity;
+        claimCondition[_tokenId].supplyClaimedByWallet[activeConditionId][
+            _dropMsgSender()
+        ] += _quantity;
 
         // If there's a price, collect price.
         collectPriceOnClaim(_tokenId, address(0), _quantity, _currency, _pricePerToken);
@@ -54,7 +64,15 @@ abstract contract Drop1155 is IDrop1155 {
 
         emit TokensClaimed(activeConditionId, _dropMsgSender(), _receiver, _tokenId, _quantity);
 
-        _afterClaim(_tokenId, _receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
+        _afterClaim(
+            _tokenId,
+            _receiver,
+            _quantity,
+            _currency,
+            _pricePerToken,
+            _allowlistProof,
+            _data
+        );
     }
 
     /// @dev Lets a contract admin set claim conditions.
@@ -89,7 +107,9 @@ abstract contract Drop1155 is IDrop1155 {
         for (uint256 i = 0; i < _conditions.length; i++) {
             require(i == 0 || lastConditionStartTimestamp < _conditions[i].startTimestamp, "ST");
 
-            uint256 supplyClaimedAlready = conditionList.conditions[newStartIndex + i].supplyClaimed;
+            uint256 supplyClaimedAlready = conditionList
+                .conditions[newStartIndex + i]
+                .supplyClaimed;
             if (supplyClaimedAlready > _conditions[i].maxClaimableSupply) {
                 revert("max supply claimed");
             }
@@ -162,12 +182,15 @@ abstract contract Drop1155 is IDrop1155 {
             claimPrice = _allowlistProof.pricePerToken != type(uint256).max
                 ? _allowlistProof.pricePerToken
                 : claimPrice;
-            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0)
+            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max &&
+                _allowlistProof.currency != address(0)
                 ? _allowlistProof.currency
                 : claimCurrency;
         }
 
-        uint256 supplyClaimedByWallet = claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
+        uint256 supplyClaimedByWallet = claimCondition[_tokenId].supplyClaimedByWallet[
+            _conditionId
+        ][_claimer];
 
         if (_currency != claimCurrency || _pricePerToken != claimPrice) {
             revert("!PriceOrCurrency");
@@ -189,7 +212,11 @@ abstract contract Drop1155 is IDrop1155 {
     /// @dev At any given moment, returns the uid for the active claim condition.
     function getActiveClaimConditionId(uint256 _tokenId) public view returns (uint256) {
         ClaimConditionList storage conditionList = claimCondition[_tokenId];
-        for (uint256 i = conditionList.currentStartId + conditionList.count; i > conditionList.currentStartId; i--) {
+        for (
+            uint256 i = conditionList.currentStartId + conditionList.count;
+            i > conditionList.currentStartId;
+            i--
+        ) {
             if (block.timestamp >= conditionList.conditions[i - 1].startTimestamp) {
                 return i - 1;
             }
@@ -199,11 +226,10 @@ abstract contract Drop1155 is IDrop1155 {
     }
 
     /// @dev Returns the claim condition at the given uid.
-    function getClaimConditionById(uint256 _tokenId, uint256 _conditionId)
-        external
-        view
-        returns (ClaimCondition memory condition)
-    {
+    function getClaimConditionById(
+        uint256 _tokenId,
+        uint256 _conditionId
+    ) external view returns (ClaimCondition memory condition) {
         condition = claimCondition[_tokenId].conditions[_conditionId];
     }
 
@@ -213,7 +239,9 @@ abstract contract Drop1155 is IDrop1155 {
         uint256 _conditionId,
         address _claimer
     ) public view returns (uint256 supplyClaimedByWallet) {
-        supplyClaimedByWallet = claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
+        supplyClaimedByWallet = claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][
+            _claimer
+        ];
     }
 
     /*////////////////////////////////////////////////////////////////////

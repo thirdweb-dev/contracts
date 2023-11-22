@@ -18,7 +18,11 @@ interface IPluginMap {
     }
 
     /// @dev Emitted when a function selector is mapped to a particular plug-in smart contract, during construction of Map.
-    event PluginSet(bytes4 indexed functionSelector, string indexed functionSignature, address indexed pluginAddress);
+    event PluginSet(
+        bytes4 indexed functionSelector,
+        string indexed functionSignature,
+        address indexed pluginAddress
+    );
 
     /// @dev Returns the plug-in contract for a given function.
     function getPluginForFunction(bytes4 functionSelector) external view returns (address);

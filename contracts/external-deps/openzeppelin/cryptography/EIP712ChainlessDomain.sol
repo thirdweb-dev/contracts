@@ -52,7 +52,9 @@ abstract contract EIP712ChainlessDomain {
     constructor(string memory name, string memory version) {
         bytes32 hashedName = keccak256(bytes(name));
         bytes32 hashedVersion = keccak256(bytes(version));
-        bytes32 typeHash = keccak256("EIP712Domain(string name,string version,address verifyingContract)");
+        bytes32 typeHash = keccak256(
+            "EIP712Domain(string name,string version,address verifyingContract)"
+        );
         _HASHED_NAME = hashedName;
         _HASHED_VERSION = hashedVersion;
         _CACHED_DOMAIN_SEPARATOR = _buildDomainSeparator(typeHash, hashedName, hashedVersion);

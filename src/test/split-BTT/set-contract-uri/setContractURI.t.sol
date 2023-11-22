@@ -39,7 +39,10 @@ contract SplitTest_SetContractURI is BaseTest {
             address(
                 new TWProxy(
                     implementation,
-                    abi.encodeCall(Split.initialize, (deployer, CONTRACT_URI, forwarders(), payees, shares))
+                    abi.encodeCall(
+                        Split.initialize,
+                        (deployer, CONTRACT_URI, forwarders(), payees, shares)
+                    )
                 )
             )
         );

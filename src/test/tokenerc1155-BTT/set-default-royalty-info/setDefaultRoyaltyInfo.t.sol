@@ -101,7 +101,10 @@ contract TokenERC1155Test_SetDefaultRoyaltyInfo is BaseTest {
 
         // royaltyInfo - ERC2981
         uint256 salePrice = 1000;
-        (address _royaltyRecipient, uint256 _royaltyAmount) = tokenContract.royaltyInfo(tokenId, salePrice);
+        (address _royaltyRecipient, uint256 _royaltyAmount) = tokenContract.royaltyInfo(
+            tokenId,
+            salePrice
+        );
         assertEq(_royaltyRecipient, defaultRoyaltyRecipient);
         assertEq(_royaltyAmount, (salePrice * defaultRoyaltyBps) / 10_000);
     }

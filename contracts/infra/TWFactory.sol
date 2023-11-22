@@ -30,7 +30,11 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable, IContr
 
     /// @dev Emitted when a proxy is deployed.
     event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer);
-    event ImplementationAdded(address implementation, bytes32 indexed contractType, uint256 version);
+    event ImplementationAdded(
+        address implementation,
+        bytes32 indexed contractType,
+        uint256 version
+    );
     event ImplementationApproved(address implementation, bool isApproved);
 
     /// @dev mapping of implementation address to deployment approval
@@ -133,11 +137,23 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable, IContr
         return implementation[_type][currentVersion[_type]];
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (address sender)
+    {
         return ERC2771Context._msgSender();
     }
 
-    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
+    function _msgData()
+        internal
+        view
+        virtual
+        override(Context, ERC2771Context)
+        returns (bytes calldata)
+    {
         return ERC2771Context._msgData();
     }
 }
