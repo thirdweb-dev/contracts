@@ -4,14 +4,13 @@ pragma solidity ^0.8.0;
 import { DropERC20 } from "contracts/prebuilts/drop/DropERC20.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
+
 import "../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract DropERC20Test is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+    using Strings for uint256;
+    using Strings for address;
 
     DropERC20 public drop;
 
@@ -40,9 +39,9 @@ contract DropERC20Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -60,9 +59,9 @@ contract DropERC20Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
+                Strings.toHexString(uint160(target), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 

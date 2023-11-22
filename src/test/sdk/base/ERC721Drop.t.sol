@@ -9,7 +9,7 @@ import { ERC721Drop } from "contracts/base/ERC721Drop.sol";
 
 contract BaseERC721DropTest is BaseUtilTest {
     ERC721Drop internal base;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     address recipient;
 

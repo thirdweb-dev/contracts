@@ -7,15 +7,15 @@ import "./TWFactory.sol";
 import "./interface/ITWFee.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import { Multicall } from "../extension/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 interface IFeeTierPlacementExtension {
     /// @dev Returns the fee tier for a given proxy contract address and proxy deployer address.
-    function getFeeTier(
-        address deployer,
-        address proxy
-    ) external view returns (uint128 tierId, uint128 validUntilTimestamp);
+    function getFeeTier(address deployer, address proxy)
+        external
+        view
+        returns (uint128 tierId, uint128 validUntilTimestamp);
 }
 
 contract TWFee is
@@ -79,10 +79,12 @@ contract TWFee is
     }
 
     /// @dev Returns the fee tier for a proxy deployer wallet or contract address.
-    function getFeeTier(
-        address _deployer,
-        address _proxy
-    ) public view override returns (uint128 tierId, uint128 validUntilTimestamp) {
+    function getFeeTier(address _deployer, address _proxy)
+        public
+        view
+        override
+        returns (uint128 tierId, uint128 validUntilTimestamp)
+    {
         Tier memory targetTier = tier[_proxy];
         if (block.timestamp <= targetTier.validUntilTimestamp) {
             tierId = targetTier.id;
@@ -106,10 +108,11 @@ contract TWFee is
     }
 
     /// @dev Returns the fee info for a given module and fee type.
-    function getFeeInfo(
-        address _proxy,
-        uint256 _feeType
-    ) external view returns (address recipient, uint256 bps) {
+    function getFeeInfo(address _proxy, uint256 _feeType)
+        external
+        view
+        returns (address recipient, uint256 bps)
+    {
         address deployer = factory.deployer(_proxy);
         uint128 tierId = 0;
         uint128 validUntilTimestamp = 0;

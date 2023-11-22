@@ -9,7 +9,7 @@ import { ERC721DelayedReveal } from "contracts/base/ERC721DelayedReveal.sol";
 
 contract BaseERC721DelayedRevealTest is BaseUtilTest {
     ERC721DelayedReveal internal base;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     function setUp() public override {
         vm.prank(deployer);

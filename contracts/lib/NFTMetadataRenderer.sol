@@ -1,12 +1,12 @@
-// SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.10;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.8.0;
 
 /* solhint-disable quotes */
 
 /// @author thirdweb
 /// credits: Zora
 
-import "./TWStrings.sol";
+import "./Strings.sol";
 import "../external-deps/openzeppelin/utils/Base64.sol";
 
 /// NFT metadata library for rendering metadata associated with editions
@@ -49,14 +49,14 @@ library NFTMetadataRenderer {
                 '{"name": "',
                 name,
                 " ",
-                TWStrings.toString(tokenOfEdition),
+                Strings.toString(tokenOfEdition),
                 '", "',
                 'description": "',
                 description,
                 '", "',
                 mediaData,
                 'properties": {"number": ',
-                TWStrings.toString(tokenOfEdition),
+                Strings.toString(tokenOfEdition),
                 ', "name": "',
                 name,
                 '"}}'
@@ -73,10 +73,11 @@ library NFTMetadataRenderer {
     /// Combines the media data and metadata
     /// @param imageUrl URL of image to render for edition
     /// @param animationUrl URL of animation to render for edition
-    function tokenMediaData(
-        string memory imageUrl,
-        string memory animationUrl
-    ) internal pure returns (string memory) {
+    function tokenMediaData(string memory imageUrl, string memory animationUrl)
+        internal
+        pure
+        returns (string memory)
+    {
         bool hasImage = bytes(imageUrl).length > 0;
         bool hasAnimation = bytes(animationUrl).length > 0;
         if (hasImage && hasAnimation) {

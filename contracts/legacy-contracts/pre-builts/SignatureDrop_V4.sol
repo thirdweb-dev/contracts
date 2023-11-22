@@ -5,7 +5,7 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
@@ -42,7 +42,7 @@ contract SignatureDrop_V4 is
     DropSinglePhase_V1,
     SignatureMintERC721Upgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     ERC721AUpgradeable
 {
     using StringsUpgradeable for uint256;
@@ -114,9 +114,13 @@ contract SignatureDrop_V4 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721AUpgradeable, IERC165)
+        returns (bool)
+    {
         return
             super.supportsInterface(interfaceId) ||
             type(IERC2981Upgradeable).interfaceId == interfaceId;
@@ -157,10 +161,11 @@ contract SignatureDrop_V4 is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(
-        uint256 _index,
-        bytes calldata _key
-    ) external onlyRole(minterRole) returns (string memory revealedURI) {
+    function reveal(uint256 _index, bytes calldata _key)
+        external
+        onlyRole(minterRole)
+        returns (string memory revealedURI)
+    {
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
@@ -175,10 +180,11 @@ contract SignatureDrop_V4 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function mintWithSignature(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    ) external payable returns (address signer) {
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
+        external
+        payable
+        returns (address signer)
+    {
         uint256 tokenIdToMint = _currentIndex;
         if (tokenIdToMint + _req.quantity > nextTokenIdToLazyMint) {
             revert("Not enough tokens");
@@ -267,10 +273,11 @@ contract SignatureDrop_V4 is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal override returns (uint256 startTokenId) {
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        override
+        returns (uint256 startTokenId)
+    {
         startTokenId = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
     }

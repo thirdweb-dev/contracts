@@ -16,7 +16,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
@@ -47,7 +47,7 @@ contract DropERC1155 is
     PermissionsEnumerable,
     Drop1155,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     ERC1155Upgradeable
 {
     using StringsUpgradeable for uint256;
@@ -155,9 +155,13 @@ contract DropERC1155 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(ERC1155Upgradeable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC1155Upgradeable, IERC165)
+        returns (bool)
+    {
         return
             super.supportsInterface(interfaceId) ||
             type(IERC2981Upgradeable).interfaceId == interfaceId;
@@ -180,19 +184,19 @@ contract DropERC1155 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a module admin set a max total supply for token.
-    function setMaxTotalSupply(
-        uint256 _tokenId,
-        uint256 _maxTotalSupply
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         maxTotalSupply[_tokenId] = _maxTotalSupply;
         emit MaxTotalSupplyUpdated(_tokenId, _maxTotalSupply);
     }
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
-    function setSaleRecipientForToken(
-        uint256 _tokenId,
-        address _saleRecipient
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         saleRecipient[_tokenId] = _saleRecipient;
         emit SaleRecipientForTokenUpdated(_tokenId, _saleRecipient);
     }
@@ -203,10 +207,10 @@ contract DropERC1155 is
      * @param _index Index of the desired batch in batchIds array.
      * @param _uri   the new base URI for the batch.
      */
-    function updateBatchBaseURI(
-        uint256 _index,
-        string calldata _uri
-    ) external onlyRole(metadataRole) {
+    function updateBatchBaseURI(uint256 _index, string calldata _uri)
+        external
+        onlyRole(metadataRole)
+    {
         uint256 batchId = getBatchIdAtIndex(_index);
         _setBaseURI(batchId, _uri);
     }

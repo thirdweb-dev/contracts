@@ -2,14 +2,12 @@
 pragma solidity ^0.8.0;
 
 // Test utils
-import "../../utils/BaseTest.sol";
+import { BaseTest } from "../../utils/BaseTest.sol";
 
 // Account Abstraction setup for smart wallets.
 import { IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
-
+import { Strings } from "contracts/lib/Strings.sol";
 import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
-import "contracts/lib/TWStrings.sol";
-
 import "forge-std/Test.sol";
 
 contract AABenchmarkPrepare is BaseTest {
@@ -32,24 +30,24 @@ contract AABenchmarkPrepare is BaseTest {
 
         string memory accountFactoryAddressString = string.concat(
             "address constant THIRDWEB_ACCOUNT_FACTORY_ADDRESS = ",
-            TWStrings.toHexStringChecksummed(accountFactoryAddress),
+            Strings.toHexStringChecksummed(accountFactoryAddress),
             ";"
         );
         string memory accountFactoryBytecodeString = string.concat(
             'bytes constant THIRDWEB_ACCOUNT_FACTORY_BYTECODE = hex"',
-            TWStrings.toHexStringNoPrefix(accountFactoryBytecode),
+            Strings.toHexStringNoPrefix(accountFactoryBytecode),
             '"',
             ";"
         );
 
         string memory accountImplAddressString = string.concat(
             "address constant THIRDWEB_ACCOUNT_IMPL_ADDRESS = ",
-            TWStrings.toHexStringChecksummed(accountImplAddress),
+            Strings.toHexStringChecksummed(accountImplAddress),
             ";"
         );
         string memory accountImplBytecodeString = string.concat(
             'bytes constant THIRDWEB_ACCOUNT_IMPL_BYTECODE = hex"',
-            TWStrings.toHexStringNoPrefix(accountImplBytecode),
+            Strings.toHexStringNoPrefix(accountImplBytecode),
             '"',
             ";"
         );

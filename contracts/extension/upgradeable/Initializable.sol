@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache 2.0
 pragma solidity ^0.8.0;
 
-import "../../lib/TWAddress.sol";
+import "../../lib/Address.sol";
 
 library InitStorage {
     /// @custom:storage-location erc7201:init.storage
@@ -41,7 +41,7 @@ abstract contract Initializable {
         bool isTopLevelCall = !_initializing;
         require(
             (isTopLevelCall && _initialized < 1) ||
-                (!TWAddress.isContract(address(this)) && _initialized == 1),
+                (!Address.isContract(address(this)) && _initialized == 1),
             "Initializable: contract is already initialized"
         );
         _initStorage().initialized = 1;

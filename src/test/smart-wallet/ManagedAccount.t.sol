@@ -15,6 +15,7 @@ import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.s
 // Target
 import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
 import { ManagedAccountFactory, ManagedAccount } from "contracts/prebuilts/account/managed/ManagedAccountFactory.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /// @dev This is a dummy contract to test contract interactions with Account.
 contract Number {
@@ -73,9 +74,11 @@ contract ManagedAccountTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _prepareSignature(
-        IAccountPermissions.SignerPermissionRequest memory _req
-    ) internal view returns (bytes32 typedDataHash) {
+    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
+        internal
+        view
+        returns (bytes32 typedDataHash)
+    {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -108,9 +111,11 @@ contract ManagedAccountTest is BaseTest {
         typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function _signSignerPermissionRequest(
-        IAccountPermissions.SignerPermissionRequest memory _req
-    ) internal view returns (bytes memory signature) {
+    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
+        internal
+        view
+        returns (bytes memory signature)
+    {
         bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
@@ -248,10 +253,12 @@ contract ManagedAccountTest is BaseTest {
     }
 
     /// @dev Returns the salt used when deploying an Account.
-    function _generateSalt(
-        address _admin,
-        bytes memory _data
-    ) internal view virtual returns (bytes32) {
+    function _generateSalt(address _admin, bytes memory _data)
+        internal
+        view
+        virtual
+        returns (bytes32)
+    {
         return keccak256(abi.encode(_admin, _data));
     }
 

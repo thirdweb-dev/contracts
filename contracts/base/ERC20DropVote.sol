@@ -11,7 +11,7 @@ import "../extension/Ownable.sol";
 import "../extension/PrimarySale.sol";
 import "../extension/DropSinglePhase.sol";
 
-import "../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 /**
  *      BASE:      ERC20Votes
@@ -104,10 +104,12 @@ contract ERC20DropVote is
     }
 
     /// @dev Transfers the tokens being claimed.
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal virtual override returns (uint256) {
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        virtual
+        override
+        returns (uint256)
+    {
         _mint(_to, _quantityBeingClaimed);
         return 0;
     }

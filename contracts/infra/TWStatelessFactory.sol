@@ -15,7 +15,7 @@ pragma solidity ^0.8.11;
 import "../extension/interface/IContractFactory.sol";
 
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import "../extension/Multicall.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract TWStatelessFactory is Multicall, ERC2771Context, IContractFactory {

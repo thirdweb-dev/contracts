@@ -5,10 +5,10 @@ pragma solidity ^0.8.0;
 
 import "./interface/IDropSinglePhase1155_V1.sol";
 import "../../lib/MerkleProof.sol";
-import "../../lib/TWBitMaps.sol";
+import "../../lib/BitMaps.sol";
 
 abstract contract DropSinglePhase1155_V1 is IDropSinglePhase1155_V1 {
-    using TWBitMaps for TWBitMaps.BitMap;
+    using BitMaps for BitMaps.BitMap;
 
     /*///////////////////////////////////////////////////////////////
                                 Mappings
@@ -30,7 +30,7 @@ abstract contract DropSinglePhase1155_V1 is IDropSinglePhase1155_V1 {
      *  @dev Map from a claim condition uid to whether an address in an allowlist
      *       has already claimed tokens i.e. used their place in the allowlist.
      */
-    mapping(bytes32 => TWBitMaps.BitMap) private usedAllowlistSpot;
+    mapping(bytes32 => BitMaps.BitMap) private usedAllowlistSpot;
 
     /*///////////////////////////////////////////////////////////////
                             Drop logic
@@ -240,10 +240,11 @@ abstract contract DropSinglePhase1155_V1 is IDropSinglePhase1155_V1 {
     }
 
     /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
-    function getClaimTimestamp(
-        uint256 _tokenId,
-        address _claimer
-    ) public view returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp) {
+    function getClaimTimestamp(uint256 _tokenId, address _claimer)
+        public
+        view
+        returns (uint256 lastClaimedAt, uint256 nextValidClaimTimestamp)
+    {
         lastClaimedAt = lastClaimTimestamp[conditionId[_tokenId]][_claimer];
 
         unchecked {

@@ -14,12 +14,12 @@ import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
+import { Permissions } from "contracts/extension/Permissions.sol";
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
 
 contract BurnToClaimDropERC721Logic_BurnAndClaim is BaseTest, IExtension {
-    using TWStrings for uint256;
-    using TWStrings for address;
+    using Strings for uint256;
+    using Strings for address;
 
     event TokensBurnedAndClaimed(
         address indexed originContract,

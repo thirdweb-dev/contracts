@@ -5,14 +5,13 @@ import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
+
 import "../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract DropERC721Test is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+    using Strings for uint256;
+    using Strings for address;
 
     event TokensLazyMinted(
         uint256 indexed startTokenId,
@@ -52,9 +51,9 @@ contract DropERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -72,9 +71,9 @@ contract DropERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
+                Strings.toHexString(uint160(target), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -542,9 +541,9 @@ contract DropERC721Test is BaseTest {
 
         bytes memory errorMessage = abi.encodePacked(
             "Permissions: account ",
-            TWStrings.toHexString(uint160(address(this)), 20),
+            Strings.toHexString(uint160(address(this)), 20),
             " is missing role ",
-            TWStrings.toHexString(uint256(keccak256("METADATA_ROLE")), 32)
+            Strings.toHexString(uint256(keccak256("METADATA_ROLE")), 32)
         );
 
         vm.expectRevert(errorMessage);

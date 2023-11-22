@@ -8,7 +8,7 @@ import "./ERC20Vote.sol";
 import "../extension/PrimarySale.sol";
 import { SignatureMintERC20 } from "../extension/SignatureMintERC20.sol";
 
-import "../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 /**
  *      BASE:      ERC20Vote
@@ -47,10 +47,12 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
      *  @param _req       The payload / mint request.
      *  @param _signature The signature produced by an account signing the mint request.
      */
-    function mintWithSignature(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    ) external payable virtual returns (address signer) {
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
+        external
+        payable
+        virtual
+        returns (address signer)
+    {
         require(_req.quantity > 0, "Minting zero tokens.");
 
         // Verify and process payload.

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import { IERC721AUpgradeable, OpenEditionERC721, ISharedMetadata } from "contracts/prebuilts/open-edition/OpenEditionERC721.sol";
-import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRendererLib.sol";
+import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRenderer.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports

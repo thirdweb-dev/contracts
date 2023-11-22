@@ -21,7 +21,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradea
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
@@ -36,7 +36,7 @@ contract NFTStake is
     ContractMetadata,
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     Staking721Upgradeable,
     ERC165Upgradeable,
     IERC721ReceiverUpgradeable,

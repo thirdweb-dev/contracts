@@ -8,9 +8,9 @@ pragma solidity ^0.8.4;
 
 import "./interface/IERC721A.sol";
 import "./interface/IERC721Receiver.sol";
-import "../lib/TWAddress.sol";
+import "../lib/Address.sol";
 import "../external-deps/openzeppelin/utils/Context.sol";
-import "../lib/TWStrings.sol";
+import "../lib/Strings.sol";
 import "./ERC165.sol";
 import "../extension/upgradeable/Initializable.sol";
 
@@ -59,17 +59,17 @@ library ERC721AStorage {
  * Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).
  */
 contract ERC721AUpgradeable is Initializable, Context, ERC165, IERC721A {
-    using TWAddress for address;
-    using TWStrings for uint256;
+    using Address for address;
+    using Strings for uint256;
 
     function __ERC721A_init(string memory name_, string memory symbol_) internal onlyInitializing {
         __ERC721A_init_unchained(name_, symbol_);
     }
 
-    function __ERC721A_init_unchained(
-        string memory name_,
-        string memory symbol_
-    ) internal onlyInitializing {
+    function __ERC721A_init_unchained(string memory name_, string memory symbol_)
+        internal
+        onlyInitializing
+    {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
 
         data._name = name_;
@@ -112,9 +112,13 @@ contract ERC721AUpgradeable is Initializable, Context, ERC165, IERC721A {
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(ERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC165)
+        returns (bool)
+    {
         return
             interfaceId == type(IERC721).interfaceId ||
             interfaceId == type(IERC721Metadata).interfaceId ||
@@ -281,10 +285,13 @@ contract ERC721AUpgradeable is Initializable, Context, ERC165, IERC721A {
     /**
      * @dev See {IERC721-isApprovedForAll}.
      */
-    function isApprovedForAll(
-        address owner,
-        address operator
-    ) public view virtual override returns (bool) {
+    function isApprovedForAll(address owner, address operator)
+        public
+        view
+        virtual
+        override
+        returns (bool)
+    {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
         return data._operatorApprovals[owner][operator];
     }
@@ -292,14 +299,22 @@ contract ERC721AUpgradeable is Initializable, Context, ERC165, IERC721A {
     /**
      * @dev See {IERC721-transferFrom}.
      */
-    function transferFrom(address from, address to, uint256 tokenId) public virtual override {
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public virtual override {
         _transfer(from, to, tokenId);
     }
 
     /**
      * @dev See {IERC721-safeTransferFrom}.
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId) public virtual override {
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public virtual override {
         safeTransferFrom(from, to, tokenId, "");
     }
 
@@ -352,7 +367,11 @@ contract ERC721AUpgradeable is Initializable, Context, ERC165, IERC721A {
      *
      * Emits a {Transfer} event.
      */
-    function _safeMint(address to, uint256 quantity, bytes memory _data) internal {
+    function _safeMint(
+        address to,
+        uint256 quantity,
+        bytes memory _data
+    ) internal {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
 
         uint256 startTokenId = data._currentIndex;
@@ -444,7 +463,11 @@ contract ERC721AUpgradeable is Initializable, Context, ERC165, IERC721A {
      *
      * Emits a {Transfer} event.
      */
-    function _transfer(address from, address to, uint256 tokenId) private {
+    function _transfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) private {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
 
         TokenOwnership memory prevOwnership = _ownershipOf(tokenId);
@@ -571,7 +594,11 @@ contract ERC721AUpgradeable is Initializable, Context, ERC165, IERC721A {
      *
      * Emits a {Approval} event.
      */
-    function _approve(address to, uint256 tokenId, address owner) private {
+    function _approve(
+        address to,
+        uint256 tokenId,
+        address owner
+    ) private {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
         data._tokenApprovals[tokenId] = to;
         emit Approval(owner, to, tokenId);

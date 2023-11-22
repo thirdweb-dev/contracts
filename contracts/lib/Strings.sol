@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache 2.0
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 /// @author thirdweb
@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
 /**
  * @dev String operations.
  */
-library TWStrings {
+library Strings {
     bytes16 private constant _HEX_SYMBOLS = "0123456789abcdef";
 
     /**

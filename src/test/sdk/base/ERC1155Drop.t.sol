@@ -5,11 +5,10 @@ import "@std/Test.sol";
 import "@ds-test/test.sol";
 
 import { ERC1155Drop } from "contracts/base/ERC1155Drop.sol";
-
-import "contracts/lib/TWStrings.sol";
+import { Strings } from "contracts/lib/Strings.sol";
 
 contract ERC1155DropTest is DSTest, Test {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     // Target contract
     ERC1155Drop internal base;

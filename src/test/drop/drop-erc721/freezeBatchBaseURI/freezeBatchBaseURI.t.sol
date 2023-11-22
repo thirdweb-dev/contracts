@@ -75,9 +75,9 @@ contract DropERC721Test_freezeBatchBaseURI is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(unauthorized), 20),
+                Strings.toHexString(uint160(unauthorized), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
         drop.freezeBatchBaseURI(0);

@@ -15,11 +15,10 @@ import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
 
 contract BurnToClaimDropERC721Test is BaseTest, IExtension {
-    using TWStrings for uint256;
-    using TWStrings for address;
+    using Strings for uint256;
+    using Strings for address;
 
     event TokensLazyMinted(
         uint256 indexed startTokenId,
@@ -275,9 +274,9 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -295,9 +294,9 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
+                Strings.toHexString(uint160(target), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -1920,9 +1919,9 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(deployer), 20),
+                Strings.toHexString(uint160(deployer), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(keccak256("EXTENSION_ROLE")), 32)
+                Strings.toHexString(uint256(keccak256("EXTENSION_ROLE")), 32)
             )
         );
         Permissions(address(drop)).grantRole(keccak256("EXTENSION_ROLE"), address(0x12345));

@@ -26,7 +26,6 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
@@ -34,6 +33,7 @@ import { IMarketplace } from "../interface/marketplace/IMarketplace.sol";
 
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
+import "../../extension/Multicall.sol";
 import "../../lib/CurrencyTransferLib.sol";
 import "../../lib/FeeType.sol";
 
@@ -42,7 +42,7 @@ contract Marketplace is
     IMarketplace,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     AccessControlEnumerableUpgradeable,
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable
@@ -199,9 +199,7 @@ contract Marketplace is
         return this.onERC721Received.selector;
     }
 
-    function supportsInterface(
-        bytes4 interfaceId
-    )
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
@@ -656,10 +654,12 @@ contract Marketplace is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets an account close an auction for either the (1) winning bidder, or (2) auction creator.
-    function closeAuction(
-        uint256 _listingId,
-        address _closeFor
-    ) external override nonReentrant onlyExistingListing(_listingId) {
+    function closeAuction(uint256 _listingId, address _closeFor)
+        external
+        override
+        nonReentrant
+        onlyExistingListing(_listingId)
+    {
         Listing memory targetListing = listings[_listingId];
 
         require(targetListing.listingType == ListingType.Auction, "not an auction.");
@@ -716,10 +716,9 @@ contract Marketplace is
     }
 
     /// @dev Closes an auction for an auction creator; distributes winning bid amount to auction creator.
-    function _closeAuctionForAuctionCreator(
-        Listing memory _targetListing,
-        Offer memory _winningBid
-    ) internal {
+    function _closeAuctionForAuctionCreator(Listing memory _targetListing, Offer memory _winningBid)
+        internal
+    {
         uint256 payoutAmount = _winningBid.pricePerToken * _targetListing.quantity;
 
         _targetListing.quantity = 0;
@@ -747,10 +746,9 @@ contract Marketplace is
     }
 
     /// @dev Closes an auction for the winning bidder; distributes auction items to the winning bidder.
-    function _closeAuctionForBidder(
-        Listing memory _targetListing,
-        Offer memory _winningBid
-    ) internal {
+    function _closeAuctionForBidder(Listing memory _targetListing, Offer memory _winningBid)
+        internal
+    {
         uint256 quantityToSend = _winningBid.quantityWanted;
 
         _targetListing.endTime = block.timestamp;
@@ -938,10 +936,11 @@ contract Marketplace is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Enforces quantity == 1 if tokenType is TokenType.ERC721.
-    function getSafeQuantity(
-        TokenType _tokenType,
-        uint256 _quantityToCheck
-    ) internal pure returns (uint256 safeQuantity) {
+    function getSafeQuantity(TokenType _tokenType, uint256 _quantityToCheck)
+        internal
+        pure
+        returns (uint256 safeQuantity)
+    {
         if (_quantityToCheck == 0) {
             safeQuantity = 0;
         } else {
@@ -978,10 +977,10 @@ contract Marketplace is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a contract admin update platform fee recipient and bps.
-    function setPlatformFeeInfo(
-        address _platformFeeRecipient,
-        uint256 _platformFeeBps
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -991,10 +990,10 @@ contract Marketplace is
     }
 
     /// @dev Lets a contract admin set auction buffers.
-    function setAuctionBuffers(
-        uint256 _timeBuffer,
-        uint256 _bidBufferBps
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setAuctionBuffers(uint256 _timeBuffer, uint256 _bidBufferBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_bidBufferBps < MAX_BPS, "invalid BPS.");
 
         timeBuffer = uint64(_timeBuffer);

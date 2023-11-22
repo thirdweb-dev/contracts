@@ -16,7 +16,7 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
@@ -40,7 +40,7 @@ contract DropERC20 is
     PermissionsEnumerable,
     Drop,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     ERC20BurnableUpgradeable,
     ERC20VotesUpgradeable
 {
@@ -187,10 +187,11 @@ contract DropERC20 is
     }
 
     /// @dev Transfers the tokens being claimed.
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal override returns (uint256) {
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        override
+        returns (uint256)
+    {
         _mint(_to, _quantityBeingClaimed);
         return 0;
     }
@@ -219,17 +220,19 @@ contract DropERC20 is
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
-    function _mint(
-        address account,
-        uint256 amount
-    ) internal virtual override(ERC20Upgradeable, ERC20VotesUpgradeable) {
+    function _mint(address account, uint256 amount)
+        internal
+        virtual
+        override(ERC20Upgradeable, ERC20VotesUpgradeable)
+    {
         super._mint(account, amount);
     }
 
-    function _burn(
-        address account,
-        uint256 amount
-    ) internal virtual override(ERC20Upgradeable, ERC20VotesUpgradeable) {
+    function _burn(address account, uint256 amount)
+        internal
+        virtual
+        override(ERC20Upgradeable, ERC20VotesUpgradeable)
+    {
         super._burn(account, amount);
     }
 

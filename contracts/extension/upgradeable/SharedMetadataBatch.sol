@@ -3,7 +3,7 @@ pragma solidity ^0.8.11;
 
 /// @author thirdweb
 
-import "../../lib/NFTMetadataRendererLib.sol";
+import "../../lib/NFTMetadataRenderer.sol";
 import "../interface/ISharedMetadataBatch.sol";
 import "../../external-deps/openzeppelin/utils/EnumerableSet.sol";
 
@@ -81,10 +81,11 @@ abstract contract SharedMetadataBatch is ISharedMetadataBatch {
     }
 
     /// @dev Token URI information getter
-    function _getURIFromSharedMetadata(
-        bytes32 id,
-        uint256 tokenId
-    ) internal view returns (string memory) {
+    function _getURIFromSharedMetadata(bytes32 id, uint256 tokenId)
+        internal
+        view
+        returns (string memory)
+    {
         SharedMetadataInfo memory info = _sharedMetadataBatchStorage().metadata[id].metadata;
 
         return

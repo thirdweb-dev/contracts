@@ -9,7 +9,7 @@ import { ERC20SignatureMintVote } from "contracts/base/ERC20SignatureMintVote.so
 
 contract BaseERC20SignatureMintVoteTest is BaseUtilTest {
     ERC20SignatureMintVote internal base;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     bytes32 internal typehashMintRequest;
     bytes32 internal nameHash;

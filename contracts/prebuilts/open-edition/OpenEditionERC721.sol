@@ -106,9 +106,7 @@ contract OpenEditionERC721 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the URI for a given tokenId.
-    function tokenURI(
-        uint256 _tokenId
-    )
+    function tokenURI(uint256 _tokenId)
         public
         view
         virtual
@@ -123,9 +121,7 @@ contract OpenEditionERC721 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(
-        bytes4 interfaceId
-    )
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
@@ -180,10 +176,11 @@ contract OpenEditionERC721 is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal override returns (uint256 startTokenId_) {
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        override
+        returns (uint256 startTokenId_)
+    {
         startTokenId_ = _nextTokenId();
         _safeMint(_to, _quantityBeingClaimed);
     }

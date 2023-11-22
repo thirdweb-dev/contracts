@@ -14,7 +14,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import "../extension/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 import "./interface/ITWMultichainRegistry.sol";
@@ -66,7 +66,11 @@ contract TWMultichainRegistry is
     }
 
     // slither-disable-next-line similar-names
-    function remove(address _deployer, address _deployment, uint256 _chainId) external {
+    function remove(
+        address _deployer,
+        address _deployment,
+        uint256 _chainId
+    ) external {
         require(
             hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
             "not operator or deployer."
@@ -118,10 +122,11 @@ contract TWMultichainRegistry is
         }
     }
 
-    function getMetadataUri(
-        uint256 _chainId,
-        address _deployment
-    ) external view returns (string memory metadataUri) {
+    function getMetadataUri(uint256 _chainId, address _deployment)
+        external
+        view
+        returns (string memory metadataUri)
+    {
         metadataUri = addressToMetadataUri[_chainId][_deployment];
     }
 

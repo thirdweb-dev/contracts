@@ -9,7 +9,7 @@ import "../extension/PrimarySale.sol";
 import "../extension/PermissionsEnumerable.sol";
 import "../extension/SignatureMintERC721.sol";
 
-import "../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 /**
  *      BASE:      ERC721A
@@ -50,10 +50,13 @@ contract ERC721SignatureMint is ERC721Base, PrimarySale, SignatureMintERC721 {
      *  @param _req       The payload / mint request.
      *  @param _signature The signature produced by an account signing the mint request.
      */
-    function mintWithSignature(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    ) external payable virtual override returns (address signer) {
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
+        external
+        payable
+        virtual
+        override
+        returns (address signer)
+    {
         require(_req.quantity == 1, "quantiy must be 1");
 
         uint256 tokenIdToMint = nextTokenIdToMint();

@@ -16,7 +16,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import "../extension/Multicall.sol";
 
 //  ==========  Internal imports    ==========
 import { IContractPublisher } from "./interface/IContractPublisher.sol";
@@ -66,10 +66,9 @@ contract ContractPublisher is
         _;
     }
 
-    constructor(
-        address _trustedForwarder,
-        IContractPublisher _prevPublisher
-    ) ERC2771Context(_trustedForwarder) {
+    constructor(address _trustedForwarder, IContractPublisher _prevPublisher)
+        ERC2771Context(_trustedForwarder)
+    {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         prevPublisher = _prevPublisher;
     }
@@ -79,9 +78,11 @@ contract ContractPublisher is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns the latest version of all contracts published by a publisher.
-    function getAllPublishedContracts(
-        address _publisher
-    ) external view returns (CustomContractInstance[] memory published) {
+    function getAllPublishedContracts(address _publisher)
+        external
+        view
+        returns (CustomContractInstance[] memory published)
+    {
         CustomContractInstance[] memory linkedData = prevPublisher.getAllPublishedContracts(
             _publisher
         );
@@ -103,10 +104,11 @@ contract ContractPublisher is
     }
 
     /// @notice Returns all versions of a published contract.
-    function getPublishedContractVersions(
-        address _publisher,
-        string memory _contractId
-    ) external view returns (CustomContractInstance[] memory published) {
+    function getPublishedContractVersions(address _publisher, string memory _contractId)
+        external
+        view
+        returns (CustomContractInstance[] memory published)
+    {
         CustomContractInstance[] memory linkedVersions = prevPublisher.getPublishedContractVersions(
             _publisher,
             _contractId
@@ -130,10 +132,11 @@ contract ContractPublisher is
     }
 
     /// @notice Returns the latest version of a contract published by a publisher.
-    function getPublishedContract(
-        address _publisher,
-        string memory _contractId
-    ) external view returns (CustomContractInstance memory published) {
+    function getPublishedContract(address _publisher, string memory _contractId)
+        external
+        view
+        returns (CustomContractInstance memory published)
+    {
         published = contractsOfPublisher[_publisher]
             .contracts[keccak256(bytes(_contractId))]
             .latest;
@@ -172,24 +175,25 @@ contract ContractPublisher is
         uint256 index = contractsOfPublisher[_publisher].contracts[contractIdInBytes].total;
         contractsOfPublisher[_publisher].contracts[contractIdInBytes].total += 1;
         contractsOfPublisher[_publisher].contracts[contractIdInBytes].instances[
-            index
-        ] = publishedContract;
+                index
+            ] = publishedContract;
 
         uint256 metadataIndex = compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri]
             .index;
         compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].uris[
-            metadataIndex
-        ] = _publishMetadataUri;
+                metadataIndex
+            ] = _publishMetadataUri;
         compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].index = metadataIndex + 1;
 
         emit ContractPublished(_msgSender(), _publisher, publishedContract);
     }
 
     /// @notice Lets a publisher unpublish a contract and all its versions.
-    function unpublishContract(
-        address _publisher,
-        string memory _contractId
-    ) external onlyPublisher(_publisher) onlyUnpausedOrAdmin {
+    function unpublishContract(address _publisher, string memory _contractId)
+        external
+        onlyPublisher(_publisher)
+        onlyUnpausedOrAdmin
+    {
         bytes32 contractIdInBytes = keccak256(bytes(_contractId));
 
         bool removed = EnumerableSet.remove(
@@ -204,10 +208,10 @@ contract ContractPublisher is
     }
 
     /// @notice Lets an account set its own publisher profile uri
-    function setPublisherProfileUri(
-        address publisher,
-        string memory uri
-    ) public onlyPublisher(publisher) {
+    function setPublisherProfileUri(address publisher, string memory uri)
+        public
+        onlyPublisher(publisher)
+    {
         string memory currentURI = profileUriOfPublisher[publisher];
         profileUriOfPublisher[publisher] = uri;
 
@@ -224,9 +228,11 @@ contract ContractPublisher is
     }
 
     /// @notice Retrieve the published metadata URI from a compiler metadata URI
-    function getPublishedUriFromCompilerUri(
-        string memory compilerMetadataUri
-    ) public view returns (string[] memory publishedMetadataUris) {
+    function getPublishedUriFromCompilerUri(string memory compilerMetadataUri)
+        public
+        view
+        returns (string[] memory publishedMetadataUris)
+    {
         string[] memory linkedUris = prevPublisher.getPublishedUriFromCompilerUri(
             compilerMetadataUri
         );

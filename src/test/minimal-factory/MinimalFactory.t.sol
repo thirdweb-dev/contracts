@@ -5,7 +5,6 @@ import "contracts/infra/TWMinimalFactory.sol";
 import "contracts/infra/TWProxy.sol";
 
 import "@openzeppelin/contracts/proxy/Clones.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 import "../utils/BaseTest.sol";
 

@@ -9,7 +9,7 @@ import { ERC20Vote } from "contracts/base/ERC20Vote.sol";
 
 contract BaseERC20VoteTest is BaseUtilTest {
     ERC20Vote internal base;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     bytes32 internal permitTypeHash;
     bytes32 internal delegationTypeHash;

@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/extension/plugin/PluginMap.sol";
-import { BaseTest } from "../utils/BaseTest.sol";
-import "contracts/lib/TWStrings.sol";
+import { PluginMap, IPluginMap } from "contracts/extension/plugin/PluginMap.sol";
+import "../utils/BaseTest.sol";
 
 contract MapTest is BaseTest {
-    using TWStrings for uint256;
+    using Strings for uint256;
     PluginMap internal map;
 
     address[] private pluginAddresses;

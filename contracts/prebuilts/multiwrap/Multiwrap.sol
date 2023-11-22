@@ -14,14 +14,13 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
 import "../interface/IMultiwrap.sol";
+import "../../extension/Multicall.sol";
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
@@ -41,7 +40,7 @@ contract Multiwrap is
     TokenStore,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     ERC721EnumerableUpgradeable,
     IMultiwrap
 {
@@ -142,9 +141,7 @@ contract Multiwrap is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(
-        bytes4 interfaceId
-    )
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
@@ -185,10 +182,11 @@ contract Multiwrap is
     }
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
-    function unwrap(
-        uint256 _tokenId,
-        address _recipient
-    ) external nonReentrant onlyRoleWithSwitch(UNWRAP_ROLE) {
+    function unwrap(uint256 _tokenId, address _recipient)
+        external
+        nonReentrant
+        onlyRoleWithSwitch(UNWRAP_ROLE)
+    {
         require(_tokenId < nextTokenIdToMint, "wrapped NFT DNE.");
         require(_isApprovedOrOwner(_msgSender(), _tokenId), "caller not approved for unwrapping.");
 

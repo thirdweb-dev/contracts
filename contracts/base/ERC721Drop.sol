@@ -15,8 +15,8 @@ import "../extension/DropSinglePhase.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
-import "../lib/TWStrings.sol";
-import "../lib/CurrencyTransferLib.sol";
+import "../lib/Strings.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 /**
  *      BASE:      ERC721A
@@ -53,7 +53,7 @@ contract ERC721Drop is
     DelayedReveal,
     DropSinglePhase
 {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
@@ -90,9 +90,13 @@ contract ERC721Drop is
      * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
      * @inheritdoc IERC165
      */
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(ERC721A, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721A, IERC165)
+        returns (bool)
+    {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
             interfaceId == 0x80ac58cd || // ERC165 Interface ID for ERC721
@@ -172,10 +176,12 @@ contract ERC721Drop is
      *  @param _index The ID for the batch of delayed-reveal NFTs to reveal.
      *  @param _key   The key with which the base URI for the relevant batch of NFTs was encrypted.
      */
-    function reveal(
-        uint256 _index,
-        bytes calldata _key
-    ) public virtual override returns (string memory revealedURI) {
+    function reveal(uint256 _index, bytes calldata _key)
+        public
+        virtual
+        override
+        returns (string memory revealedURI)
+    {
         require(_canReveal(), "Not authorized");
 
         uint256 batchId = getBatchIdAtIndex(_index);
@@ -264,10 +270,12 @@ contract ERC721Drop is
      * @param _to                    The address to which the NFTs are being transferred.
      * @param _quantityBeingClaimed  The quantity of NFTs being claimed.
      */
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal virtual override returns (uint256 startTokenId) {
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        virtual
+        override
+        returns (uint256 startTokenId)
+    {
         startTokenId = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
     }

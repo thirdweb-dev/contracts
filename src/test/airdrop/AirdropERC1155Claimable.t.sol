@@ -6,7 +6,8 @@ import "contracts/prebuilts/unaudited/airdrop/AirdropERC1155Claimable.sol";
 // Test imports
 import { Wallet } from "../utils/Wallet.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
-import { BaseTest, Strings } from "../utils/BaseTest.sol";
+import { BaseTest } from "../utils/BaseTest.sol";
+import { Strings } from "contracts/lib/Strings.sol";
 
 contract AirdropERC1155ClaimableTest is BaseTest {
     address public implementation;

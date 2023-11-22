@@ -9,7 +9,6 @@ import "../../mocks/MockERC20.sol";
 import "../../mocks/MockERC721.sol";
 import "../../mocks/MockERC1155.sol";
 import "contracts/infra/forwarder/Forwarder.sol";
-import "contracts/lib/TWStrings.sol";
 
 abstract contract BaseUtilTest is DSTest, Test {
     string public constant NAME = "NAME";
@@ -103,11 +102,19 @@ abstract contract BaseUtilTest is DSTest, Test {
         }
     }
 
-    function assertBalERC20Eq(address _token, address _owner, uint256 _amount) internal {
+    function assertBalERC20Eq(
+        address _token,
+        address _owner,
+        uint256 _amount
+    ) internal {
         assertEq(MockERC20(_token).balanceOf(_owner), _amount);
     }
 
-    function assertBalERC20Gte(address _token, address _owner, uint256 _amount) internal {
+    function assertBalERC20Gte(
+        address _token,
+        address _owner,
+        uint256 _amount
+    ) internal {
         assertTrue(MockERC20(_token).balanceOf(_owner) >= _amount);
     }
 

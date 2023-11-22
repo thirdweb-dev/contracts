@@ -14,7 +14,7 @@ pragma solidity ^0.8.11;
 
 import { BurnToClaimDrop721Storage } from "./BurnToClaimDrop721Storage.sol";
 
-import "../../../../lib/TWStrings.sol";
+import "../../../../lib/Strings.sol";
 import "../../../../lib/CurrencyTransferLib.sol";
 
 import { IERC2981 } from "../../../../eip/interface/IERC2981.sol";
@@ -47,7 +47,7 @@ contract BurnToClaimDrop721Logic is
     ERC2771ContextUpgradeable,
     ERC721AUpgradeable
 {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     /*///////////////////////////////////////////////////////////////
                             Constants
@@ -90,9 +90,13 @@ contract BurnToClaimDrop721Logic is
     }
 
     /// @notice See ERC 165
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        virtual
+        override(ERC721AUpgradeable, IERC165)
+        returns (bool)
+    {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 
@@ -124,10 +128,10 @@ contract BurnToClaimDrop721Logic is
     }
 
     /// @notice Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(
-        uint256 _index,
-        bytes calldata _key
-    ) external returns (string memory revealedURI) {
+    function reveal(uint256 _index, bytes calldata _key)
+        external
+        returns (string memory revealedURI)
+    {
         require(_hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
@@ -257,10 +261,11 @@ contract BurnToClaimDrop721Logic is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal override returns (uint256 startTokenId) {
+    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        internal
+        override
+        returns (uint256 startTokenId)
+    {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
         startTokenId = data._currentIndex;
         _safeMint(_to, _quantityBeingClaimed);

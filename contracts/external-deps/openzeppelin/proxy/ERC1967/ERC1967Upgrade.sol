@@ -5,8 +5,8 @@ pragma solidity ^0.8.2;
 
 import "../beacon/IBeacon.sol";
 import "../IERC1822Proxiable.sol";
-import "../../../../lib/TWAddress.sol";
-import "../../../../lib/TWStorageSlot.sol";
+import "../../../../lib/Address.sol";
+import "../../../../lib/StorageSlot.sol";
 
 /**
  * @dev This abstract contract provides getters and event emitting update functions for
@@ -38,7 +38,7 @@ abstract contract ERC1967Upgrade {
      * @dev Returns the current implementation address.
      */
     function _getImplementation() internal view returns (address) {
-        return TWStorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value;
+        return StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value;
     }
 
     /**
@@ -46,10 +46,10 @@ abstract contract ERC1967Upgrade {
      */
     function _setImplementation(address newImplementation) private {
         require(
-            TWAddress.isContract(newImplementation),
+            Address.isContract(newImplementation),
             "ERC1967: new implementation is not a contract"
         );
-        TWStorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = newImplementation;
+        StorageSlot.getAddressSlot(_IMPLEMENTATION_SLOT).value = newImplementation;
     }
 
     /**
@@ -74,7 +74,7 @@ abstract contract ERC1967Upgrade {
     ) internal {
         _upgradeTo(newImplementation);
         if (data.length > 0 || forceCall) {
-            TWAddress.functionDelegateCall(newImplementation, data);
+            Address.functionDelegateCall(newImplementation, data);
         }
     }
 
@@ -91,7 +91,7 @@ abstract contract ERC1967Upgrade {
         // Upgrades from old implementations will perform a rollback test. This test requires the new
         // implementation to upgrade back to the old, non-ERC1822 compliant, implementation. Removing
         // this special case will break upgrade paths from old UUPS implementation to new ones.
-        if (TWStorageSlot.getBooleanSlot(_ROLLBACK_SLOT).value) {
+        if (StorageSlot.getBooleanSlot(_ROLLBACK_SLOT).value) {
             _setImplementation(newImplementation);
         } else {
             try IERC1822Proxiable(newImplementation).proxiableUUID() returns (bytes32 slot) {
@@ -120,7 +120,7 @@ abstract contract ERC1967Upgrade {
      * @dev Returns the current admin.
      */
     function _getAdmin() internal view returns (address) {
-        return TWStorageSlot.getAddressSlot(_ADMIN_SLOT).value;
+        return StorageSlot.getAddressSlot(_ADMIN_SLOT).value;
     }
 
     /**
@@ -128,7 +128,7 @@ abstract contract ERC1967Upgrade {
      */
     function _setAdmin(address newAdmin) private {
         require(newAdmin != address(0), "ERC1967: new admin is the zero address");
-        TWStorageSlot.getAddressSlot(_ADMIN_SLOT).value = newAdmin;
+        StorageSlot.getAddressSlot(_ADMIN_SLOT).value = newAdmin;
     }
 
     /**
@@ -157,19 +157,19 @@ abstract contract ERC1967Upgrade {
      * @dev Returns the current beacon.
      */
     function _getBeacon() internal view returns (address) {
-        return TWStorageSlot.getAddressSlot(_BEACON_SLOT).value;
+        return StorageSlot.getAddressSlot(_BEACON_SLOT).value;
     }
 
     /**
      * @dev Stores a new beacon in the EIP1967 beacon slot.
      */
     function _setBeacon(address newBeacon) private {
-        require(TWAddress.isContract(newBeacon), "ERC1967: new beacon is not a contract");
+        require(Address.isContract(newBeacon), "ERC1967: new beacon is not a contract");
         require(
-            TWAddress.isContract(IBeacon(newBeacon).implementation()),
+            Address.isContract(IBeacon(newBeacon).implementation()),
             "ERC1967: beacon implementation is not a contract"
         );
-        TWStorageSlot.getAddressSlot(_BEACON_SLOT).value = newBeacon;
+        StorageSlot.getAddressSlot(_BEACON_SLOT).value = newBeacon;
     }
 
     /**
@@ -186,7 +186,7 @@ abstract contract ERC1967Upgrade {
         _setBeacon(newBeacon);
         emit BeaconUpgraded(newBeacon);
         if (data.length > 0 || forceCall) {
-            TWAddress.functionDelegateCall(IBeacon(newBeacon).implementation(), data);
+            Address.functionDelegateCall(IBeacon(newBeacon).implementation(), data);
         }
     }
 }

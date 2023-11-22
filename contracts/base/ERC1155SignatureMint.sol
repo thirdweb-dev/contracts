@@ -8,7 +8,7 @@ import "./ERC1155Base.sol";
 import "../extension/PrimarySale.sol";
 import "../extension/SignatureMintERC1155.sol";
 
-import "../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 /**
  *      BASE:      ERC1155Base
@@ -49,10 +49,13 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
      *  @param _req       The payload / mint request.
      *  @param _signature The signature produced by an account signing the mint request.
      */
-    function mintWithSignature(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    ) external payable virtual override returns (address signer) {
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
+        external
+        payable
+        virtual
+        override
+        returns (address signer)
+    {
         require(_req.quantity > 0, "Minting zero tokens.");
 
         uint256 tokenIdToMint;

@@ -5,8 +5,8 @@ import { Multiwrap } from "contracts/prebuilts/multiwrap/Multiwrap.sol";
 import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
+import { Strings } from "contracts/lib/Strings.sol";
 import { Wallet } from "./utils/Wallet.sol";
 import "./utils/BaseTest.sol";
 
@@ -18,7 +18,11 @@ contract MultiwrapReentrant is MockERC20, ITokenBundle {
         multiwrap = Multiwrap(_multiwrap);
     }
 
-    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
+    function transferFrom(
+        address from,
+        address to,
+        uint256 amount
+    ) public override returns (bool) {
         multiwrap.unwrap(0, address(this));
         return super.transferFrom(from, to, amount);
     }
@@ -115,9 +119,9 @@ contract MultiwrapTest is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -135,9 +139,9 @@ contract MultiwrapTest is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
+                Strings.toHexString(uint160(target), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -794,9 +798,10 @@ contract MultiwrapTest is BaseTest {
 
     uint256 internal constant MAX_TOKENS = 1000;
 
-    function getTokensToWrap(
-        uint256 x
-    ) internal returns (ITokenBundle.Token[] memory tokensToWrap) {
+    function getTokensToWrap(uint256 x)
+        internal
+        returns (ITokenBundle.Token[] memory tokensToWrap)
+    {
         uint256 len = x % MAX_TOKENS;
         tokensToWrap = new ITokenBundle.Token[](len);
 

@@ -26,7 +26,7 @@ import "../extension/DelayedReveal.sol";
  */
 
 contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     /*//////////////////////////////////////////////////////////////
                             Constructor
@@ -102,10 +102,12 @@ contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
      *  @param _index The ID for the batch of delayed-reveal NFTs to reveal.
      *  @param _key   The key with which the base URI for the relevant batch of NFTs was encrypted.
      */
-    function reveal(
-        uint256 _index,
-        bytes calldata _key
-    ) external virtual override returns (string memory revealedURI) {
+    function reveal(uint256 _index, bytes calldata _key)
+        external
+        virtual
+        override
+        returns (string memory revealedURI)
+    {
         require(_canReveal(), "Not authorized");
 
         uint256 batchId = getBatchIdAtIndex(_index);

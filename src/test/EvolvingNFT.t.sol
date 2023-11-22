@@ -12,20 +12,20 @@ import { Drop } from "contracts/extension/upgradeable/Drop.sol";
 import { SharedMetadataBatch } from "contracts/extension/upgradeable/SharedMetadataBatch.sol";
 import { ISharedMetadataBatch } from "contracts/extension/interface/ISharedMetadataBatch.sol";
 import { RulesEngine, IRulesEngine } from "contracts/extension/upgradeable/RulesEngine.sol";
-import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRendererLib.sol";
+import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRenderer.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 import { PermissionsEnumerable as DynamicPermissionsEnumerable } from "contracts/extension/upgradeable/PermissionsEnumerable.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
+import { Strings } from "contracts/lib/Strings.sol";
+import { Permissions } from "contracts/extension/Permissions.sol";
+import { IERC721 } from "./mocks/MockERC721.sol";
 import "./utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract EvolvingNFTTest is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+    using Strings for uint256;
+    using Strings for address;
 
     event SharedMetadataUpdated(
         bytes32 indexed id,
@@ -400,9 +400,9 @@ contract EvolvingNFTTest is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -420,9 +420,9 @@ contract EvolvingNFTTest is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
+                Strings.toHexString(uint160(target), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 

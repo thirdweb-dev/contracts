@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/prebuilts/unaudited/airdrop/AirdropERC1155.sol";
+import { AirdropERC1155, IAirdropERC1155 } from "contracts/prebuilts/unaudited/airdrop/AirdropERC1155.sol";
 
 // Test imports
 import { Wallet } from "../utils/Wallet.sol";

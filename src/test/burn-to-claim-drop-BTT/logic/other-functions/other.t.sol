@@ -13,6 +13,7 @@ import { ERC721AStorage } from "contracts/extension/upgradeable/init/ERC721AInit
 import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 
 import { TWProxy } from "contracts/infra/TWProxy.sol";
+import { Permissions } from "contracts/extension/Permissions.sol";
 
 contract MyBurnToClaimDrop721Logic is BurnToClaimDrop721Logic {
     function canSetPlatformFeeInfo() external view returns (bool) {
@@ -56,10 +57,10 @@ contract MyBurnToClaimDrop721Logic is BurnToClaimDrop721Logic {
         _beforeTokenTransfers(from, to, startTokenId, quantity);
     }
 
-    function transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) external returns (uint256 startTokenId) {
+    function transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
+        external
+        returns (uint256 startTokenId)
+    {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
         startTokenId = data._currentIndex;
         _safeMint(_to, _quantityBeingClaimed);

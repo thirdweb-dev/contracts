@@ -71,9 +71,9 @@ contract TokenERC721Test_MintTo is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
+                Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
             )
         );
         tokenContract.mintTo(recipient, uri);

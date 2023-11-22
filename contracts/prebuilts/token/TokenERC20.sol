@@ -35,7 +35,7 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgra
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "../../lib/CurrencyTransferLib.sol";
 import "../../lib/FeeType.sol";
 
@@ -46,7 +46,7 @@ contract TokenERC20 is
     IPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     ERC20BurnableUpgradeable,
     ERC20VotesUpgradeable,
     ITokenERC20,
@@ -133,7 +133,11 @@ contract TokenERC20 is
     }
 
     /// @dev Runs on every transfer.
-    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 amount
+    ) internal override {
         super._beforeTokenTransfer(from, to, amount);
 
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
@@ -144,17 +148,19 @@ contract TokenERC20 is
         }
     }
 
-    function _mint(
-        address account,
-        uint256 amount
-    ) internal virtual override(ERC20Upgradeable, ERC20VotesUpgradeable) {
+    function _mint(address account, uint256 amount)
+        internal
+        virtual
+        override(ERC20Upgradeable, ERC20VotesUpgradeable)
+    {
         super._mint(account, amount);
     }
 
-    function _burn(
-        address account,
-        uint256 amount
-    ) internal virtual override(ERC20Upgradeable, ERC20VotesUpgradeable) {
+    function _burn(address account, uint256 amount)
+        internal
+        virtual
+        override(ERC20Upgradeable, ERC20VotesUpgradeable)
+    {
         super._burn(account, amount);
     }
 
@@ -173,19 +179,21 @@ contract TokenERC20 is
     }
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    ) public view returns (bool, address) {
+    function verify(MintRequest calldata _req, bytes calldata _signature)
+        public
+        view
+        returns (bool, address)
+    {
         address signer = recoverAddress(_req, _signature);
         return (!minted[_req.uid] && hasRole(MINTER_ROLE, signer), signer);
     }
 
     /// @dev Mints tokens according to the provided mint request.
-    function mintWithSignature(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    ) external payable nonReentrant {
+    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
+        external
+        payable
+        nonReentrant
+    {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to;
 
@@ -203,10 +211,10 @@ contract TokenERC20 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(
-        address _platformFeeRecipient,
-        uint256 _platformFeeBps
-    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
+        external
+        onlyRole(DEFAULT_ADMIN_ROLE)
+    {
         require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -260,10 +268,10 @@ contract TokenERC20 is
     }
 
     /// @dev Verifies that a mint request is valid.
-    function verifyRequest(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    ) internal returns (address) {
+    function verifyRequest(MintRequest calldata _req, bytes calldata _signature)
+        internal
+        returns (address)
+    {
         (bool success, address signer) = verify(_req, _signature);
         require(success, "invalid signature");
 
@@ -281,10 +289,11 @@ contract TokenERC20 is
     }
 
     /// @dev Returns the address of the signer of the mint request.
-    function recoverAddress(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    ) internal view returns (address) {
+    function recoverAddress(MintRequest calldata _req, bytes calldata _signature)
+        internal
+        view
+        returns (address)
+    {
         return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
     }
 

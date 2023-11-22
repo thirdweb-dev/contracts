@@ -14,7 +14,7 @@ import "../external-deps/openzeppelin/utils/ERC721/ERC721Holder.sol";
 //  ==========  Internal imports    ==========
 
 import { TokenBundle, ITokenBundle } from "./TokenBundle.sol";
-import "../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 /**
  *  @title   Token Store
@@ -58,7 +58,11 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
     }
 
     /// @dev Transfers an arbitrary ERC20 / ERC721 / ERC1155 token.
-    function _transferToken(address _from, address _to, Token memory _token) internal {
+    function _transferToken(
+        address _from,
+        address _to,
+        Token memory _token
+    ) internal {
         if (_token.tokenType == TokenType.ERC20) {
             CurrencyTransferLib.transferCurrencyWithWrapper(
                 _token.assetContract,
@@ -81,7 +85,11 @@ contract TokenStore is TokenBundle, ERC721Holder, ERC1155Holder {
     }
 
     /// @dev Transfers multiple arbitrary ERC20 / ERC721 / ERC1155 tokens.
-    function _transferTokenBatch(address _from, address _to, Token[] memory _tokens) internal {
+    function _transferTokenBatch(
+        address _from,
+        address _to,
+        Token[] memory _tokens
+    ) internal {
         uint256 nativeTokenValue;
         for (uint256 i = 0; i < _tokens.length; i += 1) {
             if (

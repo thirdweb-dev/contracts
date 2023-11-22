@@ -16,7 +16,7 @@ pragma solidity ^0.8.11;
 import "../../../eip/interface/IERC721.sol";
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../../extension/Multicall.sol";
 
 //  ==========  Internal imports    ==========
 
@@ -31,7 +31,7 @@ contract AirdropERC721Claimable is
     Initializable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     IAirdropERC721Claimable
 {
     /*///////////////////////////////////////////////////////////////

@@ -3,7 +3,7 @@
 
 pragma solidity ^0.8.2;
 
-import "../../../../lib/TWAddress.sol";
+import "../../../../lib/Address.sol";
 
 /**
  * @dev This is a base contract to aid in writing upgradeable contracts, or any kind of contract that will be deployed
@@ -79,7 +79,7 @@ abstract contract Initializable {
         bool isTopLevelCall = !_initializing;
         require(
             (isTopLevelCall && _initialized < 1) ||
-                (!TWAddress.isContract(address(this)) && _initialized == 1),
+                (!Address.isContract(address(this)) && _initialized == 1),
             "Initializable: contract is already initialized"
         );
         _initialized = 1;

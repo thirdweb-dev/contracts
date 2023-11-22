@@ -6,7 +6,7 @@ pragma solidity ^0.8.11;
 import "../external-deps/openzeppelin/security/ReentrancyGuard.sol";
 import "../external-deps/openzeppelin/utils/math/SafeMath.sol";
 import "../eip/interface/IERC20.sol";
-import "../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 import "./interface/IStaking20.sol";
 
@@ -157,9 +157,12 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
      *  @return _tokensStaked   Amount of tokens staked.
      *  @return _rewards        Available reward amount.
      */
-    function getStakeInfo(
-        address _staker
-    ) external view virtual returns (uint256 _tokensStaked, uint256 _rewards) {
+    function getStakeInfo(address _staker)
+        external
+        view
+        virtual
+        returns (uint256 _tokensStaked, uint256 _rewards)
+    {
         _tokensStaked = stakers[_staker].amountStaked;
         _rewards = _availableRewards(_staker);
     }
@@ -331,9 +334,9 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
             _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
         }
 
-        (, _rewards) = SafeMath.tryMul(_rewards, 10 ** rewardTokenDecimals);
+        (, _rewards) = SafeMath.tryMul(_rewards, 10**rewardTokenDecimals);
 
-        _rewards /= (10 ** stakingTokenDecimals);
+        _rewards /= (10**stakingTokenDecimals);
     }
 
     /*////////////////////////////////////////////////////////////////////

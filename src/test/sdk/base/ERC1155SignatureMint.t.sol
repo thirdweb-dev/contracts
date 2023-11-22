@@ -5,11 +5,10 @@ import "@std/Test.sol";
 import "@ds-test/test.sol";
 
 import { ERC1155SignatureMint } from "contracts/base/ERC1155SignatureMint.sol";
-
-import "contracts/lib/TWStrings.sol";
+import { Strings } from "contracts/lib/Strings.sol";
 
 contract ERC1155SignatureMintTest is DSTest, Test {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     // Target contract
     ERC1155SignatureMint internal base;
@@ -30,10 +29,11 @@ contract ERC1155SignatureMintTest is DSTest, Test {
 
     ERC1155SignatureMint.MintRequest req;
 
-    function signMintRequest(
-        ERC1155SignatureMint.MintRequest memory _request,
-        uint256 privateKey
-    ) internal view returns (bytes memory) {
+    function signMintRequest(ERC1155SignatureMint.MintRequest memory _request, uint256 privateKey)
+        internal
+        view
+        returns (bytes memory)
+    {
         bytes memory encodedRequest = bytes.concat(
             abi.encode(
                 typehashMintRequest,

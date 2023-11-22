@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 /// @author thirdweb
 
 import "./interface/ITokenBundle.sol";
-import "../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 interface IERC165 {
     function supportsInterface(bytes4 interfaceId) external view returns (bool);

@@ -15,7 +15,7 @@ pragma solidity ^0.8.11;
 //  ==========  External imports    ==========
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../../extension/Multicall.sol";
 
 //  ==========  Internal imports    ==========
 
@@ -34,7 +34,7 @@ contract AirdropERC20 is
     PermissionsEnumerable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     IAirdropERC20
 {
     /*///////////////////////////////////////////////////////////////
