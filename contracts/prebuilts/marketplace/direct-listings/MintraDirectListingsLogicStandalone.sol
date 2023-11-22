@@ -10,6 +10,7 @@ import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "../../../eip/interface/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 // ====== Internal imports ======
 import "../../../extension/Multicall.sol";
@@ -97,10 +98,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
     //////////////////////////////////////////////////////////////*/
 
     /// @notice List NFTs (ERC721 or ERC1155) for sale at a fixed price.
-    function createListing(ListingParameters calldata _params)
-        external
-        returns (uint256 listingId)
-    {
+    function createListing(ListingParameters calldata _params) external returns (uint256 listingId) {
         listingId = _getNextListingId();
         address listingCreator = msg.sender;
         TokenType tokenType = _getTokenType(_params.assetContract);
@@ -397,6 +395,32 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         listing = _directListingsStorage().listings[_listingId];
     }
 
+    /**
+     * @notice Set or update the royalty for a collection
+     * @dev Sets or updates the royalty for a collection to a new value
+     * @param _collectionAddress Address of the collection to set the royalty for
+     * @param _royaltyInBasisPoints New royalty value, in basis points (1 basis point = 0.01%)
+     */
+    function createOrUpdateRoyalty(
+        address _collectionAddress,
+        uint256 _royaltyInBasisPoints,
+        address receiver
+    ) public nonReentrant {
+        require(_collectionAddress != address(0), "_collectionAddress is not set");
+        require(_royaltyInBasisPoints >= 0 && _royaltyInBasisPoints <= 10000, "Royalty not in range");
+        require(receiver != address(0), "receiver is not set");
+
+        // Check that the caller is the owner/creator of the collection contract
+        require(Ownable(_collectionAddress).owner() == msg.sender, "Unauthorized");
+
+        // Create a new Royalty object with the given value and store it in the royalties mapping
+        Royalty memory royalty = Royalty(receiver, _royaltyInBasisPoints);
+        royalties[_collectionAddress] = royalty;
+
+        // Emit a RoyaltyUpdated
+        emit RoyaltyUpdated(_collectionAddress, _royaltyInBasisPoints, receiver);
+    }
+
     /*///////////////////////////////////////////////////////////////
                             Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -623,7 +647,6 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
     function _directListingsStorage() internal pure returns (DirectListingsStorage.Data storage data) {
         data = DirectListingsStorage.data();
     }
-
 
     /**
      * @notice Update the market fee percentage
