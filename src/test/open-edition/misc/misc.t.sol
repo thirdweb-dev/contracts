@@ -22,7 +22,7 @@ contract OpenEditionERC721Test_misc is BaseTest {
     address private openEditionImpl;
     address private harnessImpl;
 
-    address private receiver = 0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3;
+    address private receiver = 0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd;
 
     ISharedMetadata.SharedMetadataInfo public sharedMetadata;
 

@@ -47,7 +47,9 @@ contract AirdropERC721 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor() initializer {}
+    constructor() {
+        _disableInitializers();
+    }
 
     /// @dev Initializes the contract, like a constructor.
     function initialize(

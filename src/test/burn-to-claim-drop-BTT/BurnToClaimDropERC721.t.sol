@@ -1041,7 +1041,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         BurnToClaimDrop721Logic.ClaimCondition[]
             memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
@@ -1092,7 +1092,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         BurnToClaimDrop721Logic.ClaimCondition[]
             memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
@@ -1152,7 +1152,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         BurnToClaimDrop721Logic.ClaimCondition[]
             memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
@@ -1208,7 +1208,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         BurnToClaimDrop721Logic.ClaimCondition[]
             memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
@@ -1265,7 +1265,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
 
         // bytes32[] memory proofs = new bytes32[](0);
 

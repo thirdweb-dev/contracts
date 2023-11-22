@@ -36,13 +36,13 @@ contract DropERC721Test_misc is BaseTest {
     }
 
     modifier callerOwner() {
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
         vm.startPrank(receiver);
         _;
     }
 
     modifier callerApproved() {
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
         vm.prank(receiver);
         drop.setApprovalForAll(deployer, true);
         vm.startPrank(deployer);
@@ -99,7 +99,7 @@ contract DropERC721Test_misc is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;

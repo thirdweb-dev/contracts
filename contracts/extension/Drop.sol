@@ -138,6 +138,10 @@ abstract contract Drop is IDrop {
         uint256 claimPrice = currentClaimPhase.pricePerToken;
         address claimCurrency = currentClaimPhase.currency;
 
+        /*
+         * Here `isOverride` implies that if the merkle proof verification fails,
+         * the claimer would claim through open claim limit instead of allowlisted limit.
+         */
         if (currentClaimPhase.merkleRoot != bytes32(0)) {
             (isOverride, ) = MerkleProof.verify(
                 _allowlistProof.proof,

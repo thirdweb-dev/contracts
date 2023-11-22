@@ -145,18 +145,6 @@ abstract contract BaseTest is DSTest, Test {
         );
         TWFactory(factory).addImplementation(address(new AirdropERC1155()));
         TWFactory(factory).addImplementation(
-            address(new MockContract(bytes32("AirdropERC721Claimable"), 1))
-        );
-        TWFactory(factory).addImplementation(address(new AirdropERC721Claimable()));
-        TWFactory(factory).addImplementation(
-            address(new MockContract(bytes32("AirdropERC20Claimable"), 1))
-        );
-        TWFactory(factory).addImplementation(address(new AirdropERC20Claimable()));
-        TWFactory(factory).addImplementation(
-            address(new MockContract(bytes32("AirdropERC1155Claimable"), 1))
-        );
-        TWFactory(factory).addImplementation(address(new AirdropERC1155Claimable()));
-        TWFactory(factory).addImplementation(
             address(new PackVRFDirect(address(weth), eoaForwarder, linkToken, vrfV2Wrapper))
         );
         TWFactory(factory).addImplementation(address(new Pack(address(weth), eoaForwarder)));
@@ -338,55 +326,6 @@ abstract contract BaseTest is DSTest, Test {
             abi.encodeCall(AirdropERC1155.initialize, (deployer, CONTRACT_URI, forwarders()))
         );
         deployContractProxy(
-            "AirdropERC721Claimable",
-            abi.encodeCall(
-                AirdropERC721Claimable.initialize,
-                (
-                    deployer,
-                    forwarders(),
-                    address(airdropTokenOwner),
-                    address(erc721),
-                    _airdropTokenIdsERC721,
-                    1000,
-                    1,
-                    _airdropMerkleRootERC721
-                )
-            )
-        );
-        deployContractProxy(
-            "AirdropERC1155Claimable",
-            abi.encodeCall(
-                AirdropERC1155Claimable.initialize,
-                (
-                    deployer,
-                    forwarders(),
-                    address(airdropTokenOwner),
-                    address(erc1155),
-                    _airdropTokenIdsERC1155,
-                    _airdropAmountsERC1155,
-                    1000,
-                    _airdropWalletClaimCountERC1155,
-                    _airdropMerkleRootERC1155
-                )
-            )
-        );
-        deployContractProxy(
-            "AirdropERC20Claimable",
-            abi.encodeCall(
-                AirdropERC20Claimable.initialize,
-                (
-                    deployer,
-                    forwarders(),
-                    address(airdropTokenOwner),
-                    address(erc20),
-                    10_000 ether,
-                    1000,
-                    1,
-                    _airdropMerkleRootERC20
-                )
-            )
-        );
-        deployContractProxy(
             "NFTStake",
             abi.encodeCall(
                 NFTStake.initialize,
@@ -494,12 +433,11 @@ abstract contract BaseTest is DSTest, Test {
     }
 
     function setupAirdropClaimable() public {
-        string[] memory inputs = new string[](5);
+        string[] memory inputs = new string[](3);
         inputs[0] = "node";
-        inputs[1] = "src/test/scripts/generateRoot.ts";
+        inputs[1] = "src/test/scripts/generateRootAirdrop.ts";
         inputs[2] = Strings.toString(uint256(5));
-        inputs[3] = "0";
-        inputs[4] = "0x0000000000000000000000000000000000000000";
+
         bytes memory result = vm.ffi(inputs);
         bytes32 root = abi.decode(result, (bytes32));
 
