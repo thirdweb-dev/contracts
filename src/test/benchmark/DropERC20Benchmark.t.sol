@@ -35,8 +35,8 @@ contract DropERC20BenchmarkTest is BaseTest {
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(300 ether);
-        inputs[3] = Strings.toString(1 ether);
+        inputs[2] = Strings.toString(uint256(300 ether));
+        inputs[3] = Strings.toString(uint256(1 ether));
         inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
 
         bytes memory result = vm.ffi(inputs);
@@ -89,8 +89,8 @@ contract DropERC20BenchmarkTest is BaseTest {
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(300 ether);
-        inputs[3] = Strings.toString(1 ether);
+        inputs[2] = Strings.toString(uint256(300 ether));
+        inputs[3] = Strings.toString(uint256(1 ether));
         inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
 
         bytes memory result = vm.ffi(inputs);

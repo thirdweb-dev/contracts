@@ -391,8 +391,8 @@ contract DropERC20Test is BaseTest {
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(300 ether);
-        inputs[3] = Strings.toString(1 ether);
+        inputs[2] = Strings.toString(uint256(300 ether));
+        inputs[3] = Strings.toString(uint256(1 ether));
         inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
 
         bytes memory result = vm.ffi(inputs);
@@ -451,7 +451,7 @@ contract DropERC20Test is BaseTest {
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(300 ether);
+        inputs[2] = Strings.toString(uint256(300 ether));
         inputs[3] = Strings.toString(type(uint256).max); // this implies that general price is applicable
         inputs[4] = "0x0000000000000000000000000000000000000000";
 
@@ -508,7 +508,7 @@ contract DropERC20Test is BaseTest {
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
         inputs[2] = "0"; // this implies that general limit is applicable
-        inputs[3] = Strings.toString(5 ether);
+        inputs[3] = Strings.toString(uint256(5 ether));
         inputs[4] = "0x0000000000000000000000000000000000000000"; // general currency will be applicable
 
         bytes memory result = vm.ffi(inputs);

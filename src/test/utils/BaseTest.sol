@@ -409,10 +409,10 @@ abstract contract BaseTest is DSTest, Test {
         );
     }
 
-    function deployContractProxy(
-        string memory _contractType,
-        bytes memory _initializer
-    ) public returns (address proxyAddress) {
+    function deployContractProxy(string memory _contractType, bytes memory _initializer)
+        public
+        returns (address proxyAddress)
+    {
         vm.startPrank(deployer);
         proxyAddress = TWFactory(factory).deployProxy(bytes32(bytes(_contractType)), _initializer);
         contracts[bytes32(bytes(_contractType))] = proxyAddress;
@@ -479,11 +479,19 @@ abstract contract BaseTest is DSTest, Test {
         }
     }
 
-    function assertBalERC20Eq(address _token, address _owner, uint256 _amount) internal {
+    function assertBalERC20Eq(
+        address _token,
+        address _owner,
+        uint256 _amount
+    ) internal {
         assertEq(MockERC20(_token).balanceOf(_owner), _amount);
     }
 
-    function assertBalERC20Gte(address _token, address _owner, uint256 _amount) internal {
+    function assertBalERC20Gte(
+        address _token,
+        address _owner,
+        uint256 _amount
+    ) internal {
         assertTrue(MockERC20(_token).balanceOf(_owner) >= _amount);
     }
 
@@ -497,7 +505,7 @@ abstract contract BaseTest is DSTest, Test {
         string[] memory inputs = new string[](5);
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(5);
+        inputs[2] = Strings.toString(uint256(5));
         inputs[3] = "0";
         inputs[4] = "0x0000000000000000000000000000000000000000";
         bytes memory result = vm.ffi(inputs);

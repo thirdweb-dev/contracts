@@ -142,9 +142,7 @@ contract Multiwrap is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(
-        bytes4 interfaceId
-    )
+    function supportsInterface(bytes4 interfaceId)
         public
         view
         virtual
@@ -185,10 +183,11 @@ contract Multiwrap is
     }
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
-    function unwrap(
-        uint256 _tokenId,
-        address _recipient
-    ) external nonReentrant onlyRoleWithSwitch(UNWRAP_ROLE) {
+    function unwrap(uint256 _tokenId, address _recipient)
+        external
+        nonReentrant
+        onlyRoleWithSwitch(UNWRAP_ROLE)
+    {
         require(_tokenId < nextTokenIdToMint, "wrapped NFT DNE.");
         require(_isApprovedOrOwner(_msgSender(), _tokenId), "caller not approved for unwrapping.");
 
@@ -241,9 +240,10 @@ contract Multiwrap is
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
+        uint256 tokenId,
+        uint256 batchSize
     ) internal virtual override {
-        super._beforeTokenTransfer(from, to, tokenId);
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
