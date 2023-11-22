@@ -592,6 +592,8 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
                     _nativeTokenWrapper
                 );
 
+                amountRemaining = amountRemaining - royaltyAmount;
+
                 emit RoyaltyTransfered(
                     _listing.assetContract,
                     _listing.tokenId,
