@@ -103,7 +103,7 @@ contract DropERC1155Test_transferTokensOnClaim is BaseTest {
      *  note: Tests whether contract reverts when a non-holder renounces a role.
      */
     function test_revert_ContractNotERC155Receiver() public toNotReceiever {
-        vm.expectRevert("ERC1155: transfer to non ERC1155Receiver implementer");
+        vm.expectRevert("ERC1155: transfer to non-ERC1155Receiver implementer");
         proxy.transferTokensOnClaimHarness(to, 0, 1);
     }
 

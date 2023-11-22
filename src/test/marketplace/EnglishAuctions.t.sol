@@ -641,7 +641,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
             );
 
         vm.prank(seller);
-        vm.expectRevert("ERC721: caller is not token owner nor approved");
+        vm.expectRevert("ERC721: caller is not token owner or approved");
         EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
