@@ -142,7 +142,9 @@ contract Multiwrap is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
@@ -183,11 +185,10 @@ contract Multiwrap is
     }
 
     /// @dev Unwrap a wrapped NFT to retrieve underlying ERC1155, ERC721, ERC20 tokens.
-    function unwrap(uint256 _tokenId, address _recipient)
-        external
-        nonReentrant
-        onlyRoleWithSwitch(UNWRAP_ROLE)
-    {
+    function unwrap(
+        uint256 _tokenId,
+        address _recipient
+    ) external nonReentrant onlyRoleWithSwitch(UNWRAP_ROLE) {
         require(_tokenId < nextTokenIdToMint, "wrapped NFT DNE.");
         require(_isApprovedOrOwner(_msgSender(), _tokenId), "caller not approved for unwrapping.");
 

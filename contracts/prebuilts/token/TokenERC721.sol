@@ -176,11 +176,10 @@ contract TokenERC721 is
     }
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(MintRequest calldata _req, bytes calldata _signature)
-        public
-        view
-        returns (bool, address)
-    {
+    function verify(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) public view returns (bool, address) {
         address signer = recoverAddress(_req, _signature);
         return (!minted[_req.uid] && hasRole(MINTER_ROLE, signer), signer);
     }
@@ -191,11 +190,10 @@ contract TokenERC721 is
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT.
-    function mintTo(address _to, string calldata _uri)
-        external
-        onlyRole(MINTER_ROLE)
-        returns (uint256)
-    {
+    function mintTo(
+        address _to,
+        string calldata _uri
+    ) external onlyRole(MINTER_ROLE) returns (uint256) {
         // `_mintTo` is re-used. `mintTo` just adds a minter role check.
         return _mintTo(_to, _uri);
     }
@@ -203,24 +201,20 @@ contract TokenERC721 is
     ///     =====   External functions  =====
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view virtual returns (address receiver, uint256 royaltyAmount) {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        nonReentrant
-        returns (uint256 tokenIdMinted)
-    {
+    function mintWithSignature(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) external payable nonReentrant returns (uint256 tokenIdMinted) {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to;
 
@@ -247,10 +241,10 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setDefaultRoyaltyInfo(
+        address _royaltyRecipient,
+        uint256 _royaltyBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -273,10 +267,10 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -337,11 +331,10 @@ contract TokenERC721 is
     }
 
     /// @dev Returns the address of the signer of the mint request.
-    function recoverAddress(MintRequest calldata _req, bytes calldata _signature)
-        private
-        view
-        returns (address)
-    {
+    function recoverAddress(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) private view returns (address) {
         return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
     }
 
@@ -364,10 +357,10 @@ contract TokenERC721 is
     }
 
     /// @dev Verifies that a mint request is valid.
-    function verifyRequest(MintRequest calldata _req, bytes calldata _signature)
-        internal
-        returns (address)
-    {
+    function verifyRequest(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) internal returns (address) {
         (bool success, address signer) = verify(_req, _signature);
         require(success, "invalid signature");
 
@@ -457,7 +450,9 @@ contract TokenERC721 is
         return hasRole(METADATA_ROLE, _msgSender());
     }
 
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
