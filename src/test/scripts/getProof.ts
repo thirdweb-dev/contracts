@@ -1,4 +1,5 @@
-const { MerkleTree } = require("merkletreejs");
+const { MerkleTree } = require("@thirdweb-dev/merkletree");
+
 const keccak256 = require("keccak256");
 const { ethers } = require("ethers");
 
