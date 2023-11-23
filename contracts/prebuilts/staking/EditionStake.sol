@@ -21,7 +21,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC1155/IERC1155ReceiverUpgrad
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
@@ -36,7 +36,7 @@ contract EditionStake is
     ContractMetadata,
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     Staking1155Upgradeable,
     ERC165Upgradeable,
     IERC1155ReceiverUpgradeable,
@@ -141,13 +141,7 @@ contract EditionStake is
                         ERC 165 / 721 logic
     //////////////////////////////////////////////////////////////*/
 
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external view returns (bytes4) {
+    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external view returns (bytes4) {
         require(isStaking == 2, "Direct transfer");
         return this.onERC1155Received.selector;
     }
@@ -160,12 +154,9 @@ contract EditionStake is
         bytes calldata data
     ) external returns (bytes4) {}
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC165Upgradeable, IERC165Upgradeable)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view override(ERC165Upgradeable, IERC165Upgradeable) returns (bool) {
         return interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 

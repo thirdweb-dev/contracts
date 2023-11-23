@@ -9,7 +9,7 @@ import { ERC721Base } from "contracts/base/ERC721Base.sol";
 
 contract BaseERC721BaseTest is BaseUtilTest {
     ERC721Base internal base;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     function setUp() public override {
         vm.prank(deployer);

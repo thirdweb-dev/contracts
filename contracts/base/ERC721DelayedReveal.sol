@@ -26,7 +26,7 @@ import "../extension/DelayedReveal.sol";
  */
 
 contract ERC721DelayedReveal is ERC721LazyMint, DelayedReveal {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     /*//////////////////////////////////////////////////////////////
                             Constructor

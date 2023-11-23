@@ -66,11 +66,9 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    function makeOffer(OfferParams memory _params)
-        external
-        onlyAssetRole(_params.assetContract)
-        returns (uint256 _offerId)
-    {
+    function makeOffer(
+        OfferParams memory _params
+    ) external onlyAssetRole(_params.assetContract) returns (uint256 _offerId) {
         _offerId = _getNextOfferId();
         address _offeror = _msgSender();
         TokenType _tokenType = _getTokenType(_params.assetContract);
@@ -267,12 +265,7 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     }
 
     /// @dev Transfers tokens.
-    function _transferOfferTokens(
-        address _from,
-        address _to,
-        uint256 _quantity,
-        Offer memory _offer
-    ) internal {
+    function _transferOfferTokens(address _from, address _to, uint256 _quantity, Offer memory _offer) internal {
         if (_offer.tokenType == TokenType.ERC1155) {
             IERC1155(_offer.assetContract).safeTransferFrom(_from, _to, _offer.tokenId, _quantity, "");
         } else if (_offer.tokenType == TokenType.ERC721) {

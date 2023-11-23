@@ -4,7 +4,7 @@ pragma solidity ^0.8.11;
 import "@std/Test.sol";
 import "@ds-test/test.sol";
 
-import { PermissionsEnumerable, TWStrings } from "contracts/extension/PermissionsEnumerable.sol";
+import { PermissionsEnumerable, Strings } from "contracts/extension/PermissionsEnumerable.sol";
 
 contract MyPermissionsEnumerable is PermissionsEnumerable {
     constructor() {

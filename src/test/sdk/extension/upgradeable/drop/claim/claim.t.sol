@@ -15,11 +15,10 @@ contract MyDropUpg is Drop {
         uint256 _pricePerToken
     ) internal override {}
 
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId)
-    {}
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId) {}
 
     function _canSetClaimConditions() internal view override returns (bool) {
         return true;

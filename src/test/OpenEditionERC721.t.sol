@@ -2,19 +2,17 @@
 pragma solidity ^0.8.0;
 
 import { ERC721AUpgradeable, OpenEditionERC721, ISharedMetadata } from "contracts/prebuilts/open-edition/OpenEditionERC721.sol";
-import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRendererLib.sol";
+import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRenderer.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
 import "./utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract OpenEditionERC721Test is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+    using Strings for uint256;
+    using Strings for address;
 
     event SharedMetadataUpdated(string name, string description, string imageURI, string animationURI);
 
@@ -77,9 +75,9 @@ contract OpenEditionERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -97,9 +95,9 @@ contract OpenEditionERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
+                Strings.toHexString(uint160(target), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -258,7 +256,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -420,7 +418,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -470,7 +468,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -529,7 +527,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -584,7 +582,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -640,7 +638,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
 
         // bytes32[] memory proofs = new bytes32[](0);
 

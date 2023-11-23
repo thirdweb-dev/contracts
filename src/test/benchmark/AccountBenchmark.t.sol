@@ -13,6 +13,7 @@ import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.s
 import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
 import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /// @dev This is a dummy contract to test contract interactions with Account.
 contract Number {
@@ -57,11 +58,9 @@ contract AccountBenchmarkTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );

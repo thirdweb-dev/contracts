@@ -86,12 +86,9 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     //////////////////////////////////////////////////////////////*/
 
     /// @notice List NFTs (ERC721 or ERC1155) for sale at a fixed price.
-    function createListing(ListingParameters calldata _params)
-        external
-        onlyListerRole
-        onlyAssetRole(_params.assetContract)
-        returns (uint256 listingId)
-    {
+    function createListing(
+        ListingParameters calldata _params
+    ) external onlyListerRole onlyAssetRole(_params.assetContract) returns (uint256 listingId) {
         listingId = _getNextListingId();
         address listingCreator = _msgSender();
         TokenType tokenType = _getTokenType(_params.assetContract);
@@ -131,12 +128,10 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     }
 
     /// @notice Update parameters of a listing of NFTs.
-    function updateListing(uint256 _listingId, ListingParameters memory _params)
-        external
-        onlyExistingListing(_listingId)
-        onlyAssetRole(_params.assetContract)
-        onlyListingCreator(_listingId)
-    {
+    function updateListing(
+        uint256 _listingId,
+        ListingParameters memory _params
+    ) external onlyExistingListing(_listingId) onlyAssetRole(_params.assetContract) onlyListingCreator(_listingId) {
         address listingCreator = _msgSender();
         Listing memory listing = _directListingsStorage().listings[_listingId];
         TokenType tokenType = _getTokenType(_params.assetContract);
@@ -355,11 +350,10 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
      *          A valid listing is where the listing creator still owns and has approved Marketplace
      *          to transfer the listed NFTs.
      */
-    function getAllValidListings(uint256 _startId, uint256 _endId)
-        external
-        view
-        returns (Listing[] memory _validListings)
-    {
+    function getAllValidListings(
+        uint256 _startId,
+        uint256 _endId
+    ) external view returns (Listing[] memory _validListings) {
         require(_startId <= _endId && _endId < _directListingsStorage().totalListings, "invalid range");
 
         Listing[] memory _listings = new Listing[](_endId - _startId + 1);
@@ -476,11 +470,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Markeplace to transfer the appropriate amount of currency
-    function _validateERC20BalAndAllowance(
-        address _tokenOwner,
-        address _currency,
-        uint256 _amount
-    ) internal view {
+    function _validateERC20BalAndAllowance(address _tokenOwner, address _currency, uint256 _amount) internal view {
         require(
             IERC20(_currency).balanceOf(_tokenOwner) >= _amount &&
                 IERC20(_currency).allowance(_tokenOwner, address(this)) >= _amount,
@@ -489,12 +479,7 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
     }
 
     /// @dev Transfers tokens listed for sale in a direct or auction listing.
-    function _transferListingTokens(
-        address _from,
-        address _to,
-        uint256 _quantity,
-        Listing memory _listing
-    ) internal {
+    function _transferListingTokens(address _from, address _to, uint256 _quantity, Listing memory _listing) internal {
         if (_listing.tokenType == TokenType.ERC1155) {
             IERC1155(_listing.assetContract).safeTransferFrom(_from, _to, _listing.tokenId, _quantity, "");
         } else if (_listing.tokenType == TokenType.ERC721) {

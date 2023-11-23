@@ -117,7 +117,7 @@ abstract contract RulesEngine is IRulesEngine {
 
         if (_rule.tokenType == TokenType.ERC20) {
             // NOTE: We are rounding down the ERC20 balance to the nearest full unit.
-            uint256 unit = 10**IERC20Metadata(_rule.token).decimals();
+            uint256 unit = 10 ** IERC20Metadata(_rule.token).decimals();
             balance = IERC20(_rule.token).balanceOf(_tokenOwner) / unit;
         } else if (_rule.tokenType == TokenType.ERC721) {
             balance = IERC721(_rule.token).balanceOf(_tokenOwner);

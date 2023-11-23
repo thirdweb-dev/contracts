@@ -9,7 +9,7 @@ import { ERC721SignatureMint } from "contracts/base/ERC721SignatureMint.sol";
 
 contract BaseERC721SignatureMintTest is BaseUtilTest {
     ERC721SignatureMint internal base;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     bytes32 internal typehashMintRequest;
     bytes32 internal nameHash;
@@ -56,11 +56,10 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(ERC721SignatureMint.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        ERC721SignatureMint.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,

@@ -12,11 +12,7 @@ import "@openzeppelin/contracts-upgradeable/utils/introspection/IERC165Upgradeab
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 contract MyTokenERC20 is TokenERC20 {
-    function beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) external {
+    function beforeTokenTransfer(address from, address to, uint256 amount) external {
         _beforeTokenTransfer(from, to, amount);
     }
 

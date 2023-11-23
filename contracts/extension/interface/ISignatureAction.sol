@@ -37,8 +37,8 @@ interface ISignatureAction {
      *  @return success Whether the payload is signed by the authorized wallet.
      *  @return signer The address of the signer.
      */
-    function verify(GenericRequest calldata req, bytes calldata signature)
-        external
-        view
-        returns (bool success, address signer);
+    function verify(
+        GenericRequest calldata req,
+        bytes calldata signature
+    ) external view returns (bool success, address signer);
 }

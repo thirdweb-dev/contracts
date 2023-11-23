@@ -14,12 +14,7 @@ contract OpenEditionERC721Harness is OpenEditionERC721 {
 }
 
 contract MockERC721Receiver {
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes memory
-    ) external pure returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes memory) external pure returns (bytes4) {
         return this.onERC721Received.selector;
     }
 }

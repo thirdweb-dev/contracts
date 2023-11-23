@@ -126,13 +126,9 @@ contract LoyaltyCard is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 
@@ -141,12 +137,10 @@ contract LoyaltyCard is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Mints an NFT according to the provided mint request. Always mints 1 NFT.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        nonReentrant
-        returns (address signer)
-    {
+    function mintWithSignature(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) external payable nonReentrant returns (address signer) {
         require(_req.quantity == 1, "LoyaltyCard: only 1 NFT can be minted at a time.");
 
         signer = _processRequest(_req, _signature);

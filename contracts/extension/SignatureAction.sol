@@ -18,12 +18,10 @@ abstract contract SignatureAction is EIP712, ISignatureAction {
     constructor() EIP712("SignatureAction", "1") {}
 
     /// @dev Verifies that a request is signed by an authorized account.
-    function verify(GenericRequest calldata _req, bytes calldata _signature)
-        public
-        view
-        override
-        returns (bool success, address signer)
-    {
+    function verify(
+        GenericRequest calldata _req,
+        bytes calldata _signature
+    ) public view override returns (bool success, address signer) {
         signer = _recoverAddress(_req, _signature);
         success = !executed[_req.uid] && _isAuthorizedSigner(signer);
     }
@@ -32,10 +30,10 @@ abstract contract SignatureAction is EIP712, ISignatureAction {
     function _isAuthorizedSigner(address _signer) internal view virtual returns (bool);
 
     /// @dev Verifies a request and marks the request as processed.
-    function _processRequest(GenericRequest calldata _req, bytes calldata _signature)
-        internal
-        returns (address signer)
-    {
+    function _processRequest(
+        GenericRequest calldata _req,
+        bytes calldata _signature
+    ) internal returns (address signer) {
         bool success;
         (success, signer) = verify(_req, _signature);
 

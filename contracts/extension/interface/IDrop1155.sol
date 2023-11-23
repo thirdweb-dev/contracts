@@ -71,9 +71,5 @@ interface IDrop1155 is IClaimConditionMultiPhase {
      *                                  in the new claim conditions being set.
      *
      */
-    function setClaimConditions(
-        uint256 tokenId,
-        ClaimCondition[] calldata phases,
-        bool resetClaimEligibility
-    ) external;
+    function setClaimConditions(uint256 tokenId, ClaimCondition[] calldata phases, bool resetClaimEligibility) external;
 }

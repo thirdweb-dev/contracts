@@ -20,12 +20,10 @@ abstract contract SignatureMintERC1155 is EIP712, ISignatureMintERC1155 {
     constructor() EIP712("SignatureMintERC1155", "1") {}
 
     /// @dev Verifies that a mint request is signed by an account holding MINTER_ROLE (at the time of the function call).
-    function verify(MintRequest calldata _req, bytes calldata _signature)
-        public
-        view
-        override
-        returns (bool success, address signer)
-    {
+    function verify(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) public view override returns (bool success, address signer) {
         signer = _recoverAddress(_req, _signature);
         success = !minted[_req.uid] && _canSignMintRequest(signer);
     }

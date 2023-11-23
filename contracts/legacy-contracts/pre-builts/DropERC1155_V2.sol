@@ -10,7 +10,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
@@ -44,7 +44,7 @@ contract DropERC1155_V2 is
     IPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     AccessControlEnumerableUpgradeable,
     ERC1155Upgradeable,
     IDropERC1155_V2
@@ -209,7 +209,9 @@ contract DropERC1155_V2 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
@@ -220,12 +222,10 @@ contract DropERC1155_V2 is
     }
 
     /// @dev Returns the royalty recipient and amount, given a tokenId and sale price.
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view virtual returns (address receiver, uint256 royaltyAmount) {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
@@ -558,11 +558,10 @@ contract DropERC1155_V2 is
     }
 
     /// @dev Returns the claim condition at the given uid.
-    function getClaimConditionById(uint256 _tokenId, uint256 _conditionId)
-        external
-        view
-        returns (ClaimCondition memory condition)
-    {
+    function getClaimConditionById(
+        uint256 _tokenId,
+        uint256 _conditionId
+    ) external view returns (ClaimCondition memory condition) {
         condition = claimCondition[_tokenId].phases[_conditionId];
     }
 
@@ -605,10 +604,10 @@ contract DropERC1155_V2 is
     }
 
     /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setDefaultRoyaltyInfo(
+        address _royaltyRecipient,
+        uint256 _royaltyBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -631,10 +630,10 @@ contract DropERC1155_V2 is
     }
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint16(_platformFeeBps);
@@ -660,11 +659,7 @@ contract DropERC1155_V2 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
-    function burn(
-        address account,
-        uint256 id,
-        uint256 value
-    ) public virtual {
+    function burn(address account, uint256 id, uint256 value) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
             "ERC1155: caller is not owner nor approved."
@@ -674,11 +669,7 @@ contract DropERC1155_V2 is
     }
 
     /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
-    function burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory values
-    ) public virtual {
+    function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
             "ERC1155: caller is not owner nor approved."

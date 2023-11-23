@@ -5,8 +5,8 @@ import { Multiwrap } from "contracts/prebuilts/multiwrap/Multiwrap.sol";
 import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import { MockERC20 } from "./mocks/MockERC20.sol";
+import { Strings } from "contracts/lib/Strings.sol";
 import { Wallet } from "./utils/Wallet.sol";
 import "./utils/BaseTest.sol";
 
@@ -18,11 +18,7 @@ contract MultiwrapReentrant is MockERC20, ITokenBundle {
         multiwrap = Multiwrap(_multiwrap);
     }
 
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) public override returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
         multiwrap.unwrap(0, address(this));
         return super.transferFrom(from, to, amount);
     }
@@ -119,9 +115,9 @@ contract MultiwrapTest is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -139,9 +135,9 @@ contract MultiwrapTest is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
+                Strings.toHexString(uint160(target), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -446,7 +442,7 @@ contract MultiwrapTest is BaseTest {
         address recipient = address(0x123);
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("ERC721: caller is not token owner nor approved");
+        vm.expectRevert("ERC721: caller is not token owner or approved");
         multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
     }
 
@@ -485,7 +481,7 @@ contract MultiwrapTest is BaseTest {
         address recipient = address(0x123);
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("ERC721: caller is not token owner nor approved");
+        vm.expectRevert("ERC721: caller is not token owner or approved");
         multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
     }
 
@@ -498,7 +494,7 @@ contract MultiwrapTest is BaseTest {
         address recipient = address(0x123);
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("ERC1155: caller is not token owner nor approved");
+        vm.expectRevert("ERC1155: caller is not token owner or approved");
         multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
     }
 

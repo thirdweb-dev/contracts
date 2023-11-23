@@ -4,13 +4,12 @@ pragma solidity ^0.8.0;
 import { TokenERC721 } from "contracts/prebuilts/token/TokenERC721.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
+
 import "../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract TokenERC721Test is BaseTest {
-    using StringsUpgradeable for uint256;
+    using Strings for uint256;
 
     event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri);
     event TokensMintedWithSignature(
@@ -81,11 +80,10 @@ contract TokenERC721Test is BaseTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(TokenERC721.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        TokenERC721.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,
@@ -299,9 +297,9 @@ contract TokenERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
-                TWStrings.toHexString(uint160(address(0x1)), 20),
+                Strings.toHexString(uint160(address(0x1)), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
         vm.prank(address(0x1));
@@ -456,9 +454,9 @@ contract TokenERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
-                TWStrings.toHexString(uint160(address(0x1)), 20),
+                Strings.toHexString(uint160(address(0x1)), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
         vm.prank(address(0x1));
@@ -496,9 +494,9 @@ contract TokenERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
-                TWStrings.toHexString(uint160(address(0x1)), 20),
+                Strings.toHexString(uint160(address(0x1)), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
         vm.prank(address(0x1));
@@ -559,9 +557,9 @@ contract TokenERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
-                TWStrings.toHexString(uint160(address(0x1)), 20),
+                Strings.toHexString(uint160(address(0x1)), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
         vm.prank(address(0x1));
@@ -609,9 +607,9 @@ contract TokenERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
-                TWStrings.toHexString(uint160(address(0x1)), 20),
+                Strings.toHexString(uint160(address(0x1)), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
         vm.prank(address(0x1));
@@ -650,9 +648,9 @@ contract TokenERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
-                TWStrings.toHexString(uint160(address(0x1)), 20),
+                Strings.toHexString(uint160(address(0x1)), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
         vm.prank(address(0x1));

@@ -36,7 +36,7 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "../../lib/CurrencyTransferLib.sol";
 import "../../lib/FeeType.sol";
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
@@ -54,7 +54,7 @@ contract TokenERC1155 is
     EIP712Upgradeable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     AccessControlEnumerableUpgradeable,
     ERC1155Upgradeable,
     ITokenERC1155,
@@ -228,12 +228,10 @@ contract TokenERC1155 is
     ///     =====   External functions  =====
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view virtual returns (address receiver, uint256 royaltyAmount) {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
@@ -276,10 +274,10 @@ contract TokenERC1155 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setDefaultRoyaltyInfo(
+        address _royaltyRecipient,
+        uint256 _royaltyBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -302,10 +300,10 @@ contract TokenERC1155 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -315,10 +313,10 @@ contract TokenERC1155 is
     }
 
     /// @dev Lets a module admin set a flat fee on primary sales.
-    function setFlatPlatformFeeInfo(address _platformFeeRecipient, uint256 _flatFee)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setFlatPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _flatFee
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         flatPlatformFee = _flatFee;
         platformFeeRecipient = _platformFeeRecipient;
 
@@ -381,12 +379,7 @@ contract TokenERC1155 is
     ///     =====   Internal functions  =====
 
     /// @dev Mints an NFT to `to`
-    function _mintTo(
-        address _to,
-        string calldata _uri,
-        uint256 _tokenId,
-        uint256 _amount
-    ) internal {
+    function _mintTo(address _to, string calldata _uri, uint256 _tokenId, uint256 _amount) internal {
         if (bytes(_tokenURI[_tokenId]).length == 0) {
             _setTokenURI(_tokenId, _uri);
         }
@@ -472,11 +465,7 @@ contract TokenERC1155 is
     ///     =====   Low-level overrides  =====
 
     /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
-    function burn(
-        address account,
-        uint256 id,
-        uint256 value
-    ) public virtual {
+    function burn(address account, uint256 id, uint256 value) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
             "ERC1155: caller is not owner nor approved."
@@ -486,11 +475,7 @@ contract TokenERC1155 is
     }
 
     /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
-    function burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory values
-    ) public virtual {
+    function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
             "ERC1155: caller is not owner nor approved."
@@ -530,7 +515,9 @@ contract TokenERC1155 is
         }
     }
 
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual

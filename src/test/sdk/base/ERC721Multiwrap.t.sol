@@ -11,7 +11,7 @@ import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 contract BaseERC721MultiwrapTest is BaseUtilTest {
     ERC721Multiwrap internal base;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     Wallet internal tokenOwner;
     string internal uriForWrappedToken;

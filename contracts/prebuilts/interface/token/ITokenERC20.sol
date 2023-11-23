@@ -42,10 +42,10 @@ interface ITokenERC20 is IERC20MetadataUpgradeable {
      *
      *  returns (success, signer) Result of verification and the recovered address.
      */
-    function verify(MintRequest calldata req, bytes calldata signature)
-        external
-        view
-        returns (bool success, address signer);
+    function verify(
+        MintRequest calldata req,
+        bytes calldata signature
+    ) external view returns (bool success, address signer);
 
     /**
      * @dev Creates `amount` new tokens for `to`.

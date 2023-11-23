@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../lib/TWAddress.sol";
+import "../lib/Address.sol";
 import "./interface/IMulticall.sol";
 
 /**
@@ -22,7 +22,7 @@ contract Multicall is IMulticall {
     function multicall(bytes[] calldata data) external virtual override returns (bytes[] memory results) {
         results = new bytes[](data.length);
         for (uint256 i = 0; i < data.length; i++) {
-            results[i] = TWAddress.functionDelegateCall(address(this), data[i]);
+            results[i] = Address.functionDelegateCall(address(this), data[i]);
         }
         return results;
     }

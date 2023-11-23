@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { DropERC1155 } from "contracts/prebuilts/drop/DropERC1155.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
+
 import "../../../utils/BaseTest.sol";
 import "../../../../../lib/openzeppelin-contracts-upgradeable/contracts/interfaces/IERC2981Upgradeable.sol";
 import "../../../../../lib/openzeppelin-contracts-upgradeable/contracts/interfaces/IERC1155Upgradeable.sol";

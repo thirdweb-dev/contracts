@@ -47,11 +47,7 @@ contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(
-        address _account,
-        address _admin,
-        bytes calldata _data
-    ) internal override {
+    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal override {
         ManagedAccount(payable(_account)).initialize(_admin, _data);
     }
 

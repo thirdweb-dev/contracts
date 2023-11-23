@@ -46,10 +46,10 @@ interface ISignatureMintERC20 {
      *
      *  returns (success, signer) Result of verification and the recovered address.
      */
-    function verify(MintRequest calldata req, bytes calldata signature)
-        external
-        view
-        returns (bool success, address signer);
+    function verify(
+        MintRequest calldata req,
+        bytes calldata signature
+    ) external view returns (bool success, address signer);
 
     /**
      *  @notice Mints tokens according to the provided mint request.
@@ -57,8 +57,8 @@ interface ISignatureMintERC20 {
      *  @param req The payload / mint request.
      *  @param signature The signature produced by an account signing the mint request.
      */
-    function mintWithSignature(MintRequest calldata req, bytes calldata signature)
-        external
-        payable
-        returns (address signer);
+    function mintWithSignature(
+        MintRequest calldata req,
+        bytes calldata signature
+    ) external payable returns (address signer);
 }

@@ -69,10 +69,9 @@ contract MarketplaceV3 is
         address nativeTokenWrapper;
     }
 
-    constructor(MarketplaceConstructorParams memory _marketplaceV3Params)
-        BaseRouter(_marketplaceV3Params.extensions)
-        RoyaltyPaymentsLogic(_marketplaceV3Params.royaltyEngineAddress)
-    {
+    constructor(
+        MarketplaceConstructorParams memory _marketplaceV3Params
+    ) BaseRouter(_marketplaceV3Params.extensions) RoyaltyPaymentsLogic(_marketplaceV3Params.royaltyEngineAddress) {
         nativeTokenWrapper = _marketplaceV3Params.nativeTokenWrapper;
         _disableInitializers();
     }
@@ -127,13 +126,9 @@ contract MarketplaceV3 is
                         ERC 165 / 721 / 1155 logic
     //////////////////////////////////////////////////////////////*/
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC165, IERC165, ERC1155Receiver)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC165, IERC165, ERC1155Receiver) returns (bool) {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||

@@ -32,12 +32,7 @@ contract MyStakingContract is ERC20, Staking721, IERC721Receiver {
                         ERC 165 / 721 logic
     //////////////////////////////////////////////////////////////*/
 
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external view override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external view override returns (bytes4) {
         require(isStaking == 2, "Direct transfer");
         return this.onERC721Received.selector;
     }

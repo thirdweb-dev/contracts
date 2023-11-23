@@ -38,9 +38,5 @@ interface IAirdropERC721 {
      *  @param tokenOwner      The owner of the tokens to transfer.
      *  @param contents        List containing recipient, tokenId to airdrop.
      */
-    function airdropERC721(
-        address tokenAddress,
-        address tokenOwner,
-        AirdropContent[] calldata contents
-    ) external;
+    function airdropERC721(address tokenAddress, address tokenOwner, AirdropContent[] calldata contents) external;
 }

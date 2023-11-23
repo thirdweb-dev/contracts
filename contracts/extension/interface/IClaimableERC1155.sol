@@ -23,11 +23,7 @@ interface IClaimableERC1155 {
      *  @param _tokenId   The tokenId of the lazy minted NFT to mint.
      *  @param _quantity  The number of tokens to mint.
      */
-    function claim(
-        address _receiver,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) external payable;
+    function claim(address _receiver, uint256 _tokenId, uint256 _quantity) external payable;
 
     /**
      *  @notice          Override this function to add logic for claim verification, based on conditions
@@ -39,9 +35,5 @@ interface IClaimableERC1155 {
      *  @param _tokenId   The tokenId of the lazy minted NFT to mint.
      *  @param _quantity  The number of NFTs being claimed.
      */
-    function verifyClaim(
-        address _claimer,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) external view;
+    function verifyClaim(address _claimer, uint256 _tokenId, uint256 _quantity) external view;
 }

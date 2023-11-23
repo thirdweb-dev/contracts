@@ -16,7 +16,7 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../../extension/Multicall.sol";
 
 //  ==========  Internal imports    ==========
 
@@ -33,7 +33,7 @@ contract AirdropERC1155 is
     PermissionsEnumerable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     IAirdropERC1155
 {
     /*///////////////////////////////////////////////////////////////
@@ -47,7 +47,9 @@ contract AirdropERC1155 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor() initializer {}
+    constructor() {
+        _disableInitializers();
+    }
 
     /// @dev Initializes the contract, like a constructor.
     function initialize(

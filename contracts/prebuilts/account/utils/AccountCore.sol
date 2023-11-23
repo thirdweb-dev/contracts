@@ -198,27 +198,19 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         _value = abi.decode(data[36:68], (uint256));
     }
 
-    function decodeExecuteBatchCalldata(bytes calldata data)
-        internal
-        pure
-        returns (
-            address[] memory _targets,
-            uint256[] memory _values,
-            bytes[] memory _callData
-        )
-    {
+    function decodeExecuteBatchCalldata(
+        bytes calldata data
+    ) internal pure returns (address[] memory _targets, uint256[] memory _values, bytes[] memory _callData) {
         require(data.length >= 4 + 32 + 32 + 32, "!Data");
 
         (_targets, _values, _callData) = abi.decode(data[4:], (address[], uint256[], bytes[]));
     }
 
     /// @notice Validates the signature of a user operation.
-    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
-        internal
-        virtual
-        override
-        returns (uint256 validationData)
-    {
+    function _validateSignature(
+        UserOperation calldata userOp,
+        bytes32 userOpHash
+    ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         address signer = hash.recover(userOp.signature);
 

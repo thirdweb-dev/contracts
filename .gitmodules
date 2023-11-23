@@ -16,11 +16,9 @@
 [submodule "lib/ERC721A-Upgradeable"]
 	path = lib/ERC721A-Upgradeable
 	url = https://github.com/chiru-labs/ERC721A-Upgradeable
-	branch = v3.3.0
 [submodule "lib/ERC721A"]
 	path = lib/ERC721A
 	url = https://github.com/chiru-labs/ERC721A
-	branch = v3.3.0
 [submodule "lib/dynamic-contracts"]
 	path = lib/dynamic-contracts
 	url = https://github.com/thirdweb-dev/dynamic-contracts

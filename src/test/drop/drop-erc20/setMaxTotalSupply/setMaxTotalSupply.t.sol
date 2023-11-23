@@ -31,9 +31,9 @@ contract DropERC20Test_setMaxTotalSupply is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(address(this)), 20),
+                Strings.toHexString(uint160(address(this)), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
         drop.setMaxTotalSupply(0);

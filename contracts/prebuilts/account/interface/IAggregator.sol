@@ -30,8 +30,7 @@ interface IAggregator {
      * @param userOps array of UserOperations to collect the signatures from.
      * @return aggregatedSignature the aggregated signature
      */
-    function aggregateSignatures(UserOperation[] calldata userOps)
-        external
-        view
-        returns (bytes memory aggregatedSignature);
+    function aggregateSignatures(
+        UserOperation[] calldata userOps
+    ) external view returns (bytes memory aggregatedSignature);
 }

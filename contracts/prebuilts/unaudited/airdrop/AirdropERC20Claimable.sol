@@ -16,32 +16,27 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../../extension/Multicall.sol";
 
 //  ==========  Internal imports    ==========
 
 import "../../interface/airdrop/IAirdropERC20Claimable.sol";
 
 //  ==========  Features    ==========
-import "../../../extension/Ownable.sol";
 
 import "../../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 import "../../../lib/MerkleProof.sol";
 
 contract AirdropERC20Claimable is
     Initializable,
-    Ownable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     IAirdropERC20Claimable
 {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
-
-    bytes32 private constant MODULE_TYPE = bytes32("AirdropERC20Claimable");
-    uint256 private constant VERSION = 1;
 
     /// @dev address of token being airdropped.
     address public airdropTokenAddress;
@@ -49,14 +44,14 @@ contract AirdropERC20Claimable is
     /// @dev address of owner of tokens being airdropped.
     address public tokenOwner;
 
-    /// @dev number tokens available to claim in tokenIds[].
+    /// @dev number tokens available to claim.
     uint256 public availableAmount;
 
     /// @dev airdrop expiration timestamp.
     uint256 public expirationTimestamp;
 
-    /// @dev general claim limit if claimer not in allowlist.
-    uint256 public maxWalletClaimCount;
+    /// @dev claim limit for open/public claiming without allowlist.
+    uint256 public openClaimLimitPerWallet;
 
     /// @dev merkle root of the allowlist of addresses eligible to claim.
     bytes32 public merkleRoot;
@@ -72,20 +67,20 @@ contract AirdropERC20Claimable is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor() initializer {}
+    constructor() {
+        _disableInitializers();
+    }
 
     /// @dev Initializes the contract, like a constructor.
     function initialize(
-        address _defaultAdmin,
         address[] memory _trustedForwarders,
         address _tokenOwner,
         address _airdropTokenAddress,
         uint256 _airdropAmount,
         uint256 _expirationTimestamp,
-        uint256 _maxWalletClaimCount,
+        uint256 _openClaimLimitPerWallet,
         bytes32 _merkleRoot
     ) external initializer {
-        _setupOwner(_defaultAdmin);
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
 
@@ -93,22 +88,8 @@ contract AirdropERC20Claimable is
         airdropTokenAddress = _airdropTokenAddress;
         availableAmount = _airdropAmount;
         expirationTimestamp = _expirationTimestamp;
-        maxWalletClaimCount = _maxWalletClaimCount;
+        openClaimLimitPerWallet = _openClaimLimitPerWallet;
         merkleRoot = _merkleRoot;
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Generic contract logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
-    }
-
-    /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -148,6 +129,11 @@ contract AirdropERC20Claimable is
         uint256 _proofMaxQuantityForWallet
     ) public view {
         bool isOverride;
+
+        /*
+         * Here `isOverride` implies that if the merkle proof verification fails,
+         * the claimer would claim through open claim limit instead of allowlisted limit.
+         */
         if (merkleRoot != bytes32(0)) {
             (isOverride, ) = MerkleProof.verify(
                 _proofs,
@@ -164,7 +150,7 @@ contract AirdropERC20Claimable is
         uint256 expTimestamp = expirationTimestamp;
         require(expTimestamp == 0 || block.timestamp < expTimestamp, "airdrop expired.");
 
-        uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : maxWalletClaimCount;
+        uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : openClaimLimitPerWallet;
         require(_quantity + supplyClaimedAlready <= claimLimitForWallet, "invalid quantity.");
     }
 
@@ -181,11 +167,6 @@ contract AirdropERC20Claimable is
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal view virtual override returns (bool) {
-        return _msgSender() == owner();
-    }
 
     function _msgSender() internal view virtual override returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();

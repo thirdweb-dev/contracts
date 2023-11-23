@@ -14,7 +14,7 @@ contract DropERC721Test_beforeClaim is BaseTest {
     bytes private beforeClaim_data;
     string private beforeClaim_baseURI;
     uint256 private beforeClaim_amount;
-    address private receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+    address private receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
 
     DropERC721.AllowlistProof private alp;
 

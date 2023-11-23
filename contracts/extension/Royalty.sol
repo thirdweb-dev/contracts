@@ -33,13 +33,10 @@ abstract contract Royalty is IRoyalty {
      *  @return receiver        Address of royalty recipient account.
      *  @return royaltyAmount   Royalty amount calculated at current royaltyBps value.
      */
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view virtual override returns (address receiver, uint256 royaltyAmount) {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / 10_000;
@@ -104,11 +101,7 @@ abstract contract Royalty is IRoyalty {
      *  @param _recipient   Address to be set as royalty recipient for given token Id.
      *  @param _bps         Updated royalty bps for the token Id.
      */
-    function setRoyaltyInfoForToken(
-        uint256 _tokenId,
-        address _recipient,
-        uint256 _bps
-    ) external override {
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external override {
         if (!_canSetRoyaltyInfo()) {
             revert("Not authorized");
         }
@@ -117,11 +110,7 @@ abstract contract Royalty is IRoyalty {
     }
 
     /// @dev Lets a contract admin set the royalty recipient and bps for a particular token Id.
-    function _setupRoyaltyInfoForToken(
-        uint256 _tokenId,
-        address _recipient,
-        uint256 _bps
-    ) internal {
+    function _setupRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) internal {
         if (_bps > 10_000) {
             revert("Exceeds max bps");
         }
