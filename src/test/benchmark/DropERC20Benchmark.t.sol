@@ -26,7 +26,7 @@ contract DropERC20BenchmarkTest is BaseTest {
                         DropERC20 benchmark
     //////////////////////////////////////////////////////////////*/
 
-    function test_bechmark_dropERC20_setClaimConditions_five_conditions() public {
+    function test_benchmark_dropERC20_setClaimConditions_five_conditions() public {
         vm.pauseGasMetering();
         string[] memory inputs = new string[](5);
 
@@ -80,7 +80,7 @@ contract DropERC20BenchmarkTest is BaseTest {
         drop.setClaimConditions(conditions, false);
     }
 
-    function test_bechmark_dropERC20_claim() public {
+    function test_benchmark_dropERC20_claim() public {
         vm.pauseGasMetering();
         string[] memory inputs = new string[](5);
 
@@ -127,7 +127,7 @@ contract DropERC20BenchmarkTest is BaseTest {
         drop.claim(receiver, 100 ether, address(erc20), 1 ether, alp, "");
     }
 
-    // function test_bechmark_dropERC20_setClaimConditions_one_condition() public {
+    // function test_benchmark_dropERC20_setClaimConditions_one_condition() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -167,7 +167,7 @@ contract DropERC20BenchmarkTest is BaseTest {
     //     drop.setClaimConditions(conditions, false);
     // }
 
-    // function test_bechmark_dropERC20_setClaimConditions_two_conditions() public {
+    // function test_benchmark_dropERC20_setClaimConditions_two_conditions() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -211,7 +211,7 @@ contract DropERC20BenchmarkTest is BaseTest {
     //     drop.setClaimConditions(conditions, false);
     // }
 
-    // function test_bechmark_dropERC20_setClaimConditions_three_conditions() public {
+    // function test_benchmark_dropERC20_setClaimConditions_three_conditions() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 

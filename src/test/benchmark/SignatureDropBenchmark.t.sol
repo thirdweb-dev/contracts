@@ -55,7 +55,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
                         SignatureDrop benchmark
     //////////////////////////////////////////////////////////////*/
 
-    function test_bechmark_signatureDrop_claim_five_tokens() public {
+    function test_benchmark_signatureDrop_claim_five_tokens() public {
         vm.pauseGasMetering();
         vm.warp(1);
 
@@ -80,7 +80,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         sigdrop.claim(receiver, 5, address(0), 0, alp, "");
     }
 
-    function test_bechmark_signatureDrop_setClaimConditions() public {
+    function test_benchmark_signatureDrop_setClaimConditions() public {
         vm.pauseGasMetering();
         vm.warp(1);
         bytes32[] memory proofs = new bytes32[](0);
@@ -137,7 +137,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         sigdrop.reveal(0, key);
     }
 
-    // function test_bechmark_signatureDrop_claim_one_token() public {
+    // function test_benchmark_signatureDrop_claim_one_token() public {
     //     vm.pauseGasMetering();
     //     vm.warp(1);
 
@@ -162,7 +162,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
     //     sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     // }
 
-    // function test_bechmark_signatureDrop_claim_two_tokens() public {
+    // function test_benchmark_signatureDrop_claim_two_tokens() public {
     //     vm.pauseGasMetering();
     //     vm.warp(1);
 
@@ -187,7 +187,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
     //     sigdrop.claim(receiver, 2, address(0), 0, alp, "");
     // }
 
-    // function test_bechmark_signatureDrop_claim_three_tokens() public {
+    // function test_benchmark_signatureDrop_claim_three_tokens() public {
     //     vm.pauseGasMetering();
     //     vm.warp(1);
 

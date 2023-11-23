@@ -31,7 +31,7 @@ contract DropERC1155BenchmarkTest is BaseTest {
                         DropERC1155 benchmark
     //////////////////////////////////////////////////////////////*/
 
-    function test_bechmark_dropERC1155_claim() public {
+    function test_benchmark_dropERC1155_claim() public {
         vm.pauseGasMetering();
         uint256 _tokenId = 0;
         string[] memory inputs = new string[](5);
@@ -81,7 +81,7 @@ contract DropERC1155BenchmarkTest is BaseTest {
         drop.claim(receiver, _tokenId, 100, address(erc20), 5, alp, "");
     }
 
-    function test_bechmark_dropERC1155_setClaimConditions_five_conditions() public {
+    function test_benchmark_dropERC1155_setClaimConditions_five_conditions() public {
         vm.pauseGasMetering();
         uint256 _tokenId = 0;
         string[] memory inputs = new string[](5);
@@ -145,7 +145,7 @@ contract DropERC1155BenchmarkTest is BaseTest {
         drop.lazyMint(100, "ipfs://", emptyEncodedBytes);
     }
 
-    // function test_bechmark_dropERC1155_setClaimConditions_one_condition() public {
+    // function test_benchmark_dropERC1155_setClaimConditions_one_condition() public {
     //     vm.pauseGasMetering();
     //     uint256 _tokenId = 0;
     //     string[] memory inputs = new string[](5);
@@ -188,7 +188,7 @@ contract DropERC1155BenchmarkTest is BaseTest {
     //     drop.setClaimConditions(_tokenId, conditions, false);
     // }
 
-    // function test_bechmark_dropERC1155_setClaimConditions_two_conditions() public {
+    // function test_benchmark_dropERC1155_setClaimConditions_two_conditions() public {
     //     vm.pauseGasMetering();
     //     uint256 _tokenId = 0;
     //     string[] memory inputs = new string[](5);
@@ -235,7 +235,7 @@ contract DropERC1155BenchmarkTest is BaseTest {
     //     drop.setClaimConditions(_tokenId, conditions, false);
     // }
 
-    // function test_bechmark_dropERC1155_setClaimConditions_three_conditions() public {
+    // function test_benchmark_dropERC1155_setClaimConditions_three_conditions() public {
     //     vm.pauseGasMetering();
     //     uint256 _tokenId = 0;
     //     string[] memory inputs = new string[](5);
