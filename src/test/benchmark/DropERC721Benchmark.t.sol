@@ -29,7 +29,7 @@ contract DropERC721BenchmarkTest is BaseTest {
                         DropERC721 benchmark
     //////////////////////////////////////////////////////////////*/
 
-    function test_bechmark_dropERC721_claim_five_tokens() public {
+    function test_benchmark_dropERC721_claim_five_tokens() public {
         vm.pauseGasMetering();
         string[] memory inputs = new string[](5);
 
@@ -80,7 +80,7 @@ contract DropERC721BenchmarkTest is BaseTest {
         drop.claim(receiver, 5, address(erc20), 5, alp, "");
     }
 
-    function test_bechmark_dropERC721_setClaimConditions_five_conditions() public {
+    function test_benchmark_dropERC721_setClaimConditions_five_conditions() public {
         vm.pauseGasMetering();
         string[] memory inputs = new string[](5);
 
@@ -171,7 +171,7 @@ contract DropERC721BenchmarkTest is BaseTest {
         drop.reveal(0, key);
     }
 
-    // function test_bechmark_dropERC721_claim_one_token() public {
+    // function test_benchmark_dropERC721_claim_one_token() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -222,7 +222,7 @@ contract DropERC721BenchmarkTest is BaseTest {
     //     drop.claim(receiver, 1, address(erc20), 5, alp, "");
     // }
 
-    // function test_bechmark_dropERC721_claim_two_tokens() public {
+    // function test_benchmark_dropERC721_claim_two_tokens() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -273,7 +273,7 @@ contract DropERC721BenchmarkTest is BaseTest {
     //     drop.claim(receiver, 2, address(erc20), 5, alp, "");
     // }
 
-    // function test_bechmark_dropERC721_claim_three_tokens() public {
+    // function test_benchmark_dropERC721_claim_three_tokens() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -324,7 +324,7 @@ contract DropERC721BenchmarkTest is BaseTest {
     //     drop.claim(receiver, 3, address(erc20), 5, alp, "");
     // }
 
-    // function test_bechmark_dropERC721_setClaimConditions_one_condition() public {
+    // function test_benchmark_dropERC721_setClaimConditions_one_condition() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -364,7 +364,7 @@ contract DropERC721BenchmarkTest is BaseTest {
     //     drop.setClaimConditions(conditions, false);
     // }
 
-    // function test_bechmark_dropERC721_setClaimConditions_two_conditions() public {
+    // function test_benchmark_dropERC721_setClaimConditions_two_conditions() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -408,7 +408,7 @@ contract DropERC721BenchmarkTest is BaseTest {
     //     drop.setClaimConditions(conditions, false);
     // }
 
-    // function test_bechmark_dropERC721_setClaimConditions_three_conditions() public {
+    // function test_benchmark_dropERC721_setClaimConditions_three_conditions() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
