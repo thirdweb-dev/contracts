@@ -71,10 +71,7 @@ contract MarketplaceV3 is
 
     constructor(
         MarketplaceConstructorParams memory _marketplaceV3Params
-    )
-        BaseRouter(_marketplaceV3Params.extensions)
-        RoyaltyPaymentsLogic(_marketplaceV3Params.royaltyEngineAddress)
-    {
+    ) BaseRouter(_marketplaceV3Params.extensions) RoyaltyPaymentsLogic(_marketplaceV3Params.royaltyEngineAddress) {
         nativeTokenWrapper = _marketplaceV3Params.nativeTokenWrapper;
         _disableInitializers();
     }
@@ -170,21 +167,11 @@ contract MarketplaceV3 is
         return _hasRole(EXTENSION_ROLE, msg.sender);
     }
 
-    function _msgSender()
-        internal
-        view
-        override(ERC2771ContextUpgradeable, Permissions)
-        returns (address sender)
-    {
+    function _msgSender() internal view override(ERC2771ContextUpgradeable, Permissions) returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        override(ERC2771ContextUpgradeable, Permissions)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view override(ERC2771ContextUpgradeable, Permissions) returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

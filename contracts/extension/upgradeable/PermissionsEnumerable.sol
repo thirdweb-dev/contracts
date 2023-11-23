@@ -15,8 +15,7 @@ import "./Permissions.sol";
 library PermissionsEnumerableStorage {
     /// @custom:storage-location erc7201:extension.manager.storage
     bytes32 public constant PERMISSIONS_ENUMERABLE_STORAGE_POSITION =
-        keccak256(abi.encode(uint256(keccak256("permissions.enumerable.storage")) - 1)) &
-            ~bytes32(uint256(0xff));
+        keccak256(abi.encode(uint256(keccak256("permissions.enumerable.storage")) - 1)) & ~bytes32(uint256(0xff));
 
     /**
      *  @notice A data structure to store data of members for a given role.
@@ -56,10 +55,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
      *
      *  @return member  Address of account that has `role`
      */
-    function getRoleMember(
-        bytes32 role,
-        uint256 index
-    ) external view override returns (address member) {
+    function getRoleMember(bytes32 role, uint256 index) external view override returns (address member) {
         uint256 currentIndex = _permissionsEnumerableStorage().roleMembers[role].index;
         uint256 check;
 
@@ -71,8 +67,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
                 }
                 check += 1;
             } else if (
-                hasRole(role, address(0)) &&
-                i == _permissionsEnumerableStorage().roleMembers[role].indexOf[address(0)]
+                hasRole(role, address(0)) && i == _permissionsEnumerableStorage().roleMembers[role].indexOf[address(0)]
             ) {
                 check += 1;
             }
@@ -133,11 +128,7 @@ contract PermissionsEnumerable is IPermissionsEnumerable, Permissions {
     }
 
     /// @dev Returns the PermissionsEnumerable storage.
-    function _permissionsEnumerableStorage()
-        internal
-        pure
-        returns (PermissionsEnumerableStorage.Data storage data)
-    {
+    function _permissionsEnumerableStorage() internal pure returns (PermissionsEnumerableStorage.Data storage data) {
         data = PermissionsEnumerableStorage.data();
     }
 }

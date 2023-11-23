@@ -37,9 +37,7 @@ contract ApproveBuyerForListingTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -192,11 +190,7 @@ contract ApproveBuyerForListingTest is BaseTest, IExtension {
         _;
     }
 
-    function test_approveBuyerForListing_whenListingNotReserved()
-        public
-        whenListingExists
-        whenCallerIsListingCreator
-    {
+    function test_approveBuyerForListing_whenListingNotReserved() public whenListingExists whenCallerIsListingCreator {
         vm.prank(seller);
         vm.expectRevert("Marketplace: listing not reserved.");
         DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
@@ -216,19 +210,13 @@ contract ApproveBuyerForListingTest is BaseTest, IExtension {
         whenCallerIsListingCreator
         whenListingIsReserved
     {
-        assertEq(
-            DirectListingsLogic(marketplace).isBuyerApprovedForListing(listingId, buyer),
-            false
-        );
+        assertEq(DirectListingsLogic(marketplace).isBuyerApprovedForListing(listingId, buyer), false);
 
         vm.prank(seller);
         vm.expectEmit(true, true, true, false);
         emit BuyerApprovedForListing(listingId, buyer, true);
         DirectListingsLogic(marketplace).approveBuyerForListing(listingId, buyer, true);
 
-        assertEq(
-            DirectListingsLogic(marketplace).isBuyerApprovedForListing(listingId, buyer),
-            true
-        );
+        assertEq(DirectListingsLogic(marketplace).isBuyerApprovedForListing(listingId, buyer), true);
     }
 }

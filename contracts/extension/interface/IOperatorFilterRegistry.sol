@@ -16,19 +16,11 @@ interface IOperatorFilterRegistry {
 
     function updateOperator(address registrant, address operator, bool filtered) external;
 
-    function updateOperators(
-        address registrant,
-        address[] calldata operators,
-        bool filtered
-    ) external;
+    function updateOperators(address registrant, address[] calldata operators, bool filtered) external;
 
     function updateCodeHash(address registrant, bytes32 codehash, bool filtered) external;
 
-    function updateCodeHashes(
-        address registrant,
-        bytes32[] calldata codeHashes,
-        bool filtered
-    ) external;
+    function updateCodeHashes(address registrant, bytes32[] calldata codeHashes, bool filtered) external;
 
     function subscribe(address registrant, address registrantToSubscribe) external;
 
@@ -44,10 +36,7 @@ interface IOperatorFilterRegistry {
 
     function isOperatorFiltered(address registrant, address operator) external returns (bool);
 
-    function isCodeHashOfFiltered(
-        address registrant,
-        address operatorWithCode
-    ) external returns (bool);
+    function isCodeHashOfFiltered(address registrant, address operatorWithCode) external returns (bool);
 
     function isCodeHashFiltered(address registrant, bytes32 codeHash) external returns (bool);
 

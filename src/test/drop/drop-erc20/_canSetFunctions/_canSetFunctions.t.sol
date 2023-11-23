@@ -35,16 +35,7 @@ contract DropERC20Test_canSet is BaseTest {
 
         bytes memory initializeData = abi.encodeCall(
             DropERC20.initialize,
-            (
-                deployer,
-                NAME,
-                SYMBOL,
-                CONTRACT_URI,
-                forwarders(),
-                saleRecipient,
-                platformFeeRecipient,
-                platformFeeBps
-            )
+            (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), saleRecipient, platformFeeRecipient, platformFeeBps)
         );
 
         dropImp = address(new HarnessDropERC20CanSet());
@@ -75,10 +66,7 @@ contract DropERC20Test_canSet is BaseTest {
         assertEq(status, true);
     }
 
-    function test_canSetPrimarySaleRecipient_returnFalse()
-        public
-        callerDoesNotHaveDefaultAdminRole
-    {
+    function test_canSetPrimarySaleRecipient_returnFalse() public callerDoesNotHaveDefaultAdminRole {
         bool status = proxy.canSetPrimarySaleRecipient();
         assertEq(status, false);
     }

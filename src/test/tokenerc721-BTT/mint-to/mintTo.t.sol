@@ -164,12 +164,7 @@ contract TokenERC721Test_MintTo is BaseTest {
         assertEq(tokenContract.ownerOf(_tokenId), recipient);
     }
 
-    function test_mintTo_contract_MetadataUpdateEvent()
-        public
-        whenMinterRole
-        whenNotEmptyUri
-        whenERC721Receiver
-    {
+    function test_mintTo_contract_MetadataUpdateEvent() public whenMinterRole whenNotEmptyUri whenERC721Receiver {
         uint256 _tokenIdToMint = tokenContract.nextTokenIdToMint();
 
         vm.prank(caller);
@@ -178,12 +173,7 @@ contract TokenERC721Test_MintTo is BaseTest {
         tokenContract.mintTo(recipient, uri);
     }
 
-    function test_mintTo_contract_TokensMintedEvent()
-        public
-        whenMinterRole
-        whenNotEmptyUri
-        whenERC721Receiver
-    {
+    function test_mintTo_contract_TokensMintedEvent() public whenMinterRole whenNotEmptyUri whenERC721Receiver {
         uint256 _tokenIdToMint = tokenContract.nextTokenIdToMint();
 
         vm.prank(caller);

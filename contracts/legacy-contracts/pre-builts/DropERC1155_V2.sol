@@ -209,30 +209,23 @@ contract DropERC1155_V2 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
-        override(
-            ERC1155Upgradeable,
-            AccessControlEnumerableUpgradeable,
-            IERC165Upgradeable,
-            IERC165
-        )
+        override(ERC1155Upgradeable, AccessControlEnumerableUpgradeable, IERC165Upgradeable, IERC165)
         returns (bool)
     {
-        return
-            super.supportsInterface(interfaceId) ||
-            type(IERC2981Upgradeable).interfaceId == interfaceId;
+        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     /// @dev Returns the royalty recipient and amount, given a tokenId and sale price.
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view virtual returns (address receiver, uint256 royaltyAmount) {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
@@ -246,10 +239,7 @@ contract DropERC1155_V2 is
      *  @dev Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
      *       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
      */
-    function lazyMint(uint256 _amount, string calldata _baseURIForTokens)
-        external
-        onlyRole(MINTER_ROLE)
-    {
+    function lazyMint(uint256 _amount, string calldata _baseURIForTokens) external onlyRole(MINTER_ROLE) {
         uint256 startId = nextTokenIdToMint;
         uint256 baseURIIndex = startId + _amount;
 
@@ -316,9 +306,7 @@ contract DropERC1155_V2 is
              *  Mark the claimer's use of their position in the allowlist. A spot in an allowlist
              *  can be used only once.
              */
-            claimCondition[_tokenId].limitMerkleProofClaim[activeConditionId].set(
-                uint256(uint160(_msgSender()))
-            );
+            claimCondition[_tokenId].limitMerkleProofClaim[activeConditionId].set(uint256(uint160(_msgSender())));
         }
 
         // If there's a price, collect price.
@@ -364,10 +352,7 @@ contract DropERC1155_V2 is
             );
 
             uint256 supplyClaimedAlready = condition.phases[newStartIndex + i].supplyClaimed;
-            require(
-                supplyClaimedAlready <= _phases[i].maxClaimableSupply,
-                "max supply claimed already"
-            );
+            require(supplyClaimedAlready <= _phases[i].maxClaimableSupply, "max supply claimed already");
 
             condition.phases[newStartIndex + i] = _phases[i];
             condition.phases[newStartIndex + i].supplyClaimed = supplyClaimedAlready;
@@ -420,21 +405,9 @@ contract DropERC1155_V2 is
             require(msg.value == totalPrice, "must send total price.");
         }
 
-        address recipient = saleRecipient[_tokenId] == address(0)
-            ? primarySaleRecipient
-            : saleRecipient[_tokenId];
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            platformFeeRecipient,
-            platformFees
-        );
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            recipient,
-            totalPrice - platformFees
-        );
+        address recipient = saleRecipient[_tokenId] == address(0) ? primarySaleRecipient : saleRecipient[_tokenId];
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), recipient, totalPrice - platformFees);
     }
 
     /// @dev Transfers the NFTs being claimed.
@@ -449,8 +422,7 @@ contract DropERC1155_V2 is
 
         // if transfer claimed tokens is called when to != msg.sender, it'd use msg.sender's limits.
         // behavior would be similar to msg.sender mint for itself, then transfer to `to`.
-        claimCondition[_tokenId].limitLastClaimTimestamp[_conditionId][_msgSender()] = block
-            .timestamp;
+        claimCondition[_tokenId].limitLastClaimTimestamp[_conditionId][_msgSender()] = block.timestamp;
 
         walletClaimCount[_tokenId][_msgSender()] += _quantityBeingClaimed;
 
@@ -470,15 +442,13 @@ contract DropERC1155_V2 is
         ClaimCondition memory currentClaimPhase = claimCondition[_tokenId].phases[_conditionId];
 
         require(
-            _currency == currentClaimPhase.currency &&
-                _pricePerToken == currentClaimPhase.pricePerToken,
+            _currency == currentClaimPhase.currency && _pricePerToken == currentClaimPhase.pricePerToken,
             "invalid currency or price specified."
         );
         // If we're checking for an allowlist quantity restriction, ignore the general quantity restriction.
         require(
             _quantity > 0 &&
-                (!verifyMaxQuantityPerTransaction ||
-                    _quantity <= currentClaimPhase.quantityLimitPerTransaction),
+                (!verifyMaxQuantityPerTransaction || _quantity <= currentClaimPhase.quantityLimitPerTransaction),
             "invalid quantity claimed."
         );
         require(
@@ -486,8 +456,7 @@ contract DropERC1155_V2 is
             "exceed max mint supply."
         );
         require(
-            maxTotalSupply[_tokenId] == 0 ||
-                totalSupply[_tokenId] + _quantity <= maxTotalSupply[_tokenId],
+            maxTotalSupply[_tokenId] == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupply[_tokenId],
             "exceed max total supply"
         );
         require(
@@ -501,10 +470,7 @@ contract DropERC1155_V2 is
             _conditionId,
             _claimer
         );
-        require(
-            lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp,
-            "cannot claim yet."
-        );
+        require(lastClaimTimestamp == 0 || block.timestamp >= nextValidClaimTimestamp, "cannot claim yet.");
     }
 
     /// @dev Checks whether a claimer meets the claim condition's allowlist criteria.
@@ -526,14 +492,11 @@ contract DropERC1155_V2 is
             );
             require(validMerkleProof, "not in whitelist.");
             require(
-                !claimCondition[_tokenId].limitMerkleProofClaim[_conditionId].get(
-                    uint256(uint160(_claimer))
-                ),
+                !claimCondition[_tokenId].limitMerkleProofClaim[_conditionId].get(uint256(uint160(_claimer))),
                 "proof claimed."
             );
             require(
-                _proofMaxQuantityPerTransaction == 0 ||
-                    _quantity <= _proofMaxQuantityPerTransaction,
+                _proofMaxQuantityPerTransaction == 0 || _quantity <= _proofMaxQuantityPerTransaction,
                 "invalid quantity proof."
             );
         }
@@ -546,11 +509,7 @@ contract DropERC1155_V2 is
     /// @dev At any given moment, returns the uid for the active claim condition, for a given tokenId.
     function getActiveClaimConditionId(uint256 _tokenId) public view returns (uint256) {
         ClaimConditionList storage conditionList = claimCondition[_tokenId];
-        for (
-            uint256 i = conditionList.currentStartId + conditionList.count;
-            i > conditionList.currentStartId;
-            i--
-        ) {
+        for (uint256 i = conditionList.currentStartId + conditionList.count; i > conditionList.currentStartId; i--) {
             if (block.timestamp >= conditionList.phases[i - 1].startTimestamp) {
                 return i - 1;
             }
@@ -585,9 +544,7 @@ contract DropERC1155_V2 is
         uint256 _conditionId,
         address _claimer
     ) public view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) {
-        lastClaimTimestamp = claimCondition[_tokenId].limitLastClaimTimestamp[_conditionId][
-            _claimer
-        ];
+        lastClaimTimestamp = claimCondition[_tokenId].limitLastClaimTimestamp[_conditionId][_claimer];
 
         unchecked {
             nextValidClaimTimestamp =
@@ -601,11 +558,10 @@ contract DropERC1155_V2 is
     }
 
     /// @dev Returns the claim condition at the given uid.
-    function getClaimConditionById(uint256 _tokenId, uint256 _conditionId)
-        external
-        view
-        returns (ClaimCondition memory condition)
-    {
+    function getClaimConditionById(
+        uint256 _tokenId,
+        uint256 _conditionId
+    ) external view returns (ClaimCondition memory condition) {
         condition = claimCondition[_tokenId].phases[_conditionId];
     }
 
@@ -624,19 +580,13 @@ contract DropERC1155_V2 is
     }
 
     /// @dev Lets a contract admin set a maximum number of NFTs of a tokenId that can be claimed by any wallet.
-    function setMaxWalletClaimCount(uint256 _tokenId, uint256 _count)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setMaxWalletClaimCount(uint256 _tokenId, uint256 _count) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxWalletClaimCount[_tokenId] = _count;
         emit MaxWalletClaimCountUpdated(_tokenId, _count);
     }
 
     /// @dev Lets a module admin set a max total supply for token.
-    function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxTotalSupply[_tokenId] = _maxTotalSupply;
         emit MaxTotalSupplyUpdated(_tokenId, _maxTotalSupply);
     }
@@ -648,19 +598,16 @@ contract DropERC1155_V2 is
     }
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
-    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         saleRecipient[_tokenId] = _saleRecipient;
         emit SaleRecipientForTokenUpdated(_tokenId, _saleRecipient);
     }
 
     /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setDefaultRoyaltyInfo(
+        address _royaltyRecipient,
+        uint256 _royaltyBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -683,10 +630,10 @@ contract DropERC1155_V2 is
     }
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint16(_platformFeeBps);
@@ -712,11 +659,7 @@ contract DropERC1155_V2 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
-    function burn(
-        address account,
-        uint256 id,
-        uint256 value
-    ) public virtual {
+    function burn(address account, uint256 id, uint256 value) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
             "ERC1155: caller is not owner nor approved."
@@ -726,11 +669,7 @@ contract DropERC1155_V2 is
     }
 
     /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
-    function burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory values
-    ) public virtual {
+    function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
             "ERC1155: caller is not owner nor approved."
@@ -754,10 +693,7 @@ contract DropERC1155_V2 is
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            require(
-                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "restricted to TRANSFER_ROLE holders."
-            );
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "restricted to TRANSFER_ROLE holders.");
         }
 
         if (from == address(0)) {

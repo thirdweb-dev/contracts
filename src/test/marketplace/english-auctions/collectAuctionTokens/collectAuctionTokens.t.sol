@@ -64,9 +64,7 @@ contract CollectAuctionTokensTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -233,11 +231,7 @@ contract CollectAuctionTokensTest is BaseTest, IExtension {
         _;
     }
 
-    function test_collectAuctionTokens_whenNoWinningBid()
-        public
-        whenAuctionNotCancelled
-        whenAuctionHasEnded
-    {
+    function test_collectAuctionTokens_whenNoWinningBid() public whenAuctionNotCancelled whenAuctionHasEnded {
         vm.warp(auctionParams.endTimestamp + 1);
 
         vm.prank(buyer);
@@ -289,24 +283,14 @@ contract CollectAuctionTokensTest is BaseTest, IExtension {
 
         vm.prank(buyer);
         vm.expectEmit(true, true, true, true);
-        emit AuctionClosed(
-            auctionId,
-            address(erc1155),
-            buyer,
-            auctionParams.tokenId,
-            seller,
-            buyer
-        );
+        emit AuctionClosed(auctionId, address(erc1155), buyer, auctionParams.tokenId, seller, buyer);
         EnglishAuctionsLogic(marketplace).collectAuctionTokens(auctionId);
 
         assertEq(
             uint256(EnglishAuctionsLogic(marketplace).getAuction(auctionId).status),
             uint256(IEnglishAuctions.Status.COMPLETED)
         );
-        assertEq(
-            EnglishAuctionsLogic(marketplace).getAuction(auctionId).endTimestamp,
-            uint64(block.timestamp)
-        );
+        assertEq(EnglishAuctionsLogic(marketplace).getAuction(auctionId).endTimestamp, uint64(block.timestamp));
 
         assertEq(erc1155.balanceOf(address(marketplace), auctionParams.tokenId), 0);
         assertEq(erc1155.balanceOf(buyer, auctionParams.tokenId), 1);

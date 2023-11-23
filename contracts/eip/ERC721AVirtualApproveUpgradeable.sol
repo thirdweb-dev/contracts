@@ -24,12 +24,7 @@ import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
  *
  * Assumes that the maximum token id cannot exceed 2**256 - 1 (max value of uint256).
  */
-contract ERC721AUpgradeable is
-    Initializable,
-    ContextUpgradeable,
-    ERC165Upgradeable,
-    IERC721AUpgradeable
-{
+contract ERC721AUpgradeable is Initializable, ContextUpgradeable, ERC165Upgradeable, IERC721AUpgradeable {
     using AddressUpgradeable for address;
     using StringsUpgradeable for uint256;
 
@@ -62,10 +57,7 @@ contract ERC721AUpgradeable is
         __ERC721A_init_unchained(name_, symbol_);
     }
 
-    function __ERC721A_init_unchained(
-        string memory name_,
-        string memory symbol_
-    ) internal onlyInitializing {
+    function __ERC721A_init_unchained(string memory name_, string memory symbol_) internal onlyInitializing {
         _name = name_;
         _symbol = symbol_;
         _currentIndex = _startTokenId();
@@ -209,8 +201,7 @@ contract ERC721AUpgradeable is
         if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
         string memory baseURI = _baseURI();
-        return
-            bytes(baseURI).length != 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : "";
+        return bytes(baseURI).length != 0 ? string(abi.encodePacked(baseURI, tokenId.toString())) : "";
     }
 
     /**
@@ -259,10 +250,7 @@ contract ERC721AUpgradeable is
     /**
      * @dev See {IERC721-isApprovedForAll}.
      */
-    function isApprovedForAll(
-        address owner,
-        address operator
-    ) public view virtual override returns (bool) {
+    function isApprovedForAll(address owner, address operator) public view virtual override returns (bool) {
         return _operatorApprovals[owner][operator];
     }
 
@@ -283,12 +271,7 @@ contract ERC721AUpgradeable is
     /**
      * @dev See {IERC721-safeTransferFrom}.
      */
-    function safeTransferFrom(
-        address from,
-        address to,
-        uint256 tokenId,
-        bytes memory _data
-    ) public virtual override {
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory _data) public virtual override {
         _transfer(from, to, tokenId);
         if (to.isContract())
             if (!_checkContractOnERC721Received(from, to, tokenId, _data)) {
@@ -304,8 +287,7 @@ contract ERC721AUpgradeable is
      * Tokens start existing when they are minted (`_mint`),
      */
     function _exists(uint256 tokenId) internal view returns (bool) {
-        return
-            _startTokenId() <= tokenId && tokenId < _currentIndex && !_ownerships[tokenId].burned;
+        return _startTokenId() <= tokenId && tokenId < _currentIndex && !_ownerships[tokenId].burned;
     }
 
     /**
@@ -557,9 +539,9 @@ contract ERC721AUpgradeable is
         uint256 tokenId,
         bytes memory _data
     ) private returns (bool) {
-        try
-            IERC721ReceiverUpgradeable(to).onERC721Received(_msgSender(), from, tokenId, _data)
-        returns (bytes4 retval) {
+        try IERC721ReceiverUpgradeable(to).onERC721Received(_msgSender(), from, tokenId, _data) returns (
+            bytes4 retval
+        ) {
             return retval == IERC721ReceiverUpgradeable(to).onERC721Received.selector;
         } catch (bytes memory reason) {
             if (reason.length == 0) {
@@ -587,12 +569,7 @@ contract ERC721AUpgradeable is
      * - When `to` is zero, `tokenId` will be burned by `from`.
      * - `from` and `to` are never both zero.
      */
-    function _beforeTokenTransfers(
-        address from,
-        address to,
-        uint256 startTokenId,
-        uint256 quantity
-    ) internal virtual {}
+    function _beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity) internal virtual {}
 
     /**
      * @dev Hook that is called after a set of serially-ordered token ids have been transferred. This includes
@@ -610,12 +587,7 @@ contract ERC721AUpgradeable is
      * - When `to` is zero, `tokenId` has been burned by `from`.
      * - `from` and `to` are never both zero.
      */
-    function _afterTokenTransfers(
-        address from,
-        address to,
-        uint256 startTokenId,
-        uint256 quantity
-    ) internal virtual {}
+    function _afterTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity) internal virtual {}
 
     /**
      * @dev This empty reserved space is put in place to allow future versions to add new

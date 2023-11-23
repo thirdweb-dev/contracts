@@ -10,9 +10,7 @@ abstract contract SignatureAction is EIP712, ISignatureAction {
     using ECDSA for bytes32;
 
     bytes32 private constant TYPEHASH =
-        keccak256(
-            "GenericRequest(uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid,bytes data)"
-        );
+        keccak256("GenericRequest(uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid,bytes data)");
 
     /// @dev Mapping from a signed request UID => whether the request is processed.
     mapping(bytes32 => bool) private executed;
@@ -43,10 +41,7 @@ abstract contract SignatureAction is EIP712, ISignatureAction {
             revert("Invalid req");
         }
 
-        if (
-            _req.validityStartTimestamp > block.timestamp ||
-            block.timestamp > _req.validityEndTimestamp
-        ) {
+        if (_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) {
             revert("Req expired");
         }
 
@@ -54,10 +49,7 @@ abstract contract SignatureAction is EIP712, ISignatureAction {
     }
 
     /// @dev Returns the address of the signer of the request.
-    function _recoverAddress(
-        GenericRequest calldata _req,
-        bytes calldata _signature
-    ) internal view returns (address) {
+    function _recoverAddress(GenericRequest calldata _req, bytes calldata _signature) internal view returns (address) {
         return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
     }
 

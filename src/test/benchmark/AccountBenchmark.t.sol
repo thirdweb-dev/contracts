@@ -58,11 +58,9 @@ contract AccountBenchmarkTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -71,9 +69,7 @@ contract AccountBenchmarkTest is BaseTest {
         bytes32 typehashEip712 = keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
-        bytes32 domainSeparator = keccak256(
-            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender)
-        );
+        bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
 
         bytes memory encodedRequest = bytes.concat(
             abi.encode(
@@ -92,9 +88,7 @@ contract AccountBenchmarkTest is BaseTest {
             )
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
@@ -204,15 +198,8 @@ contract AccountBenchmarkTest is BaseTest {
     /// @dev Create an account via Entrypoint.
     function test_state_createAccount_viaEntrypoint() public {
         vm.pauseGasMetering();
-        bytes memory initCallData = abi.encodeWithSignature(
-            "createAccount(address,bytes)",
-            accountAdmin,
-            bytes("")
-        );
-        bytes memory initCode = abi.encodePacked(
-            abi.encodePacked(address(accountFactory)),
-            initCallData
-        );
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
+        bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         vm.resumeGasMetering();
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
@@ -231,15 +218,8 @@ contract AccountBenchmarkTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function _setup_executeTransaction() internal {
-        bytes memory initCallData = abi.encodeWithSignature(
-            "createAccount(address,bytes)",
-            accountAdmin,
-            bytes("")
-        );
-        bytes memory initCode = abi.encodePacked(
-            abi.encodePacked(address(accountFactory)),
-            initCallData
-        );
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
+        bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
             accountAdminPKey,
@@ -358,18 +338,17 @@ contract AccountBenchmarkTest is BaseTest {
         approvedTargets[0] = address(numberContract);
 
         vm.resumeGasMetering();
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                0,
-                approvedTargets,
-                1 ether,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            0,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -397,18 +376,17 @@ contract AccountBenchmarkTest is BaseTest {
         approvedTargets[0] = address(numberContract);
 
         vm.resumeGasMetering();
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                0,
-                approvedTargets,
-                1 ether,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            0,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -463,13 +441,7 @@ contract AccountBenchmarkTest is BaseTest {
         address recipient = address(0x3456);
 
         vm.resumeGasMetering();
-        UserOperation[] memory userOp = _setupUserOpExecute(
-            accountAdminPKey,
-            bytes(""),
-            recipient,
-            value,
-            bytes("")
-        );
+        UserOperation[] memory userOp = _setupUserOpExecute(accountAdminPKey, bytes(""), recipient, value, bytes(""));
 
         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
     }

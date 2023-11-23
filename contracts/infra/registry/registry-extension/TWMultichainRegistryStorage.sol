@@ -21,11 +21,7 @@ library TWMultichainRegistryStorage {
         EnumerableSet.UintSet chainIds;
     }
 
-    function multichainRegistryStorage()
-        internal
-        pure
-        returns (Data storage multichainRegistryData)
-    {
+    function multichainRegistryStorage() internal pure returns (Data storage multichainRegistryData) {
         bytes32 position = MULTICHAIN_REGISTRY_STORAGE_POSITION;
         assembly {
             multichainRegistryData.slot := position

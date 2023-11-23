@@ -130,11 +130,7 @@ contract ERC1155LazyMint is
      *  @param _tokenId   The tokenId of the lazy minted NFT to mint.
      *  @param _quantity  The number of tokens to mint.
      */
-    function claim(
-        address _receiver,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) public payable virtual nonReentrant {
+    function claim(address _receiver, uint256 _tokenId, uint256 _quantity) public payable virtual nonReentrant {
         require(_tokenId < nextTokenIdToMint(), "invalid id");
         verifyClaim(msg.sender, _tokenId, _quantity); // Add your claim verification logic by overriding this function.
 
@@ -152,11 +148,7 @@ contract ERC1155LazyMint is
      *  @param _tokenId   The tokenId of the lazy minted NFT to mint.
      *  @param _quantity  The number of NFTs being claimed.
      */
-    function verifyClaim(
-        address _claimer,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) public view virtual {}
+    function verifyClaim(address _claimer, uint256 _tokenId, uint256 _quantity) public view virtual {}
 
     /**
      *  @notice         Lets an owner or approved operator burn NFTs of the given tokenId.
@@ -165,11 +157,7 @@ contract ERC1155LazyMint is
      *  @param _tokenId The tokenId of the NFT to burn.
      *  @param _amount  The amount of the NFT to burn.
      */
-    function burn(
-        address _owner,
-        uint256 _tokenId,
-        uint256 _amount
-    ) external virtual {
+    function burn(address _owner, uint256 _tokenId, uint256 _amount) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
@@ -185,11 +173,7 @@ contract ERC1155LazyMint is
      *  @param _tokenIds The tokenIds of the NFTs to burn.
      *  @param _amounts  The amounts of the NFTs to burn.
      */
-    function burnBatch(
-        address _owner,
-        uint256[] memory _tokenIds,
-        uint256[] memory _amounts
-    ) external virtual {
+    function burnBatch(address _owner, uint256[] memory _tokenIds, uint256[] memory _amounts) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
@@ -210,13 +194,7 @@ contract ERC1155LazyMint is
      * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
             interfaceId == 0xd9b67a26 || // ERC165 Interface ID for ERC1155
@@ -249,11 +227,7 @@ contract ERC1155LazyMint is
      *  @param _tokenId  The tokenId of the lazy minted NFT to mint.
      *  @param _quantity The number of tokens to mint.
      */
-    function _transferTokensOnClaim(
-        address _receiver,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) internal virtual {
+    function _transferTokensOnClaim(address _receiver, uint256 _tokenId, uint256 _quantity) internal virtual {
         _mint(_receiver, _tokenId, _quantity, "");
     }
 

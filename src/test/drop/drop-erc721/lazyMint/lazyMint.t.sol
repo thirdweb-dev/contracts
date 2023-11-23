@@ -7,12 +7,7 @@ import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
 import "../../../utils/BaseTest.sol";
 
 contract DropERC721Test_lazyMint is BaseTest {
-    event TokensLazyMinted(
-        uint256 indexed startTokenId,
-        uint256 endTokenId,
-        string baseURI,
-        bytes encryptedBaseURI
-    );
+    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
 
     DropERC721 public drop;
 
@@ -92,32 +87,17 @@ contract DropERC721Test_lazyMint is BaseTest {
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 
-    function test_revert_AmountEqualZero()
-        public
-        callerWithMinterRole
-        dataLengthZero
-        amountEqualZero
-    {
+    function test_revert_AmountEqualZero() public callerWithMinterRole dataLengthZero amountEqualZero {
         vm.expectRevert("0 amt");
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 
-    function test_revert_DataInvalidFormat()
-        public
-        callerWithMinterRole
-        amountNotEqualZero
-        dataInvalidFormat
-    {
+    function test_revert_DataInvalidFormat() public callerWithMinterRole amountNotEqualZero dataInvalidFormat {
         vm.expectRevert();
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 
-    function test_state_dataLengthZero()
-        public
-        callerWithMinterRole
-        amountNotEqualZero
-        dataLengthZero
-    {
+    function test_state_dataLengthZero() public callerWithMinterRole amountNotEqualZero dataLengthZero {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
         uint256 expectedBatchId = nextTokenIdToLazyMintBefore + lazyMint_amount;
 
@@ -132,12 +112,7 @@ contract DropERC721Test_lazyMint is BaseTest {
         assertEq(string(abi.encodePacked(lazyMint_revealedURI, "0")), baseURIState);
     }
 
-    function test_event_dataLengthZero()
-        public
-        callerWithMinterRole
-        amountNotEqualZero
-        dataLengthZero
-    {
+    function test_event_dataLengthZero() public callerWithMinterRole amountNotEqualZero dataLengthZero {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
 
         vm.expectEmit(true, false, false, true);
@@ -150,12 +125,7 @@ contract DropERC721Test_lazyMint is BaseTest {
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 
-    function test_state_noEncryptedURI()
-        public
-        callerWithMinterRole
-        amountNotEqualZero
-        dataValidFormatNoURI
-    {
+    function test_state_noEncryptedURI() public callerWithMinterRole amountNotEqualZero dataValidFormatNoURI {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
         uint256 expectedBatchId = nextTokenIdToLazyMintBefore + lazyMint_amount;
         bytes memory expectedEncryptedData;
@@ -173,12 +143,7 @@ contract DropERC721Test_lazyMint is BaseTest {
         assertEq(expectedEncryptedData, encryptedDataState);
     }
 
-    function test_event_noEncryptedURI()
-        public
-        callerWithMinterRole
-        amountNotEqualZero
-        dataValidFormatNoURI
-    {
+    function test_event_noEncryptedURI() public callerWithMinterRole amountNotEqualZero dataValidFormatNoURI {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
 
         vm.expectEmit(true, false, false, true);
@@ -191,12 +156,7 @@ contract DropERC721Test_lazyMint is BaseTest {
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 
-    function test_state_noProvenanceHash()
-        public
-        callerWithMinterRole
-        amountNotEqualZero
-        dataValidFormatNoHash
-    {
+    function test_state_noProvenanceHash() public callerWithMinterRole amountNotEqualZero dataValidFormatNoHash {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
         uint256 expectedBatchId = nextTokenIdToLazyMintBefore + lazyMint_amount;
         bytes memory expectedEncryptedData;
@@ -214,12 +174,7 @@ contract DropERC721Test_lazyMint is BaseTest {
         assertEq(expectedEncryptedData, encryptedDataState);
     }
 
-    function test_event_noProvenanceHash()
-        public
-        callerWithMinterRole
-        amountNotEqualZero
-        dataValidFormatNoHash
-    {
+    function test_event_noProvenanceHash() public callerWithMinterRole amountNotEqualZero dataValidFormatNoHash {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
 
         vm.expectEmit(true, false, false, true);
@@ -232,12 +187,7 @@ contract DropERC721Test_lazyMint is BaseTest {
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 
-    function test_state_encryptedURIAndHash()
-        public
-        callerWithMinterRole
-        amountNotEqualZero
-        dataValidFormat
-    {
+    function test_state_encryptedURIAndHash() public callerWithMinterRole amountNotEqualZero dataValidFormat {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
         uint256 expectedBatchId = nextTokenIdToLazyMintBefore + lazyMint_amount;
 
@@ -254,12 +204,7 @@ contract DropERC721Test_lazyMint is BaseTest {
         assertEq(lazymint_data, encryptedDataState);
     }
 
-    function test_event_encryptedURIAndHash()
-        public
-        callerWithMinterRole
-        amountNotEqualZero
-        dataValidFormat
-    {
+    function test_event_encryptedURIAndHash() public callerWithMinterRole amountNotEqualZero dataValidFormat {
         uint256 nextTokenIdToLazyMintBefore = drop.nextTokenIdToMint();
 
         vm.expectEmit(true, false, false, true);

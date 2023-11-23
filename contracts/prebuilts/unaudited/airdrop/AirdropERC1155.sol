@@ -112,8 +112,7 @@ contract AirdropERC1155 is
             {} catch {
                 // revert if failure is due to unapproved tokens
                 require(
-                    IERC1155(_tokenAddress).balanceOf(_tokenOwner, _contents[i].tokenId) >=
-                        _contents[i].amount &&
+                    IERC1155(_tokenAddress).balanceOf(_tokenOwner, _contents[i].tokenId) >= _contents[i].amount &&
                         IERC1155(_tokenAddress).isApprovedForAll(_tokenOwner, address(this)),
                     "Not balance or approved"
                 );

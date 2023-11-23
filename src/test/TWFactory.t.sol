@@ -15,11 +15,7 @@ import "./mocks/MockThirdwebContract.sol";
 
 interface ITWFactoryData {
     event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer);
-    event ImplementationAdded(
-        address implementation,
-        bytes32 indexed contractType,
-        uint256 version
-    );
+    event ImplementationAdded(address implementation, bytes32 indexed contractType, uint256 version);
     event ImplementationApproved(address implementation, bool isApproved);
 }
 
@@ -245,15 +241,8 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         bytes32 contractType = mockModule.contractType();
 
         bytes32 salt = bytes32("Random");
-        bytes memory proxyBytecode = abi.encodePacked(
-            type(TWProxy).creationCode,
-            abi.encode(address(mockModule), "")
-        );
-        address computedProxyAddr = Create2.computeAddress(
-            salt,
-            keccak256(proxyBytecode),
-            address(_factory)
-        );
+        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
+        address computedProxyAddr = Create2.computeAddress(salt, keccak256(proxyBytecode), address(_factory));
 
         vm.expectEmit(true, true, false, true);
         emit ProxyDeployed(address(mockModule), computedProxyAddr, proxyDeployer);
@@ -308,15 +297,8 @@ contract TWFactoryTest is ITWFactoryData, BaseTest {
         bytes32 contractType = mockModule.contractType();
 
         bytes32 salt = keccak256(abi.encodePacked(contractType, block.number));
-        bytes memory proxyBytecode = abi.encodePacked(
-            type(TWProxy).creationCode,
-            abi.encode(address(mockModule), "")
-        );
-        address computedProxyAddr = Create2.computeAddress(
-            salt,
-            keccak256(proxyBytecode),
-            address(_factory)
-        );
+        bytes memory proxyBytecode = abi.encodePacked(type(TWProxy).creationCode, abi.encode(address(mockModule), ""));
+        address computedProxyAddr = Create2.computeAddress(salt, keccak256(proxyBytecode), address(_factory));
 
         vm.expectEmit(true, true, false, true);
         emit ProxyDeployed(address(mockModule), computedProxyAddr, proxyDeployer);

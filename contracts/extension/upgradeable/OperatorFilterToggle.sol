@@ -39,11 +39,7 @@ abstract contract OperatorFilterToggle is IOperatorFilterToggle {
     }
 
     /// @dev Returns the OperatorFilterToggle storage.
-    function _operatorFilterToggleStorage()
-        internal
-        pure
-        returns (OperatorFilterToggleStorage.Data storage data)
-    {
+    function _operatorFilterToggleStorage() internal pure returns (OperatorFilterToggleStorage.Data storage data) {
         data = OperatorFilterToggleStorage.data();
     }
 

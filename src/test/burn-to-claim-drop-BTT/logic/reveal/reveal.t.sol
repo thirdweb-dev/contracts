@@ -88,15 +88,9 @@ contract BurnToClaimDropERC721Logic_Reveal is BaseTest, IExtension {
             // set encrypted uri for one of the batches
             if (i == 1) {
                 bytes memory _encryptedURI = drop.encryptDecrypt(originalURI, _key);
-                bytes32 _provenanceHash = keccak256(
-                    abi.encodePacked(originalURI, _key, block.chainid)
-                );
+                bytes32 _provenanceHash = keccak256(abi.encodePacked(originalURI, _key, block.chainid));
 
-                startId = drop.lazyMint(
-                    _amount,
-                    placeholderURI,
-                    abi.encode(_encryptedURI, _provenanceHash)
-                );
+                startId = drop.lazyMint(_amount, placeholderURI, abi.encode(_encryptedURI, _provenanceHash));
             } else {
                 startId = drop.lazyMint(_amount, string(originalURI), "");
             }
@@ -135,10 +129,7 @@ contract BurnToClaimDropERC721Logic_Reveal is BaseTest, IExtension {
         });
 
         extension_drop.functions = new ExtensionFunction[](6);
-        extension_drop.functions[0] = ExtensionFunction(
-            BurnToClaimDrop721Logic.tokenURI.selector,
-            "tokenURI(uint256)"
-        );
+        extension_drop.functions[0] = ExtensionFunction(BurnToClaimDrop721Logic.tokenURI.selector, "tokenURI(uint256)");
         extension_drop.functions[1] = ExtensionFunction(
             BurnToClaimDrop721Logic.lazyMint.selector,
             "lazyMint(uint256,string,bytes)"
@@ -196,12 +187,7 @@ contract BurnToClaimDropERC721Logic_Reveal is BaseTest, IExtension {
         _;
     }
 
-    function test_reveal_incorrectKey()
-        public
-        whenCallerAuthorized
-        whenValidIndex
-        whenEncryptedURI
-    {
+    function test_reveal_incorrectKey() public whenCallerAuthorized whenValidIndex whenEncryptedURI {
         vm.prank(address(caller));
         vm.expectRevert("Incorrect key");
         drop.reveal(_index, "incorrect key");

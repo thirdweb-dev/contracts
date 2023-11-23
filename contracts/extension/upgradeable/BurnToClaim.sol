@@ -45,47 +45,31 @@ abstract contract BurnToClaim is IBurnToClaim {
     }
 
     /// @notice Verifies an attempt to burn tokens to claim new tokens.
-    function verifyBurnToClaim(
-        address _tokenOwner,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) public view virtual {
+    function verifyBurnToClaim(address _tokenOwner, uint256 _tokenId, uint256 _quantity) public view virtual {
         BurnToClaimInfo memory _burnToClaimInfo = getBurnToClaimInfo();
 
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {
             require(_quantity == 1, "Invalid amount");
-            require(
-                IERC721(_burnToClaimInfo.originContractAddress).ownerOf(_tokenId) == _tokenOwner,
-                "!Owner"
-            );
+            require(IERC721(_burnToClaimInfo.originContractAddress).ownerOf(_tokenId) == _tokenOwner, "!Owner");
         } else if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC1155) {
             uint256 _eligible1155TokenId = _burnToClaimInfo.tokenId;
 
             require(_tokenId == _eligible1155TokenId, "Invalid token Id");
             require(
-                IERC1155(_burnToClaimInfo.originContractAddress).balanceOf(_tokenOwner, _tokenId) >=
-                    _quantity,
+                IERC1155(_burnToClaimInfo.originContractAddress).balanceOf(_tokenOwner, _tokenId) >= _quantity,
                 "!Balance"
             );
         }
     }
 
     /// @dev Burns tokens to claim new tokens.
-    function _burnTokensOnOrigin(
-        address _tokenOwner,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) internal virtual {
+    function _burnTokensOnOrigin(address _tokenOwner, uint256 _tokenId, uint256 _quantity) internal virtual {
         BurnToClaimInfo memory _burnToClaimInfo = getBurnToClaimInfo();
 
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {
             ERC721Burnable(_burnToClaimInfo.originContractAddress).burn(_tokenId);
         } else if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC1155) {
-            ERC1155Burnable(_burnToClaimInfo.originContractAddress).burn(
-                _tokenOwner,
-                _tokenId,
-                _quantity
-            );
+            ERC1155Burnable(_burnToClaimInfo.originContractAddress).burn(_tokenOwner, _tokenId, _quantity);
         }
     }
 

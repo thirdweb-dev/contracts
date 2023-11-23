@@ -13,11 +13,7 @@ contract MyBatchMintMetadata is BatchMintMetadata {
         uint256 _amountToMint,
         string memory _baseURIForTokens
     ) external returns (uint256 nextTokenIdToMint, uint256 batchId) {
-        (nextTokenIdToMint, batchId) = _batchMintMetadata(
-            _startId,
-            _amountToMint,
-            _baseURIForTokens
-        );
+        (nextTokenIdToMint, batchId) = _batchMintMetadata(_startId, _amountToMint, _baseURIForTokens);
     }
 
     function setBaseURI(uint256 _batchId, string memory _baseURI) external {

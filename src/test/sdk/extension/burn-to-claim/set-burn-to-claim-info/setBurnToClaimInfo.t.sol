@@ -53,10 +53,7 @@ contract BurnToClaim_SetBurnToClaimInfo is ExtensionUtilTest {
         _;
     }
 
-    function test_setBurnToClaimInfo_invalidOriginContract_addressZero()
-        public
-        whenCallerAuthorized
-    {
+    function test_setBurnToClaimInfo_invalidOriginContract_addressZero() public whenCallerAuthorized {
         vm.prank(address(caller));
         vm.expectRevert("Origin contract not set.");
         ext.setBurnToClaimInfo(info);
@@ -67,11 +64,7 @@ contract BurnToClaim_SetBurnToClaimInfo is ExtensionUtilTest {
         _;
     }
 
-    function test_setBurnToClaimInfo_invalidCurrency_addressZero()
-        public
-        whenCallerAuthorized
-        whenValidOriginContract
-    {
+    function test_setBurnToClaimInfo_invalidCurrency_addressZero() public whenCallerAuthorized whenValidOriginContract {
         vm.prank(address(caller));
         vm.expectRevert("Currency not set.");
         ext.setBurnToClaimInfo(info);
@@ -82,12 +75,7 @@ contract BurnToClaim_SetBurnToClaimInfo is ExtensionUtilTest {
         _;
     }
 
-    function test_setBurnToClaimInfo()
-        public
-        whenCallerAuthorized
-        whenValidOriginContract
-        whenValidCurrency
-    {
+    function test_setBurnToClaimInfo() public whenCallerAuthorized whenValidOriginContract whenValidCurrency {
         vm.prank(address(caller));
         ext.setBurnToClaimInfo(info);
 

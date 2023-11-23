@@ -52,11 +52,7 @@ contract BaseERC721DelayedRevealTest is BaseUtilTest {
         uint256 nextTokenId = base.nextTokenIdToMint();
 
         vm.startPrank(deployer);
-        uint256 batchId = base.lazyMint(
-            _amount,
-            _baseURIForTokens,
-            abi.encode(_encryptedBaseURI, provenanceHash)
-        );
+        uint256 batchId = base.lazyMint(_amount, _baseURIForTokens, abi.encode(_encryptedBaseURI, provenanceHash));
 
         assertEq(nextTokenId + _amount, base.nextTokenIdToMint());
         assertEq(nextTokenId + _amount, batchId);

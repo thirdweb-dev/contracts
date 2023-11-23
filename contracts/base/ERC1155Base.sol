@@ -97,12 +97,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
      *  @param _tokenURI The full metadata URI for the NFTs minted (if a new NFT is being minted).
      *  @param _amount   The amount of the same NFT to mint.
      */
-    function mintTo(
-        address _to,
-        uint256 _tokenId,
-        string memory _tokenURI,
-        uint256 _amount
-    ) public virtual {
+    function mintTo(address _to, uint256 _tokenId, string memory _tokenURI, uint256 _amount) public virtual {
         require(_canMint(), "Not authorized to mint.");
 
         uint256 tokenIdToMint;
@@ -173,11 +168,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
      *  @param _tokenId The tokenId of the NFT to burn.
      *  @param _amount  The amount of the NFT to burn.
      */
-    function burn(
-        address _owner,
-        uint256 _tokenId,
-        uint256 _amount
-    ) external virtual {
+    function burn(address _owner, uint256 _tokenId, uint256 _amount) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
@@ -193,11 +184,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
      *  @param _tokenIds The tokenIds of the NFTs to burn.
      *  @param _amounts  The amounts of the NFTs to burn.
      */
-    function burnBatch(
-        address _owner,
-        uint256[] memory _tokenIds,
-        uint256[] memory _amounts
-    ) external virtual {
+    function burnBatch(address _owner, uint256[] memory _tokenIds, uint256[] memory _amounts) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
@@ -218,13 +205,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
      * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
             interfaceId == 0xd9b67a26 || // ERC165 Interface ID for ERC1155

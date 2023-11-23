@@ -8,11 +8,7 @@ import "./interface/ISignatureMintERC20.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
-abstract contract SignatureMintERC20Upgradeable is
-    Initializable,
-    EIP712Upgradeable,
-    ISignatureMintERC20
-{
+abstract contract SignatureMintERC20Upgradeable is Initializable, EIP712Upgradeable, ISignatureMintERC20 {
     using ECDSAUpgradeable for bytes32;
 
     bytes32 private constant TYPEHASH =
@@ -43,17 +39,13 @@ abstract contract SignatureMintERC20Upgradeable is
     function _isAuthorizedSigner(address _signer) internal view virtual returns (bool);
 
     /// @dev Verifies a mint request and marks the request as minted.
-    function _processRequest(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    ) internal returns (address signer) {
+    function _processRequest(MintRequest calldata _req, bytes calldata _signature) internal returns (address signer) {
         bool success;
         (success, signer) = verify(_req, _signature);
 
         require(success, "Invalid request");
         require(
-            _req.validityStartTimestamp <= block.timestamp &&
-                block.timestamp <= _req.validityEndTimestamp,
+            _req.validityStartTimestamp <= block.timestamp && block.timestamp <= _req.validityEndTimestamp,
             "Request expired"
         );
         require(_req.to != address(0), "recipient undefined");
@@ -63,10 +55,7 @@ abstract contract SignatureMintERC20Upgradeable is
     }
 
     /// @dev Returns the address of the signer of the mint request.
-    function _recoverAddress(
-        MintRequest calldata _req,
-        bytes calldata _signature
-    ) internal view returns (address) {
+    function _recoverAddress(MintRequest calldata _req, bytes calldata _signature) internal view returns (address) {
         return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
     }
 

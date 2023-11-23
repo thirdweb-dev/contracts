@@ -4,11 +4,7 @@ pragma solidity ^0.8.0;
 import { PermissionsStorage } from "../Permissions.sol";
 
 contract PermissionsInit {
-    event RoleAdminChanged(
-        bytes32 indexed role,
-        bytes32 indexed previousAdminRole,
-        bytes32 indexed newAdminRole
-    );
+    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
     event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
 
     /// @dev Default admin role for all roles. Only accounts with this role can grant/revoke other roles.

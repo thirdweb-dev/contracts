@@ -61,15 +61,9 @@ abstract contract OperatorFilterer is OperatorFilterToggle {
             if (address(subscriptionOrRegistrantToCopy).code.length > 0) {
                 // Do we want to subscribe?
                 if (subscribe) {
-                    OPERATOR_FILTER_REGISTRY.registerAndSubscribe(
-                        address(this),
-                        subscriptionOrRegistrantToCopy
-                    );
+                    OPERATOR_FILTER_REGISTRY.registerAndSubscribe(address(this), subscriptionOrRegistrantToCopy);
                 } else {
-                    OPERATOR_FILTER_REGISTRY.registerAndCopyEntries(
-                        address(this),
-                        subscriptionOrRegistrantToCopy
-                    );
+                    OPERATOR_FILTER_REGISTRY.registerAndCopyEntries(address(this), subscriptionOrRegistrantToCopy);
                 }
             } else {
                 OPERATOR_FILTER_REGISTRY.register(address(this));

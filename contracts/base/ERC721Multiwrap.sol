@@ -26,15 +26,7 @@ import "../extension/Multicall.sol";
  *
  */
 
-contract ERC721Multiwrap is
-    Multicall,
-    TokenStore,
-    SoulboundERC721A,
-    ERC721A,
-    ContractMetadata,
-    Ownable,
-    Royalty
-{
+contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, ContractMetadata, Ownable, Royalty {
     /*//////////////////////////////////////////////////////////////
                     Permission control roles
     //////////////////////////////////////////////////////////////*/
@@ -178,10 +170,7 @@ contract ERC721Multiwrap is
      *  @param _tokenId   The token Id of the wrapped NFT to unwrap.
      *  @param _recipient The recipient of the underlying ERC1155, ERC721, ERC20 tokens of the wrapped NFT.
      */
-    function unwrap(
-        uint256 _tokenId,
-        address _recipient
-    ) public virtual onlyRoleWithSwitch(UNWRAP_ROLE) {
+    function unwrap(uint256 _tokenId, address _recipient) public virtual onlyRoleWithSwitch(UNWRAP_ROLE) {
         require(_tokenId < nextTokenIdToMint(), "wrapped NFT DNE.");
         require(isApprovedOrOwner(msg.sender, _tokenId), "caller not approved for unwrapping.");
 

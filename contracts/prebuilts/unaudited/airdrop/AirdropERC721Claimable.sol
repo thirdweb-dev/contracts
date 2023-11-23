@@ -158,9 +158,7 @@ contract AirdropERC721Claimable is
         uint256 expTimestamp = expirationTimestamp;
         require(expTimestamp == 0 || block.timestamp < expTimestamp, "airdrop expired.");
 
-        uint256 claimLimitForWallet = isOverride
-            ? _proofMaxQuantityForWallet
-            : openClaimLimitPerWallet;
+        uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : openClaimLimitPerWallet;
         require(_quantity + supplyClaimedAlready <= claimLimitForWallet, "invalid quantity.");
     }
 

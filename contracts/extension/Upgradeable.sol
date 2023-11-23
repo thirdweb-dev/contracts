@@ -40,10 +40,7 @@ abstract contract Upgradeable is IERC1822Proxiable, ERC1967Upgrade {
      * callable on the implementing contract but not through proxies.
      */
     modifier notDelegated() {
-        require(
-            address(this) == __self,
-            "UUPSUpgradeable: must not be called through delegatecall"
-        );
+        require(address(this) == __self, "UUPSUpgradeable: must not be called through delegatecall");
         _;
     }
 
@@ -79,10 +76,7 @@ abstract contract Upgradeable is IERC1822Proxiable, ERC1967Upgrade {
      *
      * Emits an {Upgraded} event.
      */
-    function upgradeToAndCall(
-        address newImplementation,
-        bytes memory data
-    ) external payable virtual onlyProxy {
+    function upgradeToAndCall(address newImplementation, bytes memory data) external payable virtual onlyProxy {
         _authorizeUpgrade(newImplementation);
         _upgradeToAndCallUUPS(newImplementation, data, true);
     }

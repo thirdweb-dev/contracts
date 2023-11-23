@@ -10,18 +10,12 @@ contract MockERC1155 is ERC1155PresetMinterPauser {
         _mint(to, id, amount, "");
     }
 
-    function hasRole(
-        bytes32,
-        address
-    ) public pure override(AccessControl, IAccessControl) returns (bool) {
+    function hasRole(bytes32, address) public pure override(AccessControl, IAccessControl) returns (bool) {
         return true;
     }
 
     function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts) public virtual {
-        require(
-            hasRole(MINTER_ROLE, _msgSender()),
-            "ERC1155PresetMinterPauser: must have minter role to mint"
-        );
+        require(hasRole(MINTER_ROLE, _msgSender()), "ERC1155PresetMinterPauser: must have minter role to mint");
 
         _mintBatch(to, ids, amounts, "");
     }

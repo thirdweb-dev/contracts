@@ -52,11 +52,7 @@ library ECDSA {
      *
      * _Available since v4.3._
      */
-    function tryRecover(bytes32 hash, bytes memory signature)
-        internal
-        pure
-        returns (address, RecoverError)
-    {
+    function tryRecover(bytes32 hash, bytes memory signature) internal pure returns (address, RecoverError) {
         if (signature.length == 65) {
             bytes32 r;
             bytes32 s;
@@ -102,13 +98,8 @@ library ECDSA {
      *
      * _Available since v4.3._
      */
-    function tryRecover(
-        bytes32 hash,
-        bytes32 r,
-        bytes32 vs
-    ) internal pure returns (address, RecoverError) {
-        bytes32 s = vs &
-            bytes32(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
+    function tryRecover(bytes32 hash, bytes32 r, bytes32 vs) internal pure returns (address, RecoverError) {
+        bytes32 s = vs & bytes32(0x7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff);
         uint8 v = uint8((uint256(vs) >> 255) + 27);
         return tryRecover(hash, v, r, s);
     }
@@ -118,11 +109,7 @@ library ECDSA {
      *
      * _Available since v4.2._
      */
-    function recover(
-        bytes32 hash,
-        bytes32 r,
-        bytes32 vs
-    ) internal pure returns (address) {
+    function recover(bytes32 hash, bytes32 r, bytes32 vs) internal pure returns (address) {
         (address recovered, RecoverError error) = tryRecover(hash, r, vs);
         _throwError(error);
         return recovered;
@@ -134,12 +121,7 @@ library ECDSA {
      *
      * _Available since v4.3._
      */
-    function tryRecover(
-        bytes32 hash,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal pure returns (address, RecoverError) {
+    function tryRecover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) internal pure returns (address, RecoverError) {
         // EIP-2 still allows signature malleability for ecrecover(). Remove this possibility and make the signature
         // unique. Appendix F in the Ethereum Yellow paper (https://ethereum.github.io/yellowpaper/paper.pdf), defines
         // the valid range for s in (301): 0 < s < secp256k1n ÷ 2 + 1, and for v in (302): v ∈ {27, 28}. Most
@@ -166,12 +148,7 @@ library ECDSA {
      * @dev Overload of {ECDSA-recover} that receives the `v`,
      * `r` and `s` signature fields separately.
      */
-    function recover(
-        bytes32 hash,
-        uint8 v,
-        bytes32 r,
-        bytes32 s
-    ) internal pure returns (address) {
+    function recover(bytes32 hash, uint8 v, bytes32 r, bytes32 s) internal pure returns (address) {
         (address recovered, RecoverError error) = tryRecover(hash, v, r, s);
         _throwError(error);
         return recovered;
@@ -205,10 +182,7 @@ library ECDSA {
      * See {recover}.
      */
     function toEthSignedMessageHash(bytes memory s) internal pure returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked("\x19Ethereum Signed Message:\n", Strings.toString(s.length), s)
-            );
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n", Strings.toString(s.length), s));
     }
 
     /**
@@ -220,11 +194,7 @@ library ECDSA {
      *
      * See {recover}.
      */
-    function toTypedDataHash(bytes32 domainSeparator, bytes32 structHash)
-        internal
-        pure
-        returns (bytes32 data)
-    {
+    function toTypedDataHash(bytes32 domainSeparator, bytes32 structHash) internal pure returns (bytes32 data) {
         /// @solidity memory-safe-assembly
         assembly {
             let ptr := mload(0x40)
@@ -241,11 +211,7 @@ library ECDSA {
      *
      * See {recover}.
      */
-    function toDataWithIntendedValidatorHash(address validator, bytes memory data)
-        internal
-        pure
-        returns (bytes32)
-    {
+    function toDataWithIntendedValidatorHash(address validator, bytes memory data) internal pure returns (bytes32) {
         return keccak256(abi.encodePacked("\x19\x00", validator, data));
     }
 }

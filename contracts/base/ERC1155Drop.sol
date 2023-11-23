@@ -100,13 +100,7 @@ contract ERC1155Drop is
      * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155, IERC165) returns (bool) {
         return
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
             interfaceId == 0xd9b67a26 || // ERC165 Interface ID for ERC1155
@@ -125,11 +119,7 @@ contract ERC1155Drop is
      *  @param _tokenId The tokenId of the NFT to burn.
      *  @param _amount  The amount of the NFT to burn.
      */
-    function burn(
-        address _owner,
-        uint256 _tokenId,
-        uint256 _amount
-    ) external virtual {
+    function burn(address _owner, uint256 _tokenId, uint256 _amount) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
@@ -145,11 +135,7 @@ contract ERC1155Drop is
      *  @param _tokenIds The tokenIds of the NFTs to burn.
      *  @param _amounts  The amounts of the NFTs to burn.
      */
-    function burnBatch(
-        address _owner,
-        uint256[] memory _tokenIds,
-        uint256[] memory _amounts
-    ) external virtual {
+    function burnBatch(address _owner, uint256[] memory _tokenIds, uint256[] memory _amounts) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
@@ -195,12 +181,7 @@ contract ERC1155Drop is
      *  @param _key         The key with which the base URI for the relevant batch of NFTs was encrypted.
      *  @return revealedURI The revealed URI for the batch of NFTs.
      */
-    function reveal(uint256 _index, bytes calldata _key)
-        public
-        virtual
-        override
-        returns (string memory revealedURI)
-    {
+    function reveal(uint256 _index, bytes calldata _key) public virtual override returns (string memory revealedURI) {
         require(_canReveal(), "Not authorized");
 
         uint256 batchId = getBatchIdAtIndex(_index);
@@ -231,10 +212,7 @@ contract ERC1155Drop is
         bytes calldata _data
     ) public virtual override returns (uint256 batchId) {
         if (_data.length > 0) {
-            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(
-                _data,
-                (bytes, bytes32)
-            );
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
             if (encryptedURI.length != 0 && provenanceHash != "") {
                 _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
             }
@@ -301,9 +279,7 @@ contract ERC1155Drop is
         }
         require(validMsgValue, "Invalid msg value");
 
-        address saleRecipient = _primarySaleRecipient == address(0)
-            ? primarySaleRecipient()
-            : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 

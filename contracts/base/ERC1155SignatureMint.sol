@@ -49,13 +49,10 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
      *  @param _req       The payload / mint request.
      *  @param _signature The signature produced by an account signing the mint request.
      */
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        virtual
-        override
-        returns (address signer)
-    {
+    function mintWithSignature(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) external payable virtual override returns (address signer) {
         require(_req.quantity > 0, "Minting zero tokens.");
 
         uint256 tokenIdToMint;
@@ -75,12 +72,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         address receiver = _req.to;
 
         // Collect price
-        _collectPriceOnClaim(
-            _req.primarySaleRecipient,
-            _req.quantity,
-            _req.currency,
-            _req.pricePerToken
-        );
+        _collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
 
         // Set royalties, if applicable.
         if (_req.royaltyRecipient != address(0)) {
@@ -134,9 +126,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
         }
         require(validMsgValue, "Invalid msg value");
 
-        address saleRecipient = _primarySaleRecipient == address(0)
-            ? primarySaleRecipient()
-            : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
         CurrencyTransferLib.transferCurrency(_currency, msg.sender, saleRecipient, totalPrice);
     }
 }

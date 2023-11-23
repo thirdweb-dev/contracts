@@ -31,11 +31,7 @@ interface ITokenERC20 is IERC20MetadataUpgradeable {
     event TokensMinted(address indexed mintedTo, uint256 quantityMinted);
 
     /// @dev Emitted when tokens are minted.
-    event TokensMintedWithSignature(
-        address indexed signer,
-        address indexed mintedTo,
-        MintRequest mintRequest
-    );
+    event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, MintRequest mintRequest);
 
     /**
      *  @notice Verifies that a mint request is signed by an account holding

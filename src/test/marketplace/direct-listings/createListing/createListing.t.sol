@@ -39,9 +39,7 @@ contract CreateListingTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -195,11 +193,7 @@ contract CreateListingTest is BaseTest, IExtension {
         _;
     }
 
-    function test_createListing_startTimeGteEndTime()
-        public
-        whenCallerHasListerRole
-        whenAssetHasAssetRole
-    {
+    function test_createListing_startTimeGteEndTime() public whenCallerHasListerRole whenAssetHasAssetRole {
         listingParams.startTimestamp = 200;
         listingParams.endTimestamp = 100;
 
@@ -281,10 +275,7 @@ contract CreateListingTest is BaseTest, IExtension {
         uint256 expectedListingId = 0;
 
         assertEq(DirectListingsLogic(marketplace).totalListings(), 0);
-        assertEq(
-            DirectListingsLogic(marketplace).getListing(expectedListingId).assetContract,
-            address(0)
-        );
+        assertEq(DirectListingsLogic(marketplace).getListing(expectedListingId).assetContract, address(0));
 
         IDirectListings.Listing memory listing;
 
@@ -299,10 +290,7 @@ contract CreateListingTest is BaseTest, IExtension {
         assertEq(listing.quantity, listingParams.quantity);
         assertEq(listing.currency, listingParams.currency);
         assertEq(listing.pricePerToken, listingParams.pricePerToken);
-        assertEq(
-            listing.endTimestamp,
-            block.timestamp + (listingParams.endTimestamp - listingParams.startTimestamp)
-        );
+        assertEq(listing.endTimestamp, block.timestamp + (listingParams.endTimestamp - listingParams.startTimestamp));
         assertEq(listing.startTimestamp, block.timestamp);
         assertEq(listing.listingCreator, seller);
         assertEq(listing.reserved, true);
@@ -346,10 +334,7 @@ contract CreateListingTest is BaseTest, IExtension {
         uint256 expectedListingId = 0;
 
         assertEq(DirectListingsLogic(marketplace).totalListings(), 0);
-        assertEq(
-            DirectListingsLogic(marketplace).getListing(expectedListingId).assetContract,
-            address(0)
-        );
+        assertEq(DirectListingsLogic(marketplace).getListing(expectedListingId).assetContract, address(0));
 
         IDirectListings.Listing memory listing;
 

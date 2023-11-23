@@ -48,9 +48,7 @@ interface IRulesEngine {
 
     function getRulesEngineOverride() external view returns (address rulesEngineAddress);
 
-    function createRuleMultiplicative(
-        RuleTypeMultiplicative memory rule
-    ) external returns (bytes32 ruleId);
+    function createRuleMultiplicative(RuleTypeMultiplicative memory rule) external returns (bytes32 ruleId);
 
     function createRuleThreshold(RuleTypeThreshold memory rule) external returns (bytes32 ruleId);
 

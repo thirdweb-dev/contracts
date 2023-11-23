@@ -81,8 +81,8 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardRatioNumerator) /
-                timeUnit) / rewardRatioDenominator)
+            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
 
         //================ second staker ======================
@@ -113,8 +113,8 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardRatioNumerator) /
-                timeUnit) / rewardRatioDenominator)
+            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
 
         // check available rewards for stakerTwo
@@ -122,8 +122,8 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardRatioNumerator) /
-                timeUnit) / rewardRatioDenominator)
+            (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
     }
 
@@ -160,14 +160,14 @@ contract TokenStakeTest is BaseTest {
         // check reward balances
         assertEq(
             erc20.balanceOf(stakerOne),
-            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardRatioNumerator) /
-                timeUnit) / rewardRatioDenominator)
+            (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
         assertEq(
             rewardBalanceAfter,
             rewardBalanceBefore -
-                (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardRatioNumerator) /
-                    timeUnit) / rewardRatioDenominator)
+                (((((block.timestamp - timeOfLastUpdate_one) * 400) * rewardRatioNumerator) / timeUnit) /
+                    rewardRatioDenominator)
         );
 
         // check available rewards after claiming
@@ -195,14 +195,14 @@ contract TokenStakeTest is BaseTest {
         // check reward balances
         assertEq(
             erc20.balanceOf(stakerTwo),
-            (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardRatioNumerator) /
-                timeUnit) / rewardRatioDenominator)
+            (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
         assertEq(
             rewardBalanceAfter,
             rewardBalanceBefore -
-                (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardRatioNumerator) /
-                    timeUnit) / rewardRatioDenominator)
+                (((((block.timestamp - timeOfLastUpdate_two) * 200) * rewardRatioNumerator) / timeUnit) /
+                    rewardRatioDenominator)
         );
 
         // check available rewards after claiming -- stakerTwo
@@ -215,8 +215,8 @@ contract TokenStakeTest is BaseTest {
         assertEq(_amountStaked, 400);
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate_two) * 400) * rewardRatioNumerator) /
-                timeUnit) / rewardRatioDenominator)
+            (((((block.timestamp - timeOfLastUpdate_two) * 400) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator)
         );
     }
 
@@ -282,10 +282,7 @@ contract TokenStakeTest is BaseTest {
         // check available rewards -- should use previous value for rewardsPerUnitTime for calculation
         (, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
 
-        assertEq(
-            _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate) * 400) * 3) / timeUnit) / 70)
-        );
+        assertEq(_availableRewards, (((((block.timestamp - timeOfLastUpdate) * 400) * 3) / timeUnit) / 70));
 
         //====== check rewards after some time
         vm.roll(300);
@@ -295,8 +292,7 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _newRewards,
-            _availableRewards +
-                (((((block.timestamp - newTimeOfLastUpdate) * 400) * 3) / timeUnit) / 80)
+            _availableRewards + (((((block.timestamp - newTimeOfLastUpdate) * 400) * 3) / timeUnit) / 80)
         );
     }
 
@@ -328,8 +324,8 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardRatioNumerator) /
-                timeUnitToSet) / rewardRatioDenominator)
+            (((((block.timestamp - timeOfLastUpdate) * 400) * rewardRatioNumerator) / timeUnitToSet) /
+                rewardRatioDenominator)
         );
 
         //====== check rewards after some time
@@ -416,10 +412,10 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((((timeOfLastUpdateLatest - timeOfLastUpdate) * 400)) * rewardRatioNumerator) /
-                timeUnit) / rewardRatioDenominator) +
-                ((((((block.timestamp - timeOfLastUpdateLatest) * 300)) * rewardRatioNumerator) /
-                    timeUnit) / rewardRatioDenominator)
+            ((((((timeOfLastUpdateLatest - timeOfLastUpdate) * 400)) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator) +
+                ((((((block.timestamp - timeOfLastUpdateLatest) * 300)) * rewardRatioNumerator) / timeUnit) /
+                    rewardRatioDenominator)
         );
 
         // withdraw partially for stakerTwo
@@ -448,10 +444,10 @@ contract TokenStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((((timeOfLastUpdateLatest - timeOfLastUpdate) * 200)) * rewardRatioNumerator) /
-                timeUnit) / rewardRatioDenominator) +
-                ((((((block.timestamp - timeOfLastUpdateLatest) * 100)) * rewardRatioNumerator) /
-                    timeUnit) / rewardRatioDenominator)
+            ((((((timeOfLastUpdateLatest - timeOfLastUpdate) * 200)) * rewardRatioNumerator) / timeUnit) /
+                rewardRatioDenominator) +
+                ((((((block.timestamp - timeOfLastUpdateLatest) * 100)) * rewardRatioNumerator) / timeUnit) /
+                    rewardRatioDenominator)
         );
     }
 
@@ -609,8 +605,7 @@ contract Macro_TokenStake_Rewards6_Staking18_Test is BaseTest {
         assertEq(erc20_staking18.balanceOf(address(stakerOne)), 600e18);
 
         // check available rewards right after staking
-        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract_reward6_staking18
-            .getStakeInfo(stakerOne);
+        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract_reward6_staking18.getStakeInfo(stakerOne);
 
         assertEq(_amountStaked, 400e18);
         assertEq(_availableRewards, 0);
@@ -704,8 +699,7 @@ contract Macro_TokenStake_Rewards18_Staking6_Test is BaseTest {
         assertEq(erc20_staking6.balanceOf(address(stakerOne)), 600e6);
 
         // check available rewards right after staking
-        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract_reward18_staking6
-            .getStakeInfo(stakerOne);
+        (uint256 _amountStaked, uint256 _availableRewards) = stakeContract_reward18_staking6.getStakeInfo(stakerOne);
 
         assertEq(_amountStaked, 400e6);
         assertEq(_availableRewards, 0);

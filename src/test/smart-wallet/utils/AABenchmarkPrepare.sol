@@ -70,10 +70,7 @@ contract AABenchmarkPrepare is BaseTest {
         vm.writeLine(path, "}");
 
         vm.writeLine(path, "interface ThirdwebAccount {");
-        vm.writeLine(
-            path,
-            "    function execute(address _target, uint256 _value, bytes calldata _calldata) external;"
-        );
+        vm.writeLine(path, "    function execute(address _target, uint256 _value, bytes calldata _calldata) external;");
         vm.writeLine(path, "}");
         vm.writeLine(path, accountFactoryAddressString);
         vm.writeLine(path, accountImplAddressString);

@@ -43,12 +43,7 @@ contract TokenERC1155Test_MintTo is BaseTest {
     ERC1155ReceiverCompliant internal erc1155ReceiverContract;
 
     event MetadataUpdate(uint256 _tokenId);
-    event TokensMinted(
-        address indexed mintedTo,
-        uint256 indexed tokenIdMinted,
-        string uri,
-        uint256 quantityMinted
-    );
+    event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri, uint256 quantityMinted);
 
     function setUp() public override {
         super.setUp();
@@ -188,11 +183,7 @@ contract TokenERC1155Test_MintTo is BaseTest {
         assertEq(tokenContract.uri(_tokenIdToMint), uri);
     }
 
-    function test_mintTo_maxTokenId_contract_TokensMintedEvent()
-        public
-        whenMinterRole
-        whenERC1155Receiver
-    {
+    function test_mintTo_maxTokenId_contract_TokensMintedEvent() public whenMinterRole whenERC1155Receiver {
         uint256 _tokenIdToMint = tokenContract.nextTokenIdToMint();
 
         vm.prank(caller);
@@ -201,11 +192,7 @@ contract TokenERC1155Test_MintTo is BaseTest {
         tokenContract.mintTo(recipient, type(uint256).max, uri, amount);
     }
 
-    function test_mintTo_maxTokenId_contract_MetadataUpdateEvent()
-        public
-        whenMinterRole
-        whenERC1155Receiver
-    {
+    function test_mintTo_maxTokenId_contract_MetadataUpdateEvent() public whenMinterRole whenERC1155Receiver {
         uint256 _tokenIdToMint = tokenContract.nextTokenIdToMint();
 
         vm.prank(caller);
@@ -214,11 +201,7 @@ contract TokenERC1155Test_MintTo is BaseTest {
         tokenContract.mintTo(recipient, type(uint256).max, uri, amount);
     }
 
-    function test_mintTo_maxTokenId_contract_uriAlreadyPresent()
-        public
-        whenMinterRole
-        whenERC1155Receiver
-    {
+    function test_mintTo_maxTokenId_contract_uriAlreadyPresent() public whenMinterRole whenERC1155Receiver {
         // state before
         uint256 _tokenIdToMint = tokenContract.nextTokenIdToMint();
 
@@ -275,12 +258,7 @@ contract TokenERC1155Test_MintTo is BaseTest {
         assertEq(tokenContract.uri(_tokenIdToMint), "uri1");
     }
 
-    function test_mintTo_EOA_TokensMintedEvent()
-        public
-        whenMinterRole
-        whenNotMaxTokenId
-        whenValidId
-    {
+    function test_mintTo_EOA_TokensMintedEvent() public whenMinterRole whenNotMaxTokenId whenValidId {
         uint256 _tokenIdToMint = tokenContract.nextTokenIdToMint() - 1;
 
         vm.prank(caller);
@@ -289,12 +267,7 @@ contract TokenERC1155Test_MintTo is BaseTest {
         tokenContract.mintTo(recipient, _tokenIdToMint, uri, amount);
     }
 
-    function test_mintTo_nonERC1155ReceiverContract()
-        public
-        whenMinterRole
-        whenNotMaxTokenId
-        whenValidId
-    {
+    function test_mintTo_nonERC1155ReceiverContract() public whenMinterRole whenNotMaxTokenId whenValidId {
         uint256 _tokenIdToMint = tokenContract.nextTokenIdToMint() - 1;
 
         recipient = address(this);
@@ -303,13 +276,7 @@ contract TokenERC1155Test_MintTo is BaseTest {
         tokenContract.mintTo(recipient, _tokenIdToMint, uri, amount);
     }
 
-    function test_mintTo_contract()
-        public
-        whenMinterRole
-        whenNotMaxTokenId
-        whenERC1155Receiver
-        whenValidId
-    {
+    function test_mintTo_contract() public whenMinterRole whenNotMaxTokenId whenERC1155Receiver whenValidId {
         // state before
         uint256 _tokenIdToMint = tokenContract.nextTokenIdToMint() - 1;
 

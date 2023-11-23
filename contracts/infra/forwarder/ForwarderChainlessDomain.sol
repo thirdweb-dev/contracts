@@ -44,10 +44,7 @@ contract ForwarderChainlessDomain is EIP712ChainlessDomain {
         return _nonces[from];
     }
 
-    function verify(
-        ForwardRequest calldata req,
-        bytes calldata signature
-    ) public view returns (bool) {
+    function verify(ForwardRequest calldata req, bytes calldata signature) public view returns (bool) {
         address signer = _hashTypedDataV4(
             keccak256(
                 abi.encode(

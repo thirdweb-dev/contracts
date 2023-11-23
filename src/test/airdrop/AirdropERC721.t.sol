@@ -32,15 +32,11 @@ contract AirdropERC721Test is BaseTest {
         countTwo = 200;
 
         for (uint256 i = 0; i < countOne; i++) {
-            _contentsOne.push(
-                IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i })
-            );
+            _contentsOne.push(IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i }));
         }
 
         for (uint256 i = countOne; i < countOne + countTwo; i++) {
-            _contentsTwo.push(
-                IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i })
-            );
+            _contentsTwo.push(IAirdropERC721.AirdropContent({ recipient: getActor(uint160(i)), tokenId: i }));
         }
     }
 
@@ -115,12 +111,7 @@ contract AirdropERC721GasTest is BaseTest {
         console.log(gasleft());
     }
 
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
         return this.onERC721Received.selector;
     }
 }

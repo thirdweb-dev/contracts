@@ -19,12 +19,7 @@ import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 import "./interface/ITWMultichainRegistry.sol";
 
-contract TWMultichainRegistry is
-    ITWMultichainRegistry,
-    Multicall,
-    ERC2771Context,
-    AccessControlEnumerable
-{
+contract TWMultichainRegistry is ITWMultichainRegistry, Multicall, ERC2771Context, AccessControlEnumerable {
     bytes32 public constant OPERATOR_ROLE = keccak256("OPERATOR_ROLE");
 
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -42,16 +37,8 @@ contract TWMultichainRegistry is
     }
 
     // slither-disable-next-line similar-names
-    function add(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId,
-        string memory metadataUri
-    ) external {
-        require(
-            hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
-            "not operator or deployer."
-        );
+    function add(address _deployer, address _deployment, uint256 _chainId, string memory metadataUri) external {
+        require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
         bool added = deployments[_deployer][_chainId].add(_deployment);
         require(added, "failed to add");
@@ -66,15 +53,8 @@ contract TWMultichainRegistry is
     }
 
     // slither-disable-next-line similar-names
-    function remove(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId
-    ) external {
-        require(
-            hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
-            "not operator or deployer."
-        );
+    function remove(address _deployer, address _deployment, uint256 _chainId) external {
+        require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
         bool removed = deployments[_deployer][_chainId].remove(_deployment);
         require(removed, "failed to remove");
@@ -122,31 +102,15 @@ contract TWMultichainRegistry is
         }
     }
 
-    function getMetadataUri(uint256 _chainId, address _deployment)
-        external
-        view
-        returns (string memory metadataUri)
-    {
+    function getMetadataUri(uint256 _chainId, address _deployment) external view returns (string memory metadataUri) {
         metadataUri = addressToMetadataUri[_chainId][_deployment];
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }
 }

@@ -43,10 +43,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
-        require(
-            msg.sender == address(entryPoint()) || isAdmin(msg.sender),
-            "Account: not admin or EntryPoint."
-        );
+        require(msg.sender == address(entryPoint()) || isAdmin(msg.sender), "Account: not admin or EntryPoint.");
         _;
     }
 
@@ -58,9 +55,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     //////////////////////////////////////////////////////////////*/
 
     /// @notice See {IERC165-supportsInterface}.
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(ERC1155Receiver) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Receiver) returns (bool) {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
@@ -80,12 +75,10 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         }
 
         address caller = msg.sender;
-        EnumerableSet.AddressSet storage approvedTargets = _accountPermissionsStorage()
-            .approvedTargets[signer];
+        EnumerableSet.AddressSet storage approvedTargets = _accountPermissionsStorage().approvedTargets[signer];
 
         require(
-            approvedTargets.contains(caller) ||
-                (approvedTargets.length() == 1 && approvedTargets.at(0) == address(0)),
+            approvedTargets.contains(caller) || (approvedTargets.length() == 1 && approvedTargets.at(0) == address(0)),
             "Account: caller not approved target."
         );
 
@@ -109,11 +102,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(
-        address _target,
-        uint256 _value,
-        bytes calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
+    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual onlyAdminOrEntrypoint {
         _registerOnFactory();
         _call(_target, _value, _calldata);
     }
@@ -126,10 +115,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     ) external virtual onlyAdminOrEntrypoint {
         _registerOnFactory();
 
-        require(
-            _target.length == _calldata.length && _target.length == _value.length,
-            "Account: wrong array lengths."
-        );
+        require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
         for (uint256 i = 0; i < _target.length; i++) {
             _call(_target[i], _value[i], _calldata[i]);
         }

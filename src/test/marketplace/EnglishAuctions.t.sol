@@ -36,9 +36,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -171,9 +169,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         royaltyEngine = new MockRoyaltyEngineV1(mockRecipients, mockAmounts);
     }
 
-    function _setupAuctionForRoyaltyTests(
-        address erc721TokenAddress
-    ) private returns (uint256 auctionId) {
+    function _setupAuctionForRoyaltyTests(address erc721TokenAddress) private returns (uint256 auctionId) {
         // Sample auction parameters.
         address assetContract = erc721TokenAddress;
         uint256 tokenId = 0;
@@ -191,29 +187,25 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         IERC721(erc721TokenAddress).setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
-    function _buyoutAuctionForRoyaltyTests(
-        uint256 auctionId
-    ) private returns (uint256 buyoutAmount) {
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+    function _buyoutAuctionForRoyaltyTests(uint256 auctionId) private returns (uint256 buyoutAmount) {
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         buyoutAmount = existingAuction.buyoutBidAmount;
 
@@ -241,10 +233,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         vm.prank(marketplaceDeployer);
         RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
 
-        assertEq(
-            RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(),
-            address(royaltyEngine)
-        );
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
 
         // 1. ========= Create auction =========
 
@@ -269,11 +258,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
 
             // Seller gets total price minus royalty amounts
-            assertBalERC20Eq(
-                address(erc20),
-                seller,
-                buyoutAmount - customRoyaltyAmounts[0] - customRoyaltyAmounts[1]
-            );
+            assertBalERC20Eq(address(erc20), seller, buyoutAmount - customRoyaltyAmounts[0] - customRoyaltyAmounts[1]);
         }
     }
 
@@ -284,21 +269,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         vm.prank(marketplaceDeployer);
         RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
 
-        assertEq(
-            RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(),
-            address(royaltyEngine)
-        );
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
 
         // create token with ERC2981
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
-        ERC721Base nft2981 = new ERC721Base(
-            address(0x12345),
-            "NFT 2981",
-            "NFT2981",
-            royaltyRecipient,
-            royaltyBps
-        );
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
         // Mint the ERC721 tokens to seller. These tokens will be listed.
         vm.prank(address(0x12345));
         nft2981.mintTo(seller, "");
@@ -335,13 +311,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         // create token with ERC2981
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
-        ERC721Base nft2981 = new ERC721Base(
-            address(0x12345),
-            "NFT 2981",
-            "NFT2981",
-            royaltyRecipient,
-            royaltyBps
-        );
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
         vm.prank(address(0x12345));
         nft2981.mintTo(seller, "");
 
@@ -384,10 +354,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         vm.prank(marketplaceDeployer);
         RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
 
-        assertEq(
-            RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(),
-            address(royaltyEngine)
-        );
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
 
         // Set platform fee on marketplace
         address platformFeeRecipient = marketplaceDeployer;
@@ -437,10 +404,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         vm.prank(marketplaceDeployer);
         RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
 
-        assertEq(
-            RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(),
-            address(royaltyEngine)
-        );
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
 
         // Set platform fee on marketplace
         address platformFeeRecipient = marketplaceDeployer;
@@ -455,9 +419,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
         // 2. ========= Bid in auction =========
 
-        IEnglishAuctions.Auction memory auction = EnglishAuctionsLogic(marketplace).getAuction(
-            auctionId
-        );
+        IEnglishAuctions.Auction memory auction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256 buyoutAmount = auction.buyoutBidAmount;
 
@@ -510,19 +472,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         uint256 auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
@@ -536,9 +497,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         assertEq(EnglishAuctionsLogic(marketplace).totalAuctions(), 1);
 
         // Fetch listing and verify state.
-        IEnglishAuctions.Auction memory auction = EnglishAuctionsLogic(marketplace).getAuction(
-            auctionId
-        );
+        IEnglishAuctions.Auction memory auction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         assertEq(auction.auctionId, auctionId);
         assertEq(auction.auctionCreator, seller);
@@ -582,19 +541,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         vm.expectRevert("ERC721: transfer from incorrect owner");
@@ -626,19 +584,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, false);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         vm.expectRevert("ERC721: caller is not token owner or approved");
@@ -670,19 +627,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: auctioning zero quantity.");
@@ -714,19 +670,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: auctioning invalid quantity.");
@@ -758,19 +713,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: no time-buffer.");
@@ -822,19 +776,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: invalid bid amounts.");
@@ -870,19 +823,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: invalid timestamps.");
@@ -914,19 +866,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: invalid timestamps.");
@@ -947,19 +898,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         uint64 endTimestamp = startTimestamp - 1;
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         // Grant ERC20 token asset role.
         vm.prank(marketplaceDeployer);
@@ -995,19 +945,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         // Revoke LISTER_ROLE from seller.
         vm.startPrank(marketplaceDeployer);
@@ -1047,19 +996,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         // Revoke ASSET_ROLE from token to list.
         vm.startPrank(marketplaceDeployer);
@@ -1103,19 +1051,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
@@ -1146,19 +1093,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
@@ -1166,8 +1112,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_cancelAuction() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1187,15 +1132,13 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         assertEq(EnglishAuctionsLogic(marketplace).totalAuctions(), 1);
 
         // status should be `CANCELLED`
-        IEnglishAuctions.Auction memory cancelledAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory cancelledAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
         assertTrue(cancelledAuction.status == IEnglishAuctions.Status.CANCELLED);
     }
 
     function test_revert_cancelAuction_bidsAlreadyMade() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1223,8 +1166,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_bidInAuction_firstBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1241,8 +1183,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1256,8 +1199,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_bidInAuction_secondBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1274,8 +1216,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1308,8 +1251,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_bidInAuction_buyoutBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1326,8 +1268,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1360,8 +1303,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_revert_bidInAuction_inactiveAuction() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1390,8 +1332,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_revert_bidInAuction_notOwnerOfBidTokens() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1411,8 +1352,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_revert_bidInAuction_notApprovedMarketplaceToTransferToken() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1432,8 +1372,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_revert_bidInAuction_notNewWinningBid_firstBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1454,8 +1393,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_revert_bidInAuction_notNewWinningBid_secondBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1472,8 +1410,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 1 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1495,8 +1434,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_bidInAuction_nativeToken() public {
         uint256 auctionId = _setup_newAuction_nativeToken();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1512,8 +1450,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction{ value: 1 ether }(auctionId, 1 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1531,8 +1470,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_collectAuctionPayout_buyoutBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1549,8 +1487,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 10 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1571,8 +1510,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_collectAuctionPayout_afterAuctionEnds() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1589,8 +1527,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 5 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1614,8 +1553,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_revert_collectAuctionPayout_auctionNotExpired() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1640,8 +1578,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_revert_collectAuctionPayout_noBidsInAuction() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1663,8 +1600,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_collectAuctionTokens() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1681,8 +1617,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 5 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1705,8 +1642,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_revert_collectAuctionTokens_auctionNotExpired() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1723,8 +1659,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 5 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -1747,8 +1684,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_isNewWinningBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1773,8 +1709,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_revert_isNewWinningBid() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1841,8 +1776,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
             auctionIds[i] = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
         }
 
-        IEnglishAuctions.Auction[] memory activeAuctions = EnglishAuctionsLogic(marketplace)
-            .getAllAuctions(0, 4);
+        IEnglishAuctions.Auction[] memory activeAuctions = EnglishAuctionsLogic(marketplace).getAllAuctions(0, 4);
         assertEq(activeAuctions.length, 5);
 
         for (uint256 i = 0; i < 5; i += 1) {
@@ -1858,10 +1792,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
             assertEq(activeAuctions[i].bidBufferBps, bidBufferBps);
             assertEq(activeAuctions[i].startTimestamp, startTimestamp);
             assertEq(activeAuctions[i].endTimestamp, endTimestamp);
-            assertEq(
-                uint256(activeAuctions[i].tokenType),
-                uint256(IEnglishAuctions.TokenType.ERC721)
-            );
+            assertEq(uint256(activeAuctions[i].tokenType), uint256(IEnglishAuctions.TokenType.ERC721));
         }
     }
 
@@ -1910,8 +1841,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
             auctionIds[i] = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
         }
 
-        IEnglishAuctions.Auction[] memory activeAuctions = EnglishAuctionsLogic(marketplace)
-            .getAllValidAuctions(0, 4);
+        IEnglishAuctions.Auction[] memory activeAuctions = EnglishAuctionsLogic(marketplace).getAllValidAuctions(0, 4);
         assertEq(activeAuctions.length, 5);
 
         for (uint256 i = 0; i < 5; i += 1) {
@@ -1927,10 +1857,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
             assertEq(activeAuctions[i].bidBufferBps, bidBufferBps);
             assertEq(activeAuctions[i].startTimestamp, startTimestamp);
             assertEq(activeAuctions[i].endTimestamp, endTimestamp);
-            assertEq(
-                uint256(activeAuctions[i].tokenType),
-                uint256(IEnglishAuctions.TokenType.ERC721)
-            );
+            assertEq(uint256(activeAuctions[i].tokenType), uint256(IEnglishAuctions.TokenType.ERC721));
         }
 
         // create an inactive auction, and check the auctions returned
@@ -1956,8 +1883,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_isAuctionExpired() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         vm.warp(existingAuction.endTimestamp);
         assertTrue(EnglishAuctionsLogic(marketplace).isAuctionExpired(auctionId));
@@ -1976,8 +1902,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_collectAuctionPayout_buyoutBid_nativeToken() public {
         uint256 auctionId = _setup_newAuction_nativeToken();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -1993,8 +1918,9 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction{ value: 10 ether }(auctionId, 10 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Test consequent states.
         // Seller is owner of token.
@@ -2019,8 +1945,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_audit_native_tokens_locked() public {
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -2059,8 +1984,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
         // Buyout bid : 10 ETH
         uint256 auctionId = _setup_newAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -2109,19 +2033,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
@@ -2141,8 +2064,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
         // Buyout bid : 10 ETH
         uint256 auctionId = _setup_nativeTokenAuction();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         uint256[] memory tokenIds = new uint256[](1);
         tokenIds[0] = existingAuction.tokenId;
@@ -2173,12 +2095,7 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
     address public seller;
     address public buyer;
 
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
 
@@ -2192,9 +2109,7 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -2325,19 +2240,18 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
         erc721.setApprovalForAll(marketplace, true);
 
         ////////////////////////////// Setup: auction tokens //////////////////////////////////
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
         vm.prank(seller);
         uint256 auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
 
@@ -2389,9 +2303,7 @@ contract BreitwieserTheBidder is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -2583,11 +2495,7 @@ contract BreitwieserTheBidder is BaseTest, IExtension {
         // Bid a small amount: 1 wei.
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId2, 1);
 
-        assertEq(
-            erc1155.balanceOf(attacker, tokenId),
-            1,
-            "Attack should have collected back their token."
-        );
+        assertEq(erc1155.balanceOf(attacker, tokenId), 1, "Attack should have collected back their token.");
 
         // Note: Attacker does not collect payout, it sets auction quantity to 0 and prevent further token collections.
 
@@ -2622,9 +2530,7 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -2749,19 +2655,18 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         erc1155.setApprovalForAll(marketplace, true);
 
         // Auction tokens.
-        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions
-            .AuctionParameters(
-                assetContract,
-                tokenId,
-                quantity,
-                currency,
-                minimumBidAmount,
-                buyoutBidAmount,
-                timeBufferInSeconds,
-                bidBufferBps,
-                startTimestamp,
-                endTimestamp
-            );
+        IEnglishAuctions.AuctionParameters memory auctionParams = IEnglishAuctions.AuctionParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            minimumBidAmount,
+            buyoutBidAmount,
+            timeBufferInSeconds,
+            bidBufferBps,
+            startTimestamp,
+            endTimestamp
+        );
 
         vm.prank(seller);
         auctionId = EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
@@ -2769,8 +2674,7 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
     function test_state_collectAuctionTokens_afterAuctionPayout() public {
         uint256 auctionId = _setup_newAuction_1155();
-        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace)
-            .getAuction(auctionId);
+        IEnglishAuctions.Auction memory existingAuction = EnglishAuctionsLogic(marketplace).getAuction(auctionId);
 
         // Verify existing auction at `auctionId`
         assertEq(existingAuction.assetContract, address(erc1155));
@@ -2784,8 +2688,9 @@ contract IssueC3_MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, 5 ether);
         vm.stopPrank();
 
-        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace)
-            .getWinningBid(auctionId);
+        (address bidder, address currency, uint256 bidAmount) = EnglishAuctionsLogic(marketplace).getWinningBid(
+            auctionId
+        );
 
         // Seller is owner of token.
         assertEq(erc20.balanceOf(marketplace), 5 ether);

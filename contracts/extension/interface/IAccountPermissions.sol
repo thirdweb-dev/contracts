@@ -88,9 +88,7 @@ interface IAccountPermissions {
     function isActiveSigner(address signer) external view returns (bool);
 
     /// @notice Returns the restrictions under which a signer can use the smart wallet.
-    function getPermissionsForSigner(
-        address signer
-    ) external view returns (SignerPermissions memory permissions);
+    function getPermissionsForSigner(address signer) external view returns (SignerPermissions memory permissions);
 
     /// @notice Returns all active and inactive signers of the account.
     function getAllSigners() external view returns (SignerPermissions[] memory signers);
@@ -112,8 +110,5 @@ interface IAccountPermissions {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Sets the permissions for a given signer.
-    function setPermissionsForSigner(
-        SignerPermissionRequest calldata req,
-        bytes calldata signature
-    ) external;
+    function setPermissionsForSigner(SignerPermissionRequest calldata req, bytes calldata signature) external;
 }

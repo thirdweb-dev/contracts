@@ -39,12 +39,7 @@ interface ITokenERC1155 is IERC1155Upgradeable {
     }
 
     /// @dev Emitted when an account with MINTER_ROLE mints an NFT.
-    event TokensMinted(
-        address indexed mintedTo,
-        uint256 indexed tokenIdMinted,
-        string uri,
-        uint256 quantityMinted
-    );
+    event TokensMinted(address indexed mintedTo, uint256 indexed tokenIdMinted, string uri, uint256 quantityMinted);
 
     /// @dev Emitted when tokens are minted.
     event TokensMintedWithSignature(

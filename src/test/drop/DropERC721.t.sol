@@ -13,12 +13,7 @@ contract DropERC721Test is BaseTest {
     using Strings for uint256;
     using Strings for address;
 
-    event TokensLazyMinted(
-        uint256 indexed startTokenId,
-        uint256 endTokenId,
-        string baseURI,
-        bytes encryptedBaseURI
-    );
+    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
 
@@ -343,11 +338,7 @@ contract DropERC721Test is BaseTest {
         uint256 nextTokenIdToMintBefore = drop.nextTokenIdToMint();
 
         vm.startPrank(deployer);
-        uint256 batchId = drop.lazyMint(
-            amountToLazyMint,
-            baseURI,
-            abi.encode(encryptedBaseURI, provenanceHash)
-        );
+        uint256 batchId = drop.lazyMint(amountToLazyMint, baseURI, abi.encode(encryptedBaseURI, provenanceHash));
 
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, drop.nextTokenIdToMint());
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
@@ -445,11 +436,7 @@ contract DropERC721Test is BaseTest {
         uint256 nextTokenIdToMintBefore = drop.nextTokenIdToMint();
 
         vm.startPrank(deployer);
-        uint256 batchId = drop.lazyMint(
-            amountToLazyMint,
-            baseURI,
-            abi.encode(encryptedBaseURI, provenanceHash)
-        );
+        uint256 batchId = drop.lazyMint(amountToLazyMint, baseURI, abi.encode(encryptedBaseURI, provenanceHash));
 
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, drop.nextTokenIdToMint());
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);

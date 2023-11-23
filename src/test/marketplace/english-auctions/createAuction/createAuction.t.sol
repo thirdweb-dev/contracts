@@ -52,9 +52,7 @@ contract CreateAuctionTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -209,11 +207,7 @@ contract CreateAuctionTest is BaseTest, IExtension {
         _;
     }
 
-    function test_createAuction_whenTokenIsInvalid()
-        public
-        whenCallerHasListerRole
-        whenAssetHasAssetRole
-    {
+    function test_createAuction_whenTokenIsInvalid() public whenCallerHasListerRole whenAssetHasAssetRole {
         address newToken = address(new InvalidToken());
 
         vm.prank(marketplaceDeployer);
@@ -259,10 +253,7 @@ contract CreateAuctionTest is BaseTest, IExtension {
 
         assertEq(EnglishAuctionsLogic(marketplace).totalAuctions(), 0);
         assertEq(erc721.ownerOf(0), seller);
-        assertEq(
-            EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).assetContract,
-            address(0)
-        );
+        assertEq(EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).assetContract, address(0));
 
         vm.prank(seller);
         erc721.setApprovalForAll(marketplace, true);
@@ -283,18 +274,12 @@ contract CreateAuctionTest is BaseTest, IExtension {
         assertEq(EnglishAuctionsLogic(marketplace).getAllValidAuctions(0, 0).length, 1);
 
         assertEq(EnglishAuctionsLogic(marketplace).getAllAuctions(0, 0).length, 1);
-        assertEq(
-            EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).auctionId,
-            expectedAuctionId
-        );
+        assertEq(EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).auctionId, expectedAuctionId);
         assertEq(
             EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).assetContract,
             auctionParams.assetContract
         );
-        assertEq(
-            EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).tokenId,
-            auctionParams.tokenId
-        );
+        assertEq(EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).tokenId, auctionParams.tokenId);
         assertEq(
             EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).minimumBidAmount,
             auctionParams.minimumBidAmount
@@ -319,14 +304,8 @@ contract CreateAuctionTest is BaseTest, IExtension {
             EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).endTimestamp,
             auctionParams.endTimestamp
         );
-        assertEq(
-            EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).auctionCreator,
-            seller
-        );
-        assertEq(
-            EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).currency,
-            auctionParams.currency
-        );
+        assertEq(EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).auctionCreator, seller);
+        assertEq(EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).currency, auctionParams.currency);
         assertEq(
             uint256(EnglishAuctionsLogic(marketplace).getAuction(expectedAuctionId).tokenType),
             uint256(IEnglishAuctions.TokenType.ERC721)

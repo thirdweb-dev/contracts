@@ -26,23 +26,12 @@ import "../extension/interface/IBurnableERC20.sol";
  *                             presenting a message signed by the account.
  */
 
-contract ERC20Base is
-    ContractMetadata,
-    Multicall,
-    Ownable,
-    ERC20Permit,
-    IMintableERC20,
-    IBurnableERC20
-{
+contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit, IMintableERC20, IBurnableERC20 {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(
-        address _defaultAdmin,
-        string memory _name,
-        string memory _symbol
-    ) ERC20Permit(_name, _symbol) {
+    constructor(address _defaultAdmin, string memory _name, string memory _symbol) ERC20Permit(_name, _symbol) {
         _setupOwner(_defaultAdmin);
     }
 

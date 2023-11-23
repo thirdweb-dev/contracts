@@ -47,9 +47,7 @@ abstract contract Royalty is IRoyalty {
      *  @dev             Returns royalty recipient and bps for `_tokenId`.
      *  @param _tokenId  The tokenID of the NFT for which to query royalty info.
      */
-    function getRoyaltyInfoForToken(
-        uint256 _tokenId
-    ) public view override returns (address, uint16) {
+    function getRoyaltyInfoForToken(uint256 _tokenId) public view override returns (address, uint16) {
         RoyaltyInfo memory royaltyForToken = royaltyInfoForToken[_tokenId];
 
         return
@@ -74,10 +72,7 @@ abstract contract Royalty is IRoyalty {
      *  @param _royaltyRecipient   Address to be set as default royalty recipient.
      *  @param _royaltyBps         Updated royalty bps.
      */
-    function setDefaultRoyaltyInfo(
-        address _royaltyRecipient,
-        uint256 _royaltyBps
-    ) external override {
+    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external override {
         if (!_canSetRoyaltyInfo()) {
             revert("Not authorized");
         }
@@ -106,11 +101,7 @@ abstract contract Royalty is IRoyalty {
      *  @param _recipient   Address to be set as royalty recipient for given token Id.
      *  @param _bps         Updated royalty bps for the token Id.
      */
-    function setRoyaltyInfoForToken(
-        uint256 _tokenId,
-        address _recipient,
-        uint256 _bps
-    ) external override {
+    function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external override {
         if (!_canSetRoyaltyInfo()) {
             revert("Not authorized");
         }
@@ -119,11 +110,7 @@ abstract contract Royalty is IRoyalty {
     }
 
     /// @dev Lets a contract admin set the royalty recipient and bps for a particular token Id.
-    function _setupRoyaltyInfoForToken(
-        uint256 _tokenId,
-        address _recipient,
-        uint256 _bps
-    ) internal {
+    function _setupRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) internal {
         if (_bps > 10_000) {
             revert("Exceeds max bps");
         }

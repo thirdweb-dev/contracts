@@ -35,12 +35,7 @@ contract Number {
 }
 
 contract NFTRejector {
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes memory
-    ) public virtual returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes memory) public virtual returns (bytes4) {
         revert("NFTs not accepted");
     }
 }
@@ -55,8 +50,7 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
     );
 
     // Target contracts
-    EntryPoint private constant entrypoint =
-        EntryPoint(payable(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789));
+    EntryPoint private constant entrypoint = EntryPoint(payable(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789));
     DynamicAccountFactory private accountFactory;
 
     // Mocks
@@ -82,11 +76,9 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes32 typedDataHash)
-    {
+    function _prepareSignature(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes32 typedDataHash) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -95,9 +87,7 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         bytes32 typehashEip712 = keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
-        bytes32 domainSeparator = keccak256(
-            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender)
-        );
+        bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
 
         bytes memory encodedRequestStart = abi.encode(
             typehashSignerPermissionRequest,
@@ -119,11 +109,9 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
@@ -275,15 +263,8 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
     }
 
     function _setup_executeTransaction() internal {
-        bytes memory initCallData = abi.encodeWithSignature(
-            "createAccount(address,bytes)",
-            accountAdmin,
-            data
-        );
-        bytes memory initCode = abi.encodePacked(
-            abi.encodePacked(address(accountFactory)),
-            initCallData
-        );
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
+        bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
             accountAdminPKey,
@@ -304,18 +285,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         bool adminStatusBefore = SimpleAccount(payable(account)).isAdmin(accountSigner);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                1,
-                approvedTargets,
-                0,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            1,
+            approvedTargets,
+            0,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -334,18 +314,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address[] memory approvedTargets = new address[](0);
 
         {
-            IAccountPermissions.SignerPermissionRequest memory request = IAccountPermissions
-                .SignerPermissionRequest(
-                    accountSigner,
-                    1,
-                    approvedTargets,
-                    1,
-                    0,
-                    type(uint128).max,
-                    0,
-                    type(uint128).max,
-                    uidCache
-                );
+            IAccountPermissions.SignerPermissionRequest memory request = IAccountPermissions.SignerPermissionRequest(
+                accountSigner,
+                1,
+                approvedTargets,
+                1,
+                0,
+                type(uint128).max,
+                0,
+                type(uint128).max,
+                uidCache
+            );
 
             bytes memory sig2 = _signSignerPermissionRequest(request);
             SimpleAccount(payable(account)).setPermissionsForSigner(request, sig2);
@@ -358,18 +337,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         uidCache = bytes32("new uid");
 
-        IAccountPermissions.SignerPermissionRequest memory req = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                2,
-                approvedTargets,
-                1,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory req = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            2,
+            approvedTargets,
+            1,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         bytes memory sig3 = _signSignerPermissionRequest(req);
         SimpleAccount(payable(account)).setPermissionsForSigner(req, sig3);
@@ -388,18 +366,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         address[] memory approvedTargets = new address[](0);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                1,
-                approvedTargets,
-                1,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            1,
+            approvedTargets,
+            1,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
         SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
@@ -430,18 +407,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         address[] memory approvedTargets = new address[](0);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                1,
-                approvedTargets,
-                1,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            1,
+            approvedTargets,
+            1,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
 
@@ -456,18 +432,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         address[] memory approvedTargets = new address[](0);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                2,
-                approvedTargets,
-                1,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            2,
+            approvedTargets,
+            1,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
 
@@ -482,18 +457,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         address[] memory approvedTargets = new address[](0);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                1,
-                approvedTargets,
-                0,
-                0,
-                type(uint128).max,
-                uint128(block.timestamp + 1000),
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            1,
+            approvedTargets,
+            0,
+            0,
+            type(uint128).max,
+            uint128(block.timestamp + 1000),
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -507,18 +481,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         address[] memory approvedTargets = new address[](0);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                1,
-                approvedTargets,
-                0,
-                0,
-                type(uint128).max,
-                0,
-                uint128(block.timestamp - 1),
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            1,
+            approvedTargets,
+            0,
+            0,
+            type(uint128).max,
+            0,
+            uint128(block.timestamp - 1),
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -532,18 +505,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address account = accountFactory.getAddress(accountAdmin, bytes(""));
         address[] memory approvedTargets = new address[](0);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                0,
-                approvedTargets,
-                0,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            0,
+            approvedTargets,
+            0,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequestInvalid(permissionsReq);
@@ -559,18 +531,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         {
             //set admin status
-            IAccountPermissions.SignerPermissionRequest memory req = IAccountPermissions
-                .SignerPermissionRequest(
-                    accountSigner,
-                    1,
-                    approvedTargets,
-                    0,
-                    0,
-                    type(uint128).max,
-                    0,
-                    type(uint128).max,
-                    uidCache
-                );
+            IAccountPermissions.SignerPermissionRequest memory req = IAccountPermissions.SignerPermissionRequest(
+                accountSigner,
+                1,
+                approvedTargets,
+                0,
+                0,
+                type(uint128).max,
+                0,
+                type(uint128).max,
+                uidCache
+            );
 
             vm.prank(accountAdmin);
             bytes memory sig2 = _signSignerPermissionRequest(req);
@@ -581,18 +552,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         uidCache = bytes32("new uid");
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                0,
-                approvedTargets,
-                0,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            0,
+            approvedTargets,
+            0,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig3 = _signSignerPermissionRequest(permissionsReq);
@@ -607,25 +577,23 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(numberContract);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                0,
-                approvedTargets,
-                1,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            0,
+            approvedTargets,
+            1,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
         SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
 
-        IAccountPermissions.SignerPermissions[] memory allSigners = SimpleAccount(payable(account))
-            .getAllSigners();
+        IAccountPermissions.SignerPermissions[] memory allSigners = SimpleAccount(payable(account)).getAllSigners();
         assertEq(allSigners[0].signer, accountSigner);
         assertEq(allSigners[0].approvedTargets[0], address(numberContract));
         assertEq(allSigners[0].nativeTokenLimitPerTransaction, 1);
@@ -640,18 +608,17 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(numberContract);
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                0,
-                approvedTargets,
-                1,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            0,
+            approvedTargets,
+            1,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);

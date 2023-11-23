@@ -4,11 +4,7 @@ pragma solidity ^0.8.0;
 /// @author thirdweb
 
 library MerkleProof {
-    function verify(
-        bytes32[] memory proof,
-        bytes32 root,
-        bytes32 leaf
-    ) internal pure returns (bool, uint256) {
+    function verify(bytes32[] memory proof, bytes32 root, bytes32 leaf) internal pure returns (bool, uint256) {
         bytes32 computedHash = leaf;
         uint256 index = 0;
 

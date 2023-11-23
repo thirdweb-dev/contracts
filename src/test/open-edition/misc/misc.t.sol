@@ -111,8 +111,7 @@ contract OpenEditionERC721Test_misc is BaseTest {
 
         vm.warp(1);
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;

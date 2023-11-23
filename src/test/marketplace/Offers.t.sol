@@ -37,9 +37,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -85,22 +83,13 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         });
 
         extension_offers.functions = new ExtensionFunction[](7);
-        extension_offers.functions[0] = ExtensionFunction(
-            OffersLogic.totalOffers.selector,
-            "totalOffers()"
-        );
+        extension_offers.functions[0] = ExtensionFunction(OffersLogic.totalOffers.selector, "totalOffers()");
         extension_offers.functions[1] = ExtensionFunction(
             OffersLogic.makeOffer.selector,
             "makeOffer((address,uint256,uint256,address,uint256,uint256))"
         );
-        extension_offers.functions[2] = ExtensionFunction(
-            OffersLogic.cancelOffer.selector,
-            "cancelOffer(uint256)"
-        );
-        extension_offers.functions[3] = ExtensionFunction(
-            OffersLogic.acceptOffer.selector,
-            "acceptOffer(uint256)"
-        );
+        extension_offers.functions[2] = ExtensionFunction(OffersLogic.cancelOffer.selector, "cancelOffer(uint256)");
+        extension_offers.functions[3] = ExtensionFunction(OffersLogic.acceptOffer.selector, "acceptOffer(uint256)");
         extension_offers.functions[4] = ExtensionFunction(
             OffersLogic.getAllValidOffers.selector,
             "getAllValidOffers(uint256,uint256)"
@@ -109,10 +98,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
             OffersLogic.getAllOffers.selector,
             "getAllOffers(uint256,uint256)"
         );
-        extension_offers.functions[6] = ExtensionFunction(
-            OffersLogic.getOffer.selector,
-            "getOffer(uint256)"
-        );
+        extension_offers.functions[6] = ExtensionFunction(OffersLogic.getOffer.selector, "getOffer(uint256)");
 
         extensions[0] = extension_offers;
     }
@@ -146,9 +132,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         royaltyEngine = new MockRoyaltyEngineV1(mockRecipients, mockAmounts);
     }
 
-    function _setupOfferForRoyaltyTests(
-        address erc721TokenAddress
-    ) private returns (uint256 offerId) {
+    function _setupOfferForRoyaltyTests(address erc721TokenAddress) private returns (uint256 offerId) {
         // Sample offer parameters.
         address assetContract = erc721TokenAddress;
         uint256 tokenId = 0;
@@ -203,10 +187,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         vm.prank(marketplaceDeployer);
         RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
 
-        assertEq(
-            RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(),
-            address(royaltyEngine)
-        );
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
 
         // 1. ========= Make offer =========
 
@@ -226,11 +207,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
 
             // Seller gets total price minus royalty amounts
-            assertBalERC20Eq(
-                address(erc20),
-                seller,
-                totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1]
-            );
+            assertBalERC20Eq(address(erc20), seller, totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1]);
         }
     }
 
@@ -241,21 +218,12 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         vm.prank(marketplaceDeployer);
         RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
 
-        assertEq(
-            RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(),
-            address(royaltyEngine)
-        );
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
 
         // create token with ERC2981
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
-        ERC721Base nft2981 = new ERC721Base(
-            address(0x12345),
-            "NFT 2981",
-            "NFT2981",
-            royaltyRecipient,
-            royaltyBps
-        );
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
         // Mint the ERC721 tokens to seller. These tokens will be sold.
         vm.prank(address(0x12345));
         nft2981.mintTo(seller, "");
@@ -287,13 +255,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         // create token with ERC2981
         address royaltyRecipient = address(0x12345);
         uint128 royaltyBps = 10;
-        ERC721Base nft2981 = new ERC721Base(
-            address(0x12345),
-            "NFT 2981",
-            "NFT2981",
-            royaltyRecipient,
-            royaltyBps
-        );
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, royaltyBps);
         vm.prank(address(0x12345));
         nft2981.mintTo(seller, "");
 
@@ -331,10 +293,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         vm.prank(marketplaceDeployer);
         RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
 
-        assertEq(
-            RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(),
-            address(royaltyEngine)
-        );
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
 
         // Set platform fee on marketplace
         address platformFeeRecipient = marketplaceDeployer;
@@ -379,10 +338,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         vm.prank(marketplaceDeployer);
         RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
 
-        assertEq(
-            RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(),
-            address(royaltyEngine)
-        );
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
 
         // Set platform fee on marketplace
         address platformFeeRecipient = marketplaceDeployer;

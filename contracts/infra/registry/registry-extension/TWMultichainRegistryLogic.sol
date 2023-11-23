@@ -36,20 +36,13 @@ contract TWMultichainRegistryLogic is ITWMultichainRegistry, ERC2771ContextConsu
     //////////////////////////////////////////////////////////////*/
 
     // slither-disable-next-line similar-names
-    function add(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId,
-        string memory metadataUri
-    ) external {
+    function add(address _deployer, address _deployment, uint256 _chainId, string memory metadataUri) external {
         require(
-            PermissionsEnumerableLogic(address(this)).hasRole(OPERATOR_ROLE, _msgSender()) ||
-                _deployer == _msgSender(),
+            PermissionsEnumerableLogic(address(this)).hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
             "not operator or deployer."
         );
 
-        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage
-            .multichainRegistryStorage();
+        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
 
         bool added = data.deployments[_deployer][_chainId].add(_deployment);
         require(added, "failed to add");
@@ -66,13 +59,11 @@ contract TWMultichainRegistryLogic is ITWMultichainRegistry, ERC2771ContextConsu
     // slither-disable-next-line similar-names
     function remove(address _deployer, address _deployment, uint256 _chainId) external {
         require(
-            PermissionsEnumerableLogic(address(this)).hasRole(OPERATOR_ROLE, _msgSender()) ||
-                _deployer == _msgSender(),
+            PermissionsEnumerableLogic(address(this)).hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
             "not operator or deployer."
         );
 
-        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage
-            .multichainRegistryStorage();
+        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
 
         bool removed = data.deployments[_deployer][_chainId].remove(_deployment);
         require(removed, "failed to remove");
@@ -81,8 +72,7 @@ contract TWMultichainRegistryLogic is ITWMultichainRegistry, ERC2771ContextConsu
     }
 
     function getAll(address _deployer) external view returns (Deployment[] memory allDeployments) {
-        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage
-            .multichainRegistryStorage();
+        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
         uint256 totalDeployments;
         uint256 chainIdsLen = data.chainIds.length();
 
@@ -113,8 +103,7 @@ contract TWMultichainRegistryLogic is ITWMultichainRegistry, ERC2771ContextConsu
     }
 
     function count(address _deployer) external view returns (uint256 deploymentCount) {
-        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage
-            .multichainRegistryStorage();
+        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
         uint256 chainIdsLen = data.chainIds.length();
 
         for (uint256 i = 0; i < chainIdsLen; i += 1) {
@@ -124,12 +113,8 @@ contract TWMultichainRegistryLogic is ITWMultichainRegistry, ERC2771ContextConsu
         }
     }
 
-    function getMetadataUri(
-        uint256 _chainId,
-        address _deployment
-    ) external view returns (string memory metadataUri) {
-        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage
-            .multichainRegistryStorage();
+    function getMetadataUri(uint256 _chainId, address _deployment) external view returns (string memory metadataUri) {
+        TWMultichainRegistryStorage.Data storage data = TWMultichainRegistryStorage.multichainRegistryStorage();
         metadataUri = data.addressToMetadataUri[_chainId][_deployment];
     }
 }

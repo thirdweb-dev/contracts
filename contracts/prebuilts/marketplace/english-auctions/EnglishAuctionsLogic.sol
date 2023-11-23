@@ -46,10 +46,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyListerRole() {
-        require(
-            Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()),
-            "!LISTER_ROLE"
-        );
+        require(Permissions(address(this)).hasRoleWithSwitch(LISTER_ROLE, _msgSender()), "!LISTER_ROLE");
         _;
     }
 
@@ -70,8 +67,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     /// @dev Checks whether an auction exists.
     modifier onlyExistingAuction(uint256 _auctionId) {
         require(
-            _englishAuctionsStorage().auctions[_auctionId].status ==
-                IEnglishAuctions.Status.CREATED,
+            _englishAuctionsStorage().auctions[_auctionId].status == IEnglishAuctions.Status.CREATED,
             "Marketplace: invalid auction."
         );
         _;
@@ -130,8 +126,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
 
         require(
-            _targetAuction.endTimestamp > block.timestamp &&
-                _targetAuction.startTimestamp <= block.timestamp,
+            _targetAuction.endTimestamp > block.timestamp && _targetAuction.startTimestamp <= block.timestamp,
             "Marketplace: inactive auction."
         );
         require(_bidAmount != 0, "Marketplace: Bidding with zero amount.");
@@ -144,11 +139,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
             "Marketplace: Bidding above buyout price."
         );
 
-        Bid memory newBid = Bid({
-            auctionId: _auctionId,
-            bidder: _msgSender(),
-            bidAmount: _bidAmount
-        });
+        Bid memory newBid = Bid({ auctionId: _auctionId, bidder: _msgSender(), bidAmount: _bidAmount });
 
         _handleBid(_targetAuction, newBid);
     }
@@ -163,22 +154,14 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
         Bid memory _winningBid = _englishAuctionsStorage().winningBid[_auctionId];
 
-        require(
-            _targetAuction.status != IEnglishAuctions.Status.CANCELLED,
-            "Marketplace: invalid auction."
-        );
-        require(
-            _targetAuction.endTimestamp <= block.timestamp,
-            "Marketplace: auction still active."
-        );
+        require(_targetAuction.status != IEnglishAuctions.Status.CANCELLED, "Marketplace: invalid auction.");
+        require(_targetAuction.endTimestamp <= block.timestamp, "Marketplace: auction still active.");
         require(_winningBid.bidder != address(0), "Marketplace: no bids were made.");
 
         _closeAuctionForAuctionCreator(_targetAuction, _winningBid);
 
         if (_targetAuction.status != IEnglishAuctions.Status.COMPLETED) {
-            _englishAuctionsStorage().auctions[_auctionId].status = IEnglishAuctions
-                .Status
-                .COMPLETED;
+            _englishAuctionsStorage().auctions[_auctionId].status = IEnglishAuctions.Status.COMPLETED;
         }
     }
 
@@ -186,29 +169,19 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
         Bid memory _winningBid = _englishAuctionsStorage().winningBid[_auctionId];
 
-        require(
-            _targetAuction.status != IEnglishAuctions.Status.CANCELLED,
-            "Marketplace: invalid auction."
-        );
-        require(
-            _targetAuction.endTimestamp <= block.timestamp,
-            "Marketplace: auction still active."
-        );
+        require(_targetAuction.status != IEnglishAuctions.Status.CANCELLED, "Marketplace: invalid auction.");
+        require(_targetAuction.endTimestamp <= block.timestamp, "Marketplace: auction still active.");
         require(_winningBid.bidder != address(0), "Marketplace: no bids were made.");
 
         _closeAuctionForBidder(_targetAuction, _winningBid);
 
         if (_targetAuction.status != IEnglishAuctions.Status.COMPLETED) {
-            _englishAuctionsStorage().auctions[_auctionId].status = IEnglishAuctions
-                .Status
-                .COMPLETED;
+            _englishAuctionsStorage().auctions[_auctionId].status = IEnglishAuctions.Status.COMPLETED;
         }
     }
 
     /// @dev Cancels an auction.
-    function cancelAuction(
-        uint256 _auctionId
-    ) external onlyExistingAuction(_auctionId) onlyAuctionCreator(_auctionId) {
+    function cancelAuction(uint256 _auctionId) external onlyExistingAuction(_auctionId) onlyAuctionCreator(_auctionId) {
         Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
         Bid memory _winningBid = _englishAuctionsStorage().winningBid[_auctionId];
 
@@ -249,14 +222,8 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         _auction = _englishAuctionsStorage().auctions[_auctionId];
     }
 
-    function getAllAuctions(
-        uint256 _startId,
-        uint256 _endId
-    ) external view returns (Auction[] memory _allAuctions) {
-        require(
-            _startId <= _endId && _endId < _englishAuctionsStorage().totalAuctions,
-            "invalid range"
-        );
+    function getAllAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory _allAuctions) {
+        require(_startId <= _endId && _endId < _englishAuctionsStorage().totalAuctions, "invalid range");
 
         _allAuctions = new Auction[](_endId - _startId + 1);
 
@@ -269,10 +236,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         uint256 _startId,
         uint256 _endId
     ) external view returns (Auction[] memory _validAuctions) {
-        require(
-            _startId <= _endId && _endId < _englishAuctionsStorage().totalAuctions,
-            "invalid range"
-        );
+        require(_startId <= _endId && _endId < _englishAuctionsStorage().totalAuctions, "invalid range");
 
         Auction[] memory _auctions = new Auction[](_endId - _startId + 1);
         uint256 _auctionCount;
@@ -316,9 +280,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         _bidAmount = _currentWinningBid.bidAmount;
     }
 
-    function isAuctionExpired(
-        uint256 _auctionId
-    ) external view onlyExistingAuction(_auctionId) returns (bool) {
+    function isAuctionExpired(uint256 _auctionId) external view onlyExistingAuction(_auctionId) returns (bool) {
         return _englishAuctionsStorage().auctions[_auctionId].endTimestamp >= block.timestamp;
     }
 
@@ -344,20 +306,13 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     }
 
     /// @dev Checks whether the auction creator owns and has approved marketplace to transfer auctioned tokens.
-    function _validateNewAuction(
-        AuctionParameters memory _params,
-        TokenType _tokenType
-    ) internal view {
+    function _validateNewAuction(AuctionParameters memory _params, TokenType _tokenType) internal view {
         require(_params.quantity > 0, "Marketplace: auctioning zero quantity.");
-        require(
-            _params.quantity == 1 || _tokenType == TokenType.ERC1155,
-            "Marketplace: auctioning invalid quantity."
-        );
+        require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "Marketplace: auctioning invalid quantity.");
         require(_params.timeBufferInSeconds > 0, "Marketplace: no time-buffer.");
         require(_params.bidBufferBps > 0, "Marketplace: no bid-buffer.");
         require(
-            _params.startTimestamp + 60 minutes >= block.timestamp &&
-                _params.startTimestamp < _params.endTimestamp,
+            _params.startTimestamp + 60 minutes >= block.timestamp && _params.startTimestamp < _params.endTimestamp,
             "Marketplace: invalid timestamps."
         );
         require(
@@ -368,18 +323,13 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
 
     /// @dev Processes an incoming bid in an auction.
     function _handleBid(Auction memory _targetAuction, Bid memory _incomingBid) internal {
-        Bid memory currentWinningBid = _englishAuctionsStorage().winningBid[
-            _targetAuction.auctionId
-        ];
+        Bid memory currentWinningBid = _englishAuctionsStorage().winningBid[_targetAuction.auctionId];
         uint256 currentBidAmount = currentWinningBid.bidAmount;
         uint256 incomingBidAmount = _incomingBid.bidAmount;
         address _nativeTokenWrapper = nativeTokenWrapper;
 
         // Close auction and execute sale if there's a buyout price and incoming bid amount is buyout price.
-        if (
-            _targetAuction.buyoutBidAmount > 0 &&
-            incomingBidAmount >= _targetAuction.buyoutBidAmount
-        ) {
+        if (_targetAuction.buyoutBidAmount > 0 && incomingBidAmount >= _targetAuction.buyoutBidAmount) {
             incomingBidAmount = _targetAuction.buyoutBidAmount;
             _incomingBid.bidAmount = _targetAuction.buyoutBidAmount;
 
@@ -402,9 +352,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
             // Update the winning bid and auction's end time before external contract calls.
             _englishAuctionsStorage().winningBid[_targetAuction.auctionId] = _incomingBid;
 
-            if (
-                _targetAuction.endTimestamp - block.timestamp <= _targetAuction.timeBufferInSeconds
-            ) {
+            if (_targetAuction.endTimestamp - block.timestamp <= _targetAuction.timeBufferInSeconds) {
                 _targetAuction.endTimestamp += _targetAuction.timeBufferInSeconds;
                 _englishAuctionsStorage().auctions[_targetAuction.auctionId] = _targetAuction;
             }
@@ -450,24 +398,18 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
             isValidNewBid = _incomingBidAmount >= _minimumBidAmount;
         } else {
             isValidNewBid = (_incomingBidAmount > _currentWinningBidAmount &&
-                ((_incomingBidAmount - _currentWinningBidAmount) * MAX_BPS) /
-                    _currentWinningBidAmount >=
+                ((_incomingBidAmount - _currentWinningBidAmount) * MAX_BPS) / _currentWinningBidAmount >=
                 _bidBufferBps);
         }
     }
 
     /// @dev Closes an auction for the winning bidder; distributes auction items to the winning bidder.
-    function _closeAuctionForBidder(
-        Auction memory _targetAuction,
-        Bid memory _winningBid
-    ) internal {
+    function _closeAuctionForBidder(Auction memory _targetAuction, Bid memory _winningBid) internal {
         require(
             !_englishAuctionsStorage().payoutStatus[_targetAuction.auctionId].paidOutAuctionTokens,
             "Marketplace: payout already completed."
         );
-        _englishAuctionsStorage()
-            .payoutStatus[_targetAuction.auctionId]
-            .paidOutAuctionTokens = true;
+        _englishAuctionsStorage().payoutStatus[_targetAuction.auctionId].paidOutAuctionTokens = true;
 
         _targetAuction.endTimestamp = uint64(block.timestamp);
 
@@ -487,18 +429,9 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     }
 
     /// @dev Closes an auction for an auction creator; distributes winning bid amount to auction creator.
-    function _closeAuctionForAuctionCreator(
-        Auction memory _targetAuction,
-        Bid memory _winningBid
-    ) internal {
+    function _closeAuctionForAuctionCreator(Auction memory _targetAuction, Bid memory _winningBid) internal {
         uint256 payoutAmount = _winningBid.bidAmount;
-        _payout(
-            address(this),
-            _targetAuction.auctionCreator,
-            _targetAuction.currency,
-            payoutAmount,
-            _targetAuction
-        );
+        _payout(address(this), _targetAuction.auctionCreator, _targetAuction.currency, payoutAmount, _targetAuction);
 
         emit AuctionClosed(
             _targetAuction.auctionId,
@@ -513,13 +446,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     /// @dev Transfers tokens for auction.
     function _transferAuctionTokens(address _from, address _to, Auction memory _auction) internal {
         if (_auction.tokenType == TokenType.ERC1155) {
-            IERC1155(_auction.assetContract).safeTransferFrom(
-                _from,
-                _to,
-                _auction.tokenId,
-                _auction.quantity,
-                ""
-            );
+            IERC1155(_auction.assetContract).safeTransferFrom(_from, _to, _auction.tokenId, _auction.quantity, "");
         } else if (_auction.tokenType == TokenType.ERC721) {
             IERC721(_auction.assetContract).safeTransferFrom(_from, _to, _auction.tokenId, "");
         }
@@ -538,8 +465,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
 
         // Payout platform fee
         {
-            (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this))
-                .getPlatformFeeInfo();
+            (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
             uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
             // Transfer platform fee
@@ -557,9 +483,8 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         // Payout royalties
         {
             // Get royalty recipients and amounts
-            (address payable[] memory recipients, uint256[] memory amounts) = RoyaltyPaymentsLogic(
-                address(this)
-            ).getRoyalty(_targetAuction.assetContract, _targetAuction.tokenId, _totalPayoutAmount);
+            (address payable[] memory recipients, uint256[] memory amounts) = RoyaltyPaymentsLogic(address(this))
+                .getRoyalty(_targetAuction.assetContract, _targetAuction.tokenId, _totalPayoutAmount);
 
             uint256 royaltyRecipientCount = recipients.length;
 
@@ -602,11 +527,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     }
 
     /// @dev Returns the EnglishAuctions storage.
-    function _englishAuctionsStorage()
-        internal
-        pure
-        returns (EnglishAuctionsStorage.Data storage data)
-    {
+    function _englishAuctionsStorage() internal pure returns (EnglishAuctionsStorage.Data storage data) {
         data = EnglishAuctionsStorage.data();
     }
 }

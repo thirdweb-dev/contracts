@@ -133,18 +133,12 @@ contract TokenBoundAccount is
         entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
-    function token()
-        external
-        view
-        returns (uint256 chainId, address tokenContract, uint256 tokenId)
-    {
+    function token() external view returns (uint256 chainId, address tokenContract, uint256 tokenId) {
         return ERC6551AccountLib.token();
     }
 
     /// @notice See {IERC165-supportsInterface}.
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view virtual override(ERC1155Receiver) returns (bool) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override(ERC1155Receiver) returns (bool) {
         return
             interfaceId == type(IERC1155Receiver).interfaceId ||
             interfaceId == type(IERC721Receiver).interfaceId ||
@@ -162,11 +156,7 @@ contract TokenBoundAccount is
     }
 
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(
-        address _target,
-        uint256 _value,
-        bytes calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
+    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual onlyAdminOrEntrypoint {
         _call(_target, _value, _calldata);
     }
 
@@ -176,10 +166,7 @@ contract TokenBoundAccount is
         uint256[] calldata _value,
         bytes[] calldata _calldata
     ) external virtual onlyAdminOrEntrypoint {
-        require(
-            _target.length == _calldata.length && _target.length == _value.length,
-            "Account: wrong array lengths."
-        );
+        require(_target.length == _calldata.length && _target.length == _value.length, "Account: wrong array lengths.");
         for (uint256 i = 0; i < _target.length; i++) {
             _call(_target[i], _value[i], _calldata[i]);
         }
@@ -221,16 +208,12 @@ contract TokenBoundAccount is
         return 0;
     }
 
-    function getFunctionSignature(
-        bytes calldata data
-    ) internal pure returns (bytes4 functionSelector) {
+    function getFunctionSignature(bytes calldata data) internal pure returns (bytes4 functionSelector) {
         require(data.length >= 4, "Data too short");
         return bytes4(data[:4]);
     }
 
-    function decodeExecuteCalldata(
-        bytes calldata data
-    ) internal pure returns (address _target, uint256 _value) {
+    function decodeExecuteCalldata(bytes calldata data) internal pure returns (address _target, uint256 _value) {
         require(data.length >= 4 + 32 + 32, "Data too short");
 
         // Decode the address, which is bytes 4 to 35
@@ -242,11 +225,7 @@ contract TokenBoundAccount is
 
     function decodeExecuteBatchCalldata(
         bytes calldata data
-    )
-        internal
-        pure
-        returns (address[] memory _targets, uint256[] memory _values, bytes[] memory _callData)
-    {
+    ) internal pure returns (address[] memory _targets, uint256[] memory _values, bytes[] memory _callData) {
         require(data.length >= 4 + 32 + 32 + 32, "Data too short");
 
         (_targets, _values, _callData) = abi.decode(data[4:], (address[], uint256[], bytes[]));
@@ -262,10 +241,7 @@ contract TokenBoundAccount is
     //////////////////////////////////////////////////////////////*/
 
     modifier onlyAdminOrEntrypoint() {
-        require(
-            msg.sender == address(entryPoint()) || msg.sender == owner(),
-            "Account: not admin or EntryPoint."
-        );
+        require(msg.sender == address(entryPoint()) || msg.sender == owner(), "Account: not admin or EntryPoint.");
         _;
     }
 

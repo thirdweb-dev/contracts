@@ -90,13 +90,9 @@ contract BurnToClaimDrop721Logic is
     }
 
     /// @notice See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981).interfaceId == interfaceId;
     }
 
@@ -115,10 +111,7 @@ contract BurnToClaimDrop721Logic is
     ) public override returns (uint256) {
         uint256 nextId = nextTokenIdToLazyMint();
         if (_data.length > 0) {
-            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(
-                _data,
-                (bytes, bytes32)
-            );
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
             if (encryptedURI.length != 0 && provenanceHash != "") {
                 _setEncryptedData(nextId + _amount, _data);
             }
@@ -128,10 +121,7 @@ contract BurnToClaimDrop721Logic is
     }
 
     /// @notice Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
-        external
-        returns (string memory revealedURI)
-    {
+    function reveal(uint256 _index, bytes calldata _key) external returns (string memory revealedURI) {
         require(_hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
@@ -183,8 +173,7 @@ contract BurnToClaimDrop721Logic is
     function setMaxTotalMinted(uint256 _maxTotalMinted) external {
         require(_hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "not admin.");
 
-        BurnToClaimDrop721Storage.Data storage data = BurnToClaimDrop721Storage
-            .burnToClaimDrop721Storage();
+        BurnToClaimDrop721Storage.Data storage data = BurnToClaimDrop721Storage.burnToClaimDrop721Storage();
         data.maxTotalMinted = _maxTotalMinted;
         emit MaxTotalMintedUpdated(_maxTotalMinted);
     }
@@ -231,9 +220,7 @@ contract BurnToClaimDrop721Logic is
 
         (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
 
-        address saleRecipient = _primarySaleRecipient == address(0)
-            ? primarySaleRecipient()
-            : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
@@ -246,26 +233,15 @@ contract BurnToClaimDrop721Logic is
         }
         require(validMsgValue, "Invalid msg value");
 
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            platformFeeRecipient,
-            platformFees
-        );
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            saleRecipient,
-            totalPrice - platformFees
-        );
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId) {
         ERC721AStorage.Data storage data = ERC721AStorage.erc721AStorage();
         startTokenId = data._currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
@@ -338,8 +314,7 @@ contract BurnToClaimDrop721Logic is
 
     /// @notice Global max total NFTs that can be minted.
     function maxTotalMinted() public view returns (uint256) {
-        BurnToClaimDrop721Storage.Data storage data = BurnToClaimDrop721Storage
-            .burnToClaimDrop721Storage();
+        BurnToClaimDrop721Storage.Data storage data = BurnToClaimDrop721Storage.burnToClaimDrop721Storage();
         return data.maxTotalMinted;
     }
 
@@ -375,23 +350,11 @@ contract BurnToClaimDrop721Logic is
         return _msgSender();
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(Context, ERC2771ContextUpgradeable)
-        returns (address)
-    {
+    function _msgSender() internal view virtual override(Context, ERC2771ContextUpgradeable) returns (address) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override(Context, ERC2771ContextUpgradeable)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override(Context, ERC2771ContextUpgradeable) returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

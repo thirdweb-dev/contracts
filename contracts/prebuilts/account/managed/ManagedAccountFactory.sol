@@ -21,12 +21,7 @@ import { ManagedAccount, IEntryPoint } from "./ManagedAccount.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract ManagedAccountFactory is
-    BaseAccountFactory,
-    ContractMetadata,
-    PermissionsEnumerable,
-    BaseRouter
-{
+contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable, BaseRouter {
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -37,10 +32,7 @@ contract ManagedAccountFactory is
         Extension[] memory _defaultExtensions
     )
         BaseRouter(_defaultExtensions)
-        BaseAccountFactory(
-            payable(address(new ManagedAccount(_entrypoint, address(this)))),
-            address(_entrypoint)
-        )
+        BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint, address(this)))), address(_entrypoint))
     {
         __BaseRouter_init();
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
@@ -55,11 +47,7 @@ contract ManagedAccountFactory is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(
-        address _account,
-        address _admin,
-        bytes calldata _data
-    ) internal override {
+    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal override {
         ManagedAccount(payable(_account)).initialize(_admin, _data);
     }
 

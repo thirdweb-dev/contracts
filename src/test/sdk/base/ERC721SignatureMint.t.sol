@@ -25,14 +25,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
     function setUp() public override {
         super.setUp();
         vm.prank(signer);
-        base = new ERC721SignatureMint(
-            signer,
-            NAME,
-            SYMBOL,
-            royaltyRecipient,
-            royaltyBps,
-            saleRecipient
-        );
+        base = new ERC721SignatureMint(signer, NAME, SYMBOL, royaltyRecipient, royaltyBps, saleRecipient);
 
         recipient = address(0x123);
         erc20.mint(recipient, 1_000);
@@ -46,9 +39,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
         typehashEip712 = keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
-        domainSeparator = keccak256(
-            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(base))
-        );
+        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(base)));
 
         _mintrequest.to = recipient;
         _mintrequest.royaltyRecipient = royaltyRecipient;
@@ -65,11 +56,10 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(ERC721SignatureMint.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        ERC721SignatureMint.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,
@@ -85,9 +75,7 @@ contract BaseERC721SignatureMintTest is BaseUtilTest {
             _request.uid
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);

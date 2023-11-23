@@ -115,11 +115,7 @@ contract PackVRFDirect is
         address _trustedForwarder,
         address _linkTokenAddress,
         address _vrfV2Wrapper
-    )
-        VRFV2WrapperConsumerBase(_linkTokenAddress, _vrfV2Wrapper)
-        TokenStore(_nativeTokenWrapper)
-        initializer
-    {
+    ) VRFV2WrapperConsumerBase(_linkTokenAddress, _vrfV2Wrapper) TokenStore(_nativeTokenWrapper) initializer {
         forwarder = _trustedForwarder;
     }
 
@@ -190,13 +186,9 @@ contract PackVRFDirect is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155Receiver, ERC1155Upgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155Receiver, ERC1155Upgradeable, IERC165) returns (bool) {
         return
             super.supportsInterface(interfaceId) ||
             type(IERC2981Upgradeable).interfaceId == interfaceId ||
@@ -216,13 +208,7 @@ contract PackVRFDirect is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    )
-        external
-        payable
-        onlyRole(minterRole)
-        nonReentrant
-        returns (uint256 packId, uint256 packTotalSupply)
-    {
+    ) external payable onlyRole(minterRole) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
         require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
 
         packId = nextTokenIdToMint;
@@ -297,10 +283,7 @@ contract PackVRFDirect is
     }
 
     /// @notice Called by Chainlink VRF to fulfill a random number request.
-    function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords)
-        internal
-        override
-    {
+    function fulfillRandomWords(uint256 _requestId, uint256[] memory _randomWords) internal override {
         RequestInfo memory info = requestInfo[_requestId];
 
         require(info.randomWords.length == 0, "!Req");
@@ -331,10 +314,7 @@ contract PackVRFDirect is
     }
 
     function _claimRewards(address opener) internal returns (Token[] memory) {
-        require(
-            isTrustedForwarder(msg.sender) || msg.sender == address(this) || opener == tx.origin,
-            "!EOA"
-        );
+        require(isTrustedForwarder(msg.sender) || msg.sender == address(this) || opener == tx.origin, "!EOA");
         require(canClaimRewards(opener), "!ActiveReq");
         uint256 reqId = openerToReqId[opener];
         RequestInfo memory info = requestInfo[reqId];
@@ -376,10 +356,7 @@ contract PackVRFDirect is
         for (uint256 i = 0; i < _contents.length; i += 1) {
             require(_contents[i].totalAmount != 0, "0 amt");
             require(_contents[i].totalAmount % _numOfRewardUnits[i] == 0, "!R");
-            require(
-                _contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1,
-                "!R"
-            );
+            require(_contents[i].tokenType != TokenType.ERC721 || _contents[i].totalAmount == 1, "!R");
 
             sumOfRewardUnits += _numOfRewardUnits[i];
 
@@ -452,11 +429,9 @@ contract PackVRFDirect is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the underlying contents of a pack.
-    function getPackContents(uint256 _packId)
-        public
-        view
-        returns (Token[] memory contents, uint256[] memory perUnitAmounts)
-    {
+    function getPackContents(
+        uint256 _packId
+    ) public view returns (Token[] memory contents, uint256[] memory perUnitAmounts) {
         PackInfo memory pack = packInfo[_packId];
         uint256 total = getTokenCountOfBundle(_packId);
         contents = new Token[](total);

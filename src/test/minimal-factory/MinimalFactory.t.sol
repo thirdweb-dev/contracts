@@ -20,11 +20,7 @@ contract DummyUpgradeable {
 
 contract TWNotMinimalFactory {
     /// @dev Deploys a proxy that points to the given implementation.
-    function deployProxyByImplementation(
-        address _implementation,
-        bytes memory _data,
-        bytes32 _salt
-    ) public {
+    function deployProxyByImplementation(address _implementation, bytes memory _data, bytes32 _salt) public {
         address deployedProxy = Clones.cloneDeterministic(_implementation, _salt);
 
         if (_data.length > 0) {
@@ -83,11 +79,7 @@ contract MinimalFactoryTest is BaseTest {
         vm.prank(address(0x123456));
         address minimalFactory = address(new TWMinimalFactory(implementation, data, salt));
         bytes32 salthash = keccak256(abi.encodePacked(address(0x123456), salt));
-        address deployedProxy = Clones.predictDeterministicAddress(
-            implementation,
-            salthash,
-            minimalFactory
-        );
+        address deployedProxy = Clones.predictDeterministicAddress(implementation, salthash, minimalFactory);
 
         bytes32 contractType = TokenERC20(deployedProxy).contractType();
         assertEq(contractType, bytes32("TokenERC20"));

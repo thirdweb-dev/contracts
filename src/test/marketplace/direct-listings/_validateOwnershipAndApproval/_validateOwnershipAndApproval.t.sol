@@ -19,14 +19,7 @@ contract MockValidateOwnershipAndApproval is DirectListingsLogic {
         uint256 _quantity,
         TokenType _tokenType
     ) external view returns (bool) {
-        return
-            _validateOwnershipAndApproval(
-                _tokenOwner,
-                _assetContract,
-                _tokenId,
-                _quantity,
-                _tokenType
-            );
+        return _validateOwnershipAndApproval(_tokenOwner, _assetContract, _tokenId, _quantity, _tokenType);
     }
 }
 
@@ -50,9 +43,7 @@ contract ValidateOwnershipAndApprovalTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -141,10 +132,7 @@ contract ValidateOwnershipAndApprovalTest is BaseTest, IExtension {
         _;
     }
 
-    function test_validateOwnershipAndApproval_whenInsufficientTokensOwned_erc1155()
-        public
-        whenTokenIsERC1155
-    {
+    function test_validateOwnershipAndApproval_whenInsufficientTokensOwned_erc1155() public whenTokenIsERC1155 {
         vm.prank(seller);
         erc1155.setApprovalForAll(marketplace, true);
 
@@ -161,10 +149,7 @@ contract ValidateOwnershipAndApprovalTest is BaseTest, IExtension {
         assertEq(result, false);
     }
 
-    function test_validateOwnershipAndApproval_whenInsufficientTokensOwned_erc721()
-        public
-        whenTokenIsERC721
-    {
+    function test_validateOwnershipAndApproval_whenInsufficientTokensOwned_erc721() public whenTokenIsERC721 {
         vm.prank(seller);
         erc721.setApprovalForAll(marketplace, true);
 

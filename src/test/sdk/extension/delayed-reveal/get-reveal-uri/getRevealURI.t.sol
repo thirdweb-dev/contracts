@@ -12,10 +12,7 @@ contract MyDelayedReveal is DelayedReveal {
         _setEncryptedData(_batchId, _encryptedData);
     }
 
-    function reveal(
-        uint256 identifier,
-        bytes calldata key
-    ) external returns (string memory revealedURI) {}
+    function reveal(uint256 identifier, bytes calldata key) external returns (string memory revealedURI) {}
 }
 
 contract DelayedReveal_GetRevealURI is ExtensionUtilTest {

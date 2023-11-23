@@ -24,10 +24,7 @@ interface IDelayedRevealDeprecated {
      *
      *  @param key        The key with which the base URI for the relevant batch of NFTs was encrypted.
      */
-    function reveal(
-        uint256 identifier,
-        bytes calldata key
-    ) external returns (string memory revealedURI);
+    function reveal(uint256 identifier, bytes calldata key) external returns (string memory revealedURI);
 
     /**
      *  @notice Performs XOR encryption/decryption.
@@ -37,8 +34,5 @@ interface IDelayedRevealDeprecated {
      *
      *  @param key  The key with which to encrypt data
      */
-    function encryptDecrypt(
-        bytes memory data,
-        bytes calldata key
-    ) external pure returns (bytes memory result);
+    function encryptDecrypt(bytes memory data, bytes calldata key) external pure returns (bytes memory result);
 }

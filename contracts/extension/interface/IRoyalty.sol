@@ -35,9 +35,5 @@ interface IRoyalty is IERC2981 {
     event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);
 
     /// @dev Emitted when royalty recipient for tokenId is set
-    event RoyaltyForToken(
-        uint256 indexed tokenId,
-        address indexed royaltyRecipient,
-        uint256 royaltyBps
-    );
+    event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps);
 }

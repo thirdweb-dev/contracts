@@ -12,10 +12,7 @@ import { IDirectListings } from "contracts/prebuilts/marketplace/IMarketplace.so
 contract MockValidateListing is DirectListingsLogic {
     constructor(address _nativeTokenWrapper) DirectListingsLogic(_nativeTokenWrapper) {}
 
-    function validateNewListing(
-        ListingParameters memory _params,
-        TokenType _tokenType
-    ) external returns (bool) {
+    function validateNewListing(ListingParameters memory _params, TokenType _tokenType) external returns (bool) {
         _validateNewListing(_params, _tokenType);
         return true;
     }
@@ -41,9 +38,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -124,10 +119,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
         listingParams.quantity = 0;
 
         vm.expectRevert("Marketplace: listing zero quantity.");
-        MockValidateListing(marketplace).validateNewListing(
-            listingParams,
-            IDirectListings.TokenType.ERC721
-        );
+        MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC721);
     }
 
     modifier whenQuantityIsOne() {
@@ -152,10 +144,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
 
     function test_validateNewListing_whenTokenIsERC721() public whenQuantityIsGtOne {
         vm.expectRevert("Marketplace: listing invalid quantity.");
-        MockValidateListing(marketplace).validateNewListing(
-            listingParams,
-            IDirectListings.TokenType.ERC721
-        );
+        MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC721);
     }
 
     function test_validateNewListing_whenTokenOwnerDoesntOwnSufficientTokens_1()
@@ -170,10 +159,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        MockValidateListing(marketplace).validateNewListing(
-            listingParams,
-            IDirectListings.TokenType.ERC1155
-        );
+        MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC1155);
     }
 
     modifier whenTokenOwnerOwnsSufficientTokens() {
@@ -191,10 +177,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        MockValidateListing(marketplace).validateNewListing(
-            listingParams,
-            IDirectListings.TokenType.ERC1155
-        );
+        MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC1155);
     }
 
     modifier whenTokensApprovedForTransfer(IDirectListings.TokenType tokenType) {
@@ -216,10 +199,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
     {
         vm.prank(seller);
         assertEq(
-            MockValidateListing(marketplace).validateNewListing(
-                listingParams,
-                IDirectListings.TokenType.ERC1155
-            ),
+            MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC1155),
             true
         );
     }
@@ -236,10 +216,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        MockValidateListing(marketplace).validateNewListing(
-            listingParams,
-            IDirectListings.TokenType.ERC1155
-        );
+        MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC1155);
     }
 
     function test_validateNewListing_whenTokenOwnerDoesntOwnSufficientTokens_2b()
@@ -254,10 +231,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        MockValidateListing(marketplace).validateNewListing(
-            listingParams,
-            IDirectListings.TokenType.ERC721
-        );
+        MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC721);
     }
 
     function test_validateNewListing_whenTokensNotApprovedForTransfer_2a()
@@ -271,10 +245,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        MockValidateListing(marketplace).validateNewListing(
-            listingParams,
-            IDirectListings.TokenType.ERC721
-        );
+        MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC721);
     }
 
     function test_validateNewListing_whenTokensNotApprovedForTransfer_2b()
@@ -288,10 +259,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
 
         vm.prank(seller);
         vm.expectRevert("Marketplace: not owner or approved tokens.");
-        MockValidateListing(marketplace).validateNewListing(
-            listingParams,
-            IDirectListings.TokenType.ERC1155
-        );
+        MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC1155);
     }
 
     function test_validateNewListing_whenTokensOwnedAndApproved_2a()
@@ -303,10 +271,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
     {
         vm.prank(seller);
         assertEq(
-            MockValidateListing(marketplace).validateNewListing(
-                listingParams,
-                IDirectListings.TokenType.ERC1155
-            ),
+            MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC1155),
             true
         );
     }
@@ -320,10 +285,7 @@ contract ValidateNewListingTest is BaseTest, IExtension {
     {
         vm.prank(seller);
         assertEq(
-            MockValidateListing(marketplace).validateNewListing(
-                listingParams,
-                IDirectListings.TokenType.ERC721
-            ),
+            MockValidateListing(marketplace).validateNewListing(listingParams, IDirectListings.TokenType.ERC721),
             true
         );
     }

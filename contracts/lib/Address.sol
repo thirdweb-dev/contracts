@@ -43,13 +43,8 @@ library Address {
     }
 
     /// @dev Performs a low-level call on `target` with `data` and `value`.
-    function functionCallWithValue(
-        address target,
-        bytes memory data,
-        uint256 value
-    ) internal returns (bytes memory) {
-        return
-            functionCallWithValue(target, data, value, "Address: low-level call with value failed");
+    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
+        return functionCallWithValue(target, data, value, "Address: low-level call with value failed");
     }
 
     /// @dev Performs a static call on `target` with `data` and `value`, with `errorMessage` as a fallback
@@ -68,11 +63,7 @@ library Address {
     }
 
     /// @dev Performs a static call on `target` with `data`.
-    function functionStaticCall(address target, bytes memory data)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {
         return functionStaticCall(target, data, "Address: low-level static call failed");
     }
 
@@ -90,10 +81,7 @@ library Address {
     }
 
     /// @dev Performs a delegate call on `target` with `data`.
-    function functionDelegateCall(address target, bytes memory data)
-        internal
-        returns (bytes memory)
-    {
+    function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {
         return functionDelegateCall(target, data, "Address: low-level delegate call failed");
     }
 

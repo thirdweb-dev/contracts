@@ -6,8 +6,7 @@ import "../../lib/Address.sol";
 library InitStorage {
     /// @custom:storage-location erc7201:init.storage
     /// @dev keccak256(abi.encode(uint256(keccak256("init.storage")) - 1)) & ~bytes32(uint256(0xff))
-    bytes32 constant INIT_STORAGE_POSITION =
-        0x322cf19c484104d3b1a9c2982ebae869ede3fa5f6c4703ca41b9a48c76ee0300;
+    bytes32 constant INIT_STORAGE_POSITION = 0x322cf19c484104d3b1a9c2982ebae869ede3fa5f6c4703ca41b9a48c76ee0300;
 
     /// @dev Layout of the entrypoint contract's storage.
     struct Data {
@@ -40,8 +39,7 @@ abstract contract Initializable {
 
         bool isTopLevelCall = !_initializing;
         require(
-            (isTopLevelCall && _initialized < 1) ||
-                (!Address.isContract(address(this)) && _initialized == 1),
+            (isTopLevelCall && _initialized < 1) || (!Address.isContract(address(this)) && _initialized == 1),
             "Initializable: contract is already initialized"
         );
         _initStorage().initialized = 1;
@@ -71,10 +69,7 @@ abstract contract Initializable {
         uint8 _initialized = _initStorage().initialized;
         bool _initializing = _initStorage().initializing;
 
-        require(
-            !_initializing && _initialized < version,
-            "Initializable: contract is already initialized"
-        );
+        require(!_initializing && _initialized < version, "Initializable: contract is already initialized");
         _initStorage().initialized = version;
         _initStorage().initializing = true;
         _;

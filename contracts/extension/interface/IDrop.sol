@@ -68,8 +68,5 @@ interface IDrop is IClaimConditionMultiPhase {
      *                                  in the new claim conditions being set.
      *
      */
-    function setClaimConditions(
-        ClaimCondition[] calldata phases,
-        bool resetClaimEligibility
-    ) external;
+    function setClaimConditions(ClaimCondition[] calldata phases, bool resetClaimEligibility) external;
 }

@@ -139,23 +139,13 @@ contract AirdropERC1155Claimable is
     }
 
     /// @dev Transfers the tokens being claimed.
-    function _transferClaimedTokens(
-        address _to,
-        uint256 _quantityBeingClaimed,
-        uint256 _tokenId
-    ) internal {
+    function _transferClaimedTokens(address _to, uint256 _quantityBeingClaimed, uint256 _tokenId) internal {
         // if transfer claimed tokens is called when `to != msg.sender`, it'd use msg.sender's limits.
         // behavior would be similar to `msg.sender` mint for itself, then transfer to `_to`.
         supplyClaimedByWallet[_tokenId][_msgSender()] += _quantityBeingClaimed;
         availableAmount[_tokenId] -= _quantityBeingClaimed;
 
-        IERC1155(airdropTokenAddress).safeTransferFrom(
-            tokenOwner,
-            _to,
-            _tokenId,
-            _quantityBeingClaimed,
-            ""
-        );
+        IERC1155(airdropTokenAddress).safeTransferFrom(tokenOwner, _to, _tokenId, _quantityBeingClaimed, "");
     }
 
     /// @dev Checks a request to claim tokens against the active claim condition's criteria.
@@ -189,9 +179,7 @@ contract AirdropERC1155Claimable is
         uint256 expTimestamp = expirationTimestamp;
         require(expTimestamp == 0 || block.timestamp < expTimestamp, "airdrop expired.");
 
-        uint256 claimLimitForWallet = isOverride
-            ? _proofMaxQuantityForWallet
-            : openClaimLimitPerWallet[_tokenId];
+        uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : openClaimLimitPerWallet[_tokenId];
         require(_quantity + supplyClaimedAlready <= claimLimitForWallet, "invalid quantity.");
     }
 

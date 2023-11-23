@@ -58,9 +58,7 @@ contract CancelAuctionTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -239,12 +237,7 @@ contract CancelAuctionTest is BaseTest, IExtension {
         _;
     }
 
-    function test_cancelAuction_whenNoWinningBid()
-        public
-        whenAuctionExists
-        whenCallerIsCreator
-        whenNoWinningBid
-    {
+    function test_cancelAuction_whenNoWinningBid() public whenAuctionExists whenCallerIsCreator whenNoWinningBid {
         assertEq(
             uint256(EnglishAuctionsLogic(marketplace).getAuction(auctionId).status),
             uint256(IEnglishAuctions.Status.CREATED)

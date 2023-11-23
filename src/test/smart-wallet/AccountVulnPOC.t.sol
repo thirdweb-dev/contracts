@@ -18,10 +18,7 @@ library GPv2EIP1271 {
 }
 
 interface EIP1271Verifier {
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
-        external
-        view
-        returns (bytes4 magicValue);
+    function isValidSignature(bytes32 _hash, bytes memory _signature) external view returns (bytes4 magicValue);
 }
 
 /// @dev This is a dummy contract to test contract interactions with Account.
@@ -40,19 +37,14 @@ contract Number {
         num += 1;
     }
 
-    function setNumBySignature(
-        address owner,
-        uint256 newNum,
-        bytes calldata signature
-    ) public {
+    function setNumBySignature(address owner, uint256 newNum, bytes calldata signature) public {
         if (owner.code.length == 0) {
             // Signature verification by ECDSA
         } else {
             // Signature verification by EIP1271
             bytes32 digest = keccak256(abi.encode(newNum));
             require(
-                EIP1271Verifier(owner).isValidSignature(digest, signature) ==
-                    GPv2EIP1271.MAGICVALUE,
+                EIP1271Verifier(owner).isValidSignature(digest, signature) == GPv2EIP1271.MAGICVALUE,
                 "GPv2: invalid eip1271 signature"
             );
             num = newNum;
@@ -86,11 +78,9 @@ contract SimpleAccountVulnPOCTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes32 typedDataHash)
-    {
+    function _prepareSignature(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes32 typedDataHash) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -99,9 +89,7 @@ contract SimpleAccountVulnPOCTest is BaseTest {
         bytes32 typehashEip712 = keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
-        bytes32 domainSeparator = keccak256(
-            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender)
-        );
+        bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
 
         bytes memory encodedRequestStart = abi.encode(
             typehashSignerPermissionRequest,
@@ -123,11 +111,9 @@ contract SimpleAccountVulnPOCTest is BaseTest {
         typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
@@ -230,15 +216,8 @@ contract SimpleAccountVulnPOCTest is BaseTest {
     //////////////////////////////////////////////////////////////*/
 
     function _setup_executeTransaction() internal {
-        bytes memory initCallData = abi.encodeWithSignature(
-            "createAccount(address,bytes)",
-            accountAdmin,
-            bytes("")
-        );
-        bytes memory initCode = abi.encodePacked(
-            abi.encodePacked(address(accountFactory)),
-            initCallData
-        );
+        bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
+        bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
         UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
             accountAdminPKey,
@@ -262,18 +241,17 @@ contract SimpleAccountVulnPOCTest is BaseTest {
         address[] memory approvedTargets = new address[](1);
         approvedTargets[0] = address(0x123); // allowing accountSigner permissions for some random contract, consider it as 0 address here
 
-        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions
-            .SignerPermissionRequest(
-                accountSigner,
-                0,
-                approvedTargets,
-                1 ether,
-                0,
-                type(uint128).max,
-                0,
-                type(uint128).max,
-                uidCache
-            );
+        IAccountPermissions.SignerPermissionRequest memory permissionsReq = IAccountPermissions.SignerPermissionRequest(
+            accountSigner,
+            0,
+            approvedTargets,
+            1 ether,
+            0,
+            type(uint128).max,
+            0,
+            type(uint128).max,
+            uidCache
+        );
 
         vm.prank(accountAdmin);
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
@@ -314,8 +292,8 @@ contract SimpleAccountVulnPOCTest is BaseTest {
         newApprovedTargets[0] = address(0x123); // allowing accountSigner permissions for some random contract, consider it as 0 address here
         newApprovedTargets[1] = address(numberContract);
 
-        IAccountPermissions.SignerPermissionRequest
-            memory updatedPermissionsReq = IAccountPermissions.SignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory updatedPermissionsReq = IAccountPermissions
+            .SignerPermissionRequest(
                 accountSigner,
                 0,
                 newApprovedTargets,

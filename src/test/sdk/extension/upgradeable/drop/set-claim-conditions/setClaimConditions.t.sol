@@ -51,10 +51,7 @@ contract UpgradeableDrop_SetClaimConditions is ExtensionUtilTest {
     IClaimCondition.ClaimCondition[] internal newClaimConditions;
     IClaimCondition.ClaimCondition[] internal oldClaimConditions;
 
-    event ClaimConditionsUpdated(
-        IClaimCondition.ClaimCondition[] claimConditions,
-        bool resetEligibility
-    );
+    event ClaimConditionsUpdated(IClaimCondition.ClaimCondition[] claimConditions, bool resetEligibility);
 
     function setUp() public override {
         super.setUp();
@@ -174,11 +171,7 @@ contract UpgradeableDrop_SetClaimConditions is ExtensionUtilTest {
     // ======= Test branch: claim eligibility reset
     // ==================
 
-    function test_setClaimConditions_resetEligibility_startIndex()
-        public
-        whenCallerAuthorized
-        whenCorrectTimestamps
-    {
+    function test_setClaimConditions_resetEligibility_startIndex() public whenCallerAuthorized whenCorrectTimestamps {
         (, uint256 oldCount) = ext.claimCondition();
 
         ext.setClaimConditions(newClaimConditions, true);
@@ -211,9 +204,7 @@ contract UpgradeableDrop_SetClaimConditions is ExtensionUtilTest {
         (uint256 newStartIndex, uint256 newCount) = ext.claimCondition();
 
         for (uint256 i = 0; i < newCount; i++) {
-            IClaimCondition.ClaimCondition memory _claimCondition = ext.getClaimConditionById(
-                i + newStartIndex
-            );
+            IClaimCondition.ClaimCondition memory _claimCondition = ext.getClaimConditionById(i + newStartIndex);
 
             assertEq(_claimCondition.startTimestamp, newClaimConditions[i].startTimestamp);
             assertEq(_claimCondition.maxClaimableSupply, newClaimConditions[i].maxClaimableSupply);
@@ -232,9 +223,7 @@ contract UpgradeableDrop_SetClaimConditions is ExtensionUtilTest {
         ext.setClaimConditions(newClaimConditions, true);
 
         for (uint256 i = 0; i < oldCount; i++) {
-            IClaimCondition.ClaimCondition memory _claimCondition = ext.getClaimConditionById(
-                i + oldStartIndex
-            );
+            IClaimCondition.ClaimCondition memory _claimCondition = ext.getClaimConditionById(i + oldStartIndex);
 
             assertEq(_claimCondition.startTimestamp, 0);
             assertEq(_claimCondition.maxClaimableSupply, 0);
@@ -247,11 +236,7 @@ contract UpgradeableDrop_SetClaimConditions is ExtensionUtilTest {
         }
     }
 
-    function test_setClaimConditions_resetEligibility_event()
-        public
-        whenCallerAuthorized
-        whenCorrectTimestamps
-    {
+    function test_setClaimConditions_resetEligibility_event() public whenCallerAuthorized whenCorrectTimestamps {
         // TODO: fix/review event data check by setting last param true
         vm.expectEmit(false, false, false, false);
         emit ClaimConditionsUpdated(newClaimConditions, true);
@@ -318,11 +303,8 @@ contract UpgradeableDrop_SetClaimConditions is ExtensionUtilTest {
         (, uint256 oldCount) = ext.claimCondition();
 
         // setting array size as this way to avoid out-of-bound error in the second loop
-        uint256 length = newClaimConditions.length > oldCount
-            ? newClaimConditions.length
-            : oldCount;
-        IClaimCondition.ClaimCondition[]
-            memory _oldConditions = new IClaimCondition.ClaimCondition[](length);
+        uint256 length = newClaimConditions.length > oldCount ? newClaimConditions.length : oldCount;
+        IClaimCondition.ClaimCondition[] memory _oldConditions = new IClaimCondition.ClaimCondition[](length);
 
         for (uint256 i = 0; i < oldCount; i++) {
             _oldConditions[i] = ext.getClaimConditionById(i);
@@ -333,9 +315,7 @@ contract UpgradeableDrop_SetClaimConditions is ExtensionUtilTest {
         (uint256 newStartIndex, uint256 newCount) = ext.claimCondition();
 
         for (uint256 i = 0; i < newCount; i++) {
-            IClaimCondition.ClaimCondition memory _claimCondition = ext.getClaimConditionById(
-                i + newStartIndex
-            );
+            IClaimCondition.ClaimCondition memory _claimCondition = ext.getClaimConditionById(i + newStartIndex);
 
             assertEq(_claimCondition.startTimestamp, newClaimConditions[i].startTimestamp);
             assertEq(_claimCondition.maxClaimableSupply, newClaimConditions[i].maxClaimableSupply);
@@ -356,9 +336,7 @@ contract UpgradeableDrop_SetClaimConditions is ExtensionUtilTest {
         (, uint256 newCount) = ext.claimCondition();
 
         for (uint256 i = 0; i < oldCount; i++) {
-            IClaimCondition.ClaimCondition memory _claimCondition = ext.getClaimConditionById(
-                i + oldStartIndex
-            );
+            IClaimCondition.ClaimCondition memory _claimCondition = ext.getClaimConditionById(i + oldStartIndex);
 
             if (i >= newCount) {
                 // case where deleted
@@ -377,14 +355,8 @@ contract UpgradeableDrop_SetClaimConditions is ExtensionUtilTest {
                 // supply claimed should be same as old condition, hence not checked below
 
                 assertEq(_claimCondition.startTimestamp, newClaimConditions[i].startTimestamp);
-                assertEq(
-                    _claimCondition.maxClaimableSupply,
-                    newClaimConditions[i].maxClaimableSupply
-                );
-                assertEq(
-                    _claimCondition.quantityLimitPerWallet,
-                    newClaimConditions[i].quantityLimitPerWallet
-                );
+                assertEq(_claimCondition.maxClaimableSupply, newClaimConditions[i].maxClaimableSupply);
+                assertEq(_claimCondition.quantityLimitPerWallet, newClaimConditions[i].quantityLimitPerWallet);
                 assertEq(_claimCondition.merkleRoot, newClaimConditions[i].merkleRoot);
                 assertEq(_claimCondition.pricePerToken, newClaimConditions[i].pricePerToken);
                 assertEq(_claimCondition.currency, newClaimConditions[i].currency);

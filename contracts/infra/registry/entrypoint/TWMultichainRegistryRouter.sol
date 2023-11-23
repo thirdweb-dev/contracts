@@ -51,12 +51,7 @@ contract TWMultichainRegistryRouter is PermissionsEnumerableLogic, ERC2771Contex
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    function _msgSender()
-        internal
-        view
-        override(ERC2771ContextLogic, PermissionsLogic)
-        returns (address sender)
-    {
+    function _msgSender() internal view override(ERC2771ContextLogic, PermissionsLogic) returns (address sender) {
         if (isTrustedForwarder(msg.sender)) {
             // The assembly code is more direct than the Solidity version using `abi.decode`.
             assembly {
@@ -67,12 +62,7 @@ contract TWMultichainRegistryRouter is PermissionsEnumerableLogic, ERC2771Contex
         }
     }
 
-    function _msgData()
-        internal
-        view
-        override(ERC2771ContextLogic, PermissionsLogic)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view override(ERC2771ContextLogic, PermissionsLogic) returns (bytes calldata) {
         if (isTrustedForwarder(msg.sender)) {
             return msg.data[:msg.data.length - 20];
         } else {

@@ -41,10 +41,7 @@ contract SplitTest_ReleaseNativeToken is BaseTest {
             address(
                 new TWProxy(
                     implementation,
-                    abi.encodeCall(
-                        Split.initialize,
-                        (deployer, CONTRACT_URI, forwarders(), payees, shares)
-                    )
+                    abi.encodeCall(Split.initialize, (deployer, CONTRACT_URI, forwarders(), payees, shares))
                 )
             )
         );
@@ -93,10 +90,7 @@ contract SplitTest_ReleaseNativeToken is BaseTest {
         assertEq(splitContract.totalReleased(), totalReleased + pendingPayment);
         assertEq(_payeeThree.balance, pendingPayment);
 
-        assertEq(
-            address(splitContract).balance,
-            100 ether - _payeeOne.balance - _payeeThree.balance
-        );
+        assertEq(address(splitContract).balance, 100 ether - _payeeOne.balance - _payeeThree.balance);
     }
 
     function test_release_event_PaymentReleased() public whenPendingPaymentNonZero {

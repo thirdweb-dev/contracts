@@ -145,14 +145,7 @@ contract BaseERC20DropTest is BaseUtilTest {
         vm.deal(claimer, 1_000 ether);
 
         vm.prank(claimer, claimer);
-        base.claim{ value: totalPrice }(
-            recipient,
-            _quantity,
-            address(NATIVE_TOKEN),
-            1 ether,
-            alp,
-            ""
-        );
+        base.claim{ value: totalPrice }(recipient, _quantity, address(NATIVE_TOKEN), 1 ether, alp, "");
 
         assertEq(base.totalSupply(), currentTotalSupply + _quantity);
         assertEq(base.balanceOf(recipient), currentBalanceOfRecipient + _quantity);
@@ -214,20 +207,10 @@ contract BaseERC20DropTest is BaseUtilTest {
         uint256 _nonce = base.nonces(_owner);
 
         domainSeparator = keccak256(
-            abi.encode(
-                typehashEip712,
-                permitNameHash,
-                permitVersionHash,
-                block.chainid,
-                address(base)
-            )
+            abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base))
         );
-        bytes32 structHash = keccak256(
-            abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline)
-        );
-        bytes32 typedDataHash = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 structHash = keccak256(abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline));
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(recipientPrivateKey, typedDataHash);
 
@@ -253,20 +236,10 @@ contract BaseERC20DropTest is BaseUtilTest {
         uint256 _nonce = base.nonces(_owner);
 
         domainSeparator = keccak256(
-            abi.encode(
-                typehashEip712,
-                permitNameHash,
-                permitVersionHash,
-                block.chainid,
-                address(base)
-            )
+            abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base))
         );
-        bytes32 structHash = keccak256(
-            abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline)
-        );
-        bytes32 typedDataHash = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 structHash = keccak256(abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline));
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(wrongPrivateKey, typedDataHash); // sign with wrong key
 
@@ -285,20 +258,10 @@ contract BaseERC20DropTest is BaseUtilTest {
         uint256 _nonce = base.nonces(_owner);
 
         domainSeparator = keccak256(
-            abi.encode(
-                typehashEip712,
-                permitNameHash,
-                permitVersionHash,
-                block.chainid,
-                address(base)
-            )
+            abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base))
         );
-        bytes32 structHash = keccak256(
-            abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline)
-        );
-        bytes32 typedDataHash = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 structHash = keccak256(abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline));
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(recipientPrivateKey, typedDataHash);
 
@@ -322,20 +285,10 @@ contract BaseERC20DropTest is BaseUtilTest {
         uint256 _nonce = base.nonces(_owner);
 
         domainSeparator = keccak256(
-            abi.encode(
-                typehashEip712,
-                permitNameHash,
-                permitVersionHash,
-                block.chainid,
-                address(base)
-            )
+            abi.encode(typehashEip712, permitNameHash, permitVersionHash, block.chainid, address(base))
         );
-        bytes32 structHash = keccak256(
-            abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline)
-        );
-        bytes32 typedDataHash = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 structHash = keccak256(abi.encode(permitTypeHash, _owner, _spender, _value, _nonce, _deadline));
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(recipientPrivateKey, typedDataHash);
 

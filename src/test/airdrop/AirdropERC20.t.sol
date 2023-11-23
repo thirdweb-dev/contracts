@@ -35,15 +35,11 @@ contract AirdropERC20Test is BaseTest {
         countTwo = 200;
 
         for (uint256 i = 0; i < countOne; i++) {
-            _contentsOne.push(
-                IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether })
-            );
+            _contentsOne.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
         }
 
         for (uint256 i = countOne; i < countOne + countTwo; i++) {
-            _contentsTwo.push(
-                IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether })
-            );
+            _contentsTwo.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
         }
     }
 
@@ -112,15 +108,11 @@ contract AirdropERC20AuditTest is BaseTest {
         countTwo = 200;
 
         for (uint256 i = 0; i < countOne; i++) {
-            _contentsOne.push(
-                IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether })
-            );
+            _contentsOne.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
         }
 
         for (uint256 i = countOne; i < countOne + countTwo; i++) {
-            _contentsTwo.push(
-                IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether })
-            );
+            _contentsTwo.push(IAirdropERC20.AirdropContent({ recipient: getActor(uint160(i)), amount: 10 ether }));
         }
     }
 
@@ -130,10 +122,7 @@ contract AirdropERC20AuditTest is BaseTest {
 
         // check balances after airdrop
         for (uint256 i = 0; i < countOne; i++) {
-            assertEq(
-                erc20_nonCompliant.balanceOf(_contentsOne[i].recipient),
-                _contentsOne[i].amount
-            );
+            assertEq(erc20_nonCompliant.balanceOf(_contentsOne[i].recipient), _contentsOne[i].amount);
         }
         assertEq(erc20_nonCompliant.balanceOf(address(tokenOwner)), 0);
     }

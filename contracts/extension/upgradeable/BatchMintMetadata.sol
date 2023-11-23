@@ -138,11 +138,7 @@ contract BatchMintMetadata {
     }
 
     /// @dev Returns the BatchMintMetadata storage.
-    function _batchMintMetadataStorage()
-        internal
-        pure
-        returns (BatchMintMetadataStorage.Data storage data)
-    {
+    function _batchMintMetadataStorage() internal pure returns (BatchMintMetadataStorage.Data storage data) {
         data = BatchMintMetadataStorage.data();
     }
 }

@@ -160,11 +160,7 @@ contract LoyaltyPoints is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being minted.
-    function _collectPriceOnClaim(
-        address _primarySaleRecipient,
-        address _currency,
-        uint256 _price
-    ) internal {
+    function _collectPriceOnClaim(address _primarySaleRecipient, address _currency, uint256 _price) internal {
         if (_price == 0) {
             require(msg.value == 0, "!Value");
             return;
@@ -178,9 +174,7 @@ contract LoyaltyPoints is
         }
         require(validMsgValue, "Invalid msg value");
 
-        address saleRecipient = _primarySaleRecipient == address(0)
-            ? primarySaleRecipient()
-            : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         uint256 fees;
         address feeRecipient;
@@ -205,10 +199,7 @@ contract LoyaltyPoints is
         super._beforeTokenTransfer(from, to, amount);
 
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
-            require(
-                hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to),
-                "transfers restricted."
-            );
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "transfers restricted.");
         }
 
         if (from == address(0)) {

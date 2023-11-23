@@ -110,14 +110,7 @@ contract ERC1155 is IERC1155, IERC1155Metadata {
 
         address operator = msg.sender;
 
-        _beforeTokenTransfer(
-            operator,
-            from,
-            to,
-            _asSingletonArray(id),
-            _asSingletonArray(amount),
-            data
-        );
+        _beforeTokenTransfer(operator, from, to, _asSingletonArray(id), _asSingletonArray(amount), data);
 
         uint256 fromBalance = balanceOf[from][id];
         require(fromBalance >= amount, "INSUFFICIENT_BAL");
@@ -171,14 +164,7 @@ contract ERC1155 is IERC1155, IERC1155Metadata {
 
         address operator = msg.sender;
 
-        _beforeTokenTransfer(
-            operator,
-            address(0),
-            to,
-            _asSingletonArray(id),
-            _asSingletonArray(amount),
-            data
-        );
+        _beforeTokenTransfer(operator, address(0), to, _asSingletonArray(id), _asSingletonArray(amount), data);
 
         balanceOf[to][id] += amount;
         emit TransferSingle(operator, address(0), to, id, amount);
@@ -213,14 +199,7 @@ contract ERC1155 is IERC1155, IERC1155Metadata {
 
         address operator = msg.sender;
 
-        _beforeTokenTransfer(
-            operator,
-            from,
-            address(0),
-            _asSingletonArray(id),
-            _asSingletonArray(amount),
-            ""
-        );
+        _beforeTokenTransfer(operator, from, address(0), _asSingletonArray(id), _asSingletonArray(amount), "");
 
         uint256 fromBalance = balanceOf[from][id];
         require(fromBalance >= amount, "INSUFFICIENT_BAL");
@@ -231,11 +210,7 @@ contract ERC1155 is IERC1155, IERC1155Metadata {
         emit TransferSingle(operator, from, address(0), id, amount);
     }
 
-    function _burnBatch(
-        address from,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) internal virtual {
+    function _burnBatch(address from, uint256[] memory ids, uint256[] memory amounts) internal virtual {
         require(from != address(0), "FROM_ZERO_ADDR");
         require(ids.length == amounts.length, "LENGTH_MISMATCH");
 
@@ -275,9 +250,7 @@ contract ERC1155 is IERC1155, IERC1155Metadata {
         bytes memory data
     ) private {
         if (to.code.length > 0) {
-            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (
-                bytes4 response
-            ) {
+            try IERC1155Receiver(to).onERC1155Received(operator, from, id, amount, data) returns (bytes4 response) {
                 if (response != IERC1155Receiver.onERC1155Received.selector) {
                     revert("TOKENS_REJECTED");
                 }
@@ -298,9 +271,9 @@ contract ERC1155 is IERC1155, IERC1155Metadata {
         bytes memory data
     ) private {
         if (to.code.length > 0) {
-            try
-                IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data)
-            returns (bytes4 response) {
+            try IERC1155Receiver(to).onERC1155BatchReceived(operator, from, ids, amounts, data) returns (
+                bytes4 response
+            ) {
                 if (response != IERC1155Receiver.onERC1155BatchReceived.selector) {
                     revert("TOKENS_REJECTED");
                 }

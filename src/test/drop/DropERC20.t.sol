@@ -433,10 +433,7 @@ contract DropERC20Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         drop.claim(receiver, 100 ether, address(erc20), 1 ether, alp, "");
-        assertEq(
-            drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), receiver),
-            100 ether
-        );
+        assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), receiver), 100 ether);
         assertEq(erc20.balanceOf(receiver), 900 ether);
     }
 
@@ -489,10 +486,7 @@ contract DropERC20Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         drop.claim(receiver, 100 ether, address(erc20), 10 ether, alp, "");
-        assertEq(
-            drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), receiver),
-            100 ether
-        );
+        assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), receiver), 100 ether);
         assertEq(erc20.balanceOf(receiver), 10000 ether - 1000 ether);
     }
 
@@ -550,10 +544,7 @@ contract DropERC20Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         drop.claim(receiver, 10 ether, address(erc20), 5 ether, alp, "");
-        assertEq(
-            drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), receiver),
-            10 ether
-        );
+        assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), receiver), 10 ether);
         assertEq(erc20.balanceOf(receiver), 10000 ether - 50 ether);
     }
 

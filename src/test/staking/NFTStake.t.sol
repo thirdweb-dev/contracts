@@ -72,9 +72,7 @@ contract NFTStakeTest is BaseTest {
         assertEq(erc721.balanceOf(address(stakeContract)), _tokenIdsOne.length);
 
         // check available rewards right after staking
-        (uint256[] memory _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(
-            stakerOne
-        );
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
 
         assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
@@ -88,8 +86,7 @@ contract NFTStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) *
-                rewardsPerUnitTime) / timeUnit)
+            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) * rewardsPerUnitTime) / timeUnit)
         );
 
         //================ second staker ======================
@@ -110,10 +107,7 @@ contract NFTStakeTest is BaseTest {
             assertEq(stakeContract.stakerAddress(_tokenIdsTwo[i]), stakerTwo);
         }
         assertEq(erc721.balanceOf(stakerTwo), 3);
-        assertEq(
-            erc721.balanceOf(address(stakeContract)),
-            _tokenIdsTwo.length + _tokenIdsOne.length
-        );
+        assertEq(erc721.balanceOf(address(stakeContract)), _tokenIdsTwo.length + _tokenIdsOne.length);
 
         // check available rewards right after staking
         (_amountStaked, _availableRewards) = stakeContract.getStakeInfo(stakerTwo);
@@ -130,8 +124,7 @@ contract NFTStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) *
-                rewardsPerUnitTime) / timeUnit)
+            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) * rewardsPerUnitTime) / timeUnit)
         );
 
         // check available rewards for stakerTwo
@@ -139,8 +132,7 @@ contract NFTStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate_two) * _tokenIdsTwo.length) *
-                rewardsPerUnitTime) / timeUnit)
+            ((((block.timestamp - timeOfLastUpdate_two) * _tokenIdsTwo.length) * rewardsPerUnitTime) / timeUnit)
         );
     }
 
@@ -192,20 +184,16 @@ contract NFTStakeTest is BaseTest {
         // check reward balances
         assertEq(
             erc20.balanceOf(stakerOne),
-            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) *
-                rewardsPerUnitTime) / timeUnit)
+            ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) * rewardsPerUnitTime) / timeUnit)
         );
         assertEq(
             rewardBalanceAfter,
             rewardBalanceBefore -
-                ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) *
-                    rewardsPerUnitTime) / timeUnit)
+                ((((block.timestamp - timeOfLastUpdate_one) * _tokenIdsOne.length) * rewardsPerUnitTime) / timeUnit)
         );
 
         // check available rewards after claiming
-        (uint256[] memory _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(
-            stakerOne
-        );
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
 
         assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
@@ -285,8 +273,7 @@ contract NFTStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate) * _tokenIdsOne.length) *
-                newRewardsPerUnitTime) / timeUnit)
+            ((((block.timestamp - timeOfLastUpdate) * _tokenIdsOne.length) * newRewardsPerUnitTime) / timeUnit)
         );
 
         //====== check rewards after some time
@@ -297,8 +284,7 @@ contract NFTStakeTest is BaseTest {
 
         assertEq(
             _newRewards,
-            _availableRewards +
-                ((((block.timestamp - newTimeOfLastUpdate) * _tokenIdsOne.length) * 200) / timeUnit)
+            _availableRewards + ((((block.timestamp - newTimeOfLastUpdate) * _tokenIdsOne.length) * 200) / timeUnit)
         );
     }
 
@@ -343,8 +329,7 @@ contract NFTStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate) * _tokenIdsOne.length) * rewardsPerUnitTime) /
-                newTimeUnit)
+            ((((block.timestamp - timeOfLastUpdate) * _tokenIdsOne.length) * rewardsPerUnitTime) / newTimeUnit)
         );
 
         //====== check rewards after some time
@@ -356,8 +341,7 @@ contract NFTStakeTest is BaseTest {
         assertEq(
             _newRewards,
             _availableRewards +
-                ((((block.timestamp - newTimeOfLastUpdate) * _tokenIdsOne.length) *
-                    rewardsPerUnitTime) / (1 seconds))
+                ((((block.timestamp - newTimeOfLastUpdate) * _tokenIdsOne.length) * rewardsPerUnitTime) / (1 seconds))
         );
     }
 
@@ -392,9 +376,7 @@ contract NFTStakeTest is BaseTest {
         assertEq(erc721.balanceOf(address(stakeContract)), _tokenIdsOne.length);
 
         // check available rewards right after staking
-        (uint256[] memory _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(
-            stakerOne
-        );
+        (uint256[] memory _amountStaked, uint256 _availableRewards) = stakeContract.getStakeInfo(stakerOne);
 
         assertEq(_amountStaked.length, _tokenIdsOne.length);
         assertEq(_availableRewards, 0);
@@ -424,10 +406,7 @@ contract NFTStakeTest is BaseTest {
 
         // check available rewards after withdraw
         (_amountStaked, _availableRewards) = stakeContract.getStakeInfo(stakerOne);
-        assertEq(
-            _availableRewards,
-            ((((block.timestamp - timeOfLastUpdate) * 3) * rewardsPerUnitTime) / timeUnit)
-        );
+        assertEq(_availableRewards, ((((block.timestamp - timeOfLastUpdate) * 3) * rewardsPerUnitTime) / timeUnit));
 
         console.log("==== staked tokens after withdraw ====");
         for (uint256 i = 0; i < _amountStaked.length; i++) {
@@ -444,10 +423,8 @@ contract NFTStakeTest is BaseTest {
 
         assertEq(
             _availableRewards,
-            (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 3)) * rewardsPerUnitTime) /
-                timeUnit) +
-                (((((block.timestamp - timeOfLastUpdateLatest) * 2)) * rewardsPerUnitTime) /
-                    timeUnit)
+            (((((timeOfLastUpdateLatest - timeOfLastUpdate) * 3)) * rewardsPerUnitTime) / timeUnit) +
+                (((((block.timestamp - timeOfLastUpdateLatest) * 2)) * rewardsPerUnitTime) / timeUnit)
         );
 
         // stake again

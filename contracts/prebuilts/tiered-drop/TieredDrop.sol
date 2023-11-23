@@ -183,16 +183,10 @@ contract TieredDrop is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC165)
-        returns (bool)
-    {
-        return
-            super.supportsInterface(interfaceId) ||
-            type(IERC2981Upgradeable).interfaceId == interfaceId;
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
+        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -210,10 +204,7 @@ contract TieredDrop is
         bytes calldata _data
     ) public override returns (uint256 batchId) {
         if (_data.length > 0) {
-            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(
-                _data,
-                (bytes, bytes32)
-            );
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
             if (encryptedURI.length != 0 && provenanceHash != "") {
                 _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
             }
@@ -230,11 +221,10 @@ contract TieredDrop is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
-        external
-        onlyRole(minterRole)
-        returns (string memory revealedURI)
-    {
+    function reveal(
+        uint256 _index,
+        bytes calldata _key
+    ) external onlyRole(minterRole) returns (string memory revealedURI) {
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
@@ -251,11 +241,10 @@ contract TieredDrop is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function claimWithSignature(GenericRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        returns (address signer)
-    {
+    function claimWithSignature(
+        GenericRequest calldata _req,
+        bytes calldata _signature
+    ) external payable returns (address signer) {
         (
             string[] memory tiersInPriority,
             address to,
@@ -265,10 +254,7 @@ contract TieredDrop is
             uint256 quantity,
             uint256 totalPrice,
             address currency
-        ) = abi.decode(
-                _req.data,
-                (string[], address, address, uint256, address, uint256, uint256, address)
-            );
+        ) = abi.decode(_req.data, (string[], address, address, uint256, address, uint256, uint256, address));
 
         if (quantity == 0) {
             revert("0 qty");
@@ -300,19 +286,13 @@ contract TieredDrop is
                         Internal functions
     //////////////////////////////////////////////////////////////*/
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectPriceOnClaim(
-        address _primarySaleRecipient,
-        address _currency,
-        uint256 _totalPrice
-    ) internal {
+    function collectPriceOnClaim(address _primarySaleRecipient, address _currency, uint256 _totalPrice) internal {
         if (_totalPrice == 0) {
             require(msg.value == 0, "!Value");
             return;
         }
 
-        address saleRecipient = _primarySaleRecipient == address(0)
-            ? primarySaleRecipient()
-            : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -326,11 +306,7 @@ contract TieredDrop is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(
-        address _to,
-        uint256 _totalQuantityBeingClaimed,
-        string[] memory _tiers
-    ) internal {
+    function transferTokensOnClaim(address _to, uint256 _totalQuantityBeingClaimed, string[] memory _tiers) internal {
         uint256 startTokenIdToMint = _currentIndex;
 
         uint256 startIdToMap = startTokenIdToMint;
@@ -365,11 +341,7 @@ contract TieredDrop is
     }
 
     /// @dev Maps lazy minted metadata to NFT tokenIds.
-    function _mapTokensToTier(
-        string memory _tier,
-        uint256 _startIdToMap,
-        uint256 _quantity
-    ) private {
+    function _mapTokensToTier(string memory _tier, uint256 _startIdToMap, uint256 _quantity) private {
         uint256 nextIdFromTier = nextMetadataIdToMapFromTier[_tier];
         uint256 startTokenId = _startIdToMap;
 
@@ -382,9 +354,7 @@ contract TieredDrop is
             TokenRange memory range = tokensInTier[i];
             uint256 gap = 0;
 
-            if (
-                range.startIdInclusive <= nextIdFromTier && nextIdFromTier < range.endIdNonInclusive
-            ) {
+            if (range.startIdInclusive <= nextIdFromTier && nextIdFromTier < range.endIdNonInclusive) {
                 uint256 proxyStartId = nextIdFromTier;
                 uint256 proxyEndId = proxyStartId + qtyRemaining <= range.endIdNonInclusive
                     ? proxyStartId + qtyRemaining
@@ -420,11 +390,10 @@ contract TieredDrop is
     }
 
     /// @dev Returns how much of the total-quantity-to-distribute can come from the given tier.
-    function _getQuantityFulfilledByTier(string memory _tier, uint256 _quantity)
-        private
-        view
-        returns (uint256 fulfilled)
-    {
+    function _getQuantityFulfilledByTier(
+        string memory _tier,
+        uint256 _quantity
+    ) private view returns (uint256 fulfilled) {
         uint256 total = totalRemainingInTier[_tier];
 
         if (total >= _quantity) {
@@ -537,9 +506,7 @@ contract TieredDrop is
 
     /// @dev Scrambles tokenId offset for a given batchId.
     function _scrambleOffset(uint256 _batchId, bytes calldata _seed) private {
-        tokenIdOffset[_batchId] = keccak256(
-            abi.encodePacked(_seed, block.timestamp, blockhash(block.number - 1))
-        );
+        tokenIdOffset[_batchId] = keccak256(abi.encodePacked(_seed, block.timestamp, blockhash(block.number - 1)));
     }
 
     /// @dev Returns whether a given address is authorized to sign mint requests.

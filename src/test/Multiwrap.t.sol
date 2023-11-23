@@ -18,11 +18,7 @@ contract MultiwrapReentrant is MockERC20, ITokenBundle {
         multiwrap = Multiwrap(_multiwrap);
     }
 
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) public override returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
         multiwrap.unwrap(0, address(this));
         return super.transferFrom(from, to, amount);
     }
@@ -170,16 +166,11 @@ contract MultiwrapTest is BaseTest {
 
         assertEq(expectedIdForWrappedToken + 1, multiwrap.nextTokenIdToMint());
 
-        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(
-            expectedIdForWrappedToken
-        );
+        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, wrappedContent.length);
         for (uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
             assertEq(contentsOfWrappedToken[i].assetContract, wrappedContent[i].assetContract);
-            assertEq(
-                uint256(contentsOfWrappedToken[i].tokenType),
-                uint256(wrappedContent[i].tokenType)
-            );
+            assertEq(uint256(contentsOfWrappedToken[i].tokenType), uint256(wrappedContent[i].tokenType));
             assertEq(contentsOfWrappedToken[i].tokenId, wrappedContent[i].tokenId);
             assertEq(contentsOfWrappedToken[i].totalAmount, wrappedContent[i].totalAmount);
         }
@@ -209,24 +200,13 @@ contract MultiwrapTest is BaseTest {
 
         assertEq(expectedIdForWrappedToken + 1, multiwrap.nextTokenIdToMint());
 
-        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(
-            expectedIdForWrappedToken
-        );
+        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, nativeTokenContentToWrap.length);
         for (uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
-            assertEq(
-                contentsOfWrappedToken[i].assetContract,
-                nativeTokenContentToWrap[i].assetContract
-            );
-            assertEq(
-                uint256(contentsOfWrappedToken[i].tokenType),
-                uint256(nativeTokenContentToWrap[i].tokenType)
-            );
+            assertEq(contentsOfWrappedToken[i].assetContract, nativeTokenContentToWrap[i].assetContract);
+            assertEq(uint256(contentsOfWrappedToken[i].tokenType), uint256(nativeTokenContentToWrap[i].tokenType));
             assertEq(contentsOfWrappedToken[i].tokenId, nativeTokenContentToWrap[i].tokenId);
-            assertEq(
-                contentsOfWrappedToken[i].totalAmount,
-                nativeTokenContentToWrap[i].totalAmount
-            );
+            assertEq(contentsOfWrappedToken[i].totalAmount, nativeTokenContentToWrap[i].totalAmount);
         }
 
         assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
@@ -257,16 +237,11 @@ contract MultiwrapTest is BaseTest {
 
         assertEq(expectedIdForWrappedToken + 1, multiwrap.nextTokenIdToMint());
 
-        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(
-            expectedIdForWrappedToken
-        );
+        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, wrappedContent.length);
         for (uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
             assertEq(contentsOfWrappedToken[i].assetContract, wrappedContent[i].assetContract);
-            assertEq(
-                uint256(contentsOfWrappedToken[i].tokenType),
-                uint256(wrappedContent[i].tokenType)
-            );
+            assertEq(uint256(contentsOfWrappedToken[i].tokenType), uint256(wrappedContent[i].tokenType));
             assertEq(contentsOfWrappedToken[i].tokenId, wrappedContent[i].tokenId);
             assertEq(contentsOfWrappedToken[i].totalAmount, wrappedContent[i].totalAmount);
         }
@@ -284,12 +259,7 @@ contract MultiwrapTest is BaseTest {
         vm.prank(address(tokenOwner));
 
         vm.expectEmit(true, true, true, true);
-        emit TokensWrapped(
-            address(tokenOwner),
-            recipient,
-            expectedIdForWrappedToken,
-            wrappedContent
-        );
+        emit TokensWrapped(address(tokenOwner), recipient, expectedIdForWrappedToken, wrappedContent);
 
         multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
     }
@@ -591,9 +561,7 @@ contract MultiwrapTest is BaseTest {
         assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
         assertEq(0, multiwrap.getTokenCountOfBundle(expectedIdForWrappedToken));
 
-        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(
-            expectedIdForWrappedToken
-        );
+        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, 0);
     }
 
@@ -656,9 +624,7 @@ contract MultiwrapTest is BaseTest {
         assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
         assertEq(0, multiwrap.getTokenCountOfBundle(expectedIdForWrappedToken));
 
-        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(
-            expectedIdForWrappedToken
-        );
+        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, 0);
     }
 
@@ -798,10 +764,7 @@ contract MultiwrapTest is BaseTest {
 
     uint256 internal constant MAX_TOKENS = 1000;
 
-    function getTokensToWrap(uint256 x)
-        internal
-        returns (ITokenBundle.Token[] memory tokensToWrap)
-    {
+    function getTokensToWrap(uint256 x) internal returns (ITokenBundle.Token[] memory tokensToWrap) {
         uint256 len = x % MAX_TOKENS;
         tokensToWrap = new ITokenBundle.Token[](len);
 
@@ -837,11 +800,7 @@ contract MultiwrapTest is BaseTest {
                     totalAmount: random
                 });
 
-                erc1155.mint(
-                    address(tokenOwner),
-                    tokensToWrap[i].tokenId,
-                    tokensToWrap[i].totalAmount
-                );
+                erc1155.mint(address(tokenOwner), tokensToWrap[i].tokenId, tokensToWrap[i].totalAmount);
             }
         }
     }
@@ -860,16 +819,11 @@ contract MultiwrapTest is BaseTest {
 
         assertEq(expectedIdForWrappedToken + 1, multiwrap.nextTokenIdToMint());
 
-        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(
-            expectedIdForWrappedToken
-        );
+        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, tokensToWrap.length);
         for (uint256 i = 0; i < contentsOfWrappedToken.length; i += 1) {
             assertEq(contentsOfWrappedToken[i].assetContract, tokensToWrap[i].assetContract);
-            assertEq(
-                uint256(contentsOfWrappedToken[i].tokenType),
-                uint256(tokensToWrap[i].tokenType)
-            );
+            assertEq(uint256(contentsOfWrappedToken[i].tokenType), uint256(tokensToWrap[i].tokenType));
             assertEq(contentsOfWrappedToken[i].tokenId, tokensToWrap[i].tokenId);
             assertEq(contentsOfWrappedToken[i].totalAmount, tokensToWrap[i].totalAmount);
         }
@@ -902,9 +856,7 @@ contract MultiwrapTest is BaseTest {
         assertEq(uriForWrappedToken, multiwrap.tokenURI(expectedIdForWrappedToken));
         assertEq(0, multiwrap.getTokenCountOfBundle(expectedIdForWrappedToken));
 
-        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(
-            expectedIdForWrappedToken
-        );
+        ITokenBundle.Token[] memory contentsOfWrappedToken = multiwrap.getWrappedContents(expectedIdForWrappedToken);
         assertEq(contentsOfWrappedToken.length, 0);
     }
 }

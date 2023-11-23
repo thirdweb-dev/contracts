@@ -21,12 +21,7 @@ import "../extension/Multicall.sol";
 //  ==========  Internal imports    ==========
 import { IContractPublisher } from "./interface/IContractPublisher.sol";
 
-contract ContractPublisher is
-    IContractPublisher,
-    ERC2771Context,
-    AccessControlEnumerable,
-    Multicall
-{
+contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlEnumerable, Multicall {
     using EnumerableSet for EnumerableSet.Bytes32Set;
 
     /*///////////////////////////////////////////////////////////////
@@ -66,9 +61,7 @@ contract ContractPublisher is
         _;
     }
 
-    constructor(address _trustedForwarder, IContractPublisher _prevPublisher)
-        ERC2771Context(_trustedForwarder)
-    {
+    constructor(address _trustedForwarder, IContractPublisher _prevPublisher) ERC2771Context(_trustedForwarder) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         prevPublisher = _prevPublisher;
     }
@@ -78,14 +71,10 @@ contract ContractPublisher is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns the latest version of all contracts published by a publisher.
-    function getAllPublishedContracts(address _publisher)
-        external
-        view
-        returns (CustomContractInstance[] memory published)
-    {
-        CustomContractInstance[] memory linkedData = prevPublisher.getAllPublishedContracts(
-            _publisher
-        );
+    function getAllPublishedContracts(
+        address _publisher
+    ) external view returns (CustomContractInstance[] memory published) {
+        CustomContractInstance[] memory linkedData = prevPublisher.getAllPublishedContracts(_publisher);
         uint256 currentTotal = EnumerableSet.length(contractsOfPublisher[_publisher].contractIds);
         uint256 prevTotal = linkedData.length;
         uint256 total = prevTotal + currentTotal;
@@ -97,18 +86,15 @@ contract ContractPublisher is
         // fill in current published contracts
         for (uint256 i = 0; i < currentTotal; i += 1) {
             bytes32 contractId = EnumerableSet.at(contractsOfPublisher[_publisher].contractIds, i);
-            published[i + prevTotal] = contractsOfPublisher[_publisher]
-                .contracts[contractId]
-                .latest;
+            published[i + prevTotal] = contractsOfPublisher[_publisher].contracts[contractId].latest;
         }
     }
 
     /// @notice Returns all versions of a published contract.
-    function getPublishedContractVersions(address _publisher, string memory _contractId)
-        external
-        view
-        returns (CustomContractInstance[] memory published)
-    {
+    function getPublishedContractVersions(
+        address _publisher,
+        string memory _contractId
+    ) external view returns (CustomContractInstance[] memory published) {
         CustomContractInstance[] memory linkedVersions = prevPublisher.getPublishedContractVersions(
             _publisher,
             _contractId
@@ -132,14 +118,11 @@ contract ContractPublisher is
     }
 
     /// @notice Returns the latest version of a contract published by a publisher.
-    function getPublishedContract(address _publisher, string memory _contractId)
-        external
-        view
-        returns (CustomContractInstance memory published)
-    {
-        published = contractsOfPublisher[_publisher]
-            .contracts[keccak256(bytes(_contractId))]
-            .latest;
+    function getPublishedContract(
+        address _publisher,
+        string memory _contractId
+    ) external view returns (CustomContractInstance memory published) {
+        published = contractsOfPublisher[_publisher].contracts[keccak256(bytes(_contractId))].latest;
         // if not found, check the previous publisher
         if (published.publishTimestamp == 0) {
             published = prevPublisher.getPublishedContract(_publisher, _contractId);
@@ -174,32 +157,23 @@ contract ContractPublisher is
 
         uint256 index = contractsOfPublisher[_publisher].contracts[contractIdInBytes].total;
         contractsOfPublisher[_publisher].contracts[contractIdInBytes].total += 1;
-        contractsOfPublisher[_publisher].contracts[contractIdInBytes].instances[
-                index
-            ] = publishedContract;
+        contractsOfPublisher[_publisher].contracts[contractIdInBytes].instances[index] = publishedContract;
 
-        uint256 metadataIndex = compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri]
-            .index;
-        compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].uris[
-                metadataIndex
-            ] = _publishMetadataUri;
+        uint256 metadataIndex = compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].index;
+        compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].uris[metadataIndex] = _publishMetadataUri;
         compilerMetadataUriToPublishedMetadataUris[_compilerMetadataUri].index = metadataIndex + 1;
 
         emit ContractPublished(_msgSender(), _publisher, publishedContract);
     }
 
     /// @notice Lets a publisher unpublish a contract and all its versions.
-    function unpublishContract(address _publisher, string memory _contractId)
-        external
-        onlyPublisher(_publisher)
-        onlyUnpausedOrAdmin
-    {
+    function unpublishContract(
+        address _publisher,
+        string memory _contractId
+    ) external onlyPublisher(_publisher) onlyUnpausedOrAdmin {
         bytes32 contractIdInBytes = keccak256(bytes(_contractId));
 
-        bool removed = EnumerableSet.remove(
-            contractsOfPublisher[_publisher].contractIds,
-            contractIdInBytes
-        );
+        bool removed = EnumerableSet.remove(contractsOfPublisher[_publisher].contractIds, contractIdInBytes);
         require(removed, "given contractId DNE");
 
         delete contractsOfPublisher[_publisher].contracts[contractIdInBytes];
@@ -208,10 +182,7 @@ contract ContractPublisher is
     }
 
     /// @notice Lets an account set its own publisher profile uri
-    function setPublisherProfileUri(address publisher, string memory uri)
-        public
-        onlyPublisher(publisher)
-    {
+    function setPublisherProfileUri(address publisher, string memory uri) public onlyPublisher(publisher) {
         string memory currentURI = profileUriOfPublisher[publisher];
         profileUriOfPublisher[publisher] = uri;
 
@@ -228,17 +199,12 @@ contract ContractPublisher is
     }
 
     /// @notice Retrieve the published metadata URI from a compiler metadata URI
-    function getPublishedUriFromCompilerUri(string memory compilerMetadataUri)
-        public
-        view
-        returns (string[] memory publishedMetadataUris)
-    {
-        string[] memory linkedUris = prevPublisher.getPublishedUriFromCompilerUri(
-            compilerMetadataUri
-        );
+    function getPublishedUriFromCompilerUri(
+        string memory compilerMetadataUri
+    ) public view returns (string[] memory publishedMetadataUris) {
+        string[] memory linkedUris = prevPublisher.getPublishedUriFromCompilerUri(compilerMetadataUri);
         uint256 prevTotal = linkedUris.length;
-        uint256 currentTotal = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri]
-            .index;
+        uint256 currentTotal = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].index;
         uint256 total = prevTotal + currentTotal;
         publishedMetadataUris = new string[](total);
         // fill in previously published uris
@@ -247,9 +213,9 @@ contract ContractPublisher is
         }
         // fill in current published uris
         for (uint256 i = 0; i < currentTotal; i += 1) {
-            publishedMetadataUris[i + prevTotal] = compilerMetadataUriToPublishedMetadataUris[
-                compilerMetadataUri
-            ].uris[i];
+            publishedMetadataUris[i + prevTotal] = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].uris[
+                i
+            ];
         }
     }
 
@@ -265,24 +231,12 @@ contract ContractPublisher is
     }
 
     /// @dev ERC2771Context overrides
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
     /// @dev ERC2771Context overrides
-    function _msgData()
-        internal
-        view
-        virtual
-        override(Context, ERC2771Context)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override(Context, ERC2771Context) returns (bytes calldata) {
         return ERC2771Context._msgData();
     }
 }

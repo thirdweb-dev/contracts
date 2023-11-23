@@ -93,9 +93,7 @@ abstract contract ERC721AQueryableUpgradeable is
      * multiple smaller scans if the collection is large enough to cause
      * an out-of-gas error (10K collections should be fine).
      */
-    function tokensOfOwner(
-        address owner
-    ) external view virtual override returns (uint256[] memory) {
+    function tokensOfOwner(address owner) external view virtual override returns (uint256[] memory) {
         uint256 start = _startTokenId();
         uint256 stop = _nextTokenId();
         uint256[] memory tokenIds;
@@ -109,11 +107,7 @@ abstract contract ERC721AQueryableUpgradeable is
      * Note that this function is optimized for smaller bytecode size over runtime gas,
      * since it is meant to be called off-chain.
      */
-    function _tokensOfOwnerIn(
-        address owner,
-        uint256 start,
-        uint256 stop
-    ) private view returns (uint256[] memory) {
+    function _tokensOfOwnerIn(address owner, uint256 start, uint256 stop) private view returns (uint256[] memory) {
         unchecked {
             if (start >= stop) _revert(InvalidQueryRange.selector);
             // Set `start = max(start, _startTokenId())`.

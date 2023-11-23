@@ -138,11 +138,7 @@ contract VoteERC20Test_Initialize is BaseTest {
         assertEq(address(voteContract.token()), token);
     }
 
-    function test_initialize_event_VotingDelaySet()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_VotingDelaySet() public whenNotImplementation whenProxyNotInitialized {
         vm.expectEmit(false, false, false, true);
         emit VotingDelaySet(0, initialVotingDelay);
         MyVoteERC20(proxy).initialize(
@@ -157,11 +153,7 @@ contract VoteERC20Test_Initialize is BaseTest {
         );
     }
 
-    function test_initialize_event_VotingPeriodSet()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_VotingPeriodSet() public whenNotImplementation whenProxyNotInitialized {
         vm.expectEmit(false, false, false, true);
         emit VotingPeriodSet(0, initialVotingPeriod);
         MyVoteERC20(proxy).initialize(
@@ -176,11 +168,7 @@ contract VoteERC20Test_Initialize is BaseTest {
         );
     }
 
-    function test_initialize_event_ProposalThresholdSet()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_ProposalThresholdSet() public whenNotImplementation whenProxyNotInitialized {
         vm.expectEmit(false, false, false, true);
         emit ProposalThresholdSet(0, initialProposalThreshold);
         MyVoteERC20(proxy).initialize(
@@ -195,11 +183,7 @@ contract VoteERC20Test_Initialize is BaseTest {
         );
     }
 
-    function test_initialize_event_QuorumNumeratorUpdated()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_QuorumNumeratorUpdated() public whenNotImplementation whenProxyNotInitialized {
         vm.expectEmit(false, false, false, true);
         emit QuorumNumeratorUpdated(0, initialVoteQuorumFraction);
         MyVoteERC20(proxy).initialize(

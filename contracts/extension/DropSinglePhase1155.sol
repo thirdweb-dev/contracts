@@ -36,27 +36,12 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
         AllowlistProof calldata _allowlistProof,
         bytes memory _data
     ) public payable virtual override {
-        _beforeClaim(
-            _tokenId,
-            _receiver,
-            _quantity,
-            _currency,
-            _pricePerToken,
-            _allowlistProof,
-            _data
-        );
+        _beforeClaim(_tokenId, _receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
 
         ClaimCondition memory condition = claimCondition[_tokenId];
         bytes32 activeConditionId = conditionId[_tokenId];
 
-        verifyClaim(
-            _tokenId,
-            _dropMsgSender(),
-            _quantity,
-            _currency,
-            _pricePerToken,
-            _allowlistProof
-        );
+        verifyClaim(_tokenId, _dropMsgSender(), _quantity, _currency, _pricePerToken, _allowlistProof);
 
         // Update contract state.
         condition.supplyClaimed += _quantity;
@@ -71,15 +56,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
 
         emit TokensClaimed(_dropMsgSender(), _receiver, _tokenId, _quantity);
 
-        _afterClaim(
-            _tokenId,
-            _receiver,
-            _quantity,
-            _currency,
-            _pricePerToken,
-            _allowlistProof,
-            _data
-        );
+        _afterClaim(_tokenId, _receiver, _quantity, _currency, _pricePerToken, _allowlistProof, _data);
     }
 
     /// @dev Lets a contract admin set claim conditions.
@@ -99,9 +76,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
 
         if (targetConditionId == bytes32(0) || _resetClaimEligibility) {
             supplyClaimedAlready = 0;
-            targetConditionId = keccak256(
-                abi.encodePacked(_dropMsgSender(), block.number, _tokenId)
-            );
+            targetConditionId = keccak256(abi.encodePacked(_dropMsgSender(), block.number, _tokenId));
         }
 
         if (supplyClaimedAlready > _condition.maxClaimableSupply) {
@@ -165,8 +140,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
             claimPrice = _allowlistProof.pricePerToken != type(uint256).max
                 ? _allowlistProof.pricePerToken
                 : claimPrice;
-            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max &&
-                _allowlistProof.currency != address(0)
+            claimCurrency = _allowlistProof.pricePerToken != type(uint256).max && _allowlistProof.currency != address(0)
                 ? _allowlistProof.currency
                 : claimCurrency;
         }
@@ -191,10 +165,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     }
 
     /// @dev Returns the supply claimed by claimer for active conditionId.
-    function getSupplyClaimedByWallet(
-        uint256 _tokenId,
-        address _claimer
-    ) public view returns (uint256) {
+    function getSupplyClaimedByWallet(uint256 _tokenId, address _claimer) public view returns (uint256) {
         return supplyClaimedByWallet[conditionId[_tokenId]][_claimer];
     }
 
@@ -238,11 +209,7 @@ abstract contract DropSinglePhase1155 is IDropSinglePhase1155 {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _tokenId,
-        uint256 _quantityBeingClaimed
-    ) internal virtual;
+    function _transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed) internal virtual;
 
     function _canSetClaimConditions() internal view virtual returns (bool);
 }

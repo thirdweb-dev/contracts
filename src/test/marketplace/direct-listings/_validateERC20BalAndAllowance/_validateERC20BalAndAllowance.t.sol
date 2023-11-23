@@ -42,9 +42,7 @@ contract ValidateERC20BalAndAllowanceTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -132,11 +130,7 @@ contract ValidateERC20BalAndAllowanceTest is BaseTest, IExtension {
         vm.stopPrank();
 
         vm.expectRevert("!BAL20");
-        MockValidateERC20BalAndAllowance(marketplace).validateERC20BalAndAllowance(
-            seller,
-            address(erc20),
-            100 ether
-        );
+        MockValidateERC20BalAndAllowance(marketplace).validateERC20BalAndAllowance(seller, address(erc20), 100 ether);
     }
 
     function test_validateERC20BalAndAllowance_whenTokensNotApprovedToTransfer() public {
@@ -145,11 +139,7 @@ contract ValidateERC20BalAndAllowanceTest is BaseTest, IExtension {
         vm.stopPrank();
 
         vm.expectRevert("!BAL20");
-        MockValidateERC20BalAndAllowance(marketplace).validateERC20BalAndAllowance(
-            seller,
-            address(erc20),
-            100 ether
-        );
+        MockValidateERC20BalAndAllowance(marketplace).validateERC20BalAndAllowance(seller, address(erc20), 100 ether);
     }
 
     function test_validateERC20BalAndAllowance_whenTokensOwnedAndApproved() public {

@@ -64,11 +64,7 @@ abstract contract ContractMetadata is IContractMetadata {
     }
 
     /// @dev Returns the AccountPermissions storage.
-    function _contractMetadataStorage()
-        internal
-        pure
-        returns (ContractMetadataStorage.Data storage data)
-    {
+    function _contractMetadataStorage() internal pure returns (ContractMetadataStorage.Data storage data) {
         data = ContractMetadataStorage.data();
     }
 

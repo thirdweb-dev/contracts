@@ -39,11 +39,7 @@ interface IContractPublisher {
     );
 
     /// @dev Emitted when a contract is unpublished.
-    event ContractUnpublished(
-        address indexed operator,
-        address indexed publisher,
-        string indexed contractId
-    );
+    event ContractUnpublished(address indexed operator, address indexed publisher, string indexed contractId);
 
     /// @dev Emitted when a publisher updates their profile URI.
     event PublisherProfileUpdated(address indexed publisher, string prevURI, string newURI);

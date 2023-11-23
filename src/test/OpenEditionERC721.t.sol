@@ -14,12 +14,7 @@ contract OpenEditionERC721Test is BaseTest {
     using Strings for uint256;
     using Strings for address;
 
-    event SharedMetadataUpdated(
-        string name,
-        string description,
-        string imageURI,
-        string animationURI
-    );
+    event SharedMetadataUpdated(string name, string description, string imageURI, string animationURI);
 
     OpenEditionERC721 public openEdition;
     ISharedMetadata.SharedMetadataInfo public sharedMetadata;
@@ -174,8 +169,7 @@ contract OpenEditionERC721Test is BaseTest {
         OpenEditionERC721.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -204,8 +198,7 @@ contract OpenEditionERC721Test is BaseTest {
         OpenEditionERC721.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].startTimestamp = 100;
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
@@ -265,8 +258,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -337,8 +329,7 @@ contract OpenEditionERC721Test is BaseTest {
         OpenEditionERC721.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 200;
 
@@ -369,8 +360,7 @@ contract OpenEditionERC721Test is BaseTest {
         alp.proof = proofs;
         alp.quantityLimitPerWallet = x;
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -430,8 +420,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -446,10 +435,7 @@ contract OpenEditionERC721Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         openEdition.claim(receiver, 100, address(erc20), 0, alp, ""); // claims for free, because allowlist price is 0
-        assertEq(
-            openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver),
-            100
-        );
+        assertEq(openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver), 100);
     }
 
     /**
@@ -484,8 +470,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -508,10 +493,7 @@ contract OpenEditionERC721Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         openEdition.claim(receiver, 100, address(erc20), 5, alp, "");
-        assertEq(
-            openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver),
-            100
-        );
+        assertEq(openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver), 100);
         assertEq(erc20.balanceOf(receiver), 10000 - 500);
     }
 
@@ -547,8 +529,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -567,10 +548,7 @@ contract OpenEditionERC721Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         openEdition.claim(receiver, 100, address(erc20), 10, alp, "");
-        assertEq(
-            openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver),
-            100
-        );
+        assertEq(openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver), 100);
         assertEq(erc20.balanceOf(receiver), 10000 - 1000);
     }
 
@@ -606,8 +584,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;
@@ -631,10 +608,7 @@ contract OpenEditionERC721Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         openEdition.claim(receiver, 10, address(erc20), 5, alp, "");
-        assertEq(
-            openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver),
-            10
-        );
+        assertEq(openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver), 10);
         assertEq(erc20.balanceOf(receiver), 10000 - 50);
     }
 
@@ -668,8 +642,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         // bytes32[] memory proofs = new bytes32[](0);
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = x;
         conditions[0].quantityLimitPerWallet = 1;
         conditions[0].merkleRoot = root;
@@ -682,10 +655,7 @@ contract OpenEditionERC721Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         openEdition.claim(receiver, x - 5, address(0), 0, alp, "");
-        assertEq(
-            openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver),
-            x - 5
-        );
+        assertEq(openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver), x - 5);
 
         bytes memory errorQty = "!Qty";
 
@@ -695,10 +665,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         vm.prank(receiver, receiver);
         openEdition.claim(receiver, 5, address(0), 0, alp, "");
-        assertEq(
-            openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver),
-            x
-        );
+        assertEq(openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver), x);
 
         vm.prank(receiver, receiver);
         vm.expectRevert(errorQty);
@@ -717,8 +684,7 @@ contract OpenEditionERC721Test is BaseTest {
         OpenEditionERC721.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -754,8 +720,7 @@ contract OpenEditionERC721Test is BaseTest {
         uint256 currentStartId = 0;
         uint256 count = 0;
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](2);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](2);
         conditions[0].startTimestamp = 0;
         conditions[0].maxClaimableSupply = 10;
         conditions[1].startTimestamp = 1;
@@ -787,8 +752,7 @@ contract OpenEditionERC721Test is BaseTest {
 
         uint256 activeConditionId = 0;
 
-        OpenEditionERC721.ClaimCondition[]
-            memory conditions = new OpenEditionERC721.ClaimCondition[](3);
+        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](3);
         conditions[0].startTimestamp = 10;
         conditions[0].maxClaimableSupply = 11;
         conditions[0].quantityLimitPerWallet = 12;

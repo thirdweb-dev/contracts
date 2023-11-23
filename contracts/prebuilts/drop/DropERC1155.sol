@@ -155,16 +155,10 @@ contract DropERC1155 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155Upgradeable, IERC165)
-        returns (bool)
-    {
-        return
-            super.supportsInterface(interfaceId) ||
-            type(IERC2981Upgradeable).interfaceId == interfaceId;
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155Upgradeable, IERC165) returns (bool) {
+        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -184,19 +178,13 @@ contract DropERC1155 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a module admin set a max total supply for token.
-    function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
         maxTotalSupply[_tokenId] = _maxTotalSupply;
         emit MaxTotalSupplyUpdated(_tokenId, _maxTotalSupply);
     }
 
     /// @dev Lets a contract admin set the recipient for all primary sales.
-    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
         saleRecipient[_tokenId] = _saleRecipient;
         emit SaleRecipientForTokenUpdated(_tokenId, _saleRecipient);
     }
@@ -207,10 +195,7 @@ contract DropERC1155 is
      * @param _index Index of the desired batch in batchIds array.
      * @param _uri   the new base URI for the batch.
      */
-    function updateBatchBaseURI(uint256 _index, string calldata _uri)
-        external
-        onlyRole(metadataRole)
-    {
+    function updateBatchBaseURI(uint256 _index, string calldata _uri) external onlyRole(metadataRole) {
         uint256 batchId = getBatchIdAtIndex(_index);
         _setBaseURI(batchId, _uri);
     }
@@ -240,8 +225,7 @@ contract DropERC1155 is
         bytes memory
     ) internal view override {
         require(
-            maxTotalSupply[_tokenId] == 0 ||
-                totalSupply[_tokenId] + _quantity <= maxTotalSupply[_tokenId],
+            maxTotalSupply[_tokenId] == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupply[_tokenId],
             "exceed max total supply"
         );
     }
@@ -262,11 +246,7 @@ contract DropERC1155 is
         (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
 
         address _saleRecipient = _primarySaleRecipient == address(0)
-            ? (
-                saleRecipient[_tokenId] == address(0)
-                    ? primarySaleRecipient()
-                    : saleRecipient[_tokenId]
-            )
+            ? (saleRecipient[_tokenId] == address(0) ? primarySaleRecipient() : saleRecipient[_tokenId])
             : _primarySaleRecipient;
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
@@ -280,26 +260,12 @@ contract DropERC1155 is
         }
         require(validMsgValue, "!V");
 
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            platformFeeRecipient,
-            platformFees
-        );
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            _saleRecipient,
-            totalPrice - platformFees
-        );
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), _saleRecipient, totalPrice - platformFees);
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(
-        address _to,
-        uint256 _tokenId,
-        uint256 _quantityBeingClaimed
-    ) internal override {
+    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed) internal override {
         _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
 
@@ -348,11 +314,7 @@ contract DropERC1155 is
     }
 
     /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
-    function burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory values
-    ) public virtual {
+    function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public virtual {
         require(
             account == _msgSender() || isApprovedForAll(account, _msgSender()),
             "ERC1155: caller is not owner nor approved."
@@ -376,10 +338,7 @@ contract DropERC1155 is
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
-            require(
-                hasRole(transferRole, from) || hasRole(transferRole, to),
-                "restricted to TRANSFER_ROLE holders."
-            );
+            require(hasRole(transferRole, from) || hasRole(transferRole, to), "restricted to TRANSFER_ROLE holders.");
         }
 
         if (from == address(0)) {

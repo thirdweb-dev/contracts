@@ -26,10 +26,7 @@ interface VmModified {
 
     function keyExists(string calldata, string calldata) external returns (bool);
 
-    function parseJsonKeys(
-        string calldata json,
-        string calldata key
-    ) external pure returns (string[] memory keys);
+    function parseJsonKeys(string calldata json, string calldata key) external pure returns (string[] memory keys);
 }
 
 uint256 constant OV_FIXED = 21000;
@@ -97,10 +94,7 @@ abstract contract AAGasProfileBase is Test {
         op.signature = getSignature(op);
     }
 
-    function signUserOpHash(
-        uint256 _key,
-        UserOperation memory _op
-    ) internal view returns (bytes memory signature) {
+    function signUserOpHash(uint256 _key, UserOperation memory _op) internal view returns (bytes memory signature) {
         bytes32 hash = entryPoint.getUserOpHash(_op);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_key, ECDSA.toEthSignedMessageHash(hash));
         signature = abi.encodePacked(r, s, v);
@@ -166,11 +160,7 @@ abstract contract AAGasProfileBase is Test {
         address recipient = makeAddr("recipient");
         uint256 balance = mockERC20.balanceOf(recipient);
         UserOperation memory op = fillUserOp(
-            fillData(
-                address(mockERC20),
-                0,
-                abi.encodeWithSelector(mockERC20.transfer.selector, recipient, amount)
-            )
+            fillData(address(mockERC20), 0, abi.encodeWithSelector(mockERC20.transfer.selector, recipient, amount))
         );
         executeUserOp(op, "erc20", 0);
         assertEq(mockERC20.balanceOf(recipient), balance + amount);
@@ -219,21 +209,15 @@ abstract contract AAGasProfileBase is Test {
         }
     }
 
-    function emptyPaymasterAndData(
-        UserOperation memory _op
-    ) internal pure returns (bytes memory ret) {}
+    function emptyPaymasterAndData(UserOperation memory _op) internal pure returns (bytes memory ret) {}
 
-    function validatePaymasterAndData(
-        UserOperation memory _op
-    ) internal view returns (bytes memory ret) {
+    function validatePaymasterAndData(UserOperation memory _op) internal view returns (bytes memory ret) {
         bytes32 hash = paymaster.getHash(_op, 0, 0);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(verifierKey, ECDSA.toEthSignedMessageHash(hash));
         ret = abi.encodePacked(address(paymaster), uint256(0), uint256(0), r, s, uint8(v));
     }
 
-    function getDummyPaymasterAndData(
-        UserOperation memory _op
-    ) internal view returns (bytes memory ret) {
+    function getDummyPaymasterAndData(UserOperation memory _op) internal view returns (bytes memory ret) {
         ret = abi.encodePacked(
             address(paymaster),
             uint256(0),
@@ -285,11 +269,7 @@ abstract contract AAGasProfileBase is Test {
 
     function getDummySig(UserOperation memory _op) internal pure virtual returns (bytes memory);
 
-    function fillData(
-        address _to,
-        uint256 _amount,
-        bytes memory _data
-    ) internal view virtual returns (bytes memory);
+    function fillData(address _to, uint256 _amount, bytes memory _data) internal view virtual returns (bytes memory);
 
     function getAccountAddr(address _owner) internal view virtual returns (IAccount _account);
 

@@ -115,11 +115,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         StakingCondition memory condition = stakingConditions[nextConditionId - 1];
         require(_timeUnit != condition.timeUnit, "Time-unit unchanged.");
 
-        _setStakingCondition(
-            _timeUnit,
-            condition.rewardRatioNumerator,
-            condition.rewardRatioDenominator
-        );
+        _setStakingCondition(_timeUnit, condition.rewardRatioNumerator, condition.rewardRatioDenominator);
 
         emit UpdatedTimeUnit(condition.timeUnit, _timeUnit);
     }
@@ -142,8 +138,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
 
         StakingCondition memory condition = stakingConditions[nextConditionId - 1];
         require(
-            _numerator != condition.rewardRatioNumerator ||
-                _denominator != condition.rewardRatioDenominator,
+            _numerator != condition.rewardRatioNumerator || _denominator != condition.rewardRatioDenominator,
             "Reward ratio unchanged."
         );
         _setStakingCondition(condition.timeUnit, _numerator, _denominator);
@@ -163,12 +158,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
      *  @return _tokensStaked   Amount of tokens staked.
      *  @return _rewards        Available reward amount.
      */
-    function getStakeInfo(address _staker)
-        external
-        view
-        virtual
-        returns (uint256 _tokensStaked, uint256 _rewards)
-    {
+    function getStakeInfo(address _staker) external view virtual returns (uint256 _tokensStaked, uint256 _rewards) {
         _tokensStaked = stakers[_staker].amountStaked;
         _rewards = _availableRewards(_staker);
     }
@@ -257,8 +247,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
 
     /// @dev Logic for claiming rewards. Override to add custom logic.
     function _claimRewards() internal virtual {
-        uint256 rewards = stakers[_stakeMsgSender()].unclaimedRewards +
-            _calculateRewards(_stakeMsgSender());
+        uint256 rewards = stakers[_stakeMsgSender()].unclaimedRewards + _calculateRewards(_stakeMsgSender());
 
         require(rewards != 0, "No rewards");
 
@@ -289,11 +278,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
     }
 
     /// @dev Set staking conditions.
-    function _setStakingCondition(
-        uint80 _timeUnit,
-        uint256 _numerator,
-        uint256 _denominator
-    ) internal virtual {
+    function _setStakingCondition(uint80 _timeUnit, uint256 _numerator, uint256 _denominator) internal virtual {
         require(_denominator != 0, "divide by 0");
         require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextConditionId;
@@ -322,12 +307,8 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
         for (uint256 i = _stakerConditionId; i < _nextConditionId; i += 1) {
             StakingCondition memory condition = stakingConditions[i];
 
-            uint256 startTime = i != _stakerConditionId
-                ? condition.startTimestamp
-                : staker.timeOfLastUpdate;
-            uint256 endTime = condition.endTimestamp != 0
-                ? condition.endTimestamp
-                : block.timestamp;
+            uint256 startTime = i != _stakerConditionId ? condition.startTimestamp : staker.timeOfLastUpdate;
+            uint256 endTime = condition.endTimestamp != 0 ? condition.endTimestamp : block.timestamp;
 
             (bool noOverflowProduct, uint256 rewardsProduct) = SafeMath.tryMul(
                 (endTime - startTime) * staker.amountStaked,
@@ -341,9 +322,9 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
             _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
         }
 
-        (, _rewards) = SafeMath.tryMul(_rewards, 10**rewardTokenDecimals);
+        (, _rewards) = SafeMath.tryMul(_rewards, 10 ** rewardTokenDecimals);
 
-        _rewards /= (10**stakingTokenDecimals);
+        _rewards /= (10 ** stakingTokenDecimals);
     }
 
     /*////////////////////////////////////////////////////////////////////
@@ -363,11 +344,7 @@ abstract contract Staking20Upgradeable is ReentrancyGuardUpgradeable, IStaking20
      *  @notice View total rewards available in the staking contract.
      *
      */
-    function getRewardTokenBalance()
-        external
-        view
-        virtual
-        returns (uint256 _rewardsAvailableInContract);
+    function getRewardTokenBalance() external view virtual returns (uint256 _rewardsAvailableInContract);
 
     /**
      *  @dev    Mint/Transfer ERC20 rewards to the staker. Must override.

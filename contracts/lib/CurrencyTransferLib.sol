@@ -14,12 +14,7 @@ library CurrencyTransferLib {
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /// @dev Transfers a given amount of currency.
-    function transferCurrency(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
+    function transferCurrency(address _currency, address _from, address _to, uint256 _amount) internal {
         if (_amount == 0) {
             return;
         }
@@ -61,12 +56,7 @@ library CurrencyTransferLib {
     }
 
     /// @dev Transfer `amount` of ERC20 token from `from` to `to`.
-    function safeTransferERC20(
-        address _currency,
-        address _from,
-        address _to,
-        uint256 _amount
-    ) internal {
+    function safeTransferERC20(address _currency, address _from, address _to, uint256 _amount) internal {
         if (_from == _to) {
             return;
         }
@@ -87,11 +77,7 @@ library CurrencyTransferLib {
     }
 
     /// @dev Transfers `amount` of native token to `to`. (With native token wrapping)
-    function safeTransferNativeTokenWithWrapper(
-        address to,
-        uint256 value,
-        address _nativeTokenWrapper
-    ) internal {
+    function safeTransferNativeTokenWithWrapper(address to, uint256 value, address _nativeTokenWrapper) internal {
         // solhint-disable avoid-low-level-calls
         // slither-disable-next-line low-level-calls
         (bool success, ) = to.call{ value: value }("");

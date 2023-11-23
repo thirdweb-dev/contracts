@@ -12,12 +12,7 @@ contract DropERC1155Test is BaseTest {
     using Strings for uint256;
     using Strings for address;
 
-    event TokensLazyMinted(
-        uint256 indexed startTokenId,
-        uint256 endTokenId,
-        string baseURI,
-        bytes encryptedBaseURI
-    );
+    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
     event MaxTotalSupplyUpdated(uint256 tokenId, uint256 maxTotalSupply);
 
@@ -550,14 +545,7 @@ contract DropERC1155Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         drop.claim(receiver, _tokenId, 100, address(erc20), 0, alp, ""); // claims for free, because allowlist price is 0
-        assertEq(
-            drop.getSupplyClaimedByWallet(
-                _tokenId,
-                drop.getActiveClaimConditionId(_tokenId),
-                receiver
-            ),
-            100
-        );
+        assertEq(drop.getSupplyClaimedByWallet(_tokenId, drop.getActiveClaimConditionId(_tokenId), receiver), 100);
     }
 
     /**
@@ -616,14 +604,7 @@ contract DropERC1155Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         drop.claim(receiver, _tokenId, 100, address(erc20), 5, alp, "");
-        assertEq(
-            drop.getSupplyClaimedByWallet(
-                _tokenId,
-                drop.getActiveClaimConditionId(_tokenId),
-                receiver
-            ),
-            100
-        );
+        assertEq(drop.getSupplyClaimedByWallet(_tokenId, drop.getActiveClaimConditionId(_tokenId), receiver), 100);
         assertEq(erc20.balanceOf(receiver), 10000 - 500);
     }
 
@@ -679,14 +660,7 @@ contract DropERC1155Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         drop.claim(receiver, _tokenId, 100, address(erc20), 10, alp, "");
-        assertEq(
-            drop.getSupplyClaimedByWallet(
-                _tokenId,
-                drop.getActiveClaimConditionId(_tokenId),
-                receiver
-            ),
-            100
-        );
+        assertEq(drop.getSupplyClaimedByWallet(_tokenId, drop.getActiveClaimConditionId(_tokenId), receiver), 100);
         assertEq(erc20.balanceOf(receiver), 10000 - 1000);
     }
 
@@ -747,14 +721,7 @@ contract DropERC1155Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         drop.claim(receiver, _tokenId, 10, address(erc20), 5, alp, "");
-        assertEq(
-            drop.getSupplyClaimedByWallet(
-                _tokenId,
-                drop.getActiveClaimConditionId(_tokenId),
-                receiver
-            ),
-            10
-        );
+        assertEq(drop.getSupplyClaimedByWallet(_tokenId, drop.getActiveClaimConditionId(_tokenId), receiver), 10);
         assertEq(erc20.balanceOf(receiver), 10000 - 50);
     }
 
@@ -802,14 +769,7 @@ contract DropERC1155Test is BaseTest {
         // vm.prank(getActor(5), getActor(5));
         vm.prank(receiver, receiver);
         drop.claim(receiver, _tokenId, x - 5, address(0), 0, alp, "");
-        assertEq(
-            drop.getSupplyClaimedByWallet(
-                _tokenId,
-                drop.getActiveClaimConditionId(_tokenId),
-                receiver
-            ),
-            x - 5
-        );
+        assertEq(drop.getSupplyClaimedByWallet(_tokenId, drop.getActiveClaimConditionId(_tokenId), receiver), x - 5);
 
         bytes memory errorQty = "!Qty";
 
@@ -819,14 +779,7 @@ contract DropERC1155Test is BaseTest {
 
         vm.prank(receiver, receiver);
         drop.claim(receiver, _tokenId, 5, address(0), 0, alp, "");
-        assertEq(
-            drop.getSupplyClaimedByWallet(
-                _tokenId,
-                drop.getActiveClaimConditionId(_tokenId),
-                receiver
-            ),
-            x
-        );
+        assertEq(drop.getSupplyClaimedByWallet(_tokenId, drop.getActiveClaimConditionId(_tokenId), receiver), x);
 
         vm.prank(receiver, receiver);
         vm.expectRevert(errorQty);
@@ -936,30 +889,21 @@ contract DropERC1155Test is BaseTest {
         assertEq(activeConditionId, 0);
         assertEq(drop.getClaimConditionById(_tokenId, activeConditionId).startTimestamp, 10);
         assertEq(drop.getClaimConditionById(_tokenId, activeConditionId).maxClaimableSupply, 11);
-        assertEq(
-            drop.getClaimConditionById(_tokenId, activeConditionId).quantityLimitPerWallet,
-            12
-        );
+        assertEq(drop.getClaimConditionById(_tokenId, activeConditionId).quantityLimitPerWallet, 12);
 
         vm.warp(20);
         activeConditionId = drop.getActiveClaimConditionId(_tokenId);
         assertEq(activeConditionId, 1);
         assertEq(drop.getClaimConditionById(_tokenId, activeConditionId).startTimestamp, 20);
         assertEq(drop.getClaimConditionById(_tokenId, activeConditionId).maxClaimableSupply, 21);
-        assertEq(
-            drop.getClaimConditionById(_tokenId, activeConditionId).quantityLimitPerWallet,
-            22
-        );
+        assertEq(drop.getClaimConditionById(_tokenId, activeConditionId).quantityLimitPerWallet, 22);
 
         vm.warp(30);
         activeConditionId = drop.getActiveClaimConditionId(_tokenId);
         assertEq(activeConditionId, 2);
         assertEq(drop.getClaimConditionById(_tokenId, activeConditionId).startTimestamp, 30);
         assertEq(drop.getClaimConditionById(_tokenId, activeConditionId).maxClaimableSupply, 31);
-        assertEq(
-            drop.getClaimConditionById(_tokenId, activeConditionId).quantityLimitPerWallet,
-            32
-        );
+        assertEq(drop.getClaimConditionById(_tokenId, activeConditionId).quantityLimitPerWallet, 32);
 
         vm.warp(40);
         assertEq(drop.getActiveClaimConditionId(_tokenId), 2);

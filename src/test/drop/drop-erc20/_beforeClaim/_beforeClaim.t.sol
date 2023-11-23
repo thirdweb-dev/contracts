@@ -26,16 +26,7 @@ contract DropERC20Test_beforeClaim is BaseTest {
 
         bytes memory initializeData = abi.encodeCall(
             DropERC20.initialize,
-            (
-                deployer,
-                NAME,
-                SYMBOL,
-                CONTRACT_URI,
-                forwarders(),
-                saleRecipient,
-                platformFeeRecipient,
-                platformFeeBps
-            )
+            (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), saleRecipient, platformFeeRecipient, platformFeeBps)
         );
 
         dropImp = address(new HarnessDropERC20BeforeClaim());

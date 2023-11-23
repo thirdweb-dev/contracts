@@ -162,9 +162,7 @@ contract TokenERC1155Test_OtherFunctions is BaseTest {
         assertTrue(tokenContract.supportsInterface(type(IERC2981).interfaceId));
         assertTrue(tokenContract.supportsInterface(type(IERC165).interfaceId));
         assertTrue(tokenContract.supportsInterface(type(IERC165Upgradeable).interfaceId));
-        assertTrue(
-            tokenContract.supportsInterface(type(IAccessControlEnumerableUpgradeable).interfaceId)
-        );
+        assertTrue(tokenContract.supportsInterface(type(IAccessControlEnumerableUpgradeable).interfaceId));
         assertTrue(tokenContract.supportsInterface(type(IAccessControlUpgradeable).interfaceId));
         assertTrue(tokenContract.supportsInterface(type(IERC1155Upgradeable).interfaceId));
 

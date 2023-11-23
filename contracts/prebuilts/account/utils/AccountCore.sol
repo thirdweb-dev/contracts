@@ -87,20 +87,14 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     */
 
     /* solhint-disable*/
-    function isValidSigner(
-        address _signer,
-        UserOperation calldata _userOp
-    ) public view virtual returns (bool) {
+    function isValidSigner(address _signer, UserOperation calldata _userOp) public view virtual returns (bool) {
         // First, check if the signer is an admin.
         if (_accountPermissionsStorage().isAdmin[_signer]) {
             return true;
         }
 
-        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[
-            _signer
-        ];
-        EnumerableSet.AddressSet storage approvedTargets = _accountPermissionsStorage()
-            .approvedTargets[_signer];
+        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[_signer];
+        EnumerableSet.AddressSet storage approvedTargets = _accountPermissionsStorage().approvedTargets[_signer];
 
         // If not an admin, check if the signer is active.
         if (
@@ -141,9 +135,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         // checking target and value for `executeBatch`
         else if (sig == AccountExtension.executeBatch.selector) {
             // Extract the `target` and `value` array arguments from the calldata for `executeBatch`.
-            (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(
-                _userOp.callData
-            );
+            (address[] memory targets, uint256[] memory values, ) = decodeExecuteBatchCalldata(_userOp.callData);
 
             // if wildcard target is not approved, check that the targets are in the approvedTargets set.
             if (!isWildCard) {
@@ -187,23 +179,16 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the salt used when deploying an Account.
-    function _generateSalt(
-        address _admin,
-        bytes memory _data
-    ) internal view virtual returns (bytes32) {
+    function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
         return keccak256(abi.encode(_admin, _data));
     }
 
-    function getFunctionSignature(
-        bytes calldata data
-    ) internal pure returns (bytes4 functionSelector) {
+    function getFunctionSignature(bytes calldata data) internal pure returns (bytes4 functionSelector) {
         require(data.length >= 4, "!Data");
         return bytes4(data[:4]);
     }
 
-    function decodeExecuteCalldata(
-        bytes calldata data
-    ) internal pure returns (address _target, uint256 _value) {
+    function decodeExecuteCalldata(bytes calldata data) internal pure returns (address _target, uint256 _value) {
         require(data.length >= 4 + 32 + 32, "!Data");
 
         // Decode the address, which is bytes 4 to 35
@@ -215,11 +200,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
 
     function decodeExecuteBatchCalldata(
         bytes calldata data
-    )
-        internal
-        pure
-        returns (address[] memory _targets, uint256[] memory _values, bytes[] memory _callData)
-    {
+    ) internal pure returns (address[] memory _targets, uint256[] memory _values, bytes[] memory _callData) {
         require(data.length >= 4 + 32 + 32 + 32, "!Data");
 
         (_targets, _values, _callData) = abi.decode(data[4:], (address[], uint256[], bytes[]));
@@ -235,9 +216,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
 
         if (!isValidSigner(signer, userOp)) return SIG_VALIDATION_FAILED;
 
-        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[
-            signer
-        ];
+        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
 
         uint48 validAfter = uint48(permissions.startTimestamp);
         uint48 validUntil = uint48(permissions.endTimestamp);
@@ -250,28 +229,17 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         super._setAdmin(_account, _isAdmin);
         if (factory.code.length > 0) {
             if (_isAdmin) {
-                BaseAccountFactory(factory).onSignerAdded(
-                    _account,
-                    AccountCoreStorage.data().creationSalt
-                );
+                BaseAccountFactory(factory).onSignerAdded(_account, AccountCoreStorage.data().creationSalt);
             } else {
-                BaseAccountFactory(factory).onSignerRemoved(
-                    _account,
-                    AccountCoreStorage.data().creationSalt
-                );
+                BaseAccountFactory(factory).onSignerRemoved(_account, AccountCoreStorage.data().creationSalt);
             }
         }
     }
 
     /// @notice Runs after every `changeRole` run.
-    function _afterSignerPermissionsUpdate(
-        SignerPermissionRequest calldata _req
-    ) internal virtual override {
+    function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {
         if (factory.code.length > 0) {
-            BaseAccountFactory(factory).onSignerAdded(
-                _req.signer,
-                AccountCoreStorage.data().creationSalt
-            );
+            BaseAccountFactory(factory).onSignerAdded(_req.signer, AccountCoreStorage.data().creationSalt);
         }
     }
 }

@@ -97,9 +97,7 @@ contract NFTStake is
     function depositRewardTokens(uint256 _amount) external payable nonReentrant {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
-        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN
-            ? nativeTokenWrapper
-            : rewardToken;
+        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : rewardToken;
 
         uint256 balanceBefore = IERC20(_rewardToken).balanceOf(address(this));
         CurrencyTransferLib.transferCurrencyWithWrapper(
@@ -143,20 +141,13 @@ contract NFTStake is
                         ERC 165 / 721 logic
     //////////////////////////////////////////////////////////////*/
 
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external view override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external view override returns (bytes4) {
         require(isStaking == 2, "Direct transfer");
         return this.onERC721Received.selector;
     }
 
     function supportsInterface(bytes4 interfaceId) public view override returns (bool) {
-        return
-            interfaceId == type(IERC721ReceiverUpgradeable).interfaceId ||
-            super.supportsInterface(interfaceId);
+        return interfaceId == type(IERC721ReceiverUpgradeable).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -37,12 +37,7 @@ interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
     );
 
     /// @dev Emitted when tokens are lazy minted.
-    event TokensLazyMinted(
-        uint256 startTokenId,
-        uint256 endTokenId,
-        string baseURI,
-        bytes encryptedBaseURI
-    );
+    event TokensLazyMinted(uint256 startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
 
     /// @dev Emitted when the URI for a batch of 'delayed-reveal' NFTs is revealed.
     event NFTRevealed(uint256 endTokenId, string revealedURI);
@@ -65,11 +60,7 @@ interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
      *                           result of encrypting the URI of the NFTs in the revealed
      *                           state.
      */
-    function lazyMint(
-        uint256 amount,
-        string calldata baseURIForTokens,
-        bytes calldata encryptedBaseURI
-    ) external;
+    function lazyMint(uint256 amount, string calldata baseURIForTokens, bytes calldata encryptedBaseURI) external;
 
     /**
      *  @notice Lets an account claim a given quantity of NFTs.
@@ -99,8 +90,5 @@ interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
      *                               `limitMerkleProofClaim` values when setting new
      *                               claim conditions.
      */
-    function setClaimConditions(
-        ClaimCondition[] calldata phases,
-        bool resetClaimEligibility
-    ) external;
+    function setClaimConditions(ClaimCondition[] calldata phases, bool resetClaimEligibility) external;
 }

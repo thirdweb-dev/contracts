@@ -66,9 +66,7 @@ contract EnglishAuctionsPayoutTest is BaseTest, IExtension {
         // Deploy implementation.
         Extension[] memory extensions = _setupExtensions();
         address impl = address(
-            new MarketplaceV3(
-                MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth))
-            )
+            new MarketplaceV3(MarketplaceV3.MarketplaceConstructorParams(extensions, address(0), address(weth)))
         );
 
         vm.prank(marketplaceDeployer);
@@ -77,13 +75,7 @@ contract EnglishAuctionsPayoutTest is BaseTest, IExtension {
                 impl,
                 abi.encodeCall(
                     MarketplaceV3.initialize,
-                    (
-                        marketplaceDeployer,
-                        "",
-                        new address[](0),
-                        platformFeeRecipient,
-                        uint16(platformFeeBps)
-                    )
+                    (marketplaceDeployer, "", new address[](0), platformFeeRecipient, uint16(platformFeeBps))
                 )
             )
         );
@@ -263,10 +255,7 @@ contract EnglishAuctionsPayoutTest is BaseTest, IExtension {
         _;
     }
 
-    function test_payout_whenInsufficientFundsToPayRoyaltyAfterPlatformFeePayout()
-        public
-        whenNonZeroRoyaltyRecipients
-    {
+    function test_payout_whenInsufficientFundsToPayRoyaltyAfterPlatformFeePayout() public whenNonZeroRoyaltyRecipients {
         vm.prank(marketplaceDeployer);
         PlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, 9999); // 99.99% fees;
 
@@ -280,14 +269,8 @@ contract EnglishAuctionsPayoutTest is BaseTest, IExtension {
         EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
     }
 
-    function test_payout_whenSufficientFundsToPayRoyaltyAfterPlatformFeePayout()
-        public
-        whenNonZeroRoyaltyRecipients
-    {
-        assertEq(
-            RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(),
-            address(royaltyEngine)
-        );
+    function test_payout_whenSufficientFundsToPayRoyaltyAfterPlatformFeePayout() public whenNonZeroRoyaltyRecipients {
+        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
 
         vm.warp(auctionParams.startTimestamp);
         vm.prank(buyer);
@@ -308,11 +291,7 @@ contract EnglishAuctionsPayoutTest is BaseTest, IExtension {
             assertBalERC20Eq(address(erc20), platformFeeRecipient, platformFees);
 
             // Seller gets total price minus royalty amounts
-            assertBalERC20Eq(
-                address(erc20),
-                seller,
-                totalPrice - mockAmounts[0] - mockAmounts[1] - platformFees
-            );
+            assertBalERC20Eq(address(erc20), seller, totalPrice - mockAmounts[0] - mockAmounts[1] - platformFees);
         }
     }
 }

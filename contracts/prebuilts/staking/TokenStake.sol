@@ -48,10 +48,7 @@ contract TokenStake is
     /// @dev Total amount of reward tokens in the contract.
     uint256 private rewardTokenBalance;
 
-    constructor(address _nativeTokenWrapper)
-        initializer
-        Staking20Upgradeable(_nativeTokenWrapper)
-    {}
+    constructor(address _nativeTokenWrapper) initializer Staking20Upgradeable(_nativeTokenWrapper) {}
 
     /// @dev Initializes the contract, like a constructor.
     function initialize(
@@ -102,9 +99,7 @@ contract TokenStake is
     function depositRewardTokens(uint256 _amount) external payable nonReentrant {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
-        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN
-            ? nativeTokenWrapper
-            : rewardToken;
+        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : rewardToken;
 
         uint256 balanceBefore = IERC20(_rewardToken).balanceOf(address(this));
         CurrencyTransferLib.transferCurrencyWithWrapper(
@@ -137,9 +132,7 @@ contract TokenStake is
         );
 
         // The withdrawal shouldn't reduce staking token balance. `>=` accounts for any accidental transfers.
-        address _stakingToken = stakingToken == CurrencyTransferLib.NATIVE_TOKEN
-            ? nativeTokenWrapper
-            : stakingToken;
+        address _stakingToken = stakingToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : stakingToken;
         require(
             IERC20(_stakingToken).balanceOf(address(this)) >= stakingTokenBalance,
             "Staking token balance reduced."

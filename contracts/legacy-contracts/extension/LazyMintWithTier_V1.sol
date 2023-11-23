@@ -86,20 +86,14 @@ abstract contract LazyMintWithTier_V1 is ILazyMintWithTier, BatchMintMetadata_V1
     }
 
     /// @notice Returns all metadata for all tiers created on the contract.
-    function getMetadataForAllTiers()
-        external
-        view
-        returns (TierMetadata[] memory metadataForAllTiers)
-    {
+    function getMetadataForAllTiers() external view returns (TierMetadata[] memory metadataForAllTiers) {
         string[] memory allTiers = tiers;
         uint256 len = allTiers.length;
 
         metadataForAllTiers = new TierMetadata[](len);
 
         for (uint256 i = 0; i < len; i += 1) {
-            (TokenRange[] memory tokens, string[] memory baseURIs) = _getMetadataInTier(
-                allTiers[i]
-            );
+            (TokenRange[] memory tokens, string[] memory baseURIs) = _getMetadataInTier(allTiers[i]);
             metadataForAllTiers[i] = TierMetadata(allTiers[i], tokens, baseURIs);
         }
     }

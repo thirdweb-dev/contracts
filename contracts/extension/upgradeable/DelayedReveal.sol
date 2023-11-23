@@ -52,26 +52,17 @@ abstract contract DelayedReveal is IDelayedReveal {
      *
      *  @return revealedURI Decrypted base URI.
      */
-    function getRevealURI(
-        uint256 _batchId,
-        bytes calldata _key
-    ) public view returns (string memory revealedURI) {
+    function getRevealURI(uint256 _batchId, bytes calldata _key) public view returns (string memory revealedURI) {
         bytes memory dataForBatch = _delayedRevealStorage().encryptedData[_batchId];
         if (dataForBatch.length == 0) {
             revert("Nothing to reveal");
         }
 
-        (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(
-            dataForBatch,
-            (bytes, bytes32)
-        );
+        (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(dataForBatch, (bytes, bytes32));
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
 
-        require(
-            keccak256(abi.encodePacked(revealedURI, _key, block.chainid)) == provenanceHash,
-            "Incorrect key"
-        );
+        require(keccak256(abi.encodePacked(revealedURI, _key, block.chainid)) == provenanceHash, "Incorrect key");
     }
 
     /**
@@ -84,10 +75,7 @@ abstract contract DelayedReveal is IDelayedReveal {
      *
      *  @return result  Output after encryption/decryption of given data.
      */
-    function encryptDecrypt(
-        bytes memory data,
-        bytes calldata key
-    ) public pure override returns (bytes memory result) {
+    function encryptDecrypt(bytes memory data, bytes calldata key) public pure override returns (bytes memory result) {
         // Store data length on stack for later use
         uint256 length = data.length;
 
@@ -132,11 +120,7 @@ abstract contract DelayedReveal is IDelayedReveal {
     }
 
     /// @dev Returns the DelayedReveal storage.
-    function _delayedRevealStorage()
-        internal
-        pure
-        returns (DelayedRevealStorage.Data storage data)
-    {
+    function _delayedRevealStorage() internal pure returns (DelayedRevealStorage.Data storage data) {
         data = DelayedRevealStorage.data();
     }
 }

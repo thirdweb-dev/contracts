@@ -124,9 +124,7 @@ contract TokenERC20Test_MintWithSignature is BaseTest {
             _request.uid
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_privateKey, typedDataHash);
         bytes memory sig = abi.encodePacked(r, s, v);
@@ -178,12 +176,7 @@ contract TokenERC20Test_MintWithSignature is BaseTest {
         _;
     }
 
-    function test_mintWithSignature_invalidEndTimestamp()
-        public
-        whenMinterRole
-        whenUidNotUsed
-        whenValidStartTimestamp
-    {
+    function test_mintWithSignature_invalidEndTimestamp() public whenMinterRole whenUidNotUsed whenValidStartTimestamp {
         _mintrequest.validityEndTimestamp = uint128(block.timestamp - 1);
 
         bytes memory _signature = signMintRequest(_mintrequest, privateKey);

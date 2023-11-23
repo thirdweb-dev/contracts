@@ -95,11 +95,7 @@ contract BurnToClaimDropERC721_Initialize is BaseTest, IExtension {
     event ContractURIUpdated(string prevURI, string newURI);
     event OwnerUpdated(address indexed prevOwner, address indexed newOwner);
     event RoleGranted(bytes32 indexed role, address indexed account, address indexed sender);
-    event RoleAdminChanged(
-        bytes32 indexed role,
-        bytes32 indexed previousAdminRole,
-        bytes32 indexed newAdminRole
-    );
+    event RoleAdminChanged(bytes32 indexed role, bytes32 indexed previousAdminRole, bytes32 indexed newAdminRole);
     event PlatformFeeInfoUpdated(address indexed platformFeeRecipient, uint256 platformFeeBps);
     event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);
     event PrimarySaleRecipientUpdated(address indexed recipient);
@@ -166,10 +162,7 @@ contract BurnToClaimDropERC721_Initialize is BaseTest, IExtension {
         });
 
         extension_drop.functions = new ExtensionFunction[](1);
-        extension_drop.functions[0] = ExtensionFunction(
-            BurnToClaimDrop721Logic.tokenURI.selector,
-            "tokenURI(uint256)"
-        );
+        extension_drop.functions[0] = ExtensionFunction(BurnToClaimDrop721Logic.tokenURI.selector, "tokenURI(uint256)");
         extensions[1] = extension_drop;
     }
 
@@ -250,11 +243,7 @@ contract BurnToClaimDropERC721_Initialize is BaseTest, IExtension {
         assertEq(_extensions.length, 2);
     }
 
-    function test_initialize_event_ContractURIUpdated()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_ContractURIUpdated() public whenNotImplementation whenProxyNotInitialized {
         vm.expectEmit(false, false, false, true);
         emit ContractURIUpdated("", CONTRACT_URI);
         BurnToClaimDropERC721(payable(proxy)).initialize(
@@ -271,11 +260,7 @@ contract BurnToClaimDropERC721_Initialize is BaseTest, IExtension {
         );
     }
 
-    function test_initialize_event_OwnerUpdated()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_OwnerUpdated() public whenNotImplementation whenProxyNotInitialized {
         vm.expectEmit(true, true, false, false);
         emit OwnerUpdated(address(0), deployer);
         BurnToClaimDropERC721(payable(proxy)).initialize(
@@ -292,11 +277,7 @@ contract BurnToClaimDropERC721_Initialize is BaseTest, IExtension {
         );
     }
 
-    function test_initialize_event_RoleGranted_DefaultAdmin()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_RoleGranted_DefaultAdmin() public whenNotImplementation whenProxyNotInitialized {
         bytes32 _defaultAdminRole = bytes32(0x00);
         vm.prank(deployer);
         vm.expectEmit(true, true, true, false);
@@ -315,11 +296,7 @@ contract BurnToClaimDropERC721_Initialize is BaseTest, IExtension {
         );
     }
 
-    function test_initialize_event_RoleGranted_MinterRole()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_RoleGranted_MinterRole() public whenNotImplementation whenProxyNotInitialized {
         bytes32 _minterRole = keccak256("MINTER_ROLE");
         vm.prank(deployer);
         vm.expectEmit(true, true, true, false);
@@ -338,11 +315,7 @@ contract BurnToClaimDropERC721_Initialize is BaseTest, IExtension {
         );
     }
 
-    function test_initialize_event_RoleGranted_TransferRole()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_RoleGranted_TransferRole() public whenNotImplementation whenProxyNotInitialized {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         vm.prank(deployer);
         vm.expectEmit(true, true, true, false);
@@ -384,11 +357,7 @@ contract BurnToClaimDropERC721_Initialize is BaseTest, IExtension {
         );
     }
 
-    function test_initialize_event_RoleGranted_ExtensionRole()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_RoleGranted_ExtensionRole() public whenNotImplementation whenProxyNotInitialized {
         bytes32 _extensionRole = keccak256("EXTENSION_ROLE");
         vm.prank(deployer);
         vm.expectEmit(true, true, true, false);
@@ -430,11 +399,7 @@ contract BurnToClaimDropERC721_Initialize is BaseTest, IExtension {
         );
     }
 
-    function test_initialize_event_PlatformFeeInfoUpdated()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_PlatformFeeInfoUpdated() public whenNotImplementation whenProxyNotInitialized {
         vm.prank(deployer);
         vm.expectEmit(true, false, false, true);
         emit PlatformFeeInfoUpdated(platformFeeRecipient, platformFeeBps);
@@ -452,11 +417,7 @@ contract BurnToClaimDropERC721_Initialize is BaseTest, IExtension {
         );
     }
 
-    function test_initialize_event_DefaultRoyalty()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_DefaultRoyalty() public whenNotImplementation whenProxyNotInitialized {
         vm.prank(deployer);
         vm.expectEmit(true, false, false, true);
         emit DefaultRoyalty(royaltyRecipient, royaltyBps);
@@ -474,11 +435,7 @@ contract BurnToClaimDropERC721_Initialize is BaseTest, IExtension {
         );
     }
 
-    function test_initialize_event_PrimarySaleRecipientUpdated()
-        public
-        whenNotImplementation
-        whenProxyNotInitialized
-    {
+    function test_initialize_event_PrimarySaleRecipientUpdated() public whenNotImplementation whenProxyNotInitialized {
         vm.prank(deployer);
         vm.expectEmit(true, false, false, false);
         emit PrimarySaleRecipientUpdated(saleRecipient);

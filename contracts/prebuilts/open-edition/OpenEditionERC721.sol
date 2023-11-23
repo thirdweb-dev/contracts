@@ -106,13 +106,9 @@ contract OpenEditionERC721 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC721AUpgradeable)
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 _tokenId
+    ) public view virtual override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
         if (!_exists(_tokenId)) {
             revert("!ID");
         }
@@ -121,16 +117,10 @@ contract OpenEditionERC721 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC165, IERC721AUpgradeable)
-        returns (bool)
-    {
-        return
-            super.supportsInterface(interfaceId) ||
-            type(IERC2981Upgradeable).interfaceId == interfaceId;
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721AUpgradeable, IERC165, IERC721AUpgradeable) returns (bool) {
+        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     /// @dev The start token ID for the contract.
@@ -168,19 +158,16 @@ contract OpenEditionERC721 is
         }
         require(validMsgValue, "!V");
 
-        address saleRecipient = _primarySaleRecipient == address(0)
-            ? primarySaleRecipient()
-            : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice);
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId_)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId_) {
         startTokenId_ = _nextTokenId();
         _safeMint(_to, _quantityBeingClaimed);
     }
@@ -269,23 +256,11 @@ contract OpenEditionERC721 is
         return _msgSender();
     }
 
-    function _msgSender()
-        internal
-        view
-        virtual
-        override(ERC2771ContextUpgradeable)
-        returns (address sender)
-    {
+    function _msgSender() internal view virtual override(ERC2771ContextUpgradeable) returns (address sender) {
         return ERC2771ContextUpgradeable._msgSender();
     }
 
-    function _msgData()
-        internal
-        view
-        virtual
-        override(ERC2771ContextUpgradeable)
-        returns (bytes calldata)
-    {
+    function _msgData() internal view virtual override(ERC2771ContextUpgradeable) returns (bytes calldata) {
         return ERC2771ContextUpgradeable._msgData();
     }
 }

@@ -42,10 +42,7 @@ abstract contract SharedMetadataBatch is ISharedMetadataBatch {
     /// @notice Delete shared metadata for NFTs
     function deleteSharedMetadata(bytes32 _id) external {
         require(_canSetSharedMetadata(), "SharedMetadataBatch: cannot set shared metadata");
-        require(
-            _sharedMetadataBatchStorage().ids.remove(_id),
-            "SharedMetadataBatch: shared metadata does not exist"
-        );
+        require(_sharedMetadataBatchStorage().ids.remove(_id), "SharedMetadataBatch: shared metadata does not exist");
 
         delete _sharedMetadataBatchStorage().metadata[_id];
 
@@ -64,10 +61,7 @@ abstract contract SharedMetadataBatch is ISharedMetadataBatch {
 
     /// @dev Store shared metadata
     function _createSharedMetadata(SharedMetadataInfo calldata _metadata, bytes32 _id) internal {
-        require(
-            _sharedMetadataBatchStorage().ids.add(_id),
-            "SharedMetadataBatch: shared metadata already exists"
-        );
+        require(_sharedMetadataBatchStorage().ids.add(_id), "SharedMetadataBatch: shared metadata already exists");
 
         _sharedMetadataBatchStorage().metadata[_id] = SharedMetadataWithId(_id, _metadata);
 
@@ -81,11 +75,7 @@ abstract contract SharedMetadataBatch is ISharedMetadataBatch {
     }
 
     /// @dev Token URI information getter
-    function _getURIFromSharedMetadata(bytes32 id, uint256 tokenId)
-        internal
-        view
-        returns (string memory)
-    {
+    function _getURIFromSharedMetadata(bytes32 id, uint256 tokenId) internal view returns (string memory) {
         SharedMetadataInfo memory info = _sharedMetadataBatchStorage().metadata[id].metadata;
 
         return
@@ -99,11 +89,7 @@ abstract contract SharedMetadataBatch is ISharedMetadataBatch {
     }
 
     /// @dev Get contract storage
-    function _sharedMetadataBatchStorage()
-        internal
-        pure
-        returns (SharedMetadataBatchStorage.Data storage data)
-    {
+    function _sharedMetadataBatchStorage() internal pure returns (SharedMetadataBatchStorage.Data storage data) {
         data = SharedMetadataBatchStorage.data();
     }
 

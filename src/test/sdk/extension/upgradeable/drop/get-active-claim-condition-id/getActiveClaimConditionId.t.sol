@@ -98,11 +98,7 @@ contract UpgradeableDrop_GetActiveClaimConditionId is ExtensionUtilTest {
         _;
     }
 
-    function test_getActiveClaimConditionId_activeConditions()
-        public
-        whenConditionsAreSet
-        whenActiveConditions
-    {
+    function test_getActiveClaimConditionId_activeConditions() public whenConditionsAreSet whenActiveConditions {
         vm.warp(claimConditions[0].startTimestamp);
 
         uint256 id = ext.getActiveClaimConditionId();

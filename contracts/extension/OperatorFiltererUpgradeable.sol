@@ -12,10 +12,7 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
     IOperatorFilterRegistry constant OPERATOR_FILTER_REGISTRY =
         IOperatorFilterRegistry(0x000000000000AAeB6D7670E522A718067333cd4E);
 
-    function __OperatorFilterer_init(
-        address subscriptionOrRegistrantToCopy,
-        bool subscribe
-    ) internal {
+    function __OperatorFilterer_init(address subscriptionOrRegistrantToCopy, bool subscribe) internal {
         // If an inheriting token contract is deployed to a network without the registry deployed, the modifier
         // will not revert, but the contract will need to be registered with the registry once it is deployed in
         // order for the modifier to filter addresses.
@@ -60,15 +57,9 @@ abstract contract OperatorFiltererUpgradeable is OperatorFilterToggle {
             if (address(subscriptionOrRegistrantToCopy).code.length > 0) {
                 // Do we want to subscribe?
                 if (subscribe) {
-                    OPERATOR_FILTER_REGISTRY.registerAndSubscribe(
-                        address(this),
-                        subscriptionOrRegistrantToCopy
-                    );
+                    OPERATOR_FILTER_REGISTRY.registerAndSubscribe(address(this), subscriptionOrRegistrantToCopy);
                 } else {
-                    OPERATOR_FILTER_REGISTRY.registerAndCopyEntries(
-                        address(this),
-                        subscriptionOrRegistrantToCopy
-                    );
+                    OPERATOR_FILTER_REGISTRY.registerAndCopyEntries(address(this), subscriptionOrRegistrantToCopy);
                 }
             } else {
                 OPERATOR_FILTER_REGISTRY.register(address(this));

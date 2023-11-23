@@ -18,8 +18,7 @@ library ERC721A__InitializableStorage {
         bool _initializing;
     }
 
-    bytes32 internal constant STORAGE_SLOT =
-        keccak256("ERC721A.contracts.storage.initializable.facet");
+    bytes32 internal constant STORAGE_SLOT = keccak256("ERC721A.contracts.storage.initializable.facet");
 
     function layout() internal pure returns (Layout storage l) {
         bytes32 slot = STORAGE_SLOT;

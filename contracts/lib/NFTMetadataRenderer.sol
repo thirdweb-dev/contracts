@@ -73,24 +73,11 @@ library NFTMetadataRenderer {
     /// Combines the media data and metadata
     /// @param imageUrl URL of image to render for edition
     /// @param animationUrl URL of animation to render for edition
-    function tokenMediaData(string memory imageUrl, string memory animationUrl)
-        internal
-        pure
-        returns (string memory)
-    {
+    function tokenMediaData(string memory imageUrl, string memory animationUrl) internal pure returns (string memory) {
         bool hasImage = bytes(imageUrl).length > 0;
         bool hasAnimation = bytes(animationUrl).length > 0;
         if (hasImage && hasAnimation) {
-            return
-                string(
-                    abi.encodePacked(
-                        'image": "',
-                        imageUrl,
-                        '", "animation_url": "',
-                        animationUrl,
-                        '", "'
-                    )
-                );
+            return string(abi.encodePacked('image": "', imageUrl, '", "animation_url": "', animationUrl, '", "'));
         }
         if (hasImage) {
             return string(abi.encodePacked('image": "', imageUrl, '", "'));

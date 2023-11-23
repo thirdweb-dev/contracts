@@ -35,11 +35,7 @@ interface ISignatureMintERC20 {
     }
 
     /// @dev Emitted when tokens are minted.
-    event TokensMintedWithSignature(
-        address indexed signer,
-        address indexed mintedTo,
-        MintRequest mintRequest
-    );
+    event TokensMintedWithSignature(address indexed signer, address indexed mintedTo, MintRequest mintRequest);
 
     /**
      *  @notice Verifies that a mint request is signed by an account holding

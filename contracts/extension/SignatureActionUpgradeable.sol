@@ -10,9 +10,7 @@ abstract contract SignatureActionUpgradeable is EIP712Upgradeable, ISignatureAct
     using ECDSAUpgradeable for bytes32;
 
     bytes32 private constant TYPEHASH =
-        keccak256(
-            "GenericRequest(uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid,bytes data)"
-        );
+        keccak256("GenericRequest(uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid,bytes data)");
 
     /// @dev Mapping from a signed request UID => whether the request is processed.
     mapping(bytes32 => bool) private executed;
@@ -47,10 +45,7 @@ abstract contract SignatureActionUpgradeable is EIP712Upgradeable, ISignatureAct
             revert("Invalid req");
         }
 
-        if (
-            _req.validityStartTimestamp > block.timestamp ||
-            block.timestamp > _req.validityEndTimestamp
-        ) {
+        if (_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) {
             revert("Req expired");
         }
 
@@ -58,10 +53,7 @@ abstract contract SignatureActionUpgradeable is EIP712Upgradeable, ISignatureAct
     }
 
     /// @dev Returns the address of the signer of the request.
-    function _recoverAddress(
-        GenericRequest calldata _req,
-        bytes calldata _signature
-    ) internal view returns (address) {
+    function _recoverAddress(GenericRequest calldata _req, bytes calldata _signature) internal view returns (address) {
         return _hashTypedDataV4(keccak256(_encodeRequest(_req))).recover(_signature);
     }
 

@@ -47,11 +47,7 @@ abstract contract ReentrancyGuard {
     }
 
     /// @dev Returns the ReentrancyGuard storage.
-    function _reentrancyGuardStorage()
-        internal
-        pure
-        returns (ReentrancyGuardStorage.Data storage data)
-    {
+    function _reentrancyGuardStorage() internal pure returns (ReentrancyGuardStorage.Data storage data) {
         data = ReentrancyGuardStorage.data();
     }
 }

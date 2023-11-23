@@ -33,13 +33,7 @@ contract Wallet is ERC721Holder, ERC1155Holder {
         MockERC721(token).burn(tokenId);
     }
 
-    function transferERC1155(
-        address token,
-        address to,
-        uint256 tokenId,
-        uint256 amount,
-        bytes calldata data
-    ) external {
+    function transferERC1155(address token, address to, uint256 tokenId, uint256 amount, bytes calldata data) external {
         MockERC1155(token).safeTransferFrom(address(this), to, tokenId, amount, data);
     }
 

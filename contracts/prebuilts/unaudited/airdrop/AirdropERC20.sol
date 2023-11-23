@@ -112,12 +112,7 @@ contract AirdropERC20 is
             );
 
             if (!success) {
-                emit AirdropFailed(
-                    _tokenAddress,
-                    _tokenOwner,
-                    _contents[i].recipient,
-                    _contents[i].amount
-                );
+                emit AirdropFailed(_tokenAddress, _tokenOwner, _contents[i].recipient, _contents[i].amount);
             }
 
             if (_tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {

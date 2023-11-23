@@ -82,11 +82,7 @@ contract RouterTest is BaseTest {
 
         IPluginMap.Plugin[] memory pluginMaps = new IPluginMap.Plugin[](3);
         pluginMaps[0] = IPluginMap.Plugin(Counter.number.selector, "number()", counter);
-        pluginMaps[1] = IPluginMap.Plugin(
-            Counter.setNumber.selector,
-            "setNumber(uint256)",
-            counter
-        );
+        pluginMaps[1] = IPluginMap.Plugin(Counter.setNumber.selector, "setNumber(uint256)", counter);
         pluginMaps[2] = IPluginMap.Plugin(Counter.doubleNumber.selector, "doubleNumber()", counter);
 
         map = address(new PluginMap(pluginMaps));
@@ -101,11 +97,7 @@ contract RouterTest is BaseTest {
 
         // Add extension for `tripleNumber`.
         RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(
-                CounterAlternate2.tripleNumber.selector,
-                "tripleNumber()",
-                counterAlternate2
-            )
+            IPluginMap.Plugin(CounterAlternate2.tripleNumber.selector, "tripleNumber()", counterAlternate2)
         );
 
         // Triple number.
@@ -113,8 +105,7 @@ contract RouterTest is BaseTest {
         assertEq(Counter(router).number(), num * 3);
 
         // Get and check all overriden extensions.
-        IPluginMap.Plugin[] memory pluginsStored = RouterImplementation(payable(router))
-            .getAllPlugins();
+        IPluginMap.Plugin[] memory pluginsStored = RouterImplementation(payable(router)).getAllPlugins();
         assertEq(pluginsStored.length, 4);
 
         bool isStored;
@@ -138,30 +129,18 @@ contract RouterTest is BaseTest {
 
     function test_revert_addPlugin_pluginAlreadyExists() external {
         RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(
-                CounterAlternate2.tripleNumber.selector,
-                "tripleNumber()",
-                counterAlternate2
-            )
+            IPluginMap.Plugin(CounterAlternate2.tripleNumber.selector, "tripleNumber()", counterAlternate2)
         );
         vm.expectRevert();
         RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(
-                CounterAlternate2.tripleNumber.selector,
-                "tripleNumber()",
-                counterAlternate2
-            )
+            IPluginMap.Plugin(CounterAlternate2.tripleNumber.selector, "tripleNumber()", counterAlternate2)
         );
     }
 
     function test_revert_addPlugin_selectorSignatureMismatch() external {
         vm.expectRevert("Router: fn selector and signature mismatch.");
         RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(
-                CounterAlternate2.tripleNumber.selector,
-                "doubleNumber()",
-                counterAlternate2
-            )
+            IPluginMap.Plugin(CounterAlternate2.tripleNumber.selector, "doubleNumber()", counterAlternate2)
         );
     }
 
@@ -190,14 +169,11 @@ contract RouterTest is BaseTest {
 
         // Get and check all overriden extensions.
         assertEq(
-            RouterImplementation(payable(router)).getPluginForFunction(
-                Counter.doubleNumber.selector
-            ),
+            RouterImplementation(payable(router)).getPluginForFunction(Counter.doubleNumber.selector),
             counterAlternate1
         );
 
-        IPluginMap.Plugin[] memory pluginsStored = RouterImplementation(payable(router))
-            .getAllPlugins();
+        IPluginMap.Plugin[] memory pluginsStored = RouterImplementation(payable(router)).getAllPlugins();
         assertEq(pluginsStored.length, 3);
 
         bool isStored;
@@ -224,9 +200,7 @@ contract RouterTest is BaseTest {
         );
 
         // check plugins for counter
-        bytes4[] memory functions = RouterImplementation(payable(router)).getAllFunctionsOfPlugin(
-            counter
-        );
+        bytes4[] memory functions = RouterImplementation(payable(router)).getAllFunctionsOfPlugin(counter);
         assertEq(functions.length, 4);
         console.logBytes4(functions[0]);
         console.logBytes4(functions[1]);
@@ -234,9 +208,7 @@ contract RouterTest is BaseTest {
         console.logBytes4(functions[3]);
 
         // check plugins for counterAlternate
-        functions = RouterImplementation(payable(router)).getAllFunctionsOfPlugin(
-            counterAlternate1
-        );
+        functions = RouterImplementation(payable(router)).getAllFunctionsOfPlugin(counterAlternate1);
         assertEq(functions.length, 1);
         console.logBytes4(functions[0]);
     }
@@ -244,47 +216,31 @@ contract RouterTest is BaseTest {
     function test_revert_updatePlugin_selectorSignatureMismatch() external {
         vm.expectRevert("Router: fn selector and signature mismatch.");
         RouterImplementation(payable(router)).updatePlugin(
-            IPluginMap.Plugin(
-                CounterAlternate1.doubleNumber.selector,
-                "tripleNumber()",
-                counterAlternate2
-            )
+            IPluginMap.Plugin(CounterAlternate1.doubleNumber.selector, "tripleNumber()", counterAlternate2)
         );
     }
 
     function test_revert_updatePlugin_functionDNE() external {
         vm.expectRevert("Map: No plugin available for selector");
         RouterImplementation(payable(router)).updatePlugin(
-            IPluginMap.Plugin(
-                CounterAlternate2.tripleNumber.selector,
-                "tripleNumber()",
-                counterAlternate2
-            )
+            IPluginMap.Plugin(CounterAlternate2.tripleNumber.selector, "tripleNumber()", counterAlternate2)
         );
     }
 
     function test_state_removePlugin() external {
         RouterImplementation(payable(router)).addPlugin(
-            IPluginMap.Plugin(
-                CounterAlternate2.tripleNumber.selector,
-                "tripleNumber()",
-                counterAlternate2
-            )
+            IPluginMap.Plugin(CounterAlternate2.tripleNumber.selector, "tripleNumber()", counterAlternate2)
         );
 
         assertEq(
-            RouterImplementation(payable(router)).getPluginForFunction(
-                CounterAlternate2.tripleNumber.selector
-            ),
+            RouterImplementation(payable(router)).getPluginForFunction(CounterAlternate2.tripleNumber.selector),
             counterAlternate2
         );
 
         RouterImplementation(payable(router)).removePlugin(CounterAlternate2.tripleNumber.selector);
 
         vm.expectRevert("Map: No plugin available for selector");
-        RouterImplementation(payable(router)).getPluginForFunction(
-            CounterAlternate2.tripleNumber.selector
-        );
+        RouterImplementation(payable(router)).getPluginForFunction(CounterAlternate2.tripleNumber.selector);
     }
 
     function test_revert_removePlugin_pluginDNE() external {
@@ -308,9 +264,7 @@ contract RouterTest is BaseTest {
         );
         assertEq(pluginAddress, counterAlternate1);
 
-        pluginAddress = RouterImplementation(payable(router)).getPluginForFunction(
-            Counter.extraFunction.selector
-        );
+        pluginAddress = RouterImplementation(payable(router)).getPluginForFunction(Counter.extraFunction.selector);
         assertEq(pluginAddress, counter);
     }
 }

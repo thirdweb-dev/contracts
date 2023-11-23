@@ -100,11 +100,7 @@ interface IDirectListings {
     event BuyerApprovedForListing(uint256 indexed listingId, address indexed buyer, bool approved);
 
     /// @notice Emitted when a currency is approved as a form of payment for the listing.
-    event CurrencyApprovedForListing(
-        uint256 indexed listingId,
-        address indexed currency,
-        uint256 pricePerToken
-    );
+    event CurrencyApprovedForListing(uint256 indexed listingId, address indexed currency, uint256 pricePerToken);
 
     /// @notice Emitted when NFTs are bought from a listing.
     event NewSale(
@@ -187,20 +183,14 @@ interface IDirectListings {
     function totalListings() external view returns (uint256);
 
     /// @notice Returns all listings between the start and end Id (both inclusive) provided.
-    function getAllListings(
-        uint256 _startId,
-        uint256 _endId
-    ) external view returns (Listing[] memory listings);
+    function getAllListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory listings);
 
     /**
      *  @notice Returns all valid listings between the start and end Id (both inclusive) provided.
      *          A valid listing is where the listing creator still owns and has approved Marketplace
      *          to transfer the listed NFTs.
      */
-    function getAllValidListings(
-        uint256 _startId,
-        uint256 _endId
-    ) external view returns (Listing[] memory listings);
+    function getAllValidListings(uint256 _startId, uint256 _endId) external view returns (Listing[] memory listings);
 
     /**
      *  @notice Returns a listing at the provided listing ID.
@@ -393,16 +383,10 @@ interface IEnglishAuctions {
     function getAuction(uint256 _auctionId) external view returns (Auction memory auction);
 
     /// @notice Returns all non-cancelled auctions.
-    function getAllAuctions(
-        uint256 _startId,
-        uint256 _endId
-    ) external view returns (Auction[] memory auctions);
+    function getAllAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory auctions);
 
     /// @notice Returns all active auctions.
-    function getAllValidAuctions(
-        uint256 _startId,
-        uint256 _endId
-    ) external view returns (Auction[] memory auctions);
+    function getAllValidAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory auctions);
 
     /// @notice Returns the winning bid of an active auction.
     function getWinningBid(
@@ -478,12 +462,7 @@ interface IOffers {
     }
 
     /// @dev Emitted when a new offer is created.
-    event NewOffer(
-        address indexed offeror,
-        uint256 indexed offerId,
-        address indexed assetContract,
-        Offer offer
-    );
+    event NewOffer(address indexed offeror, uint256 indexed offerId, address indexed assetContract, Offer offer);
 
     /// @dev Emitted when an offer is cancelled.
     event CancelledOffer(address indexed offeror, uint256 indexed offerId);
@@ -526,14 +505,8 @@ interface IOffers {
     function getOffer(uint256 _offerId) external view returns (Offer memory offer);
 
     /// @notice Returns all active (i.e. non-expired or cancelled) offers.
-    function getAllOffers(
-        uint256 _startId,
-        uint256 _endId
-    ) external view returns (Offer[] memory offers);
+    function getAllOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory offers);
 
     /// @notice Returns all valid offers. An offer is valid if the offeror owns and has approved Marketplace to transfer the offer amount of currency.
-    function getAllValidOffers(
-        uint256 _startId,
-        uint256 _endId
-    ) external view returns (Offer[] memory offers);
+    function getAllValidOffers(uint256 _startId, uint256 _endId) external view returns (Offer[] memory offers);
 }

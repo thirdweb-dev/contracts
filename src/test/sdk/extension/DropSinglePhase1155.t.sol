@@ -24,11 +24,7 @@ contract MyDropSinglePhase1155 is DropSinglePhase1155 {
         uint256 _pricePerToken
     ) internal override {}
 
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _tokenId,
-        uint256 _quantityBeingClaimed
-    ) internal override {}
+    function _transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed) internal override {}
 }
 
 contract ExtensionDropSinglePhase1155 is DSTest, Test {
@@ -70,8 +66,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
         MyDropSinglePhase1155.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        MyDropSinglePhase1155.ClaimCondition[]
-            memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
+        MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -102,8 +97,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
         alp.proof = proofs;
         alp.quantityLimitPerWallet = x;
 
-        MyDropSinglePhase1155.ClaimCondition[]
-            memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
+        MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -135,8 +129,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
         MyDropSinglePhase1155.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        MyDropSinglePhase1155.ClaimCondition[]
-            memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
+        MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -161,8 +154,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
         MyDropSinglePhase1155.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        MyDropSinglePhase1155.ClaimCondition[]
-            memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
+        MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -186,8 +178,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
         MyDropSinglePhase1155.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        MyDropSinglePhase1155.ClaimCondition[]
-            memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
+        MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 
@@ -221,8 +212,7 @@ contract ExtensionDropSinglePhase1155 is DSTest, Test {
         MyDropSinglePhase1155.AllowlistProof memory alp;
         alp.proof = proofs;
 
-        MyDropSinglePhase1155.ClaimCondition[]
-            memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
+        MyDropSinglePhase1155.ClaimCondition[] memory conditions = new MyDropSinglePhase1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 100;
         conditions[0].quantityLimitPerWallet = 100;
 

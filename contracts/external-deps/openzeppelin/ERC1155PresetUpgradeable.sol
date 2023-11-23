@@ -83,12 +83,7 @@ contract ERC1155PresetUpgradeable is
     /**
      * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] variant of {mint}.
      */
-    function mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) public virtual {
+    function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) public virtual {
         require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role");
 
         _mintBatch(to, ids, amounts, data);

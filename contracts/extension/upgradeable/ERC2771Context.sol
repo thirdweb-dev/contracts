@@ -56,11 +56,7 @@ contract ERC2771Context is IERC2771Context {
     }
 
     /// @dev Returns the ERC2771ContextStorage storage.
-    function _erc2771ContextStorage()
-        internal
-        pure
-        returns (ERC2771ContextStorage.Data storage data)
-    {
+    function _erc2771ContextStorage() internal pure returns (ERC2771ContextStorage.Data storage data) {
         data = ERC2771ContextStorage.data();
     }
 

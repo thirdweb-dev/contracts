@@ -11,11 +11,7 @@ library ERC2771ContextUpgradeableStorage {
         mapping(address => bool) _trustedForwarder;
     }
 
-    function erc2771ContextUpgradeableStorage()
-        internal
-        pure
-        returns (Data storage erc2771ContextData)
-    {
+    function erc2771ContextUpgradeableStorage() internal pure returns (Data storage erc2771ContextData) {
         bytes32 position = ERC2771_CONTEXT_UPGRADEABLE_STORAGE_POSITION;
         assembly {
             erc2771ContextData.slot := position

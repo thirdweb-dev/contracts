@@ -44,14 +44,7 @@ import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 //        Additional functionality such as deposit functions, reward-minting, etc.
 //        must be implemented by the deployer of this contract, as needed for their use-case.
 
-contract Staking1155Base is
-    ContractMetadata,
-    Multicall,
-    Ownable,
-    Staking1155,
-    ERC165,
-    IERC1155Receiver
-{
+contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155, ERC165, IERC1155Receiver {
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
     address public rewardToken;
 
@@ -100,13 +93,7 @@ contract Staking1155Base is
                         ERC 165 / 721 logic
     //////////////////////////////////////////////////////////////*/
 
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external view returns (bytes4) {
+    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external view returns (bytes4) {
         require(isStaking == 2, "Direct transfer");
         return this.onERC1155Received.selector;
     }
@@ -119,12 +106,8 @@ contract Staking1155Base is
         bytes calldata data
     ) external virtual returns (bytes4) {}
 
-    function supportsInterface(
-        bytes4 interfaceId
-    ) public view override(ERC165, IERC165) returns (bool) {
-        return
-            interfaceId == type(IERC1155Receiver).interfaceId ||
-            super.supportsInterface(interfaceId);
+    function supportsInterface(bytes4 interfaceId) public view override(ERC165, IERC165) returns (bool) {
+        return interfaceId == type(IERC1155Receiver).interfaceId || super.supportsInterface(interfaceId);
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -158,9 +141,7 @@ contract Staking1155Base is
     function _depositRewardTokens(uint256 _amount) internal virtual {
         require(msg.sender == owner(), "Not authorized");
 
-        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN
-            ? nativeTokenWrapper
-            : rewardToken;
+        address _rewardToken = rewardToken == CurrencyTransferLib.NATIVE_TOKEN ? nativeTokenWrapper : rewardToken;
 
         uint256 balanceBefore = IERC20(_rewardToken).balanceOf(address(this));
         CurrencyTransferLib.transferCurrencyWithWrapper(

@@ -27,10 +27,7 @@ interface IStaking1155 {
     event UpdatedDefaultTimeUnit(uint256 oldTimeUnit, uint256 newTimeUnit);
 
     /// @dev Emitted when contract admin updates rewardsPerUnitTime.
-    event UpdatedDefaultRewardsPerUnitTime(
-        uint256 oldRewardsPerUnitTime,
-        uint256 newRewardsPerUnitTime
-    );
+    event UpdatedDefaultRewardsPerUnitTime(uint256 oldRewardsPerUnitTime, uint256 newRewardsPerUnitTime);
 
     /**
      *  @notice Staker Info.
@@ -109,12 +106,5 @@ interface IStaking1155 {
      */
     function getStakeInfo(
         address staker
-    )
-        external
-        view
-        returns (
-            uint256[] memory _tokensStaked,
-            uint256[] memory _tokenAmounts,
-            uint256 _totalRewards
-        );
+    ) external view returns (uint256[] memory _tokensStaked, uint256[] memory _tokenAmounts, uint256 _totalRewards);
 }

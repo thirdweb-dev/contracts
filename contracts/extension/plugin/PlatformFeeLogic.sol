@@ -31,10 +31,7 @@ abstract contract PlatformFeeLogic is IPlatformFee {
      *  @param _platformFeeRecipient   Address to be set as new platformFeeRecipient.
      *  @param _platformFeeBps         Updated platformFeeBps.
      */
-    function setPlatformFeeInfo(
-        address _platformFeeRecipient,
-        uint256 _platformFeeBps
-    ) external override {
+    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external override {
         if (!_canSetPlatformFeeInfo()) {
             revert("Not authorized");
         }
@@ -42,10 +39,7 @@ abstract contract PlatformFeeLogic is IPlatformFee {
     }
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
-    function _setupPlatformFeeInfo(
-        address _platformFeeRecipient,
-        uint256 _platformFeeBps
-    ) internal {
+    function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
         PlatformFeeStorage.Data storage data = PlatformFeeStorage.platformFeeStorage();
         if (_platformFeeBps > 10_000) {
             revert("Exceeds max bps");

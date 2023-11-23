@@ -114,16 +114,10 @@ contract SignatureDrop_V4 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC165)
-        returns (bool)
-    {
-        return
-            super.supportsInterface(interfaceId) ||
-            type(IERC2981Upgradeable).interfaceId == interfaceId;
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
+        return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
     function contractType() external pure returns (bytes32) {
@@ -148,10 +142,7 @@ contract SignatureDrop_V4 is
         bytes calldata _data
     ) public override returns (uint256 batchId) {
         if (_data.length > 0) {
-            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(
-                _data,
-                (bytes, bytes32)
-            );
+            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
             if (encryptedURI.length != 0 && provenanceHash != "") {
                 _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
             }
@@ -161,11 +152,10 @@ contract SignatureDrop_V4 is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
-        external
-        onlyRole(minterRole)
-        returns (string memory revealedURI)
-    {
+    function reveal(
+        uint256 _index,
+        bytes calldata _key
+    ) external onlyRole(minterRole) returns (string memory revealedURI) {
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
@@ -180,11 +170,10 @@ contract SignatureDrop_V4 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        returns (address signer)
-    {
+    function mintWithSignature(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) external payable returns (address signer) {
         uint256 tokenIdToMint = _currentIndex;
         if (tokenIdToMint + _req.quantity > nextTokenIdToLazyMint) {
             revert("Not enough tokens");
@@ -196,12 +185,7 @@ contract SignatureDrop_V4 is
         address receiver = _req.to;
 
         // Collect price
-        _collectPriceOnClaim(
-            _req.primarySaleRecipient,
-            _req.quantity,
-            _req.currency,
-            _req.pricePerToken
-        );
+        _collectPriceOnClaim(_req.primarySaleRecipient, _req.quantity, _req.currency, _req.pricePerToken);
 
         // Set royalties, if applicable.
         if (_req.royaltyRecipient != address(0) && _req.royaltyBps != 0) {
@@ -245,9 +229,7 @@ contract SignatureDrop_V4 is
 
         (address platformFeeRecipient, uint16 platformFeeBps) = getPlatformFeeInfo();
 
-        address saleRecipient = _primarySaleRecipient == address(0)
-            ? primarySaleRecipient()
-            : _primarySaleRecipient;
+        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
@@ -258,26 +240,15 @@ contract SignatureDrop_V4 is
             }
         }
 
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            platformFeeRecipient,
-            platformFees
-        );
-        CurrencyTransferLib.transferCurrency(
-            _currency,
-            _msgSender(),
-            saleRecipient,
-            totalPrice - platformFees
-        );
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId) {
         startTokenId = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
     }

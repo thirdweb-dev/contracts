@@ -33,9 +33,7 @@ contract DynamicAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
         IExtension.Extension[] memory _defaultExtensions
     )
         BaseAccountFactory(
-            payable(
-                address(new DynamicAccount(IEntryPoint(ENTRYPOINT_ADDRESS), _defaultExtensions))
-            ),
+            payable(address(new DynamicAccount(IEntryPoint(ENTRYPOINT_ADDRESS), _defaultExtensions))),
             ENTRYPOINT_ADDRESS
         )
     {
@@ -47,11 +45,7 @@ contract DynamicAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(
-        address _account,
-        address _admin,
-        bytes calldata _data
-    ) internal override {
+    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal override {
         DynamicAccount(payable(_account)).initialize(_admin, _data);
     }
 

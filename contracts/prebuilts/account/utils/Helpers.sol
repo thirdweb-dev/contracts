@@ -57,10 +57,7 @@ function _intersectTimeRange(
  * @param data - the ValidationData to pack
  */
 function _packValidationData(ValidationData memory data) pure returns (uint256) {
-    return
-        uint160(data.aggregator) |
-        (uint256(data.validUntil) << 160) |
-        (uint256(data.validAfter) << (160 + 48));
+    return uint160(data.aggregator) | (uint256(data.validUntil) << 160) | (uint256(data.validAfter) << (160 + 48));
 }
 
 /**
@@ -69,11 +66,7 @@ function _packValidationData(ValidationData memory data) pure returns (uint256) 
  * @param validUntil last timestamp this UserOperation is valid (or zero for infinite)
  * @param validAfter first timestamp this UserOperation is valid
  */
-function _packValidationData(
-    bool sigFailed,
-    uint48 validUntil,
-    uint48 validAfter
-) pure returns (uint256) {
+function _packValidationData(bool sigFailed, uint48 validUntil, uint48 validAfter) pure returns (uint256) {
     return (sigFailed ? 1 : 0) | (uint256(validUntil) << 160) | (uint256(validAfter) << (160 + 48));
 }
 

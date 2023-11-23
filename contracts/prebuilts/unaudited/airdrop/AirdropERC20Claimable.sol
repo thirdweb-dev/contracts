@@ -150,9 +150,7 @@ contract AirdropERC20Claimable is
         uint256 expTimestamp = expirationTimestamp;
         require(expTimestamp == 0 || block.timestamp < expTimestamp, "airdrop expired.");
 
-        uint256 claimLimitForWallet = isOverride
-            ? _proofMaxQuantityForWallet
-            : openClaimLimitPerWallet;
+        uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : openClaimLimitPerWallet;
         require(_quantity + supplyClaimedAlready <= claimLimitForWallet, "invalid quantity.");
     }
 
@@ -163,10 +161,7 @@ contract AirdropERC20Claimable is
         supplyClaimedByWallet[_msgSender()] += _quantityBeingClaimed;
         availableAmount -= _quantityBeingClaimed;
 
-        require(
-            IERC20(airdropTokenAddress).transferFrom(tokenOwner, _to, _quantityBeingClaimed),
-            "transfer failed"
-        );
+        require(IERC20(airdropTokenAddress).transferFrom(tokenOwner, _to, _quantityBeingClaimed), "transfer failed");
     }
 
     /*///////////////////////////////////////////////////////////////

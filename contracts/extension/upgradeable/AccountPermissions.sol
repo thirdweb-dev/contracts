@@ -54,15 +54,11 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Sets the permissions for a given signer.
-    function setPermissionsForSigner(
-        SignerPermissionRequest calldata _req,
-        bytes calldata _signature
-    ) external {
+    function setPermissionsForSigner(SignerPermissionRequest calldata _req, bytes calldata _signature) external {
         address targetSigner = _req.signer;
 
         require(
-            _req.reqValidityStartTimestamp <= block.timestamp &&
-                block.timestamp < _req.reqValidityEndTimestamp,
+            _req.reqValidityStartTimestamp <= block.timestamp && block.timestamp < _req.reqValidityEndTimestamp,
             "!period"
         );
 
@@ -91,9 +87,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
             _req.permissionEndTimestamp
         );
 
-        address[] memory currentTargets = _accountPermissionsStorage()
-            .approvedTargets[targetSigner]
-            .values();
+        address[] memory currentTargets = _accountPermissionsStorage().approvedTargets[targetSigner].values();
         uint256 len = currentTargets.length;
 
         for (uint256 i = 0; i < len; i += 1) {
@@ -121,9 +115,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
 
     /// @notice Returns whether the given account is an active signer on the account.
     function isActiveSigner(address signer) public view returns (bool) {
-        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[
-            signer
-        ];
+        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
 
         return
             permissions.startTimestamp <= block.timestamp &&
@@ -132,12 +124,8 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @notice Returns the restrictions under which a signer can use the smart wallet.
-    function getPermissionsForSigner(
-        address signer
-    ) external view returns (SignerPermissions memory) {
-        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[
-            signer
-        ];
+    function getPermissionsForSigner(address signer) external view returns (SignerPermissions memory) {
+        SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
 
         return
             SignerPermissions(
@@ -166,8 +154,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         signers = new SignerPermissions[](len);
         for (uint256 i = 0; i < len; i += 1) {
             address signer = allSigners[i];
-            SignerPermissionsStatic memory permissions = _accountPermissionsStorage()
-                .signerPermissions[signer];
+            SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
 
             signers[i] = SignerPermissions(
                 signer,
@@ -199,8 +186,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
         for (uint256 i = 0; i < len; i += 1) {
             if (allSigners[i] != address(0)) {
                 address signer = allSigners[i];
-                SignerPermissionsStatic memory permissions = _accountPermissionsStorage()
-                    .signerPermissions[signer];
+                SignerPermissionsStatic memory permissions = _accountPermissionsStorage().signerPermissions[signer];
 
                 signers[index++] = SignerPermissions(
                     signer,
@@ -239,17 +225,12 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @dev Returns the address of the signer of the request.
-    function _recoverAddress(
-        bytes memory _encoded,
-        bytes calldata _signature
-    ) internal view virtual returns (address) {
+    function _recoverAddress(bytes memory _encoded, bytes calldata _signature) internal view virtual returns (address) {
         return _hashTypedDataV4(keccak256(_encoded)).recover(_signature);
     }
 
     /// @dev Encodes a request for recovery of the signer in `recoverAddress`.
-    function _encodeRequest(
-        SignerPermissionRequest calldata _req
-    ) internal pure virtual returns (bytes memory) {
+    function _encodeRequest(SignerPermissionRequest calldata _req) internal pure virtual returns (bytes memory) {
         return
             abi.encode(
                 TYPEHASH,
@@ -266,11 +247,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @dev Returns the AccountPermissions storage.
-    function _accountPermissionsStorage()
-        internal
-        pure
-        returns (AccountPermissionsStorage.Data storage data)
-    {
+    function _accountPermissionsStorage() internal pure returns (AccountPermissionsStorage.Data storage data) {
         data = AccountPermissionsStorage.data();
     }
 }

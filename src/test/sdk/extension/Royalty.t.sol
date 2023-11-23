@@ -25,11 +25,7 @@ contract MyRoyalty is Royalty {
 contract ExtensionRoyaltyTest is DSTest, Test {
     MyRoyalty internal ext;
     event DefaultRoyalty(address indexed newRoyaltyRecipient, uint256 newRoyaltyBps);
-    event RoyaltyForToken(
-        uint256 indexed tokenId,
-        address indexed royaltyRecipient,
-        uint256 royaltyBps
-    );
+    event RoyaltyForToken(uint256 indexed tokenId, address indexed royaltyRecipient, uint256 royaltyBps);
 
     function setUp() public {
         ext = new MyRoyalty();

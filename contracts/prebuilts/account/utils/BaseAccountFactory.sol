@@ -49,10 +49,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Deploys a new Account for admin.
-    function createAccount(
-        address _admin,
-        bytes calldata _data
-    ) external virtual override returns (address) {
+    function createAccount(address _admin, bytes calldata _data) external virtual override returns (address) {
         address impl = accountImplementation;
         bytes32 salt = _generateSalt(_admin, _data);
         address account = Clones.predictDeterministicAddress(impl, salt);
@@ -120,14 +117,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @notice Returns all accounts between the given indices.
-    function getAccounts(
-        uint256 _start,
-        uint256 _end
-    ) external view returns (address[] memory accounts) {
-        require(
-            _start < _end && _end <= allAccounts.length(),
-            "BaseAccountFactory: invalid indices"
-        );
+    function getAccounts(uint256 _start, uint256 _end) external view returns (address[] memory accounts) {
+        require(_start < _end && _end <= allAccounts.length(), "BaseAccountFactory: invalid indices");
 
         uint256 len = _end - _start;
         accounts = new address[](_end - _start);
@@ -158,10 +149,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns whether the caller is an account deployed by this factory.
-    function _isAccountOfFactory(
-        address _account,
-        bytes32 _salt
-    ) internal view virtual returns (bool) {
+    function _isAccountOfFactory(address _account, bytes32 _salt) internal view virtual returns (bool) {
         address predicted = Clones.predictDeterministicAddress(accountImplementation, _salt);
         return _account == predicted;
     }
@@ -172,17 +160,10 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @dev Returns the salt used when deploying an Account.
-    function _generateSalt(
-        address _admin,
-        bytes memory _data
-    ) internal view virtual returns (bytes32) {
+    function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
         return keccak256(abi.encode(_admin, _data));
     }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(
-        address _account,
-        address _admin,
-        bytes calldata _data
-    ) internal virtual;
+    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal virtual;
 }

@@ -12,12 +12,7 @@ contract SignatureDropTest is BaseTest {
     using Strings for uint256;
     using Strings for address;
 
-    event TokensLazyMinted(
-        uint256 indexed startTokenId,
-        uint256 endTokenId,
-        string baseURI,
-        bytes encryptedBaseURI
-    );
+    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
     event TokensMintedWithSignature(
         address indexed signer,
@@ -54,9 +49,7 @@ contract SignatureDropTest is BaseTest {
         typehashEip712 = keccak256(
             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
         );
-        domainSeparator = keccak256(
-            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(sigdrop))
-        );
+        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(sigdrop)));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -342,11 +335,7 @@ contract SignatureDropTest is BaseTest {
         uint256 nextTokenIdToMintBefore = sigdrop.nextTokenIdToMint();
 
         vm.startPrank(deployerSigner);
-        uint256 batchId = sigdrop.lazyMint(
-            amountToLazyMint,
-            baseURI,
-            abi.encode(encryptedBaseURI, provenanceHash)
-        );
+        uint256 batchId = sigdrop.lazyMint(amountToLazyMint, baseURI, abi.encode(encryptedBaseURI, provenanceHash));
 
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
@@ -452,11 +441,7 @@ contract SignatureDropTest is BaseTest {
         uint256 nextTokenIdToMintBefore = sigdrop.nextTokenIdToMint();
 
         vm.startPrank(deployerSigner);
-        uint256 batchId = sigdrop.lazyMint(
-            amountToLazyMint,
-            baseURI,
-            abi.encode(encryptedBaseURI, provenanceHash)
-        );
+        uint256 batchId = sigdrop.lazyMint(amountToLazyMint, baseURI, abi.encode(encryptedBaseURI, provenanceHash));
 
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, sigdrop.nextTokenIdToMint());
         assertEq(nextTokenIdToMintBefore + amountToLazyMint, batchId);
@@ -515,11 +500,7 @@ contract SignatureDropTest is BaseTest {
         bytes memory encryptedURI = sigdrop.encryptDecrypt(secretURI, key);
         bytes32 provenanceHash = keccak256(abi.encodePacked(secretURI, key, block.chainid));
 
-        sigdrop.lazyMint(
-            amountToLazyMint,
-            placeholderURI,
-            abi.encode(encryptedURI, provenanceHash)
-        );
+        sigdrop.lazyMint(amountToLazyMint, placeholderURI, abi.encode(encryptedURI, provenanceHash));
 
         for (uint256 i = 0; i < amountToLazyMint; i += 1) {
             string memory uri = sigdrop.tokenURI(i);
@@ -639,11 +620,10 @@ contract SignatureDropTest is BaseTest {
                         Signature Mint Tests
     //////////////////////////////////////////////////////////////*/
 
-    function signMintRequest(SignatureDrop.MintRequest memory mintrequest, uint256 privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        SignatureDrop.MintRequest memory mintrequest,
+        uint256 privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             mintrequest.to,
@@ -659,9 +639,7 @@ contract SignatureDropTest is BaseTest {
             mintrequest.uid
         );
         bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(
-            abi.encodePacked("\x19\x01", domainSeparator, structHash)
-        );
+        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
         bytes memory signature = abi.encodePacked(r, s, v);
@@ -957,9 +935,7 @@ contract SignatureDropTest is BaseTest {
                 erc20.balanceOf(deployerSigner)
             );
 
-            vm.expectRevert(
-                abi.encodeWithSelector(IERC721AUpgradeable.OwnerQueryForNonexistentToken.selector)
-            );
+            vm.expectRevert(abi.encodeWithSelector(IERC721AUpgradeable.OwnerQueryForNonexistentToken.selector));
             owner = sigdrop.ownerOf(1);
         }
     }
@@ -1375,12 +1351,7 @@ contract MaliciousReceiver {
         alp = _alp;
     }
 
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external returns (bytes4) {
         if (claim && loop) {
             loop = false;
             claim = false;

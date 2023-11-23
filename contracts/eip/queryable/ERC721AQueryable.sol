@@ -30,9 +30,7 @@ abstract contract ERC721AQueryable is ERC721A, IERC721AQueryable {
      *   - `startTimestamp` = `<Timestamp of start of ownership>`
      *   - `burned = `false`
      */
-    function explicitOwnershipOf(
-        uint256 tokenId
-    ) public view override returns (TokenOwnership memory) {
+    function explicitOwnershipOf(uint256 tokenId) public view override returns (TokenOwnership memory) {
         TokenOwnership memory ownership;
         if (tokenId < _startTokenId() || tokenId >= _currentIndex) {
             return ownership;
@@ -48,9 +46,7 @@ abstract contract ERC721AQueryable is ERC721A, IERC721AQueryable {
      * @dev Returns an array of `TokenOwnership` structs at `tokenIds` in order.
      * See {ERC721AQueryable-explicitOwnershipOf}
      */
-    function explicitOwnershipsOf(
-        uint256[] memory tokenIds
-    ) external view override returns (TokenOwnership[] memory) {
+    function explicitOwnershipsOf(uint256[] memory tokenIds) external view override returns (TokenOwnership[] memory) {
         unchecked {
             uint256 tokenIdsLength = tokenIds.length;
             TokenOwnership[] memory ownerships = new TokenOwnership[](tokenIdsLength);

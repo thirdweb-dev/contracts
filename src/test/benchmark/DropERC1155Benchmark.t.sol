@@ -10,12 +10,7 @@ contract DropERC1155BenchmarkTest is BaseTest {
     using Strings for uint256;
     using Strings for address;
 
-    event TokensLazyMinted(
-        uint256 indexed startTokenId,
-        uint256 endTokenId,
-        string baseURI,
-        bytes encryptedBaseURI
-    );
+    event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
 
     DropERC1155 public drop;

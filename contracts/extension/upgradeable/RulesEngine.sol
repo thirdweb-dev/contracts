@@ -73,19 +73,11 @@ abstract contract RulesEngine is IRulesEngine {
                             External functions
     //////////////////////////////////////////////////////////////*/
 
-    function createRuleMultiplicative(
-        RuleTypeMultiplicative memory rule
-    ) external returns (bytes32 ruleId) {
+    function createRuleMultiplicative(RuleTypeMultiplicative memory rule) external returns (bytes32 ruleId) {
         require(_canSetRules(), "RulesEngine: cannot set rules");
 
         ruleId = keccak256(
-            abi.encodePacked(
-                rule.token,
-                rule.tokenType,
-                rule.tokenId,
-                rule.scorePerOwnedToken,
-                RuleType.Multiplicative
-            )
+            abi.encodePacked(rule.token, rule.tokenType, rule.tokenId, rule.scorePerOwnedToken, RuleType.Multiplicative)
         );
         _createRule(
             RuleWithId(
@@ -104,25 +96,10 @@ abstract contract RulesEngine is IRulesEngine {
         require(_canSetRules(), "RulesEngine: cannot set rules");
 
         ruleId = keccak256(
-            abi.encodePacked(
-                rule.token,
-                rule.tokenType,
-                rule.tokenId,
-                rule.balance,
-                rule.score,
-                RuleType.Threshold
-            )
+            abi.encodePacked(rule.token, rule.tokenType, rule.tokenId, rule.balance, rule.score, RuleType.Threshold)
         );
         _createRule(
-            RuleWithId(
-                ruleId,
-                rule.token,
-                rule.tokenType,
-                rule.tokenId,
-                rule.balance,
-                rule.score,
-                RuleType.Threshold
-            )
+            RuleWithId(ruleId, rule.token, rule.tokenType, rule.tokenId, rule.balance, rule.score, RuleType.Threshold)
         );
     }
 
@@ -135,10 +112,7 @@ abstract contract RulesEngine is IRulesEngine {
                             Internal functions
     //////////////////////////////////////////////////////////////*/
 
-    function _getScoreForRule(
-        address _tokenOwner,
-        RuleWithId memory _rule
-    ) internal view returns (uint256 score) {
+    function _getScoreForRule(address _tokenOwner, RuleWithId memory _rule) internal view returns (uint256 score) {
         uint256 balance = 0;
 
         if (_rule.tokenType == TokenType.ERC20) {

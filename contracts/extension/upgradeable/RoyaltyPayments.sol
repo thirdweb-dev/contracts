@@ -43,9 +43,7 @@ abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
         // allow address(0) in case RoyaltyEngineV1 not present on a network
         require(
             _royaltyEngineAddress == address(0) ||
-                IERC165(_royaltyEngineAddress).supportsInterface(
-                    type(IRoyaltyEngineV1).interfaceId
-                ),
+                IERC165(_royaltyEngineAddress).supportsInterface(type(IRoyaltyEngineV1).interfaceId),
             "Doesn't support IRoyaltyEngineV1 interface"
         );
 
@@ -69,10 +67,7 @@ abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
         address royaltyEngineAddress = getRoyaltyEngineAddress();
 
         if (royaltyEngineAddress == address(0)) {
-            try IERC2981(tokenAddress).royaltyInfo(tokenId, value) returns (
-                address recipient,
-                uint256 amount
-            ) {
+            try IERC2981(tokenAddress).royaltyInfo(tokenId, value) returns (address recipient, uint256 amount) {
                 require(amount < value, "Invalid royalty amount");
 
                 recipients = new address payable[](1);
@@ -81,11 +76,7 @@ abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
                 amounts[0] = amount;
             } catch {}
         } else {
-            (recipients, amounts) = IRoyaltyEngineV1(royaltyEngineAddress).getRoyalty(
-                tokenAddress,
-                tokenId,
-                value
-            );
+            (recipients, amounts) = IRoyaltyEngineV1(royaltyEngineAddress).getRoyalty(tokenAddress, tokenId, value);
         }
     }
 
@@ -101,9 +92,7 @@ abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
 
         require(
             _royaltyEngineAddress != address(0) &&
-                IERC165(_royaltyEngineAddress).supportsInterface(
-                    type(IRoyaltyEngineV1).interfaceId
-                ),
+                IERC165(_royaltyEngineAddress).supportsInterface(type(IRoyaltyEngineV1).interfaceId),
             "Doesn't support IRoyaltyEngineV1 interface"
         );
 
@@ -114,9 +103,7 @@ abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
     function getRoyaltyEngineAddress() public view returns (address royaltyEngineAddress) {
         RoyaltyPaymentsStorage.Data storage data = RoyaltyPaymentsStorage.royaltyPaymentsStorage();
         address royaltyEngineOverride = data.royaltyEngineAddressOverride;
-        royaltyEngineAddress = royaltyEngineOverride != address(0)
-            ? royaltyEngineOverride
-            : ROYALTY_ENGINE_ADDRESS;
+        royaltyEngineAddress = royaltyEngineOverride != address(0) ? royaltyEngineOverride : ROYALTY_ENGINE_ADDRESS;
     }
 
     /// @dev Lets a contract admin update the royalty engine address
