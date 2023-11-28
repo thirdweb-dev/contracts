@@ -22,7 +22,7 @@ import { RoyaltyPaymentsLogic } from "../../../extension/upgradeable/RoyaltyPaym
 import { CurrencyTransferLib } from "../../../lib/CurrencyTransferLib.sol";
 
 /**
- * @author  thirdweb.com
+ * @author  thirdweb.com / mintra.ai
  */
 contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, ReentrancyGuard {
     /*///////////////////////////////////////////////////////////////
@@ -32,6 +32,30 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         address receiver;
         uint256 basisPoints;
     }
+
+    event NewSale(
+        address indexed listingCreator,
+        uint256 indexed listingId,
+        address indexed assetContract,
+        uint256 tokenId,
+        address buyer,
+        uint256 quantityBought,
+        uint256 totalPricePaid,
+        address currency
+    );
+
+    event RoyaltyTransfered(
+        address assetContract,
+        uint256 tokenId,
+        uint256 listingId,
+        uint256 totalPrice,
+        uint256 royaltyAmount,
+        uint256 platformFee,
+        address royaltyRecipient,
+        address currency
+    );
+
+    event RoyaltyUpdated(address assetContract, uint256 royaltyAmount, address royaltyRecipient);
 
     address public immutable wizard;
     address private immutable mintTokenAddress;
@@ -312,7 +336,8 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
             listing.tokenId,
             buyer,
             _quantity,
-            targetTotalPrice
+            targetTotalPrice,
+            _currency
         );
     }
 
@@ -546,11 +571,10 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
     ) internal {
         address _nativeTokenWrapper = nativeTokenWrapper;
         uint256 amountRemaining;
+        uint256 platformFeeCut;
 
         // Payout platform fee
         {
-            uint256 platformFeeCut;
-
             // Descrease platform fee for mint token
             if (_currencyToUse == mintTokenAddress) {
                 platformFeeCut = (_totalPayoutAmount * platformFeeBpsMint) / MAX_BPS;
@@ -600,7 +624,9 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
                     _listing.listingId,
                     _totalPayoutAmount,
                     royaltyAmount,
-                    royaltyRecipient
+                    platformFeeCut,
+                    royaltyRecipient,
+                    _currencyToUse
                 );
             }
         }

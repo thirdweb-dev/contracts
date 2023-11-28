@@ -5,16 +5,16 @@ pragma solidity ^0.8.0;
 import "../utils/BaseTest.sol";
 
 // Test contracts and interfaces
-import {RoyaltyPaymentsLogic} from "contracts/extension/plugin/RoyaltyPayments.sol";
-import {MarketplaceV3, IPlatformFee} from "contracts/prebuilts/marketplace/entrypoint/MarketplaceV3.sol";
-import {TWProxy} from "contracts/infra/TWProxy.sol";
-import {ERC721Base} from "contracts/base/ERC721Base.sol";
-import {MockRoyaltyEngineV1} from "../mocks/MockRoyaltyEngineV1.sol";
+import { RoyaltyPaymentsLogic } from "contracts/extension/plugin/RoyaltyPayments.sol";
+import { MarketplaceV3, IPlatformFee } from "contracts/prebuilts/marketplace/entrypoint/MarketplaceV3.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
+import { ERC721Base } from "contracts/base/ERC721Base.sol";
+import { MockRoyaltyEngineV1 } from "../mocks/MockRoyaltyEngineV1.sol";
 
-import {IDirectListings} from "contracts/prebuilts/marketplace/IMarketplace.sol";
-import {MintraDirectListingsLogicStandalone} from
-    "contracts/prebuilts/marketplace/direct-listings/MintraDirectListingsLogicStandalone.sol";
+import { IDirectListings } from "contracts/prebuilts/marketplace/IMarketplace.sol";
+import { MintraDirectListingsLogicStandalone } from "contracts/prebuilts/marketplace/direct-listings/MintraDirectListingsLogicStandalone.sol";
 import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
+import { MockERC721Ownable } from "../mocks/MockERC721Ownable.sol";
 
 contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
     // Target contract
@@ -25,6 +25,10 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
     address public seller;
     address public buyer;
     address public wizard;
+    address public collectionOwner;
+
+    MintraDirectListingsLogicStandalone public mintraDirectListingsLogicStandalone;
+    MockERC721Ownable public erc721Ownable;
 
     function setUp() public override {
         super.setUp();
@@ -33,29 +37,22 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         seller = getActor(2);
         buyer = getActor(3);
         wizard = getActor(4);
+        collectionOwner = getActor(5);
 
         // Deploy implementation.
-        marketplace = address(
-            new MintraDirectListingsLogicStandalone(
-                address(weth), 
-                address(erc20Aux), 
-                address(platformFeeRecipient), 
-                address(wizard)
-            )
+        mintraDirectListingsLogicStandalone = new MintraDirectListingsLogicStandalone(
+            address(weth),
+            address(erc20Aux),
+            address(platformFeeRecipient),
+            address(wizard)
         );
+        marketplace = address(mintraDirectListingsLogicStandalone);
 
-        vm.prank(marketplaceDeployer);
-        // marketplace = address(
-        //     new TWProxy(
-        //         impl,
-        //         abi.encodeCall(
-        //             MarketplaceV3.initialize,
-        //             (marketplaceDeployer, "", new address[](0), marketplaceDeployer, 0)
-        //         )
-        //     )
-        // );
+        vm.prank(collectionOwner);
+        erc721Ownable = new MockERC721Ownable();
 
-        //vm.label(impl, "MarketplaceV3_Impl");
+        //vm.prank(marketplaceDeployer);
+
         vm.label(marketplace, "Marketplace");
         vm.label(seller, "Seller");
         vm.label(buyer, "Buyer");
@@ -96,7 +93,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
         vm.prank(seller);
@@ -124,7 +128,9 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.prank(seller);
         vm.expectRevert("Marketplace: approving listing currency with different price.");
         MintraDirectListingsLogicStandalone(marketplace).approveCurrencyForListing(
-            listingId, currencyToApprove, pricePerTokenForCurrency
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency
         );
 
         // change currency
@@ -132,11 +138,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         vm.prank(seller);
         MintraDirectListingsLogicStandalone(marketplace).approveCurrencyForListing(
-            listingId, currencyToApprove, pricePerTokenForCurrency
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency
         );
 
         assertEq(
-            MintraDirectListingsLogicStandalone(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), true
+            MintraDirectListingsLogicStandalone(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN),
+            true
         );
         assertEq(
             MintraDirectListingsLogicStandalone(marketplace).currencyPriceForListing(listingId, NATIVE_TOKEN),
@@ -159,26 +168,6 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
                 Royalty Tests (incl Royalty Engine / Registry)
     //////////////////////////////////////////////////////////////*/
 
-    function _setupRoyaltyEngine()
-        private
-        returns (
-            MockRoyaltyEngineV1 royaltyEngine,
-            address payable[] memory mockRecipients,
-            uint256[] memory mockAmounts
-        )
-    {
-        mockRecipients = new address payable[](2);
-        mockAmounts = new uint256[](2);
-
-        mockRecipients[0] = payable(address(0x12345));
-        mockRecipients[1] = payable(address(0x56789));
-
-        mockAmounts[0] = 10;
-        mockAmounts[1] = 15;
-
-        royaltyEngine = new MockRoyaltyEngineV1(mockRecipients, mockAmounts);
-    }
-
     function _setupListingForRoyaltyTests(address erc721TokenAddress) private returns (uint256 listingId) {
         // Sample listing parameters.
         address assetContract = erc721TokenAddress;
@@ -196,7 +185,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
         vm.prank(seller);
@@ -230,7 +226,11 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         MintraDirectListingsLogicStandalone(marketplace).buyFromListing(
-            listingId, buyFor, quantityToBuy, currency, totalPrice
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
         );
         console.log("done");
     }
@@ -247,11 +247,11 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         // 1. ========= Create listing =========
 
         uint256 listingId = _setupListingForRoyaltyTests(address(nft2981));
-        console.log("here");
+
         // 2. ========= Buy from listing =========
 
         uint256 totalPrice = _buyFromListingForRoyaltyTests(listingId);
-        console.log("here11");
+
         // 3. ======== Check balances after royalty payments ========
 
         {
@@ -259,62 +259,80 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
             uint256 royaltyAmount = (royaltyBps * totalPrice) / 10_000;
 
             assertBalERC20Eq(address(erc20), platformFeeRecipient, platforfee);
-            console.log("platforfee: %s", platforfee);
 
             // Royalty recipient receives correct amounts
             assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
 
-            console.log("here2");
             // Seller gets total price minus royalty amount minus platform fee
             assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount - platforfee);
-            console.log("here3");
         }
     }
 
-    function test_revert_feesExceedTotalPrice() public {
-        (MockRoyaltyEngineV1 royaltyEngine,,) = _setupRoyaltyEngine();
-
-        // Add RoyaltyEngine to marketplace
-        vm.prank(marketplaceDeployer);
-        RoyaltyPaymentsLogic(marketplace).setRoyaltyEngine(address(royaltyEngine));
-
-        assertEq(RoyaltyPaymentsLogic(marketplace).getRoyaltyEngineAddress(), address(royaltyEngine));
-
-        // Set platform fee on marketplace
-        address platformFeeRecipient = marketplaceDeployer;
-        uint128 platformFeeBps = 10_000; // equal to max bps 10_000 or 100%
-        vm.prank(marketplaceDeployer);
-        IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
+    function test_revert_mintra_native_royalty_feesExceedTotalPrice() public {
+        // Set native royalty too high
+        vm.prank(collectionOwner);
+        mintraDirectListingsLogicStandalone.createOrUpdateRoyalty(address(erc721Ownable), 10000, factoryAdmin);
 
         // 1. ========= Create listing =========
-
-        _setupERC721BalanceForSeller(seller, 1);
-        uint256 listingId = _setupListingForRoyaltyTests(address(erc721));
+        erc721Ownable.mint(seller, 1);
+        uint256 listingId = _setupListingForRoyaltyTests(address(erc721Ownable));
 
         // 2. ========= Buy from listing =========
-
         IDirectListings.Listing memory listing = MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
-
         address buyFor = buyer;
         uint256 quantityToBuy = listing.quantity;
         address currency = listing.currency;
         uint256 pricePerToken = listing.pricePerToken;
         uint256 totalPrice = pricePerToken * quantityToBuy;
-
         // Mint requisite total price to buyer.
         erc20.mint(buyer, totalPrice);
-
         // Approve marketplace to transfer currency
         vm.prank(buyer);
         erc20.increaseAllowance(marketplace, totalPrice);
-
         // Buy tokens from listing.
         vm.warp(listing.startTimestamp);
-
         vm.expectRevert("fees exceed the price");
         vm.prank(buyer);
         MintraDirectListingsLogicStandalone(marketplace).buyFromListing(
-            listingId, buyFor, quantityToBuy, currency, totalPrice
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
+        );
+    }
+
+    function test_revert_erc2981_royalty_feesExceedTotalPrice() public {
+        // Set erc2981 royalty too high
+        ERC721Base nft2981 = new ERC721Base(address(0x12345), "NFT 2981", "NFT2981", royaltyRecipient, 10000);
+
+        // 1. ========= Create listing =========
+        vm.prank(address(0x12345));
+        nft2981.mintTo(seller, "");
+        uint256 listingId = _setupListingForRoyaltyTests(address(nft2981));
+
+        // 2. ========= Buy from listing =========
+        IDirectListings.Listing memory listing = MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice);
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, totalPrice);
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.expectRevert("fees exceed the price");
+        vm.prank(buyer);
+        MintraDirectListingsLogicStandalone(marketplace).buyFromListing(
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
         );
     }
 
@@ -346,7 +364,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
         vm.prank(seller);
@@ -402,7 +427,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
         vm.prank(seller);
@@ -434,7 +466,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
         vm.prank(seller);
@@ -466,7 +505,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
         vm.prank(seller);
@@ -498,7 +544,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
         vm.prank(seller);
@@ -534,7 +587,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
         vm.prank(seller);
@@ -566,7 +626,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
         vm.prank(seller);
@@ -587,10 +654,16 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
-        vm.prank(seller);
         vm.expectRevert("Marketplace: listed token must be ERC1155 or ERC721.");
         MintraDirectListingsLogicStandalone(marketplace).createListing(listingParams);
     }
@@ -626,7 +699,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
         vm.prank(seller);
@@ -779,10 +859,6 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         listingParamsToUpdate.assetContract = address(erc20); // Listing non ERC721 / ERC1155 token.
 
-        // Grant ERC20 token asset role.
-        vm.prank(marketplaceDeployer);
-        Permissions(marketplace).grantRole(keccak256("ASSET_ROLE"), address(erc20));
-
         vm.prank(seller);
         vm.expectRevert("Marketplace: listed token must be ERC1155 or ERC721.");
         MintraDirectListingsLogicStandalone(marketplace).updateListing(listingId, listingParamsToUpdate);
@@ -832,7 +908,7 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
     //////////////////////////////////////////////////////////////*/
 
     function _setup_cancelListing() private returns (uint256 listingId, IDirectListings.Listing memory listing) {
-        (listingId,) = _setup_updateListing();
+        (listingId, ) = _setup_updateListing();
         listing = MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
     }
 
@@ -846,8 +922,9 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         MintraDirectListingsLogicStandalone(marketplace).cancelListing(listingId);
 
         // status should be `CANCELLED`
-        IDirectListings.Listing memory cancelledListing =
-            MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
+        IDirectListings.Listing memory cancelledListing = MintraDirectListingsLogicStandalone(marketplace).getListing(
+            listingId
+        );
         assertTrue(cancelledListing.status == IDirectListings.Status.CANCELLED);
     }
 
@@ -879,7 +956,7 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
     //////////////////////////////////////////////////////////////*/
 
     function _setup_approveBuyerForListing() private returns (uint256 listingId) {
-        (listingId,) = _setup_updateListing();
+        (listingId, ) = _setup_updateListing();
     }
 
     function test_state_approveBuyerForListing() public {
@@ -932,7 +1009,7 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
     //////////////////////////////////////////////////////////////*/
 
     function _setup_approveCurrencyForListing() private returns (uint256 listingId) {
-        (listingId,) = _setup_updateListing();
+        (listingId, ) = _setup_updateListing();
     }
 
     function test_state_approveCurrencyForListing() public {
@@ -943,11 +1020,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         // Seller approves buyer for reserved listing.
         vm.prank(seller);
         MintraDirectListingsLogicStandalone(marketplace).approveCurrencyForListing(
-            listingId, currencyToApprove, pricePerTokenForCurrency
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency
         );
 
         assertEq(
-            MintraDirectListingsLogicStandalone(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN), true
+            MintraDirectListingsLogicStandalone(marketplace).isCurrencyApprovedForListing(listingId, NATIVE_TOKEN),
+            true
         );
         assertEq(
             MintraDirectListingsLogicStandalone(marketplace).currencyPriceForListing(listingId, NATIVE_TOKEN),
@@ -965,7 +1045,9 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.prank(notSeller);
         vm.expectRevert("Marketplace: not listing creator.");
         MintraDirectListingsLogicStandalone(marketplace).approveCurrencyForListing(
-            listingId, currencyToApprove, pricePerTokenForCurrency
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency
         );
     }
 
@@ -978,7 +1060,9 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.prank(seller);
         vm.expectRevert("Marketplace: approving listing currency with different price.");
         MintraDirectListingsLogicStandalone(marketplace).approveCurrencyForListing(
-            listingId, currencyToApprove, pricePerTokenForCurrency
+            listingId,
+            currencyToApprove,
+            pricePerTokenForCurrency
         );
     }
 
@@ -987,7 +1071,7 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
     //////////////////////////////////////////////////////////////*/
 
     function _setup_buyFromListing() private returns (uint256 listingId, IDirectListings.Listing memory listing) {
-        (listingId,) = _setup_updateListing();
+        (listingId, ) = _setup_updateListing();
         listing = MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
     }
 
@@ -999,6 +1083,8 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         address currency = listing.currency;
         uint256 pricePerToken = listing.pricePerToken;
         uint256 totalPrice = pricePerToken * quantityToBuy;
+        uint256 platformFeeBps = MintraDirectListingsLogicStandalone(marketplace).platformFeeBps();
+        uint256 platformFee = (totalPrice * platformFeeBps) / 10000;
 
         // Seller approves buyer for listing
         vm.prank(seller);
@@ -1023,7 +1109,11 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         MintraDirectListingsLogicStandalone(marketplace).buyFromListing(
-            listingId, buyFor, quantityToBuy, currency, totalPrice
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
         );
 
         // Verify that buyer is owner of listed tokens, post-sale.
@@ -1032,12 +1122,12 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // Verify seller is paid total price.
         assertBalERC20Eq(address(erc20), buyer, 0);
-        assertBalERC20Eq(address(erc20), seller, totalPrice);
+        assertBalERC20Eq(address(erc20), seller, totalPrice - platformFee);
 
         if (quantityToBuy == listing.quantity) {
             // Verify listing status is `COMPLETED` if listing tokens are all bought.
-            IDirectListings.Listing memory completedListing =
-                MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
+            IDirectListings.Listing memory completedListing = MintraDirectListingsLogicStandalone(marketplace)
+                .getListing(listingId);
             assertTrue(completedListing.status == IDirectListings.Status.COMPLETED);
         }
     }
@@ -1050,6 +1140,8 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         address currency = NATIVE_TOKEN;
         uint256 pricePerToken = listing.pricePerToken;
         uint256 totalPrice = pricePerToken * quantityToBuy;
+        uint256 platformFeeBps = MintraDirectListingsLogicStandalone(marketplace).platformFeeBps();
+        uint256 platformFee = (totalPrice * platformFeeBps) / 10000;
 
         // Approve NATIVE_TOKEN for listing
         vm.prank(seller);
@@ -1073,8 +1165,12 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         // Buy tokens from listing.
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
-        MintraDirectListingsLogicStandalone(marketplace).buyFromListing{value: totalPrice}(
-            listingId, buyFor, quantityToBuy, currency, totalPrice
+        MintraDirectListingsLogicStandalone(marketplace).buyFromListing{ value: totalPrice }(
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
         );
 
         // Verify that buyer is owner of listed tokens, post-sale.
@@ -1083,12 +1179,12 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // Verify seller is paid total price.
         assertEq(buyer.balance, buyerBalBefore - totalPrice);
-        assertEq(seller.balance, sellerBalBefore + totalPrice);
+        assertEq(seller.balance, sellerBalBefore + (totalPrice - platformFee));
 
         if (quantityToBuy == listing.quantity) {
             // Verify listing status is `COMPLETED` if listing tokens are all bought.
-            IDirectListings.Listing memory completedListing =
-                MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
+            IDirectListings.Listing memory completedListing = MintraDirectListingsLogicStandalone(marketplace)
+                .getListing(listingId);
             assertTrue(completedListing.status == IDirectListings.Status.COMPLETED);
         }
     }
@@ -1123,8 +1219,13 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         vm.expectRevert("Marketplace: msg.value must exactly be the total price.");
-        MintraDirectListingsLogicStandalone(marketplace).buyFromListing{value: totalPrice - 1}( // sending insufficient value
-        listingId, buyFor, quantityToBuy, currency, totalPrice);
+        MintraDirectListingsLogicStandalone(marketplace).buyFromListing{ value: totalPrice - 1 }( // sending insufficient value
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
+        );
     }
 
     function test_revert_buyFromListing_unexpectedTotalPrice() public {
@@ -1157,7 +1258,7 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.warp(listing.startTimestamp);
         vm.prank(buyer);
         vm.expectRevert("Unexpected total price");
-        MintraDirectListingsLogicStandalone(marketplace).buyFromListing{value: totalPrice}(
+        MintraDirectListingsLogicStandalone(marketplace).buyFromListing{ value: totalPrice }(
             listingId,
             buyFor,
             quantityToBuy,
@@ -1205,7 +1306,11 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.prank(buyer);
         vm.expectRevert("Paying in invalid currency.");
         MintraDirectListingsLogicStandalone(marketplace).buyFromListing(
-            listingId, buyFor, quantityToBuy, NATIVE_TOKEN, totalPrice
+            listingId,
+            buyFor,
+            quantityToBuy,
+            NATIVE_TOKEN,
+            totalPrice
         );
     }
 
@@ -1353,7 +1458,11 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.prank(buyer);
         vm.expectRevert("Buying invalid quantity");
         MintraDirectListingsLogicStandalone(marketplace).buyFromListing(
-            listingId, buyFor, quantityToBuy, currency, totalPrice
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
         );
     }
 
@@ -1385,7 +1494,14 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // List tokens.
         IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
-            assetContract, tokenId, quantity, currency, pricePerToken, startTimestamp, endTimestamp, reserved
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
         );
 
         vm.prank(_seller);
@@ -1417,8 +1533,12 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         erc20.approve(marketplace, 10 ether);
 
         vm.expectRevert("Marketplace: invalid native tokens sent.");
-        MintraDirectListingsLogicStandalone(marketplace).buyFromListing{value: 1 ether}(
-            listingId, buyer, 1, address(erc20), 1 ether
+        MintraDirectListingsLogicStandalone(marketplace).buyFromListing{ value: 1 ether }(
+            listingId,
+            buyer,
+            1,
+            address(erc20),
+            1 ether
         );
         vm.stopPrank();
 

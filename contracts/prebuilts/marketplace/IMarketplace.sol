@@ -113,17 +113,6 @@ interface IDirectListings {
         uint256 totalPricePaid
     );
 
-    event RoyaltyTransfered(
-        address assetContract,
-        uint256 tokenId,
-        uint256 listingId,
-        uint256 totalPrice,
-        uint256 royaltyAmount,
-        address royaltyRecipient
-    );
-
-    event RoyaltyUpdated(address assetContract, uint256 royaltyAmount, address royaltyRecipient);
-
     /**
      *  @notice List NFTs (ERC721 or ERC1155) for sale at a fixed price.
      *
