@@ -40,7 +40,6 @@ remappings = [
   'erc721a/=lib/ERC721A/',
   '@thirdweb-dev/dynamic-contracts/=lib/dynamic-contracts/',
   'lib/sstore2=lib/dynamic-contracts/lib/sstore2/',
-  '@chainlink/contracts-ccip/=node_modules/@chainlink/contracts-ccip'
 ]
 src = 'contracts'
 test = 'src/test'
