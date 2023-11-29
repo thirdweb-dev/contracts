@@ -5,6 +5,7 @@ import { IRouterClient } from "@chainlink/contracts-ccip/src/v0.8/ccip/interface
 import { OwnerIsCreator } from "@chainlink/contracts-ccip/src/v0.8/shared/access/OwnerIsCreator.sol";
 import { Client } from "@chainlink/contracts-ccip/src/v0.8/ccip/libraries/Client.sol";
 import { IERC20 } from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/token/ERC20/IERC20.sol";
+import "./SafeMath.sol";
 
 /// @title - A simple contract for transferring tokens across chains.
 contract CrossChainTokenTransfer is OwnerIsCreator {
@@ -25,6 +26,9 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
         address feeToken, // the token address used to pay CCIP fees.
         uint256 fees // The fees paid for sending the message.
     );
+
+    //Following standard for calculation
+    using SafeMath for uint256;
 
     // Mapping to keep track of allowlisted destination chains.
     mapping(uint64 => bool) public allowlistedChains;
@@ -73,7 +77,12 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
         );
 
         // Get the fee required to send the message
-        estimate = s_router.getFee(_destinationChainSelector, evm2AnyMessage);
+        uint256 fees = s_router.getFee(_destinationChainSelector, evm2AnyMessage);
+
+        //Get 10% of the fees
+        uint256 tenPercent = fees.mul(10).div(100);
+        //Add 10% as slippage
+        estimate = fees.add(tenPercent);
     }
 
     /// @notice Transfer tokens to receiver on the destination chain.
@@ -165,7 +174,13 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
         Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(_receiver, _token, _amount, address(0));
 
         // Get the fee required to send the message
-        estimate = s_router.getFee(_destinationChainSelector, evm2AnyMessage);
+        uint256 fees = s_router.getFee(_destinationChainSelector, evm2AnyMessage);
+
+        //Get 10% of the fee
+        uint256 tenPercent = fees.mul(10).div(100);
+
+        //Add 10% to the fees as slippage
+        estimate = fees.add(tenPercent);
     }
 
     /// @notice Transfer tokens to receiver on the destination chain.
