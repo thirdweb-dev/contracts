@@ -340,6 +340,72 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
                             Create listing
     //////////////////////////////////////////////////////////////*/
 
+    function test_state_createListing_1155() public {
+        // Sample listing parameters.
+        address assetContract = address(erc1155);
+        uint256 tokenId = 0;
+        uint256 quantity = 2;
+        address currency = address(erc20);
+        uint256 pricePerToken = 1 ether;
+        uint128 startTimestamp = 100;
+        uint128 endTimestamp = 200;
+        bool reserved = false;
+
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+        erc1155.mint(seller, tokenId, quantity, "");
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = quantity;
+
+        assertBalERC1155Eq(address(erc1155), seller, tokenIds, amounts);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc1155.setApprovalForAll(marketplace, true);
+
+        // List tokens.
+        IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
+        );
+
+        vm.prank(seller);
+        uint256 listingId = MintraDirectListingsLogicStandalone(marketplace).createListing(listingParams);
+
+        // Test consequent state of the contract.
+
+        // Seller is still owner of token.
+        assertBalERC1155Eq(address(erc1155), seller, tokenIds, amounts);
+
+        // Total listings incremented
+        assertEq(MintraDirectListingsLogicStandalone(marketplace).totalListings(), 1);
+
+        // Fetch listing and verify state.
+        IDirectListings.Listing memory listing = MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
+
+        assertEq(listing.listingId, listingId);
+        assertEq(listing.listingCreator, seller);
+        assertEq(listing.assetContract, assetContract);
+        assertEq(listing.tokenId, tokenId);
+        assertEq(listing.quantity, quantity);
+        assertEq(listing.currency, currency);
+        assertEq(listing.pricePerToken, pricePerToken);
+        assertEq(listing.startTimestamp, startTimestamp);
+        assertEq(listing.endTimestamp, endTimestamp);
+        assertEq(listing.reserved, reserved);
+        assertEq(uint256(listing.tokenType), uint256(IDirectListings.TokenType.ERC1155));
+    }
+
     function test_state_createListing() public {
         // Sample listing parameters.
         address assetContract = address(erc721);
@@ -397,6 +463,74 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         assertEq(listing.pricePerToken, pricePerToken);
         assertEq(listing.startTimestamp, startTimestamp);
         assertEq(listing.endTimestamp, endTimestamp);
+        assertEq(listing.reserved, reserved);
+        assertEq(uint256(listing.tokenType), uint256(IDirectListings.TokenType.ERC721));
+    }
+
+    function test_state_createListing_start_time_in_past() public {
+        // Sample listing parameters.
+        address assetContract = address(erc721);
+        uint256 tokenId = 0;
+        uint256 quantity = 1;
+        address currency = address(erc20);
+        uint256 pricePerToken = 1 ether;
+
+        vm.warp(10000); // Set the timestop for block 1 to 10000
+
+        uint256 expectedStartTimestamp = 10000;
+        uint256 expectedEndTimestamp = type(uint128).max;
+        // Set the start time to be at a timestamp in the past
+        uint128 startTimestamp = uint128(block.timestamp) - 1000;
+
+        uint128 endTimestamp = type(uint128).max;
+        bool reserved = true;
+
+        // Mint the ERC721 tokens to seller. These tokens will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Approve Marketplace to transfer token.
+        vm.prank(seller);
+        erc721.setApprovalForAll(marketplace, true);
+
+        // List tokens.
+        IDirectListings.ListingParameters memory listingParams = IDirectListings.ListingParameters(
+            assetContract,
+            tokenId,
+            quantity,
+            currency,
+            pricePerToken,
+            startTimestamp,
+            endTimestamp,
+            reserved
+        );
+
+        vm.prank(seller);
+        uint256 listingId = MintraDirectListingsLogicStandalone(marketplace).createListing(listingParams);
+
+        // Test consequent state of the contract.
+
+        // Seller is still owner of token.
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Total listings incremented
+        assertEq(MintraDirectListingsLogicStandalone(marketplace).totalListings(), 1);
+
+        // Fetch listing and verify state.
+        IDirectListings.Listing memory listing = MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
+
+        assertEq(listing.listingId, listingId);
+        assertEq(listing.listingCreator, seller);
+        assertEq(listing.assetContract, assetContract);
+        assertEq(listing.tokenId, tokenId);
+        assertEq(listing.quantity, quantity);
+        assertEq(listing.currency, currency);
+        assertEq(listing.pricePerToken, pricePerToken);
+        assertEq(listing.startTimestamp, expectedStartTimestamp);
+        assertEq(listing.endTimestamp, expectedEndTimestamp);
         assertEq(listing.reserved, reserved);
         assertEq(uint256(listing.tokenType), uint256(IDirectListings.TokenType.ERC721));
     }
@@ -753,6 +887,54 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         assertEq(uint256(listing.tokenType), uint256(IDirectListings.TokenType.ERC721));
     }
 
+    function test_state_updateListing_start_time_in_past() public {
+        (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
+
+        // Mint MORE ERC721 tokens to seller. A new tokenId will be listed.
+        _setupERC721BalanceForSeller(seller, 1);
+
+        uint256[] memory tokenIds = new uint256[](2);
+        tokenIds[0] = 0;
+        tokenIds[1] = 1;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        listingParamsToUpdate.pricePerToken = 2 ether;
+
+        // Update the start time of the listing
+        uint256 expectedStartTimestamp = block.timestamp + 10;
+        uint256 expectedEndTimestamp = type(uint128).max;
+
+        listingParamsToUpdate.startTimestamp = uint128(block.timestamp);
+        listingParamsToUpdate.endTimestamp = type(uint128).max;
+        vm.warp(block.timestamp + 10); // Set the timestamp 10 seconds in the future
+
+        vm.prank(seller);
+        MintraDirectListingsLogicStandalone(marketplace).updateListing(listingId, listingParamsToUpdate);
+
+        // Test consequent state of the contract.
+
+        // Seller is still owner of token.
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Total listings not incremented on update.
+        assertEq(MintraDirectListingsLogicStandalone(marketplace).totalListings(), 1);
+
+        // Fetch listing and verify state.
+        IDirectListings.Listing memory listing = MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
+
+        assertEq(listing.listingId, listingId);
+        assertEq(listing.listingCreator, seller);
+        assertEq(listing.assetContract, listingParamsToUpdate.assetContract);
+        assertEq(listing.tokenId, 0);
+        assertEq(listing.quantity, listingParamsToUpdate.quantity);
+        assertEq(listing.currency, listingParamsToUpdate.currency);
+        assertEq(listing.pricePerToken, listingParamsToUpdate.pricePerToken);
+        assertEq(listing.startTimestamp, expectedStartTimestamp);
+        assertEq(listing.endTimestamp, expectedEndTimestamp);
+        assertEq(listing.reserved, listingParamsToUpdate.reserved);
+        assertEq(uint256(listing.tokenType), uint256(IDirectListings.TokenType.ERC721));
+    }
+
     function test_revert_updateListing_notListingCreator() public {
         (uint256 listingId, IDirectListings.ListingParameters memory listingParamsToUpdate) = _setup_updateListing();
 
@@ -1075,7 +1257,61 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         listing = MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
     }
 
-    function test_state_buyFromListing() public {
+    function test_state_buyFromListing_with_mint_token() public {
+        uint256 listingId = _createListing(seller, address(erc20Aux));
+        IDirectListings.Listing memory listing = MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
+
+        address buyFor = buyer;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+        uint256 platformFeeBpsMint = MintraDirectListingsLogicStandalone(marketplace).platformFeeBpsMint();
+        uint256 platformFee = (totalPrice * platformFeeBpsMint) / 10000;
+
+        // Verify that seller is owner of listed tokens, pre-sale.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = 0;
+        assertIsOwnerERC721(address(erc721), seller, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), buyer, tokenIds);
+
+        // Mint requisite total price to buyer.
+        erc20Aux.mint(buyer, totalPrice);
+        assertBalERC20Eq(address(erc20Aux), buyer, totalPrice);
+        assertBalERC20Eq(address(erc20Aux), seller, 0);
+
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20Aux.increaseAllowance(marketplace, totalPrice);
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        MintraDirectListingsLogicStandalone(marketplace).buyFromListing(
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
+        );
+
+        // Verify that buyer is owner of listed tokens, post-sale.
+        assertIsOwnerERC721(address(erc721), buyer, tokenIds);
+        assertIsNotOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Verify seller is paid total price.
+        assertBalERC20Eq(address(erc20Aux), buyer, 0);
+        assertBalERC20Eq(address(erc20Aux), seller, totalPrice - platformFee);
+
+        if (quantityToBuy == listing.quantity) {
+            // Verify listing status is `COMPLETED` if listing tokens are all bought.
+            IDirectListings.Listing memory completedListing = MintraDirectListingsLogicStandalone(marketplace)
+                .getListing(listingId);
+            assertTrue(completedListing.status == IDirectListings.Status.COMPLETED);
+        }
+    }
+
+    function test_state_buyFromListing_721() public {
         (uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
 
         address buyFor = buyer;
@@ -1119,6 +1355,69 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         // Verify that buyer is owner of listed tokens, post-sale.
         assertIsOwnerERC721(address(erc721), buyer, tokenIds);
         assertIsNotOwnerERC721(address(erc721), seller, tokenIds);
+
+        // Verify seller is paid total price.
+        assertBalERC20Eq(address(erc20), buyer, 0);
+        assertBalERC20Eq(address(erc20), seller, totalPrice - platformFee);
+
+        if (quantityToBuy == listing.quantity) {
+            // Verify listing status is `COMPLETED` if listing tokens are all bought.
+            IDirectListings.Listing memory completedListing = MintraDirectListingsLogicStandalone(marketplace)
+                .getListing(listingId);
+            assertTrue(completedListing.status == IDirectListings.Status.COMPLETED);
+        }
+    }
+
+    function test_state_buyFromListing_1155() public {
+        // Create the listing
+        test_state_createListing_1155();
+
+        //(uint256 listingId, IDirectListings.Listing memory listing) = _setup_buyFromListing();
+        uint256 listingId = 0;
+
+        IDirectListings.Listing memory listing = MintraDirectListingsLogicStandalone(marketplace).getListing(listingId);
+
+        address buyFor = buyer;
+        uint256 tokenId = listing.tokenId;
+        uint256 quantity = listing.quantity;
+        uint256 quantityToBuy = listing.quantity;
+        address currency = listing.currency;
+        uint256 pricePerToken = listing.pricePerToken;
+        uint256 totalPrice = pricePerToken * quantityToBuy;
+        uint256 platformFeeBps = MintraDirectListingsLogicStandalone(marketplace).platformFeeBps();
+        uint256 platformFee = (totalPrice * platformFeeBps) / 10000;
+
+        // Verify that seller is owner of listed tokens, pre-sale.
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = quantity;
+
+        assertBalERC1155Eq(address(erc1155), seller, tokenIds, amounts);
+
+        // Mint requisite total price to buyer.
+        erc20.mint(buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), buyer, totalPrice);
+        assertBalERC20Eq(address(erc20), seller, 0);
+
+        // Approve marketplace to transfer currency
+        vm.prank(buyer);
+        erc20.increaseAllowance(marketplace, totalPrice);
+
+        // Buy tokens from listing.
+        vm.warp(listing.startTimestamp);
+        vm.prank(buyer);
+        MintraDirectListingsLogicStandalone(marketplace).buyFromListing(
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
+        );
+
+        // Verify that buyer is owner of listed tokens, post-sale.
+        assertBalERC1155Eq(address(erc1155), buyer, tokenIds, amounts);
 
         // Verify seller is paid total price.
         assertBalERC20Eq(address(erc20), buyer, 0);
@@ -1347,7 +1646,11 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.prank(buyer);
         vm.expectRevert("!BAL20");
         MintraDirectListingsLogicStandalone(marketplace).buyFromListing(
-            listingId, buyFor, quantityToBuy, currency, totalPrice
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
         );
     }
 
@@ -1384,7 +1687,11 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.prank(buyer);
         vm.expectRevert("!BAL20");
         MintraDirectListingsLogicStandalone(marketplace).buyFromListing(
-            listingId, buyFor, quantityToBuy, currency, totalPrice
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
         );
     }
 
@@ -1421,7 +1728,11 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         vm.prank(buyer);
         vm.expectRevert("Buying invalid quantity");
         MintraDirectListingsLogicStandalone(marketplace).buyFromListing(
-            listingId, buyFor, quantityToBuy, currency, totalPrice
+            listingId,
+            buyFor,
+            quantityToBuy,
+            currency,
+            totalPrice
         );
     }
 
@@ -1469,17 +1780,75 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
+    function test_getAllListing() public {
+        // Create the listing
+        test_state_createListing_1155();
 
-    function _createListing(address _seller) private returns (uint256 listingId) {
+        IDirectListings.Listing[] memory listings = MintraDirectListingsLogicStandalone(marketplace).getAllListings(
+            0,
+            0
+        );
+
+        assertEq(listings.length, 1);
+
+        IDirectListings.Listing memory listing = listings[0];
+
+        assertEq(listing.assetContract, address(erc1155));
+        assertEq(listing.tokenId, 0);
+        assertEq(listing.quantity, 2);
+        assertEq(listing.currency, address(erc20));
+        assertEq(listing.pricePerToken, 1 ether);
+        assertEq(listing.startTimestamp, 100);
+        assertEq(listing.endTimestamp, 200);
+        assertEq(listing.reserved, false);
+    }
+
+    function test_getAllValidListings() public {
+        // Create the listing
+        test_state_createListing_1155();
+
+        IDirectListings.Listing[] memory listingsAll = MintraDirectListingsLogicStandalone(marketplace).getAllListings(
+            0,
+            0
+        );
+
+        assertEq(listingsAll.length, 1);
+
+        vm.warp(listingsAll[0].startTimestamp);
+        IDirectListings.Listing[] memory listings = MintraDirectListingsLogicStandalone(marketplace)
+            .getAllValidListings(0, 0);
+
+        assertEq(listings.length, 1);
+
+        IDirectListings.Listing memory listing = listings[0];
+
+        assertEq(listing.assetContract, address(erc1155));
+        assertEq(listing.tokenId, 0);
+        assertEq(listing.quantity, 2);
+        assertEq(listing.currency, address(erc20));
+        assertEq(listing.pricePerToken, 1 ether);
+        assertEq(listing.startTimestamp, 100);
+        assertEq(listing.endTimestamp, 200);
+        assertEq(listing.reserved, false);
+    }
+
+    function test_currencyPriceForListing_fail() public {
+        // Create the listing
+        test_state_createListing_1155();
+
+        vm.expectRevert("Currency not approved for listing");
+        MintraDirectListingsLogicStandalone(marketplace).currencyPriceForListing(0, address(erc20Aux));
+    }
+
+    function _createListing(address _seller, address currency) private returns (uint256 listingId) {
         // Sample listing parameters.
         address assetContract = address(erc721);
         uint256 tokenId = 0;
         uint256 quantity = 1;
-        address currency = address(erc20);
         uint256 pricePerToken = 1 ether;
         uint128 startTimestamp = 100;
         uint128 endTimestamp = 200;
-        bool reserved = true;
+        bool reserved = false;
 
         // Mint the ERC721 tokens to seller. These tokens will be listed.
         _setupERC721BalanceForSeller(_seller, 1);
@@ -1544,5 +1913,24 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
 
         // 1 ether is temporary locked in contract
         assertEq(marketplace.balance, 0 ether);
+    }
+
+    function test_set_platform_fee() public {
+        uint256 platformFeeBps = MintraDirectListingsLogicStandalone(marketplace).platformFeeBps();
+        assertEq(platformFeeBps, 225);
+
+        vm.prank(wizard);
+        MintraDirectListingsLogicStandalone(marketplace).setPlatformFeeBps(369);
+
+        platformFeeBps = MintraDirectListingsLogicStandalone(marketplace).platformFeeBps();
+
+        console.log("platformFeeBps", platformFeeBps);
+        assertEq(platformFeeBps, 369);
+    }
+
+    function test_set_platform_fee_fail() public {
+        vm.prank(wizard);
+        vm.expectRevert("Fee not in range");
+        MintraDirectListingsLogicStandalone(marketplace).setPlatformFeeBps(1000);
     }
 }

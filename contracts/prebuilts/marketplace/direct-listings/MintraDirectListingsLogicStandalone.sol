@@ -1,24 +1,20 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-/// @author thirdweb
+/// @author thirdweb.com / mintra.ai
 
 import "./DirectListingsStorage.sol";
 
 // ====== External imports ======
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
-import "../../../eip/interface/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import { Ownable } from "@openzeppelin/contracts/access/Ownable.sol";
 
 // ====== Internal imports ======
+import "../../../eip/interface/IERC721.sol";
 import "../../../extension/Multicall.sol";
-import "../../../extension/interface/IPlatformFee.sol";
-import "../../../extension/upgradeable/ERC2771ContextConsumer.sol";
 import "../../../extension/upgradeable/ReentrancyGuard.sol";
-import "../../../extension/upgradeable/PermissionsEnumerable.sol";
-import { RoyaltyPaymentsLogic } from "../../../extension/upgradeable/RoyaltyPayments.sol";
 import { CurrencyTransferLib } from "../../../lib/CurrencyTransferLib.sol";
 
 /**
@@ -34,9 +30,10 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
     }
 
     event NewSale(
-        address indexed listingCreator,
-        uint256 indexed listingId,
-        address indexed assetContract,
+        address listingCreator,
+        uint256 listingId,
+        address assetContract,
+        Status status,
         uint256 tokenId,
         address buyer,
         uint256 quantityBought,
@@ -333,6 +330,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
             listing.listingCreator,
             listing.listingId,
             listing.assetContract,
+            listing.status,
             listing.tokenId,
             buyer,
             _quantity,
