@@ -13,6 +13,7 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
     error NotEnoughBalance(uint256 currentBalance, uint256 calculatedFees); // Used to make sure contract has enough balance to cover the fees.
     error NotEnoughBalanceSent(uint256 currentBalance, uint256 calculatedFees);
     error ApprovedAmountInsufficient(uint256 approvedAmount, uint256 expectedAmount);
+    error ApprovedLinkAmountInsufficient(uint256 approvedAmount, uint256 expectedAmount);
     error NothingToWithdraw(); // Used when trying to withdraw Ether but there's nothing to withdraw.
     error FailedToWithdrawEth(address owner, address target, uint256 value); // Used when the withdrawal of Ether fails.
     error DestinationChainNotAllowlisted(uint64 destinationChainSelector); // Used when the destination chain has not been allowlisted by the contract owner.
@@ -103,7 +104,7 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
         uint256 _amount,
         uint256 _approvedAmountLink,
         uint256 _approvedAmountToken
-    ) external onlyOwner onlyAllowlistedChain(_destinationChainSelector) returns (bytes32 messageId) {
+    ) external onlyAllowlistedChain(_destinationChainSelector) returns (bytes32 messageId) {
         // Create an EVM2AnyMessage struct in memory with necessary information for sending a cross-chain message
         //  address(linkToken) means fees are paid in LINK
         Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(
@@ -117,14 +118,13 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
         uint256 fees = s_router.getFee(_destinationChainSelector, evm2AnyMessage);
 
         //verify amount approved for Link
-        if (_approvedAmountLink < fees) revert ApprovedAmountInsufficient(_approvedAmountLink, fees);
+        if (_approvedAmountLink < fees) revert ApprovedLinkAmountInsufficient(_approvedAmountLink, fees);
 
         //verify amount approved for token transfered
         if (_approvedAmountToken < _amount) revert ApprovedAmountInsufficient(_approvedAmountToken, fees);
 
         //verify
-        if (fees > s_linkToken.balanceOf(address(this)))
-            revert NotEnoughBalance(s_linkToken.balanceOf(address(this)), fees);
+        //if (fees > s_linkToken.balanceOf(address(this)))  revert NotEnoughBalance(s_linkToken.balanceOf(address(this)), fees);
 
         //transfer token from user to contract
         IERC20(_token).transferFrom(_sender, address(this), _approvedAmountToken);
@@ -200,7 +200,7 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
         address _token,
         uint256 _amount,
         uint256 _approvedAmountToken
-    ) external payable onlyOwner onlyAllowlistedChain(_destinationChainSelector) returns (bytes32 messageId) {
+    ) external payable onlyAllowlistedChain(_destinationChainSelector) returns (bytes32 messageId) {
         // Create an EVM2AnyMessage struct in memory with necessary information for sending a cross-chain message
         // address(0) means fees are paid in native gas
         Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(_receiver, _token, _amount, address(0));
