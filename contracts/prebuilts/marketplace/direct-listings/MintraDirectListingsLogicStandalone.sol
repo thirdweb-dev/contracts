@@ -29,19 +29,15 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         uint256 basisPoints;
     }
 
-    event NewSale(
-        address listingCreator,
+    event MintaNewSale(
         uint256 listingId,
-        address assetContract,
-        Status status,
-        uint256 tokenId,
         address buyer,
         uint256 quantityBought,
         uint256 totalPricePaid,
         address currency
     );
 
-    event RoyaltyTransfered(
+    event MintraRoyaltyTransfered(
         address assetContract,
         uint256 tokenId,
         uint256 listingId,
@@ -326,12 +322,8 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         _payout(buyer, listing.listingCreator, _currency, targetTotalPrice, listing);
         _transferListingTokens(listing.listingCreator, _buyFor, _quantity, listing);
 
-        emit NewSale(
-            listing.listingCreator,
+        emit MintaNewSale(
             listing.listingId,
-            listing.assetContract,
-            listing.status,
-            listing.tokenId,
             buyer,
             _quantity,
             targetTotalPrice,
@@ -616,7 +608,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
 
                 amountRemaining = amountRemaining - royaltyAmount;
 
-                emit RoyaltyTransfered(
+                emit MintraRoyaltyTransfered(
                     _listing.assetContract,
                     _listing.tokenId,
                     _listing.listingId,
