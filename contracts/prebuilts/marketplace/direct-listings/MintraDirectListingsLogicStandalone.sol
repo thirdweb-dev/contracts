@@ -29,7 +29,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         uint256 basisPoints;
     }
 
-    event MintaNewSale(
+    event MintraNewSale(
         uint256 listingId,
         address buyer,
         uint256 quantityBought,
@@ -322,13 +322,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         _payout(buyer, listing.listingCreator, _currency, targetTotalPrice, listing);
         _transferListingTokens(listing.listingCreator, _buyFor, _quantity, listing);
 
-        emit MintaNewSale(
-            listing.listingId,
-            buyer,
-            _quantity,
-            targetTotalPrice,
-            _currency
-        );
+        emit MintraNewSale(listing.listingId, buyer, _quantity, targetTotalPrice, _currency);
     }
 
     /*///////////////////////////////////////////////////////////////
