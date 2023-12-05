@@ -10,51 +10,20 @@ import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/Acco
 import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
 
 import { IERC20 } from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 contract CrossChainTokenTransferMaster {
     // Target contracts
     EntryPoint private entrypoint;
     address payable private beneficiary = payable(address(0x45654));
-
-    function _prepareSignature(
-        IAccountPermissions.SignerPermissionRequest memory _req
-    ) internal view returns (bytes32 typedDataHash) {
-        bytes32 typehashSignerPermissionRequest = keccak256(
-            "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
-        );
-        bytes32 nameHash = keccak256(bytes("Account"));
-        bytes32 versionHash = keccak256(bytes("1"));
-        bytes32 typehashEip712 = keccak256(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-        );
-        bytes32 domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, block.chainid, sender));
-
-        bytes memory encodedRequestStart = abi.encode(
-            typehashSignerPermissionRequest,
-            _req.signer,
-            _req.isAdmin,
-            keccak256(abi.encodePacked(_req.approvedTargets)),
-            _req.nativeTokenLimitPerTransaction
-        );
-
-        bytes memory encodedRequestEnd = abi.encode(
-            _req.permissionStartTimestamp,
-            _req.permissionEndTimestamp,
-            _req.reqValidityStartTimestamp,
-            _req.reqValidityEndTimestamp,
-            _req.uid
-        );
-
-        bytes32 structHash = keccak256(bytes.concat(encodedRequestStart, encodedRequestEnd));
-        typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
-    }
+    mapping(address => UserOperation) private userOPS;
+    event HashGenerated(address indexed owner, bytes32 hash);
 
     function _setupUserOp(
-        uint256 _signerPKey,
         bytes memory _initCode,
         bytes memory _callDataForEntrypoint,
         address _sender
-    ) internal returns (UserOperation[] memory ops) {
+    ) internal returns (bytes32 msgHash) {
         uint256 nonce = entrypoint.getNonce(_sender, 0);
 
         // Get user op fields
@@ -72,49 +41,31 @@ contract CrossChainTokenTransferMaster {
             signature: bytes("")
         });
 
+        userOPS[_sender] = op;
         // Sign UserOp
         bytes32 opHash = EntryPoint(entrypoint).getUserOpHash(op);
-        bytes32 msgHash = ECDSA.toEthSignedMessageHash(opHash);
+        msgHash = ECDSA.toEthSignedMessageHash(opHash);
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPKey, msgHash);
-        bytes memory userOpSignature = abi.encodePacked(r, s, v);
+        // (uint8 v, bytes32 r, bytes32 s) = vm.sign(_signerPKey, msgHash);
+        // bytes memory userOpSignature = abi.encodePacked(r, s, v);
 
-        address recoveredSigner = ECDSA.recover(msgHash, v, r, s);
-        address expectedSigner = vm.addr(_signerPKey);
+        // address recoveredSigner = ECDSA.recover(msgHash, v, r, s);
+        // address expectedSigner = vm.addr(_signerPKey);
 
-        op.signature = userOpSignature;
+        // op.signature = userOpSignature;
 
         // Store UserOp
-        ops = new UserOperation[](1);
-        ops[0] = op;
-    }
-
-    function _setupUserOpExecute(
-        uint256 _signerPKey,
-        bytes memory _initCode,
-        address _target,
-        uint256 _value,
-        bytes memory _callData,
-        address _sender
-    ) internal returns (UserOperation[] memory) {
-        bytes memory callDataForEntrypoint = abi.encodeWithSignature(
-            "execute(address,uint256,bytes)",
-            _target,
-            _value,
-            _callData
-        );
-
-        return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint, _sender);
+        // ops = new UserOperation[](1);
+        // ops[0] = op;
     }
 
     function _setupUserOpExecuteBatch(
-        uint256 _signerPKey,
         bytes memory _initCode,
         address[] memory _target,
         uint256[] memory _value,
         bytes[] memory _callData,
         address _sender
-    ) internal returns (UserOperation[] memory) {
+    ) internal returns (bytes32) {
         bytes memory callDataForEntrypoint = abi.encodeWithSignature(
             "executeBatch(address[],uint256[],bytes[])",
             _target,
@@ -122,7 +73,7 @@ contract CrossChainTokenTransferMaster {
             _callData
         );
 
-        return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint, _sender);
+        return _setupUserOp(_initCode, callDataForEntrypoint, _sender);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -166,16 +117,8 @@ contract CrossChainTokenTransferMaster {
             _tokenAmount
         );
 
-        UserOperation[] memory userOp = _setupUserOpExecuteBatch(
-            accountAdminPKey,
-            bytes(""),
-            targets,
-            values,
-            callData,
-            _smartWalletAccount
-        );
-
-        EntryPoint(entrypoint).handleOps(userOp, beneficiary);
+        bytes32 userOpHash = _setupUserOpExecuteBatch(bytes(""), targets, values, callData, _smartWalletAccount);
+        emit HashGenerated(_smartWalletAccount, userOpHash);
     }
 
     function _initiateTokenTransferWithNativeToken(
@@ -207,15 +150,18 @@ contract CrossChainTokenTransferMaster {
             _tokenAmount,
             _tokenAmount
         );
-        UserOperation[] memory userOp = _setupUserOpExecuteBatch(
-            accountAdminPKey,
-            bytes(""),
-            targets,
-            values,
-            callData,
-            _smartWalletAccount
-        );
+        bytes32 userOpHash = _setupUserOpExecuteBatch(bytes(""), targets, values, callData, _smartWalletAccount);
+        emit HashGenerated(_smartWalletAccount, userOpHash);
+    }
 
-        EntryPoint(entrypoint).handleOps(userOp, beneficiary);
+    function proceed(bytes32 messageHash, bytes memory signature) external {
+        address signer = ECDSA.recover(messageHash, signature);
+        //get user  op
+        UserOperation storage userOP = userOPS[signer];
+        //array of userOPs
+        UserOperation[] memory ops = new UserOperation[](1);
+        userOP.signature = signature;
+        ops[0] = userOP;
+        EntryPoint(entrypoint).handleOps(ops, beneficiary);
     }
 }
