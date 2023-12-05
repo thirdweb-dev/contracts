@@ -2,19 +2,20 @@
 pragma solidity ^0.8.12;
 
 interface IAccountRecovery {
+    // Errors //
+    error NotOwner(address sender);
+
     /**
      * @dev Will be used to store the shards of user's private key in a secure cloud based storage of the user.
      * @param privateKeyShards Array of private key shards of the user's account
      */
-    function storePrivateKeyShards(string[] calldata privateKeyShards) external;
+    function storePrivateKeyShards(uint8[] calldata privateKeyShards) external;
 
     /**
      * @dev Create a account recovery request for the account.
-     * @param email The emails of the account for which recovery req. is being created.
-     * @return The hash of the recovery request
      */
 
-    function generateRecoveryRequest(string calldata email) external returns (bytes calldata);
+    function generateAndSendRecoveryRequest() external;
 
     /**
      * @dev Will collect the guardians signatures on the account's active recovery request
@@ -32,5 +33,5 @@ interface IAccountRecovery {
      * @dev Will restore the private key, encrypt and return/email the user
      * @return Encrypted private key of the account
      */
-    function restorePrivateKey() external returns (bytes calldata);
+    function restorePrivateKey() external returns (bytes memory);
 }

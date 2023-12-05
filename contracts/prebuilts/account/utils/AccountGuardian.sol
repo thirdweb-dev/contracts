@@ -4,26 +4,29 @@ pragma solidity ^0.8.12;
 import { IAccountGuardian } from "../interface/IAccountGuardian.sol";
 import { Guardian } from "./Guardian.sol";
 import { AccountLock } from "./AccountLock.sol";
+import { AccountRecovery } from "./AccountRecovery.sol";
 
 contract AccountGuardian is IAccountGuardian {
     Guardian public guardianContract;
     AccountLock public accountLock;
+    AccountRecovery public accountRecovery;
     address account;
     address[] private accountGuardians;
     address public owner;
 
-    error NotOwnerOrAccountLock(address owner, address sender);
+    error NotAuthorized(address sender);
 
     constructor(Guardian _guardianContract, AccountLock _accountLock, address _account) {
         guardianContract = _guardianContract;
         accountLock = _accountLock;
         account = _account;
         owner = account;
+        accountRecovery = new AccountRecovery(account, address(this));
     }
 
-    modifier onlyOwnerOrAccountLock() {
-        if (msg.sender != owner && msg.sender != address(accountLock)) {
-            revert NotOwnerOrAccountLock(owner, msg.sender);
+    modifier onlyOwnerAccountLockAccountRecovery() {
+        if (msg.sender != owner && msg.sender != address(accountLock) && msg.sender != address(accountRecovery)) {
+            revert NotAuthorized(msg.sender);
         }
         _;
     }
@@ -32,7 +35,7 @@ contract AccountGuardian is IAccountGuardian {
     ///// External Functions////
     ////////////////////////////
 
-    function addGuardian(address guardian) external onlyOwnerOrAccountLock {
+    function addGuardian(address guardian) external onlyOwnerAccountLockAccountRecovery {
         if (guardianContract.isVerifiedGuardian(guardian)) {
             accountGuardians.push(guardian);
             guardianContract.addAccountToGuardian(guardian, owner);
@@ -42,7 +45,7 @@ contract AccountGuardian is IAccountGuardian {
         }
     }
 
-    function removeGuardian(address guardian) external onlyOwnerOrAccountLock {
+    function removeGuardian(address guardian) external onlyOwnerAccountLockAccountRecovery {
         require(guardian != address(0), "guardian address being removed cannot be a zero address");
 
         bool guardianFound = false;
@@ -58,11 +61,11 @@ contract AccountGuardian is IAccountGuardian {
         }
     }
 
-    function getAllGuardians() external view onlyOwnerOrAccountLock returns (address[] memory) {
+    function getAllGuardians() external view onlyOwnerAccountLockAccountRecovery returns (address[] memory) {
         return accountGuardians;
     }
 
-    function isAccountGuardian(address guardian) external view onlyOwnerOrAccountLock returns (bool) {
+    function isAccountGuardian(address guardian) external view onlyOwnerAccountLockAccountRecovery returns (bool) {
         for (uint256 g = 0; g < accountGuardians.length; g++) {
             if (accountGuardians[g] == guardian) {
                 return true;
@@ -70,4 +73,6 @@ contract AccountGuardian is IAccountGuardian {
         }
         return false;
     }
+
+    function getTotalGuardians() external view override returns (uint256) {}
 }

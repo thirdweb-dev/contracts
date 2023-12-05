@@ -2,12 +2,11 @@
 pragma solidity ^0.8.12;
 
 interface IGuardian {
-
-     //////////////////////////////////////
+    //////////////////////////////////////
     /////////// Errors ////////////////
     //////////////////////////////////////
 
- /**
+    /**
      * Emits error if the guardian already exists
      * @param guardian wallet address of the guardian being added.
      */
@@ -19,7 +18,7 @@ interface IGuardian {
      */
     error NotAGuardian(address guardian);
 
-     //////////////////////////////////////
+    //////////////////////////////////////
     /////////// Events ////////////////
     //////////////////////////////////////
 
@@ -32,7 +31,7 @@ interface IGuardian {
      * @param guardian address of the guardian being removed.
      */
     event GuardianRemoved(address indexed guardian);
-   
+
     /////////////////////////////////////
     /////////// External Functions //////
     //////////////////////////////////////
@@ -49,13 +48,12 @@ interface IGuardian {
      * @return bool Boolean value indicating if a address is a verified
      * guardian or not.
      */
-    function isVerifiedGuardian(address isVerified) external returns(bool);
+    function isVerifiedGuardian(address isVerified) external returns (bool);
 
     /**
      * @notice Remove the sender as a verified thirdweb guardian.
      */
     function removeVerifiedGuardian() external;
-
 
     /**
      * @notice Used to maintain a record of each account and it's guardian (accountGuardian) contract instance
@@ -68,9 +66,9 @@ interface IGuardian {
     /**
      * @notice Creates a mapping of account to their respective guardians
      * @param guardian Guardian to be added to account
-     * @param account Account whose guardian list is to be updated. 
+     * @param account Account whose guardian list is to be updated.
      */
-     function addAccountToGuardian(address guardian, address account) external;
+    function addAccountToGuardian(address guardian, address account) external;
 
     //////////////////////////////////////
     /////////// Getter Function //////////
@@ -80,19 +78,30 @@ interface IGuardian {
      * Returns the list of verified guardians.
      * Can only be called by the owner.
      */
-    function getVerifiedGuardians() external view returns(address[] memory);
+    function getVerifiedGuardians() external view returns (address[] memory);
 
     /**
      * @notice Returns the accountGuardian address of an account
      * @param account account
      * @return address accountGuardian
      */
-    function getAccountGuardian(address account) external view returns(address);
+    function getAccountGuardian(address account) external view returns (address);
 
     /**
      * @notice Returns the list of accounts the guardian is guarding
      * @param guardian Guardian whose account list has to be returned
      */
-    function getAccountsTheGuardianIsGuarding(address guardian) external view returns(address[] memory);
+    function getAccountsTheGuardianIsGuarding(address guardian) external view returns (address[] memory);
 
+    /**
+     * @dev Returns the address of the Account Recovery contract of an account. Will be used by guardians to get the account recovery request and send signature back to the account recovery contract.
+     * @param account The account for which it's recovery contract is requested
+     */
+    function getAccountRecovery(address account) external returns (address);
+
+    /**
+     * @dev A checker function to check if a sender is guardian for the account
+     * @param account Account address for which check is being done.
+     */
+    function isGuardingAccount(address account, address guardian) external view returns (bool);
 }
