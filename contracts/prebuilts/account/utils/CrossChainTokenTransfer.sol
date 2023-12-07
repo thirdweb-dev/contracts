@@ -62,6 +62,12 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
         allowlistedChains[_destinationChainSelector] = allowed;
     }
 
+    /// @dev Estimates amount of token required for the trnsaction
+    /// @param _destinationChainSelector The identifier (aka selector) for the destination blockchain.
+    /// @param _receiver The address of the recipient on the destination blockchain.
+    /// @param _token token address.
+    /// @param _amount token amount.
+    /// @return  estimate estimated  amount
     function estimateLink(
         uint64 _destinationChainSelector,
         address _receiver,
@@ -95,6 +101,8 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
     /// @param _receiver The address of the recipient on the destination blockchain.
     /// @param _token token address.
     /// @param _amount token amount.
+    /// @param _approvedAmountLink Link amount.
+    /// @param _approvedAmountToken token amount
     /// @return messageId The ID of the message that was sent.
     function transferTokensPayLINK(
         uint64 _destinationChainSelector,
@@ -163,6 +171,12 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
         return messageId;
     }
 
+    /// @dev Estimates amount of token required for the trnsaction
+    /// @param _destinationChainSelector The identifier (aka selector) for the destination blockchain.
+    /// @param _receiver The address of the recipient on the destination blockchain.
+    /// @param _token token address.
+    /// @param _amount token amount.
+    /// @return  estimate estimated  amount
     function estimateNative(
         uint64 _destinationChainSelector,
         address _receiver,
@@ -192,6 +206,7 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
     /// @param _receiver The address of the recipient on the destination blockchain.
     /// @param _token token address.
     /// @param _amount token amount.
+    /// @param _approvedAmountToken approved amount.
     /// @return messageId The ID of the message that was sent.
     function transferTokensPayNative(
         uint64 _destinationChainSelector,
