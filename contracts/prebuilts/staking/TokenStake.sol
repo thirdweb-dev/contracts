@@ -19,7 +19,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 import "../../eip/interface/IERC20Metadata.sol";
 
@@ -35,7 +35,7 @@ contract TokenStake is
     ContractMetadata,
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     Staking20Upgradeable,
     ITokenStake
 {

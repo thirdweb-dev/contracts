@@ -6,11 +6,12 @@ import "@ds-test/test.sol";
 
 import "./utils/BaseTest.sol";
 import "contracts/infra/TWProxy.sol";
+import { Strings } from "contracts/lib/Strings.sol";
 import { LoyaltyPoints } from "contracts/prebuilts/unaudited/loyalty/LoyaltyPoints.sol";
 
 contract LoyaltyPointsTest is BaseTest {
     LoyaltyPoints internal loyaltyPoints;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     bytes32 internal typehashMintRequest;
     bytes32 internal nameHash;
@@ -78,11 +79,10 @@ contract LoyaltyPointsTest is BaseTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(LoyaltyPoints.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        LoyaltyPoints.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,

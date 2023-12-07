@@ -26,7 +26,6 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
@@ -34,6 +33,7 @@ import { IMarketplace } from "../interface/marketplace/IMarketplace.sol";
 
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
+import "../../extension/Multicall.sol";
 import "../../lib/CurrencyTransferLib.sol";
 import "../../lib/FeeType.sol";
 
@@ -42,7 +42,7 @@ contract Marketplace is
     IMarketplace,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     AccessControlEnumerableUpgradeable,
     IERC721ReceiverUpgradeable,
     IERC1155ReceiverUpgradeable
@@ -190,22 +190,13 @@ contract Marketplace is
         return this.onERC1155BatchReceived.selector;
     }
 
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
         return this.onERC721Received.selector;
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(AccessControlEnumerableUpgradeable, IERC165Upgradeable)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(AccessControlEnumerableUpgradeable, IERC165Upgradeable) returns (bool) {
         return
             interfaceId == type(IERC1155ReceiverUpgradeable).interfaceId ||
             interfaceId == type(IERC721ReceiverUpgradeable).interfaceId ||
@@ -604,12 +595,10 @@ contract Marketplace is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets an account close an auction for either the (1) winning bidder, or (2) auction creator.
-    function closeAuction(uint256 _listingId, address _closeFor)
-        external
-        override
-        nonReentrant
-        onlyExistingListing(_listingId)
-    {
+    function closeAuction(
+        uint256 _listingId,
+        address _closeFor
+    ) external override nonReentrant onlyExistingListing(_listingId) {
         Listing memory targetListing = listings[_listingId];
 
         require(targetListing.listingType == ListingType.Auction, "not an auction.");
@@ -695,12 +684,7 @@ contract Marketplace is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Transfers tokens listed for sale in a direct or auction listing.
-    function transferListingTokens(
-        address _from,
-        address _to,
-        uint256 _quantity,
-        Listing memory _listing
-    ) internal {
+    function transferListingTokens(address _from, address _to, uint256 _quantity, Listing memory _listing) internal {
         if (_listing.tokenType == TokenType.ERC1155) {
             IERC1155Upgradeable(_listing.assetContract).safeTransferFrom(_from, _to, _listing.tokenId, _quantity, "");
         } else if (_listing.tokenType == TokenType.ERC721) {
@@ -838,11 +822,10 @@ contract Marketplace is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Enforces quantity == 1 if tokenType is TokenType.ERC721.
-    function getSafeQuantity(TokenType _tokenType, uint256 _quantityToCheck)
-        internal
-        pure
-        returns (uint256 safeQuantity)
-    {
+    function getSafeQuantity(
+        TokenType _tokenType,
+        uint256 _quantityToCheck
+    ) internal pure returns (uint256 safeQuantity) {
         if (_quantityToCheck == 0) {
             safeQuantity = 0;
         } else {
@@ -871,10 +854,10 @@ contract Marketplace is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Lets a contract admin update platform fee recipient and bps.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint64(_platformFeeBps);

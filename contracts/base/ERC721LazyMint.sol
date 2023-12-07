@@ -13,7 +13,7 @@ import "../extension/BatchMintMetadata.sol";
 import "../extension/LazyMint.sol";
 import "../extension/interface/IClaimableERC721.sol";
 
-import "../lib/TWStrings.sol";
+import "../lib/Strings.sol";
 import "../external-deps/openzeppelin/security/ReentrancyGuard.sol";
 
 /**
@@ -53,7 +53,7 @@ contract ERC721LazyMint is
     IClaimableERC721,
     ReentrancyGuard
 {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     /*//////////////////////////////////////////////////////////////
                             Constructor
@@ -184,11 +184,10 @@ contract ERC721LazyMint is
      *
      * @return startTokenId The tokenId of the first NFT minted.
      */
-    function _transferTokensOnClaim(address _receiver, uint256 _quantity)
-        internal
-        virtual
-        returns (uint256 startTokenId)
-    {
+    function _transferTokensOnClaim(
+        address _receiver,
+        uint256 _quantity
+    ) internal virtual returns (uint256 startTokenId) {
         startTokenId = _currentIndex;
         _safeMint(_receiver, _quantity);
     }

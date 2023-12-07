@@ -11,6 +11,7 @@ import { TWProxy } from "contracts/infra/TWProxy.sol";
 // Target
 import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountFactory, Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 library GPv2EIP1271 {
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
@@ -36,15 +37,11 @@ contract Number {
         num += 1;
     }
 
-    function setNumBySignature(
-        address owner,
-        uint256 newNum,
-        bytes calldata signature
-    ) public {
+    function setNumBySignature(address owner, uint256 newNum, bytes calldata signature) public {
         if (owner.code.length == 0) {
             // Signature verification by ECDSA
         } else {
-            // Signature verfication by EIP1271
+            // Signature verification by EIP1271
             bytes32 digest = keccak256(abi.encode(newNum));
             require(
                 EIP1271Verifier(owner).isValidSignature(digest, signature) == GPv2EIP1271.MAGICVALUE,
@@ -74,18 +71,16 @@ contract SimpleAccountVulnPOCTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xDD1d01438DcF28eb45a611c7faBD716B0dECE259;
+    address private sender = 0x0df2C3523703d165Aa7fA1a552f3F0B56275DfC6;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes32 typedDataHash)
-    {
+    function _prepareSignature(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes32 typedDataHash) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -116,11 +111,9 @@ contract SimpleAccountVulnPOCTest is BaseTest {
         typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
@@ -213,17 +206,7 @@ contract SimpleAccountVulnPOCTest is BaseTest {
         // Setup contracts
         entrypoint = new EntryPoint();
         // deploy account factory
-        address factoryImpl = address(new AccountFactory(IEntryPoint(payable(address(entrypoint)))));
-        accountFactory = AccountFactory(
-            address(
-                payable(
-                    new TWProxy(
-                        factoryImpl,
-                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
-                    )
-                )
-            )
-        );
+        accountFactory = new AccountFactory(deployer, IEntryPoint(payable(address(entrypoint))));
         // deploy dummy contract
         numberContract = new Number();
     }

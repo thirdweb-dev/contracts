@@ -5,7 +5,6 @@ import { Multiwrap } from "contracts/prebuilts/multiwrap/Multiwrap.sol";
 import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import { MockERC20 } from "../mocks/MockERC20.sol";
 import { Wallet } from "../utils/Wallet.sol";
 import "../utils/BaseTest.sol";

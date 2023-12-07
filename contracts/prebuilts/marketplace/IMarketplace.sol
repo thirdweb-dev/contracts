@@ -144,11 +144,7 @@ interface IDirectListings {
      *  @param _buyer The address of the buyer to approve to buy from the listing.
      *  @param _toApprove Whether to approve the buyer to buy from the listing.
      */
-    function approveBuyerForListing(
-        uint256 _listingId,
-        address _buyer,
-        bool _toApprove
-    ) external;
+    function approveBuyerForListing(uint256 _listingId, address _buyer, bool _toApprove) external;
 
     /**
      *  @notice Approve a currency as a form of payment for the listing.
@@ -393,14 +389,9 @@ interface IEnglishAuctions {
     function getAllValidAuctions(uint256 _startId, uint256 _endId) external view returns (Auction[] memory auctions);
 
     /// @notice Returns the winning bid of an active auction.
-    function getWinningBid(uint256 _auctionId)
-        external
-        view
-        returns (
-            address bidder,
-            address currency,
-            uint256 bidAmount
-        );
+    function getWinningBid(
+        uint256 _auctionId
+    ) external view returns (address bidder, address currency, uint256 bidAmount);
 
     /// @notice Returns whether an auction is active.
     function isAuctionExpired(uint256 _auctionId) external view returns (bool);

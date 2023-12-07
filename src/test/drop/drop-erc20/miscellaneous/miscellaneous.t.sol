@@ -18,11 +18,7 @@ contract HarnessDropERC20Misc is DropERC20 {
         return _transferTokensOnClaim(_to, _quantityBeingClaimed);
     }
 
-    function beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) public {
+    function beforeTokenTransfer(address from, address to, uint256 amount) public {
         _beforeTokenTransfer(from, to, amount);
     }
 

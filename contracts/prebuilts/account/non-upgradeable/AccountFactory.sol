@@ -5,7 +5,6 @@ pragma solidity ^0.8.12;
 import "../utils/BaseAccountFactory.sol";
 import "../utils/BaseAccount.sol";
 import "../../../external-deps/openzeppelin/proxy/Clones.sol";
-import "../../../extension/upgradeable/Initializable.sol";
 
 // Extensions
 import "../../../extension/upgradeable//PermissionsEnumerable.sol";
@@ -26,19 +25,16 @@ import { Account } from "./Account.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract AccountFactory is Initializable, BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
+contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint) BaseAccountFactory(address(new Account(_entrypoint)), address(_entrypoint)) {
-        _disableInitializers();
-    }
-
-    /// @notice Initializes the factory contract.
-    function initialize(address _defaultAdmin, string memory _contractURI) external initializer {
+    constructor(
+        address _defaultAdmin,
+        IEntryPoint _entrypoint
+    ) BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint)) {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-        _setupContractURI(_contractURI);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -46,12 +42,8 @@ contract AccountFactory is Initializable, BaseAccountFactory, ContractMetadata, 
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(
-        address _account,
-        address _admin,
-        bytes calldata _data
-    ) internal override {
-        Account(payable(_account)).initialize(_admin, address(this), _data);
+    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal override {
+        Account(payable(_account)).initialize(_admin, _data);
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.

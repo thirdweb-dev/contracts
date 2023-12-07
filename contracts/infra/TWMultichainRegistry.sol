@@ -14,7 +14,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import "../extension/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 import "./interface/ITWMultichainRegistry.sol";
@@ -37,12 +37,7 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Multicall, ERC2771Contex
     }
 
     // slither-disable-next-line similar-names
-    function add(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId,
-        string memory metadataUri
-    ) external {
+    function add(address _deployer, address _deployment, uint256 _chainId, string memory metadataUri) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
         bool added = deployments[_deployer][_chainId].add(_deployment);
@@ -58,11 +53,7 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Multicall, ERC2771Contex
     }
 
     // slither-disable-next-line similar-names
-    function remove(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId
-    ) external {
+    function remove(address _deployer, address _deployment, uint256 _chainId) external {
         require(hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(), "not operator or deployer.");
 
         bool removed = deployments[_deployer][_chainId].remove(_deployment);

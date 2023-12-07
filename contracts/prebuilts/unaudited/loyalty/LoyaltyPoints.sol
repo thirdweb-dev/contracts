@@ -116,12 +116,10 @@ contract LoyaltyPoints is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Mints tokens to a recipient using a signature from an authorized party.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        nonReentrant
-        returns (address signer)
-    {
+    function mintWithSignature(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) external payable nonReentrant returns (address signer) {
         signer = _processRequest(_req, _signature);
         address receiver = _req.to;
 
@@ -162,11 +160,7 @@ contract LoyaltyPoints is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being minted.
-    function _collectPriceOnClaim(
-        address _primarySaleRecipient,
-        address _currency,
-        uint256 _price
-    ) internal {
+    function _collectPriceOnClaim(address _primarySaleRecipient, address _currency, uint256 _price) internal {
         if (_price == 0) {
             require(msg.value == 0, "!Value");
             return;
@@ -201,11 +195,7 @@ contract LoyaltyPoints is
     }
 
     /// @dev Runs on every transfer.
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override {
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
         super._beforeTokenTransfer(from, to, amount);
 
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {

@@ -9,7 +9,7 @@ import { ERC20Base } from "contracts/base/ERC20Base.sol";
 
 contract BaseERC20BaseTest is BaseUtilTest {
     ERC20Base internal base;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     bytes32 internal permitTypeHash;
     bytes32 internal permitNameHash;

@@ -8,11 +8,7 @@ import { BurnToClaim, IBurnToClaim } from "contracts/extension/BurnToClaim.sol";
 import "../../ExtensionUtilTest.sol";
 
 contract MyBurnToClaim is BurnToClaim {
-    function burnTokensOnOrigin(
-        address _tokenOwner,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) public {
+    function burnTokensOnOrigin(address _tokenOwner, uint256 _tokenId, uint256 _quantity) public {
         _burnTokensOnOrigin(_tokenOwner, _tokenId, _quantity);
     }
 

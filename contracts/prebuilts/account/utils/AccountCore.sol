@@ -39,6 +39,9 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
                                 State
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice EIP 4337 factory for this contract.
+    address public immutable factory;
+
     /// @notice EIP 4337 Entrypoint contract.
     IEntryPoint private immutable entrypointContract;
 
@@ -46,31 +49,22 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint) EIP712("Account", "1") {
+    constructor(IEntryPoint _entrypoint, address _factory) EIP712("Account", "1") {
         _disableInitializers();
+        factory = _factory;
         entrypointContract = _entrypoint;
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(
-        address _defaultAdmin,
-        address _factory,
-        bytes calldata _data
-    ) public virtual initializer {
+    function initialize(address _defaultAdmin, bytes calldata _data) public virtual initializer {
         // This is passed as data in the `_registerOnFactory()` call in `AccountExtension` / `Account`.
         AccountCoreStorage.data().creationSalt = _generateSalt(_defaultAdmin, _data);
-        AccountCoreStorage.data().factory = _factory;
         _setAdmin(_defaultAdmin, true);
     }
 
     /*///////////////////////////////////////////////////////////////
                             View functions
     //////////////////////////////////////////////////////////////*/
-
-    /// @notice Returns the address of the account factory.
-    function factory() public view virtual override returns (address) {
-        return AccountCoreStorage.data().factory;
-    }
 
     /// @notice Returns the EIP 4337 entrypoint contract.
     function entryPoint() public view virtual override returns (IEntryPoint) {
@@ -204,27 +198,19 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         _value = abi.decode(data[36:68], (uint256));
     }
 
-    function decodeExecuteBatchCalldata(bytes calldata data)
-        internal
-        pure
-        returns (
-            address[] memory _targets,
-            uint256[] memory _values,
-            bytes[] memory _callData
-        )
-    {
+    function decodeExecuteBatchCalldata(
+        bytes calldata data
+    ) internal pure returns (address[] memory _targets, uint256[] memory _values, bytes[] memory _callData) {
         require(data.length >= 4 + 32 + 32 + 32, "!Data");
 
         (_targets, _values, _callData) = abi.decode(data[4:], (address[], uint256[], bytes[]));
     }
 
     /// @notice Validates the signature of a user operation.
-    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
-        internal
-        virtual
-        override
-        returns (uint256 validationData)
-    {
+    function _validateSignature(
+        UserOperation calldata userOp,
+        bytes32 userOpHash
+    ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         address signer = hash.recover(userOp.signature);
 
@@ -241,22 +227,19 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     /// @notice Makes the given account an admin.
     function _setAdmin(address _account, bool _isAdmin) internal virtual override {
         super._setAdmin(_account, _isAdmin);
-
-        address factoryAddr = factory();
-        if (factoryAddr.code.length > 0) {
+        if (factory.code.length > 0) {
             if (_isAdmin) {
-                BaseAccountFactory(factoryAddr).onSignerAdded(_account, AccountCoreStorage.data().creationSalt);
+                BaseAccountFactory(factory).onSignerAdded(_account, AccountCoreStorage.data().creationSalt);
             } else {
-                BaseAccountFactory(factoryAddr).onSignerRemoved(_account, AccountCoreStorage.data().creationSalt);
+                BaseAccountFactory(factory).onSignerRemoved(_account, AccountCoreStorage.data().creationSalt);
             }
         }
     }
 
     /// @notice Runs after every `changeRole` run.
     function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual override {
-        address factoryAddr = factory();
-        if (factoryAddr.code.length > 0) {
-            BaseAccountFactory(factoryAddr).onSignerAdded(_req.signer, AccountCoreStorage.data().creationSalt);
+        if (factory.code.length > 0) {
+            BaseAccountFactory(factory).onSignerAdded(_req.signer, AccountCoreStorage.data().creationSalt);
         }
     }
 }

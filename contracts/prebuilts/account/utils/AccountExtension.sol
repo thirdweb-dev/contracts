@@ -65,13 +65,10 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
     }
 
     /// @notice See EIP-1271
-    function isValidSignature(bytes32 _message, bytes memory _signature)
-        public
-        view
-        virtual
-        override
-        returns (bytes4 magicValue)
-    {
+    function isValidSignature(
+        bytes32 _message,
+        bytes memory _signature
+    ) public view virtual override returns (bytes4 magicValue) {
         bytes32 messageHash = getMessageHash(abi.encode(_message));
         address signer = messageHash.recover(_signature);
 
@@ -107,11 +104,7 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(
-        address _target,
-        uint256 _value,
-        bytes calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
+    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual onlyAdminOrEntrypoint {
         _registerOnFactory();
         _call(_target, _value, _calldata);
     }
@@ -154,11 +147,7 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
     }
 
     /// @dev Calls a target contract and reverts if it fails.
-    function _call(
-        address _target,
-        uint256 value,
-        bytes memory _calldata
-    ) internal returns (bytes memory result) {
+    function _call(address _target, uint256 value, bytes memory _calldata) internal returns (bytes memory result) {
         bool success;
         (success, result) = _target.call{ value: value }(_calldata);
         if (!success) {

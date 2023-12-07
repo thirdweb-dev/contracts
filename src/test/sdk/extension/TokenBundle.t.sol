@@ -24,11 +24,7 @@ contract MyTokenBundle is TokenBundle {
         _addTokenInBundle(_tokenToBind, _bundleId);
     }
 
-    function updateTokenInBundle(
-        Token memory _tokenToBind,
-        uint256 _bundleId,
-        uint256 _index
-    ) external {
+    function updateTokenInBundle(Token memory _tokenToBind, uint256 _bundleId, uint256 _index) external {
         _updateTokenInBundle(_tokenToBind, _bundleId, _index);
     }
 

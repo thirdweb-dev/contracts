@@ -7,7 +7,6 @@ import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountPermissions } from "contracts/extension/upgradeable/AccountPermissions.sol";
 import { AccountExtension } from "contracts/prebuilts/account/utils/AccountExtension.sol";
-import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
@@ -16,6 +15,7 @@ import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.s
 // Target
 import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
 import { ManagedAccountFactory, ManagedAccount } from "contracts/prebuilts/account/managed/ManagedAccountFactory.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /// @dev This is a dummy contract to test contract interactions with Account.
 contract Number {
@@ -35,12 +35,7 @@ contract Number {
 }
 
 contract NFTRejector {
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes memory
-    ) public virtual returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes memory) public virtual returns (bytes4) {
         revert("NFTs not accepted");
     }
 }
@@ -67,20 +62,16 @@ contract ManagedAccountTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0x48670c84959b8854A9036D88a020382bA89a47Ce;
+    address private sender = 0xbEA1Fa134A1727187A8f2e7E714B660f3a95478D;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
 
-    address internal factoryImpl;
-
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes32 typedDataHash)
-    {
+    function _prepareSignature(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes32 typedDataHash) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -111,11 +102,9 @@ contract ManagedAccountTest is BaseTest {
         typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
@@ -323,24 +312,13 @@ contract ManagedAccountTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        factoryImpl = address(new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions));
-        accountFactory = ManagedAccountFactory(
-            payable(
-                address(
-                    new TWProxy(
-                        factoryImpl,
-                        abi.encodeWithSignature("initialize(address,string)", factoryDeployer, "https://example.com")
-                    )
-                )
-            )
+        accountFactory = new ManagedAccountFactory(
+            factoryDeployer,
+            IEntryPoint(payable(address(entrypoint))),
+            extensions
         );
         // deploy dummy contract
         numberContract = new Number();
-    }
-
-    function test_revert_initializeImplementation() public {
-        vm.expectRevert("Initializable: contract is already initialized");
-        ManagedAccountFactory(payable(factoryImpl)).initialize(deployer, "https://example.com");
     }
 
     /// @dev benchmark test for deployment gas cost
@@ -390,16 +368,10 @@ contract ManagedAccountTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        factoryImpl = address(new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions));
-        ManagedAccountFactory factory = ManagedAccountFactory(
-            payable(
-                address(
-                    new TWProxy(
-                        factoryImpl,
-                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
-                    )
-                )
-            )
+        ManagedAccountFactory factory = new ManagedAccountFactory(
+            factoryDeployer,
+            IEntryPoint(payable(address(entrypoint))),
+            extensions
         );
         assertTrue(address(factory) != address(0), "factory address should not be zero");
     }
@@ -420,7 +392,7 @@ contract ManagedAccountTest is BaseTest {
     }
 
     /// @dev Create an account via Entrypoint.
-    function test_state_createAccount_viaEntrypointSingle() public {
+    function test_state_createAccount_viaEntrypoint() public {
         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 

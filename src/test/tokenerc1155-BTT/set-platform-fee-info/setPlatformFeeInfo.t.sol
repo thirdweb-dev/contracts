@@ -58,9 +58,9 @@ contract TokenERC1155Test_SetPlatformFeeInfo is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "AccessControl: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(0), 32)
+                Strings.toHexString(uint256(0), 32)
             )
         );
         tokenContract.setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);

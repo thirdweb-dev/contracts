@@ -5,14 +5,11 @@ import { SignatureDrop, IDropSinglePhase, IDelayedReveal, ISignatureMintERC721, 
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
 import "../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract SignatureDropBenchmarkTest is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+    using Strings for uint256;
+    using Strings for address;
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
@@ -58,7 +55,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
                         SignatureDrop benchmark
     //////////////////////////////////////////////////////////////*/
 
-    function test_bechmark_signatureDrop_claim_five_tokens() public {
+    function test_benchmark_signatureDrop_claim_five_tokens() public {
         vm.pauseGasMetering();
         vm.warp(1);
 
@@ -83,7 +80,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         sigdrop.claim(receiver, 5, address(0), 0, alp, "");
     }
 
-    function test_bechmark_signatureDrop_setClaimConditions() public {
+    function test_benchmark_signatureDrop_setClaimConditions() public {
         vm.pauseGasMetering();
         vm.warp(1);
         bytes32[] memory proofs = new bytes32[](0);
@@ -140,7 +137,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
         sigdrop.reveal(0, key);
     }
 
-    // function test_bechmark_signatureDrop_claim_one_token() public {
+    // function test_benchmark_signatureDrop_claim_one_token() public {
     //     vm.pauseGasMetering();
     //     vm.warp(1);
 
@@ -165,7 +162,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
     //     sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     // }
 
-    // function test_bechmark_signatureDrop_claim_two_tokens() public {
+    // function test_benchmark_signatureDrop_claim_two_tokens() public {
     //     vm.pauseGasMetering();
     //     vm.warp(1);
 
@@ -190,7 +187,7 @@ contract SignatureDropBenchmarkTest is BaseTest {
     //     sigdrop.claim(receiver, 2, address(0), 0, alp, "");
     // }
 
-    // function test_bechmark_signatureDrop_claim_three_tokens() public {
+    // function test_benchmark_signatureDrop_claim_three_tokens() public {
     //     vm.pauseGasMetering();
     //     vm.warp(1);
 

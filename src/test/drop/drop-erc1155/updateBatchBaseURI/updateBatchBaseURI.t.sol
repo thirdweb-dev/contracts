@@ -4,13 +4,13 @@ pragma solidity ^0.8.0;
 import { DropERC1155 } from "contracts/prebuilts/drop/DropERC1155.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
+
 import "../../../utils/BaseTest.sol";
 import "../../../../../lib/openzeppelin-contracts-upgradeable/contracts/interfaces/IERC2981Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract DropERC1155Test_updateBatchBaseURI is BaseTest {
-    using StringsUpgradeable for uint256;
+    using Strings for uint256;
 
     event MetadataFrozen();
 
@@ -65,9 +65,9 @@ contract DropERC1155Test_updateBatchBaseURI is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(unauthorized), 20),
+                Strings.toHexString(uint160(unauthorized), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
         drop.updateBatchBaseURI(0, updatedBaseURI);

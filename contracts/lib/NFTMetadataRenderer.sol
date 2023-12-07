@@ -1,12 +1,12 @@
-// SPDX-License-Identifier: Apache 2.0
-pragma solidity ^0.8.10;
+// SPDX-License-Identifier: Apache-2.0
+pragma solidity ^0.8.0;
 
 /* solhint-disable quotes */
 
 /// @author thirdweb
 /// credits: Zora
 
-import "./TWStrings.sol";
+import "./Strings.sol";
 import "../external-deps/openzeppelin/utils/Base64.sol";
 
 /// NFT metadata library for rendering metadata associated with editions
@@ -49,14 +49,14 @@ library NFTMetadataRenderer {
                 '{"name": "',
                 name,
                 " ",
-                TWStrings.toString(tokenOfEdition),
+                Strings.toString(tokenOfEdition),
                 '", "',
                 'description": "',
                 description,
                 '", "',
                 mediaData,
                 'properties": {"number": ',
-                TWStrings.toString(tokenOfEdition),
+                Strings.toString(tokenOfEdition),
                 ', "name": "',
                 name,
                 '"}}'

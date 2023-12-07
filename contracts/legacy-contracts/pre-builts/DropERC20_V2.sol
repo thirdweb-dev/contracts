@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 
 //  ==========  Internal imports    ==========
 
@@ -38,7 +38,7 @@ contract DropERC20_V2 is
     IPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     AccessControlEnumerableUpgradeable,
     ERC20BurnableUpgradeable,
     ERC20VotesUpgradeable,
@@ -139,13 +139,9 @@ contract DropERC20_V2 is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(AccessControlEnumerableUpgradeable)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(AccessControlEnumerableUpgradeable) returns (bool) {
         return super.supportsInterface(interfaceId);
     }
 
@@ -158,11 +154,7 @@ contract DropERC20_V2 is
     }
 
     /// @dev Runs on every transfer.
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override(ERC20Upgradeable) {
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override(ERC20Upgradeable) {
         super._beforeTokenTransfer(from, to, amount);
 
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
@@ -236,10 +228,10 @@ contract DropERC20_V2 is
     }
 
     /// @dev Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
-    function setClaimConditions(ClaimCondition[] calldata _phases, bool _resetClaimEligibility)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setClaimConditions(
+        ClaimCondition[] calldata _phases,
+        bool _resetClaimEligibility
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 existingStartIndex = claimCondition.currentStartId;
         uint256 existingPhaseCount = claimCondition.count;
 
@@ -303,11 +295,7 @@ contract DropERC20_V2 is
     }
 
     /// @dev Collects and distributes the primary sale value of tokens being claimed.
-    function collectClaimPrice(
-        uint256 _quantityToClaim,
-        address _currency,
-        uint256 _pricePerToken
-    ) internal {
+    function collectClaimPrice(uint256 _quantityToClaim, address _currency, uint256 _pricePerToken) internal {
         if (_pricePerToken == 0) {
             return;
         }
@@ -327,11 +315,7 @@ contract DropERC20_V2 is
     }
 
     /// @dev Transfers the tokens being claimed.
-    function transferClaimedTokens(
-        address _to,
-        uint256 _conditionId,
-        uint256 _quantityBeingClaimed
-    ) internal {
+    function transferClaimedTokens(address _to, uint256 _conditionId, uint256 _quantityBeingClaimed) internal {
         // Update the supply minted under mint condition.
         claimCondition.phases[_conditionId].supplyClaimed += _quantityBeingClaimed;
 
@@ -425,11 +409,10 @@ contract DropERC20_V2 is
     }
 
     /// @dev Returns the timestamp for when a claimer is eligible for claiming tokens again.
-    function getClaimTimestamp(uint256 _conditionId, address _claimer)
-        public
-        view
-        returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
-    {
+    function getClaimTimestamp(
+        uint256 _conditionId,
+        address _claimer
+    ) public view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) {
         lastClaimTimestamp = claimCondition.limitLastClaimTimestamp[_conditionId][_claimer];
 
         if (lastClaimTimestamp != 0) {
@@ -484,10 +467,10 @@ contract DropERC20_V2 is
     }
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFeeBps <= MAX_BPS, "bps <= 10000.");
 
         platformFeeBps = uint64(_platformFeeBps);

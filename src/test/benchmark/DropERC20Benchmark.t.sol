@@ -4,14 +4,11 @@ pragma solidity ^0.8.0;
 import { DropERC20 } from "contracts/prebuilts/drop/DropERC20.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import "../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract DropERC20BenchmarkTest is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+    using Strings for uint256;
+    using Strings for address;
 
     DropERC20 public drop;
 
@@ -29,14 +26,14 @@ contract DropERC20BenchmarkTest is BaseTest {
                         DropERC20 benchmark
     //////////////////////////////////////////////////////////////*/
 
-    function test_bechmark_dropERC20_setClaimConditions_five_conditions() public {
+    function test_benchmark_dropERC20_setClaimConditions_five_conditions() public {
         vm.pauseGasMetering();
         string[] memory inputs = new string[](5);
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(300 ether);
-        inputs[3] = Strings.toString(1 ether);
+        inputs[2] = Strings.toString(uint256(300 ether));
+        inputs[3] = Strings.toString(uint256(1 ether));
         inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
 
         bytes memory result = vm.ffi(inputs);
@@ -83,14 +80,14 @@ contract DropERC20BenchmarkTest is BaseTest {
         drop.setClaimConditions(conditions, false);
     }
 
-    function test_bechmark_dropERC20_claim() public {
+    function test_benchmark_dropERC20_claim() public {
         vm.pauseGasMetering();
         string[] memory inputs = new string[](5);
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(300 ether);
-        inputs[3] = Strings.toString(1 ether);
+        inputs[2] = Strings.toString(uint256(300 ether));
+        inputs[3] = Strings.toString(uint256(1 ether));
         inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
 
         bytes memory result = vm.ffi(inputs);
@@ -109,7 +106,7 @@ contract DropERC20BenchmarkTest is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500 ether;
@@ -130,7 +127,7 @@ contract DropERC20BenchmarkTest is BaseTest {
         drop.claim(receiver, 100 ether, address(erc20), 1 ether, alp, "");
     }
 
-    // function test_bechmark_dropERC20_setClaimConditions_one_condition() public {
+    // function test_benchmark_dropERC20_setClaimConditions_one_condition() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -156,7 +153,7 @@ contract DropERC20BenchmarkTest is BaseTest {
 
     //     vm.warp(1);
 
-    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+    //     address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
     //     DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
     //     conditions[0].maxClaimableSupply = 500 ether;
@@ -170,7 +167,7 @@ contract DropERC20BenchmarkTest is BaseTest {
     //     drop.setClaimConditions(conditions, false);
     // }
 
-    // function test_bechmark_dropERC20_setClaimConditions_two_conditions() public {
+    // function test_benchmark_dropERC20_setClaimConditions_two_conditions() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -196,7 +193,7 @@ contract DropERC20BenchmarkTest is BaseTest {
 
     //     vm.warp(1);
 
-    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+    //     address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
     //     DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](2);
     //     conditions[0].maxClaimableSupply = 500 ether;
@@ -214,7 +211,7 @@ contract DropERC20BenchmarkTest is BaseTest {
     //     drop.setClaimConditions(conditions, false);
     // }
 
-    // function test_bechmark_dropERC20_setClaimConditions_three_conditions() public {
+    // function test_benchmark_dropERC20_setClaimConditions_three_conditions() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -240,7 +237,7 @@ contract DropERC20BenchmarkTest is BaseTest {
 
     //     vm.warp(1);
 
-    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+    //     address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
     //     DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](3);
     //     conditions[0].maxClaimableSupply = 500 ether;

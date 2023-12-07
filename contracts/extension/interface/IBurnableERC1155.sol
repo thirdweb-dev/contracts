@@ -9,16 +9,8 @@ pragma solidity ^0.8.0;
  */
 interface IBurnableERC1155 {
     /// @dev Lets a token owner burn the tokens they own (i.e. destroy for good)
-    function burn(
-        address account,
-        uint256 id,
-        uint256 value
-    ) external;
+    function burn(address account, uint256 id, uint256 value) external;
 
     /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
-    function burnBatch(
-        address account,
-        uint256[] memory ids,
-        uint256[] memory values
-    ) external;
+    function burnBatch(address account, uint256[] memory ids, uint256[] memory values) external;
 }

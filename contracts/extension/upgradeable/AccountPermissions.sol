@@ -138,12 +138,10 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     }
 
     /// @dev Verifies that a request is signed by an authorized account.
-    function verifySignerPermissionRequest(SignerPermissionRequest calldata req, bytes calldata signature)
-        public
-        view
-        virtual
-        returns (bool success, address signer)
-    {
+    function verifySignerPermissionRequest(
+        SignerPermissionRequest calldata req,
+        bytes calldata signature
+    ) public view virtual returns (bool success, address signer) {
         signer = _recoverAddress(_encodeRequest(req), signature);
         success = !_accountPermissionsStorage().executed[req.uid] && isAdmin(signer);
     }

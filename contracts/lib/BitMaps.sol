@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: Apache 2.0
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 /// @author thirdweb
@@ -7,7 +7,7 @@ pragma solidity ^0.8.0;
  * @dev Library for managing uint256 to bool mapping in a compact and efficient way, providing the keys are sequential.
  * Largely inspired by Uniswap's [merkle-distributor](https://github.com/Uniswap/merkle-distributor/blob/master/contracts/MerkleDistributor.sol).
  */
-library TWBitMaps {
+library BitMaps {
     struct BitMap {
         mapping(uint256 => uint256) _data;
     }
@@ -24,11 +24,7 @@ library TWBitMaps {
     /**
      * @dev Sets the bit at `index` to the boolean `value`.
      */
-    function setTo(
-        BitMap storage bitmap,
-        uint256 index,
-        bool value
-    ) internal {
+    function setTo(BitMap storage bitmap, uint256 index, bool value) internal {
         if (value) {
             set(bitmap, index);
         } else {

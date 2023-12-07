@@ -76,11 +76,10 @@ contract TokenERC20Test_Verify is BaseTest {
         _mintrequest.uid = bytes32(0);
     }
 
-    function signMintRequest(TokenERC20.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        TokenERC20.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,

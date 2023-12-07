@@ -5,28 +5,18 @@ import { DropERC1155 } from "contracts/prebuilts/drop/DropERC1155.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
+
 import "../../../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 contract HarnessDropERC1155 is DropERC1155 {
-    function transferTokensOnClaimHarness(
-        address to,
-        uint256 _tokenId,
-        uint256 _quantityBeingClaimed
-    ) external {
+    function transferTokensOnClaimHarness(address to, uint256 _tokenId, uint256 _quantityBeingClaimed) external {
         transferTokensOnClaim(to, _tokenId, _quantityBeingClaimed);
     }
 }
 
 contract MockERC1155Receiver {
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes memory
-    ) external pure returns (bytes4) {
+    function onERC1155Received(address, address, uint256, uint256, bytes memory) external pure returns (bytes4) {
         return this.onERC1155Received.selector;
     }
 
@@ -44,8 +34,8 @@ contract MockERC1155Receiver {
 contract MockERC11555NotReceiver {}
 
 contract DropERC1155Test_transferTokensOnClaim is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+    using Strings for uint256;
+    using Strings for address;
 
     address private to;
     MockERC1155Receiver private receiver;
@@ -103,7 +93,7 @@ contract DropERC1155Test_transferTokensOnClaim is BaseTest {
      *  note: Tests whether contract reverts when a non-holder renounces a role.
      */
     function test_revert_ContractNotERC155Receiver() public toNotReceiever {
-        vm.expectRevert("ERC1155: transfer to non ERC1155Receiver implementer");
+        vm.expectRevert("ERC1155: transfer to non-ERC1155Receiver implementer");
         proxy.transferTokensOnClaimHarness(to, 0, 1);
     }
 

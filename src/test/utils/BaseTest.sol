@@ -4,18 +4,18 @@ pragma solidity ^0.8.11;
 import "@std/Test.sol";
 import "@ds-test/test.sol";
 // import "./Console.sol";
-import "./Wallet.sol";
+import { Wallet } from "./Wallet.sol";
 import "./ChainlinkVRF.sol";
-import "../mocks/WETH9.sol";
-import "../mocks/MockERC20.sol";
-import "../mocks/MockERC721.sol";
-import "../mocks/MockERC1155.sol";
+import { WETH9 } from "../mocks/WETH9.sol";
+import { MockERC20, ERC20, IERC20 } from "../mocks/MockERC20.sol";
+import { MockERC721, IERC721 } from "../mocks/MockERC721.sol";
+import { MockERC1155, IERC1155 } from "../mocks/MockERC1155.sol";
 import { MockERC721NonBurnable } from "../mocks/MockERC721NonBurnable.sol";
 import { MockERC1155NonBurnable } from "../mocks/MockERC1155NonBurnable.sol";
-import "contracts/infra/forwarder/Forwarder.sol";
+import { Forwarder } from "contracts/infra/forwarder/Forwarder.sol";
 import { ForwarderEOAOnly } from "contracts/infra/forwarder/ForwarderEOAOnly.sol";
-import "contracts/infra/TWRegistry.sol";
-import "contracts/infra/TWFactory.sol";
+import { TWRegistry } from "contracts/infra/TWRegistry.sol";
+import { TWFactory } from "contracts/infra/TWFactory.sol";
 import { Multiwrap } from "contracts/prebuilts/multiwrap/Multiwrap.sol";
 import { Pack } from "contracts/prebuilts/pack/Pack.sol";
 import { PackVRFDirect } from "contracts/prebuilts/pack/PackVRFDirect.sol";
@@ -34,14 +34,21 @@ import { IContractPublisher } from "contracts/infra/interface/IContractPublisher
 import { AirdropERC721 } from "contracts/prebuilts/unaudited/airdrop/AirdropERC721.sol";
 import { AirdropERC721Claimable } from "contracts/prebuilts/unaudited/airdrop/AirdropERC721Claimable.sol";
 import { AirdropERC20 } from "contracts/prebuilts/unaudited/airdrop/AirdropERC20.sol";
-import "contracts/prebuilts/unaudited/airdrop/AirdropERC20Claimable.sol";
-import "contracts/prebuilts/unaudited/airdrop/AirdropERC1155.sol";
-import "contracts/prebuilts/unaudited/airdrop/AirdropERC1155Claimable.sol";
+import { AirdropERC20Claimable } from "contracts/prebuilts/unaudited/airdrop/AirdropERC20Claimable.sol";
+import { AirdropERC1155 } from "contracts/prebuilts/unaudited/airdrop/AirdropERC1155.sol";
+import { AirdropERC1155Claimable } from "contracts/prebuilts/unaudited/airdrop/AirdropERC1155Claimable.sol";
 import { NFTStake } from "contracts/prebuilts/staking/NFTStake.sol";
 import { EditionStake } from "contracts/prebuilts/staking/EditionStake.sol";
 import { TokenStake } from "contracts/prebuilts/staking/TokenStake.sol";
 import { Mock, MockContract } from "../mocks/Mock.sol";
-import "../mocks/MockContractPublisher.sol";
+import { MockContractPublisher } from "../mocks/MockContractPublisher.sol";
+import { Permissions } from "contracts/extension/Permissions.sol";
+import { PermissionsEnumerable } from "contracts/extension/PermissionsEnumerable.sol";
+import { ERC1155Holder, IERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
+import { ERC721Holder, IERC721Receiver } from "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
+import { Strings } from "contracts/lib/Strings.sol";
+import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
 
 abstract contract BaseTest is DSTest, Test {
     string public constant NAME = "NAME";
@@ -138,12 +145,6 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new AirdropERC20()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC1155"), 1)));
         TWFactory(factory).addImplementation(address(new AirdropERC1155()));
-        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC721Claimable"), 1)));
-        TWFactory(factory).addImplementation(address(new AirdropERC721Claimable()));
-        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC20Claimable"), 1)));
-        TWFactory(factory).addImplementation(address(new AirdropERC20Claimable()));
-        TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC1155Claimable"), 1)));
-        TWFactory(factory).addImplementation(address(new AirdropERC1155Claimable()));
         TWFactory(factory).addImplementation(
             address(new PackVRFDirect(address(weth), eoaForwarder, linkToken, vrfV2Wrapper))
         );
@@ -317,55 +318,6 @@ abstract contract BaseTest is DSTest, Test {
             abi.encodeCall(AirdropERC1155.initialize, (deployer, CONTRACT_URI, forwarders()))
         );
         deployContractProxy(
-            "AirdropERC721Claimable",
-            abi.encodeCall(
-                AirdropERC721Claimable.initialize,
-                (
-                    deployer,
-                    forwarders(),
-                    address(airdropTokenOwner),
-                    address(erc721),
-                    _airdropTokenIdsERC721,
-                    1000,
-                    1,
-                    _airdropMerkleRootERC721
-                )
-            )
-        );
-        deployContractProxy(
-            "AirdropERC1155Claimable",
-            abi.encodeCall(
-                AirdropERC1155Claimable.initialize,
-                (
-                    deployer,
-                    forwarders(),
-                    address(airdropTokenOwner),
-                    address(erc1155),
-                    _airdropTokenIdsERC1155,
-                    _airdropAmountsERC1155,
-                    1000,
-                    _airdropWalletClaimCountERC1155,
-                    _airdropMerkleRootERC1155
-                )
-            )
-        );
-        deployContractProxy(
-            "AirdropERC20Claimable",
-            abi.encodeCall(
-                AirdropERC20Claimable.initialize,
-                (
-                    deployer,
-                    forwarders(),
-                    address(airdropTokenOwner),
-                    address(erc20),
-                    10_000 ether,
-                    1000,
-                    1,
-                    _airdropMerkleRootERC20
-                )
-            )
-        );
-        deployContractProxy(
             "NFTStake",
             abi.encodeCall(
                 NFTStake.initialize,
@@ -388,10 +340,10 @@ abstract contract BaseTest is DSTest, Test {
         );
     }
 
-    function deployContractProxy(string memory _contractType, bytes memory _initializer)
-        public
-        returns (address proxyAddress)
-    {
+    function deployContractProxy(
+        string memory _contractType,
+        bytes memory _initializer
+    ) public returns (address proxyAddress) {
         vm.startPrank(deployer);
         proxyAddress = TWFactory(factory).deployProxy(bytes32(bytes(_contractType)), _initializer);
         contracts[bytes32(bytes(_contractType))] = proxyAddress;
@@ -410,22 +362,14 @@ abstract contract BaseTest is DSTest, Test {
         wallet = new Wallet();
     }
 
-    function assertIsOwnerERC721(
-        address _token,
-        address _owner,
-        uint256[] memory _tokenIds
-    ) internal {
+    function assertIsOwnerERC721(address _token, address _owner, uint256[] memory _tokenIds) internal {
         for (uint256 i = 0; i < _tokenIds.length; i += 1) {
             bool isOwnerOfToken = MockERC721(_token).ownerOf(_tokenIds[i]) == _owner;
             assertTrue(isOwnerOfToken);
         }
     }
 
-    function assertIsNotOwnerERC721(
-        address _token,
-        address _owner,
-        uint256[] memory _tokenIds
-    ) internal {
+    function assertIsNotOwnerERC721(address _token, address _owner, uint256[] memory _tokenIds) internal {
         for (uint256 i = 0; i < _tokenIds.length; i += 1) {
             bool isOwnerOfToken = MockERC721(_token).ownerOf(_tokenIds[i]) == _owner;
             assertTrue(!isOwnerOfToken);
@@ -458,19 +402,11 @@ abstract contract BaseTest is DSTest, Test {
         }
     }
 
-    function assertBalERC20Eq(
-        address _token,
-        address _owner,
-        uint256 _amount
-    ) internal {
+    function assertBalERC20Eq(address _token, address _owner, uint256 _amount) internal {
         assertEq(MockERC20(_token).balanceOf(_owner), _amount);
     }
 
-    function assertBalERC20Gte(
-        address _token,
-        address _owner,
-        uint256 _amount
-    ) internal {
+    function assertBalERC20Gte(address _token, address _owner, uint256 _amount) internal {
         assertTrue(MockERC20(_token).balanceOf(_owner) >= _amount);
     }
 
@@ -481,12 +417,11 @@ abstract contract BaseTest is DSTest, Test {
     }
 
     function setupAirdropClaimable() public {
-        string[] memory inputs = new string[](5);
+        string[] memory inputs = new string[](3);
         inputs[0] = "node";
-        inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(5);
-        inputs[3] = "0";
-        inputs[4] = "0x0000000000000000000000000000000000000000";
+        inputs[1] = "src/test/scripts/generateRootAirdrop.ts";
+        inputs[2] = Strings.toString(uint256(5));
+
         bytes memory result = vm.ffi(inputs);
         bytes32 root = abi.decode(result, (bytes32));
 

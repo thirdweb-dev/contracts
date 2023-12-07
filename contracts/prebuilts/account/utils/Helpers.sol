@@ -32,10 +32,10 @@ function _parseValidationData(uint256 validationData) pure returns (ValidationDa
 }
 
 // intersect account and paymaster ranges.
-function _intersectTimeRange(uint256 validationData, uint256 paymasterValidationData)
-    pure
-    returns (ValidationData memory)
-{
+function _intersectTimeRange(
+    uint256 validationData,
+    uint256 paymasterValidationData
+) pure returns (ValidationData memory) {
     ValidationData memory accountValidationData = _parseValidationData(validationData);
     ValidationData memory pmValidationData = _parseValidationData(paymasterValidationData);
     address aggregator = accountValidationData.aggregator;
@@ -66,11 +66,7 @@ function _packValidationData(ValidationData memory data) pure returns (uint256) 
  * @param validUntil last timestamp this UserOperation is valid (or zero for infinite)
  * @param validAfter first timestamp this UserOperation is valid
  */
-function _packValidationData(
-    bool sigFailed,
-    uint48 validUntil,
-    uint48 validAfter
-) pure returns (uint256) {
+function _packValidationData(bool sigFailed, uint48 validUntil, uint48 validAfter) pure returns (uint256) {
     return (sigFailed ? 1 : 0) | (uint256(validUntil) << 160) | (uint256(validAfter) << (160 + 48));
 }
 

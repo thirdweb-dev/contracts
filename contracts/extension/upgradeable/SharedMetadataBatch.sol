@@ -3,7 +3,7 @@ pragma solidity ^0.8.11;
 
 /// @author thirdweb
 
-import "../../lib/NFTMetadataRendererLib.sol";
+import "../../lib/NFTMetadataRenderer.sol";
 import "../interface/ISharedMetadataBatch.sol";
 import "../../external-deps/openzeppelin/utils/EnumerableSet.sol";
 

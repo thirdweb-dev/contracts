@@ -16,7 +16,7 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/extensions/ERC20VotesUpgradeable.sol";
 
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
@@ -40,7 +40,7 @@ contract DropERC20 is
     PermissionsEnumerable,
     Drop,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     ERC20BurnableUpgradeable,
     ERC20VotesUpgradeable
 {
@@ -218,11 +218,7 @@ contract DropERC20 is
     }
 
     /// @dev Runs on every transfer.
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 amount
-    ) internal override(ERC20Upgradeable) {
+    function _beforeTokenTransfer(address from, address to, uint256 amount) internal override(ERC20Upgradeable) {
         super._beforeTokenTransfer(from, to, amount);
 
         if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {

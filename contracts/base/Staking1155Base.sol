@@ -93,13 +93,7 @@ contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155, E
                         ERC 165 / 721 logic
     //////////////////////////////////////////////////////////////*/
 
-    function onERC1155Received(
-        address,
-        address,
-        uint256,
-        uint256,
-        bytes calldata
-    ) external view returns (bytes4) {
+    function onERC1155Received(address, address, uint256, uint256, bytes calldata) external view returns (bytes4) {
         require(isStaking == 2, "Direct transfer");
         return this.onERC1155Received.selector;
     }
