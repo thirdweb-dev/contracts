@@ -4,20 +4,24 @@ pragma solidity ^0.8.12;
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
 import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.sol";
 
-// Target
-import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
-import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
-import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
-
 import { IERC20 } from "@chainlink/contracts-ccip/src/v0.8/vendor/openzeppelin-solidity/v4.8.0/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import { AccountExtension } from "contracts/prebuilts/account/utils/AccountExtension.sol";
+import { DynamicAccountFactory, DynamicAccount, BaseAccountFactory } from "contracts/prebuilts/account/dynamic/DynamicAccountFactory.sol";
+import { AccountPermissions, AccountPermissionsStorage } from "contracts/extension/upgradeable/AccountPermissions.sol";
 
-contract CrossChainTokenTransferMaster {
+contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
     // Target contracts
     EntryPoint private entrypoint;
     address payable private beneficiary = payable(address(0x45654));
     mapping(address => UserOperation) private userOPS;
     event HashGenerated(address indexed owner, bytes32 hash);
+    event RoleChanged(SignerPermissionRequest req);
+
+    function setBeneficiary(address _beneficiary) external onlyOwner {
+        beneficiary = payable(_beneficiary);
+    }
 
     function _setupUserOp(
         bytes memory _initCode,
@@ -156,6 +160,9 @@ contract CrossChainTokenTransferMaster {
 
     function proceed(bytes32 messageHash, bytes memory signature) external {
         address signer = ECDSA.recover(messageHash, signature);
+        //verify signature
+        bytes32 value = isValidSignature(messageHash, signature);
+        require(value == MAGICVALUE, "Invalid Signer");
         //get user  op
         UserOperation storage userOP = userOPS[signer];
         //array of userOPs
