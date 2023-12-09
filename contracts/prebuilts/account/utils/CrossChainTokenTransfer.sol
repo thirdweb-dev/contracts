@@ -68,7 +68,7 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
     /// @param _token token address.
     /// @param _amount token amount.
     /// @return  estimate estimated  amount
-    function estimateLink(
+    function estimateFee(
         uint64 _destinationChainSelector,
         address _receiver,
         address _token,
@@ -177,25 +177,25 @@ contract CrossChainTokenTransfer is OwnerIsCreator {
     /// @param _token token address.
     /// @param _amount token amount.
     /// @return  estimate estimated  amount
-    function estimateNative(
-        uint64 _destinationChainSelector,
-        address _receiver,
-        address _token,
-        uint256 _amount
-    ) external view returns (uint estimate) {
-        // Create an EVM2AnyMessage struct in memory with necessary information for sending a cross-chain message
-        // address(0) means fees are paid in native gas
-        Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(_receiver, _token, _amount, address(0));
+    // function estimateNative(
+    //     uint64 _destinationChainSelector,
+    //     address _receiver,
+    //     address _token,
+    //     uint256 _amount
+    // ) external view returns (uint estimate) {
+    //     // Create an EVM2AnyMessage struct in memory with necessary information for sending a cross-chain message
+    //     // address(0) means fees are paid in native gas
+    //     Client.EVM2AnyMessage memory evm2AnyMessage = _buildCCIPMessage(_receiver, _token, _amount, address(0));
 
-        // Get the fee required to send the message
-        uint256 fees = s_router.getFee(_destinationChainSelector, evm2AnyMessage);
+    //     // Get the fee required to send the message
+    //     uint256 fees = s_router.getFee(_destinationChainSelector, evm2AnyMessage);
 
-        //Get 10% of the fee
-        uint256 tenPercent = fees.mul(10).div(100);
+    //     //Get 10% of the fee
+    //     uint256 tenPercent = fees.mul(10).div(100);
 
-        //Add 10% to the fees as slippage
-        estimate = fees.add(tenPercent);
-    }
+    //     //Add 10% to the fees as slippage
+    //     estimate = fees.add(tenPercent);
+    // }
 
     /// @notice Transfer tokens to receiver on the destination chain.
     /// @notice Pay in native gas such as ETH on Ethereum or MATIC on Polgon.
