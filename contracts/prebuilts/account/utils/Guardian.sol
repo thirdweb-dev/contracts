@@ -2,11 +2,13 @@
 pragma solidity ^0.8.12;
 
 import { IGuardian } from "../interface/IGuardian.sol";
+import { AccountRecovery } from "./AccountRecovery.sol";
 
 contract Guardian is IGuardian {
     address[] private verifiedGuardians;
     address public owner;
     mapping(address => address) private accountToAccountGuardian;
+    mapping(address => address) private accountToAccountRecovery;
     mapping(address => address[]) private guardianToAccounts;
 
     error NotOwner();
@@ -36,6 +38,8 @@ contract Guardian is IGuardian {
     }
 
     function isVerifiedGuardian(address isVerified) public view returns (bool) {
+        require(isVerified != address(0), "Guardian address cannot be a zero address");
+
         for (uint256 g = 0; g < verifiedGuardians.length; g++) {
             if (verifiedGuardians[g] == isVerified) {
                 return true;
@@ -65,6 +69,10 @@ contract Guardian is IGuardian {
         accountToAccountGuardian[account] = accountGuardian;
     }
 
+    function linkAccountToAccountRecovery(address account, address accountRecovery) external {
+        accountToAccountRecovery[account] = accountRecovery;
+    }
+
     function addAccountToGuardian(address guardian, address account) external {
         guardianToAccounts[guardian].push(account);
     }
@@ -73,20 +81,42 @@ contract Guardian is IGuardian {
     ///// Getter Functions ///////
     ///////////////////////////////
 
-    function getVerifiedGuardians() external view onlyOwner returns (address[] memory) {
-        return verifiedGuardians;
-    }
-
-    function getAccountGuardian(address account) external view returns (address) {
-        return accountToAccountGuardian[account];
-    }
-
     // TODO: Refactor this functions with the POV of access modifiers
-    function getAccountsTheGuardianIsGuarding(address guardian) external view returns (address[] memory) {
+    function getAccountsTheGuardianIsGuarding(address guardian) public view returns (address[] memory) {
         if (!isVerifiedGuardian(guardian)) {
             revert NotAGuardian(guardian);
         }
 
         return guardianToAccounts[guardian];
+    }
+
+    function isGuardingAccount(address account, address guardian) public view returns (bool) {
+        address[] memory guardingAccount = getAccountsTheGuardianIsGuarding(guardian);
+
+        for (uint256 a = 0; a < guardingAccount.length; a++) {
+            if (guardingAccount[a] == account) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function getVerifiedGuardians() external view onlyOwner returns (address[] memory) {
+        return verifiedGuardians;
+    }
+
+    function getAccountGuardian(address account) external view returns (address) {
+        if (!isGuardingAccount(account, msg.sender)) {
+            revert NotAGuardian(msg.sender);
+        }
+        return accountToAccountGuardian[account];
+    }
+
+    function getAccountRecovery(address account) external view returns (address) {
+        if (!isGuardingAccount(account, msg.sender)) {
+            revert NotAGuardian(msg.sender);
+        }
+
+        return accountToAccountRecovery[account];
     }
 }
