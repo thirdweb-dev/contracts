@@ -39,7 +39,8 @@ contract AccountLock is IAccountLock {
     mapping(address => bytes32) private accountToUnLockRequest;
     // mapping(bytes32 => uint256) private lockRequestToCreationTime;
     // mapping(bytes32 => bool) private accountRequestConcensusEvaluationStatus;
-    mapping(bytes32 => bool) private unaccountRequestConcensusEvaluationStatus;
+    mapping(bytes32 => bool) private unlockAccountRequestConcensusEvaluationStatus;
+    mapping(bytes32 => address[]) public requestToGuardiansSigned;
     mapping(bytes32 => mapping(address => bytes)) public lockRequestToGuardianToSignature;
     mapping(bytes32 => mapping(address => bytes)) public unLockRequestToGuardianToSignature;
     mapping(bytes32 => mapping(address => bool)) lockRequestToGuardianToSignatureValid;
@@ -139,7 +140,8 @@ contract AccountLock is IAccountLock {
         bytes32 ethSignedUnLockRequestHash = ECDSA.toEthSignedMessageHash(unLockRequestHash);
 
         accountToUnLockRequest[account] = ethSignedUnLockRequestHash;
-        unaccountRequestConcensusEvaluationStatus[ethSignedUnLockRequestHash] = false;
+
+        unlockAccountRequestConcensusEvaluationStatus[ethSignedUnLockRequestHash] = false;
 
         return ethSignedUnLockRequestHash;
     }
@@ -152,6 +154,7 @@ contract AccountLock is IAccountLock {
         }
 
         lockRequestToGuardianToSignature[lockRequest][guardian] = signature;
+        requestToGuardiansSigned[lockRequest].push(guardian);
     }
 
     function recordSignatureOnUnLockRequest(bytes32 unLockRequest, bytes calldata signature) external {
@@ -162,6 +165,7 @@ contract AccountLock is IAccountLock {
         }
 
         unLockRequestToGuardianToSignature[unLockRequest][guardian] = signature;
+        requestToGuardiansSigned[unLockRequest].push(guardian);
     }
 
     //TODO: Add trigger to this function once lock request is created, using Chainlink Time based automation (Ref: https://docs.chain.link/chainlink-automation/overview/getting-started)
@@ -185,8 +189,10 @@ contract AccountLock is IAccountLock {
         address[] memory guardians = AccountGuardian(accountGuardian).getAllGuardians();
         uint256 guardianCount = guardians.length;
 
-        for (uint256 g = 0; g < guardians.length; g++) {
-            address guardian = guardians[g];
+        address[] memory guardiansWhoSigned = requestToGuardiansSigned[request];
+
+        for (uint256 g = 0; g < guardiansWhoSigned.length; g++) {
+            address guardian = guardiansWhoSigned[g];
             bytes memory guardianSignature;
 
             if (_isLocked(account)) {
@@ -195,25 +201,21 @@ contract AccountLock is IAccountLock {
                 guardianSignature = lockRequestToGuardianToSignature[request][guardian];
             }
 
-            // checking if this guardian has signed the request
-            if (guardianSignature.length > 0) {
-                address recoveredGuardian = _recoverSigner(request, guardianSignature);
-                console.log("Recovered guardian", recoveredGuardian);
+            address recoveredGuardian = _recoverSigner(request, guardianSignature);
+            console.log("Recovered guardian", recoveredGuardian);
 
-                if (recoveredGuardian == guardian) {
-                    if (_isLocked(account)) {
-                        unLockRequestToGuardianToSignatureValid[request][guardian] = true;
-                    } else {
-                        lockRequestToGuardianToSignatureValid[request][guardian] = true;
-                    }
-
-                    validGuardianSignatures++;
+            if (recoveredGuardian == guardian) {
+                if (_isLocked(account)) {
+                    unLockRequestToGuardianToSignatureValid[request][guardian] = true;
                 } else {
-                    if (_isLocked(account)) {
-                        unLockRequestToGuardianToSignatureValid[request][guardian] = false;
-                    } else {
-                        lockRequestToGuardianToSignatureValid[request][guardian] = false;
-                    }
+                    lockRequestToGuardianToSignatureValid[request][guardian] = true;
+                }
+                validGuardianSignatures++;
+            } else {
+                if (_isLocked(account)) {
+                    unLockRequestToGuardianToSignatureValid[request][guardian] = false;
+                } else {
+                    lockRequestToGuardianToSignatureValid[request][guardian] = false;
                 }
             }
         }

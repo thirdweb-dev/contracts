@@ -16,6 +16,7 @@ import "../interface/IAccountFactory.sol";
 import { AccountLock } from "../utils/AccountLock.sol";
 import { Guardian } from "../utils/Guardian.sol";
 import { AccountGuardian } from "../utils/AccountGuardian.sol";
+import { AccountRecovery } from "../utils/AccountRecovery.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -38,7 +39,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     Guardian public guardian = new Guardian();
     AccountLock public accountLock = new AccountLock(guardian);
     AccountGuardian public accountGuardian;
-
+    AccountRecovery public accountRecovery;
     EnumerableSet.AddressSet private allAccounts;
     mapping(address => EnumerableSet.AddressSet) internal accountsOfSigner;
 
@@ -76,6 +77,9 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
         accountGuardian = new AccountGuardian(guardian, accountLock, account);
         guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
+
+        accountRecovery = new AccountRecovery(account, address(accountGuardian));
+        guardian.linkAccountToAccountRecovery(account, address(accountRecovery));
 
         return account;
     }

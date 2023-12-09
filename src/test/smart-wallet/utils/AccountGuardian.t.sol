@@ -35,7 +35,7 @@ contract AccountGuardianTest is Test {
     //////////////////////////
     function testRevertIfGuardianAddedNotByOwner() public {
         vm.prank(randomUser);
-        vm.expectRevert(abi.encodeWithSelector(AccountGuardian.NotOwnerOrAccountLock.selector, owner, randomUser));
+        vm.expectRevert(abi.encodeWithSelector(AccountGuardian.NotAuthorized.selector, randomUser));
         accountGuardian.addGuardian(randomUser);
     }
 
@@ -64,7 +64,7 @@ contract AccountGuardianTest is Test {
 
     function testRevertRemoveGuardianNotByOwner() external {
         vm.prank(randomUser);
-        vm.expectRevert(abi.encodeWithSelector(AccountGuardian.NotOwnerOrAccountLock.selector, owner, randomUser));
+        vm.expectRevert(abi.encodeWithSelector(AccountGuardian.NotAuthorized.selector, randomUser));
         accountGuardian.removeGuardian(guardian);
     }
 
@@ -96,7 +96,7 @@ contract AccountGuardianTest is Test {
 
     function testRevertIfNotOwnerTriesToGetGuardians() external {
         vm.prank(randomUser);
-        vm.expectRevert(abi.encodeWithSelector(AccountGuardian.NotOwnerOrAccountLock.selector, owner, randomUser));
+        vm.expectRevert(abi.encodeWithSelector(AccountGuardian.NotAuthorized.selector, randomUser));
         accountGuardian.getAllGuardians();
     }
 
