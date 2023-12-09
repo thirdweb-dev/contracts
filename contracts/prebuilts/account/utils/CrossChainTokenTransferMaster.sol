@@ -228,7 +228,7 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
      * @param _messageHash The hash of the userOp
      * @param _signature The signature of the signer
      */
-    function proceed(bytes32 _messageHash, bytes memory _signature) external {
+    function _proceed(bytes32 _messageHash, bytes memory _signature) external {
         address signer = ECDSA.recover(_messageHash, _signature);
         //verify signature
         bytes32 value = isValidSignature(_messageHash, _signature);
