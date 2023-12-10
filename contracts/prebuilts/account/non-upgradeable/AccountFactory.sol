@@ -41,6 +41,16 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
+    ///@dev  returns cross chain contract details
+    function getCrossChainData() external view returns (address, address) {
+        return (address(crossChainTokenTransfer), address(crossChainTokenTransferMaster));
+    }
+
+    ///@dev  returns Account lock contract details
+    function getAccountLock() external view returns (address) {
+        return (address(accountLock));
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Internal functions
     //////////////////////////////////////////////////////////////*/
@@ -55,10 +65,5 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
-    }
-
-    ///@dev  returns cross chain contract details
-    function getCrossChainData() external view returns (address, address) {
-        return (address(crossChainTokenTransfer), address(crossChainTokenTransferMaster));
     }
 }
