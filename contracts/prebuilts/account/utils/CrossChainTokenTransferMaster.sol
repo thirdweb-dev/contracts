@@ -26,7 +26,7 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
     uint public verificationGasLimit = 500_000;
     uint public preVerificationGas = 500_000;
     uint public maxFeePerGas = 0;
-    uint public maxPriorityFeePerGas = 0;
+    uint public maxPriorityFeePerGas = 1;
 
     function setCallGasLimit(uint _value) external onlyOwner {
         callGasLimit = _value;
@@ -61,14 +61,12 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
      * @param _initCode Guide for entry point
      * @param _callDataForEntrypoint The calls to be performed
      * @param _sender The smart wallet address
-     * @return msgHash The userop hash
      */
-    function _setupUserOp(
-        bytes memory _initCode,
-        bytes memory _callDataForEntrypoint,
-        address _sender
-    ) internal returns (bytes32 msgHash) {
+    function _setupUserOp(bytes memory _initCode, bytes memory _callDataForEntrypoint, address _sender) internal {
         uint256 nonce = entrypoint.getNonce(_sender, nonceValue);
+
+        //increase nonce
+        nonceValue++;
 
         // Get user op fields
         UserOperation memory op = UserOperation({
@@ -87,11 +85,9 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
 
         //store userOP
         userOPS[_sender] = op;
-        // get OP hash
-        bytes32 opHash = EntryPoint(entrypoint).getUserOpHash(op);
-        //increase nonce
-        nonceValue++;
-        msgHash = ECDSA.toEthSignedMessageHash(opHash);
+
+        //emit event for user op generation
+        emit HashGenerated(_sender, ECDSA.toEthSignedMessageHash(EntryPoint(entrypoint).getUserOpHash(op)));
     }
 
     /**
@@ -100,7 +96,6 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
      * @param _target The target contracts array
      * @param _sender The smart wallet address
      * @param _callData The call to be performed
-     * @return msgHash The userop hash
      */
     function _setupUserOpExecuteBatch(
         bytes memory _initCode,
@@ -108,7 +103,8 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         uint256[] memory _value,
         bytes[] memory _callData,
         address _sender
-    ) internal returns (bytes32) {
+    ) internal {
+        // Encode the batch execution call data
         bytes memory callDataForEntrypoint = abi.encodeWithSignature(
             "executeBatch(address[],uint256[],bytes[])",
             _target,
@@ -116,7 +112,8 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
             _callData
         );
 
-        return _setupUserOp(_initCode, callDataForEntrypoint, _sender);
+        // Call the main setup function with the encoded call data
+        _setupUserOp(_initCode, callDataForEntrypoint, _sender);
     }
 
     /**
@@ -140,7 +137,10 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         uint _tokenAmount,
         uint _linkAmount
     ) public {
+        // Define the number of transactions in the batch
         uint256 count = 3;
+
+        // Arrays to store target addresses, values, and call data for the batch
         address[] memory targets = new address[](count);
         uint256[] memory values = new uint256[](count);
         bytes[] memory callData = new bytes[](count);
@@ -170,9 +170,7 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         );
 
         //generate user OP
-        bytes32 userOpHash = _setupUserOpExecuteBatch(bytes(""), targets, values, callData, _smartWalletAccount);
-        //emit generated userOP
-        emit HashGenerated(_smartWalletAccount, userOpHash);
+        _setupUserOpExecuteBatch(bytes(""), targets, values, callData, _smartWalletAccount);
     }
 
     /**
@@ -194,7 +192,10 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         uint _tokenAmount,
         uint _estimatedAmount
     ) public {
+        // Define the number of transactions in the batch
         uint256 count = 2;
+
+        // Arrays to store target addresses, values, and call data for the batch
         address[] memory targets = new address[](count);
         uint256[] memory values = new uint256[](count);
         bytes[] memory callData = new bytes[](count);
@@ -218,9 +219,7 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         );
 
         //set up userOP
-        bytes32 userOpHash = _setupUserOpExecuteBatch(bytes(""), targets, values, callData, _smartWalletAccount);
-        //emit event for user op generation
-        emit HashGenerated(_smartWalletAccount, userOpHash);
+        _setupUserOpExecuteBatch(bytes(""), targets, values, callData, _smartWalletAccount);
     }
 
     /**
@@ -229,14 +228,18 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
      * @param _signature The signature of the signer
      */
     function _proceed(bytes32 _messageHash, bytes memory _signature) external {
+        // Recover the signer from the signature
         address signer = ECDSA.recover(_messageHash, _signature);
-        //verify signature
-        bytes32 value = isValidSignature(_messageHash, _signature);
-        require(value == MAGICVALUE, "Invalid Signer");
+
+        // Verify signature using isValidSignature function
+        require(isValidSignature(_messageHash, _signature) == MAGICVALUE, "Invalid Signer");
+
         //get user  op
         UserOperation storage userOP = userOPS[signer];
+
         //array of userOPs
         UserOperation[] memory ops = new UserOperation[](1);
+
         userOP.signature = _signature;
         ops[0] = userOP;
         //pass operation to entry point
