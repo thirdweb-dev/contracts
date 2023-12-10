@@ -34,8 +34,10 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        IEntryPoint _entrypoint
-    ) BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint)) {
+        IEntryPoint _entrypoint,
+        address _router,
+        address _link
+    ) BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint), _router, _link) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
@@ -53,5 +55,10 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    ///@dev  returns cross chain contract details
+    function getCrossChainData() external view returns (address, address) {
+        return (address(crossChainTokenTransfer), address(crossChainTokenTransferMaster));
     }
 }

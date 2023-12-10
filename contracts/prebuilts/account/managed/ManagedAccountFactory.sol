@@ -28,10 +28,17 @@ contract ManagedAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
 
     constructor(
         IEntryPoint _entrypoint,
-        Extension[] memory _defaultExtensions
+        Extension[] memory _defaultExtensions,
+        address _router,
+        address _link
     )
         BaseRouter(_defaultExtensions)
-        BaseAccountFactory(payable(address(new ManagedAccount(_entrypoint, address(this)))), address(_entrypoint))
+        BaseAccountFactory(
+            payable(address(new ManagedAccount(_entrypoint, address(this)))),
+            address(_entrypoint),
+            _router,
+            _link
+        )
     {
         __BaseRouter_init();
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
