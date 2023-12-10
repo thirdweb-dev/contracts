@@ -2,8 +2,7 @@
 pragma solidity ^0.8.12;
 
 interface IAccountGuardian {
-    
-     /*///////////////////////////////////////////////////////////////
+    /*///////////////////////////////////////////////////////////////
                         Events
     //////////////////////////////////////////////////////////////*/
 
@@ -20,7 +19,6 @@ interface IAccountGuardian {
      */
     event GuardianRemoved(address indexed guardian);
 
-
     /*///////////////////////////////////////////////////////////////
                         Errors
     //////////////////////////////////////////////////////////////*/
@@ -33,9 +31,9 @@ interface IAccountGuardian {
     error GuardianNotVerified(address guardian);
 
     /**
-     * An error thrown if the guardian the user is trying to remove is not a part of 
+     * An error thrown if the guardian the user is trying to remove is not a part of
      * the user's guardian list.
-     * @param guardian address which the user was trying to remove from their 
+     * @param guardian address which the user was trying to remove from their
      * guardian list but was not the guardian
      */
     error NotAGuardian(address guardian);
@@ -46,26 +44,20 @@ interface IAccountGuardian {
      * @param guardian address of guardian user is trying to remove
      * @param recoveryHash active recovery request hash
      */
-    error GuardianNotRemovedDueToActiveRecoveryRequest(
-        address guardian,
-        bytes32 recoveryHash
-        );
+    error GuardianNotRemovedDueToActiveRecoveryRequest(address guardian, bytes32 recoveryHash);
 
-
-     /*///////////////////////////////////////////////////////////////
+    /*///////////////////////////////////////////////////////////////
                         External Functions
     //////////////////////////////////////////////////////////////*/
 
-
     /**
      * @notice Add guardians for your smart-wallet.
-     * @dev The guardian address needs to connect to the thirdweb’s 
+     * @dev The guardian address needs to connect to the thirdweb’s
      * guardian signup dapp by accepting the signin request.
      * @param guardian the verified address of a wallet to be
      * added as a guardian.
      */
     function addGuardian(address guardian) external;
-
 
     /**
      * @notice A user will be able to remove allotted guardian(s) from
@@ -79,7 +71,7 @@ interface IAccountGuardian {
      * @notice Returns a list of all added guardians of the sender.
      * @return List of guardians of the sender smart-wallet.
      */
-    function getAllGuardians() external returns(address[] memory);
+    function getAllGuardians() external returns (address[] memory);
 
     /**
      * @notice Returns a bool value indicating if the guardian is that
@@ -87,8 +79,14 @@ interface IAccountGuardian {
      * @param guardian guardian to be checked for
      * @return bool
      */
-    function isAccountGuardian(address guardian) external view returns (bool); 
-    
+    function isAccountGuardian(address guardian) external view returns (bool);
+
+    /**
+     * @dev This will return the number of guardians allot for the account. Will be used when creating shards of the account's private key
+     * @return uint256 No. of account guardians
+     */
+    function getTotalGuardians() external view returns (uint256);
+
     /**
      * @notice Sign the lock request
      */

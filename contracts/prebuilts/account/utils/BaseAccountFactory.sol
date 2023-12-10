@@ -18,6 +18,7 @@ import { Guardian } from "../utils/Guardian.sol";
 import { AccountGuardian } from "../utils/AccountGuardian.sol";
 import { CrossChainTokenTransfer } from "../utils/CrossChainTokenTransfer.sol";
 import { CrossChainTokenTransferMaster } from "../utils/CrossChainTokenTransferMaster.sol";
+import { AccountRecovery } from "../utils/AccountRecovery.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -42,7 +43,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     AccountGuardian public accountGuardian;
     CrossChainTokenTransfer public crossChainTokenTransfer;
     CrossChainTokenTransferMaster public crossChainTokenTransferMaster;
-
+    AccountRecovery public accountRecovery;
     EnumerableSet.AddressSet private allAccounts;
     mapping(address => EnumerableSet.AddressSet) internal accountsOfSigner;
 
@@ -86,6 +87,9 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
         accountGuardian = new AccountGuardian(guardian, accountLock, account);
         guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
+
+        accountRecovery = new AccountRecovery(account, address(accountGuardian));
+        guardian.linkAccountToAccountRecovery(account, address(accountRecovery));
 
         return account;
     }
