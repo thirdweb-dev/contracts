@@ -20,13 +20,24 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
     mapping(address => UserOperation) private userOPS;
     event HashGenerated(address indexed owner, bytes32 hash);
     event RoleChanged(SignerPermissionRequest req);
-    uint192 private nonceValue = 0;
+    uint192 private nonceValue = 1;
+    address _ccip;
 
     uint public callGasLimit = 500_000;
     uint public verificationGasLimit = 500_000;
     uint public preVerificationGas = 500_000;
     uint public maxFeePerGas = 0;
-    uint public maxPriorityFeePerGas = 1;
+    uint public maxPriorityFeePerGas = 0;
+
+    struct TokenParams {
+        address _token;
+        address _receiver;
+        uint _tokenAmount;
+    }
+
+    constructor(address ccip) {
+        _ccip = ccip;
+    }
 
     function setCallGasLimit(uint _value) external onlyOwner {
         callGasLimit = _value;
@@ -119,23 +130,17 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
     /**
      * @dev Initiate token transfer with Link payment
      * @param _smartWalletAccount The smart wallet address
-     * @param _ccip Address of chain token transfer contract
      * @param _link Address of Link contract
-     * @param _token Address of erc20 contract
      * @param _destinationChainSelector The destination chain selector
-     * @param _receiver The receiver address
-     * @param _tokenAmount The amount of token to be sent
+     * @param _tokenParams The struct containing token parameters
      * @param _linkAmount The estimated link token required for the transaction
      */
     function _initiateTokenTransferWithLink(
         address _smartWalletAccount,
-        address _ccip,
         address _link,
-        address _token,
         uint64 _destinationChainSelector,
-        address _receiver,
-        uint _tokenAmount,
-        uint _linkAmount
+        uint _linkAmount,
+        TokenParams memory _tokenParams
     ) public {
         // Define the number of transactions in the batch
         uint256 count = 3;
@@ -151,9 +156,9 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         callData[0] = abi.encodeWithSignature("approve(address, uint)", _ccip, _linkAmount);
 
         //approve erc20 for chain token transfer contract
-        targets[1] = _token;
+        targets[1] = _tokenParams._token;
         values[1] = 0;
-        callData[1] = abi.encodeWithSignature("approve(address, uint)", _ccip, _tokenAmount);
+        callData[1] = abi.encodeWithSignature("approve(address, uint)", _ccip, _tokenParams._tokenAmount);
 
         //start cross chain transfer
         targets[2] = _ccip;
@@ -161,12 +166,12 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         callData[2] = abi.encodeWithSignature(
             "transferTokensPayLINK(uint64 , address , address , address ,uint256 , uint256,   uint256 )",
             _destinationChainSelector,
-            _receiver,
+            _tokenParams._receiver,
             _smartWalletAccount,
-            _token,
-            _tokenAmount,
+            _tokenParams._token,
+            _tokenParams._tokenAmount,
             _linkAmount,
-            _tokenAmount
+            _tokenParams._tokenAmount
         );
 
         //generate user OP
@@ -176,21 +181,15 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
     /**
      * @dev Initiate token transfer with native payment
      * @param _smartWalletAccount The smart wallet address
-     * @param _ccip Address of chain token transfer contract
-     * @param _token Address of erc20 contract
      * @param _destinationChainSelector The destination chain selector
-     * @param _receiver The receiver address
-     * @param _tokenAmount The amount of token to be sent
+     * @param _tokenParams The is the struct that contains token info
      * @param _estimatedAmount The estimated native token required for the transaction
      */
     function _initiateTokenTransferWithNativeToken(
         address _smartWalletAccount,
-        address _ccip,
-        address _token,
         uint64 _destinationChainSelector,
-        address _receiver,
-        uint _tokenAmount,
-        uint _estimatedAmount
+        uint _estimatedAmount,
+        TokenParams memory _tokenParams
     ) public {
         // Define the number of transactions in the batch
         uint256 count = 2;
@@ -201,9 +200,9 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         bytes[] memory callData = new bytes[](count);
 
         //approve token for cross chain token transfer contract
-        targets[0] = _token;
+        targets[0] = _tokenParams._token;
         values[0] = 0;
-        callData[0] = abi.encodeWithSignature("approve(address, uint)", _ccip, _tokenAmount);
+        callData[0] = abi.encodeWithSignature("approve(address, uint)", _ccip, _tokenParams._tokenAmount);
 
         // start the cross chain transfer
         targets[1] = _ccip;
@@ -211,11 +210,11 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         callData[1] = abi.encodeWithSignature(
             "transferTokensPayNative( uint64 ,  address ,  address , address,  uint256 , uint256   )",
             _destinationChainSelector,
-            _receiver,
+            _tokenParams._receiver,
             _smartWalletAccount,
-            _token,
-            _tokenAmount,
-            _tokenAmount
+            _tokenParams._token,
+            _tokenParams._tokenAmount,
+            _tokenParams._tokenAmount
         );
 
         //set up userOP
