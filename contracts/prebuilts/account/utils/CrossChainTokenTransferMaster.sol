@@ -22,7 +22,7 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
     event RoleChanged(SignerPermissionRequest req);
     uint192 private nonceValue = 1;
     address _ccip;
-
+    address _link;
     uint public callGasLimit = 500_000;
     uint public verificationGasLimit = 500_000;
     uint public preVerificationGas = 500_000;
@@ -35,8 +35,9 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         uint _tokenAmount;
     }
 
-    constructor(address ccip) {
+    constructor(address ccip, address link) {
         _ccip = ccip;
+        _link = link;
     }
 
     function setCallGasLimit(uint _value) external onlyOwner {
@@ -130,14 +131,12 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
     /**
      * @dev Initiate token transfer with Link payment
      * @param _smartWalletAccount The smart wallet address
-     * @param _link Address of Link contract
      * @param _destinationChainSelector The destination chain selector
      * @param _tokenParams The struct containing token parameters
      * @param _linkAmount The estimated link token required for the transaction
      */
     function _initiateTokenTransferWithLink(
         address _smartWalletAccount,
-        address _link,
         uint64 _destinationChainSelector,
         uint _linkAmount,
         TokenParams memory _tokenParams
