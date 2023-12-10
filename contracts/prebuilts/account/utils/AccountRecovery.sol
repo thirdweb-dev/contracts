@@ -75,7 +75,7 @@ contract AccountRecovery is IAccountRecovery {
         emit GuardianSignatureRecorded(guardian);
     }
 
-    function restorePrivateKey() external override onlyVerifiedAccountGuardian returns (bytes memory) {
+    function restorePrivateKey() external override onlyVerifiedAccountGuardian {
         require(_accountRecoveryConcensusEvaluation(), "Account Recovery Concensus has to be achieved!");
 
         bytes memory restoredPrivateKey;
@@ -83,7 +83,7 @@ contract AccountRecovery is IAccountRecovery {
             restoredPrivateKey = abi.encodePacked(restoredPrivateKey, shards[guardiansWhoSigned[g]]);
         }
 
-        return restoredPrivateKey;
+        emit RestoredKeyEmailed();
     }
 
     // internal functions //

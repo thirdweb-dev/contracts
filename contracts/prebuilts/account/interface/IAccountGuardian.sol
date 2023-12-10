@@ -54,8 +54,7 @@ interface IAccountGuardian {
      * @notice Add guardians for your smart-wallet.
      * @dev The guardian address needs to connect to the thirdweb’s
      * guardian signup dapp by accepting the signin request.
-     * @param guardian the verified address of a wallet to be
-     * added as a guardian.
+     * @param guardian the verified guardian address being added as an account guardian.
      */
     function addGuardian(address guardian) external;
 
@@ -68,7 +67,7 @@ interface IAccountGuardian {
     function removeGuardian(address guardian) external;
 
     /**
-     * @notice Returns a list of all added guardians of the sender.
+     * @notice Returns a list of all added account guardians for the sender’s smart wallet account.
      * @return List of guardians of the sender smart-wallet.
      */
     function getAllGuardians() external returns (address[] memory);
