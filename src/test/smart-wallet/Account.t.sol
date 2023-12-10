@@ -183,8 +183,10 @@ contract SimpleAccountTest is BaseTest {
 
         // Setup contracts
         entrypoint = new EntryPoint();
+        address router = address(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59);
+        address link = address(0x779877A7B0D9E8603169DdbD7836e478b4624789);
         // deploy account factory
-        accountFactory = new AccountFactory(IEntryPoint(payable(address(entrypoint))));
+        accountFactory = new AccountFactory(IEntryPoint(payable(address(entrypoint))), router, link);
         // deploy dummy contract
         numberContract = new Number();
     }

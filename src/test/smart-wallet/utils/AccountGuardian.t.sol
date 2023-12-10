@@ -21,7 +21,7 @@ contract AccountGuardianTest is Test {
 
     function setUp() public {
         DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
-        (, , guardianContract, accountLock, accountGuardian) = deployer.run();
+        (, , guardianContract, accountLock, accountGuardian, , , ) = deployer.run();
     }
 
     modifier addVerifiedGuardian() {

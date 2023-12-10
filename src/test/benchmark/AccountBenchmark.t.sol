@@ -56,11 +56,9 @@ contract AccountBenchmarkTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -180,8 +178,10 @@ contract AccountBenchmarkTest is BaseTest {
 
         // Setup contracts
         entrypoint = new EntryPoint();
+        address router = address(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59);
+        address link = address(0x779877A7B0D9E8603169DdbD7836e478b4624789);
         // deploy account factory
-        accountFactory = new AccountFactory(IEntryPoint(payable(address(entrypoint))));
+        accountFactory = new AccountFactory(IEntryPoint(payable(address(entrypoint))), router, link);
         // deploy dummy contract
         numberContract = new Number();
     }

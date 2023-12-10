@@ -29,6 +29,9 @@ import "forge-std/console.sol";
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
+    // Events //
+    event AccountFactoryContractDeployed(address indexed);
+
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -39,6 +42,8 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
         address _link
     ) BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint), _router, _link) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+
+        emit AccountFactoryContractDeployed(address(this));
     }
 
     ///@dev  returns cross chain contract details

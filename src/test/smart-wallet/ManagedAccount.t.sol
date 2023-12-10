@@ -34,12 +34,7 @@ contract Number {
 }
 
 contract NFTRejector {
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes memory
-    ) public virtual returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes memory) public virtual returns (bytes4) {
         revert("NFTs not accepted");
     }
 }
@@ -48,6 +43,8 @@ contract ManagedAccountTest is BaseTest {
     // Target contracts
     EntryPoint private entrypoint;
     ManagedAccountFactory private accountFactory;
+    address router = address(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59);
+    address link = address(0x779877A7B0D9E8603169DdbD7836e478b4624789);
 
     // Mocks
     Number internal numberContract;
@@ -73,11 +70,9 @@ contract ManagedAccountTest is BaseTest {
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes32 typedDataHash)
-    {
+    function _prepareSignature(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes32 typedDataHash) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -108,11 +103,9 @@ contract ManagedAccountTest is BaseTest {
         typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
@@ -250,7 +243,7 @@ contract ManagedAccountTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        accountFactory = new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
+        accountFactory = new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions, router, link);
         // deploy dummy contract
         numberContract = new Number();
     }
@@ -304,7 +297,9 @@ contract ManagedAccountTest is BaseTest {
         vm.prank(factoryDeployer);
         ManagedAccountFactory factory = new ManagedAccountFactory(
             IEntryPoint(payable(address(entrypoint))),
-            extensions
+            extensions,
+            router,
+            link
         );
         assertTrue(address(factory) != address(0), "factory address should not be zero");
     }

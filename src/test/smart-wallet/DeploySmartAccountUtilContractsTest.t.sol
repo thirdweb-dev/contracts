@@ -19,7 +19,7 @@ contract DeploySmartAccountUtilContractsTest is Test {
 
     function setUp() external {
         DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
-        (accountFactory, account, guardianContract, accountLock, accountGuardian) = deployer.run();
+        (accountFactory, account, guardianContract, accountLock, accountGuardian, , , ) = deployer.run();
     }
 
     function testIfSmartAccountUtilContractsDeployed() external {

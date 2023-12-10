@@ -32,22 +32,29 @@ import { AccountRecovery } from "../utils/AccountRecovery.sol";
 abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    // Events //
+
+    event GuardianContractDeployed(address indexed);
+    event AccountLockContractDeployed(address indexed);
+    event CrossChainTokenTransferContractDeployed(address indexed);
+    event CrossChainTokenTransferMasterContractDeployed(address indexed);
+    event AccountGuardianContractDeployed(address indexed);
+    event SmartAccountContractDeployed(address indexed);
+    event AccountRecoveryContractDeployed(address indexed);
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
 
     address public immutable accountImplementation;
     address public immutable entrypoint;
-    Guardian public guardian = new Guardian();
-    AccountLock public accountLock = new AccountLock(guardian);
+    Guardian public guardian;
+    AccountLock public accountLock;
     AccountGuardian public accountGuardian;
     CrossChainTokenTransfer public crossChainTokenTransfer;
     CrossChainTokenTransferMaster public crossChainTokenTransferMaster;
     AccountRecovery public accountRecovery;
     EnumerableSet.AddressSet private allAccounts;
     mapping(address => EnumerableSet.AddressSet) internal accountsOfSigner;
-
-    event CrossChainData(address crossChainTokenTransfer, address crossChainTokenTransferMaster);
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
@@ -56,10 +63,16 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     constructor(address _accountImpl, address _entrypoint, address _router, address _link) {
         accountImplementation = _accountImpl;
         entrypoint = _entrypoint;
+        guardian = new Guardian();
+        accountLock = new AccountLock(guardian);
         crossChainTokenTransfer = new CrossChainTokenTransfer(_router, _link);
         crossChainTokenTransferMaster = new CrossChainTokenTransferMaster();
-        // // emit the contract addresses
-        // emit CrossChainData(address(crossChainTokenTransfer), address(crossChainTokenTransferMaster));
+        // emit the contract addresses
+        emit SmartAccountContractDeployed(_accountImpl);
+        emit GuardianContractDeployed(address(guardian));
+        emit AccountLockContractDeployed(address(accountLock));
+        emit CrossChainTokenTransferContractDeployed(address(crossChainTokenTransfer));
+        emit CrossChainTokenTransferMasterContractDeployed(address(crossChainTokenTransferMaster));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -87,9 +100,11 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
         accountGuardian = new AccountGuardian(guardian, accountLock, account);
         guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
+        emit AccountGuardianContractDeployed(address(accountGuardian));
 
         accountRecovery = new AccountRecovery(account, address(accountGuardian));
         guardian.linkAccountToAccountRecovery(account, address(accountRecovery));
+        emit AccountRecoveryContractDeployed(address(accountRecovery));
 
         return account;
     }
