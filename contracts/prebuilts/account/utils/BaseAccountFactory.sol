@@ -66,7 +66,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         guardian = new Guardian();
         accountLock = new AccountLock(guardian);
         crossChainTokenTransfer = new CrossChainTokenTransfer(_router, _link);
-        crossChainTokenTransferMaster = new CrossChainTokenTransferMaster();
+        crossChainTokenTransferMaster = new CrossChainTokenTransferMaster(address(crossChainTokenTransfer), _link);
         // emit the contract addresses
         emit SmartAccountContractDeployed(_accountImpl);
         emit GuardianContractDeployed(address(guardian));
