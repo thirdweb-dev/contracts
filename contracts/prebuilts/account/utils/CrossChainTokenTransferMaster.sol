@@ -34,6 +34,8 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         address _receiver;
         uint _tokenAmount;
     }
+    uint linkCount = 3;
+    uint nativecount = 2;
 
     constructor(address ccip, address link) {
         _ccip = ccip;
@@ -141,13 +143,10 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         uint _linkAmount,
         TokenParams memory _tokenParams
     ) public {
-        // Define the number of transactions in the batch
-        uint256 count = 3;
-
         // Arrays to store target addresses, values, and call data for the batch
-        address[] memory targets = new address[](count);
-        uint256[] memory values = new uint256[](count);
-        bytes[] memory callData = new bytes[](count);
+        address[] memory targets = new address[](linkCount);
+        uint256[] memory values = new uint256[](linkCount);
+        bytes[] memory callData = new bytes[](linkCount);
 
         //approve link tokens for chain token transfer contract
         targets[0] = _link;
@@ -163,14 +162,11 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         targets[2] = _ccip;
         values[2] = 0;
         callData[2] = abi.encodeWithSignature(
-            "transferTokensPayLINK(uint64 , address , address , address ,uint256 , uint256,   uint256 )",
+            "transferTokensPayLINK(uint64  , address ,uint256 , TokenParams )",
             _destinationChainSelector,
-            _tokenParams._receiver,
             _smartWalletAccount,
-            _tokenParams._token,
-            _tokenParams._tokenAmount,
             _linkAmount,
-            _tokenParams._tokenAmount
+            TokenParams(_tokenParams._token, _tokenParams._receiver, _tokenParams._tokenAmount)
         );
 
         //generate user OP
@@ -200,13 +196,10 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         uint _estimatedAmount,
         TokenParams memory _tokenParams
     ) public {
-        // Define the number of transactions in the batch
-        uint256 count = 2;
-
         // Arrays to store target addresses, values, and call data for the batch
-        address[] memory targets = new address[](count);
-        uint256[] memory values = new uint256[](count);
-        bytes[] memory callData = new bytes[](count);
+        address[] memory targets = new address[](nativecount);
+        uint256[] memory values = new uint256[](nativecount);
+        bytes[] memory callData = new bytes[](nativecount);
 
         //approve token for cross chain token transfer contract
         targets[0] = _tokenParams._token;
@@ -217,13 +210,10 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         targets[1] = _ccip;
         values[1] = _estimatedAmount;
         callData[1] = abi.encodeWithSignature(
-            "transferTokensPayNative( uint64 ,  address ,  address , address,  uint256 , uint256   )",
+            "transferTokensPayNative( uint64 ,  address ,  TokenParams   )",
             _destinationChainSelector,
-            _tokenParams._receiver,
             _smartWalletAccount,
-            _tokenParams._token,
-            _tokenParams._tokenAmount,
-            _tokenParams._tokenAmount
+            TokenParams(_tokenParams._token, _tokenParams._receiver, _tokenParams._tokenAmount)
         );
 
         //set up userOP
