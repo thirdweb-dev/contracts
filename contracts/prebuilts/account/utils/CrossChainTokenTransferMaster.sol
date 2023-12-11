@@ -109,24 +109,24 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
      * @param _sender The smart wallet address
      * @param _callData The call to be performed
      */
-    function _setupUserOpExecuteBatch(
-        bytes memory _initCode,
-        address[] memory _target,
-        uint256[] memory _value,
-        bytes[] memory _callData,
-        address _sender
-    ) internal {
-        // Encode the batch execution call data
-        bytes memory callDataForEntrypoint = abi.encodeWithSignature(
-            "executeBatch(address[],uint256[],bytes[])",
-            _target,
-            _value,
-            _callData
-        );
+    // function _setupUserOpExecuteBatch(
+    //     bytes memory _initCode,
+    //     address[] memory _target,
+    //     uint256[] memory _value,
+    //     bytes[] memory _callData,
+    //     address _sender
+    // ) internal {
+    //     // Encode the batch execution call data
+    //     bytes memory callDataForEntrypoint = abi.encodeWithSignature(
+    //         "executeBatch(address[],uint256[],bytes[])",
+    //         _target,
+    //         _value,
+    //         _callData
+    //     );
 
-        // Call the main setup function with the encoded call data
-        _setupUserOp(_initCode, callDataForEntrypoint, _sender);
-    }
+    //     // Call the main setup function with the encoded call data
+    //     _setupUserOp(_initCode, callDataForEntrypoint, _sender);
+    // }
 
     /**
      * @dev Initiate token transfer with Link payment
@@ -174,7 +174,17 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         );
 
         //generate user OP
-        _setupUserOpExecuteBatch(bytes(""), targets, values, callData, _smartWalletAccount);
+        // _setupUserOpExecuteBatch(bytes(""), targets, values, callData, _smartWalletAccount);
+
+        bytes memory callDataForEntrypoint = abi.encodeWithSignature(
+            "executeBatch(address[],uint256[],bytes[])",
+            targets,
+            values,
+            callData
+        );
+
+        // Call the main setup function with the encoded call data
+        _setupUserOp(bytes(""), callDataForEntrypoint, _smartWalletAccount);
     }
 
     /**
@@ -217,7 +227,16 @@ contract CrossChainTokenTransferMaster is AccountExtension, Ownable {
         );
 
         //set up userOP
-        _setupUserOpExecuteBatch(bytes(""), targets, values, callData, _smartWalletAccount);
+        // _setupUserOpExecuteBatch(bytes(""), targets, values, callData, _smartWalletAccount);
+        bytes memory callDataForEntrypoint = abi.encodeWithSignature(
+            "executeBatch(address[],uint256[],bytes[])",
+            targets,
+            values,
+            callData
+        );
+
+        // Call the main setup function with the encoded call data
+        _setupUserOp(bytes(""), callDataForEntrypoint, _smartWalletAccount);
     }
 
     /**
