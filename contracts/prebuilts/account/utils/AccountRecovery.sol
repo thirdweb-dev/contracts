@@ -15,17 +15,17 @@ contract AccountRecovery is IAccountRecovery {
     mapping(address => uint8) private shards;
     mapping(address => bytes) private guardianSignatures;
 
+    constructor(address _account, address _accountGuardian) {
+        owner = msg.sender;
+        account = _account;
+        accountGuardian = _accountGuardian;
+    }
+
     modifier onlyOwner() {
         if (msg.sender != owner) {
             revert NotOwner(msg.sender);
         }
         _;
-    }
-
-    constructor(address _account, address _accountGuardian) {
-        owner = msg.sender;
-        account = _account;
-        accountGuardian = _accountGuardian;
     }
 
     modifier onlyVerifiedAccountGuardian() {
@@ -50,7 +50,7 @@ contract AccountRecovery is IAccountRecovery {
         //TODO: shards should be store in a more secure, decentralized storage service instead of contract state
     }
 
-    function generateRecoveryRequest() external {
+    function generateRecoveryRequest() external onlyVerifiedAccountGuardian {
         bytes32 restoreKeyRequestHash = keccak256(abi.encodeWithSignature("restorePrivateKey()"));
 
         accountRecoveryRequest = ECDSA.toEthSignedMessageHash(restoreKeyRequestHash);
@@ -58,18 +58,14 @@ contract AccountRecovery is IAccountRecovery {
         emit AccountRecoveryRequestCreated(account);
     }
 
-    function getRecoveryRequest() public view returns (bytes32) {
+    function getRecoveryRequest() public view onlyVerifiedAccountGuardian returns (bytes32) {
         return accountRecoveryRequest;
     }
 
     function collectGuardianSignaturesOnRecoveryRequest(
         address guardian,
         bytes memory recoveryReqSignature
-    ) external override {
-        if (!AccountGuardian(accountGuardian).isAccountGuardian(guardian)) {
-            revert NotAGuardian(guardian);
-        }
-
+    ) external override onlyVerifiedAccountGuardian {
         if (accountRecoveryRequest == bytes32(0)) {
             revert NoRecoveryRequestFound(account);
         }
@@ -79,7 +75,32 @@ contract AccountRecovery is IAccountRecovery {
         emit GuardianSignatureRecorded(guardian);
     }
 
-    function accountRecoveryConcensusEvaluation() public onlyVerifiedAccountGuardian returns (bool) {
+    function restorePrivateKey() external override onlyVerifiedAccountGuardian {
+        require(_accountRecoveryConcensusEvaluation(), "Account Recovery Concensus has to be achieved!");
+
+        bytes memory restoredPrivateKey;
+        for (uint256 g = 0; g < guardiansWhoSigned.length; g++) {
+            restoredPrivateKey = abi.encodePacked(restoredPrivateKey, shards[guardiansWhoSigned[g]]);
+        }
+
+        emit RestoredKeyEmailed();
+    }
+
+    // internal functions //
+
+    function _recoverSigner(bytes memory guardianSignature) internal view returns (address) {
+        // verify
+        address recoveredGuardian = ECDSA.recover(accountRecoveryRequest, guardianSignature);
+
+        return recoveredGuardian;
+    }
+
+    /**
+     * @dev Will contain the evaluation logic for concensus of account recovery request by the guardians
+     * @return Boolean flag indicating if the concensus on account recovery was achieved or not
+     */
+
+    function _accountRecoveryConcensusEvaluation() internal returns (bool) {
         bytes32 request;
         uint256 guardianCount = AccountGuardian(accountGuardian).getAllGuardians().length;
 
@@ -115,16 +136,5 @@ contract AccountRecovery is IAccountRecovery {
             emit AccountRecoveryRequestConcensusFailed(account);
             return false;
         }
-    }
-
-    function restorePrivateKey() external override returns (bytes memory) {}
-
-    // internal functions //
-
-    function _recoverSigner(bytes memory guardianSignature) internal view returns (address) {
-        // verify
-        address recoveredGuardian = ECDSA.recover(accountRecoveryRequest, guardianSignature);
-
-        return recoveredGuardian;
     }
 }

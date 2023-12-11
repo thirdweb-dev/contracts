@@ -14,6 +14,7 @@ interface IAccountRecovery {
     event GuardianSignatureRecorded(address indexed guardian);
     event AccountRecoveryRequestConcensusAchieved(address indexed account);
     event AccountRecoveryRequestConcensusFailed(address indexed account);
+    event RestoredKeyEmailed();
 
     /**
      * @dev Will be used to store the shards of user's private key in a secure cloud based storage of the user.
@@ -22,20 +23,26 @@ interface IAccountRecovery {
     function storePrivateKeyShards(uint8[] calldata privateKeyShards) external;
 
     /**
+     * @dev This function is used to generate the account recovery request.
+     * Only verified account guardians can call this function.
+     */
+
+    function generateRecoveryRequest() external;
+
+    /**
+     * @dev Retrieve the account's recovery request, if exists.
+     * Only verified account guardians can call this function.
+     */
+    function getRecoveryRequest() external returns (bytes32);
+
+    /**
      * @dev Will collect the guardians signatures on the account's active recovery request
      * @param recoveryReqSignature The signature of the guardian on the account's active recovery req.
      */
     function collectGuardianSignaturesOnRecoveryRequest(address guardian, bytes memory recoveryReqSignature) external;
 
     /**
-     * @dev Will contain the evaluation logic for concensus of account recovery request by the guardians
-     * @return Boolean flag indicating if the concensus on account recovery was achieved or not
-     */
-    function accountRecoveryConcensusEvaluation() external returns (bool);
-
-    /**
      * @dev Will restore the private key, encrypt and return/email the user
-     * @return Encrypted private key of the account
      */
-    function restorePrivateKey() external returns (bytes memory);
+    function restorePrivateKey() external;
 }

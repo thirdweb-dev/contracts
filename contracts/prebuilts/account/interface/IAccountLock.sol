@@ -81,7 +81,7 @@ interface IAccountLock {
 
     /**
      * @dev Triggered by a guardian to create a lock request.
-     * @param account address of the smart wallet to be recovered
+     * @param account address of the smart wallet to be locked
      */
 
     function createLockRequest(address account) external returns (bytes32);
@@ -89,7 +89,7 @@ interface IAccountLock {
     /**
      * @notice Records guardian's signature on a lock request by
      * updating `lockRequestToGuardianToSignature` mapping
-     * @param lockRequest Lock request of an account
+     * @param lockRequest Active lock request of an account
      * @param signature Guardian's signature on the lock request
      */
     function recordSignatureOnLockRequest(bytes32 lockRequest, bytes calldata signature) external;
