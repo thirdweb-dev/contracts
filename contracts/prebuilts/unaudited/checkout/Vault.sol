@@ -66,11 +66,7 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
         emit TokensTransferredToExecutor(msg.sender, _token, _amount);
     }
 
-    function swapAndTransferTokensToExecutor(
-        address _token,
-        uint256 _amount,
-        SwapOp memory _swapOp
-    ) external {
+    function swapAndTransferTokensToExecutor(address _token, uint256 _amount, SwapOp memory _swapOp) external {
         require(_canTransferTokens(), "Not authorized");
         require(isApprovedRouter[_swapOp.router], "Invalid router address");
 
@@ -98,7 +94,6 @@ contract Vault is Initializable, PermissionsEnumerable, IVault {
     }
 
     function _swap(SwapOp memory _swapOp) internal {
-        address _tokenOut = _swapOp.tokenOut;
         address _tokenIn = _swapOp.tokenIn;
         address _router = _swapOp.router;
 
