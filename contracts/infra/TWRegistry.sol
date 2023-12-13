@@ -60,7 +60,7 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
         return deployments[_deployer].length();
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+    function _msgSender() internal view virtual override(Context, ERC2771Context, Multicall) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 

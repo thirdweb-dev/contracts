@@ -167,7 +167,12 @@ contract MarketplaceV3 is
         return _hasRole(EXTENSION_ROLE, msg.sender);
     }
 
-    function _msgSender() internal view override(ERC2771ContextUpgradeable, Permissions) returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        override(ERC2771ContextUpgradeable, Permissions, Multicall)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
     }
 

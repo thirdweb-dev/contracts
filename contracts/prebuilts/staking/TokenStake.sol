@@ -185,11 +185,13 @@ contract TokenStake is
         return _msgSender();
     }
 
-    function _msgSender() internal view virtual override returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Multicall)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
-    }
-
-    function _msgData() internal view virtual override returns (bytes calldata) {
-        return ERC2771ContextUpgradeable._msgData();
     }
 }
