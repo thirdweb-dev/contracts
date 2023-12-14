@@ -6,6 +6,9 @@ import "@std/Test.sol";
 import { Multicall } from "contracts/extension/Multicall.sol";
 import { Forwarder } from "contracts/infra/forwarder/Forwarder.sol";
 import { ERC2771Context } from "contracts/extension/upgradeable/ERC2771Context.sol";
+import { TokenERC721 } from "contracts/prebuilts/token/TokenERC721.sol";
+import { Strings } from "contracts/lib/Strings.sol";
+import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 contract MockMulticallForwarderConsumer is Multicall, ERC2771Context {
     event Increment(address caller);
@@ -26,6 +29,7 @@ contract MockMulticallForwarderConsumer is Multicall, ERC2771Context {
 contract MulticallTest is Test {
     // Target (mock) contract
     address internal consumer;
+    TokenERC721 internal token;
 
     address internal user1;
     uint256 internal user1Pkey = 100;
@@ -54,6 +58,29 @@ contract MulticallTest is Test {
         address[] memory forwarders = new address[](1);
         forwarders[0] = address(forwarder);
         consumer = address(new MockMulticallForwarderConsumer(forwarders));
+
+        // Deploy `TokenERC721`
+        address impl = address(new TokenERC721());
+        token = TokenERC721(
+            address(
+                new TWProxy(
+                    impl,
+                    abi.encodeWithSelector(
+                        TokenERC721.initialize.selector,
+                        user1,
+                        "name",
+                        "SYMBOL",
+                        "ipfs://",
+                        forwarders,
+                        user1,
+                        user1,
+                        0,
+                        0,
+                        user1
+                    )
+                )
+            )
+        );
 
         // Setup forwarder details
         typehashForwardRequest = keccak256(
@@ -140,7 +167,7 @@ contract MulticallTest is Test {
         assertEq(MockMulticallForwarderConsumer(consumer).counter(user1), 3); // counter incremented!
     }
 
-    function test_multicall_revert_viaForwarder() public {
+    function test_multicall_viaForwarder_attemptSpoof() public {
         // Make 3 calls to `increment` within a multicall
         bytes[] memory callsSpoof = new bytes[](3);
         callsSpoof[0] = abi.encodePacked(
@@ -180,5 +207,54 @@ contract MulticallTest is Test {
 
         assertEq(MockMulticallForwarderConsumer(consumer).counter(user1), 0); // counter unchanged!
         assertEq(MockMulticallForwarderConsumer(consumer).counter(user2), 3); // counter incremented for forwarder request signer!
+    }
+
+    function test_multicall_tokenerc721_viaForwarder_attemptSpoof() public {
+        // User1 is admin on `token`
+        assertTrue(token.hasRole(keccak256("MINTER_ROLE"), user1));
+
+        // token ID `0` has no owner
+        vm.expectRevert("ERC721: invalid token ID");
+        token.ownerOf(0);
+
+        // Make call to `mintTo` within a multicall
+        bytes[] memory callsSpoof = new bytes[](1);
+        callsSpoof[0] = abi.encodePacked(
+            abi.encodeWithSelector(TokenERC721.mintTo.selector, user2, "metadataURI"),
+            user1
+        );
+        // CASE:   attempting to spoof address by manually appending address to multicall data arg.
+        //
+        //         This attempt fails because `multicall` enforces original forwarder request signer
+        //         as the `_msgSender()`.
+
+        bytes memory multicallDataSpoof = abi.encodeWithSelector(Multicall.multicall.selector, callsSpoof);
+
+        // user2 spoofing as user1
+        Forwarder.ForwardRequest memory forwardRequestSpoof;
+
+        forwardRequestSpoof.from = user2;
+        forwardRequestSpoof.to = address(token);
+        forwardRequestSpoof.value = 0;
+        forwardRequestSpoof.gas = 100_000;
+        forwardRequestSpoof.nonce = Forwarder(forwarder).getNonce(user2);
+        forwardRequestSpoof.data = multicallDataSpoof;
+
+        bytes memory signatureSpoof = _signForwarderRequest(forwardRequestSpoof, user2Pkey);
+
+        // Minter role check occurs on user2 i.e. signer of the forwarder request, and not user1 i.e. the address user2 attempts to spoof.
+        vm.expectRevert(
+            abi.encodePacked(
+                "AccessControl: account ",
+                Strings.toHexString(uint160(user2), 20),
+                " is missing role ",
+                Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
+            )
+        );
+        Forwarder(forwarder).execute(forwardRequestSpoof, signatureSpoof);
+
+        // token ID `0` still has no owner
+        vm.expectRevert("ERC721: invalid token ID");
+        token.ownerOf(0);
     }
 }
