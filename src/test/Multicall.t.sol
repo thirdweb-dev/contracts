@@ -96,7 +96,7 @@ contract MulticallTest is Test {
         return signature;
     }
 
-    function test_multicall_callflow() public {
+    function test_multicall_viaDirectCall() public {
         // Make 3 calls to `increment` within a multicall
         bytes[] memory calls = new bytes[](3);
         calls[0] = abi.encodeWithSelector(MockMulticallForwarderConsumer.increment.selector);
@@ -111,6 +111,14 @@ contract MulticallTest is Test {
         Multicall(consumer).multicall(calls);
 
         assertEq(MockMulticallForwarderConsumer(consumer).counter(user1), 3); // counter incremented!
+    }
+
+    function test_multicall_viaForwarder() public {
+        // Make 3 calls to `increment` within a multicall
+        bytes[] memory calls = new bytes[](3);
+        calls[0] = abi.encodeWithSelector(MockMulticallForwarderConsumer.increment.selector);
+        calls[1] = abi.encodeWithSelector(MockMulticallForwarderConsumer.increment.selector);
+        calls[2] = abi.encodeWithSelector(MockMulticallForwarderConsumer.increment.selector);
 
         // CASE 2: multicall with using forwarder. Should increment counter for the signer of the forwarder request.
 
@@ -129,45 +137,48 @@ contract MulticallTest is Test {
 
         Forwarder(forwarder).execute(forwardRequest, signature);
 
-        assertEq(MockMulticallForwarderConsumer(consumer).counter(user1), 6); // counter incremented!
+        assertEq(MockMulticallForwarderConsumer(consumer).counter(user1), 3); // counter incremented!
+    }
+
+    function test_multicall_revert_viaForwarder() public {
+        // Make 3 calls to `increment` within a multicall
+        bytes[] memory callsSpoof = new bytes[](3);
+        callsSpoof[0] = abi.encodePacked(
+            abi.encodeWithSelector(MockMulticallForwarderConsumer.increment.selector),
+            user1
+        );
+        callsSpoof[1] = abi.encodePacked(
+            abi.encodeWithSelector(MockMulticallForwarderConsumer.increment.selector),
+            user1
+        );
+        callsSpoof[2] = abi.encodePacked(
+            abi.encodeWithSelector(MockMulticallForwarderConsumer.increment.selector),
+            user1
+        );
 
         // CASE 3: attempting to spoof address by manually appending address to multicall data arg.
         //
-        //         Should REVERT(!) due to malformed calldata for the target function being called
-        //         since the `multicall` function will append forward request signer's address to
-        //         calldata regardless.
-        bytes[] memory calls_spoof = new bytes[](3);
-        calls_spoof[0] = abi.encodePacked(
-            abi.encodeWithSelector(MockMulticallForwarderConsumer.increment.selector),
-            user1
-        );
-        calls_spoof[1] = abi.encodePacked(
-            abi.encodeWithSelector(MockMulticallForwarderConsumer.increment.selector),
-            user1
-        );
-        calls_spoof[2] = abi.encodePacked(
-            abi.encodeWithSelector(MockMulticallForwarderConsumer.increment.selector),
-            user1
-        );
+        //         This attempt fails because `multicall` enforces original forwarder request signer
+        //         as the `_msgSender()`.
 
-        bytes memory multicallData_spoof = abi.encodeWithSelector(Multicall.multicall.selector, calls);
+        bytes memory multicallDataSpoof = abi.encodeWithSelector(Multicall.multicall.selector, callsSpoof);
 
         // user2 spoofing as user1
-        Forwarder.ForwardRequest memory forwardRequest_spoof;
+        Forwarder.ForwardRequest memory forwardRequestSpoof;
 
-        forwardRequest.from = user2;
-        forwardRequest.to = address(consumer);
-        forwardRequest.value = 0;
-        forwardRequest.gas = 100_000;
-        forwardRequest.nonce = Forwarder(forwarder).getNonce(user2);
-        forwardRequest.data = multicallData_spoof;
+        forwardRequestSpoof.from = user2;
+        forwardRequestSpoof.to = address(consumer);
+        forwardRequestSpoof.value = 0;
+        forwardRequestSpoof.gas = 100_000;
+        forwardRequestSpoof.nonce = Forwarder(forwarder).getNonce(user2);
+        forwardRequestSpoof.data = multicallDataSpoof;
 
-        bytes memory signature_spoof = _signForwarderRequest(forwardRequest_spoof, user2Pkey);
+        bytes memory signatureSpoof = _signForwarderRequest(forwardRequestSpoof, user2Pkey);
 
-        vm.expectRevert();
-        Forwarder(forwarder).execute(forwardRequest_spoof, signature_spoof);
+        // vm.expectRevert();
+        Forwarder(forwarder).execute(forwardRequestSpoof, signatureSpoof);
 
-        assertEq(MockMulticallForwarderConsumer(consumer).counter(user1), 6); // counter unchanged!
-        assertEq(MockMulticallForwarderConsumer(consumer).counter(user2), 0);
+        assertEq(MockMulticallForwarderConsumer(consumer).counter(user1), 0); // counter unchanged!
+        assertEq(MockMulticallForwarderConsumer(consumer).counter(user2), 3); // counter incremented for forwarder request signer!
     }
 }
