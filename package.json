@@ -9,6 +9,7 @@
   ],
   "devDependencies": {
     "@chainlink/contracts": "^0.6.1",
+    "@chainlink/contracts-ccip": "^1.2.1",
     "@openzeppelin/contracts": "4.7.3",
     "@openzeppelin/contracts-upgradeable": "4.7.3",
     "@thirdweb-dev/chains": "^0.1.54",
@@ -60,6 +61,5 @@
     "forge:test": "forge test",
     "gas": "forge test --mc Benchmark --gas-report > gasreport.txt",
     "forge:snapshot": "forge snapshot --check"
-  },
-  "dependencies": {}
+  }
 }
