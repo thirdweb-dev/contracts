@@ -127,4 +127,9 @@ contract ERC20DropVote is ContractMetadata, Multicall, Ownable, ERC20Votes, Prim
     function _canSetPrimarySaleRecipient() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view override(Multicall, Context) returns (address) {
+        return msg.sender;
+    }
 }

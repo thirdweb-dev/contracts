@@ -202,4 +202,9 @@ contract ERC721Base is ERC721AQueryable, ContractMetadata, Multicall, Ownable, R
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view override(Multicall, Context) returns (address) {
+        return msg.sender;
+    }
 }

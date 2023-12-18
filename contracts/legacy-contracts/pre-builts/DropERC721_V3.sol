@@ -727,7 +727,7 @@ contract DropERC721_V3 is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Multicall)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();

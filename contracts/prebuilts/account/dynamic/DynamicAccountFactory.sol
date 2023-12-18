@@ -53,4 +53,9 @@ contract DynamicAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
     function _canSetContractURI() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view override(Multicall, Permissions) returns (address) {
+        return msg.sender;
+    }
 }

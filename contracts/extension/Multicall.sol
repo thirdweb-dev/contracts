@@ -19,11 +19,22 @@ contract Multicall is IMulticall {
      *  @param data The bytes data that makes up the batch of function calls to execute.
      *  @return results The bytes data that makes up the result of the batch of function calls executed.
      */
-    function multicall(bytes[] calldata data) external virtual override returns (bytes[] memory results) {
+    function multicall(bytes[] calldata data) external returns (bytes[] memory results) {
         results = new bytes[](data.length);
+        address sender = _msgSender();
+        bool isForwarder = msg.sender != sender;
         for (uint256 i = 0; i < data.length; i++) {
-            results[i] = Address.functionDelegateCall(address(this), data[i]);
+            if (isForwarder) {
+                results[i] = Address.functionDelegateCall(address(this), abi.encodePacked(data[i], sender));
+            } else {
+                results[i] = Address.functionDelegateCall(address(this), data[i]);
+            }
         }
         return results;
+    }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view virtual returns (address) {
+        return msg.sender;
     }
 }

@@ -182,12 +182,13 @@ contract AirdropERC20 is
     }
 
     /// @dev See ERC2771
-    function _msgSender() internal view virtual override returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Multicall)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
-    }
-
-    /// @dev See ERC2771
-    function _msgData() internal view virtual override returns (bytes calldata) {
-        return ERC2771ContextUpgradeable._msgData();
     }
 }
