@@ -557,6 +557,7 @@
     fastq "^1.6.0"
 
 "@openzeppelin/contracts-upgradeable-4.7.3@npm:@openzeppelin/contracts-upgradeable@v4.7.3", "@openzeppelin/contracts-upgradeable@4.7.3":
+  name "@openzeppelin/contracts-upgradeable-4.7.3"
   version "4.7.3"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.7.3.tgz#f1d606e2827d409053f3e908ba4eb8adb1dd6995"
   integrity sha512-+wuegAMaLcZnLCJIvrVUDzA9z/Wp93f0Dla/4jJvIhijRrPabjQbZe6fWiECLaJyfn5ci9fqf9vTw3xpQOad2A==
@@ -593,7 +594,12 @@
   dependencies:
     antlr4ts "^0.5.0-alpha.4"
 
-"@thirdweb-dev/chains@0.1.58", "@thirdweb-dev/chains@^0.1.54":
+"@thirdweb-dev/chains@0.1.61":
+  version "0.1.61"
+  resolved "https://registry.yarnpkg.com/@thirdweb-dev/chains/-/chains-0.1.61.tgz#4798164d1e7f07269c04f821e4d56102b476d3ae"
+  integrity sha512-SlFXjqtqZbGqSYKv1HEhGIG03QjnkQPrgLO7WAar7/ZreEqDb3CtUzysSXnblfMqDDwe51dmWBcZ3dXXtTSZxg==
+
+"@thirdweb-dev/chains@^0.1.54":
   version "0.1.58"
   resolved "https://registry.yarnpkg.com/@thirdweb-dev/chains/-/chains-0.1.58.tgz#5a26fe187ef39b7c6af87972166785d110cad53e"
   integrity sha512-prSShAWoLODuZQcDBwNDqcXLzfevV2BOw54cDaHetSP+Sw/BP6SaPKIxojRQGsXARjn0JMWniG/NCtppUUHALQ==
@@ -644,17 +650,17 @@
     buffer-reverse "^1.0.1"
     treeify "^1.1.0"
 
-"@thirdweb-dev/sdk@^4.0.16":
-  version "4.0.16"
-  resolved "https://registry.yarnpkg.com/@thirdweb-dev/sdk/-/sdk-4.0.16.tgz#2fec8d9bb645092473479e216eccd8942a2b5b13"
-  integrity sha512-WTG3sJTtEUpbY1SUd62GU//5npkgVQNJHOUqDjGl1jrTa8Ml0w1VQNe9p/0xbv+3cCTGYOhMvM4HkOZnrQp+gg==
+"@thirdweb-dev/sdk@^4.0.22":
+  version "4.0.22"
+  resolved "https://registry.yarnpkg.com/@thirdweb-dev/sdk/-/sdk-4.0.22.tgz#5302d5ea02a1c356284c39b2893b999e14bffcb6"
+  integrity sha512-5XRn6qnR0HHqN48kbvW00dO7l2GHBR1wITFCN4IXEgkCCOPJpck0h1jVqqQ9OLm6ILBoSaIkjKo3TIGwsxhmww==
   dependencies:
-    "@thirdweb-dev/chains" "0.1.58"
+    "@thirdweb-dev/chains" "0.1.61"
     "@thirdweb-dev/contracts-js" "1.3.16"
     "@thirdweb-dev/crypto" "0.2.0"
     "@thirdweb-dev/generated-abis" "0.0.1"
     "@thirdweb-dev/merkletree" "0.2.0"
-    "@thirdweb-dev/storage" "2.0.5"
+    "@thirdweb-dev/storage" "2.0.7"
     abitype "^0.2.5"
     bn.js "^5.2.1"
     bs58 "^5.0.0"
@@ -667,10 +673,10 @@
     yaml "^2.3.1"
     zod "^3.22.3"
 
-"@thirdweb-dev/storage@2.0.5":
-  version "2.0.5"
-  resolved "https://registry.yarnpkg.com/@thirdweb-dev/storage/-/storage-2.0.5.tgz#e492923ca0037db7cd8f30572333a3bb2f67639e"
-  integrity sha512-I3DK/ZNWOMa/XE2hfJnGKVfc9INn5c3if1qavyK/1fjJBxhUiUXjT59UYbuoWhHLEq0rS/QZVOGS/9qcOs/DAQ==
+"@thirdweb-dev/storage@2.0.7":
+  version "2.0.7"
+  resolved "https://registry.yarnpkg.com/@thirdweb-dev/storage/-/storage-2.0.7.tgz#249b5bb2949156542cc715b5262f8c88dd0370de"
+  integrity sha512-pi+wfUycHWoOVxD+CZtfGprP9+yQ2PgErsYwWbW3/pQtk8uatvGJMPgMNYsiu6G3B1V3xokBfnmCTsONjz+YNw==
   dependencies:
     "@thirdweb-dev/crypto" "0.2.0"
     cid-tool "^3.0.0"
