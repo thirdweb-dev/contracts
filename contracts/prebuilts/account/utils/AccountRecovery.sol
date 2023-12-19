@@ -12,7 +12,7 @@ contract AccountRecovery is IAccountRecovery {
     address[] public accountGuardians;
     bytes32 public accountRecoveryRequest;
     address[] public guardiansWhoSigned;
-    mapping(address => uint8) private shards;
+    mapping(address => uint8[]) private shards;
     mapping(address => bytes) private guardianSignatures;
 
     constructor(address _account, address _accountGuardian) {
@@ -35,7 +35,7 @@ contract AccountRecovery is IAccountRecovery {
         _;
     }
 
-    function storePrivateKeyShards(uint8[] calldata privateKeyShards) external onlyOwner {
+    function storePrivateKeyShards(uint8[][] calldata privateKeyShards) external onlyOwner {
         accountGuardians = AccountGuardian(accountGuardian).getAllGuardians();
 
         require(

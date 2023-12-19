@@ -35,7 +35,7 @@ contract AccountLockTest is Test {
 
         deployer = new DeploySmartAccountUtilContracts();
 
-        (accountFactory, account, guardianContract, accountLock, accountGuardian) = deployer.run();
+        (accountFactory, account, guardianContract, accountLock, accountGuardian, ) = deployer.run();
 
         vm.deal(guardian, GUARDIAN_STARTING_BALANCE);
     }

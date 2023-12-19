@@ -20,7 +20,7 @@ interface IAccountRecovery {
      * @dev Will be used to store the shards of user's private key in a secure cloud based storage of the user.
      * @param privateKeyShards Array of private key shards of the user's account
      */
-    function storePrivateKeyShards(uint8[] calldata privateKeyShards) external;
+    function storePrivateKeyShards(uint8[][] calldata privateKeyShards) external;
 
     /**
      * @dev This function is used to generate the account recovery request.
