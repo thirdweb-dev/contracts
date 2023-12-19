@@ -47,9 +47,9 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
     }
 
     ///@dev  returns cross chain contract details
-    function getCrossChainData() external view returns (address, address) {
-        return (address(crossChainTokenTransfer), address(crossChainTokenTransferMaster));
-    }
+    // function getCrossChainData() external view returns (address, address) {
+    //     return (address(crossChainTokenTransfer), address(crossChainTokenTransferMaster));
+    // }
 
     ///@dev  returns Account lock contract details
     function getAccountLock() external view returns (address) {

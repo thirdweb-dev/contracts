@@ -9,8 +9,10 @@ import { Account } from "contracts/prebuilts/account/non-upgradeable/Account.sol
 import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
 import { AccountGuardian } from "contracts/prebuilts/account/utils/AccountGuardian.sol";
 import { AccountRecovery } from "contracts/prebuilts/account/utils/AccountRecovery.sol";
-import { CrossChainTokenTransfer } from "contracts/prebuilts/account/utils/CrossChainTokenTransfer.sol";
-import { CrossChainTokenTransferMaster } from "contracts/prebuilts/account/utils/CrossChainTokenTransferMaster.sol";
+
+// import { CrossChainTokenTransfer } from "contracts/prebuilts/account/utils/CrossChainTokenTransfer.sol";
+
+// import { CrossChainTokenTransferMaster } from "contracts/prebuilts/account/utils/CrossChainTokenTransferMaster.sol";
 
 contract DeploySmartAccountUtilContracts is Script {
     address public admin = makeAddr("admin");
@@ -23,8 +25,8 @@ contract DeploySmartAccountUtilContracts is Script {
             Guardian,
             AccountLock,
             AccountGuardian,
-            CrossChainTokenTransfer,
-            CrossChainTokenTransferMaster,
+            /* CrossChainTokenTransfer, */
+            /* CrossChainTokenTransferMaster, */
             AccountRecovery
         )
     {
@@ -39,8 +41,8 @@ contract DeploySmartAccountUtilContracts is Script {
 
         Guardian guardianContract = accountFactory.guardian();
         AccountLock accountLock = accountFactory.accountLock();
-        CrossChainTokenTransfer ccTokenTranferContract = accountFactory.crossChainTokenTransfer();
-        CrossChainTokenTransferMaster ccTokenTranferContractMaster = accountFactory.crossChainTokenTransferMaster();
+        // CrossChainTokenTransfer ccTokenTranferContract = accountFactory.crossChainTokenTransfer();
+        // CrossChainTokenTransferMaster ccTokenTranferContractMaster = accountFactory.crossChainTokenTransferMaster();
         AccountGuardian accountGuardian = accountFactory.accountGuardian();
         AccountRecovery accountRecovery = accountFactory.accountRecovery();
 
@@ -50,8 +52,8 @@ contract DeploySmartAccountUtilContracts is Script {
             guardianContract,
             accountLock,
             accountGuardian,
-            ccTokenTranferContract,
-            ccTokenTranferContractMaster,
+            // ccTokenTranferContract,
+            /* ccTokenTranferContractMaster, */
             accountRecovery
         );
     }
