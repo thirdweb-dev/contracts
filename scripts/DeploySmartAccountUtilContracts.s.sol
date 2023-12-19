@@ -35,7 +35,7 @@ contract DeploySmartAccountUtilContracts is Script {
         address link = address(0x779877A7B0D9E8603169DdbD7836e478b4624789);
 
         EntryPoint entryPoint = new EntryPoint();
-        AccountFactory accountFactory = new AccountFactory(entryPoint, router, link);
+        AccountFactory accountFactory = new AccountFactory(entryPoint);
         address account = accountFactory.createAccount(admin, "");
         vm.stopBroadcast();
 

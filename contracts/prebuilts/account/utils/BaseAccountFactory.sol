@@ -60,7 +60,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _accountImpl, address _entrypoint, address _router, address _link) {
+    constructor(address _accountImpl, address _entrypoint) {
         accountImplementation = _accountImpl;
         entrypoint = _entrypoint;
         guardian = new Guardian();

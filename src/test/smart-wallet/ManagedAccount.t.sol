@@ -243,7 +243,7 @@ contract ManagedAccountTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        accountFactory = new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions, router, link);
+        accountFactory = new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
         // deploy dummy contract
         numberContract = new Number();
     }
@@ -297,9 +297,7 @@ contract ManagedAccountTest is BaseTest {
         vm.prank(factoryDeployer);
         ManagedAccountFactory factory = new ManagedAccountFactory(
             IEntryPoint(payable(address(entrypoint))),
-            extensions,
-            router,
-            link
+            extensions
         );
         assertTrue(address(factory) != address(0), "factory address should not be zero");
     }
