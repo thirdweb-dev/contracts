@@ -38,8 +38,8 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
-
     address public accountLock;
+    address public commonGuardian;
 
     /// @notice EIP 4337 factory for this contract.
     address public immutable factory;
@@ -58,11 +58,16 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     }
 
     /// @notice Initializes the smart contract wallet.
-    function initialize(address _defaultAdmin, bytes calldata, address _accountLock) public virtual initializer {
+    function initialize(
+        address _defaultAdmin,
+        address _guardian,
+        address _accountLock,
+        bytes calldata
+    ) public virtual initializer {
         // This is passed as data in the `_registerOnFactory()` call in `AccountExtension` / `Account`.
         AccountCoreStorage.data().firstAdmin = _defaultAdmin;
         _setAdmin(_defaultAdmin, true);
-
+        commonGuardian = _guardian;
         accountLock = _accountLock;
     }
 

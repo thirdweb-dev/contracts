@@ -4,11 +4,11 @@ pragma solidity ^0.8.12;
 import "../utils/UserOperation.sol";
 
 interface IAccount {
-
     ///////////////////////
     //// Events //////////
     ///////////////////////
     event AccountLocked(address indexed account);
+    event AdminUpdated(address indexed newAdmin);
 
     /**
      * Validate user's signature and nonce

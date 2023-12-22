@@ -63,6 +63,13 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         _;
     }
 
+    modifier onlyAccountRecovery(address sender) {
+        if (Guardian(commonGuardian).getAccountRecovery(address(this)) != sender) {
+            revert("Only Account Recovery Contract allowed to update admin");
+        }
+        _;
+    }
+
     /// @notice Will check if the Account transactions has been paused by the guardians. If paused, it will not allow the `execute(..)` or the `executeBatch(..)` function to run.
     modifier whenNotPaused() {
         require(!paused, "Smart account has been paused.");
@@ -139,6 +146,14 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     function setPaused(bool pauseStatus) external onlyAccountLock(msg.sender) {
         paused = pauseStatus;
         AccountLock(accountLock).addLockAccountToList(address(this));
+    }
+
+    /// @notice Overrides the account admin (post recovery concensus)
+    function updateAdmin(address _newAdmin) external onlyAccountRecovery(msg.sender) {
+        AccountCoreStorage.data().firstAdmin = _newAdmin;
+        _setAdmin(_newAdmin, true);
+
+        emit AdminUpdated(_newAdmin);
     }
 
     /*///////////////////////////////////////////////////////////////

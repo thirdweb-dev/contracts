@@ -38,11 +38,12 @@ interface IAccountRecovery {
     /**
      * @dev Will collect the guardians signatures on the account's active recovery request
      * @param recoveryReqSignature The signature of the guardian on the account's active recovery req.
+     * @param guardian The guardian signing the account recovery request
+     * @param newAdmin address of the new EOA/Embedded wallet
      */
-    function collectGuardianSignaturesOnRecoveryRequest(address guardian, bytes memory recoveryReqSignature) external;
-
-    /**
-     * @dev Will restore the private key, encrypt and return/email the user
-     */
-    function restorePrivateKey() external;
+    function collectGuardianSignaturesOnRecoveryRequest(
+        address guardian,
+        address newAdmin,
+        bytes memory recoveryReqSignature
+    ) external;
 }

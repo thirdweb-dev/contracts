@@ -72,7 +72,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
             require(allAccounts.add(account), "AccountFactory: account already registered");
         }
 
-        _initializeAccount(account, _admin, _data);
+        _initializeAccount(account, _admin, address(guardian), _data);
         emit AccountCreated(account, _admin);
 
         accountGuardian = new AccountGuardian(guardian, accountLock, account);
@@ -166,5 +166,10 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal virtual;
+    function _initializeAccount(
+        address _account,
+        address _admin,
+        address guardian,
+        bytes calldata _data
+    ) internal virtual;
 }

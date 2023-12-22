@@ -64,6 +64,7 @@ contract AccountRecovery is IAccountRecovery {
 
     function collectGuardianSignaturesOnRecoveryRequest(
         address guardian,
+        address newAdmin,
         bytes memory recoveryReqSignature
     ) external override onlyVerifiedAccountGuardian {
         if (accountRecoveryRequest == bytes32(0)) {
@@ -73,17 +74,14 @@ contract AccountRecovery is IAccountRecovery {
         guardiansWhoSigned.push(guardian);
         guardianSignatures[guardian] = recoveryReqSignature;
         emit GuardianSignatureRecorded(guardian);
-    }
 
-    function restorePrivateKey() external override onlyVerifiedAccountGuardian {
-        require(_accountRecoveryConcensusEvaluation(), "Account Recovery Concensus has to be achieved!");
+        bool consensusAcheived = _accountRecoveryConcensusEvaluation();
 
-        bytes memory restoredPrivateKey;
-        for (uint256 g = 0; g < guardiansWhoSigned.length; g++) {
-            restoredPrivateKey = abi.encodePacked(restoredPrivateKey, shards[guardiansWhoSigned[g]]);
+        if (consensusAcheived) {
+            (bool success, ) = (payable(account)).call(abi.encodeWithSignature("updateAdmin(newAdmin)", newAdmin));
+
+            require(success, "Failed to update Admin");
         }
-
-        emit RestoredKeyEmailed();
     }
 
     // internal functions //
@@ -127,9 +125,8 @@ contract AccountRecovery is IAccountRecovery {
             }
         }
 
-        // accountRequestConcensusEvaluationStatus[request] = true;
-
         if (validGuardianSignatures > (guardianCount / 2)) {
+            // accountRequestConcensusEvaluationStatus[request] = true;
             emit AccountRecoveryRequestConcensusAchieved(account);
             return true;
         } else {
