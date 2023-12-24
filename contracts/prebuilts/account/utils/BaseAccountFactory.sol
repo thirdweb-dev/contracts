@@ -16,8 +16,6 @@ import "../interface/IAccountFactory.sol";
 import { AccountLock } from "../utils/AccountLock.sol";
 import { Guardian } from "../utils/Guardian.sol";
 import { AccountGuardian } from "../utils/AccountGuardian.sol";
-import { CrossChainTokenTransfer } from "../utils/CrossChainTokenTransfer.sol";
-import { CrossChainTokenTransferMaster } from "../utils/CrossChainTokenTransferMaster.sol";
 import { AccountRecovery } from "../utils/AccountRecovery.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
@@ -36,8 +34,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     event GuardianContractDeployed(address indexed);
     event AccountLockContractDeployed(address indexed);
-    event CrossChainTokenTransferContractDeployed(address indexed);
-    event CrossChainTokenTransferMasterContractDeployed(address indexed);
     event AccountGuardianContractDeployed(address indexed);
     event SmartAccountContractDeployed(address indexed);
     event AccountRecoveryContractDeployed(address indexed);
@@ -50,8 +46,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     Guardian public guardian;
     AccountLock public accountLock;
     AccountGuardian public accountGuardian;
-    CrossChainTokenTransfer public crossChainTokenTransfer;
-    CrossChainTokenTransferMaster public crossChainTokenTransferMaster;
     AccountRecovery public accountRecovery;
     EnumerableSet.AddressSet private allAccounts;
     mapping(address => EnumerableSet.AddressSet) internal accountsOfSigner;
@@ -60,19 +54,16 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _accountImpl, address _entrypoint, address _router, address _link) {
+    constructor(address _accountImpl, address _entrypoint) {
         accountImplementation = _accountImpl;
         entrypoint = _entrypoint;
         guardian = new Guardian();
         accountLock = new AccountLock(guardian);
-        crossChainTokenTransfer = new CrossChainTokenTransfer(_router, _link);
-        crossChainTokenTransferMaster = new CrossChainTokenTransferMaster(address(crossChainTokenTransfer), _link);
+
         // emit the contract addresses
         emit SmartAccountContractDeployed(_accountImpl);
         emit GuardianContractDeployed(address(guardian));
         emit AccountLockContractDeployed(address(accountLock));
-        emit CrossChainTokenTransferContractDeployed(address(crossChainTokenTransfer));
-        emit CrossChainTokenTransferMasterContractDeployed(address(crossChainTokenTransferMaster));
     }
 
     /*///////////////////////////////////////////////////////////////

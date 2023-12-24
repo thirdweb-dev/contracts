@@ -43,8 +43,6 @@ contract DynamicAccountTest is BaseTest {
     // Target contracts
     EntryPoint private entrypoint;
     DynamicAccountFactory private accountFactory;
-    address router = address(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59);
-    address link = address(0x779877A7B0D9E8603169DdbD7836e478b4624789);
 
     // Mocks
     Number internal numberContract;
@@ -241,7 +239,7 @@ contract DynamicAccountTest is BaseTest {
         extensions[0] = defaultExtension;
 
         // deploy account factory
-        accountFactory = new DynamicAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions, router, link);
+        accountFactory = new DynamicAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
         // deploy dummy contract
         numberContract = new Number();
     }
@@ -298,9 +296,7 @@ contract DynamicAccountTest is BaseTest {
         // deploy account factory
         DynamicAccountFactory factory = new DynamicAccountFactory(
             IEntryPoint(payable(address(entrypoint))),
-            extensions,
-            router,
-            link
+            extensions
         );
     }
 

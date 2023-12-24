@@ -210,8 +210,6 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
 
         // Setup contracts
         entrypoint = new EntryPoint();
-        address router = address(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59);
-        address link = address(0x779877A7B0D9E8603169DdbD7836e478b4624789);
 
         // Setting up default extension.
         IExtension.Extension memory defaultExtension;
@@ -257,7 +255,7 @@ contract AccountPermissionsTest_setPermissionsForSigner is BaseTest {
         extensions[0] = defaultExtension;
 
         // deploy account factory
-        accountFactory = new DynamicAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions, router, link);
+        accountFactory = new DynamicAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
         // deploy dummy contract
         numberContract = new Number();
     }

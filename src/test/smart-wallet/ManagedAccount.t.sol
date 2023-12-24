@@ -43,8 +43,6 @@ contract ManagedAccountTest is BaseTest {
     // Target contracts
     EntryPoint private entrypoint;
     ManagedAccountFactory private accountFactory;
-    address router = address(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59);
-    address link = address(0x779877A7B0D9E8603169DdbD7836e478b4624789);
 
     // Mocks
     Number internal numberContract;
@@ -243,7 +241,7 @@ contract ManagedAccountTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        accountFactory = new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions, router, link);
+        accountFactory = new ManagedAccountFactory(IEntryPoint(payable(address(entrypoint))), extensions);
         // deploy dummy contract
         numberContract = new Number();
     }
@@ -297,9 +295,7 @@ contract ManagedAccountTest is BaseTest {
         vm.prank(factoryDeployer);
         ManagedAccountFactory factory = new ManagedAccountFactory(
             IEntryPoint(payable(address(entrypoint))),
-            extensions,
-            router,
-            link
+            extensions
         );
         assertTrue(address(factory) != address(0), "factory address should not be zero");
     }
