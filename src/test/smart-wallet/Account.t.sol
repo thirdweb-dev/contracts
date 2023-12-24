@@ -52,15 +52,17 @@ contract SimpleAccountTest is BaseTest {
     address private sender = 0xBB956D56140CA3f3060986586A2631922a4B347E;
     address payable private beneficiary = payable(address(0x45654));
 
+    // CCIP contract addresses
+    address _router = address(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59);
+    address _link = address(0x779877A7B0D9E8603169DdbD7836e478b4624789);
+
     bytes32 private uidCache = bytes32("random uid");
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _prepareSignature(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes32 typedDataHash)
-    {
+    function _prepareSignature(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes32 typedDataHash) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -91,11 +93,9 @@ contract SimpleAccountTest is BaseTest {
         typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
     }
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typedDataHash = _prepareSignature(_req);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountAdminPKey, typedDataHash);
         signature = abi.encodePacked(r, s, v);
@@ -187,8 +187,9 @@ contract SimpleAccountTest is BaseTest {
 
         // Setup contracts
         entrypoint = new EntryPoint();
+
         // deploy account factory
-        accountFactory = new AccountFactory(IEntryPoint(payable(address(entrypoint))));
+        accountFactory = new AccountFactory(IEntryPoint(payable(address(entrypoint))), _router, _link);
         // deploy dummy contract
         numberContract = new Number();
     }

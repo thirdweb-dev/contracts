@@ -24,12 +24,13 @@ gas_reports = [
   "AccountBenchmark",
 ]
 libraries = []
-libs = ['lib']
+libs = ['node_modules', 'lib']
 optimizer = true
 optimizer_runs = 20
 out = 'artifacts_forge'
 remappings = [
-  '@chainlink/=lib/chainlink/',
+  '@chainlink/contracts/=lib/chainlink/contracts',
+  '@chainlink/contracts-ccip/=node_modules/@chainlink/contracts-ccip',
   '@openzeppelin/contracts=lib/openzeppelin-contracts/contracts',
   '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
   '@ds-test=lib/ds-test/src/',
@@ -38,7 +39,7 @@ remappings = [
   'erc721a-upgradeable/=lib/ERC721A-Upgradeable/',
   'erc721a/=lib/ERC721A/',
   '@thirdweb-dev/dynamic-contracts/=lib/dynamic-contracts/',
-  'lib/sstore2=lib/dynamic-contracts/lib/sstore2/'
+  'lib/sstore2=lib/dynamic-contracts/lib/sstore2/',
 ]
 src = 'contracts'
 test = 'src/test'

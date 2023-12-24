@@ -30,6 +30,13 @@ import { AccountRecovery } from "../utils/AccountRecovery.sol";
 abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    // Events //
+
+    event GuardianContractDeployed(address indexed);
+    event AccountLockContractDeployed(address indexed);
+    event AccountGuardianContractDeployed(address indexed);
+    event SmartAccountContractDeployed(address indexed);
+    event AccountRecoveryContractDeployed(address indexed);
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
@@ -37,8 +44,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     address public immutable accountImplementation;
     address public immutable entrypoint;
     address private constant emailService = address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720); // TODO: To be updated with the wallet address of the actual email service
-    Guardian public guardian = new Guardian();
-    AccountLock public accountLock = new AccountLock(guardian);
+    Guardian public guardian;
+    AccountLock public accountLock;
     AccountGuardian public accountGuardian;
     AccountRecovery public accountRecovery;
     EnumerableSet.AddressSet private allAccounts;
@@ -51,6 +58,13 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     constructor(address _accountImpl, address _entrypoint) {
         accountImplementation = _accountImpl;
         entrypoint = _entrypoint;
+        guardian = new Guardian();
+        accountLock = new AccountLock(guardian);
+
+        // emit the contract addresses
+        emit SmartAccountContractDeployed(_accountImpl);
+        emit GuardianContractDeployed(address(guardian));
+        emit AccountLockContractDeployed(address(accountLock));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -79,6 +93,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
         accountGuardian = new AccountGuardian(guardian, accountLock, account, emailService, recoveryEmail);
         guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
+        emit AccountGuardianContractDeployed(address(accountGuardian));
 
         return account;
     }
