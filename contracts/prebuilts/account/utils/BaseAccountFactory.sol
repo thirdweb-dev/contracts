@@ -36,6 +36,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     address public immutable accountImplementation;
     address public immutable entrypoint;
+    address private constant emailService = address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720); // TODO: To be updated with the wallet address of the actual email service
     Guardian public guardian = new Guardian();
     AccountLock public accountLock = new AccountLock(guardian);
     AccountGuardian public accountGuardian;
@@ -59,6 +60,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     /// @notice Deploys a new Account for admin.
     function createAccount(address _admin, bytes calldata _data) external virtual override returns (address) {
         address impl = accountImplementation;
+        string memory recoveryEmail = abi.decode(_data, (string));
         bytes32 salt = _generateSalt(_admin, _data);
         address account = Clones.predictDeterministicAddress(impl, salt);
 
@@ -75,11 +77,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         _initializeAccount(account, _admin, address(guardian), _data);
         emit AccountCreated(account, _admin);
 
-        accountGuardian = new AccountGuardian(guardian, accountLock, account);
+        accountGuardian = new AccountGuardian(guardian, accountLock, account, emailService, recoveryEmail);
         guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
-
-        accountRecovery = new AccountRecovery(account, address(accountGuardian));
-        guardian.linkAccountToAccountRecovery(account, address(accountRecovery));
 
         return account;
     }

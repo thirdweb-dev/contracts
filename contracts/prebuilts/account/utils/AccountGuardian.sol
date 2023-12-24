@@ -9,19 +9,26 @@ import { AccountRecovery } from "./AccountRecovery.sol";
 contract AccountGuardian is IAccountGuardian {
     Guardian public guardianContract;
     AccountLock public accountLock;
-    AccountRecovery public accountRecovery;
+    AccountRecovery accountRecovery;
     address account;
     address[] private accountGuardians;
     address public owner;
 
     error NotAuthorized(address sender);
 
-    constructor(Guardian _guardianContract, AccountLock _accountLock, address _account) {
+    constructor(
+        Guardian _guardianContract,
+        AccountLock _accountLock,
+        address _account,
+        address _emailService,
+        string memory _recoveryEmail
+    ) {
         guardianContract = _guardianContract;
         accountLock = _accountLock;
         account = _account;
         owner = account;
-        accountRecovery = new AccountRecovery(account, address(this));
+        accountRecovery = new AccountRecovery(account, _emailService, _recoveryEmail, address(this));
+        guardianContract.linkAccountToAccountRecovery(account, address(accountRecovery));
     }
 
     modifier onlyOwnerAccountLockAccountRecovery() {
