@@ -17,6 +17,11 @@ import "../interface/IEntrypoint.sol";
 import { Account } from "./Account.sol";
 import { Guardian } from "../utils/Guardian.sol";
 
+// CCIP
+import { CrossChainTokenTransfer } from "../utils/CrossChainTokenTransfer.sol";
+import { CrossChainTokenTransferMaster } from "../utils/CrossChainTokenTransferMaster.sol";
+import { AccountRecovery } from "../utils/AccountRecovery.sol";
+
 import "forge-std/console.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
@@ -31,23 +36,35 @@ import "forge-std/console.sol";
 contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
     // Events //
     event AccountFactoryContractDeployed(address indexed);
+    event CrossChainTokenTransferContractDeployed(address indexed);
+    event CrossChainTokenTransferMasterContractDeployed(address indexed);
+
+    // States //
+    CrossChainTokenTransfer public crossChainTokenTransfer;
+    CrossChainTokenTransferMaster public crossChainTokenTransferMaster;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
     constructor(
-        IEntryPoint _entrypoint
+        IEntryPoint _entrypoint,
+        address _router,
+        address _link
     ) BaseAccountFactory(address(new Account(_entrypoint, address(this))), address(_entrypoint)) {
         _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
+        crossChainTokenTransfer = new CrossChainTokenTransfer(_router, _link);
+        crossChainTokenTransferMaster = new CrossChainTokenTransferMaster(address(crossChainTokenTransfer), _link);
 
         emit AccountFactoryContractDeployed(address(this));
+        emit CrossChainTokenTransferContractDeployed(address(crossChainTokenTransfer));
+        emit CrossChainTokenTransferMasterContractDeployed(address(crossChainTokenTransferMaster));
     }
 
     ///@dev  returns cross chain contract details
-    // function getCrossChainData() external view returns (address, address) {
-    //     return (address(crossChainTokenTransfer), address(crossChainTokenTransferMaster));
-    // }
+    function getCrossChainData() external view returns (address, address) {
+        return (address(crossChainTokenTransfer), address(crossChainTokenTransferMaster));
+    }
 
     ///@dev  returns Account lock contract details
     function getAccountLock() external view returns (address) {

@@ -16,6 +16,8 @@ import { AccountRecovery } from "contracts/prebuilts/account/utils/AccountRecove
 
 contract DeploySmartAccountUtilContracts is Script {
     address public admin = makeAddr("admin");
+    address _router = address(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59);
+    address _link = address(0x779877A7B0D9E8603169DdbD7836e478b4624789);
 
     function run()
         external
@@ -31,11 +33,9 @@ contract DeploySmartAccountUtilContracts is Script {
         )
     {
         vm.startBroadcast(vm.envUint("SEPOLIA_PRIVATE_KEY"));
-        address router = address(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59);
-        address link = address(0x779877A7B0D9E8603169DdbD7836e478b4624789);
 
-        EntryPoint entryPoint = new EntryPoint();
-        AccountFactory accountFactory = new AccountFactory(entryPoint);
+        EntryPoint _entryPoint = new EntryPoint();
+        AccountFactory accountFactory = new AccountFactory(_entryPoint, _router, _link);
         address account = accountFactory.createAccount(admin, "");
         vm.stopBroadcast();
 
