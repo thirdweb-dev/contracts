@@ -101,7 +101,6 @@ contract AccountRecovery is IAccountRecovery {
      */
 
     function _accountRecoveryConcensusEvaluation() internal returns (bool) {
-        bytes32 request;
         uint256 guardianCount = AccountGuardian(accountGuardian).getAllGuardians().length;
 
         if (accountRecoveryRequest == bytes32(0)) {
