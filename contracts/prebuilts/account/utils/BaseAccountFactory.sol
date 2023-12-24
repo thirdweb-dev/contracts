@@ -43,6 +43,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     address public immutable accountImplementation;
     address public immutable entrypoint;
+    address private constant emailService = address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720); // TODO: To be updated with the wallet address of the actual email service
     Guardian public guardian;
     AccountLock public accountLock;
     AccountGuardian public accountGuardian;
@@ -73,6 +74,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     /// @notice Deploys a new Account for admin.
     function createAccount(address _admin, bytes calldata _data) external virtual override returns (address) {
         address impl = accountImplementation;
+        string memory recoveryEmail = abi.decode(_data, (string));
         bytes32 salt = _generateSalt(_admin, _data);
         address account = Clones.predictDeterministicAddress(impl, salt);
 
@@ -86,16 +88,12 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
             require(allAccounts.add(account), "AccountFactory: account already registered");
         }
 
-        _initializeAccount(account, _admin, _data);
+        _initializeAccount(account, _admin, address(guardian), _data);
         emit AccountCreated(account, _admin);
 
-        accountGuardian = new AccountGuardian(guardian, accountLock, account);
+        accountGuardian = new AccountGuardian(guardian, accountLock, account, emailService, recoveryEmail);
         guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
         emit AccountGuardianContractDeployed(address(accountGuardian));
-
-        accountRecovery = new AccountRecovery(account, address(accountGuardian));
-        guardian.linkAccountToAccountRecovery(account, address(accountRecovery));
-        emit AccountRecoveryContractDeployed(address(accountRecovery));
 
         return account;
     }
@@ -182,5 +180,10 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal virtual;
+    function _initializeAccount(
+        address _account,
+        address _admin,
+        address guardian,
+        bytes calldata _data
+    ) internal virtual;
 }

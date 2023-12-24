@@ -15,7 +15,6 @@ import "../interface/IEntrypoint.sol";
 
 // Smart wallet implementation
 import { Account } from "./Account.sol";
-import { Guardian } from "../utils/Guardian.sol";
 
 // CCIP
 import { CrossChainTokenTransfer } from "../utils/CrossChainTokenTransfer.sol";
@@ -76,10 +75,15 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal override {
+    function _initializeAccount(
+        address _account,
+        address _admin,
+        address commonGuardian,
+        bytes calldata _data
+    ) internal override {
         console.log("AccountLock address in AccountFactory used to initialize account clone", address(accountLock));
 
-        Account(payable(_account)).initialize(_admin, _data, address(accountLock));
+        Account(payable(_account)).initialize(_admin, commonGuardian, address(accountLock), _data);
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.

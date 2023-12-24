@@ -8,15 +8,25 @@ import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 contract AccountRecovery is IAccountRecovery {
     address public immutable account;
     address public immutable owner;
+    string private recoveryEmail;
+    address private immutable emailVerificationServiceAddress; // The address of the email verification service, responsible for providing the emailVerificationHash
+    bytes32 private emailVerificationHash;
     address public immutable accountGuardian;
     address[] public accountGuardians;
     bytes32 public accountRecoveryRequest;
     address[] public guardiansWhoSigned;
-    mapping(address => uint8) private shards;
+    address public newAdmin;
     mapping(address => bytes) private guardianSignatures;
 
-    constructor(address _account, address _accountGuardian) {
+    constructor(
+        address _account,
+        address _emailVerificationServiceAddress,
+        string memory _recoveryEmail,
+        address _accountGuardian
+    ) {
         owner = msg.sender;
+        emailVerificationServiceAddress = _emailVerificationServiceAddress;
+        recoveryEmail = _recoveryEmail;
         account = _account;
         accountGuardian = _accountGuardian;
     }
@@ -35,37 +45,40 @@ contract AccountRecovery is IAccountRecovery {
         _;
     }
 
-    function storePrivateKeyShards(uint8[] calldata privateKeyShards) external onlyOwner {
-        accountGuardians = AccountGuardian(accountGuardian).getAllGuardians();
-
-        require(
-            privateKeyShards.length == accountGuardians.length,
-            "Mismatch between no. of shards & account guardians"
-        );
-
-        for (uint256 s = 0; s < privateKeyShards.length; s++) {
-            shards[accountGuardians[s]] = privateKeyShards[s]; // alloting shards to each guardian
-        }
-        emit PrivateKeyShardsAlloted();
-        //TODO: shards should be store in a more secure, decentralized storage service instead of contract state
+    modifier onlyEmailVerificationService() {
+        if (msg.sender != emailVerificationServiceAddress)
+            revert NotAuthorizedToCommitEmailVerificationHash(msg.sender);
+        _;
     }
 
-    function generateRecoveryRequest() external onlyVerifiedAccountGuardian {
-        bytes32 restoreKeyRequestHash = keccak256(abi.encodeWithSignature("restorePrivateKey()"));
+    function commitRecoveryHash(bytes32 recoveryHash) external onlyEmailVerificationService {
+        emailVerificationHash = recoveryHash;
+    }
+
+    function generateRecoveryRequest(
+        string memory email,
+        string calldata recoveryToken,
+        string calldata recoveryTokenNonce
+    ) external {
+        bool isVerifiedToRecover = _verifyUserAsOwnerOfTheAccount(email, recoveryToken, recoveryTokenNonce);
+
+        if (!isVerifiedToRecover) {
+            revert NotOwner(msg.sender);
+        }
+
+        newAdmin = msg.sender;
+
+        bytes32 restoreKeyRequestHash = keccak256(abi.encodeWithSignature("updateAdmin(address newAdmin)", newAdmin));
 
         accountRecoveryRequest = ECDSA.toEthSignedMessageHash(restoreKeyRequestHash);
 
         emit AccountRecoveryRequestCreated(account);
     }
 
-    function getRecoveryRequest() public view onlyVerifiedAccountGuardian returns (bytes32) {
-        return accountRecoveryRequest;
-    }
-
     function collectGuardianSignaturesOnRecoveryRequest(
         address guardian,
         bytes memory recoveryReqSignature
-    ) external override onlyVerifiedAccountGuardian {
+    ) external onlyVerifiedAccountGuardian {
         if (accountRecoveryRequest == bytes32(0)) {
             revert NoRecoveryRequestFound(account);
         }
@@ -73,17 +86,19 @@ contract AccountRecovery is IAccountRecovery {
         guardiansWhoSigned.push(guardian);
         guardianSignatures[guardian] = recoveryReqSignature;
         emit GuardianSignatureRecorded(guardian);
+
+        bool consensusAcheived = _accountRecoveryConcensusEvaluation();
+
+        if (consensusAcheived) {
+            (bool success, ) = (payable(account)).call(abi.encodeWithSignature("updateAdmin(newAdmin)", newAdmin));
+
+            require(success, "Failed to update Admin");
+        }
     }
 
-    function restorePrivateKey() external override onlyVerifiedAccountGuardian {
-        require(_accountRecoveryConcensusEvaluation(), "Account Recovery Concensus has to be achieved!");
-
-        bytes memory restoredPrivateKey;
-        for (uint256 g = 0; g < guardiansWhoSigned.length; g++) {
-            restoredPrivateKey = abi.encodePacked(restoredPrivateKey, shards[guardiansWhoSigned[g]]);
-        }
-
-        emit RestoredKeyEmailed();
+    // view function //
+    function getRecoveryRequest() external returns (bytes32) {
+        return accountRecoveryRequest;
     }
 
     // internal functions //
@@ -126,14 +141,36 @@ contract AccountRecovery is IAccountRecovery {
             }
         }
 
-        // accountRequestConcensusEvaluationStatus[request] = true;
-
         if (validGuardianSignatures > (guardianCount / 2)) {
+            // accountRequestConcensusEvaluationStatus[request] = true;
             emit AccountRecoveryRequestConcensusAchieved(account);
             return true;
         } else {
             emit AccountRecoveryRequestConcensusFailed(account);
             return false;
         }
+    }
+
+    /**
+     * @dev These conditions have to be met for a sender to prove ownership of the account being recovered:
+     * 1. Email is associated with the smart account.
+     * 2. EMail is owned by the sender
+     */
+    function _verifyUserAsOwnerOfTheAccount(
+        string memory email,
+        string calldata token,
+        string calldata nonce
+    ) internal returns (bool) {
+        if (keccak256(abi.encodePacked(email)) == keccak256(abi.encodePacked(recoveryEmail))) {
+            revert("Email does not match the recovery email of the smart account being recovered");
+            return false;
+        }
+
+        bytes32 generatedEmailVerificationHash = keccak256(abi.encodePacked(token, nonce));
+        if (generatedEmailVerificationHash != emailVerificationHash) {
+            revert EmailVerificationFailed();
+            return false;
+        }
+        return true;
     }
 }

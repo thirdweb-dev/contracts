@@ -198,7 +198,7 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         address accountImpl = address(new MyDynamicAccount(IEntryPoint(payable(address(entrypoint))), extensions));
         address _account = Clones.cloneDeterministic(accountImpl, "salt");
         account = MyDynamicAccount(payable(_account));
-        account.initialize(accountAdmin, "", address(0));
+        account.initialize(accountAdmin, address(0), address(0),"");
     }
 
     function test_isValidSigner_whenSignerIsAdmin() public {

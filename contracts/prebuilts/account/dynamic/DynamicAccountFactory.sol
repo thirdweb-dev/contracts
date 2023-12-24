@@ -38,8 +38,13 @@ contract DynamicAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal override {
-        DynamicAccount(payable(_account)).initialize(_admin, _data, address(accountLock));
+    function _initializeAccount(
+        address _account,
+        address _admin,
+        address _commonGuardian,
+        bytes calldata _data
+    ) internal override {
+        DynamicAccount(payable(_account)).initialize(_admin, _commonGuardian, address(accountLock), _data);
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
