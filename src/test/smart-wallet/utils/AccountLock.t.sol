@@ -22,6 +22,7 @@ contract AccountLockTest is Test {
     AccountGuardian public accountGuardian;
     DeploySmartAccountUtilContracts deployer;
     address owner = makeAddr("owner");
+    address public admin = makeAddr("admin");
     address public guardian;
     uint256 private guardianPK;
     address public randomUser;
@@ -35,8 +36,9 @@ contract AccountLockTest is Test {
 
         deployer = new DeploySmartAccountUtilContracts();
 
-        (accountFactory, account, guardianContract, accountLock, accountGuardian, ) = deployer.run();
+        (accountFactory, guardianContract, accountLock, accountGuardian, , , ) = deployer.run();
 
+        account = accountFactory.createAccount(admin, "");
         vm.deal(guardian, GUARDIAN_STARTING_BALANCE);
     }
 

@@ -9,7 +9,7 @@ import { AccountRecovery } from "./AccountRecovery.sol";
 contract AccountGuardian is IAccountGuardian {
     Guardian public guardianContract;
     AccountLock public accountLock;
-    AccountRecovery accountRecovery;
+    AccountRecovery public accountRecovery;
     address account;
     address[] private accountGuardians;
     address public owner;

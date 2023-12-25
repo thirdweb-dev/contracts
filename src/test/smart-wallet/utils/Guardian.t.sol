@@ -17,7 +17,7 @@ contract GuardianTest is Test {
 
     function setUp() external {
         DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
-        (, account, guardian, , accountGuardian, ) = deployer.run();
+        (, guardian, , accountGuardian, , , ) = deployer.run();
         vm.deal(user, STARTING_USER_BALANCE);
     }
 
