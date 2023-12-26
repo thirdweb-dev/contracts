@@ -157,11 +157,10 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
     }
 
     /// @notice Update parameters of a listing of NFTs.
-    function updateListing(uint256 _listingId, ListingParameters memory _params)
-        external
-        onlyExistingListing(_listingId)
-        onlyListingCreator(_listingId)
-    {
+    function updateListing(
+        uint256 _listingId,
+        ListingParameters memory _params
+    ) external onlyExistingListing(_listingId) onlyListingCreator(_listingId) {
         address listingCreator = msg.sender;
         Listing memory listing = _directListingsStorage().listings[_listingId];
         TokenType tokenType = _getTokenType(_params.assetContract);
@@ -263,19 +262,58 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         emit CurrencyApprovedForListing(_listingId, _currency, _pricePerTokenInCurrency);
     }
 
+    function bulkBuyFromListing(
+        uint256[] memory _listingId,
+        address[] memory _buyFor,
+        uint256[] memory _quantity,
+        address[] memory _currency,
+        uint256[] memory _expectedTotalPrice
+    ) external payable nonReentrant {
+        uint256 totalAmountPls = 0;
+        // Iterate over each tokenId
+        for (uint256 i = 0; i < _listingId.length; i++) {
+            // Are we buying this item in PLS
+            uint256 price;
+
+            Listing memory listing = _directListingsStorage().listings[_listingId[i]];
+
+            require(listing.status == IDirectListings.Status.CREATED, "Marketplace: invalid listing.");
+
+            if (_currency[i] == CurrencyTransferLib.NATIVE_TOKEN) {
+                //calculate total amount for items being sold for PLS
+                if (_directListingsStorage().currencyPriceForListing[_listingId[i]][_currency[i]] > 0) {
+                    price =
+                        _quantity[i] *
+                        _directListingsStorage().currencyPriceForListing[_listingId[i]][_currency[i]];
+                } else {
+                    require(_currency[i] == listing.currency, "Paying in invalid currency.");
+                    price = _quantity[i] * listing.pricePerToken;
+                }
+
+                totalAmountPls += price;
+            }
+
+            // Call the buy function for the current tokenId
+            _buyFromListing(listing, _buyFor[i], _quantity[i], _currency[i], _expectedTotalPrice[i]);
+        }
+
+        // Make sure that the total price for items bought with PLS is equal to the amount sent
+        require(msg.value == totalAmountPls || (totalAmountPls == 0 && msg.value == 0), "Incorrect");
+    }
+
     /// @notice Buy NFTs from a listing.
-    function buyFromListing(
-        uint256 _listingId,
+    function _buyFromListing(
+        Listing memory listing,
         address _buyFor,
         uint256 _quantity,
         address _currency,
         uint256 _expectedTotalPrice
-    ) external payable nonReentrant onlyExistingListing(_listingId) {
-        Listing memory listing = _directListingsStorage().listings[_listingId];
+    ) internal {
+        uint256 listingId = listing.listingId;
         address buyer = msg.sender;
 
         require(
-            !listing.reserved || _directListingsStorage().isBuyerApprovedForListing[_listingId][buyer],
+            !listing.reserved || _directListingsStorage().isBuyerApprovedForListing[listingId][buyer],
             "buyer not approved"
         );
         require(_quantity > 0 && _quantity <= listing.quantity, "Buying invalid quantity");
@@ -297,27 +335,27 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
 
         uint256 targetTotalPrice;
 
-        if (_directListingsStorage().currencyPriceForListing[_listingId][_currency] > 0) {
-            targetTotalPrice = _quantity * _directListingsStorage().currencyPriceForListing[_listingId][_currency];
+        // Check: is the buyer paying in a currency that the listing creator approved
+        if (_directListingsStorage().currencyPriceForListing[listingId][_currency] > 0) {
+            targetTotalPrice = _quantity * _directListingsStorage().currencyPriceForListing[listingId][_currency];
         } else {
             require(_currency == listing.currency, "Paying in invalid currency.");
             targetTotalPrice = _quantity * listing.pricePerToken;
         }
 
+        // Check: is the buyer paying the price that the buyer is expecting to pay.
+        // This is to prevent attack where the seller could change the price
+        // right before the buyers tranaction executes.
         require(targetTotalPrice == _expectedTotalPrice, "Unexpected total price");
 
-        // Check: buyer owns and has approved sufficient currency for sale.
-        if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            require(msg.value == targetTotalPrice, "Marketplace: msg.value must exactly be the total price.");
-        } else {
-            require(msg.value == 0, "Marketplace: invalid native tokens sent.");
+        if (_currency != CurrencyTransferLib.NATIVE_TOKEN) {
             _validateERC20BalAndAllowance(buyer, _currency, targetTotalPrice);
         }
 
         if (listing.quantity == _quantity) {
-            _directListingsStorage().listings[_listingId].status = IDirectListings.Status.COMPLETED;
+            _directListingsStorage().listings[listingId].status = IDirectListings.Status.COMPLETED;
         }
-        _directListingsStorage().listings[_listingId].quantity -= _quantity;
+        _directListingsStorage().listings[listingId].quantity -= _quantity;
 
         _payout(buyer, listing.listingCreator, _currency, targetTotalPrice, listing);
         _transferListingTokens(listing.listingCreator, _buyFor, _quantity, listing);
@@ -372,11 +410,10 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
      *          A valid listing is where the listing creator still owns and has approved Marketplace
      *          to transfer the listed NFTs.
      */
-    function getAllValidListings(uint256 _startId, uint256 _endId)
-        external
-        view
-        returns (Listing[] memory _validListings)
-    {
+    function getAllValidListings(
+        uint256 _startId,
+        uint256 _endId
+    ) external view returns (Listing[] memory _validListings) {
         require(_startId <= _endId && _endId < _directListingsStorage().totalListings, "invalid range");
 
         Listing[] memory _listings = new Listing[](_endId - _startId + 1);
@@ -519,11 +556,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
     }
 
     /// @dev Validates that `_tokenOwner` owns and has approved Markeplace to transfer the appropriate amount of currency
-    function _validateERC20BalAndAllowance(
-        address _tokenOwner,
-        address _currency,
-        uint256 _amount
-    ) internal view {
+    function _validateERC20BalAndAllowance(address _tokenOwner, address _currency, uint256 _amount) internal view {
         require(
             IERC20(_currency).balanceOf(_tokenOwner) >= _amount &&
                 IERC20(_currency).allowance(_tokenOwner, address(this)) >= _amount,
@@ -532,12 +565,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
     }
 
     /// @dev Transfers tokens listed for sale in a direct or auction listing.
-    function _transferListingTokens(
-        address _from,
-        address _to,
-        uint256 _quantity,
-        Listing memory _listing
-    ) internal {
+    function _transferListingTokens(address _from, address _to, uint256 _quantity, Listing memory _listing) internal {
         if (_listing.tokenType == TokenType.ERC1155) {
             IERC1155(_listing.assetContract).safeTransferFrom(_from, _to, _listing.tokenId, _quantity, "");
         } else if (_listing.tokenType == TokenType.ERC721) {
