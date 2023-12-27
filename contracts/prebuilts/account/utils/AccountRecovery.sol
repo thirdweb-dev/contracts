@@ -68,7 +68,9 @@ contract AccountRecovery is IAccountRecovery {
 
         newAdmin = msg.sender;
 
-        bytes32 restoreKeyRequestHash = keccak256(abi.encodeWithSignature("updateAdmin(address newAdmin)", newAdmin));
+        bytes32 restoreKeyRequestHash = keccak256(
+            abi.encodeWithSignature("updateAdmin(address newAdmin, bytes memory email)", newAdmin, abi.encode(email))
+        );
 
         accountRecoveryRequest = ECDSA.toEthSignedMessageHash(restoreKeyRequestHash);
 
@@ -90,7 +92,13 @@ contract AccountRecovery is IAccountRecovery {
         bool consensusAcheived = _accountRecoveryConcensusEvaluation();
 
         if (consensusAcheived) {
-            (bool success, ) = (payable(account)).call(abi.encodeWithSignature("updateAdmin(newAdmin)", newAdmin));
+            (bool success, ) = (payable(account)).call(
+                abi.encodeWithSignature(
+                    "updateAdmin(address newAdmin, bytes memory _data)",
+                    newAdmin,
+                    abi.encode(recoveryEmail)
+                )
+            );
 
             require(success, "Failed to update Admin");
         }

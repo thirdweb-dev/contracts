@@ -75,7 +75,9 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     function createAccount(address _admin, bytes calldata _data) external virtual override returns (address) {
         address impl = accountImplementation;
         string memory recoveryEmail = abi.decode(_data, (string));
+
         bytes32 salt = _generateSalt(_admin, _data);
+
         address account = Clones.predictDeterministicAddress(impl, salt);
 
         if (account.code.length > 0) {
@@ -92,7 +94,9 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         emit AccountCreated(account, _admin);
 
         accountGuardian = new AccountGuardian(guardian, accountLock, account, emailService, recoveryEmail);
+
         guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
+
         emit AccountGuardianContractDeployed(address(accountGuardian));
 
         return account;
@@ -175,8 +179,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @dev Returns the salt used when deploying an Account.
-    function _generateSalt(address _admin, bytes memory) internal view virtual returns (bytes32) {
-        return keccak256(abi.encode(_admin));
+    function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
+        return keccak256(abi.encode(_admin, _data));
     }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.

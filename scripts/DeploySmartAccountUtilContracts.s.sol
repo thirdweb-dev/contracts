@@ -9,46 +9,54 @@ import { Account } from "contracts/prebuilts/account/non-upgradeable/Account.sol
 import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
 import { AccountGuardian } from "contracts/prebuilts/account/utils/AccountGuardian.sol";
 import { AccountRecovery } from "contracts/prebuilts/account/utils/AccountRecovery.sol";
+
 import { CrossChainTokenTransfer } from "contracts/prebuilts/account/utils/CrossChainTokenTransfer.sol";
 import { CrossChainTokenTransferMaster } from "contracts/prebuilts/account/utils/CrossChainTokenTransferMaster.sol";
 
 contract DeploySmartAccountUtilContracts is Script {
-    address _router = address(0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59);
-    address _link = address(0x779877A7B0D9E8603169DdbD7836e478b4624789);
+    address public admin = makeAddr("admin");
+    address smartWalletAccount;
 
-    function run()
-        external
-        returns (
-            AccountFactory,
-            Guardian,
-            AccountLock,
-            AccountGuardian,
-            AccountRecovery,
-            CrossChainTokenTransfer,
-            CrossChainTokenTransferMaster
-        )
-    {
-        vm.startBroadcast(vm.envUint("SEPOLIA_PRIVATE_KEY"));
+    function run() external returns (address, AccountFactory, Guardian, AccountLock, AccountGuardian, AccountRecovery) {
+        EntryPoint _entryPoint;
+        AccountFactory accountFactory;
 
-        EntryPoint _entryPoint = new EntryPoint();
-        AccountFactory accountFactory = new AccountFactory(_entryPoint, _router, _link);
-        vm.stopBroadcast();
+        if (block.chainid == 11155111) {
+            // Sepolia
+
+            vm.startBroadcast(vm.envUint("SEPOLIA_PRIVATE_KEY"));
+            _entryPoint = new EntryPoint();
+            accountFactory = new AccountFactory(
+                _entryPoint,
+                0x0BF3dE8c5D3e8A2B34D2BEeB17ABfCeBaf363A59, // address(_ccipRouter)
+                0x779877A7B0D9E8603169DdbD7836e478b4624789 // address(_LinkToken)
+            );
+
+            ///@dev accountGuardian is deployed when new smart account is created using the AccountFactory::createAccount(...)
+            smartWalletAccount = accountFactory.createAccount(admin, abi.encode("shiven@gmail.com"));
+            vm.stopBroadcast();
+        } else {
+            // Anvil
+            /// @dev _router & _link will be zero addresses as we cannot test CCIP on Anvil due to it's infrastructure.
+
+            vm.startBroadcast();
+            _entryPoint = new EntryPoint();
+            accountFactory = new AccountFactory(_entryPoint, address(0), address(0));
+            smartWalletAccount = accountFactory.createAccount(admin, abi.encode("shiven@gmail.com"));
+            vm.stopBroadcast();
+        }
 
         Guardian guardianContract = accountFactory.guardian();
         AccountLock accountLock = accountFactory.accountLock();
-        CrossChainTokenTransfer ccTokenTranferContract = accountFactory.crossChainTokenTransfer();
-        CrossChainTokenTransferMaster ccTokenTranferContractMaster = accountFactory.crossChainTokenTransferMaster();
-        AccountGuardian accountGuardian = accountFactory.accountGuardian();
-        AccountRecovery accountRecovery = accountGuardian.accountRecovery();
 
-        return (
-            accountFactory,
-            guardianContract,
-            accountLock,
-            accountGuardian,
-            accountRecovery,
-            ccTokenTranferContract,
-            ccTokenTranferContractMaster
-        );
+        AccountGuardian accountGuardian = AccountGuardian(guardianContract.getAccountGuardian(smartWalletAccount));
+
+        AccountRecovery accountRecovery = AccountRecovery(guardianContract.getAccountRecovery(smartWalletAccount));
+
+        CrossChainTokenTransfer ccTokenTranferContract = accountFactory.crossChainTokenTransfer();
+
+        CrossChainTokenTransferMaster ccTokenTranferContractMaster = accountFactory.crossChainTokenTransferMaster();
+
+        return (smartWalletAccount, accountFactory, guardianContract, accountLock, accountGuardian, accountRecovery);
     }
 }

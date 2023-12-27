@@ -73,7 +73,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
             //isAdmin > 1, remove admin
             bool _isAdmin = _req.isAdmin == 1;
 
-            _setAdmin(targetSigner, _isAdmin);
+            _setAdmin(targetSigner, _isAdmin, bytes(""));
             return;
         }
 
@@ -212,7 +212,7 @@ abstract contract AccountPermissions is IAccountPermissions, EIP712 {
     function _afterSignerPermissionsUpdate(SignerPermissionRequest calldata _req) internal virtual;
 
     /// @notice Makes the given account an admin.
-    function _setAdmin(address _account, bool _isAdmin) internal virtual {
+    function _setAdmin(address _account, bool _isAdmin, bytes memory _data) internal virtual {
         _accountPermissionsStorage().isAdmin[_account] = _isAdmin;
 
         if (_isAdmin) {

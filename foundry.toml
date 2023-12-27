@@ -1,7 +1,8 @@
 [profile.default]
-solc-version = "0.8.12"
-#auto_detect_solc = false
+solc-version = "0.8.18"
+# auto_detect_solc = true
 cache = true
+viaIR = false
 evm_version = 'london'
 force = false
 gas_reports = [
@@ -31,6 +32,7 @@ out = 'artifacts_forge'
 remappings = [
   '@chainlink/contracts/=lib/chainlink/contracts',
   '@chainlink/contracts-ccip/=node_modules/@chainlink/contracts-ccip',
+  '@solmate=lib/solmate/src',
   '@openzeppelin/contracts=lib/openzeppelin-contracts/contracts',
   '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
   '@ds-test=lib/ds-test/src/',

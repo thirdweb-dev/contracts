@@ -24,3 +24,6 @@
 [submodule "lib/dynamic-contracts"]
 	path = lib/dynamic-contracts
 	url = https://github.com/thirdweb-dev/dynamic-contracts
+[submodule "lib/solmate"]
+	path = lib/solmate
+	url = https://github.com/transmissions11/solmate
