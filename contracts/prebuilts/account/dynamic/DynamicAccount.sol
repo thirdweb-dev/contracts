@@ -39,7 +39,7 @@ contract DynamicAccount is AccountCore, BaseRouter {
     ) public override initializer {
         __BaseRouter_init();
         AccountCoreStorage.data().firstAdmin = _defaultAdmin;
-        _setAdmin(_defaultAdmin, true);
+        _setAdmin(_defaultAdmin, true, "");
     }
 
     /*///////////////////////////////////////////////////////////////

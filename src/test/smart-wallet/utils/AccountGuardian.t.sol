@@ -3,6 +3,7 @@ pragma solidity ^0.8.12;
 
 import { Test } from "forge-std/Test.sol";
 import { EntryPoint } from "contracts/prebuilts/account/utils/EntryPoint.sol";
+import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
 import { Guardian } from "contracts/prebuilts/account/utils/Guardian.sol";
 import { AccountGuardian } from "contracts/prebuilts/account/utils/AccountGuardian.sol";
 import { AccountLock } from "contracts/prebuilts/account/utils/AccountLock.sol";
@@ -10,6 +11,8 @@ import { IAccountGuardian } from "contracts/prebuilts/account/interface/IAccount
 import { DeploySmartAccountUtilContracts } from "scripts/DeploySmartAccountUtilContracts.s.sol";
 
 contract AccountGuardianTest is Test {
+    address smartAccount;
+    AccountFactory accountFactory;
     AccountGuardian accountGuardian;
     Guardian public guardianContract;
     AccountLock public accountLock;
@@ -21,7 +24,10 @@ contract AccountGuardianTest is Test {
 
     function setUp() public {
         DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
-        (, , guardianContract, accountLock, accountGuardian, ) = deployer.run();
+        (smartAccount, accountFactory, guardianContract, accountLock, , ) = deployer.run();
+
+        // retrieving the deployed accountGuardian contract address from the guardianContracts as it maintains a mapping of smartAccount => accountGuardian contracts.
+        accountGuardian = AccountGuardian(guardianContract.getAccountGuardian(smartAccount));
     }
 
     modifier addVerifiedGuardian() {

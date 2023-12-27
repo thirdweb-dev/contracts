@@ -106,17 +106,10 @@ contract Guardian is IGuardian {
     }
 
     function getAccountGuardian(address account) external view returns (address) {
-        if (!isGuardingAccount(account, msg.sender)) {
-            revert NotAGuardian(msg.sender);
-        }
         return accountToAccountGuardian[account];
     }
 
     function getAccountRecovery(address account) external view returns (address) {
-        if (!isGuardingAccount(account, msg.sender)) {
-            revert NotAGuardian(msg.sender);
-        }
-
         return accountToAccountRecovery[account];
     }
 }

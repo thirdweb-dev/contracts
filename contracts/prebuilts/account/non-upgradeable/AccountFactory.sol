@@ -21,8 +21,6 @@ import { CrossChainTokenTransfer } from "../utils/CrossChainTokenTransfer.sol";
 import { CrossChainTokenTransferMaster } from "../utils/CrossChainTokenTransferMaster.sol";
 import { AccountRecovery } from "../utils/AccountRecovery.sol";
 
-import "forge-std/console.sol";
-
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
 // $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
@@ -81,8 +79,6 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
         address commonGuardian,
         bytes calldata _data
     ) internal override {
-        console.log("AccountLock address in AccountFactory used to initialize account clone", address(accountLock));
-
         Account(payable(_account)).initialize(_admin, commonGuardian, address(accountLock), _data);
     }
 

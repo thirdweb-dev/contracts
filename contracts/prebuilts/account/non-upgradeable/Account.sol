@@ -149,9 +149,9 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     }
 
     /// @notice Overrides the account admin (post recovery concensus)
-    function updateAdmin(address _newAdmin) external onlyAccountRecovery(msg.sender) {
+    function updateAdmin(address _newAdmin, bytes memory email) external onlyAccountRecovery(msg.sender) {
         AccountCoreStorage.data().firstAdmin = _newAdmin;
-        _setAdmin(_newAdmin, true);
+        _setAdmin(_newAdmin, true, email);
 
         emit AdminUpdated(_newAdmin);
     }
