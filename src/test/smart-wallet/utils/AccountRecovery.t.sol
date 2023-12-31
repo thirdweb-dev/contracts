@@ -83,4 +83,53 @@ contract AccountRecoveryTest is Test {
         emit AccountRecoveryRequestCreated();
         accountRecovery.generateRecoveryRequest(userEmail, recoveryToken, nonce);
     }
+
+    ////////////////////////////////////////////////////////
+    // collectGuardianSignaturesOnRecoveryRequest //////////
+    ////////////////////////////////////////////////////////
+
+    function testRevertWhenNoRecoveryReqExists() external {
+        bytes32 randomRequest = keccak256(abi.encode("randomFunction()"));
+
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(firstGuardPK, randomRequest);
+        bytes memory guardianSignature = abi.encodePacked(r, s, v);
+
+        vm.prank(firstGuard);
+        vm.expectRevert(abi.encodeWithSelector(IAccountRecovery.NoRecoveryRequestFound.selector, smartWallet));
+        accountRecovery.collectGuardianSignaturesOnRecoveryRequest(firstGuard, guardianSignature);
+    }
+
+    function testRevertWhenNotVerifiedGuardianSignsRecoveryRequest() external {
+        // Setup
+        // generating a recovery request
+        vm.startPrank(user);
+        accountRecovery.generateRecoveryRequest(userEmail, recoveryToken, nonce);
+        bytes32 recoveryReq = accountRecovery.getRecoveryRequest();
+        vm.stopPrank();
+
+        // signing request by random user instead of a valid guardian
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(randomUserPK, recoveryReq);
+        bytes memory randomUserSignature = abi.encodePacked(r, s, v);
+
+        vm.prank(randomUser);
+        vm.expectRevert(abi.encodeWithSelector(IAccountRecovery.NotAGuardian.selector, randomUser));
+        accountRecovery.collectGuardianSignaturesOnRecoveryRequest(randomUser, randomUserSignature);
+    }
+
+    function testCollectionOfGuardianSignOnRecoveryReq() external {
+        vm.prank(user);
+        accountRecovery.generateRecoveryRequest(userEmail, recoveryToken, nonce);
+
+        bytes32 recoveryReq = accountRecovery.getRecoveryRequest();
+
+        vm.startPrank(firstGuard);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(firstGuardPK, recoveryReq);
+        bytes memory firstGuardSignature = abi.encodePacked(r, s, v);
+
+        vm.expectEmit(true, false, false, true);
+        emit GuardianSignatureRecorded(firstGuard);
+
+        accountRecovery.collectGuardianSignaturesOnRecoveryRequest(firstGuard, firstGuardSignature);
+        vm.stopPrank();
+    }
 }
