@@ -96,17 +96,17 @@ contract AccountRecovery is IAccountRecovery {
 
         bool consensusAcheived = _accountRecoveryConcensusEvaluation();
 
-        if (consensusAcheived) {
-            // updating the owner of the smart account
-            (bool success, ) = (payable(account)).call(
-                abi.encodeWithSignature(
-                    "updateAdmin(address newAdmin, bytes memory _data)",
-                    newAdmin,
-                    abi.encode(recoveryEmail)
-                )
-            );
-            require(success, "Failed to update Admin");
-        }
+        // if (consensusAcheived) {
+        //     // updating the owner of the smart account
+        //     (bool success, ) = (payable(account)).call(
+        //         abi.encodeWithSignature(
+        //             "updateAdmin(address newAdmin, bytes memory _data)",
+        //             newAdmin,
+        //             abi.encode(recoveryEmail)
+        //         )
+        //     );
+        //     require(success, "Failed to update Admin");
+        // }
     }
 
     // view function //

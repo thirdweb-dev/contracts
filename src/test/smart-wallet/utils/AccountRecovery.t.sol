@@ -14,6 +14,8 @@ contract AccountRecoveryTest is Test {
     event EmailServiceGeneratingHashUsing(bytes token, uint256 nonce);
     event AccountRecoveryCreated();
     event GuardianSignatureRecorded(address indexed guardian);
+    event AccountRecoveryRequestConcensusFailed(address indexed account);
+    event AccountRecoveryRequestConcensusAchieved(address indexed account);
 
     // creating a new Embedded wallet for the user
     address newEmbeddedWallet = makeAddr("newEmbeddedWallet");
@@ -29,6 +31,8 @@ contract AccountRecoveryTest is Test {
 
     address firstGuard;
     uint256 firstGuardPK;
+    address secondGuard;
+    uint256 secondGuardPK;
     address randomUser;
     uint256 randomUserPK;
 
@@ -58,7 +62,7 @@ contract AccountRecoveryTest is Test {
 
         // adding guardians
         (firstGuard, firstGuardPK) = makeAddrAndKey("firstGuardian");
-        (address secondGuard, uint256 secondGuardPK) = makeAddrAndKey("secondGuardian");
+        (secondGuard, secondGuardPK) = makeAddrAndKey("secondGuardian");
         (address thirdGuard, uint256 thirdGuardPK) = makeAddrAndKey("thirdGuardian");
 
         // guardians signing up in the system
@@ -137,5 +141,37 @@ contract AccountRecoveryTest is Test {
 
         accountRecovery.collectGuardianSignaturesOnRecoveryRequest(firstGuard, firstGuardSignature);
         vm.stopPrank();
+    }
+
+    ////////////////////////////////////
+    /// consensus evaluation tests /////
+    ////////////////////////////////////
+
+    function testConcensusFailedEvent() external {
+        bytes32 recoveryReq = _generateAccountRecoveryRequest(newEmbeddedWallet, userEmail, recoveryToken, nonce);
+
+        bytes memory firstGuardSignature = _signAndReturnSignature(firstGuardPK, recoveryReq);
+
+        vm.prank(firstGuard);
+        vm.expectEmit(true, false, false, false);
+        emit AccountRecoveryRequestConcensusFailed(smartWallet);
+        accountRecovery.collectGuardianSignaturesOnRecoveryRequest(firstGuard, firstGuardSignature);
+    }
+
+    function testConcensusAcheivedEvent() external {
+        bytes32 recoveryReq = _generateAccountRecoveryRequest(newEmbeddedWallet, userEmail, recoveryToken, nonce);
+
+        // first guardian signing
+        bytes memory firstGuardSignature = _signAndReturnSignature(firstGuardPK, recoveryReq);
+        vm.prank(firstGuard);
+        accountRecovery.collectGuardianSignaturesOnRecoveryRequest(firstGuard, firstGuardSignature);
+
+        // second guardian signing (Consensus should be achieved now)
+        bytes memory secondGuardSignature = _signAndReturnSignature(secondGuardPK, recoveryReq);
+
+        vm.prank(secondGuard);
+        vm.expectEmit(true, false, false, false);
+        emit AccountRecoveryRequestConcensusAchieved(smartWallet);
+        accountRecovery.collectGuardianSignaturesOnRecoveryRequest(secondGuard, secondGuardSignature);
     }
 }
