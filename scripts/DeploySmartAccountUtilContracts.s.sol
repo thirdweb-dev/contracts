@@ -17,6 +17,7 @@ contract DeploySmartAccountUtilContracts is Script {
     address public admin = makeAddr("admin");
     address smartWalletAccount;
 
+    // This deploy script should only be used for testing purposes as it deploys a smart account as well.
     function run() external returns (address, AccountFactory, Guardian, AccountLock, AccountGuardian, AccountRecovery) {
         EntryPoint _entryPoint;
         AccountFactory accountFactory;

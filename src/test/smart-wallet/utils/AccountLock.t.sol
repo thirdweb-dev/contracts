@@ -182,7 +182,7 @@ contract AccountLockTest is Test {
 
         vm.startPrank(randomUser);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(randomUserPK, lockReqHash);
-        bytes memory randomUserSignature = abi.encodePacked(v, r, s);
+        bytes memory randomUserSignature = abi.encodePacked(r, s, v);
 
         // Assert
         vm.expectRevert(abi.encodeWithSelector(IAccountLock.NotAGuardian.selector, randomUser));
