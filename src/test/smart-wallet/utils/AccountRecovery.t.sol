@@ -15,8 +15,8 @@ contract AccountRecoveryTest is Test {
     event AccountRecoveryCreated();
     event GuardianSignatureRecorded(address indexed guardian);
 
-    address user = makeAddr("user");
-
+    // creating a new Embedded wallet for the user
+    address newEmbeddedWallet = makeAddr("newEmbeddedWallet");
     address emailService = address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720); // TODO: To be updated with the wallet address of the actual email
     string userEmail = "shiven@gmail.com";
     uint64 nonce = 38;
@@ -31,6 +31,24 @@ contract AccountRecoveryTest is Test {
     uint256 firstGuardPK;
     address randomUser;
     uint256 randomUserPK;
+
+    function _generateAccountRecoveryRequest(
+        address sender,
+        string memory email,
+        bytes memory emailRecoveryToken,
+        uint256 recoveryNonce
+    ) internal returns (bytes32) {
+        vm.prank(sender);
+        accountRecovery.generateRecoveryRequest(email, emailRecoveryToken, recoveryNonce);
+
+        return accountRecovery.getRecoveryRequest();
+    }
+
+    function _signAndReturnSignature(uint256 signerPK, bytes32 recoveryRequest) internal returns (bytes memory) {
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPK, recoveryRequest);
+        bytes memory signature = abi.encodePacked(r, s, v);
+        return signature;
+    }
 
     function setUp() external {
         DeploySmartAccountUtilContracts deployer = new DeploySmartAccountUtilContracts();
@@ -69,16 +87,13 @@ contract AccountRecoveryTest is Test {
     }
 
     function testRevertWhenNonOwnerTriesToCreateRecoveryReq() external {
-        vm.prank(randomUser);
         vm.expectRevert(IAccountRecovery.EmailVerificationFailed.selector);
-        accountRecovery.generateRecoveryRequest(userEmail, abi.encode("randomToken"), 56); // 56 is a random nonce
+        _generateAccountRecoveryRequest(randomUser, userEmail, abi.encode("randomToken"), 56); // 56 is random nonce
     }
 
     function testRecoveryRequestGeneration() external {
-        // creating a new Embedded wallet for the user
-        address newWallet = makeAddr("newWallet");
         // Act/ Assert
-        vm.prank(newWallet); // using the new wallet to send recovery req.
+        vm.prank(newEmbeddedWallet); // using the new wallet to send recovery req.
         vm.expectEmit();
         emit AccountRecoveryRequestCreated();
         accountRecovery.generateRecoveryRequest(userEmail, recoveryToken, nonce);
@@ -91,8 +106,7 @@ contract AccountRecoveryTest is Test {
     function testRevertWhenNoRecoveryReqExists() external {
         bytes32 randomRequest = keccak256(abi.encode("randomFunction()"));
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(firstGuardPK, randomRequest);
-        bytes memory guardianSignature = abi.encodePacked(r, s, v);
+        bytes memory guardianSignature = _signAndReturnSignature(firstGuardPK, randomRequest);
 
         vm.prank(firstGuard);
         vm.expectRevert(abi.encodeWithSelector(IAccountRecovery.NoRecoveryRequestFound.selector, smartWallet));
@@ -102,14 +116,10 @@ contract AccountRecoveryTest is Test {
     function testRevertWhenNotVerifiedGuardianSignsRecoveryRequest() external {
         // Setup
         // generating a recovery request
-        vm.startPrank(user);
-        accountRecovery.generateRecoveryRequest(userEmail, recoveryToken, nonce);
-        bytes32 recoveryReq = accountRecovery.getRecoveryRequest();
-        vm.stopPrank();
+        bytes32 recoveryReq = _generateAccountRecoveryRequest(newEmbeddedWallet, userEmail, recoveryToken, nonce);
 
         // signing request by random user instead of a valid guardian
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(randomUserPK, recoveryReq);
-        bytes memory randomUserSignature = abi.encodePacked(r, s, v);
+        bytes memory randomUserSignature = _signAndReturnSignature(randomUserPK, recoveryReq);
 
         vm.prank(randomUser);
         vm.expectRevert(abi.encodeWithSelector(IAccountRecovery.NotAGuardian.selector, randomUser));
@@ -117,14 +127,10 @@ contract AccountRecoveryTest is Test {
     }
 
     function testCollectionOfGuardianSignOnRecoveryReq() external {
-        vm.prank(user);
-        accountRecovery.generateRecoveryRequest(userEmail, recoveryToken, nonce);
-
-        bytes32 recoveryReq = accountRecovery.getRecoveryRequest();
+        bytes32 recoveryReq = _generateAccountRecoveryRequest(newEmbeddedWallet, userEmail, recoveryToken, nonce);
 
         vm.startPrank(firstGuard);
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(firstGuardPK, recoveryReq);
-        bytes memory firstGuardSignature = abi.encodePacked(r, s, v);
+        bytes memory firstGuardSignature = _signAndReturnSignature(firstGuardPK, recoveryReq);
 
         vm.expectEmit(true, false, false, true);
         emit GuardianSignatureRecorded(firstGuard);

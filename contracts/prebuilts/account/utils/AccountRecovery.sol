@@ -110,7 +110,7 @@ contract AccountRecovery is IAccountRecovery {
     }
 
     // view function //
-    function getRecoveryRequest() external returns (bytes32) {
+    function getRecoveryRequest() external view returns (bytes32) {
         return accountRecoveryRequest;
     }
 
