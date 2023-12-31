@@ -298,7 +298,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         }
 
         // Make sure that the total price for items bought with PLS is equal to the amount sent
-        require(msg.value == totalAmountPls || (totalAmountPls == 0 && msg.value == 0), "Incorrect");
+        require(msg.value == totalAmountPls || (totalAmountPls == 0 && msg.value == 0), "Incorrect PLS amount sent");
     }
 
     /// @notice Buy NFTs from a listing.
@@ -358,6 +358,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         _directListingsStorage().listings[listingId].quantity -= _quantity;
 
         _payout(buyer, listing.listingCreator, _currency, targetTotalPrice, listing);
+
         _transferListingTokens(listing.listingCreator, _buyFor, _quantity, listing);
 
         emit MintraNewSale(listing.listingId, buyer, _quantity, targetTotalPrice, _currency);
@@ -581,7 +582,6 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         uint256 _totalPayoutAmount,
         Listing memory _listing
     ) internal {
-        address _nativeTokenWrapper = nativeTokenWrapper;
         uint256 amountRemaining;
         uint256 platformFeeCut;
 
@@ -595,13 +595,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
             }
 
             // Transfer platform fee
-            CurrencyTransferLib.transferCurrencyWithWrapper(
-                _currencyToUse,
-                _payer,
-                platformFeeRecipient,
-                platformFeeCut,
-                _nativeTokenWrapper
-            );
+            CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, platformFeeRecipient, platformFeeCut);
 
             amountRemaining = _totalPayoutAmount - platformFeeCut;
         }
@@ -620,13 +614,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
                 require(amountRemaining >= royaltyAmount, "fees exceed the price");
 
                 // Transfer royalty
-                CurrencyTransferLib.transferCurrencyWithWrapper(
-                    _currencyToUse,
-                    _payer,
-                    royaltyRecipient,
-                    royaltyAmount,
-                    _nativeTokenWrapper
-                );
+                CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, royaltyRecipient, royaltyAmount);
 
                 amountRemaining = amountRemaining - royaltyAmount;
 
@@ -644,13 +632,7 @@ contract MintraDirectListingsLogicStandalone is IDirectListings, Multicall, Reen
         }
 
         // Distribute price to token owner
-        CurrencyTransferLib.transferCurrencyWithWrapper(
-            _currencyToUse,
-            _payer,
-            _payee,
-            amountRemaining,
-            _nativeTokenWrapper
-        );
+        CurrencyTransferLib.transferCurrency(_currencyToUse, _payer, _payee, amountRemaining);
     }
 
     function processRoyalty(
