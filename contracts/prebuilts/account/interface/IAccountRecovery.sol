@@ -11,7 +11,7 @@ interface IAccountRecovery {
     error NotAuthorizedToCommitEmailVerificationHash(address sender);
 
     // Events //
-    event AccountRecoveryRequestCreated(address indexed account);
+    event AccountRecoveryRequestCreated();
     event GuardianSignatureRecorded(address indexed guardian);
     event AccountRecoveryRequestConcensusAchieved(address indexed account);
     event AccountRecoveryRequestConcensusFailed(address indexed account);
@@ -21,7 +21,7 @@ interface IAccountRecovery {
      * @dev This function will be called from the Email verification service updating the user's recovery token & nounce hash.
      * Nonce is to make sure that the one token is being used only once.
      */
-    function commitRecoveryHash(bytes32 recoveryHash) external;
+    function commitEmailVerificationHash(bytes calldata recoveryToken, uint256 recoveryTokenNonce) external;
 
     /**
      * @dev This function is used to generate the account recovery request.
@@ -33,9 +33,9 @@ interface IAccountRecovery {
      * @param recoveryTokenNonce The nonce is used to make sure that this particular recovery token is only used once. The nonce is incremented on creation of any new recovery token
      */
     function generateRecoveryRequest(
-        string memory email,
-        string calldata recoveryToken,
-        string calldata recoveryTokenNonce
+        string calldata email,
+        bytes calldata recoveryToken,
+        uint256 recoveryTokenNonce
     ) external;
 
     /**
