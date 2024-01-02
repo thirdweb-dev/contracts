@@ -2329,6 +2329,17 @@ contract MintraDirectListingsLogicStandaloneTest is BaseTest, IExtension {
         assertEq(platformFeeBps, 369);
     }
 
+    function test_fuzz_set_platform_fee(uint256 platformFeeBps) public {
+        vm.assume(platformFeeBps <= 369);
+
+        vm.prank(wizard);
+        MintraDirectListingsLogicStandalone(marketplace).setPlatformFeeBps(platformFeeBps);
+
+        uint256 expectedPlatformFeeBps = MintraDirectListingsLogicStandalone(marketplace).platformFeeBps();
+
+        assertEq(expectedPlatformFeeBps, platformFeeBps);
+    }
+
     function test_set_platform_fee_fail() public {
         vm.prank(wizard);
         vm.expectRevert("Fee not in range");
