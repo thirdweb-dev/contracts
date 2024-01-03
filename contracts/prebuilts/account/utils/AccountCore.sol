@@ -40,6 +40,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     //////////////////////////////////////////////////////////////*/
     address public accountLock;
     address public commonGuardian;
+    bytes recoveryEmailData;
 
     /// @notice EIP 4337 factory for this contract.
     address public immutable factory;
@@ -65,10 +66,12 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         bytes calldata _data
     ) public virtual initializer {
         // This is passed as data in the `_registerOnFactory()` call in `AccountExtension` / `Account`.
+        console.log("Inside AccountCore initialize");
         AccountCoreStorage.data().firstAdmin = _defaultAdmin;
         _setAdmin(_defaultAdmin, true, _data);
         commonGuardian = _guardian;
         accountLock = _accountLock;
+        recoveryEmailData = _data;
     }
 
     /*///////////////////////////////////////////////////////////////

@@ -76,8 +76,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     function createAccount(address _admin, bytes calldata _data) external virtual override returns (address) {
         address impl = accountImplementation;
         string memory recoveryEmail = abi.decode(_data, (string));
-        console.log("Decoded Email when creating account:", recoveryEmail);
-
         bytes32 salt = _generateSalt(_admin, _data);
 
         address account = Clones.predictDeterministicAddress(impl, salt);
@@ -95,7 +93,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         _initializeAccount(account, _admin, address(guardian), _data);
         emit AccountCreated(account, _admin);
 
-        accountGuardian = new AccountGuardian(guardian, accountLock, account, emailService, recoveryEmail);
+        accountGuardian = new AccountGuardian(guardian, accountLock, payable(account), emailService, recoveryEmail);
 
         guardian.linkAccountToAccountGuardian(account, address(accountGuardian));
 

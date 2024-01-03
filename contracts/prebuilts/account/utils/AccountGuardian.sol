@@ -10,7 +10,7 @@ contract AccountGuardian is IAccountGuardian {
     Guardian public guardianContract;
     AccountLock public accountLock;
     AccountRecovery public accountRecovery;
-    address account;
+    address payable account;
     address[] private accountGuardians;
     address public owner;
 
@@ -19,7 +19,7 @@ contract AccountGuardian is IAccountGuardian {
     constructor(
         Guardian _guardianContract,
         AccountLock _accountLock,
-        address _account,
+        address payable _account,
         address _emailService,
         string memory _recoveryEmail
     ) {

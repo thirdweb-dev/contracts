@@ -19,7 +19,6 @@ import { Account } from "./Account.sol";
 // CCIP
 import { CrossChainTokenTransfer } from "../utils/CrossChainTokenTransfer.sol";
 import { CrossChainTokenTransferMaster } from "../utils/CrossChainTokenTransferMaster.sol";
-import { AccountRecovery } from "../utils/AccountRecovery.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |

@@ -174,4 +174,8 @@ contract AccountRecoveryTest is Test {
         emit AccountRecoveryRequestConcensusAchieved(smartWallet);
         accountRecovery.collectGuardianSignaturesOnRecoveryRequest(secondGuard, secondGuardSignature);
     }
+
+    ////////////////////////////////////
+    /// updating smart account owner ///
+    ////////////////////////////////////
 }
