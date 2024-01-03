@@ -2,6 +2,7 @@
 pragma solidity ^0.8.12;
 
 import { IAccountRecovery } from "../interface/IAccountRecovery.sol";
+// import { IAccount } from "../interface/IAccount.sol";
 import { AccountGuardian } from "./AccountGuardian.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "forge-std/console.sol";
@@ -11,7 +12,7 @@ contract AccountRecovery is IAccountRecovery {
     event GeneratedHash(bytes32 generatedHash);
     event AboutToGenerateHashUsing(bytes receivedToken, uint256 nonce);
 
-    address public immutable account;
+    address payable account;
     address public immutable owner;
     string private recoveryEmail;
     address private immutable emailVerificationServiceAddress; // The address of the email verification service, responsible for providing the emailVerificationHash
@@ -21,10 +22,11 @@ contract AccountRecovery is IAccountRecovery {
     bytes32 public accountRecoveryRequest;
     address[] public guardiansWhoSigned;
     address public newAdmin;
+    // IAccount accountInterface;
     mapping(address => bytes) private guardianSignatures;
 
     constructor(
-        address _account,
+        address payable _account,
         address _emailVerificationServiceAddress,
         string memory _recoveryEmail,
         address _accountGuardian
@@ -33,6 +35,7 @@ contract AccountRecovery is IAccountRecovery {
         emailVerificationServiceAddress = _emailVerificationServiceAddress;
         recoveryEmail = _recoveryEmail;
         account = _account;
+        // accountInterface = IAccount(account);
         accountGuardian = _accountGuardian;
     }
 
@@ -68,16 +71,15 @@ contract AccountRecovery is IAccountRecovery {
         bytes calldata recoveryToken,
         uint256 recoveryTokenNonce
     ) external {
-        // TODO: _verifyUserAsOwnerOfTheAccount() should be used. Commented out to prevent tests from failing as hashes commited by the test suite for email verification is not matching the hash generated in _verifyUserAsOwnerOfTheAccount() even though same params: email, token & nonce are used. Follow up here for solution: https://ethereum.stackexchange.com/questions/158668/hashes-dont-seem-to-match-even-though-created-with-the-same-params
         _verifyUserAsOwnerOfTheAccount(email, recoveryToken, recoveryTokenNonce);
 
         newAdmin = msg.sender;
 
-        bytes32 restoreKeyRequestHash = keccak256(
+        bytes32 recoveryRequestHash = keccak256(
             abi.encodeWithSignature("updateAdmin(address newAdmin, bytes memory email)", newAdmin, abi.encode(email))
         );
 
-        accountRecoveryRequest = ECDSA.toEthSignedMessageHash(restoreKeyRequestHash);
+        accountRecoveryRequest = ECDSA.toEthSignedMessageHash(recoveryRequestHash);
 
         emit AccountRecoveryRequestCreated();
     }
@@ -96,17 +98,12 @@ contract AccountRecovery is IAccountRecovery {
 
         bool consensusAcheived = _accountRecoveryConcensusEvaluation();
 
-        // if (consensusAcheived) {
-        //     // updating the owner of the smart account
-        //     (bool success, ) = (payable(account)).call(
-        //         abi.encodeWithSignature(
-        //             "updateAdmin(address newAdmin, bytes memory _data)",
-        //             newAdmin,
-        //             abi.encode(recoveryEmail)
-        //         )
-        //     );
-        //     require(success, "Failed to update Admin");
-        // }
+        if (consensusAcheived) {
+            // updating the owner of the smart account
+            bytes memory newAdminData = abi.encodeWithSignature("updateAdmin(address)", newAdmin);
+            (bool success, ) = account.call(newAdminData);
+            require(success, "Failed to update Admin");
+        }
     }
 
     // view function //

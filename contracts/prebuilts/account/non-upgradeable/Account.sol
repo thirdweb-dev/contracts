@@ -148,12 +148,25 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         AccountLock(accountLock).addLockAccountToList(address(this));
     }
 
-    /// @notice Overrides the account admin (post recovery concensus)
-    function updateAdmin(address _newAdmin, bytes memory email) external onlyAccountRecovery(msg.sender) {
-        AccountCoreStorage.data().firstAdmin = _newAdmin;
-        _setAdmin(_newAdmin, true, email);
+    /// @notice Updates the account admin (post recovery concensus)
+    function updateAdmin(address newAdmin) external view onlyAccountRecovery(msg.sender) {
+        // Replicating the AccountCore::initialize() to update admin and email
+        console.log("Reaching updateAdmin() in Smart account proxy contract");
+        // retrieving `recoveryEmail` from `AccountCore::recoveryEmailData` passed during initialization of smart account contract
+        string memory recoveryEmail = abi.decode(recoveryEmailData, (string));
+        console.log("Email: ", recoveryEmail);
+        console.log("New Owner:", newAdmin);
 
-        emit AdminUpdated(_newAdmin);
+        // AccountCoreStorage.data().firstAdmin = _newAdmin;
+        // console.log("Account Core storage set!");
+        // _setAdmin(_newAdmin, true, email);
+        // console.log("_setAdmin set!");
+
+        // emit AdminUpdated(_newAdmin);
+    }
+
+    fallback() external {
+        console.log("Reached Fallback() of Account.sol");
     }
 
     /*///////////////////////////////////////////////////////////////
