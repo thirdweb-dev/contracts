@@ -7,6 +7,8 @@ import { AccountLock } from "./AccountLock.sol";
 import { AccountRecovery } from "./AccountRecovery.sol";
 
 contract AccountGuardian is IAccountGuardian {
+    event AccountRecoveryContractDeployed(address indexed);
+
     Guardian public guardianContract;
     AccountLock public accountLock;
     AccountRecovery public accountRecovery;
@@ -29,6 +31,8 @@ contract AccountGuardian is IAccountGuardian {
         owner = account;
         accountRecovery = new AccountRecovery(account, _emailService, _recoveryEmail, address(this));
         guardianContract.linkAccountToAccountRecovery(account, address(accountRecovery));
+
+        emit AccountRecoveryContractDeployed(address(accountRecovery));
     }
 
     modifier onlyOwnerAccountLockAccountRecovery() {

@@ -8,7 +8,6 @@ import "../../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 import "../utils/BaseAccount.sol";
 import "../../../extension/interface/IAccountPermissions.sol";
 import "../../../lib/BytesLib.sol";
-import "forge-std/console.sol";
 
 // Interface
 import "../interface/IEntrypoint.sol";
@@ -37,7 +36,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     event AccountLockContractDeployed(address indexed);
     event AccountGuardianContractDeployed(address indexed);
     event SmartAccountContractDeployed(address indexed);
-    event AccountRecoveryContractDeployed(address indexed);
+
     /*///////////////////////////////////////////////////////////////
                                 State
     //////////////////////////////////////////////////////////////*/
@@ -76,7 +75,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     function createAccount(address _admin, bytes calldata _data) external virtual override returns (address) {
         address impl = accountImplementation;
         string memory recoveryEmail = abi.decode(_data, (string));
-        bytes32 salt = _generateSalt(_admin, _data);
+        bytes32 salt = _generateSalt(_data);
 
         address account = Clones.predictDeterministicAddress(impl, salt);
 
@@ -149,7 +148,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     /// @notice Returns the address of an Account that would be deployed with the given admin signer.
     function getAddress(address _adminSigner, bytes calldata _data) public view returns (address) {
-        bytes32 salt = _generateSalt(_adminSigner, _data);
+        bytes32 salt = _generateSalt(_data);
         return Clones.predictDeterministicAddress(accountImplementation, salt);
     }
 
@@ -168,7 +167,7 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
         address _admin,
         bytes memory _data
     ) internal view virtual returns (bool) {
-        bytes32 salt = _generateSalt(_admin, _data);
+        bytes32 salt = _generateSalt(_data);
         address predicted = Clones.predictDeterministicAddress(accountImplementation, salt);
         return _account == predicted;
     }
@@ -179,8 +178,8 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
     }
 
     /// @dev Returns the salt used when deploying an Account.
-    function _generateSalt(address _admin, bytes memory _data) internal view virtual returns (bytes32) {
-        return keccak256(abi.encode(_admin, _data));
+    function _generateSalt(bytes memory _data) internal view virtual returns (bytes32) {
+        return keccak256(_data);
     }
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.

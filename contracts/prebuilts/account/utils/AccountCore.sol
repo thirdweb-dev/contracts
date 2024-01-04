@@ -66,7 +66,6 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
         bytes calldata _data
     ) public virtual initializer {
         // This is passed as data in the `_registerOnFactory()` call in `AccountExtension` / `Account`.
-        console.log("Inside AccountCore initialize");
         AccountCoreStorage.data().firstAdmin = _defaultAdmin;
         _setAdmin(_defaultAdmin, true, _data);
         commonGuardian = _guardian;
@@ -245,6 +244,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     /// @notice Makes the given account an admin.
     function _setAdmin(address _account, bool _isAdmin, bytes memory _data) internal virtual override {
         super._setAdmin(_account, _isAdmin, _data);
+
         if (factory.code.length > 0) {
             if (_isAdmin) {
                 BaseAccountFactory(factory).onSignerAdded(_account, AccountCoreStorage.data().firstAdmin, _data);
