@@ -8,7 +8,6 @@ import "../../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 import "../utils/BaseAccount.sol";
 import "../../../extension/interface/IAccountPermissions.sol";
 import "../../../lib/BytesLib.sol";
-import "forge-std/console.sol";
 
 // Interface
 import "../interface/IEntrypoint.sol";
@@ -112,7 +111,6 @@ abstract contract BaseAccountFactory is IAccountFactory, Multicall {
 
     function onSignerAdded(address _signer, address _defaultAdmin, bytes memory _data) external {
         address account = msg.sender;
-        console.log("WHo is adding the signer (should be the factory smart account contract):", account);
         require(_isAccountOfFactory(account, _defaultAdmin, _data), "AccountFactory: not an account.");
 
         bool isNewSigner = accountsOfSigner[_signer].add(account);

@@ -149,20 +149,20 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     }
 
     /// @notice Updates the account admin (post recovery concensus)
-    function updateAdmin(address newAdmin) external view onlyAccountRecovery(msg.sender) {
-        // Replicating the AccountCore::initialize() to update admin and email
-        console.log("Reaching updateAdmin() in Smart account proxy contract");
-        // retrieving `recoveryEmail` from `AccountCore::recoveryEmailData` passed during initialization of smart account contract
-        string memory recoveryEmail = abi.decode(recoveryEmailData, (string));
-        console.log("Email: ", recoveryEmail);
-        console.log("New Owner:", newAdmin);
+    function updateAdmin(address newAdmin) external onlyAccountRecovery(msg.sender) {
+        // retrieving `recoveryEmailData` from `AccountCore::recoveryEmailData` passed during initialization of smart account contract
+        AccountCoreStorage.data().firstAdmin = newAdmin;
+        console.log("Account Core storage set!");
 
-        // AccountCoreStorage.data().firstAdmin = _newAdmin;
-        // console.log("Account Core storage set!");
-        // _setAdmin(_newAdmin, true, email);
-        // console.log("_setAdmin set!");
+        _setAdmin(newAdmin, true, recoveryEmailData);
+        console.log("_setAdmin set!");
 
-        // emit AdminUpdated(_newAdmin);
+        emit AdminUpdated(newAdmin);
+    }
+
+    ////// getter functions ////////
+    function getAccountAdmin() public view returns (address) {
+        return AccountCoreStorage.data().firstAdmin;
     }
 
     fallback() external {
