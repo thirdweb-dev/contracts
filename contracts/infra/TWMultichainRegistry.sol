@@ -106,7 +106,7 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Multicall, ERC2771Contex
         metadataUri = addressToMetadataUri[_chainId][_deployment];
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+    function _msgSender() internal view virtual override(Context, ERC2771Context, Multicall) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
