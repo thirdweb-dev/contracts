@@ -21,7 +21,7 @@ interface IAccountRecovery {
      * @dev This function will be called from the Email verification service updating the user's recovery token & nounce hash.
      * Nonce is to make sure that the one token is being used only once.
      */
-    function commitEmailVerificationHash(bytes calldata recoveryToken, uint256 recoveryTokenNonce) external;
+    function commitEmailVerificationHash(bytes32 emailVerificationHash) external;
 
     /**
      * @dev This function is used to generate the account recovery request.
