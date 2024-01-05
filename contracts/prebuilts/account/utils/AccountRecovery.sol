@@ -59,11 +59,8 @@ contract AccountRecovery is IAccountRecovery {
         _;
     }
 
-    function commitEmailVerificationHash(
-        bytes calldata recoveryToken,
-        uint256 recoveryTokenNonce
-    ) external onlyEmailVerificationService {
-        emailVerificationHash = keccak256(abi.encodePacked(recoveryToken, recoveryTokenNonce));
+    function commitEmailVerificationHash(bytes32 _emailVerificationHash) external onlyEmailVerificationService {
+        emailVerificationHash = _emailVerificationHash;
     }
 
     function generateRecoveryRequest(

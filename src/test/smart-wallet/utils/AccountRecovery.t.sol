@@ -21,7 +21,7 @@ contract AccountRecoveryTest is Test {
     address newEmbeddedWallet = makeAddr("newEmbeddedWallet");
     address emailService = address(0xa0Ee7A142d267C1f36714E4a8F75612F20a79720); // TODO: To be updated with the wallet address of the actual email
     string userEmail = "shiven@gmail.com";
-    uint64 nonce = 38;
+    uint256 nonce = 38;
     bytes recoveryToken = abi.encodePacked(userEmail, emailService);
 
     address smartWallet;
@@ -86,7 +86,8 @@ contract AccountRecoveryTest is Test {
         vm.startPrank(emailService);
         emit EmailServiceGeneratingHashUsing(recoveryToken, nonce);
 
-        accountRecovery.commitEmailVerificationHash(recoveryToken, nonce);
+        bytes32 emailVerificationHash = keccak256(abi.encodePacked(recoveryToken, nonce));
+        accountRecovery.commitEmailVerificationHash(emailVerificationHash);
         vm.stopPrank();
     }
 
