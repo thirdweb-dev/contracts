@@ -1,13 +1,26 @@
 <p align="center">
-<br />
 <h1 align="center">CryptoPhoenix Smart Wallet Contracts</h1>
-<p align="center"><strong>CryptoPhoenix Wallet SDK is a rollup to thirdweb's smart wallet contracts by offering features like: <br />
-- Cross-chain payments using Chainlink's CCIP <br />
-- Social Account Recovery</strong><br />
+<p>CryptoPhoenix Wallet SDK is a rollup to thirdweb's smart wallet contracts and offers: <br />
+<ol>
+<li>Social Account Locking</li>
+<li>Social Account Recovery</li>
+<li>Guardian Management</li>
+</ol>
+
+## Problem Statement
+As we all know, a wallet is a gateway to web3 but the wallet experience is unfortunately broken as for a user to interact with a blockchain, they not only have to create a wallet but also secure their private keys and seed phrase, purchase native tokes to pay for gas, and sign every single action that they take on a dApp. 
+
+Such an intimidating user experience for newcomers is a big hindrance in the mass adoption of web3 and CryptoPhoenix Wallet SDK is here to change this through its **Account abstraction technology.**
+
+## Architecture
+
+<img src="./images/architecture.png" width="400" alt="puppy-raffle">
+<br/>
 <br />
 
-## Inspiration
-As we all know, the wallet experience is such a crucial factor in the mass adoption of web3 dapps and services by internet users. For new users to interact with the blockchain, they must: create a wallet, store their private keys, purchase & transfer funds, pay gas fees, and sign every single action that they take on a dApp. With such an intimidating user experience for newcomers, something must change. CryptoPhoenix Wallet SDK is here to bring just that change!
+[**Architecture walkthrough**](https://www.youtube.com/embed/0zq2YdOYFUo)
+
+
 
 ## How we built it
 The wallet SDK is a rollup to thirdweb's smart wallet (ERC-4337) contracts. We've added the following contracts to extend it's functionality:
