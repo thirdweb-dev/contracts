@@ -49,6 +49,7 @@ contract MintraDirectListings is IDirectListings, Multicall, ReentrancyGuard {
     );
 
     event RoyaltyUpdated(address assetContract, uint256 royaltyAmount, address royaltyRecipient);
+    event PlatformFeeUpdated(uint256 platformFeeBps);
 
     address public immutable wizard;
     address private immutable mintTokenAddress;
@@ -679,5 +680,7 @@ contract MintraDirectListings is IDirectListings, Multicall, ReentrancyGuard {
         require(_platformFeeBps <= 369, "Fee not in range");
 
         platformFeeBps = _platformFeeBps;
+
+        emit PlatformFeeUpdated(_platformFeeBps);
     }
 }
