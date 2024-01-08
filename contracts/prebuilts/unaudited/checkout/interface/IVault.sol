@@ -14,11 +14,7 @@ interface IVault is ISwap {
 
     function transferTokensToExecutor(address _token, uint256 _amount) external;
 
-    function swapAndTransferTokensToExecutor(
-        address _token,
-        uint256 _amount,
-        SwapOp memory _swapOp
-    ) external;
+    function swapAndTransferTokensToExecutor(address _token, uint256 _amount, SwapOp memory _swapOp) external;
 
     function setExecutor(address _executor) external;
 

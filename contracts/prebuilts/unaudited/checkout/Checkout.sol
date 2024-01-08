@@ -30,11 +30,7 @@ contract Checkout is PermissionsEnumerable, ICheckout {
     address public immutable vaultImplementation;
     address public immutable executorImplementation;
 
-    constructor(
-        address _defaultAdmin,
-        address _vaultImplementation,
-        address _executorImplementation
-    ) {
+    constructor(address _defaultAdmin, address _vaultImplementation, address _executorImplementation) {
         vaultImplementation = _vaultImplementation;
         executorImplementation = _executorImplementation;
 
