@@ -15,11 +15,10 @@ contract MyDropUpg is Drop {
         uint256 _pricePerToken
     ) internal override {}
 
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId)
-    {}
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId) {}
 
     function _canSetClaimConditions() internal view override returns (bool) {
         return true;
@@ -34,11 +33,7 @@ contract MyDropUpg is Drop {
         _dropStorage().claimCondition.conditions[_conditionId] = condition;
     }
 
-    function setSupplyClaimedByWallet(
-        uint256 _conditionId,
-        address _wallet,
-        uint256 _supplyClaimed
-    ) public {
+    function setSupplyClaimedByWallet(uint256 _conditionId, address _wallet, uint256 _supplyClaimed) public {
         _dropStorage().claimCondition.supplyClaimedByWallet[_conditionId][_wallet] = _supplyClaimed;
     }
 }
@@ -64,7 +59,7 @@ contract UpgradeableDrop_VerifyClaim is ExtensionUtilTest {
         ext = new MyDropUpg();
 
         _claimer = getActor(1);
-        _allowlistClaimer = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        _allowlistClaimer = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
 
         // claim condition without allowlist
         claimCondition = IClaimCondition.ClaimCondition({

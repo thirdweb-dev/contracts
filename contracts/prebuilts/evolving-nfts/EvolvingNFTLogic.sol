@@ -22,7 +22,7 @@ import "../../eip/queryable/ERC721AQueryableUpgradeable.sol";
 //  ==========  Internal imports    ==========
 
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
-import "../../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
 
@@ -65,13 +65,9 @@ contract EvolvingNFTLogic is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC721AUpgradeable)
-        returns (string memory)
-    {
+    function tokenURI(
+        uint256 _tokenId
+    ) public view virtual override(ERC721AUpgradeable, IERC721AUpgradeable) returns (string memory) {
         if (!_exists(_tokenId)) {
             revert("!ID");
         }
@@ -104,13 +100,9 @@ contract EvolvingNFTLogic is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC721AUpgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721AUpgradeable, IERC721AUpgradeable, IERC165) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
@@ -155,11 +147,10 @@ contract EvolvingNFTLogic is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId_)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId_) {
         startTokenId_ = _nextTokenId();
         _safeMint(_to, _quantityBeingClaimed);
     }

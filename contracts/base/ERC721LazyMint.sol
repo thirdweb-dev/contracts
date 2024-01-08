@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import { ERC721A } from "../eip/ERC721AVirtualApprove.sol";
+import { ERC721A, Context } from "../eip/ERC721AVirtualApprove.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/Multicall.sol";
@@ -13,7 +13,7 @@ import "../extension/BatchMintMetadata.sol";
 import "../extension/LazyMint.sol";
 import "../extension/interface/IClaimableERC721.sol";
 
-import "../lib/TWStrings.sol";
+import "../lib/Strings.sol";
 import "../external-deps/openzeppelin/security/ReentrancyGuard.sol";
 
 /**
@@ -53,7 +53,7 @@ contract ERC721LazyMint is
     IClaimableERC721,
     ReentrancyGuard
 {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     /*//////////////////////////////////////////////////////////////
                             Constructor
@@ -184,11 +184,10 @@ contract ERC721LazyMint is
      *
      * @return startTokenId The tokenId of the first NFT minted.
      */
-    function _transferTokensOnClaim(address _receiver, uint256 _quantity)
-        internal
-        virtual
-        returns (uint256 startTokenId)
-    {
+    function _transferTokensOnClaim(
+        address _receiver,
+        uint256 _quantity
+    ) internal virtual returns (uint256 startTokenId) {
         startTokenId = _currentIndex;
         _safeMint(_receiver, _quantity);
     }
@@ -211,5 +210,10 @@ contract ERC721LazyMint is
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
+    }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view override(Multicall, Context) returns (address) {
+        return msg.sender;
     }
 }

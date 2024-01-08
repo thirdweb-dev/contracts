@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import "../../../lib/TWBitMaps.sol";
+import "../../../lib/BitMaps.sol";
 
 /**
  *  Thirdweb's 'Drop' contracts are distribution mechanisms for tokens.

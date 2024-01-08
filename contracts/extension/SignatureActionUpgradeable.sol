@@ -22,12 +22,10 @@ abstract contract SignatureActionUpgradeable is EIP712Upgradeable, ISignatureAct
     function __SignatureAction_init_unchained() internal onlyInitializing {}
 
     /// @dev Verifies that a request is signed by an authorized account.
-    function verify(GenericRequest calldata _req, bytes calldata _signature)
-        public
-        view
-        override
-        returns (bool success, address signer)
-    {
+    function verify(
+        GenericRequest calldata _req,
+        bytes calldata _signature
+    ) public view override returns (bool success, address signer) {
         signer = _recoverAddress(_req, _signature);
         success = !executed[_req.uid] && _isAuthorizedSigner(signer);
     }
@@ -36,10 +34,10 @@ abstract contract SignatureActionUpgradeable is EIP712Upgradeable, ISignatureAct
     function _isAuthorizedSigner(address _signer) internal view virtual returns (bool);
 
     /// @dev Verifies a request and marks the request as processed.
-    function _processRequest(GenericRequest calldata _req, bytes calldata _signature)
-        internal
-        returns (address signer)
-    {
+    function _processRequest(
+        GenericRequest calldata _req,
+        bytes calldata _signature
+    ) internal returns (address signer) {
         bool success;
         (success, signer) = verify(_req, _signature);
 

@@ -16,32 +16,27 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import { Multicall } from "../../../extension/Multicall.sol";
 
 //  ==========  Internal imports    ==========
 
 import "../../interface/airdrop/IAirdropERC1155Claimable.sol";
 
 //  ==========  Features    ==========
-import "../../../extension/Ownable.sol";
 
 import "../../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 import "../../../lib/MerkleProof.sol";
 
 contract AirdropERC1155Claimable is
     Initializable,
-    Ownable,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     IAirdropERC1155Claimable
 {
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
-
-    bytes32 private constant MODULE_TYPE = bytes32("AirdropERC1155Claimable");
-    uint256 private constant VERSION = 1;
 
     /// @dev address of token being airdropped.
     address public airdropTokenAddress;
@@ -62,8 +57,8 @@ contract AirdropERC1155Claimable is
     /// @dev Mapping from tokenId and claimer address to total number of tokens claimed.
     mapping(uint256 => mapping(address => uint256)) public supplyClaimedByWallet;
 
-    /// @dev general claim limit for a tokenId if claimer not in allowlist.
-    mapping(uint256 => uint256) public maxWalletClaimCount;
+    /// @dev claim limit for open/public claiming without allowlist.
+    mapping(uint256 => uint256) public openClaimLimitPerWallet;
 
     /// @dev number tokens available to claim for a tokenId.
     mapping(uint256 => uint256) public availableAmount;
@@ -75,21 +70,21 @@ contract AirdropERC1155Claimable is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor() initializer {}
+    constructor() {
+        _disableInitializers();
+    }
 
     /// @dev Initializes the contract, like a constructor.
     function initialize(
-        address _defaultAdmin,
         address[] memory _trustedForwarders,
         address _tokenOwner,
         address _airdropTokenAddress,
         uint256[] memory _tokenIds,
         uint256[] memory _availableAmounts,
         uint256 _expirationTimestamp,
-        uint256[] memory _maxWalletClaimCount,
+        uint256[] memory _openClaimLimitPerWallet,
         bytes32[] memory _merkleRoot
     ) external initializer {
-        _setupOwner(_defaultAdmin);
         __ReentrancyGuard_init();
         __ERC2771Context_init(_trustedForwarders);
 
@@ -99,7 +94,7 @@ contract AirdropERC1155Claimable is
         expirationTimestamp = _expirationTimestamp;
 
         require(
-            _maxWalletClaimCount.length == _tokenIds.length &&
+            _openClaimLimitPerWallet.length == _tokenIds.length &&
                 _merkleRoot.length == _tokenIds.length &&
                 _availableAmounts.length == _tokenIds.length,
             "length mismatch."
@@ -107,23 +102,9 @@ contract AirdropERC1155Claimable is
 
         for (uint256 i = 0; i < _tokenIds.length; i++) {
             merkleRoot[_tokenIds[i]] = _merkleRoot[i];
-            maxWalletClaimCount[_tokenIds[i]] = _maxWalletClaimCount[i];
+            openClaimLimitPerWallet[_tokenIds[i]] = _openClaimLimitPerWallet[i];
             availableAmount[_tokenIds[i]] = _availableAmounts[i];
         }
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Generic contract logic
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Returns the type of the contract.
-    function contractType() external pure returns (bytes32) {
-        return MODULE_TYPE;
-    }
-
-    /// @dev Returns the version of the contract.
-    function contractVersion() external pure returns (uint8) {
-        return uint8(VERSION);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -158,11 +139,7 @@ contract AirdropERC1155Claimable is
     }
 
     /// @dev Transfers the tokens being claimed.
-    function _transferClaimedTokens(
-        address _to,
-        uint256 _quantityBeingClaimed,
-        uint256 _tokenId
-    ) internal {
+    function _transferClaimedTokens(address _to, uint256 _quantityBeingClaimed, uint256 _tokenId) internal {
         // if transfer claimed tokens is called when `to != msg.sender`, it'd use msg.sender's limits.
         // behavior would be similar to `msg.sender` mint for itself, then transfer to `_to`.
         supplyClaimedByWallet[_tokenId][_msgSender()] += _quantityBeingClaimed;
@@ -181,6 +158,10 @@ contract AirdropERC1155Claimable is
     ) public view {
         bool isOverride;
 
+        /*
+         * Here `isOverride` implies that if the merkle proof verification fails,
+         * the claimer would claim through open claim limit instead of allowlisted limit.
+         */
         bytes32 mroot = merkleRoot[_tokenId];
         if (mroot != bytes32(0)) {
             (isOverride, ) = MerkleProof.verify(
@@ -198,7 +179,7 @@ contract AirdropERC1155Claimable is
         uint256 expTimestamp = expirationTimestamp;
         require(expTimestamp == 0 || block.timestamp < expTimestamp, "airdrop expired.");
 
-        uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : maxWalletClaimCount[_tokenId];
+        uint256 claimLimitForWallet = isOverride ? _proofMaxQuantityForWallet : openClaimLimitPerWallet[_tokenId];
         require(_quantity + supplyClaimedAlready <= claimLimitForWallet, "invalid quantity.");
     }
 
@@ -206,16 +187,13 @@ contract AirdropERC1155Claimable is
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns whether owner can be set in the given execution context.
-    function _canSetOwner() internal view virtual override returns (bool) {
-        return _msgSender() == owner();
-    }
-
-    function _msgSender() internal view virtual override returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Multicall)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
-    }
-
-    function _msgData() internal view virtual override returns (bytes calldata) {
-        return ERC2771ContextUpgradeable._msgData();
     }
 }

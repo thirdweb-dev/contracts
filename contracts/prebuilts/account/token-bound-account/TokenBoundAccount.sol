@@ -108,13 +108,10 @@ contract TokenBoundAccount is
     }
 
     /// @notice See EIP-1271
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
-        public
-        view
-        virtual
-        override
-        returns (bytes4 magicValue)
-    {
+    function isValidSignature(
+        bytes32 _hash,
+        bytes memory _signature
+    ) public view virtual override returns (bytes4 magicValue) {
         address signer = _hash.recover(_signature);
 
         if (owner() == signer) {
@@ -136,15 +133,7 @@ contract TokenBoundAccount is
         entryPoint().withdrawTo(withdrawAddress, amount);
     }
 
-    function token()
-        external
-        view
-        returns (
-            uint256 chainId,
-            address tokenContract,
-            uint256 tokenId
-        )
-    {
+    function token() external view returns (uint256 chainId, address tokenContract, uint256 tokenId) {
         return ERC6551AccountLib.token();
     }
 
@@ -167,11 +156,7 @@ contract TokenBoundAccount is
     }
 
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(
-        address _target,
-        uint256 _value,
-        bytes calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
+    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual onlyAdminOrEntrypoint {
         _call(_target, _value, _calldata);
     }
 
@@ -212,12 +197,10 @@ contract TokenBoundAccount is
     }
 
     /// @notice Validates the signature of a user operation.
-    function _validateSignature(UserOperation calldata userOp, bytes32 userOpHash)
-        internal
-        virtual
-        override
-        returns (uint256 validationData)
-    {
+    function _validateSignature(
+        UserOperation calldata userOp,
+        bytes32 userOpHash
+    ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
         address signer = hash.recover(userOp.signature);
 
@@ -240,15 +223,9 @@ contract TokenBoundAccount is
         _value = abi.decode(data[36:68], (uint256));
     }
 
-    function decodeExecuteBatchCalldata(bytes calldata data)
-        internal
-        pure
-        returns (
-            address[] memory _targets,
-            uint256[] memory _values,
-            bytes[] memory _callData
-        )
-    {
+    function decodeExecuteBatchCalldata(
+        bytes calldata data
+    ) internal pure returns (address[] memory _targets, uint256[] memory _values, bytes[] memory _callData) {
         require(data.length >= 4 + 32 + 32 + 32, "Data too short");
 
         (_targets, _values, _callData) = abi.decode(data[4:], (address[], uint256[], bytes[]));

@@ -69,13 +69,7 @@ interface IERC1155 {
         @param _value   Transfer amount
         @param _data    Additional data with no specified format, MUST be sent unaltered in call to `onERC1155Received` on `_to`
     */
-    function safeTransferFrom(
-        address _from,
-        address _to,
-        uint256 _id,
-        uint256 _value,
-        bytes calldata _data
-    ) external;
+    function safeTransferFrom(address _from, address _to, uint256 _id, uint256 _value, bytes calldata _data) external;
 
     /**
         @notice Transfers `_values` amount(s) of `_ids` from the `_from` address to the `_to` address specified (with safety call).
@@ -115,10 +109,10 @@ interface IERC1155 {
         @param _ids    ID of the Tokens
         @return        The _owner's balance of the Token types requested (i.e. balance for each (owner, id) pair)
      */
-    function balanceOfBatch(address[] calldata _owners, uint256[] calldata _ids)
-        external
-        view
-        returns (uint256[] memory);
+    function balanceOfBatch(
+        address[] calldata _owners,
+        uint256[] calldata _ids
+    ) external view returns (uint256[] memory);
 
     /**
         @notice Enable or disable approval for a third party ("operator") to manage all of the caller's tokens.

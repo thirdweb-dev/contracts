@@ -3,9 +3,9 @@ pragma solidity ^0.8.11;
 
 import "@std/Test.sol";
 import "@ds-test/test.sol";
+import { Strings } from "contracts/lib/Strings.sol";
 
 import { DropSinglePhase } from "contracts/extension/DropSinglePhase.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract MyDropSinglePhase is DropSinglePhase {
     bool condition;
@@ -25,11 +25,10 @@ contract MyDropSinglePhase is DropSinglePhase {
         uint256 _pricePerToken
     ) internal override {}
 
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        override
-        returns (uint256 startTokenId)
-    {}
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal override returns (uint256 startTokenId) {}
 }
 
 contract ExtensionDropSinglePhase is DSTest, Test {
@@ -143,7 +142,7 @@ contract ExtensionDropSinglePhase is DSTest, Test {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
 
         // bytes32[] memory proofs = new bytes32[](0);
 

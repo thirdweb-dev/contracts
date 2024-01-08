@@ -16,7 +16,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import "../extension/Multicall.sol";
 
 //  ==========  Internal imports    ==========
 import { IContractPublisher } from "./interface/IContractPublisher.sol";
@@ -71,11 +71,9 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Returns the latest version of all contracts published by a publisher.
-    function getAllPublishedContracts(address _publisher)
-        external
-        view
-        returns (CustomContractInstance[] memory published)
-    {
+    function getAllPublishedContracts(
+        address _publisher
+    ) external view returns (CustomContractInstance[] memory published) {
         CustomContractInstance[] memory linkedData = prevPublisher.getAllPublishedContracts(_publisher);
         uint256 currentTotal = EnumerableSet.length(contractsOfPublisher[_publisher].contractIds);
         uint256 prevTotal = linkedData.length;
@@ -93,11 +91,10 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     }
 
     /// @notice Returns all versions of a published contract.
-    function getPublishedContractVersions(address _publisher, string memory _contractId)
-        external
-        view
-        returns (CustomContractInstance[] memory published)
-    {
+    function getPublishedContractVersions(
+        address _publisher,
+        string memory _contractId
+    ) external view returns (CustomContractInstance[] memory published) {
         CustomContractInstance[] memory linkedVersions = prevPublisher.getPublishedContractVersions(
             _publisher,
             _contractId
@@ -121,11 +118,10 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     }
 
     /// @notice Returns the latest version of a contract published by a publisher.
-    function getPublishedContract(address _publisher, string memory _contractId)
-        external
-        view
-        returns (CustomContractInstance memory published)
-    {
+    function getPublishedContract(
+        address _publisher,
+        string memory _contractId
+    ) external view returns (CustomContractInstance memory published) {
         published = contractsOfPublisher[_publisher].contracts[keccak256(bytes(_contractId))].latest;
         // if not found, check the previous publisher
         if (published.publishTimestamp == 0) {
@@ -171,11 +167,10 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     }
 
     /// @notice Lets a publisher unpublish a contract and all its versions.
-    function unpublishContract(address _publisher, string memory _contractId)
-        external
-        onlyPublisher(_publisher)
-        onlyUnpausedOrAdmin
-    {
+    function unpublishContract(
+        address _publisher,
+        string memory _contractId
+    ) external onlyPublisher(_publisher) onlyUnpausedOrAdmin {
         bytes32 contractIdInBytes = keccak256(bytes(_contractId));
 
         bool removed = EnumerableSet.remove(contractsOfPublisher[_publisher].contractIds, contractIdInBytes);
@@ -204,11 +199,9 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     }
 
     /// @notice Retrieve the published metadata URI from a compiler metadata URI
-    function getPublishedUriFromCompilerUri(string memory compilerMetadataUri)
-        public
-        view
-        returns (string[] memory publishedMetadataUris)
-    {
+    function getPublishedUriFromCompilerUri(
+        string memory compilerMetadataUri
+    ) public view returns (string[] memory publishedMetadataUris) {
         string[] memory linkedUris = prevPublisher.getPublishedUriFromCompilerUri(compilerMetadataUri);
         uint256 prevTotal = linkedUris.length;
         uint256 currentTotal = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].index;
@@ -238,7 +231,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     }
 
     /// @dev ERC2771Context overrides
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+    function _msgSender() internal view virtual override(Context, ERC2771Context, Multicall) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 

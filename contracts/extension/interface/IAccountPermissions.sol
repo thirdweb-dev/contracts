@@ -100,10 +100,10 @@ interface IAccountPermissions {
     function getAllAdmins() external view returns (address[] memory admins);
 
     /// @dev Verifies that a request is signed by an authorized account.
-    function verifySignerPermissionRequest(SignerPermissionRequest calldata req, bytes calldata signature)
-        external
-        view
-        returns (bool success, address signer);
+    function verifySignerPermissionRequest(
+        SignerPermissionRequest calldata req,
+        bytes calldata signature
+    ) external view returns (bool success, address signer);
 
     /*///////////////////////////////////////////////////////////////
                             External functions

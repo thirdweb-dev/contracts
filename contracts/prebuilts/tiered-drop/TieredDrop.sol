@@ -14,7 +14,7 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
@@ -51,7 +51,7 @@ contract TieredDrop is
     PermissionsEnumerable,
     SignatureActionUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     ERC721AUpgradeable
 {
     using StringsUpgradeable for uint256;
@@ -183,13 +183,9 @@ contract TieredDrop is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC721AUpgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
@@ -225,11 +221,10 @@ contract TieredDrop is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 _index, bytes calldata _key)
-        external
-        onlyRole(minterRole)
-        returns (string memory revealedURI)
-    {
+    function reveal(
+        uint256 _index,
+        bytes calldata _key
+    ) external onlyRole(minterRole) returns (string memory revealedURI) {
         uint256 batchId = getBatchIdAtIndex(_index);
         revealedURI = getRevealURI(batchId, _key);
 
@@ -246,11 +241,10 @@ contract TieredDrop is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Claim lazy minted tokens via signature.
-    function claimWithSignature(GenericRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        returns (address signer)
-    {
+    function claimWithSignature(
+        GenericRequest calldata _req,
+        bytes calldata _signature
+    ) external payable returns (address signer) {
         (
             string[] memory tiersInPriority,
             address to,
@@ -292,11 +286,7 @@ contract TieredDrop is
                         Internal functions
     //////////////////////////////////////////////////////////////*/
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectPriceOnClaim(
-        address _primarySaleRecipient,
-        address _currency,
-        uint256 _totalPrice
-    ) internal {
+    function collectPriceOnClaim(address _primarySaleRecipient, address _currency, uint256 _totalPrice) internal {
         if (_totalPrice == 0) {
             require(msg.value == 0, "!Value");
             return;
@@ -316,11 +306,7 @@ contract TieredDrop is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(
-        address _to,
-        uint256 _totalQuantityBeingClaimed,
-        string[] memory _tiers
-    ) internal {
+    function transferTokensOnClaim(address _to, uint256 _totalQuantityBeingClaimed, string[] memory _tiers) internal {
         uint256 startTokenIdToMint = _currentIndex;
 
         uint256 startIdToMap = startTokenIdToMint;
@@ -355,11 +341,7 @@ contract TieredDrop is
     }
 
     /// @dev Maps lazy minted metadata to NFT tokenIds.
-    function _mapTokensToTier(
-        string memory _tier,
-        uint256 _startIdToMap,
-        uint256 _quantity
-    ) private {
+    function _mapTokensToTier(string memory _tier, uint256 _startIdToMap, uint256 _quantity) private {
         uint256 nextIdFromTier = nextMetadataIdToMapFromTier[_tier];
         uint256 startTokenId = _startIdToMap;
 
@@ -408,11 +390,10 @@ contract TieredDrop is
     }
 
     /// @dev Returns how much of the total-quantity-to-distribute can come from the given tier.
-    function _getQuantityFulfilledByTier(string memory _tier, uint256 _quantity)
-        private
-        view
-        returns (uint256 fulfilled)
-    {
+    function _getQuantityFulfilledByTier(
+        string memory _tier,
+        uint256 _quantity
+    ) private view returns (uint256 fulfilled) {
         uint256 total = totalRemainingInTier[_tier];
 
         if (total >= _quantity) {
@@ -608,7 +589,7 @@ contract TieredDrop is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Multicall)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();

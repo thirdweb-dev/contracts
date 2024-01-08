@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import { ERC721A } from "../eip/ERC721AVirtualApprove.sol";
+import { ERC721A, Context } from "../eip/ERC721AVirtualApprove.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/Ownable.sol";
@@ -110,13 +110,9 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
      * @dev See ERC165: https://eips.ethereum.org/EIPS/eip-165
      * @inheritdoc IERC165
      */
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155Receiver, ERC721A, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155Receiver, ERC721A, IERC165) returns (bool) {
         return
             super.supportsInterface(interfaceId) ||
             interfaceId == 0x01ffc9a7 || // ERC165 Interface ID for ERC165
@@ -201,12 +197,10 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
      *
      * @return isApprovedOrOwnerOf Whether `_operator` is approved to transfer `_tokenId`.
      */
-    function isApprovedOrOwner(address _operator, uint256 _tokenId)
-        public
-        view
-        virtual
-        returns (bool isApprovedOrOwnerOf)
-    {
+    function isApprovedOrOwner(
+        address _operator,
+        uint256 _tokenId
+    ) public view virtual returns (bool isApprovedOrOwnerOf) {
         address owner = ownerOf(_tokenId);
         isApprovedOrOwnerOf = (_operator == owner ||
             isApprovedForAll(owner, _operator) ||
@@ -249,5 +243,10 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
+    }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view override(Multicall, Context) returns (address) {
+        return msg.sender;
     }
 }

@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 /// @author thirdweb
 
-import { ERC721A } from "../eip/ERC721AVirtualApprove.sol";
+import { ERC721A, Context } from "../eip/ERC721AVirtualApprove.sol";
 
 import "../extension/ContractMetadata.sol";
 import "../extension/Multicall.sol";
@@ -15,8 +15,8 @@ import "../extension/DropSinglePhase.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
-import "../lib/TWStrings.sol";
-import "../lib/CurrencyTransferLib.sol";
+import "../lib/Strings.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 /**
  *      BASE:      ERC721A
@@ -53,7 +53,7 @@ contract ERC721Drop is
     DelayedReveal,
     DropSinglePhase
 {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
@@ -254,12 +254,10 @@ contract ERC721Drop is
      * @param _to                    The address to which the NFTs are being transferred.
      * @param _quantityBeingClaimed  The quantity of NFTs being claimed.
      */
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        override
-        returns (uint256 startTokenId)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal virtual override returns (uint256 startTokenId) {
         startTokenId = _currentIndex;
         _safeMint(_to, _quantityBeingClaimed);
     }
@@ -304,6 +302,11 @@ contract ERC721Drop is
     //////////////////////////////////////////////////////////////*/
 
     function _dropMsgSender() internal view virtual override returns (address) {
+        return msg.sender;
+    }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view override(Multicall, Context) returns (address) {
         return msg.sender;
     }
 }

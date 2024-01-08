@@ -60,11 +60,7 @@ interface IDropERC721 is IERC721Upgradeable, IDropClaimCondition {
      *                           result of encrypting the URI of the NFTs in the revealed
      *                           state.
      */
-    function lazyMint(
-        uint256 amount,
-        string calldata baseURIForTokens,
-        bytes calldata encryptedBaseURI
-    ) external;
+    function lazyMint(uint256 amount, string calldata baseURIForTokens, bytes calldata encryptedBaseURI) external;
 
     /**
      *  @notice Lets an account claim a given quantity of NFTs.

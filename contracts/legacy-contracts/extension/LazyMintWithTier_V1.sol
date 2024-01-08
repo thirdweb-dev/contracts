@@ -72,11 +72,9 @@ abstract contract LazyMintWithTier_V1 is ILazyMintWithTier, BatchMintMetadata_V1
     }
 
     /// @notice Returns all metadata lazy minted for the given tier.
-    function _getMetadataInTier(string memory _tier)
-        private
-        view
-        returns (TokenRange[] memory tokens, string[] memory baseURIs)
-    {
+    function _getMetadataInTier(
+        string memory _tier
+    ) private view returns (TokenRange[] memory tokens, string[] memory baseURIs) {
         tokens = tokensInTier[_tier];
 
         uint256 len = tokens.length;

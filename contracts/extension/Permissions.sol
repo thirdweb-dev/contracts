@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 /// @author thirdweb
 
 import "./interface/IPermissions.sol";
-import "../lib/TWStrings.sol";
+import "../lib/Strings.sol";
 
 /**
  *  @title   Permissions
@@ -141,9 +141,9 @@ contract Permissions is IPermissions {
                 string(
                     abi.encodePacked(
                         "Permissions: account ",
-                        TWStrings.toHexString(uint160(account), 20),
+                        Strings.toHexString(uint160(account), 20),
                         " is missing role ",
-                        TWStrings.toHexString(uint256(role), 32)
+                        Strings.toHexString(uint256(role), 32)
                     )
                 )
             );
@@ -157,9 +157,9 @@ contract Permissions is IPermissions {
                 string(
                     abi.encodePacked(
                         "Permissions: account ",
-                        TWStrings.toHexString(uint160(account), 20),
+                        Strings.toHexString(uint160(account), 20),
                         " is missing role ",
-                        TWStrings.toHexString(uint256(role), 32)
+                        Strings.toHexString(uint256(role), 32)
                     )
                 )
             );

@@ -6,11 +6,7 @@ import "@openzeppelin/contracts/token/ERC1155/presets/ERC1155PresetMinterPauser.
 contract MockERC1155 is ERC1155PresetMinterPauser {
     constructor() ERC1155PresetMinterPauser("ipfs://BaseURI") {}
 
-    function mint(
-        address to,
-        uint256 id,
-        uint256 amount
-    ) public virtual {
+    function mint(address to, uint256 id, uint256 amount) public virtual {
         _mint(to, id, amount, "");
     }
 
@@ -18,11 +14,7 @@ contract MockERC1155 is ERC1155PresetMinterPauser {
         return true;
     }
 
-    function mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) public virtual {
+    function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts) public virtual {
         require(hasRole(MINTER_ROLE, _msgSender()), "ERC1155PresetMinterPauser: must have minter role to mint");
 
         _mintBatch(to, ids, amounts, "");

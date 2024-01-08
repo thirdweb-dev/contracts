@@ -13,6 +13,7 @@ import { ERC721AStorage } from "contracts/extension/upgradeable/init/ERC721AInit
 import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 
 import { TWProxy } from "contracts/infra/TWProxy.sol";
+import { Permissions } from "contracts/extension/Permissions.sol";
 
 contract MyBurnToClaimDrop721Logic is BurnToClaimDrop721Logic {
     function canSetPlatformFeeInfo() external view returns (bool) {
@@ -47,12 +48,7 @@ contract MyBurnToClaimDrop721Logic is BurnToClaimDrop721Logic {
         return _canSetBurnToClaim();
     }
 
-    function beforeTokenTransfers(
-        address from,
-        address to,
-        uint256 startTokenId,
-        uint256 quantity
-    ) external {
+    function beforeTokenTransfers(address from, address to, uint256 startTokenId, uint256 quantity) external {
         _beforeTokenTransfers(from, to, startTokenId, quantity);
     }
 

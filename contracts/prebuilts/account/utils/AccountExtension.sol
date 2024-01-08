@@ -32,6 +32,8 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    bytes32 private constant MSG_TYPEHASH = keccak256("AccountMessage(bytes message)");
+
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
@@ -63,14 +65,12 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
     }
 
     /// @notice See EIP-1271
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
-        public
-        view
-        virtual
-        override
-        returns (bytes4 magicValue)
-    {
-        address signer = _hash.recover(_signature);
+    function isValidSignature(
+        bytes32 _message,
+        bytes memory _signature
+    ) public view virtual override returns (bytes4 magicValue) {
+        bytes32 messageHash = getMessageHash(abi.encode(_message));
+        address signer = messageHash.recover(_signature);
 
         if (isAdmin(signer)) {
             return MAGICVALUE;
@@ -89,16 +89,22 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
         }
     }
 
+    /**
+     * @notice Returns the hash of message that should be signed for EIP1271 verification.
+     * @param message Message to be hashed i.e. `keccak256(abi.encode(data))`
+     * @return Hashed message
+     */
+    function getMessageHash(bytes memory message) public view returns (bytes32) {
+        bytes32 messageHash = keccak256(abi.encode(MSG_TYPEHASH, keccak256(message)));
+        return keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), messageHash));
+    }
+
     /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(
-        address _target,
-        uint256 _value,
-        bytes calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
+    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual onlyAdminOrEntrypoint {
         _registerOnFactory();
         _call(_target, _value, _calldata);
     }
@@ -141,11 +147,7 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
     }
 
     /// @dev Calls a target contract and reverts if it fails.
-    function _call(
-        address _target,
-        uint256 value,
-        bytes memory _calldata
-    ) internal returns (bytes memory result) {
+    function _call(address _target, uint256 value, bytes memory _calldata) internal returns (bytes memory result) {
         bool success;
         (success, result) = _target.call{ value: value }(_calldata);
         if (!success) {

@@ -47,13 +47,10 @@ contract ERC1155 is IERC1155, IERC1155Metadata {
         return _uri[tokenId];
     }
 
-    function balanceOfBatch(address[] memory accounts, uint256[] memory ids)
-        public
-        view
-        virtual
-        override
-        returns (uint256[] memory)
-    {
+    function balanceOfBatch(
+        address[] memory accounts,
+        uint256[] memory ids
+    ) public view virtual override returns (uint256[] memory) {
         require(accounts.length == ids.length, "LENGTH_MISMATCH");
 
         uint256[] memory batchBalances = new uint256[](accounts.length);
@@ -162,12 +159,7 @@ contract ERC1155 is IERC1155, IERC1155Metadata {
         _uri[tokenId] = newuri;
     }
 
-    function _mint(
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) internal virtual {
+    function _mint(address to, uint256 id, uint256 amount, bytes memory data) internal virtual {
         require(to != address(0), "TO_ZERO_ADDR");
 
         address operator = msg.sender;
@@ -202,11 +194,7 @@ contract ERC1155 is IERC1155, IERC1155Metadata {
         _doSafeBatchTransferAcceptanceCheck(operator, address(0), to, ids, amounts, data);
     }
 
-    function _burn(
-        address from,
-        uint256 id,
-        uint256 amount
-    ) internal virtual {
+    function _burn(address from, uint256 id, uint256 amount) internal virtual {
         require(from != address(0), "FROM_ZERO_ADDR");
 
         address operator = msg.sender;
@@ -222,11 +210,7 @@ contract ERC1155 is IERC1155, IERC1155Metadata {
         emit TransferSingle(operator, from, address(0), id, amount);
     }
 
-    function _burnBatch(
-        address from,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) internal virtual {
+    function _burnBatch(address from, uint256[] memory ids, uint256[] memory amounts) internal virtual {
         require(from != address(0), "FROM_ZERO_ADDR");
         require(ids.length == amounts.length, "LENGTH_MISMATCH");
 

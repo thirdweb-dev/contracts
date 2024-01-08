@@ -33,11 +33,13 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 
+    bytes32 private constant MSG_TYPEHASH = keccak256("AccountMessage(bytes message)");
+
     /*///////////////////////////////////////////////////////////////
                     Constructor, Initializer, Modifiers
     //////////////////////////////////////////////////////////////*/
 
-    constructor(IEntryPoint _entrypoint) AccountCore(_entrypoint) {}
+    constructor(IEntryPoint _entrypoint, address _factory) AccountCore(_entrypoint, _factory) {}
 
     /// @notice Checks whether the caller is the EntryPoint contract or the admin.
     modifier onlyAdminOrEntrypoint() virtual {
@@ -61,14 +63,12 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
     }
 
     /// @notice See EIP-1271
-    function isValidSignature(bytes32 _hash, bytes memory _signature)
-        public
-        view
-        virtual
-        override
-        returns (bytes4 magicValue)
-    {
-        address signer = _hash.recover(_signature);
+    function isValidSignature(
+        bytes32 _message,
+        bytes memory _signature
+    ) public view virtual override returns (bytes4 magicValue) {
+        bytes32 messageHash = getMessageHash(abi.encode(_message));
+        address signer = messageHash.recover(_signature);
 
         if (isAdmin(signer)) {
             return MAGICVALUE;
@@ -87,16 +87,22 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         }
     }
 
+    /**
+     * @notice Returns the hash of message that should be signed for EIP1271 verification.
+     * @param message Message to be hashed i.e. `keccak256(abi.encode(data))`
+     * @return Hashed message
+     */
+    function getMessageHash(bytes memory message) public view returns (bytes32) {
+        bytes32 messageHash = keccak256(abi.encode(MSG_TYPEHASH, keccak256(message)));
+        return keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), messageHash));
+    }
+
     /*///////////////////////////////////////////////////////////////
                             External functions
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Executes a transaction (called directly from an admin, or by entryPoint)
-    function execute(
-        address _target,
-        uint256 _value,
-        bytes calldata _calldata
-    ) external virtual onlyAdminOrEntrypoint {
+    function execute(address _target, uint256 _value, bytes calldata _calldata) external virtual onlyAdminOrEntrypoint {
         _registerOnFactory();
         _call(_target, _value, _calldata);
     }
@@ -132,7 +138,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
 
     /// @dev Registers the account on the factory if it hasn't been registered yet.
     function _registerOnFactory() internal virtual {
-        BaseAccountFactory factoryContract = BaseAccountFactory(AccountCoreStorage.data().factory);
+        BaseAccountFactory factoryContract = BaseAccountFactory(factory);
         if (!factoryContract.isRegistered(address(this))) {
             factoryContract.onRegister(AccountCoreStorage.data().creationSalt);
         }

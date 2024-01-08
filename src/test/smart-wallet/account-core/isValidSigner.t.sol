@@ -7,7 +7,6 @@ import "contracts/external-deps/openzeppelin/proxy/Clones.sol";
 import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountPermissions, EnumerableSet, ECDSA } from "contracts/extension/upgradeable/AccountPermissions.sol";
-import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
@@ -36,9 +35,10 @@ contract Number {
 contract MyDynamicAccount is DynamicAccount {
     using EnumerableSet for EnumerableSet.AddressSet;
 
-    constructor(IEntryPoint _entrypoint, Extension[] memory _defaultExtensions)
-        DynamicAccount(_entrypoint, _defaultExtensions)
-    {}
+    constructor(
+        IEntryPoint _entrypoint,
+        Extension[] memory _defaultExtensions
+    ) DynamicAccount(_entrypoint, _defaultExtensions) {}
 
     function setPermissionsForSigner(
         address _signer,
@@ -166,10 +166,10 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint);
     }
 
-    function _setupUserOpInvalidFunction(uint256 _signerPKey, bytes memory _initCode)
-        internal
-        returns (UserOperation memory)
-    {
+    function _setupUserOpInvalidFunction(
+        uint256 _signerPKey,
+        bytes memory _initCode
+    ) internal returns (UserOperation memory) {
         bytes memory callDataForEntrypoint = abi.encodeWithSignature("invalidFunction()");
 
         return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint);
@@ -191,24 +191,14 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         IExtension.Extension[] memory extensions;
 
         // deploy account factory
-        address factoryImpl = address(new DynamicAccountFactory(extensions));
-        accountFactory = DynamicAccountFactory(
-            address(
-                payable(
-                    new TWProxy(
-                        factoryImpl,
-                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
-                    )
-                )
-            )
-        );
+        accountFactory = new DynamicAccountFactory(deployer, extensions);
         // deploy dummy contract
         numberContract = new Number();
 
         address accountImpl = address(new MyDynamicAccount(IEntryPoint(payable(address(entrypoint))), extensions));
         address _account = Clones.cloneDeterministic(accountImpl, "salt");
         account = MyDynamicAccount(payable(_account));
-        account.initialize(accountAdmin, address(this), "");
+        account.initialize(accountAdmin, "");
     }
 
     function test_isValidSigner_whenSignerIsAdmin() public {

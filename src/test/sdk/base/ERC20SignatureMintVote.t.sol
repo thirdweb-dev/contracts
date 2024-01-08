@@ -9,7 +9,7 @@ import { ERC20SignatureMintVote } from "contracts/base/ERC20SignatureMintVote.so
 
 contract BaseERC20SignatureMintVoteTest is BaseUtilTest {
     ERC20SignatureMintVote internal base;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     bytes32 internal typehashMintRequest;
     bytes32 internal nameHash;
@@ -53,11 +53,10 @@ contract BaseERC20SignatureMintVoteTest is BaseUtilTest {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(ERC20SignatureMintVote.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        ERC20SignatureMintVote.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,

@@ -391,7 +391,7 @@ contract PackVRFDirectTest is BaseTest {
         address recipient = address(0x123);
 
         vm.startPrank(address(tokenOwner));
-        vm.expectRevert("ERC721: caller is not token owner nor approved");
+        vm.expectRevert("ERC721: caller is not token owner or approved");
         pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
     }
 
@@ -430,7 +430,7 @@ contract PackVRFDirectTest is BaseTest {
         address recipient = address(0x123);
 
         vm.startPrank(address(tokenOwner));
-        vm.expectRevert("ERC721: caller is not token owner nor approved");
+        vm.expectRevert("ERC721: caller is not token owner or approved");
         pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
     }
 
@@ -443,7 +443,7 @@ contract PackVRFDirectTest is BaseTest {
         address recipient = address(0x123);
 
         vm.startPrank(address(tokenOwner));
-        vm.expectRevert("ERC1155: caller is not token owner nor approved");
+        vm.expectRevert("ERC1155: caller is not token owner or approved");
         pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
     }
 
@@ -865,10 +865,9 @@ contract PackVRFDirectTest is BaseTest {
 
     uint256 internal constant MAX_TOKENS = 2000;
 
-    function getTokensToPack(uint256 len)
-        internal
-        returns (ITokenBundle.Token[] memory tokensToPack, uint256[] memory rewardUnits)
-    {
+    function getTokensToPack(
+        uint256 len
+    ) internal returns (ITokenBundle.Token[] memory tokensToPack, uint256[] memory rewardUnits) {
         vm.assume(len < MAX_TOKENS);
         tokensToPack = new ITokenBundle.Token[](len);
         rewardUnits = new uint256[](len);
@@ -921,15 +920,13 @@ contract PackVRFDirectTest is BaseTest {
         }
     }
 
-    function checkBalances(ITokenBundle.Token[] memory rewardUnits, address)
+    function checkBalances(
+        ITokenBundle.Token[] memory rewardUnits,
+        address
+    )
         internal
         pure
-        returns (
-            uint256 nativeTokenAmount,
-            uint256 erc20Amount,
-            uint256[] memory erc1155Amounts,
-            uint256 erc721Amount
-        )
+        returns (uint256 nativeTokenAmount, uint256 erc20Amount, uint256[] memory erc1155Amounts, uint256 erc721Amount)
     {
         erc1155Amounts = new uint256[](MAX_TOKENS);
 
@@ -1047,11 +1044,7 @@ contract MaliciousERC20 is MockERC20, ITokenBundle {
         pack = Pack(_pack);
     }
 
-    function transferFrom(
-        address from,
-        address to,
-        uint256 amount
-    ) public override returns (bool) {
+    function transferFrom(address from, address to, uint256 amount) public override returns (bool) {
         ITokenBundle.Token[] memory content = new ITokenBundle.Token[](1);
         uint256[] memory rewards = new uint256[](1);
 

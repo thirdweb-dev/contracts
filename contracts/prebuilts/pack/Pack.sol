@@ -17,7 +17,6 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts-upgradeable/token/ERC1155/extensions/ERC1155PausableUpgradeable.sol";
 
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import "@openzeppelin/contracts/interfaces/IERC721Receiver.sol";
@@ -26,6 +25,7 @@ import { IERC1155Receiver } from "@openzeppelin/contracts/interfaces/IERC1155Rec
 //  ==========  Internal imports    ==========
 
 import "../interface/IPack.sol";
+import "../../extension/Multicall.sol";
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
@@ -45,7 +45,7 @@ contract Pack is
     TokenStore,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     ERC1155Upgradeable,
     IPack
 {
@@ -183,13 +183,9 @@ contract Pack is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155Receiver, ERC1155Upgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155Receiver, ERC1155Upgradeable, IERC165) returns (bool) {
         return
             super.supportsInterface(interfaceId) ||
             type(IERC2981Upgradeable).interfaceId == interfaceId ||
@@ -386,11 +382,9 @@ contract Pack is
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Returns the underlying contents of a pack.
-    function getPackContents(uint256 _packId)
-        public
-        view
-        returns (Token[] memory contents, uint256[] memory perUnitAmounts)
-    {
+    function getPackContents(
+        uint256 _packId
+    ) public view returns (Token[] memory contents, uint256[] memory perUnitAmounts) {
         PackInfo memory pack = packInfo[_packId];
         uint256 total = getTokenCountOfBundle(_packId);
         contents = new Token[](total);
@@ -475,7 +469,7 @@ contract Pack is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Multicall)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();

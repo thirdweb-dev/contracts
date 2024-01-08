@@ -8,12 +8,7 @@ import { TWProxy } from "contracts/infra/TWProxy.sol";
 import "src/test/utils/BaseTest.sol";
 
 contract OpenEditionERC721Harness is OpenEditionERC721 {
-    function beforeTokenTransfers(
-        address from,
-        address to,
-        uint256 startTokenId_,
-        uint256 quantity
-    ) public {
+    function beforeTokenTransfers(address from, address to, uint256 startTokenId_, uint256 quantity) public {
         _beforeTokenTransfers(from, to, startTokenId_, quantity);
     }
 }

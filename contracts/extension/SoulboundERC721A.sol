@@ -40,12 +40,7 @@ abstract contract SoulboundERC721A is PermissionsEnumerable {
     function _canRestrictTransfers() internal view virtual returns (bool);
 
     /// @dev See {ERC721A-_beforeTokenTransfers}.
-    function _beforeTokenTransfers(
-        address from,
-        address to,
-        uint256,
-        uint256
-    ) internal virtual {
+    function _beforeTokenTransfers(address from, address to, uint256, uint256) internal virtual {
         // If transfers are restricted on the contract, we still want to allow burning and minting.
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
             if (!hasRole(TRANSFER_ROLE, from) && !hasRole(TRANSFER_ROLE, to)) {

@@ -52,10 +52,10 @@ interface ITokenERC721 is IERC721Upgradeable {
      *
      *  returns (success, signer) Result of verification and the recovered address.
      */
-    function verify(MintRequest calldata req, bytes calldata signature)
-        external
-        view
-        returns (bool success, address signer);
+    function verify(
+        MintRequest calldata req,
+        bytes calldata signature
+    ) external view returns (bool success, address signer);
 
     /**
      *  @notice Lets an account with MINTER_ROLE mint an NFT.

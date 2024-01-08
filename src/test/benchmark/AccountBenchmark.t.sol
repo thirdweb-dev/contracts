@@ -13,6 +13,7 @@ import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.s
 import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
 import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
 import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
+import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 /// @dev This is a dummy contract to test contract interactions with Account.
 contract Number {
@@ -50,18 +51,16 @@ contract AccountBenchmarkTest is BaseTest {
     address private nonSigner;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xDD1d01438DcF28eb45a611c7faBD716B0dECE259;
+    address private sender = 0x0df2C3523703d165Aa7fA1a552f3F0B56275DfC6;
     address payable private beneficiary = payable(address(0x45654));
 
     bytes32 private uidCache = bytes32("random uid");
 
     event AccountCreated(address indexed account, address indexed accountAdmin);
 
-    function _signSignerPermissionRequest(IAccountPermissions.SignerPermissionRequest memory _req)
-        internal
-        view
-        returns (bytes memory signature)
-    {
+    function _signSignerPermissionRequest(
+        IAccountPermissions.SignerPermissionRequest memory _req
+    ) internal view returns (bytes memory signature) {
         bytes32 typehashSignerPermissionRequest = keccak256(
             "SignerPermissionRequest(address signer,uint8 isAdmin,address[] approvedTargets,uint256 nativeTokenLimitPerTransaction,uint128 permissionStartTimestamp,uint128 permissionEndTimestamp,uint128 reqValidityStartTimestamp,uint128 reqValidityEndTimestamp,bytes32 uid)"
         );
@@ -182,17 +181,7 @@ contract AccountBenchmarkTest is BaseTest {
         // Setup contracts
         entrypoint = new EntryPoint();
         // deploy account factory
-        address factoryImpl = address(new AccountFactory(IEntryPoint(payable(address(entrypoint)))));
-        accountFactory = AccountFactory(
-            address(
-                payable(
-                    new TWProxy(
-                        factoryImpl,
-                        abi.encodeWithSignature("initialize(address,string)", deployer, "https://example.com")
-                    )
-                )
-            )
-        );
+        accountFactory = new AccountFactory(deployer, IEntryPoint(payable(address(entrypoint))));
         // deploy dummy contract
         numberContract = new Number();
     }

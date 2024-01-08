@@ -24,11 +24,7 @@ contract MyDropSinglePhase1155 is DropSinglePhase1155 {
         uint256 _pricePerToken
     ) internal override {}
 
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _tokenId,
-        uint256 _quantityBeingClaimed
-    ) internal override {}
+    function _transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed) internal override {}
 }
 
 contract ExtensionDropSinglePhase1155 is DSTest, Test {

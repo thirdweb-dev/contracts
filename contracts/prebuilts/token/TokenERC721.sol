@@ -40,7 +40,7 @@ import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "../../lib/CurrencyTransferLib.sol";
 import "../../lib/FeeType.sol";
 
@@ -57,7 +57,7 @@ contract TokenERC721 is
     ReentrancyGuardUpgradeable,
     EIP712Upgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     AccessControlEnumerableUpgradeable,
     ERC721EnumerableUpgradeable,
     ITokenERC721,
@@ -195,24 +195,20 @@ contract TokenERC721 is
     ///     =====   External functions  =====
 
     /// @dev See EIP-2981
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view virtual returns (address receiver, uint256 royaltyAmount) {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
     }
 
     /// @dev Mints an NFT according to the provided mint request.
-    function mintWithSignature(MintRequest calldata _req, bytes calldata _signature)
-        external
-        payable
-        nonReentrant
-        returns (uint256 tokenIdMinted)
-    {
+    function mintWithSignature(
+        MintRequest calldata _req,
+        bytes calldata _signature
+    ) external payable nonReentrant returns (uint256 tokenIdMinted) {
         address signer = verifyRequest(_req, _signature);
         address receiver = _req.to;
 
@@ -239,10 +235,10 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the royalty bps and recipient.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setDefaultRoyaltyInfo(
+        address _royaltyRecipient,
+        uint256 _royaltyBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_royaltyBps <= MAX_BPS, "exceed royalty bps");
 
         royaltyRecipient = _royaltyRecipient;
@@ -265,10 +261,10 @@ contract TokenERC721 is
     }
 
     /// @dev Lets a module admin update the fees on primary sales.
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFeeBps <= MAX_BPS, "exceeds MAX_BPS");
 
         platformFeeBps = uint64(_platformFeeBps);
@@ -404,9 +400,10 @@ contract TokenERC721 is
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
+        uint256 tokenId,
+        uint256 batchSize
     ) internal virtual override(ERC721EnumerableUpgradeable) {
-        super._beforeTokenTransfer(from, to, tokenId);
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
@@ -424,7 +421,9 @@ contract TokenERC721 is
         return hasRole(METADATA_ROLE, _msgSender());
     }
 
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
@@ -438,7 +437,7 @@ contract TokenERC721 is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Multicall)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();

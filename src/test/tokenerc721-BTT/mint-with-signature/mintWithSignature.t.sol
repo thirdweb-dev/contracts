@@ -129,11 +129,10 @@ contract TokenERC721Test_MintWithSignature is BaseTest {
         vm.stopPrank();
     }
 
-    function signMintRequest(TokenERC721.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        TokenERC721.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,

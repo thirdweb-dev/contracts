@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
-import "@chainlink/contracts/src/v0.8/interfaces/VRFV2WrapperInterface.sol";
+import "@chainlink/contracts/src/v0.8/shared/interfaces/LinkTokenInterface.sol";
+import "@chainlink/contracts/src/v0.8/vrf/interfaces/VRFV2WrapperInterface.sol";
 
 /** *******************************************************************************
  * @notice Interface for contracts using VRF randomness through the VRF V2 wrapper

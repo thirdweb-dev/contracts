@@ -5,14 +5,13 @@ import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
+
 import "../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract DropERC721Test is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+    using Strings for uint256;
+    using Strings for address;
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
@@ -47,9 +46,9 @@ contract DropERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -67,9 +66,9 @@ contract DropERC721Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
+                Strings.toHexString(uint160(target), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -529,9 +528,9 @@ contract DropERC721Test is BaseTest {
 
         bytes memory errorMessage = abi.encodePacked(
             "Permissions: account ",
-            TWStrings.toHexString(uint160(address(this)), 20),
+            Strings.toHexString(uint160(address(this)), 20),
             " is missing role ",
-            TWStrings.toHexString(uint256(keccak256("METADATA_ROLE")), 32)
+            Strings.toHexString(uint256(keccak256("METADATA_ROLE")), 32)
         );
 
         vm.expectRevert(errorMessage);
@@ -816,7 +815,7 @@ contract DropERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -866,7 +865,7 @@ contract DropERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -925,7 +924,7 @@ contract DropERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -980,7 +979,7 @@ contract DropERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -1036,7 +1035,7 @@ contract DropERC721Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
 
         // bytes32[] memory proofs = new bytes32[](0);
 

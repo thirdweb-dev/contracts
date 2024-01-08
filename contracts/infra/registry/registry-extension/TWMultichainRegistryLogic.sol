@@ -36,12 +36,7 @@ contract TWMultichainRegistryLogic is ITWMultichainRegistry, ERC2771ContextConsu
     //////////////////////////////////////////////////////////////*/
 
     // slither-disable-next-line similar-names
-    function add(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId,
-        string memory metadataUri
-    ) external {
+    function add(address _deployer, address _deployment, uint256 _chainId, string memory metadataUri) external {
         require(
             PermissionsEnumerableLogic(address(this)).hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
             "not operator or deployer."
@@ -62,11 +57,7 @@ contract TWMultichainRegistryLogic is ITWMultichainRegistry, ERC2771ContextConsu
     }
 
     // slither-disable-next-line similar-names
-    function remove(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId
-    ) external {
+    function remove(address _deployer, address _deployment, uint256 _chainId) external {
         require(
             PermissionsEnumerableLogic(address(this)).hasRole(OPERATOR_ROLE, _msgSender()) || _deployer == _msgSender(),
             "not operator or deployer."

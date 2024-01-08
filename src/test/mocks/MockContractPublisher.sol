@@ -7,12 +7,9 @@ import "contracts/infra/interface/IContractPublisher.sol";
 
 // solhint-disable const-name-snakecase
 contract MockContractPublisher is IContractPublisher {
-    function getAllPublishedContracts(address)
-        external
-        pure
-        override
-        returns (CustomContractInstance[] memory published)
-    {
+    function getAllPublishedContracts(
+        address
+    ) external pure override returns (CustomContractInstance[] memory published) {
         CustomContractInstance[] memory mocks = new CustomContractInstance[](1);
         mocks[0] = CustomContractInstance(
             "MockContract",
@@ -24,19 +21,17 @@ contract MockContractPublisher is IContractPublisher {
         return mocks;
     }
 
-    function getPublishedContractVersions(address, string memory)
-        external
-        pure
-        returns (CustomContractInstance[] memory published)
-    {
+    function getPublishedContractVersions(
+        address,
+        string memory
+    ) external pure returns (CustomContractInstance[] memory published) {
         return new CustomContractInstance[](0);
     }
 
-    function getPublishedContract(address, string memory)
-        external
-        pure
-        returns (CustomContractInstance memory published)
-    {
+    function getPublishedContract(
+        address,
+        string memory
+    ) external pure returns (CustomContractInstance memory published) {
         return CustomContractInstance("", 0, "", "", address(0));
     }
 
@@ -57,11 +52,9 @@ contract MockContractPublisher is IContractPublisher {
         return "";
     }
 
-    function getPublishedUriFromCompilerUri(string memory)
-        external
-        pure
-        returns (string[] memory publishedMetadataUris)
-    {
+    function getPublishedUriFromCompilerUri(
+        string memory
+    ) external pure returns (string[] memory publishedMetadataUris) {
         return new string[](0);
     }
 }

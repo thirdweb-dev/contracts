@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 import { EditionStake } from "contracts/prebuilts/staking/EditionStake.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
 import "../utils/BaseTest.sol";
 
 contract EditionStakeBenchmarkTest is BaseTest {

@@ -14,14 +14,13 @@ pragma solidity ^0.8.11;
 
 //  ==========  External imports    ==========
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
-
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
 import "../interface/IMultiwrap.sol";
+import "../../extension/Multicall.sol";
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 //  ==========  Features    ==========
@@ -41,7 +40,7 @@ contract Multiwrap is
     TokenStore,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     ERC721EnumerableUpgradeable,
     IMultiwrap
 {
@@ -142,13 +141,9 @@ contract Multiwrap is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        virtual
-        override(ERC1155Receiver, ERC721EnumerableUpgradeable, IERC165)
-        returns (bool)
-    {
+    function supportsInterface(
+        bytes4 interfaceId
+    ) public view virtual override(ERC1155Receiver, ERC721EnumerableUpgradeable, IERC165) returns (bool) {
         return
             super.supportsInterface(interfaceId) ||
             interfaceId == type(IERC721Upgradeable).interfaceId ||
@@ -236,9 +231,10 @@ contract Multiwrap is
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
+        uint256 tokenId,
+        uint256 batchSize
     ) internal virtual override {
-        super._beforeTokenTransfer(from, to, tokenId);
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
@@ -250,7 +246,7 @@ contract Multiwrap is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Multicall)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();

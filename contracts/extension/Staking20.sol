@@ -6,7 +6,7 @@ pragma solidity ^0.8.11;
 import "../external-deps/openzeppelin/security/ReentrancyGuard.sol";
 import "../external-deps/openzeppelin/utils/math/SafeMath.sol";
 import "../eip/interface/IERC20.sol";
-import "../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 import "./interface/IStaking20.sol";
 
@@ -271,11 +271,7 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
     }
 
     /// @dev Set staking conditions.
-    function _setStakingCondition(
-        uint80 _timeUnit,
-        uint256 _numerator,
-        uint256 _denominator
-    ) internal virtual {
+    function _setStakingCondition(uint80 _timeUnit, uint256 _numerator, uint256 _denominator) internal virtual {
         require(_denominator != 0, "divide by 0");
         require(_timeUnit != 0, "time-unit can't be 0");
         uint256 conditionId = nextConditionId;
@@ -319,9 +315,9 @@ abstract contract Staking20 is ReentrancyGuard, IStaking20 {
             _rewards = noOverflowProduct && noOverflowSum ? rewardsSum : _rewards;
         }
 
-        (, _rewards) = SafeMath.tryMul(_rewards, 10**rewardTokenDecimals);
+        (, _rewards) = SafeMath.tryMul(_rewards, 10 ** rewardTokenDecimals);
 
-        _rewards /= (10**stakingTokenDecimals);
+        _rewards /= (10 ** stakingTokenDecimals);
     }
 
     /*////////////////////////////////////////////////////////////////////

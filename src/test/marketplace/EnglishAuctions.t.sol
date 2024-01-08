@@ -598,7 +598,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         );
 
         vm.prank(seller);
-        vm.expectRevert("ERC721: caller is not token owner nor approved");
+        vm.expectRevert("ERC721: caller is not token owner or approved");
         EnglishAuctionsLogic(marketplace).createAuction(auctionParams);
     }
 
@@ -2095,12 +2095,7 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
     address public seller;
     address public buyer;
 
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
 

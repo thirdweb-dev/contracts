@@ -3,8 +3,8 @@ pragma solidity ^0.8.11;
 
 // Test imports
 import "./utils/BaseTest.sol";
-import "contracts/infra/TWFactory.sol";
-import "contracts/infra/TWRegistry.sol";
+import { TWFactory } from "contracts/infra/TWFactory.sol";
+import { TWRegistry } from "contracts/infra/TWRegistry.sol";
 
 // Helpers
 import "@openzeppelin/contracts/utils/Create2.sol";

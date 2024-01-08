@@ -4,7 +4,7 @@ pragma solidity ^0.8.11;
 import "@std/Test.sol";
 import "@ds-test/test.sol";
 
-import { Permissions, TWStrings } from "contracts/extension/Permissions.sol";
+import { Permissions, Strings } from "contracts/extension/Permissions.sol";
 
 contract MyPermissions is Permissions {
     constructor() {
@@ -94,9 +94,9 @@ contract ExtensionPermissions is DSTest, Test {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
+                Strings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
             )
         );
         ext.grantRole(keccak256("role"), address(0x1));
@@ -141,9 +141,9 @@ contract ExtensionPermissions is DSTest, Test {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(address(0x345)), 20),
+                Strings.toHexString(uint160(address(0x345)), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
+                Strings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
             )
         );
         ext.revokeRole(keccak256("role"), address(0x567));
@@ -153,9 +153,9 @@ contract ExtensionPermissions is DSTest, Test {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(address(0x789)), 20),
+                Strings.toHexString(uint160(address(0x789)), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(keccak256("role")), 32)
+                Strings.toHexString(uint256(keccak256("role")), 32)
             )
         );
         ext.revokeRole(keccak256("role"), address(0x789));
@@ -192,9 +192,9 @@ contract ExtensionPermissions is DSTest, Test {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(defaultAdmin), 20),
+                Strings.toHexString(uint160(defaultAdmin), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(keccak256("role")), 32)
+                Strings.toHexString(uint256(keccak256("role")), 32)
             )
         );
         ext.renounceRole(keccak256("role"), defaultAdmin);
@@ -220,9 +220,9 @@ contract ExtensionPermissions is DSTest, Test {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(address(0x345)), 20),
+                Strings.toHexString(uint160(address(0x345)), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
+                Strings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
             )
         );
         ext.checkModifier();

@@ -88,9 +88,5 @@ interface IDropERC1155 is IERC1155Upgradeable, IDropClaimCondition {
      *                               `limitMerkleProofClaim` values when setting new
      *                               claim conditions.
      */
-    function setClaimConditions(
-        uint256 tokenId,
-        ClaimCondition[] calldata phases,
-        bool resetClaimEligibility
-    ) external;
+    function setClaimConditions(uint256 tokenId, ClaimCondition[] calldata phases, bool resetClaimEligibility) external;
 }

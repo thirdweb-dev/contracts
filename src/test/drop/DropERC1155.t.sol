@@ -4,14 +4,13 @@ pragma solidity ^0.8.0;
 import { DropERC1155, IPermissions, ILazyMint } from "contracts/prebuilts/drop/DropERC1155.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
+
 import "../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract DropERC1155Test is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+    using Strings for uint256;
+    using Strings for address;
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
@@ -46,9 +45,9 @@ contract DropERC1155Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -66,9 +65,9 @@ contract DropERC1155Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
+                Strings.toHexString(uint160(target), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -529,7 +528,7 @@ contract DropERC1155Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -580,7 +579,7 @@ contract DropERC1155Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -640,7 +639,7 @@ contract DropERC1155Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -696,7 +695,7 @@ contract DropERC1155Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC1155.ClaimCondition[] memory conditions = new DropERC1155.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -753,7 +752,7 @@ contract DropERC1155Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
 
         // bytes32[] memory proofs = new bytes32[](0);
 

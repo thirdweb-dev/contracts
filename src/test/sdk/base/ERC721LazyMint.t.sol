@@ -9,7 +9,7 @@ import { ERC721LazyMint } from "contracts/base/ERC721LazyMint.sol";
 
 contract BaseERC721LazyMintTest is BaseUtilTest {
     ERC721LazyMint internal base;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     uint256 _amount;
     string _baseURIForTokens;
