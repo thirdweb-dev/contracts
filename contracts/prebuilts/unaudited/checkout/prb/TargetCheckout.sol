@@ -19,9 +19,7 @@ import { IPRBProxy } from "./IPRBProxy.sol";
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract TargetCheckout is IExecutor {
-    // =================================================
-    // =============== Withdraw ========================
-    // =================================================
+    mapping(address => bool) public isApprovedRouter;
 
     function withdraw(address _token, uint256 _amount) external {
         require(msg.sender == IPRBProxy(address(this)).owner(), "Not authorized");
@@ -29,11 +27,29 @@ contract TargetCheckout is IExecutor {
         CurrencyTransferLib.transferCurrency(_token, address(this), msg.sender, _amount);
     }
 
-    // =================================================
-    // =============== Executor functions ==============
-    // =================================================
+    function approveSwapRouter(address _swapRouter, bool _toApprove) external {
+        require(msg.sender == IPRBProxy(address(this)).owner(), "Not authorized");
+        require(_swapRouter != address(0), "Zero address");
+
+        isApprovedRouter[_swapRouter] = _toApprove;
+    }
 
     function execute(UserOp calldata op) external {
+        _execute(op);
+    }
+
+    function swapAndExecute(UserOp calldata op, SwapOp calldata swapOp) external {
+        require(isApprovedRouter[swapOp.router], "Invalid router address");
+
+        _swap(swapOp);
+        _execute(op);
+    }
+
+    // =================================================
+    // =============== Internal functions ==============
+    // =================================================
+
+    function _execute(UserOp calldata op) internal {
         bool success;
         if (op.currency == CurrencyTransferLib.NATIVE_TOKEN) {
             (success, ) = op.target.call{ value: op.valueToSend }(op.data);
@@ -48,7 +64,28 @@ contract TargetCheckout is IExecutor {
         require(success, "Execution failed");
     }
 
-    function swapAndExecute(UserOp calldata op, SwapOp calldata swap) external {
-        // TODO: Perform swap and execute here
+    function _swap(SwapOp memory _swapOp) internal {
+        address _tokenIn = _swapOp.tokenIn;
+        address _router = _swapOp.router;
+
+        // get quote for amountIn
+        (, bytes memory quoteData) = _router.staticcall(_swapOp.quoteCalldata);
+        uint256 amountIn;
+        uint256 offset = _swapOp.amountInOffset;
+
+        assembly {
+            amountIn := mload(add(add(quoteData, 32), offset))
+        }
+
+        // perform swap
+        bool success;
+        if (_tokenIn == CurrencyTransferLib.NATIVE_TOKEN) {
+            (success, ) = _router.call{ value: amountIn }(_swapOp.swapCalldata);
+        } else {
+            IERC20(_tokenIn).approve(_swapOp.router, amountIn);
+            (success, ) = _router.call(_swapOp.swapCalldata);
+        }
+
+        require(success, "Swap failed");
     }
 }
