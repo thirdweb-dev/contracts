@@ -166,6 +166,23 @@ contract PluginCheckoutTest is BaseTest {
         assertEq(mainCurrency.balanceOf(address(saleRecipient)), _totalPrice - (_totalPrice * platformFeeBps) / 10_000);
     }
 
+    function test_revert_executeOp_notAuthorized() public {
+        // create user op -- claim tokens on targetDrop
+        bytes memory callData;
+        IPluginCheckout.UserOp memory op = IPluginCheckout.UserOp({
+            target: address(targetDrop),
+            currency: address(mainCurrency),
+            approvalRequired: true,
+            valueToSend: 0,
+            data: callData
+        });
+
+        // execute
+        vm.prank(random);
+        vm.expectRevert("Not authorized");
+        PluginCheckout(address(proxy)).execute(op);
+    }
+
     function test_withdraw_owner() public {
         // add currency
         vm.prank(owner);
@@ -180,7 +197,7 @@ contract PluginCheckoutTest is BaseTest {
         assertEq(mainCurrency.balanceOf(owner), 95 ether);
     }
 
-    function test_withdraw_whenNotOwner() public {
+    function test_revert_withdraw_whenNotOwner() public {
         // add currency
         vm.prank(owner);
         mainCurrency.transfer(address(proxy), 10 ether);
