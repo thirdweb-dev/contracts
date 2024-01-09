@@ -35,30 +35,14 @@ contract TargetCheckout is IExecutor {
     }
 
     function execute(UserOp calldata op) external {
-        address owner = IPRBProxy(address(this)).owner();
-        if (owner != msg.sender) {
-            bool permission = IPRBProxy(address(this)).registry().getPermissionByOwner({
-                owner: owner,
-                envoy: msg.sender,
-                target: op.target
-            });
-            require(permission, "Not authorized");
-        }
+        require(_canExecute(), "Not authorized");
+
         _execute(op);
     }
 
     function swapAndExecute(UserOp calldata op, SwapOp calldata swapOp) external {
         require(isApprovedRouter[swapOp.router], "Invalid router address");
-
-        address owner = IPRBProxy(address(this)).owner();
-        if (owner != msg.sender) {
-            bool permission = IPRBProxy(address(this)).registry().getPermissionByOwner({
-                owner: owner,
-                envoy: msg.sender,
-                target: op.target
-            });
-            require(permission, "Not authorized");
-        }
+        require(_canExecute(), "Not authorized");
 
         _swap(swapOp);
         _execute(op);
@@ -106,5 +90,20 @@ contract TargetCheckout is IExecutor {
         }
 
         require(success, "Swap failed");
+    }
+
+    function _canExecute() internal view returns (bool) {
+        address owner = IPRBProxy(address(this)).owner();
+        if (owner != msg.sender) {
+            bool permission = IPRBProxy(address(this)).registry().getPermissionByOwner({
+                owner: owner,
+                envoy: msg.sender,
+                target: op.target
+            });
+
+            return permission;
+        }
+
+        return true;
     }
 }
