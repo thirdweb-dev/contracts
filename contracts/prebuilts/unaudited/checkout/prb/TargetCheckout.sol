@@ -7,7 +7,7 @@ import "../interface/IVault.sol";
 import "../../../../lib/CurrencyTransferLib.sol";
 import "../../../../eip/interface/IERC20.sol";
 
-import { IPRBProxy } from "./IPRBProxy.sol";
+import { IPRBProxy } from "@prb/proxy/src/interfaces/IPRBProxy.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
