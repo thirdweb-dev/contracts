@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import "../interface/IExecutor.sol";
-import "../interface/IVault.sol";
-
 import "../../../../lib/CurrencyTransferLib.sol";
 import "../../../../eip/interface/IERC20.sol";
 
 import { IPRBProxy } from "@prb/proxy/src/interfaces/IPRBProxy.sol";
+import "./IPluginCheckout.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -18,7 +16,7 @@ import { IPRBProxy } from "@prb/proxy/src/interfaces/IPRBProxy.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract TargetCheckout is IExecutor {
+contract TargetCheckout is IPluginCheckout {
     mapping(address => bool) public isApprovedRouter;
 
     function withdraw(address _token, uint256 _amount) external {

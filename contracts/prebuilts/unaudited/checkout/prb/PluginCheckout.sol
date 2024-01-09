@@ -12,7 +12,7 @@ pragma solidity ^0.8.11;
 
 import { IPRBProxyPlugin } from "@prb/proxy/src/interfaces/IPRBProxyPlugin.sol";
 
-import { TargetCheckout } from "./TargetCheckout.sol";
+import "./TargetCheckout.sol";
 
 contract PluginCheckout is IPRBProxyPlugin, TargetCheckout {
     function getMethods() external pure override returns (bytes4[] memory) {
