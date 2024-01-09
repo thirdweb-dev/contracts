@@ -35,14 +35,14 @@ contract TargetCheckout is IExecutor {
     }
 
     function execute(UserOp calldata op) external {
-        require(_canExecute(), "Not authorized");
+        require(_canExecute(op, msg.sender), "Not authorized");
 
         _execute(op);
     }
 
     function swapAndExecute(UserOp calldata op, SwapOp calldata swapOp) external {
         require(isApprovedRouter[swapOp.router], "Invalid router address");
-        require(_canExecute(), "Not authorized");
+        require(_canExecute(op, msg.sender), "Not authorized");
 
         _swap(swapOp);
         _execute(op);
@@ -92,12 +92,12 @@ contract TargetCheckout is IExecutor {
         require(success, "Swap failed");
     }
 
-    function _canExecute() internal view returns (bool) {
+    function _canExecute(UserOp calldata op, address caller) internal view returns (bool) {
         address owner = IPRBProxy(address(this)).owner();
-        if (owner != msg.sender) {
+        if (owner != caller) {
             bool permission = IPRBProxy(address(this)).registry().getPermissionByOwner({
                 owner: owner,
-                envoy: msg.sender,
+                envoy: caller,
                 target: op.target
             });
 
