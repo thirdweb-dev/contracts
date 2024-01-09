@@ -38,8 +38,6 @@ deployArgs.json
 /notes.txt
 .yalc/
 yalc.lock
-package-lock.json
-yarn.lock
 
 # Forge
 #/lib

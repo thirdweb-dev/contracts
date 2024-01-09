@@ -12,7 +12,7 @@ import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/structs/BitMapsUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
@@ -42,7 +42,7 @@ contract DropERC721_V3 is
     IPlatformFee,
     ReentrancyGuardUpgradeable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     AccessControlEnumerableUpgradeable,
     ERC721EnumerableUpgradeable,
     IDropERC721_V3
@@ -206,7 +206,9 @@ contract DropERC721_V3 is
     }
 
     /// @dev See ERC 165
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual
@@ -217,12 +219,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev Returns the royalty recipient and amount, given a tokenId and sale price.
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        virtual
-        returns (address receiver, uint256 royaltyAmount)
-    {
+    function royaltyInfo(
+        uint256 tokenId,
+        uint256 salePrice
+    ) external view virtual returns (address receiver, uint256 royaltyAmount) {
         (address recipient, uint256 bps) = getRoyaltyInfoForToken(tokenId);
         receiver = recipient;
         royaltyAmount = (salePrice * bps) / MAX_BPS;
@@ -260,11 +260,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev Lets an account with `MINTER_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    function reveal(uint256 index, bytes calldata _key)
-        external
-        onlyRole(MINTER_ROLE)
-        returns (string memory revealedURI)
-    {
+    function reveal(
+        uint256 index,
+        bytes calldata _key
+    ) external onlyRole(MINTER_ROLE) returns (string memory revealedURI) {
         require(index < baseURIIndices.length, "invalid index.");
 
         uint256 _index = baseURIIndices[index];
@@ -389,10 +388,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev Lets a contract admin (account with `DEFAULT_ADMIN_ROLE`) set claim conditions.
-    function setClaimConditions(ClaimCondition[] calldata _phases, bool _resetClaimEligibility)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setClaimConditions(
+        ClaimCondition[] calldata _phases,
+        bool _resetClaimEligibility
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         uint256 existingStartIndex = claimCondition.currentStartId;
         uint256 existingPhaseCount = claimCondition.count;
 
@@ -453,11 +452,7 @@ contract DropERC721_V3 is
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function collectClaimPrice(
-        uint256 _quantityToClaim,
-        address _currency,
-        uint256 _pricePerToken
-    ) internal {
+    function collectClaimPrice(uint256 _quantityToClaim, address _currency, uint256 _pricePerToken) internal {
         if (_pricePerToken == 0) {
             return;
         }
@@ -474,11 +469,7 @@ contract DropERC721_V3 is
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function transferClaimedTokens(
-        address _to,
-        uint256 _conditionId,
-        uint256 _quantityBeingClaimed
-    ) internal {
+    function transferClaimedTokens(address _to, uint256 _conditionId, uint256 _quantityBeingClaimed) internal {
         // Update the supply minted under mint condition.
         claimCondition.phases[_conditionId].supplyClaimed += _quantityBeingClaimed;
 
@@ -598,11 +589,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev Returns the timestamp for when a claimer is eligible for claiming NFTs again.
-    function getClaimTimestamp(uint256 _conditionId, address _claimer)
-        public
-        view
-        returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp)
-    {
+    function getClaimTimestamp(
+        uint256 _conditionId,
+        address _claimer
+    ) public view returns (uint256 lastClaimTimestamp, uint256 nextValidClaimTimestamp) {
         lastClaimTimestamp = claimCondition.limitLastClaimTimestamp[_conditionId][_claimer];
 
         unchecked {
@@ -655,10 +645,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev Lets a contract admin update the default royalty recipient and bps.
-    function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setDefaultRoyaltyInfo(
+        address _royaltyRecipient,
+        uint256 _royaltyBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_royaltyBps <= MAX_BPS, "> MAX_BPS");
 
         royaltyRecipient = _royaltyRecipient;
@@ -681,10 +671,10 @@ contract DropERC721_V3 is
     }
 
     /// @dev Lets a contract admin update the platform fee recipient and bps
-    function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps)
-        external
-        onlyRole(DEFAULT_ADMIN_ROLE)
-    {
+    function setPlatformFeeInfo(
+        address _platformFeeRecipient,
+        uint256 _platformFeeBps
+    ) external onlyRole(DEFAULT_ADMIN_ROLE) {
         require(_platformFeeBps <= MAX_BPS, "> MAX_BPS.");
 
         platformFeeBps = uint16(_platformFeeBps);
@@ -722,9 +712,10 @@ contract DropERC721_V3 is
     function _beforeTokenTransfer(
         address from,
         address to,
-        uint256 tokenId
+        uint256 tokenId,
+        uint256 batchSize
     ) internal virtual override(ERC721EnumerableUpgradeable) {
-        super._beforeTokenTransfer(from, to, tokenId);
+        super._beforeTokenTransfer(from, to, tokenId, batchSize);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
@@ -736,7 +727,7 @@ contract DropERC721_V3 is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Multicall)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();

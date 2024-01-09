@@ -12,7 +12,7 @@ import "../extension/PrimarySale.sol";
 import "../extension/DropSinglePhase.sol";
 import "../extension/interface/IBurnableERC20.sol";
 
-import "../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 /**
  *      BASE:      ERC20
@@ -112,12 +112,10 @@ contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, Primary
     }
 
     /// @dev Transfers the tokens being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        override
-        returns (uint256)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal virtual override returns (uint256) {
         _mint(_to, _quantityBeingClaimed);
         return 0;
     }
@@ -150,5 +148,10 @@ contract ERC20Drop is ContractMetadata, Multicall, Ownable, ERC20Permit, Primary
     /// @dev Returns whether primary sale recipient can be set in the given execution context.
     function _canSetPrimarySaleRecipient() internal view virtual override returns (bool) {
         return msg.sender == owner();
+    }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view override(Multicall, Context) returns (address) {
+        return msg.sender;
     }
 }

@@ -9,7 +9,7 @@ import { ERC20Drop } from "contracts/base/ERC20Drop.sol";
 
 contract BaseERC20DropTest is BaseUtilTest {
     ERC20Drop internal base;
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     bytes32 internal typehashEip712;
     bytes32 internal domainSeparator;

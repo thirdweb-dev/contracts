@@ -14,29 +14,13 @@ interface IOperatorFilterRegistry {
 
     function unregister(address addr) external;
 
-    function updateOperator(
-        address registrant,
-        address operator,
-        bool filtered
-    ) external;
+    function updateOperator(address registrant, address operator, bool filtered) external;
 
-    function updateOperators(
-        address registrant,
-        address[] calldata operators,
-        bool filtered
-    ) external;
+    function updateOperators(address registrant, address[] calldata operators, bool filtered) external;
 
-    function updateCodeHash(
-        address registrant,
-        bytes32 codehash,
-        bool filtered
-    ) external;
+    function updateCodeHash(address registrant, bytes32 codehash, bool filtered) external;
 
-    function updateCodeHashes(
-        address registrant,
-        bytes32[] calldata codeHashes,
-        bool filtered
-    ) external;
+    function updateCodeHashes(address registrant, bytes32[] calldata codeHashes, bool filtered) external;
 
     function subscribe(address registrant, address registrantToSubscribe) external;
 

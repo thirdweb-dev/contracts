@@ -28,7 +28,10 @@ contract DynamicAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _defaultAdmin, IExtension.Extension[] memory _defaultExtensions)
+    constructor(
+        address _defaultAdmin,
+        IExtension.Extension[] memory _defaultExtensions
+    )
         BaseAccountFactory(
             payable(address(new DynamicAccount(IEntryPoint(ENTRYPOINT_ADDRESS), _defaultExtensions))),
             ENTRYPOINT_ADDRESS
@@ -42,16 +45,17 @@ contract DynamicAccountFactory is BaseAccountFactory, ContractMetadata, Permissi
     //////////////////////////////////////////////////////////////*/
 
     /// @dev Called in `createAccount`. Initializes the account contract created in `createAccount`.
-    function _initializeAccount(
-        address _account,
-        address _admin,
-        bytes calldata _data
-    ) internal override {
+    function _initializeAccount(address _account, address _admin, bytes calldata _data) internal override {
         DynamicAccount(payable(_account)).initialize(_admin, _data);
     }
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {
         return hasRole(DEFAULT_ADMIN_ROLE, msg.sender);
+    }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view override(Multicall, Permissions) returns (address) {
+        return msg.sender;
     }
 }

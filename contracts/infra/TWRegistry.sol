@@ -14,7 +14,7 @@ pragma solidity ^0.8.11;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import "../extension/Multicall.sol";
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 
 contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
@@ -60,7 +60,7 @@ contract TWRegistry is Multicall, ERC2771Context, AccessControlEnumerable {
         return deployments[_deployer].length();
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+    function _msgSender() internal view virtual override(Context, ERC2771Context, Multicall) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 

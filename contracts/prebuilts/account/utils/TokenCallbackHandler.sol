@@ -22,12 +22,7 @@ contract TokenCallbackHandler is IERC777Recipient, IERC721Receiver, IERC1155Rece
         bytes calldata
     ) external pure override {}
 
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external pure override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external pure override returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
 

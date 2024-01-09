@@ -4,14 +4,13 @@ pragma solidity ^0.8.0;
 import { DropERC20 } from "contracts/prebuilts/drop/DropERC20.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
+
 import "../utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract DropERC20Test is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+    using Strings for uint256;
+    using Strings for address;
 
     DropERC20 public drop;
 
@@ -40,9 +39,9 @@ contract DropERC20Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -60,9 +59,9 @@ contract DropERC20Test is BaseTest {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
+                Strings.toHexString(uint160(target), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -363,7 +362,7 @@ contract DropERC20Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -391,8 +390,8 @@ contract DropERC20Test is BaseTest {
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(300 ether);
-        inputs[3] = Strings.toString(1 ether);
+        inputs[2] = Strings.toString(uint256(300 ether));
+        inputs[3] = Strings.toString(uint256(1 ether));
         inputs[4] = Strings.toHexString(uint160(address(erc20))); // address of erc20
 
         bytes memory result = vm.ffi(inputs);
@@ -411,7 +410,7 @@ contract DropERC20Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500 ether;
@@ -448,7 +447,7 @@ contract DropERC20Test is BaseTest {
 
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
-        inputs[2] = Strings.toString(300 ether);
+        inputs[2] = Strings.toString(uint256(300 ether));
         inputs[3] = Strings.toString(type(uint256).max); // this implies that general price is applicable
         inputs[4] = "0x0000000000000000000000000000000000000000";
 
@@ -468,7 +467,7 @@ contract DropERC20Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500 ether;
@@ -502,7 +501,7 @@ contract DropERC20Test is BaseTest {
         inputs[0] = "node";
         inputs[1] = "src/test/scripts/generateRoot.ts";
         inputs[2] = "0"; // this implies that general limit is applicable
-        inputs[3] = Strings.toString(5 ether);
+        inputs[3] = Strings.toString(uint256(5 ether));
         inputs[4] = "0x0000000000000000000000000000000000000000"; // general currency will be applicable
 
         bytes memory result = vm.ffi(inputs);
@@ -521,7 +520,7 @@ contract DropERC20Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC20.ClaimCondition[] memory conditions = new DropERC20.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500 ether;
@@ -575,7 +574,7 @@ contract DropERC20Test is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
 
         // bytes32[] memory proofs = new bytes32[](0);
 

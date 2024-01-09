@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import "contracts/infra/forwarder/Forwarder.sol";
-import "contracts/infra/forwarder/ForwarderConsumer.sol";
+import { Forwarder } from "contracts/infra/forwarder/Forwarder.sol";
+import { ForwarderConsumer } from "contracts/infra/forwarder/ForwarderConsumer.sol";
 
 import "./utils/BaseTest.sol";
 
@@ -47,11 +47,10 @@ contract ForwarderTest is BaseTest {
                 Regular `Forwarder`: chainId in typehash
     //////////////////////////////////////////////////////////////*/
 
-    function signForwarderRequest(Forwarder.ForwardRequest memory forwardRequest, uint256 privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signForwarderRequest(
+        Forwarder.ForwardRequest memory forwardRequest,
+        uint256 privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashForwardRequest,
             forwardRequest.from,

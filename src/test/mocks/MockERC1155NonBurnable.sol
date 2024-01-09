@@ -6,19 +6,11 @@ import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
 contract MockERC1155NonBurnable is ERC1155 {
     constructor() ERC1155("ipfs://BaseURI") {}
 
-    function mint(
-        address to,
-        uint256 id,
-        uint256 amount
-    ) public virtual {
+    function mint(address to, uint256 id, uint256 amount) public virtual {
         _mint(to, id, amount, "");
     }
 
-    function mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts
-    ) public virtual {
+    function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts) public virtual {
         _mintBatch(to, ids, amounts, "");
     }
 

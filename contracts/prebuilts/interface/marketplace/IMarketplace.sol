@@ -315,12 +315,7 @@ interface IMarketplace is IThirdwebContract, IPlatformFee {
      * @param _currency The currency of the offer that is to be accepted.
      * @param _totalPrice The total price of the offer that is to be accepted.
      */
-    function acceptOffer(
-        uint256 _listingId,
-        address _offeror,
-        address _currency,
-        uint256 _totalPrice
-    ) external;
+    function acceptOffer(uint256 _listingId, address _offeror, address _currency, uint256 _totalPrice) external;
 
     /**
      *  @notice Lets any account close an auction on behalf of either the (1) auction's creator, or (2) winning bidder.

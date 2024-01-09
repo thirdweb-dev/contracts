@@ -140,6 +140,10 @@ abstract contract Drop1155 is IDrop1155 {
         uint256 claimPrice = currentClaimPhase.pricePerToken;
         address claimCurrency = currentClaimPhase.currency;
 
+        /*
+         * Here `isOverride` implies that if the merkle proof verification fails,
+         * the claimer would claim through open claim limit instead of allowlisted limit.
+         */
         if (currentClaimPhase.merkleRoot != bytes32(0)) {
             (isOverride, ) = MerkleProof.verify(
                 _allowlistProof.proof,
@@ -199,11 +203,10 @@ abstract contract Drop1155 is IDrop1155 {
     }
 
     /// @dev Returns the claim condition at the given uid.
-    function getClaimConditionById(uint256 _tokenId, uint256 _conditionId)
-        external
-        view
-        returns (ClaimCondition memory condition)
-    {
+    function getClaimConditionById(
+        uint256 _tokenId,
+        uint256 _conditionId
+    ) external view returns (ClaimCondition memory condition) {
         condition = claimCondition[_tokenId].conditions[_conditionId];
     }
 
@@ -261,11 +264,7 @@ abstract contract Drop1155 is IDrop1155 {
     ) internal virtual;
 
     /// @dev Transfers the NFTs being claimed.
-    function transferTokensOnClaim(
-        address _to,
-        uint256 _tokenId,
-        uint256 _quantityBeingClaimed
-    ) internal virtual;
+    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed) internal virtual;
 
     /// @dev Determine what wallet can update claim conditions
     function _canSetClaimConditions() internal view virtual returns (bool);

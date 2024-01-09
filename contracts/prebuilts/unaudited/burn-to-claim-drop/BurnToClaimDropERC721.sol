@@ -123,4 +123,15 @@ contract BurnToClaimDropERC721 is
         PermissionsStorage.Data storage data = PermissionsStorage.data();
         return data._hasRole[role][addr];
     }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Multicall)
+        returns (address sender)
+    {
+        return ERC2771ContextUpgradeable._msgSender();
+    }
 }

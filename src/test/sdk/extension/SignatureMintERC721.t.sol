@@ -17,11 +17,10 @@ contract MySigMint721 is SignatureMintERC721 {
         return condition;
     }
 
-    function mintWithSignature(MintRequest calldata req, bytes calldata signature)
-        external
-        payable
-        returns (address signer)
-    {
+    function mintWithSignature(
+        MintRequest calldata req,
+        bytes calldata signature
+    ) external payable returns (address signer) {
         if (!_canSignMintRequest(msg.sender)) {
             revert("not authorized");
         }
@@ -75,11 +74,10 @@ contract ExtensionSignatureMintERC721 is DSTest, Test {
         _signature = signMintRequest(_mintrequest, privateKey);
     }
 
-    function signMintRequest(MySigMint721.MintRequest memory _request, uint256 _privateKey)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function signMintRequest(
+        MySigMint721.MintRequest memory _request,
+        uint256 _privateKey
+    ) internal view returns (bytes memory) {
         bytes memory encodedRequest = abi.encode(
             typehashMintRequest,
             _request.to,

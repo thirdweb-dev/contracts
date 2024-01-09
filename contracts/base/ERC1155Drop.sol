@@ -15,8 +15,8 @@ import "../extension/DropSinglePhase1155.sol";
 import "../extension/LazyMint.sol";
 import "../extension/DelayedReveal.sol";
 
-import "../lib/CurrencyTransferLib.sol";
-import "../lib/TWStrings.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
+import "../lib/Strings.sol";
 
 /**
  *      BASE:      ERC1155Base
@@ -53,7 +53,7 @@ contract ERC1155Drop is
     DelayedReveal,
     DropSinglePhase1155
 {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     /*//////////////////////////////////////////////////////////////
                         Mappings
@@ -119,11 +119,7 @@ contract ERC1155Drop is
      *  @param _tokenId The tokenId of the NFT to burn.
      *  @param _amount  The amount of the NFT to burn.
      */
-    function burn(
-        address _owner,
-        uint256 _tokenId,
-        uint256 _amount
-    ) external virtual {
+    function burn(address _owner, uint256 _tokenId, uint256 _amount) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
@@ -139,11 +135,7 @@ contract ERC1155Drop is
      *  @param _tokenIds The tokenIds of the NFTs to burn.
      *  @param _amounts  The amounts of the NFTs to burn.
      */
-    function burnBatch(
-        address _owner,
-        uint256[] memory _tokenIds,
-        uint256[] memory _amounts
-    ) external virtual {
+    function burnBatch(address _owner, uint256[] memory _tokenIds, uint256[] memory _amounts) external virtual {
         address caller = msg.sender;
 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");

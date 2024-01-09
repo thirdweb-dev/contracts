@@ -21,7 +21,7 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/IERC721ReceiverUpgradea
 import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
@@ -36,7 +36,7 @@ contract NFTStake is
     ContractMetadata,
     PermissionsEnumerable,
     ERC2771ContextUpgradeable,
-    MulticallUpgradeable,
+    Multicall,
     Staking721Upgradeable,
     ERC165Upgradeable,
     IERC721ReceiverUpgradeable,
@@ -141,12 +141,7 @@ contract NFTStake is
                         ERC 165 / 721 logic
     //////////////////////////////////////////////////////////////*/
 
-    function onERC721Received(
-        address,
-        address,
-        uint256,
-        bytes calldata
-    ) external view override returns (bytes4) {
+    function onERC721Received(address, address, uint256, bytes calldata) external view override returns (bytes4) {
         require(isStaking == 2, "Direct transfer");
         return this.onERC721Received.selector;
     }
@@ -194,11 +189,13 @@ contract NFTStake is
         return _msgSender();
     }
 
-    function _msgSender() internal view virtual override returns (address sender) {
+    function _msgSender()
+        internal
+        view
+        virtual
+        override(ERC2771ContextUpgradeable, Multicall)
+        returns (address sender)
+    {
         return ERC2771ContextUpgradeable._msgSender();
-    }
-
-    function _msgData() internal view virtual override returns (bytes calldata) {
-        return ERC2771ContextUpgradeable._msgData();
     }
 }

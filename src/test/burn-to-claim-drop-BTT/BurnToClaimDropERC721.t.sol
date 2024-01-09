@@ -14,12 +14,13 @@ import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
+import { Permissions } from "contracts/extension/Permissions.sol";
+import { PermissionsEnumerable } from "contracts/extension/PermissionsEnumerable.sol";
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
 
 contract BurnToClaimDropERC721Test is BaseTest, IExtension {
-    using TWStrings for uint256;
-    using TWStrings for address;
+    using Strings for uint256;
+    using Strings for address;
 
     event TokensLazyMinted(uint256 indexed startTokenId, uint256 endTokenId, string baseURI, bytes encryptedBaseURI);
     event TokenURIRevealed(uint256 indexed index, string revealedURI);
@@ -249,9 +250,9 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(caller), 20),
+                Strings.toHexString(uint160(caller), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -269,9 +270,9 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(target), 20),
+                Strings.toHexString(uint160(target), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(role), 32)
+                Strings.toHexString(uint256(role), 32)
             )
         );
 
@@ -1002,7 +1003,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -1052,7 +1053,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -1111,7 +1112,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -1166,7 +1167,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         BurnToClaimDrop721Logic.ClaimCondition[] memory conditions = new BurnToClaimDrop721Logic.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -1222,7 +1223,7 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3);
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
 
         // bytes32[] memory proofs = new bytes32[](0);
 
@@ -1873,9 +1874,9 @@ contract BurnToClaimDropERC721Test is BaseTest, IExtension {
         vm.expectRevert(
             abi.encodePacked(
                 "Permissions: account ",
-                TWStrings.toHexString(uint160(deployer), 20),
+                Strings.toHexString(uint160(deployer), 20),
                 " is missing role ",
-                TWStrings.toHexString(uint256(keccak256("EXTENSION_ROLE")), 32)
+                Strings.toHexString(uint256(keccak256("EXTENSION_ROLE")), 32)
             )
         );
         Permissions(address(drop)).grantRole(keccak256("EXTENSION_ROLE"), address(0x12345));

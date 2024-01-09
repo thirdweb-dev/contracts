@@ -4,15 +4,12 @@ pragma solidity ^0.8.0;
 import { DropERC721, IDelayedReveal, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
-import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
-import "contracts/lib/TWStrings.sol";
+import { IERC721AUpgradeable } from "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
 import "../utils/BaseTest.sol";
-import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract DropERC721BenchmarkTest is BaseTest {
-    using StringsUpgradeable for uint256;
-    using StringsUpgradeable for address;
+    using Strings for uint256;
+    using Strings for address;
 
     DropERC721 public drop;
 
@@ -32,7 +29,7 @@ contract DropERC721BenchmarkTest is BaseTest {
                         DropERC721 benchmark
     //////////////////////////////////////////////////////////////*/
 
-    function test_bechmark_dropERC721_claim_five_tokens() public {
+    function test_benchmark_dropERC721_claim_five_tokens() public {
         vm.pauseGasMetering();
         string[] memory inputs = new string[](5);
 
@@ -58,7 +55,7 @@ contract DropERC721BenchmarkTest is BaseTest {
 
         vm.warp(1);
 
-        address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
         DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
@@ -83,7 +80,7 @@ contract DropERC721BenchmarkTest is BaseTest {
         drop.claim(receiver, 5, address(erc20), 5, alp, "");
     }
 
-    function test_bechmark_dropERC721_setClaimConditions_five_conditions() public {
+    function test_benchmark_dropERC721_setClaimConditions_five_conditions() public {
         vm.pauseGasMetering();
         string[] memory inputs = new string[](5);
 
@@ -174,7 +171,7 @@ contract DropERC721BenchmarkTest is BaseTest {
         drop.reveal(0, key);
     }
 
-    // function test_bechmark_dropERC721_claim_one_token() public {
+    // function test_benchmark_dropERC721_claim_one_token() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -200,7 +197,7 @@ contract DropERC721BenchmarkTest is BaseTest {
 
     //     vm.warp(1);
 
-    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+    //     address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
     //     DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
     //     conditions[0].maxClaimableSupply = 500;
@@ -225,7 +222,7 @@ contract DropERC721BenchmarkTest is BaseTest {
     //     drop.claim(receiver, 1, address(erc20), 5, alp, "");
     // }
 
-    // function test_bechmark_dropERC721_claim_two_tokens() public {
+    // function test_benchmark_dropERC721_claim_two_tokens() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -251,7 +248,7 @@ contract DropERC721BenchmarkTest is BaseTest {
 
     //     vm.warp(1);
 
-    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+    //     address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
     //     DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
     //     conditions[0].maxClaimableSupply = 500;
@@ -276,7 +273,7 @@ contract DropERC721BenchmarkTest is BaseTest {
     //     drop.claim(receiver, 2, address(erc20), 5, alp, "");
     // }
 
-    // function test_bechmark_dropERC721_claim_three_tokens() public {
+    // function test_benchmark_dropERC721_claim_three_tokens() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -302,7 +299,7 @@ contract DropERC721BenchmarkTest is BaseTest {
 
     //     vm.warp(1);
 
-    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+    //     address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
     //     DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
     //     conditions[0].maxClaimableSupply = 500;
@@ -327,7 +324,7 @@ contract DropERC721BenchmarkTest is BaseTest {
     //     drop.claim(receiver, 3, address(erc20), 5, alp, "");
     // }
 
-    // function test_bechmark_dropERC721_setClaimConditions_one_condition() public {
+    // function test_benchmark_dropERC721_setClaimConditions_one_condition() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -353,7 +350,7 @@ contract DropERC721BenchmarkTest is BaseTest {
 
     //     vm.warp(1);
 
-    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+    //     address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
     //     DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](1);
     //     conditions[0].maxClaimableSupply = 500;
@@ -367,7 +364,7 @@ contract DropERC721BenchmarkTest is BaseTest {
     //     drop.setClaimConditions(conditions, false);
     // }
 
-    // function test_bechmark_dropERC721_setClaimConditions_two_conditions() public {
+    // function test_benchmark_dropERC721_setClaimConditions_two_conditions() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -393,7 +390,7 @@ contract DropERC721BenchmarkTest is BaseTest {
 
     //     vm.warp(1);
 
-    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+    //     address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
     //     DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](2);
     //     conditions[0].maxClaimableSupply = 500;
@@ -411,7 +408,7 @@ contract DropERC721BenchmarkTest is BaseTest {
     //     drop.setClaimConditions(conditions, false);
     // }
 
-    // function test_bechmark_dropERC721_setClaimConditions_three_conditions() public {
+    // function test_benchmark_dropERC721_setClaimConditions_three_conditions() public {
     //     vm.pauseGasMetering();
     //     string[] memory inputs = new string[](5);
 
@@ -437,7 +434,7 @@ contract DropERC721BenchmarkTest is BaseTest {
 
     //     vm.warp(1);
 
-    //     address receiver = address(0x92Bb439374a091c7507bE100183d8D1Ed2c9dAD3); // in allowlist
+    //     address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd); // in allowlist
 
     //     DropERC721.ClaimCondition[] memory conditions = new DropERC721.ClaimCondition[](3);
     //     conditions[0].maxClaimableSupply = 500;

@@ -20,10 +20,5 @@ interface IMintableERC1155 {
      *  @param amount The number of copies of the NFT to mint.
      *
      */
-    function mintTo(
-        address to,
-        uint256 tokenId,
-        string calldata uri,
-        uint256 amount
-    ) external;
+    function mintTo(address to, uint256 tokenId, string calldata uri, uint256 amount) external;
 }

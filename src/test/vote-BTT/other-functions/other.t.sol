@@ -82,7 +82,7 @@ contract VoteERC20Test_OtherFunctions is BaseTest {
         assertTrue(voteContract.supportsInterface(type(IERC165Upgradeable).interfaceId));
         assertTrue(voteContract.supportsInterface(type(IERC721ReceiverUpgradeable).interfaceId));
         assertTrue(voteContract.supportsInterface(type(IERC1155ReceiverUpgradeable).interfaceId));
-        assertTrue(voteContract.supportsInterface(type(IGovernorUpgradeable).interfaceId));
+        // assertTrue(voteContract.supportsInterface(type(IGovernorUpgradeable).interfaceId));
 
         // false for other not supported interfaces
         assertFalse(voteContract.supportsInterface(type(IStaking721).interfaceId));

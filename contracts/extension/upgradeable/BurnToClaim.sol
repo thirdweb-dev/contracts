@@ -45,11 +45,7 @@ abstract contract BurnToClaim is IBurnToClaim {
     }
 
     /// @notice Verifies an attempt to burn tokens to claim new tokens.
-    function verifyBurnToClaim(
-        address _tokenOwner,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) public view virtual {
+    function verifyBurnToClaim(address _tokenOwner, uint256 _tokenId, uint256 _quantity) public view virtual {
         BurnToClaimInfo memory _burnToClaimInfo = getBurnToClaimInfo();
 
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {
@@ -67,11 +63,7 @@ abstract contract BurnToClaim is IBurnToClaim {
     }
 
     /// @dev Burns tokens to claim new tokens.
-    function _burnTokensOnOrigin(
-        address _tokenOwner,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) internal virtual {
+    function _burnTokensOnOrigin(address _tokenOwner, uint256 _tokenId, uint256 _quantity) internal virtual {
         BurnToClaimInfo memory _burnToClaimInfo = getBurnToClaimInfo();
 
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {

@@ -31,11 +31,7 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit, IMintab
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
-    constructor(
-        address _defaultAdmin,
-        string memory _name,
-        string memory _symbol
-    ) ERC20Permit(_name, _symbol) {
+    constructor(address _defaultAdmin, string memory _name, string memory _symbol) ERC20Permit(_name, _symbol) {
         _setupOwner(_defaultAdmin);
     }
 
@@ -106,5 +102,10 @@ contract ERC20Base is ContractMetadata, Multicall, Ownable, ERC20Permit, IMintab
     /// @dev Returns whether owner can be set in the given execution context.
     function _canSetOwner() internal view virtual override returns (bool) {
         return msg.sender == owner();
+    }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view override(Multicall, Context) returns (address) {
+        return msg.sender;
     }
 }

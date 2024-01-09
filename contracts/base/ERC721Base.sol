@@ -11,7 +11,7 @@ import "../extension/Ownable.sol";
 import "../extension/Royalty.sol";
 import "../extension/BatchMintMetadata.sol";
 
-import "../lib/TWStrings.sol";
+import "../lib/Strings.sol";
 
 /**
  *  The `ERC721Base` smart contract implements the ERC721 NFT standard, along with the ERC721A optimization to the standard.
@@ -31,7 +31,7 @@ import "../lib/TWStrings.sol";
  */
 
 contract ERC721Base is ERC721AQueryable, ContractMetadata, Multicall, Ownable, Royalty, BatchMintMetadata {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     /*//////////////////////////////////////////////////////////////
                             Mappings
@@ -125,12 +125,7 @@ contract ERC721Base is ERC721AQueryable, ContractMetadata, Multicall, Ownable, R
      *  @param _baseURI  The baseURI for the `n` number of NFTs minted. The metadata for each NFT is `baseURI/tokenId`
      *  @param _data     Additional data to pass along during the minting of the NFT.
      */
-    function batchMintTo(
-        address _to,
-        uint256 _quantity,
-        string memory _baseURI,
-        bytes memory _data
-    ) public virtual {
+    function batchMintTo(address _to, uint256 _quantity, string memory _baseURI, bytes memory _data) public virtual {
         require(_canMint(), "Not authorized to mint.");
         _batchMintMetadata(nextTokenIdToMint(), _quantity, _baseURI);
         _safeMint(_to, _quantity, _data);
@@ -163,12 +158,10 @@ contract ERC721Base is ERC721AQueryable, ContractMetadata, Multicall, Ownable, R
      *
      * @return isApprovedOrOwnerOf Whether the given address is approved to transfer the given NFT.
      */
-    function isApprovedOrOwner(address _operator, uint256 _tokenId)
-        public
-        view
-        virtual
-        returns (bool isApprovedOrOwnerOf)
-    {
+    function isApprovedOrOwner(
+        address _operator,
+        uint256 _tokenId
+    ) public view virtual returns (bool isApprovedOrOwnerOf) {
         address owner = ownerOf(_tokenId);
         isApprovedOrOwnerOf = (_operator == owner ||
             isApprovedForAll(owner, _operator) ||
@@ -208,5 +201,10 @@ contract ERC721Base is ERC721AQueryable, ContractMetadata, Multicall, Ownable, R
     /// @dev Returns whether royalty info can be set in the given execution context.
     function _canSetRoyaltyInfo() internal view virtual override returns (bool) {
         return msg.sender == owner();
+    }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view override(Multicall, Context) returns (address) {
+        return msg.sender;
     }
 }

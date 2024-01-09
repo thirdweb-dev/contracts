@@ -17,11 +17,7 @@ import "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract TWMinimalFactory {
     /// @dev Deploys a proxy that points to the given implementation.
-    constructor(
-        address _implementation,
-        bytes memory _data,
-        bytes32 _salt
-    ) payable {
+    constructor(address _implementation, bytes memory _data, bytes32 _salt) payable {
         address instance;
         bytes32 salthash = keccak256(abi.encodePacked(msg.sender, _salt));
         assembly {

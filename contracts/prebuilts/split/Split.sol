@@ -23,13 +23,13 @@ import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgradeable.sol";
 
 // Utils
-import "@openzeppelin/contracts-upgradeable/utils/MulticallUpgradeable.sol";
+import "../../extension/Multicall.sol";
 import "../../lib/FeeType.sol";
 
 contract Split is
     IThirdwebContract,
     Initializable,
-    MulticallUpgradeable,
+    Multicall,
     ERC2771ContextUpgradeable,
     AccessControlEnumerableUpgradeable,
     PaymentSplitterUpgradeable
@@ -156,7 +156,7 @@ contract Split is
         internal
         view
         virtual
-        override(ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(ContextUpgradeable, ERC2771ContextUpgradeable, Multicall)
         returns (address sender)
     {
         return ERC2771ContextUpgradeable._msgSender();

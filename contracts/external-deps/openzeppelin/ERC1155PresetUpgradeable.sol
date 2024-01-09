@@ -74,12 +74,7 @@ contract ERC1155PresetUpgradeable is
      *
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mint(
-        address to,
-        uint256 id,
-        uint256 amount,
-        bytes memory data
-    ) public virtual {
+    function mint(address to, uint256 id, uint256 amount, bytes memory data) public virtual {
         require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role");
 
         _mint(to, id, amount, data);
@@ -88,12 +83,7 @@ contract ERC1155PresetUpgradeable is
     /**
      * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] variant of {mint}.
      */
-    function mintBatch(
-        address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
-    ) public virtual {
+    function mintBatch(address to, uint256[] memory ids, uint256[] memory amounts, bytes memory data) public virtual {
         require(hasRole(MINTER_ROLE, _msgSender()), "must have minter role");
 
         _mintBatch(to, ids, amounts, data);
@@ -130,7 +120,9 @@ contract ERC1155PresetUpgradeable is
     /**
      * @dev See {IERC165-supportsInterface}.
      */
-    function supportsInterface(bytes4 interfaceId)
+    function supportsInterface(
+        bytes4 interfaceId
+    )
         public
         view
         virtual

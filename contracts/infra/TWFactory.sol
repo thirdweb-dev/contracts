@@ -12,15 +12,16 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "./TWRegistry.sol";
+import { TWRegistry } from "./TWRegistry.sol";
 import "./interface/IThirdwebContract.sol";
 import "../extension/interface/IContractFactory.sol";
 
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-import "@openzeppelin/contracts/utils/Create2.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
-import "@openzeppelin/contracts/proxy/Clones.sol";
+import { AccessControlEnumerable, Context } from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import { ERC2771Context } from "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
+import { Multicall } from "../extension/Multicall.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
+import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable, IContractFactory {
     /// @dev Only FACTORY_ROLE holders can approve/unapprove implementations for proxies to point to.
@@ -62,11 +63,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable, IContr
      *  @dev Deploys a proxy at a deterministic address by taking in `salt` as a parameter.
      *       Proxy points to the latest version of the given contract type.
      */
-    function deployProxyDeterministic(
-        bytes32 _type,
-        bytes memory _data,
-        bytes32 _salt
-    ) public returns (address) {
+    function deployProxyDeterministic(bytes32 _type, bytes memory _data, bytes32 _salt) public returns (address) {
         address _implementation = implementation[_type][currentVersion[_type]];
         return deployProxyByImplementation(_implementation, _data, _salt);
     }
@@ -133,7 +130,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable, IContr
         return implementation[_type][currentVersion[_type]];
     }
 
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+    function _msgSender() internal view virtual override(Context, ERC2771Context, Multicall) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 

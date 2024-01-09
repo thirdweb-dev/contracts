@@ -100,11 +100,7 @@ abstract contract AAGasProfileBase is Test {
         signature = abi.encodePacked(r, s, v);
     }
 
-    function executeUserOp(
-        UserOperation memory _op,
-        string memory _test,
-        uint256 _value
-    ) internal {
+    function executeUserOp(UserOperation memory _op, string memory _test, uint256 _value) internal {
         UserOperation[] memory ops = new UserOperation[](1);
         ops[0] = _op;
         uint256 eth_before;
@@ -273,11 +269,7 @@ abstract contract AAGasProfileBase is Test {
 
     function getDummySig(UserOperation memory _op) internal pure virtual returns (bytes memory);
 
-    function fillData(
-        address _to,
-        uint256 _amount,
-        bytes memory _data
-    ) internal view virtual returns (bytes memory);
+    function fillData(address _to, uint256 _amount, bytes memory _data) internal view virtual returns (bytes memory);
 
     function getAccountAddr(address _owner) internal view virtual returns (IAccount _account);
 

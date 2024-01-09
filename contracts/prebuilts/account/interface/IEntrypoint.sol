@@ -153,8 +153,10 @@ interface IEntryPoint is IStakeManager, INonceManager {
      * @param opsPerAggregator the operations to execute, grouped by aggregator (or address(0) for no-aggregator accounts)
      * @param beneficiary the address to receive the fees
      */
-    function handleAggregatedOps(UserOpsPerAggregator[] calldata opsPerAggregator, address payable beneficiary)
-        external;
+    function handleAggregatedOps(
+        UserOpsPerAggregator[] calldata opsPerAggregator,
+        address payable beneficiary
+    ) external;
 
     /**
      * generate a request Id - unique identifier for this request.
@@ -218,9 +220,5 @@ interface IEntryPoint is IStakeManager, INonceManager {
      *        are set to the return from that call.
      * @param targetCallData callData to pass to target address
      */
-    function simulateHandleOp(
-        UserOperation calldata op,
-        address target,
-        bytes calldata targetCallData
-    ) external;
+    function simulateHandleOp(UserOperation calldata op, address target, bytes calldata targetCallData) external;
 }

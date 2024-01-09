@@ -11,7 +11,7 @@ import "../extension/Ownable.sol";
 import "../extension/PrimarySale.sol";
 import "../extension/DropSinglePhase.sol";
 
-import "../lib/CurrencyTransferLib.sol";
+import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 /**
  *      BASE:      ERC20Votes
@@ -95,12 +95,10 @@ contract ERC20DropVote is ContractMetadata, Multicall, Ownable, ERC20Votes, Prim
     }
 
     /// @dev Transfers the tokens being claimed.
-    function _transferTokensOnClaim(address _to, uint256 _quantityBeingClaimed)
-        internal
-        virtual
-        override
-        returns (uint256)
-    {
+    function _transferTokensOnClaim(
+        address _to,
+        uint256 _quantityBeingClaimed
+    ) internal virtual override returns (uint256) {
         _mint(_to, _quantityBeingClaimed);
         return 0;
     }
@@ -128,5 +126,10 @@ contract ERC20DropVote is ContractMetadata, Multicall, Ownable, ERC20Votes, Prim
     /// @dev Returns whether primary sale recipient can be set in the given execution context.
     function _canSetPrimarySaleRecipient() internal view virtual override returns (bool) {
         return msg.sender == owner();
+    }
+
+    /// @notice Returns the sender in the given execution context.
+    function _msgSender() internal view override(Multicall, Context) returns (address) {
+        return msg.sender;
     }
 }

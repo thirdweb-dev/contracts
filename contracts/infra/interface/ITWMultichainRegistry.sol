@@ -12,19 +12,10 @@ interface ITWMultichainRegistry {
     event Deleted(address indexed deployer, address indexed deployment, uint256 indexed chainId);
 
     /// @notice Add a deployment for a deployer.
-    function add(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId,
-        string memory metadataUri
-    ) external;
+    function add(address _deployer, address _deployment, uint256 _chainId, string memory metadataUri) external;
 
     /// @notice Remove a deployment for a deployer.
-    function remove(
-        address _deployer,
-        address _deployment,
-        uint256 _chainId
-    ) external;
+    function remove(address _deployer, address _deployment, uint256 _chainId) external;
 
     /// @notice Get all deployments for a deployer.
     function getAll(address _deployer) external view returns (Deployment[] memory allDeployments);

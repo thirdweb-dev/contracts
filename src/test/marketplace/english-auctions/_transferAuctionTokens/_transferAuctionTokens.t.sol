@@ -20,11 +20,7 @@ import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
 contract MockTransferAuctionTokens is EnglishAuctionsLogic {
     constructor(address _nativeTokenWrapper) EnglishAuctionsLogic(_nativeTokenWrapper) {}
 
-    function transferAuctionTokens(
-        address _from,
-        address _to,
-        Auction memory _auction
-    ) external {
+    function transferAuctionTokens(address _from, address _to, Auction memory _auction) external {
         _transferAuctionTokens(_from, _to, _auction);
     }
 }

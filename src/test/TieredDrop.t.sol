@@ -2,13 +2,12 @@
 pragma solidity ^0.8.0;
 
 import "./utils/BaseTest.sol";
-import "contracts/lib/TWStrings.sol";
 
 import { TieredDrop } from "contracts/prebuilts/tiered-drop/TieredDrop.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 contract TieredDropTest is BaseTest {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     TieredDrop public tieredDrop;
 
@@ -940,7 +939,7 @@ contract TieredDropTest is BaseTest {
 }
 
 contract TieredDropBechmarkTest is BaseTest {
-    using TWStrings for uint256;
+    using Strings for uint256;
 
     TieredDrop public tieredDrop;
 

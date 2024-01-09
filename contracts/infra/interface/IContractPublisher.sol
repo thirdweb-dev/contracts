@@ -51,10 +51,9 @@ interface IContractPublisher {
      *
      *  @return published An array of all contracts published by the publisher.
      */
-    function getAllPublishedContracts(address publisher)
-        external
-        view
-        returns (CustomContractInstance[] memory published);
+    function getAllPublishedContracts(
+        address publisher
+    ) external view returns (CustomContractInstance[] memory published);
 
     /**
      *  @notice Returns all versions of a published contract.
@@ -64,10 +63,10 @@ interface IContractPublisher {
      *
      *  @return published The desired contracts published by the publisher.
      */
-    function getPublishedContractVersions(address publisher, string memory contractId)
-        external
-        view
-        returns (CustomContractInstance[] memory published);
+    function getPublishedContractVersions(
+        address publisher,
+        string memory contractId
+    ) external view returns (CustomContractInstance[] memory published);
 
     /**
      *  @notice Returns the latest version of a contract published by a publisher.
@@ -77,10 +76,10 @@ interface IContractPublisher {
      *
      *  @return published The desired contract published by the publisher.
      */
-    function getPublishedContract(address publisher, string memory contractId)
-        external
-        view
-        returns (CustomContractInstance memory published);
+    function getPublishedContract(
+        address publisher,
+        string memory contractId
+    ) external view returns (CustomContractInstance memory published);
 
     /**
      *  @notice Let's an account publish a contract.
@@ -123,8 +122,7 @@ interface IContractPublisher {
     /**
      * @notice Retrieve the published metadata URI from a compiler metadata URI.
      */
-    function getPublishedUriFromCompilerUri(string memory compilerMetadataUri)
-        external
-        view
-        returns (string[] memory publishedMetadataUris);
+    function getPublishedUriFromCompilerUri(
+        string memory compilerMetadataUri
+    ) external view returns (string[] memory publishedMetadataUris);
 }

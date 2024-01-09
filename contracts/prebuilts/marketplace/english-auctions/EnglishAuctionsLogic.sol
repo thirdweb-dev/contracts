@@ -86,12 +86,9 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Auction ERC721 or ERC1155 NFTs.
-    function createAuction(AuctionParameters calldata _params)
-        external
-        onlyListerRole
-        onlyAssetRole(_params.assetContract)
-        returns (uint256 auctionId)
-    {
+    function createAuction(
+        AuctionParameters calldata _params
+    ) external onlyListerRole onlyAssetRole(_params.assetContract) returns (uint256 auctionId) {
         auctionId = _getNextAuctionId();
         address auctionCreator = _msgSender();
         TokenType tokenType = _getTokenType(_params.assetContract);
@@ -122,12 +119,10 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         emit NewAuction(auctionCreator, auctionId, _params.assetContract, auction);
     }
 
-    function bidInAuction(uint256 _auctionId, uint256 _bidAmount)
-        external
-        payable
-        nonReentrant
-        onlyExistingAuction(_auctionId)
-    {
+    function bidInAuction(
+        uint256 _auctionId,
+        uint256 _bidAmount
+    ) external payable nonReentrant onlyExistingAuction(_auctionId) {
         Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
 
         require(
@@ -203,12 +198,10 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
                             View functions
     //////////////////////////////////////////////////////////////*/
 
-    function isNewWinningBid(uint256 _auctionId, uint256 _bidAmount)
-        external
-        view
-        onlyExistingAuction(_auctionId)
-        returns (bool)
-    {
+    function isNewWinningBid(
+        uint256 _auctionId,
+        uint256 _bidAmount
+    ) external view onlyExistingAuction(_auctionId) returns (bool) {
         Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
         Bid memory _currentWinningBid = _englishAuctionsStorage().winningBid[_auctionId];
 
@@ -239,11 +232,10 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         }
     }
 
-    function getAllValidAuctions(uint256 _startId, uint256 _endId)
-        external
-        view
-        returns (Auction[] memory _validAuctions)
-    {
+    function getAllValidAuctions(
+        uint256 _startId,
+        uint256 _endId
+    ) external view returns (Auction[] memory _validAuctions) {
         require(_startId <= _endId && _endId < _englishAuctionsStorage().totalAuctions, "invalid range");
 
         Auction[] memory _auctions = new Auction[](_endId - _startId + 1);
@@ -277,15 +269,9 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         }
     }
 
-    function getWinningBid(uint256 _auctionId)
-        external
-        view
-        returns (
-            address _bidder,
-            address _currency,
-            uint256 _bidAmount
-        )
-    {
+    function getWinningBid(
+        uint256 _auctionId
+    ) external view returns (address _bidder, address _currency, uint256 _bidAmount) {
         Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
         Bid memory _currentWinningBid = _englishAuctionsStorage().winningBid[_auctionId];
 
@@ -458,11 +444,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     }
 
     /// @dev Transfers tokens for auction.
-    function _transferAuctionTokens(
-        address _from,
-        address _to,
-        Auction memory _auction
-    ) internal {
+    function _transferAuctionTokens(address _from, address _to, Auction memory _auction) internal {
         if (_auction.tokenType == TokenType.ERC1155) {
             IERC1155(_auction.assetContract).safeTransferFrom(_from, _to, _auction.tokenId, _auction.quantity, "");
         } else if (_auction.tokenType == TokenType.ERC721) {

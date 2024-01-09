@@ -27,11 +27,7 @@ abstract contract BurnToClaim is IBurnToClaim {
         burnToClaimInfo = _burnToClaimInfo;
     }
 
-    function verifyBurnToClaim(
-        address _tokenOwner,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) public view virtual {
+    function verifyBurnToClaim(address _tokenOwner, uint256 _tokenId, uint256 _quantity) public view virtual {
         BurnToClaimInfo memory _burnToClaimInfo = burnToClaimInfo;
 
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {
@@ -50,11 +46,7 @@ abstract contract BurnToClaim is IBurnToClaim {
         // TODO: check if additional verification steps are required / override in main contract
     }
 
-    function _burnTokensOnOrigin(
-        address _tokenOwner,
-        uint256 _tokenId,
-        uint256 _quantity
-    ) internal virtual {
+    function _burnTokensOnOrigin(address _tokenOwner, uint256 _tokenId, uint256 _quantity) internal virtual {
         BurnToClaimInfo memory _burnToClaimInfo = burnToClaimInfo;
         if (_burnToClaimInfo.tokenType == IBurnToClaim.TokenType.ERC721) {
             ERC721Burnable(_burnToClaimInfo.originContractAddress).burn(_tokenId);

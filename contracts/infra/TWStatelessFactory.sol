@@ -15,7 +15,7 @@ pragma solidity ^0.8.11;
 import "../extension/interface/IContractFactory.sol";
 
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import "../extension/Multicall.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
 contract TWStatelessFactory is Multicall, ERC2771Context, IContractFactory {
@@ -41,11 +41,7 @@ contract TWStatelessFactory is Multicall, ERC2771Context, IContractFactory {
         }
     }
 
-    function _msgSender() internal view virtual override returns (address sender) {
+    function _msgSender() internal view virtual override(Multicall, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
-    }
-
-    function _msgData() internal view virtual override returns (bytes calldata) {
-        return ERC2771Context._msgData();
     }
 }

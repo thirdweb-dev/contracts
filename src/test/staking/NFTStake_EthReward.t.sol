@@ -4,7 +4,7 @@ pragma solidity ^0.8.0;
 import { NFTStake } from "contracts/prebuilts/staking/NFTStake.sol";
 
 // Test imports
-import "contracts/lib/TWStrings.sol";
+
 import "../utils/BaseTest.sol";
 
 contract NFTStakeEthRewardTest is BaseTest {
