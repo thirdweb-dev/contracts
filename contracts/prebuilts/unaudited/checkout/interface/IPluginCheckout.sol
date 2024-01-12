@@ -23,17 +23,7 @@ interface IPluginCheckout {
         bytes data;
     }
 
-    struct SwapOp {
-        address router;
-        address tokenOut;
-        address tokenIn;
-        uint256 amountIn;
-        uint256 amountInOffset;
-        bytes swapCalldata;
-        bytes quoteCalldata;
-    }
-
     function execute(UserOp calldata op) external;
 
-    function swapAndExecute(UserOp calldata op, SwapOp memory swapOp) external;
+    function swapAndExecute(UserOp calldata op, UserOp memory swapOp) external;
 }

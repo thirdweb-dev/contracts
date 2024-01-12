@@ -32,17 +32,17 @@ contract TargetCheckout is IPluginCheckout {
         isApprovedRouter[_swapRouter] = _toApprove;
     }
 
-    function execute(UserOp calldata op) external {
+    function execute(UserOp memory op) external {
         require(_canExecute(op, msg.sender), "Not authorized");
 
         _execute(op);
     }
 
-    function swapAndExecute(UserOp calldata op, SwapOp calldata swapOp) external {
-        require(isApprovedRouter[swapOp.router], "Invalid router address");
+    function swapAndExecute(UserOp memory op, UserOp memory swapOp) external {
+        require(isApprovedRouter[swapOp.target], "Invalid router address");
         require(_canExecute(op, msg.sender), "Not authorized");
 
-        _swap(swapOp);
+        _execute(swapOp);
         _execute(op);
     }
 
@@ -50,7 +50,7 @@ contract TargetCheckout is IPluginCheckout {
     // =============== Internal functions ==============
     // =================================================
 
-    function _execute(UserOp calldata op) internal {
+    function _execute(UserOp memory op) internal {
         bool success;
         if (op.currency == CurrencyTransferLib.NATIVE_TOKEN) {
             (success, ) = op.target.call{ value: op.valueToSend }(op.data);
@@ -65,32 +65,7 @@ contract TargetCheckout is IPluginCheckout {
         require(success, "Execution failed");
     }
 
-    function _swap(SwapOp memory _swapOp) internal {
-        address _tokenIn = _swapOp.tokenIn;
-        address _router = _swapOp.router;
-
-        // get quote for amountIn
-        (, bytes memory quoteData) = _router.staticcall(_swapOp.quoteCalldata);
-        uint256 amountIn;
-        uint256 offset = _swapOp.amountInOffset;
-
-        assembly {
-            amountIn := mload(add(add(quoteData, 32), offset))
-        }
-
-        // perform swap
-        bool success;
-        if (_tokenIn == CurrencyTransferLib.NATIVE_TOKEN) {
-            (success, ) = _router.call{ value: amountIn }(_swapOp.swapCalldata);
-        } else {
-            IERC20(_tokenIn).approve(_swapOp.router, amountIn);
-            (success, ) = _router.call(_swapOp.swapCalldata);
-        }
-
-        require(success, "Swap failed");
-    }
-
-    function _canExecute(UserOp calldata op, address caller) internal view returns (bool) {
+    function _canExecute(UserOp memory op, address caller) internal view returns (bool) {
         address owner = IPRBProxy(address(this)).owner();
         if (owner != caller) {
             bool permission = IPRBProxy(address(this)).registry().getPermissionByOwner({
