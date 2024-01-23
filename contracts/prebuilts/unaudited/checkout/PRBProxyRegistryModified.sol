@@ -84,7 +84,7 @@ contract PRBProxyRegistryModified is IPRBProxyRegistry {
         address envoy,
         address target
     ) external view returns (bool permission) {
-        permission = _permissions[owner][envoy][target] || _permissions[owner][envoy][MAGIC_TARGET];
+        permission = _permissions[owner][envoy][MAGIC_TARGET] || _permissions[owner][envoy][target];
     }
 
     /// @inheritdoc IPRBProxyRegistry
@@ -93,7 +93,7 @@ contract PRBProxyRegistryModified is IPRBProxyRegistry {
         address envoy,
         address target
     ) external view returns (bool permission) {
-        permission = _permissions[proxy.owner()][envoy][target] || _permissions[proxy.owner()][envoy][MAGIC_TARGET];
+        permission = _permissions[proxy.owner()][envoy][MAGIC_TARGET] || _permissions[proxy.owner()][envoy][target];
     }
 
     /// @inheritdoc IPRBProxyRegistry
