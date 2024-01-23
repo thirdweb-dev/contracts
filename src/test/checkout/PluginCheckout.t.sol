@@ -11,7 +11,7 @@ import { IPRBProxyPlugin } from "@prb/proxy/src/interfaces/IPRBProxyPlugin.sol";
 import { IPRBProxy } from "@prb/proxy/src/interfaces/IPRBProxy.sol";
 import { IPRBProxyRegistry } from "@prb/proxy/src/interfaces/IPRBProxyRegistry.sol";
 import { PRBProxy } from "@prb/proxy/src/PRBProxy.sol";
-import { PRBProxyRegistry } from "@prb/proxy/src/PRBProxyRegistry.sol";
+import { PRBProxyRegistryModified } from "contracts/prebuilts/unaudited/checkout/PRBProxyRegistryModified.sol";
 
 import "./IQuoter.sol";
 import "./ISwapRouter.sol";
@@ -19,7 +19,7 @@ import "./ISwapRouter.sol";
 contract PluginCheckoutTest is BaseTest {
     PluginCheckout internal checkoutPlugin;
     PRBProxy internal proxy;
-    PRBProxyRegistry internal proxyRegistry;
+    PRBProxyRegistryModified internal proxyRegistry;
 
     address internal owner;
     address internal alice;
@@ -72,7 +72,7 @@ contract PluginCheckoutTest is BaseTest {
 
         // deploy contracts
         checkoutPlugin = new PluginCheckout();
-        proxyRegistry = new PRBProxyRegistry();
+        proxyRegistry = new PRBProxyRegistryModified();
 
         vm.prank(owner);
         proxy = PRBProxy(
@@ -126,7 +126,7 @@ contract PluginCheckoutTest is BaseTest {
 
         // deploy checkout contracts
         checkoutPlugin = new PluginCheckout();
-        proxyRegistry = new PRBProxyRegistry();
+        proxyRegistry = new PRBProxyRegistryModified();
         vm.prank(owner);
         proxy = PRBProxy(
             payable(address(proxyRegistry.deployAndInstallPlugin(IPRBProxyPlugin(address(checkoutPlugin)))))
@@ -247,6 +247,51 @@ contract PluginCheckoutTest is BaseTest {
         assertEq(mainCurrency.balanceOf(address(saleRecipient)), _totalPrice - (_totalPrice * platformFeeBps) / 10_000);
     }
 
+    function test_executeOp_permittedEOA_magicAddress() public {
+        // deposit currencies in vault
+        vm.startPrank(owner);
+        mainCurrency.transfer(address(proxy), 10 ether);
+        proxyRegistry.setPermission(alice, proxyRegistry.MAGIC_TARGET(), true); // permit other EOA
+        vm.stopPrank();
+
+        // create user op -- claim tokens on targetDrop
+        uint256 _quantityToClaim = 5;
+        uint256 _totalPrice = 5 * 10; // claim condition price is set as 10 above in setup
+        DropERC721.AllowlistProof memory alp;
+        bytes memory callData = abi.encodeWithSelector(
+            IDrop.claim.selector,
+            receiver,
+            _quantityToClaim,
+            address(mainCurrency),
+            10,
+            alp,
+            ""
+        );
+        IPluginCheckout.UserOp memory op = IPluginCheckout.UserOp({
+            target: address(targetDrop),
+            currency: address(mainCurrency),
+            approvalRequired: true,
+            valueToSend: _totalPrice,
+            data: callData
+        });
+
+        // check state before
+        assertEq(targetDrop.balanceOf(receiver), 0);
+        assertEq(targetDrop.nextTokenIdToClaim(), 0);
+        assertEq(mainCurrency.balanceOf(address(proxy)), 10 ether);
+        assertEq(mainCurrency.balanceOf(address(saleRecipient)), 0);
+
+        // execute
+        vm.prank(alice); // non-owner EOA
+        PluginCheckout(address(proxy)).execute(op);
+
+        // check state after
+        assertEq(targetDrop.balanceOf(receiver), _quantityToClaim);
+        assertEq(targetDrop.nextTokenIdToClaim(), _quantityToClaim);
+        assertEq(mainCurrency.balanceOf(address(proxy)), 10 ether - _totalPrice);
+        assertEq(mainCurrency.balanceOf(address(saleRecipient)), _totalPrice - (_totalPrice * platformFeeBps) / 10_000);
+    }
+
     function test_revert_executeOp_notAuthorized() public {
         // create user op -- claim tokens on targetDrop
         bytes memory callData;
@@ -262,6 +307,28 @@ contract PluginCheckoutTest is BaseTest {
         vm.prank(random);
         vm.expectRevert("Not authorized");
         PluginCheckout(address(proxy)).execute(op);
+    }
+
+    function test_getPermissions_magicAddress() public {
+        // give all-target permission to alice
+        vm.startPrank(owner);
+        proxyRegistry.setPermission(alice, proxyRegistry.MAGIC_TARGET(), true); // permit other EOA
+        vm.stopPrank();
+
+        address randomTargetOne = address(0x7890);
+        address randomTargetTwo = address(0x4567);
+
+        // check permissions
+        assertTrue(proxyRegistry.getPermissionByOwner(owner, alice, randomTargetOne));
+        assertTrue(proxyRegistry.getPermissionByOwner(owner, alice, randomTargetTwo));
+        assertTrue(proxyRegistry.getPermissionByProxy(proxy, alice, randomTargetOne));
+        assertTrue(proxyRegistry.getPermissionByProxy(proxy, alice, randomTargetTwo));
+
+        // should be false for other address that doesn't have magic permission
+        assertFalse(proxyRegistry.getPermissionByOwner(owner, bob, randomTargetOne));
+        assertFalse(proxyRegistry.getPermissionByOwner(owner, bob, randomTargetTwo));
+        assertFalse(proxyRegistry.getPermissionByProxy(proxy, bob, randomTargetOne));
+        assertFalse(proxyRegistry.getPermissionByProxy(proxy, bob, randomTargetTwo));
     }
 
     function test_withdraw_owner() public {
