@@ -45,7 +45,7 @@ import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 contract Staking20Base is ContractMetadata, Multicall, Ownable, Staking20 {
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
-    address public rewardToken;
+    address public immutable rewardToken;
 
     /// @dev Total amount of reward tokens in the contract.
     uint256 private rewardTokenBalance;

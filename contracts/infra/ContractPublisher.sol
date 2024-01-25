@@ -30,7 +30,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
 
     /// @notice Whether the contract publisher is paused.
     bool public isPaused;
-    IContractPublisher public prevPublisher;
+    IContractPublisher public immutable prevPublisher;
 
     /*///////////////////////////////////////////////////////////////
                                 Mappings
