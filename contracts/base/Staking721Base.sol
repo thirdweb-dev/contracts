@@ -49,7 +49,7 @@ contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC
     address public rewardToken;
 
     /// @dev The address of the native token wrapper contract.
-    address public nativeTokenWrapper;
+    address public immutable nativeTokenWrapper;
 
     /// @dev Total amount of reward tokens in the contract.
     uint256 private rewardTokenBalance;
