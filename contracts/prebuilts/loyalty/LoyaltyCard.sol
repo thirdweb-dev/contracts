@@ -158,7 +158,10 @@ contract LoyaltyCard is
     }
 
     /// @dev Lets an account with MINTER_ROLE mint an NFT. Always mints 1 NFT.
-    function mintTo(address _to, string calldata _uri) external onlyRole(MINTER_ROLE) returns (uint256 tokenIdMinted) {
+    function mintTo(
+        address _to,
+        string calldata _uri
+    ) external onlyRole(MINTER_ROLE) nonReentrant returns (uint256 tokenIdMinted) {
         tokenIdMinted = _mintTo(_to, _uri);
         emit TokensMinted(_to, tokenIdMinted, _uri);
     }

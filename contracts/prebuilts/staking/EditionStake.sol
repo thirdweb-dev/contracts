@@ -115,7 +115,7 @@ contract EditionStake is
     }
 
     /// @dev Admin can withdraw excess reward tokens.
-    function withdrawRewardTokens(uint256 _amount) external {
+    function withdrawRewardTokens(uint256 _amount) external nonReentrant {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Not authorized");
 
         // to prevent locking of direct-transferred tokens

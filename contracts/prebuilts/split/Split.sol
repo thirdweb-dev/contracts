@@ -25,6 +25,7 @@ import "@openzeppelin/contracts-upgradeable/access/AccessControlEnumerableUpgrad
 // Utils
 import "../../extension/Multicall.sol";
 import "../../lib/FeeType.sol";
+import "../../extension/upgradeable/ReentrancyGuard.sol";
 
 contract Split is
     IThirdwebContract,
@@ -32,7 +33,8 @@ contract Split is
     Multicall,
     ERC2771ContextUpgradeable,
     AccessControlEnumerableUpgradeable,
-    PaymentSplitterUpgradeable
+    PaymentSplitterUpgradeable,
+    ReentrancyGuard
 {
     bytes32 private constant MODULE_TYPE = bytes32("Split");
     uint128 private constant VERSION = 1;
@@ -76,7 +78,7 @@ contract Split is
      * @dev Triggers a transfer to `account` of the amount of Ether they are owed, according to their percentage of the
      * total shares and their previous withdrawals.
      */
-    function release(address payable account) public virtual override {
+    function release(address payable account) public virtual override nonReentrant {
         uint256 payment = _release(account);
         require(payment != 0, "PaymentSplitter: account is not due payment");
     }
@@ -86,7 +88,7 @@ contract Split is
      * percentage of the total shares and their previous withdrawals. `token` must be the address of an IERC20
      * contract.
      */
-    function release(IERC20Upgradeable token, address account) public virtual override {
+    function release(IERC20Upgradeable token, address account) public virtual override nonReentrant {
         uint256 payment = _release(token, account);
         require(payment != 0, "PaymentSplitter: account is not due payment");
     }
@@ -134,7 +136,7 @@ contract Split is
     /**
      * @dev Release the owed amount of token to all of the payees.
      */
-    function distribute() public virtual {
+    function distribute() public virtual nonReentrant {
         uint256 count = payeeCount();
         for (uint256 i = 0; i < count; i++) {
             _release(payable(payee(i)));
@@ -144,7 +146,7 @@ contract Split is
     /**
      * @dev Release owed amount of the `token` to all of the payees.
      */
-    function distribute(IERC20Upgradeable token) public virtual {
+    function distribute(IERC20Upgradeable token) public virtual nonReentrant {
         uint256 count = payeeCount();
         for (uint256 i = 0; i < count; i++) {
             _release(token, payee(i));

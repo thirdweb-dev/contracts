@@ -7,7 +7,7 @@ import "./ERC20Vote.sol";
 
 import "../extension/PrimarySale.sol";
 import { SignatureMintERC20 } from "../extension/SignatureMintERC20.sol";
-
+import { ReentrancyGuard } from "../extension/upgradeable/ReentrancyGuard.sol";
 import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 /**
@@ -23,7 +23,7 @@ import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
  *
  */
 
-contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
+contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20, ReentrancyGuard {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -50,7 +50,7 @@ contract ERC20SignatureMintVote is ERC20Vote, PrimarySale, SignatureMintERC20 {
     function mintWithSignature(
         MintRequest calldata _req,
         bytes calldata _signature
-    ) external payable virtual returns (address signer) {
+    ) external payable virtual nonReentrant returns (address signer) {
         require(_req.quantity > 0, "Minting zero tokens.");
 
         // Verify and process payload.

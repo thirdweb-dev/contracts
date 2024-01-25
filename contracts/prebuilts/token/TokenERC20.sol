@@ -161,7 +161,7 @@ contract TokenERC20 is
      *
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mintTo(address to, uint256 amount) public virtual {
+    function mintTo(address to, uint256 amount) public virtual nonReentrant {
         require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         _mintTo(to, amount);
     }
