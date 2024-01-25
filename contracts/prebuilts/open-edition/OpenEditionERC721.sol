@@ -34,10 +34,12 @@ import "../../extension/Ownable.sol";
 import "../../extension/SharedMetadata.sol";
 import "../../extension/PermissionsEnumerable.sol";
 import "../../extension/Drop.sol";
+import "../../extension/PlatformFee.sol";
 
 contract OpenEditionERC721 is
     Initializable,
     ContractMetadata,
+    PlatformFee,
     Royalty,
     PrimarySale,
     Ownable,
@@ -77,7 +79,9 @@ contract OpenEditionERC721 is
         address[] memory _trustedForwarders,
         address _saleRecipient,
         address _royaltyRecipient,
-        uint128 _royaltyBps
+        uint128 _royaltyBps,
+        uint128 _platformFeeBps,
+        address _platformFeeRecipient
     ) external initializerERC721A initializer {
         bytes32 _transferRole = keccak256("TRANSFER_ROLE");
         bytes32 _minterRole = keccak256("MINTER_ROLE");
@@ -94,6 +98,7 @@ contract OpenEditionERC721 is
         _setupRole(_transferRole, _defaultAdmin);
         _setupRole(_transferRole, address(0));
 
+        _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
         _setupPrimarySaleRecipient(_saleRecipient);
 
@@ -149,6 +154,16 @@ contract OpenEditionERC721 is
         }
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
+        uint256 platformFees;
+        address platformFeeRecipient;
+
+        if (getPlatformFeeType() == IPlatformFee.PlatformFeeType.Flat) {
+            (platformFeeRecipient, platformFees) = getFlatPlatformFeeInfo();
+        } else {
+            (address recipient, uint16 platformFeeBps) = getPlatformFeeInfo();
+            platformFeeRecipient = recipient;
+            platformFees = ((totalPrice * platformFeeBps) / MAX_BPS);
+        }
 
         bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -160,7 +175,8 @@ contract OpenEditionERC721 is
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
     }
 
     /// @dev Transfers the NFTs being claimed.
@@ -200,6 +216,11 @@ contract OpenEditionERC721 is
     /// @dev Returns whether the shared metadata of tokens can be set in the given execution context.
     function _canSetSharedMetadata() internal view virtual override returns (bool) {
         return hasRole(minterRole, _msgSender());
+    }
+
+    /// @dev Checks whether platform fee info can be set in the given execution context.
+    function _canSetPlatformFeeInfo() internal view override returns (bool) {
+        return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
     /*///////////////////////////////////////////////////////////////

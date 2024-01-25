@@ -26,6 +26,8 @@ contract OpenEditionERC721Test_initialize is BaseTest {
         address _saleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps,
+        uint128 _platformFeeBps,
+        address _platformFeeRecipient,
         address _imp
     ) public {
         vm.prank(deployer);
@@ -43,7 +45,9 @@ contract OpenEditionERC721Test_initialize is BaseTest {
                             _trustedForwarders,
                             _saleRecipient,
                             _royaltyRecipient,
-                            _royaltyBps
+                            _royaltyBps,
+                            _platformFeeBps,
+                            _platformFeeRecipient
                         )
                     )
                 )
@@ -70,6 +74,8 @@ contract OpenEditionERC721Test_initialize is BaseTest {
             saleRecipient,
             royaltyRecipient,
             royaltyBps,
+            platformFeeBps,
+            platformFeeRecipient,
             openEditionImpl
         );
 
@@ -111,6 +117,8 @@ contract OpenEditionERC721Test_initialize is BaseTest {
             saleRecipient,
             royaltyRecipient,
             _royaltyBps,
+            platformFeeBps,
+            platformFeeRecipient,
             openEditionImpl
         );
     }
@@ -127,6 +135,8 @@ contract OpenEditionERC721Test_initialize is BaseTest {
             saleRecipient,
             royaltyRecipient,
             royaltyBps,
+            platformFeeBps,
+            platformFeeRecipient,
             openEditionImpl
         );
     }
@@ -143,6 +153,8 @@ contract OpenEditionERC721Test_initialize is BaseTest {
             saleRecipient,
             royaltyRecipient,
             royaltyBps,
+            platformFeeBps,
+            platformFeeRecipient,
             openEditionImpl
         );
     }
@@ -160,6 +172,8 @@ contract OpenEditionERC721Test_initialize is BaseTest {
             saleRecipient,
             royaltyRecipient,
             royaltyBps,
+            platformFeeBps,
+            platformFeeRecipient,
             openEditionImpl
         );
     }
@@ -177,6 +191,8 @@ contract OpenEditionERC721Test_initialize is BaseTest {
             saleRecipient,
             royaltyRecipient,
             royaltyBps,
+            platformFeeBps,
+            platformFeeRecipient,
             openEditionImpl
         );
     }
@@ -194,6 +210,8 @@ contract OpenEditionERC721Test_initialize is BaseTest {
             saleRecipient,
             royaltyRecipient,
             royaltyBps,
+            platformFeeBps,
+            platformFeeRecipient,
             openEditionImpl
         );
     }
@@ -211,6 +229,8 @@ contract OpenEditionERC721Test_initialize is BaseTest {
             saleRecipient,
             royaltyRecipient,
             royaltyBps,
+            platformFeeBps,
+            platformFeeRecipient,
             openEditionImpl
         );
     }
@@ -227,6 +247,8 @@ contract OpenEditionERC721Test_initialize is BaseTest {
             saleRecipient,
             royaltyRecipient,
             royaltyBps,
+            platformFeeBps,
+            platformFeeRecipient,
             openEditionImpl
         );
     }
