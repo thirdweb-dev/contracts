@@ -173,6 +173,10 @@ contract TokenERC1155 is
 
         _setupRole(METADATA_ROLE, _defaultAdmin);
         _setRoleAdmin(METADATA_ROLE, METADATA_ROLE);
+
+        emit PrimarySaleRecipientUpdated(_primarySaleRecipient);
+        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
 
     ///     =====   Public functions  =====

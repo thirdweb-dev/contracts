@@ -154,6 +154,10 @@ contract TokenERC721 is
 
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
+
+        emit PrimarySaleRecipientUpdated(_saleRecipient);
+        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
+        emit DefaultRoyalty(_royaltyRecipient, _royaltyBps);
     }
 
     ///     =====   Public functions  =====

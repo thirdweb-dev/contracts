@@ -46,10 +46,10 @@ import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 contract Staking721Base is ContractMetadata, Multicall, Ownable, Staking721, ERC165, IERC721Receiver {
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
-    address public rewardToken;
+    address public immutable rewardToken;
 
     /// @dev The address of the native token wrapper contract.
-    address public nativeTokenWrapper;
+    address public immutable nativeTokenWrapper;
 
     /// @dev Total amount of reward tokens in the contract.
     uint256 private rewardTokenBalance;

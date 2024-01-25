@@ -112,6 +112,9 @@ contract TokenERC20 is
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
+
+        emit PrimarySaleRecipientUpdated(_primarySaleRecipient);
+        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Returns the module type of the contract.
