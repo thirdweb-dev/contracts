@@ -7,7 +7,7 @@ import "./ERC1155Base.sol";
 
 import "../extension/PrimarySale.sol";
 import "../extension/SignatureMintERC1155.sol";
-
+import { ReentrancyGuard } from "../extension/upgradeable/ReentrancyGuard.sol";
 import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 /**
@@ -23,7 +23,7 @@ import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
  *
  */
 
-contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 {
+contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155, ReentrancyGuard {
     /*//////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
@@ -52,7 +52,7 @@ contract ERC1155SignatureMint is ERC1155Base, PrimarySale, SignatureMintERC1155 
     function mintWithSignature(
         MintRequest calldata _req,
         bytes calldata _signature
-    ) external payable virtual override returns (address signer) {
+    ) external payable virtual override nonReentrant returns (address signer) {
         require(_req.quantity > 0, "Minting zero tokens.");
 
         uint256 tokenIdToMint;

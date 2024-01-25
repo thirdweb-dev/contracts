@@ -211,7 +211,7 @@ contract TokenERC1155 is
         uint256 _tokenId,
         string calldata _uri,
         uint256 _amount
-    ) external onlyRole(MINTER_ROLE) {
+    ) external nonReentrant onlyRole(MINTER_ROLE) {
         uint256 tokenIdToMint;
         if (_tokenId == type(uint256).max) {
             tokenIdToMint = nextTokenIdToMint;
