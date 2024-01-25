@@ -46,7 +46,7 @@ import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
 
 contract Staking1155Base is ContractMetadata, Multicall, Ownable, Staking1155, ERC165, IERC1155Receiver {
     /// @dev ERC20 Reward Token address. See {_mintRewards} below.
-    address public rewardToken;
+    address public immutable rewardToken;
 
     /// @dev The address of the native token wrapper contract.
     address internal immutable nativeTokenWrapper;
