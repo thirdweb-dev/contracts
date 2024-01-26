@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { OpenEditionERC721 } from "contracts/prebuilts/open-edition/OpenEditionERC721.sol";
+import { OpenEditionERC721FlatFee } from "contracts/prebuilts/open-edition/OpenEditionERC721FlatFee.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "src/test/utils/BaseTest.sol";
 
-contract OpenEditionERC721Harness is OpenEditionERC721 {
+contract OpenEditionERC721FlatFeeHarness is OpenEditionERC721FlatFee {
     function collectPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
@@ -18,8 +18,8 @@ contract OpenEditionERC721Harness is OpenEditionERC721 {
     }
 }
 
-contract OpenEditionERC721Test_collectPrice is BaseTest {
-    OpenEditionERC721Harness public openEdition;
+contract OpenEditionERC721FlatFeeTest_collectPrice is BaseTest {
+    OpenEditionERC721FlatFeeHarness public openEdition;
 
     address private openEditionImpl;
 
@@ -31,14 +31,14 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
 
     function setUp() public override {
         super.setUp();
-        openEditionImpl = address(new OpenEditionERC721Harness());
+        openEditionImpl = address(new OpenEditionERC721FlatFeeHarness());
         vm.prank(deployer);
-        openEdition = OpenEditionERC721Harness(
+        openEdition = OpenEditionERC721FlatFeeHarness(
             address(
                 new TWProxy(
                     openEditionImpl,
                     abi.encodeCall(
-                        OpenEditionERC721.initialize,
+                        OpenEditionERC721FlatFee.initialize,
                         (
                             deployer,
                             NAME,
@@ -47,7 +47,9 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
                             forwarders(),
                             saleRecipient,
                             royaltyRecipient,
-                            royaltyBps
+                            royaltyBps,
+                            platformFeeBps,
+                            platformFeeRecipient
                         )
                     )
                 )
@@ -131,7 +133,8 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
 
         uint256 afterBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
 
-        uint256 primarySaleRecipientVal = msgValue;
+        uint256 platformFeeVal = (msgValue * platformFeeBps) / 10_000;
+        uint256 primarySaleRecipientVal = msgValue - platformFeeVal;
 
         assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
     }
@@ -155,7 +158,8 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
 
         uint256 afterBalancePrimarySaleRecipient = erc20.balanceOf(primarySaleRecipient);
 
-        uint256 primarySaleRecipientVal = 1 ether;
+        uint256 platformFeeVal = (1 ether * platformFeeBps) / 10_000;
+        uint256 primarySaleRecipientVal = 1 ether - platformFeeVal;
 
         assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
     }
@@ -176,7 +180,8 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
 
         uint256 afterBalancePrimarySaleRecipient = erc20.balanceOf(storedPrimarySaleRecipient);
 
-        uint256 primarySaleRecipientVal = 1 ether;
+        uint256 platformFeeVal = (1 ether * platformFeeBps) / 10_000;
+        uint256 primarySaleRecipientVal = 1 ether - platformFeeVal;
 
         assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
     }
@@ -196,7 +201,8 @@ contract OpenEditionERC721Test_collectPrice is BaseTest {
 
         uint256 afterBalancePrimarySaleRecipient = address(storedPrimarySaleRecipient).balance;
 
-        uint256 primarySaleRecipientVal = msgValue;
+        uint256 platformFeeVal = (msgValue * platformFeeBps) / 10_000;
+        uint256 primarySaleRecipientVal = msgValue - platformFeeVal;
 
         assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
     }

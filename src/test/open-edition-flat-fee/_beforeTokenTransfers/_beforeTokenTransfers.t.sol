@@ -1,33 +1,33 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { OpenEditionERC721 } from "contracts/prebuilts/open-edition/OpenEditionERC721.sol";
+import { OpenEditionERC721FlatFee } from "contracts/prebuilts/open-edition/OpenEditionERC721FlatFee.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "src/test/utils/BaseTest.sol";
 
-contract OpenEditionERC721Harness is OpenEditionERC721 {
+contract OpenEditionERC721FlatFeeHarness is OpenEditionERC721FlatFee {
     function beforeTokenTransfers(address from, address to, uint256 startTokenId_, uint256 quantity) public {
         _beforeTokenTransfers(from, to, startTokenId_, quantity);
     }
 }
 
-contract OpenEditionERC721Test_beforeTokenTransfers is BaseTest {
-    OpenEditionERC721Harness public openEdition;
+contract OpenEditionERC721FlatFeeTest_beforeTokenTransfers is BaseTest {
+    OpenEditionERC721FlatFeeHarness public openEdition;
 
     address private openEditionImpl;
 
     function setUp() public override {
         super.setUp();
-        openEditionImpl = address(new OpenEditionERC721Harness());
+        openEditionImpl = address(new OpenEditionERC721FlatFeeHarness());
         vm.prank(deployer);
-        openEdition = OpenEditionERC721Harness(
+        openEdition = OpenEditionERC721FlatFeeHarness(
             address(
                 new TWProxy(
                     openEditionImpl,
                     abi.encodeCall(
-                        OpenEditionERC721.initialize,
+                        OpenEditionERC721FlatFee.initialize,
                         (
                             deployer,
                             NAME,
@@ -36,7 +36,9 @@ contract OpenEditionERC721Test_beforeTokenTransfers is BaseTest {
                             forwarders(),
                             saleRecipient,
                             royaltyRecipient,
-                            royaltyBps
+                            royaltyBps,
+                            platformFeeBps,
+                            platformFeeRecipient
                         )
                     )
                 )

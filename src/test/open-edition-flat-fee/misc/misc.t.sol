@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { IERC721AUpgradeable, OpenEditionERC721, ISharedMetadata } from "contracts/prebuilts/open-edition/OpenEditionERC721.sol";
+import { IERC721AUpgradeable, OpenEditionERC721FlatFee, ISharedMetadata } from "contracts/prebuilts/open-edition/OpenEditionERC721FlatFee.sol";
 import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRenderer.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
@@ -9,15 +9,15 @@ import { TWProxy } from "contracts/infra/TWProxy.sol";
 import "src/test/utils/BaseTest.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
 
-contract HarnessOpenEditionERC721 is OpenEditionERC721 {
+contract HarnessOpenEditionERC721FlatFee is OpenEditionERC721FlatFee {
     function msgData() public view returns (bytes memory) {
         return _msgData();
     }
 }
 
-contract OpenEditionERC721Test_misc is BaseTest {
-    OpenEditionERC721 public openEdition;
-    HarnessOpenEditionERC721 public harnessOpenEdition;
+contract OpenEditionERC721FlatFeeTest_misc is BaseTest {
+    OpenEditionERC721FlatFee public openEdition;
+    HarnessOpenEditionERC721FlatFee public harnessOpenEdition;
 
     address private openEditionImpl;
     address private harnessImpl;
@@ -28,14 +28,14 @@ contract OpenEditionERC721Test_misc is BaseTest {
 
     function setUp() public override {
         super.setUp();
-        openEditionImpl = address(new OpenEditionERC721());
+        openEditionImpl = address(new OpenEditionERC721FlatFee());
         vm.prank(deployer);
-        openEdition = OpenEditionERC721(
+        openEdition = OpenEditionERC721FlatFee(
             address(
                 new TWProxy(
                     openEditionImpl,
                     abi.encodeCall(
-                        OpenEditionERC721.initialize,
+                        OpenEditionERC721FlatFee.initialize,
                         (
                             deployer,
                             NAME,
@@ -44,7 +44,9 @@ contract OpenEditionERC721Test_misc is BaseTest {
                             forwarders(),
                             saleRecipient,
                             royaltyRecipient,
-                            royaltyBps
+                            royaltyBps,
+                            platformFeeBps,
+                            platformFeeRecipient
                         )
                     )
                 )
@@ -60,13 +62,13 @@ contract OpenEditionERC721Test_misc is BaseTest {
     }
 
     function deployHarness() internal {
-        harnessImpl = address(new HarnessOpenEditionERC721());
-        harnessOpenEdition = HarnessOpenEditionERC721(
+        harnessImpl = address(new HarnessOpenEditionERC721FlatFee());
+        harnessOpenEdition = HarnessOpenEditionERC721FlatFee(
             address(
                 new TWProxy(
                     harnessImpl,
                     abi.encodeCall(
-                        OpenEditionERC721.initialize,
+                        OpenEditionERC721FlatFee.initialize,
                         (
                             deployer,
                             NAME,
@@ -75,7 +77,9 @@ contract OpenEditionERC721Test_misc is BaseTest {
                             forwarders(),
                             saleRecipient,
                             royaltyRecipient,
-                            royaltyBps
+                            royaltyBps,
+                            platformFeeBps,
+                            platformFeeRecipient
                         )
                     )
                 )
@@ -103,7 +107,7 @@ contract OpenEditionERC721Test_misc is BaseTest {
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
-        OpenEditionERC721.AllowlistProof memory alp;
+        OpenEditionERC721FlatFee.AllowlistProof memory alp;
         alp.proof = proofs;
         alp.quantityLimitPerWallet = 300;
         alp.pricePerToken = 0;
@@ -111,7 +115,7 @@ contract OpenEditionERC721Test_misc is BaseTest {
 
         vm.warp(1);
 
-        OpenEditionERC721.ClaimCondition[] memory conditions = new OpenEditionERC721.ClaimCondition[](1);
+        OpenEditionERC721FlatFee.ClaimCondition[] memory conditions = new OpenEditionERC721FlatFee.ClaimCondition[](1);
         conditions[0].maxClaimableSupply = 500;
         conditions[0].quantityLimitPerWallet = 10;
         conditions[0].merkleRoot = root;

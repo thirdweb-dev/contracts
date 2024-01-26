@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { OpenEditionERC721, IERC721AUpgradeable } from "contracts/prebuilts/open-edition/OpenEditionERC721.sol";
+import { OpenEditionERC721FlatFee, IERC721AUpgradeable } from "contracts/prebuilts/open-edition/OpenEditionERC721FlatFee.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
 import "src/test/utils/BaseTest.sol";
 
-contract OpenEditionERC721Harness is OpenEditionERC721 {
+contract OpenEditionERC721FlatFeeHarness is OpenEditionERC721FlatFee {
     function transferTokensOnClaim(address _to, uint256 quantityBeingClaimed) public {
         _transferTokensOnClaim(_to, quantityBeingClaimed);
     }
@@ -21,8 +21,8 @@ contract MockERC721Receiver {
 
 contract MockERC721NotReceiver {}
 
-contract OpenEditionERC721Test_transferTokensOnClaim is BaseTest {
-    OpenEditionERC721Harness public openEdition;
+contract OpenEditionERC721FlatFeeTest_transferTokensOnClaim is BaseTest {
+    OpenEditionERC721FlatFeeHarness public openEdition;
 
     MockERC721NotReceiver private notReceiver;
     MockERC721Receiver private receiver;
@@ -31,14 +31,14 @@ contract OpenEditionERC721Test_transferTokensOnClaim is BaseTest {
 
     function setUp() public override {
         super.setUp();
-        openEditionImpl = address(new OpenEditionERC721Harness());
+        openEditionImpl = address(new OpenEditionERC721FlatFeeHarness());
         vm.prank(deployer);
-        openEdition = OpenEditionERC721Harness(
+        openEdition = OpenEditionERC721FlatFeeHarness(
             address(
                 new TWProxy(
                     openEditionImpl,
                     abi.encodeCall(
-                        OpenEditionERC721.initialize,
+                        OpenEditionERC721FlatFee.initialize,
                         (
                             deployer,
                             NAME,
@@ -47,7 +47,9 @@ contract OpenEditionERC721Test_transferTokensOnClaim is BaseTest {
                             forwarders(),
                             saleRecipient,
                             royaltyRecipient,
-                            royaltyBps
+                            royaltyBps,
+                            platformFeeBps,
+                            platformFeeRecipient
                         )
                     )
                 )
