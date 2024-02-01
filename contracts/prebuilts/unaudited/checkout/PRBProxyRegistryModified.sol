@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.18;
 
-import { IPRBProxy } from "@prb/proxy/src/interfaces/IPRBProxy.sol";
-import { IPRBProxyPlugin } from "@prb/proxy/src/interfaces/IPRBProxyPlugin.sol";
-import { IPRBProxyRegistry } from "@prb/proxy/src/interfaces/IPRBProxyRegistry.sol";
-import { PRBProxy } from "@prb/proxy/src/PRBProxy.sol";
+import { IPRBProxy } from "./interfaces/IPRBProxy.sol";
+import { IPRBProxyPlugin } from "./interfaces/IPRBProxyPlugin.sol";
+import { IPRBProxyRegistry } from "./interfaces/IPRBProxyRegistry.sol";
+import { PRBProxy } from "./PRBProxy.sol";
 
 /// @author Modified from prb-proxy (https://github.com/PaulRBerg/prb-proxy/blob/main/src/PRBProxyRegistry.sol)
 /// @title PRBProxyRegistry

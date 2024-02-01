@@ -5,7 +5,7 @@ import "../../../lib/CurrencyTransferLib.sol";
 import "../../../eip/interface/IERC20.sol";
 
 import { IPRBProxy } from "@prb/proxy/src/interfaces/IPRBProxy.sol";
-import "./interface/IPluginCheckout.sol";
+import "./interfaces/IPluginCheckout.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |

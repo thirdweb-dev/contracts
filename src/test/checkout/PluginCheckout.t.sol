@@ -7,10 +7,10 @@ import { IDrop } from "contracts/extension/interface/IDrop.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 import { PluginCheckout, IPluginCheckout } from "contracts/prebuilts/unaudited/checkout/PluginCheckout.sol";
-import { IPRBProxyPlugin } from "@prb/proxy/src/interfaces/IPRBProxyPlugin.sol";
-import { IPRBProxy } from "@prb/proxy/src/interfaces/IPRBProxy.sol";
-import { IPRBProxyRegistry } from "@prb/proxy/src/interfaces/IPRBProxyRegistry.sol";
-import { PRBProxy } from "@prb/proxy/src/PRBProxy.sol";
+import { IPRBProxyPlugin } from "contracts/prebuilts/unaudited/checkout/interfaces/IPRBProxyPlugin.sol";
+import { IPRBProxy } from "contracts/prebuilts/unaudited/checkout/interfaces/IPRBProxy.sol";
+import { IPRBProxyRegistry } from "contracts/prebuilts/unaudited/checkout/interfaces/IPRBProxyRegistry.sol";
+import { PRBProxy } from "contracts/prebuilts/unaudited/checkout/PRBProxy.sol";
 import { PRBProxyRegistryModified } from "contracts/prebuilts/unaudited/checkout/PRBProxyRegistryModified.sol";
 
 import "./IQuoter.sol";
