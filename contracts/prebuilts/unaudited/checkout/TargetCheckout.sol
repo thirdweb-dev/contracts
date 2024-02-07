@@ -52,17 +52,28 @@ contract TargetCheckout is IPluginCheckout {
 
     function _execute(UserOp memory op) internal {
         bool success;
+        bytes memory response;
         if (op.currency == CurrencyTransferLib.NATIVE_TOKEN) {
-            (success, ) = op.target.call{ value: op.valueToSend }(op.data);
+            (success, response) = op.target.call{ value: op.valueToSend }(op.data);
         } else {
             if (op.valueToSend != 0 && op.approvalRequired) {
                 IERC20(op.currency).approve(op.target, op.valueToSend);
             }
 
-            (success, ) = op.target.call(op.data);
+            (success, response) = op.target.call(op.data);
         }
 
-        require(success, "Execution failed");
+        if (!success) {
+            // If there is return data, the delegate call reverted with a reason or a custom error, which we bubble up.
+            if (response.length > 0) {
+                assembly {
+                    let returndata_size := mload(response)
+                    revert(add(32, response), returndata_size)
+                }
+            } else {
+                revert("Checkout: Execution Failed");
+            }
+        }
     }
 
     function _canExecute(UserOp memory op, address caller) internal view returns (bool) {
