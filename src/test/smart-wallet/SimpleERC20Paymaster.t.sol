@@ -17,6 +17,8 @@ contract SimpleERC20PaymasterTest is BaseTest {
     function setUp() public override {
         super.setUp();
 
+        vm.prank(deployer);
+
         accountAdmin = vm.addr(accountAdminPKey);
         vm.deal(accountAdmin, 100 ether);
         accountSigner = vm.addr(accountSignerPKey);
@@ -31,11 +33,17 @@ contract SimpleERC20PaymasterTest is BaseTest {
         vm.label(address(erc20), "Token");
     }
 
-    function test_placeholder() public {
+    function test_postDeploy() public {
         address currentToken = address(paymaster.token());
         uint256 currentTokenPricePerOp = paymaster.tokenPricePerOp();
 
         assertEq(currentToken, address(erc20));
         assertEq(currentTokenPricePerOp, 1e18);
+    }
+
+    function test_updateTokenPrice() public {
+        paymaster.setTokenPricePerOp(2e18);
+        uint256 currentTokenPricePerOp = paymaster.tokenPricePerOp();
+        assertEq(currentTokenPricePerOp, 2e18);
     }
 }
