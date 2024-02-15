@@ -34,7 +34,7 @@ contract SimpleERC20Paymaster is BasePaymaster {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev The ERC20 token used for payment
-    IERC20 public token;
+    IERC20 public immutable token;
 
     /// @dev The price per operation in the specified ERC20 tokens (in wei)
     uint256 public tokenPricePerOp;
@@ -47,6 +47,11 @@ contract SimpleERC20Paymaster is BasePaymaster {
      * @dev Emitted when a user operation is successfully sponsored, indicating the actual token cost and gas cost.
      */
     event UserOperationSponsored(address indexed user, uint256 actualTokenNeeded, uint256 actualGasCost);
+
+    /**
+     * @dev Emitted when the token price per operation is updated.
+     */
+    event TokenPriceUpdated(uint256 oldPrice, uint256 newPrice);
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
@@ -72,6 +77,7 @@ contract SimpleERC20Paymaster is BasePaymaster {
      * @param _tokenPricePerOp The new price per operation in tokens.
      */
     function setTokenPricePerOp(uint256 _tokenPricePerOp) external onlyOwner {
+        emit TokenPriceUpdated(tokenPricePerOp, _tokenPricePerOp);
         tokenPricePerOp = _tokenPricePerOp;
     }
 
