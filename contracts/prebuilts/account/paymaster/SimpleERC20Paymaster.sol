@@ -29,13 +29,28 @@ contract SimpleERC20Paymaster is BasePaymaster {
     using UserOperationLib for UserOperation;
     using SafeERC20 for IERC20;
 
-    IERC20 public token; // The ERC20 token used for payment
-    uint256 public tokenPricePerOp; // The price per operation in the specified ERC20 tokens (in wei)
+    /*///////////////////////////////////////////////////////////////
+                            State Variables
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev The ERC20 token used for payment
+    IERC20 public token;
+
+    /// @dev The price per operation in the specified ERC20 tokens (in wei)
+    uint256 public tokenPricePerOp;
+
+    /*///////////////////////////////////////////////////////////////
+                            Events
+    //////////////////////////////////////////////////////////////*/
 
     /**
      * @dev Emitted when a user operation is successfully sponsored, indicating the actual token cost and gas cost.
      */
     event UserOperationSponsored(address indexed user, uint256 actualTokenNeeded, uint256 actualGasCost);
+
+    /*///////////////////////////////////////////////////////////////
+                            Constructor
+    //////////////////////////////////////////////////////////////*/
 
     /**
      * @dev Initializes the paymaster contract with the entry point, token, and price per operation.
@@ -47,6 +62,10 @@ contract SimpleERC20Paymaster is BasePaymaster {
         token = _token;
         tokenPricePerOp = _tokenPricePerOp;
     }
+
+    /*///////////////////////////////////////////////////////////////
+                            Owner Functions
+    //////////////////////////////////////////////////////////////*/
 
     /**
      * @dev Allows the contract owner to update the token price per operation.
@@ -64,6 +83,10 @@ contract SimpleERC20Paymaster is BasePaymaster {
     function withdrawToken(address to, uint256 amount) external onlyOwner {
         SafeTransferLib.safeTransfer(address(token), to, amount);
     }
+
+    /*///////////////////////////////////////////////////////////////
+                            Paymaster Functions
+    //////////////////////////////////////////////////////////////*/
 
     /**
      * @dev Validates the paymaster user operation before execution, ensuring sufficient payment and proper data format.
