@@ -17,7 +17,7 @@ contract SimpleERC20PaymasterTest is BaseTest {
     function setUp() public override {
         super.setUp();
 
-        vm.prank(deployer);
+        vm.startPrank(deployer);
 
         accountAdmin = vm.addr(accountAdminPKey);
         vm.deal(accountAdmin, 100 ether);
@@ -31,19 +31,47 @@ contract SimpleERC20PaymasterTest is BaseTest {
         vm.label(address(entryPoint), "EntryPoint");
         vm.label(address(paymaster), "Paymaster");
         vm.label(address(erc20), "Token");
+
+        vm.stopPrank();
     }
 
     function test_postDeploy() public {
         address currentToken = address(paymaster.token());
         uint256 currentTokenPricePerOp = paymaster.tokenPricePerOp();
+        address owner = paymaster.owner();
 
         assertEq(currentToken, address(erc20));
         assertEq(currentTokenPricePerOp, 1e18);
+        assertEq(owner, deployer);
     }
 
     function test_updateTokenPrice() public {
+        vm.startPrank(deployer);
+
         paymaster.setTokenPricePerOp(2e18);
         uint256 currentTokenPricePerOp = paymaster.tokenPricePerOp();
+
         assertEq(currentTokenPricePerOp, 2e18);
+
+        vm.stopPrank();
+    }
+
+    function test_withdraw() public {
+        vm.startPrank(deployer);
+
+        assertEq(erc20.balanceOf(address(paymaster)), 0);
+        assertEq(erc20.balanceOf(deployer), 0);
+
+        erc20.mint(address(paymaster), 1e18);
+
+        assertEq(erc20.balanceOf(address(paymaster)), 1e18);
+        assertEq(erc20.balanceOf(deployer), 0);
+
+        paymaster.withdrawToken(deployer, 1e18);
+
+        assertEq(erc20.balanceOf(address(paymaster)), 0);
+        assertEq(erc20.balanceOf(deployer), 1e18);
+
+        vm.stopPrank();
     }
 }
