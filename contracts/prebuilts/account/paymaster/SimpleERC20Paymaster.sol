@@ -18,7 +18,8 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 
 //  ==========  Internal imports    ==========
 import { SafeTransferLib } from "../utils/SafeTransferLib.sol";
-import { BasePaymaster } from "../utils/BasePaymaster.sol";
+import { BasePaymaster, UserOperation } from "../utils/BasePaymaster.sol";
+import { IEntryPoint } from "../interface/IEntryPoint.sol";
 
 /**
  * @title SimpleERC20Paymaster
@@ -26,7 +27,6 @@ import { BasePaymaster } from "../utils/BasePaymaster.sol";
  * It inherits from the BasePaymaster contract and implements specific logic to handle ERC20 payments for transactions.
  */
 contract SimpleERC20Paymaster is BasePaymaster {
-    using UserOperationLib for UserOperation;
     using SafeERC20 for IERC20;
 
     /*///////////////////////////////////////////////////////////////
@@ -92,7 +92,6 @@ contract SimpleERC20Paymaster is BasePaymaster {
      * @dev Validates the paymaster user operation before execution, ensuring sufficient payment and proper data format.
      * @param userOp The user operation to validate.
      * @param context Additional context for validation (unused).
-     * @param validationData Additional data for validation (unused).
      * @return context A bytes array for the operation context.
      * @return validationResult The result of the validation, 0 if successful.
      */
