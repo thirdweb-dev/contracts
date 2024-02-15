@@ -19,7 +19,7 @@ import { SafeERC20 } from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.s
 //  ==========  Internal imports    ==========
 import { SafeTransferLib } from "../utils/SafeTransferLib.sol";
 import { BasePaymaster, UserOperation } from "../utils/BasePaymaster.sol";
-import { IEntryPoint } from "../interface/IEntryPoint.sol";
+import { IEntryPoint } from "../interface/IEntrypoint.sol";
 
 /**
  * @title SimpleERC20Paymaster
