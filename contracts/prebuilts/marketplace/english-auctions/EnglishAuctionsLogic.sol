@@ -88,7 +88,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     /// @notice Auction ERC721 or ERC1155 NFTs.
     function createAuction(
         AuctionParameters calldata _params
-    ) external onlyListerRole onlyAssetRole(_params.assetContract) returns (uint256 auctionId) {
+    ) external onlyListerRole onlyAssetRole(_params.assetContract) nonReentrant returns (uint256 auctionId) {
         auctionId = _getNextAuctionId();
         address auctionCreator = _msgSender();
         TokenType tokenType = _getTokenType(_params.assetContract);
@@ -181,7 +181,9 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     }
 
     /// @dev Cancels an auction.
-    function cancelAuction(uint256 _auctionId) external onlyExistingAuction(_auctionId) onlyAuctionCreator(_auctionId) {
+    function cancelAuction(
+        uint256 _auctionId
+    ) external onlyExistingAuction(_auctionId) onlyAuctionCreator(_auctionId) nonReentrant {
         Auction memory _targetAuction = _englishAuctionsStorage().auctions[_auctionId];
         Bid memory _winningBid = _englishAuctionsStorage().winningBid[_auctionId];
 

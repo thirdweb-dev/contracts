@@ -15,7 +15,7 @@ abstract contract Staking721 is ReentrancyGuard, IStaking721 {
     //////////////////////////////////////////////////////////////*/
 
     ///@dev Address of ERC721 NFT contract -- staked tokens belong to this contract.
-    address public stakingToken;
+    address public immutable stakingToken;
 
     /// @dev Flag to check direct transfers of staking tokens.
     uint8 internal isStaking = 1;

@@ -112,6 +112,9 @@ contract TokenERC20 is
         _setupRole(TRANSFER_ROLE, _defaultAdmin);
         _setupRole(MINTER_ROLE, _defaultAdmin);
         _setupRole(TRANSFER_ROLE, address(0));
+
+        emit PrimarySaleRecipientUpdated(_primarySaleRecipient);
+        emit PlatformFeeInfoUpdated(_platformFeeRecipient, _platformFeeBps);
     }
 
     /// @dev Returns the module type of the contract.
@@ -158,7 +161,7 @@ contract TokenERC20 is
      *
      * - the caller must have the `MINTER_ROLE`.
      */
-    function mintTo(address to, uint256 amount) public virtual {
+    function mintTo(address to, uint256 amount) public virtual nonReentrant {
         require(hasRole(MINTER_ROLE, _msgSender()), "not minter.");
         _mintTo(to, amount);
     }

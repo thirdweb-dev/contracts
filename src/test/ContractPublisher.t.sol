@@ -232,18 +232,42 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
     //     );
     // }
 
-    function test_unpublish() public {
+    function test_unpublish_state() public {
         string memory contractId = "MyContract";
 
-        vm.prank(publisher);
+        vm.startPrank(publisher);
         byoc.publishContract(
             publisher,
             contractId,
-            publishMetadataUri,
+            "publish URI 1",
             compilerMetadataUri,
             keccak256(type(MockCustomContract).creationCode),
             address(0)
         );
+        byoc.publishContract(
+            publisher,
+            contractId,
+            "publish URI 2",
+            compilerMetadataUri,
+            keccak256(type(MockCustomContract).creationCode),
+            address(0)
+        );
+        byoc.publishContract(
+            publisher,
+            contractId,
+            "publish URI 3",
+            compilerMetadataUri,
+            keccak256(type(MockCustomContract).creationCode),
+            address(0)
+        );
+
+        vm.stopPrank();
+
+        IContractPublisher.CustomContractInstance[] memory allCustomContractsBefore = byoc.getPublishedContractVersions(
+            publisher,
+            contractId
+        );
+        assertEq(allCustomContractsBefore.length, 3);
 
         vm.prank(publisher);
         byoc.unpublishContract(publisher, contractId);
@@ -257,6 +281,36 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
         assertEq(customContract.publishMetadataUri, "");
         assertEq(customContract.bytecodeHash, bytes32(0));
         assertEq(customContract.implementation, address(0));
+
+        IContractPublisher.CustomContractInstance[] memory allCustomContracts = byoc.getPublishedContractVersions(
+            publisher,
+            contractId
+        );
+
+        assertEq(allCustomContracts.length, 0);
+
+        vm.prank(publisher);
+        byoc.publishContract(
+            publisher,
+            contractId,
+            "publish URI 4",
+            compilerMetadataUri,
+            keccak256(type(MockCustomContract).creationCode),
+            address(0)
+        );
+
+        IContractPublisher.CustomContractInstance memory customContractRepublish = byoc.getPublishedContract(
+            publisher,
+            contractId
+        );
+
+        assertEq(customContractRepublish.contractId, contractId);
+        assertEq(customContractRepublish.publishMetadataUri, "publish URI 4");
+
+        IContractPublisher.CustomContractInstance[] memory allCustomContractsRepublish = byoc
+            .getPublishedContractVersions(publisher, contractId);
+
+        assertEq(allCustomContractsRepublish.length, 1);
     }
 
     // Deprecated

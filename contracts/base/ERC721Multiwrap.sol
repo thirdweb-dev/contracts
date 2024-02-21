@@ -11,6 +11,7 @@ import "../extension/Royalty.sol";
 import "../extension/SoulboundERC721A.sol";
 import "../extension/TokenStore.sol";
 import "../extension/Multicall.sol";
+import { ReentrancyGuard } from "../extension/upgradeable/ReentrancyGuard.sol";
 
 /**
  *      BASE:      ERC721Base
@@ -26,7 +27,16 @@ import "../extension/Multicall.sol";
  *
  */
 
-contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, ContractMetadata, Ownable, Royalty {
+contract ERC721Multiwrap is
+    Multicall,
+    TokenStore,
+    SoulboundERC721A,
+    ERC721A,
+    ContractMetadata,
+    Ownable,
+    Royalty,
+    ReentrancyGuard
+{
     /*//////////////////////////////////////////////////////////////
                     Permission control roles
     //////////////////////////////////////////////////////////////*/
@@ -148,7 +158,7 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
         Token[] calldata _tokensToWrap,
         string calldata _uriForWrappedToken,
         address _recipient
-    ) public payable virtual onlyRoleWithSwitch(MINTER_ROLE) returns (uint256 tokenId) {
+    ) public payable virtual onlyRoleWithSwitch(MINTER_ROLE) nonReentrant returns (uint256 tokenId) {
         if (!hasRole(ASSET_ROLE, address(0))) {
             for (uint256 i = 0; i < _tokensToWrap.length; i += 1) {
                 _checkRole(ASSET_ROLE, _tokensToWrap[i].assetContract);
@@ -170,7 +180,7 @@ contract ERC721Multiwrap is Multicall, TokenStore, SoulboundERC721A, ERC721A, Co
      *  @param _tokenId   The token Id of the wrapped NFT to unwrap.
      *  @param _recipient The recipient of the underlying ERC1155, ERC721, ERC20 tokens of the wrapped NFT.
      */
-    function unwrap(uint256 _tokenId, address _recipient) public virtual onlyRoleWithSwitch(UNWRAP_ROLE) {
+    function unwrap(uint256 _tokenId, address _recipient) public virtual onlyRoleWithSwitch(UNWRAP_ROLE) nonReentrant {
         require(_tokenId < nextTokenIdToMint(), "wrapped NFT DNE.");
         require(isApprovedOrOwner(msg.sender, _tokenId), "caller not approved for unwrapping.");
 

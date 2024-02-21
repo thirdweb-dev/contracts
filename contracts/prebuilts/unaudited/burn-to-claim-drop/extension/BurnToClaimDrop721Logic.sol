@@ -33,6 +33,7 @@ import { ContractMetadata } from "../../../../extension/upgradeable/ContractMeta
 import { Ownable } from "../../../../extension/upgradeable/Ownable.sol";
 import { PermissionsStorage } from "../../../../extension/upgradeable/Permissions.sol";
 import { BurnToClaim, BurnToClaimStorage } from "../../../../extension/upgradeable/BurnToClaim.sol";
+import { ReentrancyGuard } from "../../../../extension/upgradeable/ReentrancyGuard.sol";
 
 contract BurnToClaimDrop721Logic is
     ContractMetadata,
@@ -45,7 +46,8 @@ contract BurnToClaimDrop721Logic is
     LazyMint,
     Drop,
     ERC2771ContextUpgradeable,
-    ERC721AUpgradeable
+    ERC721AUpgradeable,
+    ReentrancyGuard
 {
     using Strings for uint256;
 
@@ -137,7 +139,7 @@ contract BurnToClaimDrop721Logic is
     //////////////////////////////////////////////////////////////*/
 
     /// @notice Claim lazy minted tokens after burning required tokens from origin contract.
-    function burnAndClaim(uint256 _burnTokenId, uint256 _quantity) external payable {
+    function burnAndClaim(uint256 _burnTokenId, uint256 _quantity) external payable nonReentrant {
         _checkTokenSupply(_quantity);
 
         // Verify and burn tokens on origin contract

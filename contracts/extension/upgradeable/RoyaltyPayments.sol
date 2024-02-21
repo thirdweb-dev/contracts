@@ -68,7 +68,7 @@ abstract contract RoyaltyPaymentsLogic is IRoyaltyPayments {
 
         if (royaltyEngineAddress == address(0)) {
             try IERC2981(tokenAddress).royaltyInfo(tokenId, value) returns (address recipient, uint256 amount) {
-                require(amount < value, "Invalid royalty amount");
+                require(amount <= value, "Invalid royalty amount");
 
                 recipients = new address payable[](1);
                 amounts = new uint256[](1);
