@@ -22,3 +22,15 @@
 [submodule "lib/dynamic-contracts"]
 	path = lib/dynamic-contracts
 	url = https://github.com/thirdweb-dev/dynamic-contracts
+[submodule "lib/seaport-sol"]
+	path = lib/seaport-sol
+	url = https://github.com/ProjectOpenSea/seaport-sol
+[submodule "lib/murky"]
+	path = lib/murky
+	url = https://github.com/dmfxyz/murky
+[submodule "lib/seaport-types"]
+	path = lib/seaport-types
+	url = https://github.com/ProjectOpenSea/seaport-types
+[submodule "lib/seaport-core"]
+	path = lib/seaport-core
+	url = https://github.com/ProjectOpenSea/seaport-core

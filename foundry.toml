@@ -39,6 +39,10 @@ remappings = [
   'erc721a/=lib/ERC721A/',
   '@thirdweb-dev/dynamic-contracts/=lib/dynamic-contracts/',
   'lib/sstore2=lib/dynamic-contracts/lib/sstore2/',
+  'murky/=lib/murky/src/',
+  'seaport-sol/=lib/seaport-sol/',
+  'seaport-types/=lib/seaport-types/',
+  'seaport-core/=lib/seaport-core/'
 ]
 fs_permissions = [{ access = "read-write", path = "./src/test/smart-wallet/utils"}]
 src = 'contracts'
