@@ -67,8 +67,29 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         bytes32 _message,
         bytes memory _signature
     ) public view virtual override returns (bytes4 magicValue) {
-        bytes32 messageHash = getMessageHash(abi.encode(_message));
-        address signer = messageHash.recover(_signature);
+        bytes32 digest;
+        bytes memory targetSig;
+
+        // Handle OpenSea bulk order signatures that are >65 bytes in length.
+        if (_signature.length > 65) {
+            // We decode the received bytes data into:
+            // 1. abi encode-packed signature
+            // 2. target digest that was signed to produce the signature
+            (bytes memory extractedPackedSig, bytes32 bulkOrderDigest) = abi.decode(_signature, (bytes, bytes32));
+
+            // Use the modified digest built for bulk orders
+            digest = bulkOrderDigest;
+
+            // Extract the signature, which is the first 65 bytes
+            targetSig = new bytes(65);
+            for (uint i = 0; i < 65; i++) {
+                targetSig[i] = extractedPackedSig[i];
+            }
+        } else {
+            digest = getMessageHash(abi.encode(_message));
+        }
+
+        address signer = digest.recover(targetSig);
 
         if (isAdmin(signer)) {
             return MAGICVALUE;

@@ -50,7 +50,7 @@ contract EIP712MerkleTree is Test {
         OrderComponents[] memory orderComponents,
         uint24 orderIndex,
         bool useCompact2098
-    ) public view returns (bytes memory) {
+    ) public view returns (bytes memory packedSignature, bytes32 bulkOrderHash) {
         // cache the hash of an empty order components struct to fill out any
         // nodes required to make the length a power of 2
         bytes32 emptyComponentsHash = consideration.getOrderHash(emptyOrderComponents);
@@ -85,88 +85,15 @@ contract EIP712MerkleTree is Test {
         bytes32[] memory proof = merkle.getProof(leaves, orderIndex);
         bytes32 root = merkle.getRoot(leaves);
 
-        return _getSignature(consideration, privateKey, bulkOrderTypehash, root, proof, orderIndex, useCompact2098);
-    }
-
-    /**
-     *  @dev Creates a single bulk signature: a base signature + a three byte
-     * index + a series of 32 byte proofs.  The height of the tree is determined
-     * by the height parameter and this function will fill empty orders into the
-     * tree until the specified height is reached.
-     */
-    function signSparseBulkOrder(
-        SeaportInterface consideration,
-        uint256 privateKey,
-        OrderComponents memory orderComponents,
-        uint256 height,
-        uint24 orderIndex,
-        bool useCompact2098
-    ) public view returns (bytes memory) {
-        require(orderIndex < 2 ** height, "orderIndex out of bounds");
-        // get hash of actual order
-        bytes32 orderHash = consideration.getOrderHash(orderComponents);
-        // get initial empty order components hash
-        bytes32 emptyComponentsHash = consideration.getOrderHash(emptyOrderComponents);
-
-        // calculate intermediate hashes of a sparse order tree
-        // this will also serve as our proof
-        bytes32[] memory emptyHashes = new bytes32[]((height));
-        // first layer is empty order hash
-        emptyHashes[0] = emptyComponentsHash;
-        for (uint256 i = 1; i < height; i++) {
-            bytes32 nextHash;
-            bytes32 lastHash = emptyHashes[i - 1];
-            // subsequent layers are hash of emptyHeight+emptyHeight
-            assembly {
-                mstore(0, lastHash)
-                mstore(0x20, lastHash)
-                nextHash := keccak256(0, 0x40)
-            }
-            emptyHashes[i] = nextHash;
-        }
-        // begin calculating order tree root
-        bytes32 root = orderHash;
-        // hashIndex is the index within the layer of the non-sparse hash
-        uint24 hashIndex = orderIndex;
-
-        for (uint256 i = 0; i < height; i++) {
-            // get sparse hash at this height
-            bytes32 heightEmptyHash = emptyHashes[i];
-            assembly {
-                // if the hashIndex is odd, our "root" is second component
-                if and(hashIndex, 1) {
-                    mstore(0, heightEmptyHash)
-                    mstore(0x20, root)
-                }
-                // else it is even and our "root" is first component
-                // (this can def be done in a branchless way but who has the
-                // time??)
-                if iszero(and(hashIndex, 1)) {
-                    mstore(0, root)
-                    mstore(0x20, heightEmptyHash)
-                }
-                // compute new intermediate hash (or final root)
-                root := keccak256(0, 0x40)
-            }
-            // divide hashIndex by 2 to get index of next layer
-            // 0 -> 0
-            // 1 -> 0
-            // 2 -> 1
-            // 3 -> 1
-            // etc
-            hashIndex /= 2;
-        }
-
-        return
-            _getSignature(
-                consideration,
-                privateKey,
-                _lookupBulkOrderTypehash(height),
-                root,
-                emptyHashes,
-                orderIndex,
-                useCompact2098
-            );
+        (packedSignature, bulkOrderHash) = _getSignature(
+            consideration,
+            privateKey,
+            bulkOrderTypehash,
+            root,
+            proof,
+            orderIndex,
+            useCompact2098
+        );
     }
 
     /**
@@ -189,22 +116,23 @@ contract EIP712MerkleTree is Test {
         bytes32[] memory proof,
         uint24 orderIndex,
         bool useCompact2098
-    ) internal view returns (bytes memory) {
-        // bulkOrder hash is keccak256 of the specific bulk order typehash and
-        // the merkle root of the order hashes
-        bytes32 bulkOrderHash = keccak256(abi.encode(bulkOrderTypehash, root));
-
+    ) internal view returns (bytes memory, bytes32) {
         // get domain separator from the particular seaport instance
         (, bytes32 domainSeparator, ) = consideration.information();
 
         // declare out here to avoid stack too deep errors
         bytes memory signature;
         // avoid stacc 2 thicc
+
+        // bulkOrder hash is keccak256 of the specific bulk order typehash and
+        // the merkle root of the order hashes
+        // bytes32 bulkOrderHash = keccak256(abi.encode(bulkOrderTypehash, root));
+        bytes32 digest = keccak256(
+            abi.encodePacked(bytes2(0x1901), domainSeparator, keccak256(abi.encode(bulkOrderTypehash, root)))
+        );
+
         {
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-                privateKey,
-                keccak256(abi.encodePacked(bytes2(0x1901), domainSeparator, bulkOrderHash))
-            );
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, digest);
             // if useCompact2098 is true, encode yParity (v) into s
             if (useCompact2098) {
                 uint256 yParity = (v == 27) ? 0 : 1;
@@ -221,6 +149,6 @@ contract EIP712MerkleTree is Test {
         // orderIndex will be the next 3 bytes
         // then proof will be each element one after another; its offset and
         // length will not be encoded
-        return abi.encodePacked(signature, orderIndex, proof);
+        return (abi.encodePacked(signature, orderIndex, proof), digest);
     }
 }
