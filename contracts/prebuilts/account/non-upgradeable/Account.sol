@@ -87,6 +87,7 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
             }
         } else {
             digest = getMessageHash(abi.encode(_message));
+            targetSig = _signature;
         }
 
         address signer = digest.recover(targetSig);
