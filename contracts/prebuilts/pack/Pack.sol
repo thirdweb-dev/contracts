@@ -56,22 +56,18 @@ contract Pack is
     bytes32 private constant MODULE_TYPE = bytes32("Pack");
     uint256 private constant VERSION = 2;
 
-    address private immutable forwarder;
+    /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
+    bytes32 private constant TRANSFER_ROLE = keccak256("TRANSFER_ROLE");
+    /// @dev Only MINTER_ROLE holders can create packs.
+    bytes32 private constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    /// @dev Only assets with ASSET_ROLE can be packed, when packing is restricted to particular assets.
+    bytes32 private constant ASSET_ROLE = keccak256("ASSET_ROLE");
 
     // Token name
     string public name;
 
     // Token symbol
     string public symbol;
-
-    /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
-    bytes32 private transferRole;
-
-    /// @dev Only MINTER_ROLE holders can create packs.
-    bytes32 private minterRole;
-
-    /// @dev Only assets with ASSET_ROLE can be packed, when packing is restricted to particular assets.
-    bytes32 private assetRole;
 
     /// @dev The token Id of the next set of packs to be minted.
     uint256 public nextTokenIdToMint;
@@ -93,9 +89,7 @@ contract Pack is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor(address _nativeTokenWrapper, address _trustedForwarder) TokenStore(_nativeTokenWrapper) initializer {
-        forwarder = _trustedForwarder;
-    }
+    constructor(address _nativeTokenWrapper) TokenStore(_nativeTokenWrapper) initializer {}
 
     /// @dev Initializes the contract, like a constructor.
     function initialize(
@@ -107,22 +101,6 @@ contract Pack is
         address _royaltyRecipient,
         uint256 _royaltyBps
     ) external initializer {
-        bytes32 _transferRole = keccak256("TRANSFER_ROLE");
-        bytes32 _minterRole = keccak256("MINTER_ROLE");
-        bytes32 _assetRole = keccak256("ASSET_ROLE");
-
-        /** note:  The immutable state-variable `forwarder` is an EOA-only forwarder,
-         *         which guards against automated attacks.
-         *
-         *         Use other forwarders only if there's a strong reason to bypass this check.
-         */
-        address[] memory forwarders = new address[](_trustedForwarders.length + 1);
-        uint256 i;
-        for (; i < _trustedForwarders.length; i++) {
-            forwarders[i] = _trustedForwarders[i];
-        }
-        forwarders[i] = forwarder;
-        __ERC2771Context_init(forwarders);
         __ERC1155_init(_contractURI);
 
         name = _name;
@@ -131,19 +109,13 @@ contract Pack is
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
-
-        _setupRole(_transferRole, _defaultAdmin);
-        _setupRole(_minterRole, _defaultAdmin);
-        _setupRole(_transferRole, address(0));
+        _setupRole(MINTER_ROLE, _defaultAdmin);
 
         // note: see `onlyRoleWithSwitch` for ASSET_ROLE behaviour.
-        _setupRole(_assetRole, address(0));
+        _setupRole(ASSET_ROLE, address(0));
+        _setupRole(TRANSFER_ROLE, address(0));
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
-
-        transferRole = _transferRole;
-        minterRole = _minterRole;
-        assetRole = _assetRole;
     }
 
     receive() external payable {
@@ -205,12 +177,12 @@ contract Pack is
         uint128 _openStartTimestamp,
         uint128 _amountDistributedPerOpen,
         address _recipient
-    ) external payable onlyRoleWithSwitch(minterRole) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
+    ) external payable onlyRoleWithSwitch(MINTER_ROLE) nonReentrant returns (uint256 packId, uint256 packTotalSupply) {
         require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
 
-        if (!hasRole(assetRole, address(0))) {
+        if (!hasRole(ASSET_ROLE, address(0))) {
             for (uint256 i = 0; i < _contents.length; i += 1) {
-                _checkRole(assetRole, _contents[i].assetContract);
+                _checkRole(ASSET_ROLE, _contents[i].assetContract);
             }
         }
 
@@ -245,7 +217,7 @@ contract Pack is
     )
         external
         payable
-        onlyRoleWithSwitch(minterRole)
+        onlyRoleWithSwitch(MINTER_ROLE)
         nonReentrant
         returns (uint256 packTotalSupply, uint256 newSupplyAdded)
     {
@@ -253,9 +225,9 @@ contract Pack is
         require(_contents.length > 0 && _contents.length == _numOfRewardUnits.length, "!Len");
         require(balanceOf(_recipient, _packId) != 0, "!Bal");
 
-        if (!hasRole(assetRole, address(0))) {
+        if (!hasRole(ASSET_ROLE, address(0))) {
             for (uint256 i = 0; i < _contents.length; i += 1) {
-                _checkRole(assetRole, _contents[i].assetContract);
+                _checkRole(ASSET_ROLE, _contents[i].assetContract);
             }
         }
 
@@ -273,7 +245,7 @@ contract Pack is
     function openPack(uint256 _packId, uint256 _amountToOpen) external nonReentrant returns (Token[] memory) {
         address opener = _msgSender();
 
-        require(isTrustedForwarder(msg.sender) || opener == tx.origin, "!EOA");
+        require(opener == tx.origin, "!EOA");
         require(balanceOf(opener, _packId) >= _amountToOpen, "!Bal");
 
         PackInfo memory pack = packInfo[_packId];
@@ -440,8 +412,8 @@ contract Pack is
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
-        if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
-            require(hasRole(transferRole, from) || hasRole(transferRole, to), "!TRANSFER_ROLE");
+        if (!hasRole(TRANSFER_ROLE, address(0)) && from != address(0) && to != address(0)) {
+            require(hasRole(TRANSFER_ROLE, from) || hasRole(TRANSFER_ROLE, to), "!TRANSFER_ROLE");
         }
 
         if (from == address(0)) {
