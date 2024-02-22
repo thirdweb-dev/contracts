@@ -9,6 +9,21 @@ import "@openzeppelin/contracts-upgradeable/utils/cryptography/ECDSAUpgradeable.
 import "@openzeppelin/contracts-upgradeable/utils/cryptography/draft-EIP712Upgradeable.sol";
 
 abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgradeable, ISignatureMintERC721 {
+    /// @dev The sender is not authorized to perform the action
+    error SignatureMintUnauthorized();
+
+    /// @dev The signer is not authorized to perform the signing action
+    error SignatureMintInvalidSigner();
+
+    /// @dev The signature is either expired or not ready to be claimed yet
+    error SignatureMintInvalidTime(uint256 startTime, uint256 endTime, uint256 actualTime);
+
+    /// @dev Invalid mint recipient
+    error SignatureMintInvalidRecipient();
+
+    /// @dev Invalid mint quantity
+    error SignatureMintInvalidQuantity();
+
     using ECDSAUpgradeable for bytes32;
 
     bytes32 private constant TYPEHASH =
@@ -43,14 +58,20 @@ abstract contract SignatureMintERC721Upgradeable is Initializable, EIP712Upgrade
         (success, signer) = verify(_req, _signature);
 
         if (!success) {
-            revert("Invalid req");
+            revert SignatureMintInvalidSigner();
         }
 
         if (_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) {
-            revert("Req expired");
+            revert SignatureMintInvalidTime(_req.validityStartTimestamp, _req.validityEndTimestamp, block.timestamp);
         }
-        require(_req.to != address(0), "recipient undefined");
-        require(_req.quantity > 0, "0 qty");
+
+        if (_req.to == address(0)) {
+            revert SignatureMintInvalidRecipient();
+        }
+
+        if (_req.quantity == 0) {
+            revert SignatureMintInvalidQuantity();
+        }
 
         minted[_req.uid] = true;
     }

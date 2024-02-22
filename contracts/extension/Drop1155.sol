@@ -7,6 +7,32 @@ import "./interface/IDrop1155.sol";
 import "../lib/MerkleProof.sol";
 
 abstract contract Drop1155 is IDrop1155 {
+    /// @dev The sender is not authorized to perform the action
+    error DropUnauthorized();
+
+    /// @dev Exceeded the max token total supply
+    error DropExceedMaxSupply();
+
+    /// @dev No active claim condition
+    error DropNoActiveCondition();
+
+    /// @dev Claim condition invalid currency or price
+    error DropClaimInvalidTokenPrice(
+        address expectedCurrency,
+        uint256 expectedPricePerToken,
+        address actualCurrency,
+        uint256 actualExpectedPricePerToken
+    );
+
+    /// @dev Claim condition exceeded limit
+    error DropClaimExceedLimit(uint256 expected, uint256 actual);
+
+    /// @dev Claim condition exceeded max supply
+    error DropClaimExceedMaxSupply(uint256 expected, uint256 actual);
+
+    /// @dev Claim condition not started yet
+    error DropClaimNotStarted(uint256 expected, uint256 actual);
+
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -64,7 +90,7 @@ abstract contract Drop1155 is IDrop1155 {
         bool _resetClaimEligibility
     ) external virtual override {
         if (!_canSetClaimConditions()) {
-            revert("Not authorized");
+            revert DropUnauthorized();
         }
         ClaimConditionList storage conditionList = claimCondition[_tokenId];
         uint256 existingStartIndex = conditionList.currentStartId;
@@ -91,7 +117,7 @@ abstract contract Drop1155 is IDrop1155 {
 
             uint256 supplyClaimedAlready = conditionList.conditions[newStartIndex + i].supplyClaimed;
             if (supplyClaimedAlready > _conditions[i].maxClaimableSupply) {
-                revert("max supply claimed");
+                revert DropExceedMaxSupply();
             }
 
             conditionList.conditions[newStartIndex + i] = _conditions[i];
@@ -174,19 +200,22 @@ abstract contract Drop1155 is IDrop1155 {
         uint256 supplyClaimedByWallet = claimCondition[_tokenId].supplyClaimedByWallet[_conditionId][_claimer];
 
         if (_currency != claimCurrency || _pricePerToken != claimPrice) {
-            revert("!PriceOrCurrency");
+            revert DropClaimInvalidTokenPrice(_currency, _pricePerToken, claimCurrency, claimPrice);
         }
 
         if (_quantity == 0 || (_quantity + supplyClaimedByWallet > claimLimit)) {
-            revert("!Qty");
+            revert DropClaimExceedLimit(claimLimit, _quantity + supplyClaimedByWallet);
         }
 
         if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) {
-            revert("!MaxSupply");
+            revert DropClaimExceedMaxSupply(
+                currentClaimPhase.maxClaimableSupply,
+                currentClaimPhase.supplyClaimed + _quantity
+            );
         }
 
         if (currentClaimPhase.startTimestamp > block.timestamp) {
-            revert("cant claim yet");
+            revert DropClaimNotStarted(currentClaimPhase.startTimestamp, block.timestamp);
         }
     }
 
@@ -199,7 +228,7 @@ abstract contract Drop1155 is IDrop1155 {
             }
         }
 
-        revert("!CONDITION.");
+        revert DropNoActiveCondition();
     }
 
     /// @dev Returns the claim condition at the given uid.
