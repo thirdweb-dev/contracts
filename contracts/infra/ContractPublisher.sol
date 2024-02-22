@@ -16,7 +16,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "../extension/Multicall.sol";
+import "@openzeppelin/contracts/utils/Multicall.sol";
 
 //  ==========  Internal imports    ==========
 import { IContractPublisher } from "./interface/IContractPublisher.sol";
@@ -30,7 +30,10 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
 
     /// @notice Whether the contract publisher is paused.
     bool public isPaused;
-    IContractPublisher public immutable prevPublisher;
+    IContractPublisher public prevPublisher;
+
+    /// @dev Only MIGRATION holders can override previous publisher or migrate data
+    bytes32 private constant MIGRATION_ROLE = keccak256("MIGRATION_ROLE");
 
     /*///////////////////////////////////////////////////////////////
                                 Mappings
@@ -61,8 +64,15 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         _;
     }
 
-    constructor(address _trustedForwarder, IContractPublisher _prevPublisher) ERC2771Context(_trustedForwarder) {
-        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
+    constructor(
+        address _defaultAdmin,
+        address _trustedForwarder,
+        IContractPublisher _prevPublisher
+    ) ERC2771Context(_trustedForwarder) {
+        _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
+        _setupRole(MIGRATION_ROLE, _defaultAdmin);
+        _setRoleAdmin(MIGRATION_ROLE, MIGRATION_ROLE);
+
         prevPublisher = _prevPublisher;
     }
 
@@ -74,7 +84,10 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     function getAllPublishedContracts(
         address _publisher
     ) external view returns (CustomContractInstance[] memory published) {
-        CustomContractInstance[] memory linkedData = prevPublisher.getAllPublishedContracts(_publisher);
+        CustomContractInstance[] memory linkedData;
+        if (address(prevPublisher) != address(0)) {
+            linkedData = prevPublisher.getAllPublishedContracts(_publisher);
+        }
         uint256 currentTotal = EnumerableSet.length(contractsOfPublisher[_publisher].contractIds);
         uint256 prevTotal = linkedData.length;
         uint256 total = prevTotal + currentTotal;
@@ -95,10 +108,11 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         address _publisher,
         string memory _contractId
     ) external view returns (CustomContractInstance[] memory published) {
-        CustomContractInstance[] memory linkedVersions = prevPublisher.getPublishedContractVersions(
-            _publisher,
-            _contractId
-        );
+        CustomContractInstance[] memory linkedVersions;
+
+        if (address(prevPublisher) != address(0)) {
+            linkedVersions = prevPublisher.getPublishedContractVersions(_publisher, _contractId);
+        }
         uint256 prevTotal = linkedVersions.length;
 
         bytes32 id = keccak256(bytes(_contractId));
@@ -124,7 +138,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     ) external view returns (CustomContractInstance memory published) {
         published = contractsOfPublisher[_publisher].contracts[keccak256(bytes(_contractId))].latest;
         // if not found, check the previous publisher
-        if (published.publishTimestamp == 0) {
+        if (address(prevPublisher) != address(0) && published.publishTimestamp == 0) {
             published = prevPublisher.getPublishedContract(_publisher, _contractId);
         }
     }
@@ -181,8 +195,17 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
         emit ContractUnpublished(_msgSender(), _publisher, _contractId);
     }
 
+    function setPrevPublisher(IContractPublisher _prevPublisher) external {
+        require(hasRole(MIGRATION_ROLE, _msgSender()), "Not authorized");
+        prevPublisher = _prevPublisher;
+    }
+
     /// @notice Lets an account set its own publisher profile uri
-    function setPublisherProfileUri(address publisher, string memory uri) public onlyPublisher(publisher) {
+    function setPublisherProfileUri(address publisher, string memory uri) public {
+        require(
+            (!isPaused && _msgSender() == publisher) || hasRole(MIGRATION_ROLE, _msgSender()),
+            "Registry paused or caller not authorized"
+        );
         string memory currentURI = profileUriOfPublisher[publisher];
         profileUriOfPublisher[publisher] = uri;
 
@@ -193,7 +216,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     function getPublisherProfileUri(address publisher) public view returns (string memory uri) {
         uri = profileUriOfPublisher[publisher];
         // if not found, check the previous publisher
-        if (bytes(uri).length == 0) {
+        if (address(prevPublisher) != address(0) && bytes(uri).length == 0) {
             uri = prevPublisher.getPublisherProfileUri(publisher);
         }
     }
@@ -202,7 +225,10 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     function getPublishedUriFromCompilerUri(
         string memory compilerMetadataUri
     ) public view returns (string[] memory publishedMetadataUris) {
-        string[] memory linkedUris = prevPublisher.getPublishedUriFromCompilerUri(compilerMetadataUri);
+        string[] memory linkedUris;
+        if (address(prevPublisher) != address(0)) {
+            linkedUris = prevPublisher.getPublishedUriFromCompilerUri(compilerMetadataUri);
+        }
         uint256 prevTotal = linkedUris.length;
         uint256 currentTotal = compilerMetadataUriToPublishedMetadataUris[compilerMetadataUri].index;
         uint256 total = prevTotal + currentTotal;
@@ -231,7 +257,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     }
 
     /// @dev ERC2771Context overrides
-    function _msgSender() internal view virtual override(Context, ERC2771Context, Multicall) returns (address sender) {
+    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
