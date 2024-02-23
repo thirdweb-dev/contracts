@@ -3,15 +3,15 @@ pragma solidity ^0.8.17;
 
 import { MurkyBase } from "murky/common/MurkyBase.sol";
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import { TypehashDirectory } from "./TypehashDirectory.sol";
 
 import { Test } from "forge-std/Test.sol";
 
-import { OrderComponents } from "seaport-sol/src/SeaportStructs.sol";
+import { ConsiderationInterface } from "seaport-types/src/interfaces/ConsiderationInterface.sol";
 
-import { SeaportInterface } from "seaport-sol/src/SeaportInterface.sol";
+import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import { TypehashDirectory } from "./TypehashDirectory.sol";
+import { OrderComponents } from "seaport-types/src/lib/ConsiderationStructs.sol";
 
 /**
  * @dev Seaport doesn't sort leaves when hashing for bulk orders, but Murky
@@ -45,12 +45,12 @@ contract EIP712MerkleTree is Test {
      * into the tree to make the length a power of 2.
      */
     function signBulkOrder(
-        SeaportInterface consideration,
+        ConsiderationInterface consideration,
         uint256 privateKey,
         OrderComponents[] memory orderComponents,
         uint24 orderIndex,
         bool useCompact2098
-    ) public view returns (bytes memory packedSignature, bytes32 bulkOrderHash) {
+    ) public view returns (bytes memory) {
         // cache the hash of an empty order components struct to fill out any
         // nodes required to make the length a power of 2
         bytes32 emptyComponentsHash = consideration.getOrderHash(emptyOrderComponents);
@@ -85,15 +85,7 @@ contract EIP712MerkleTree is Test {
         bytes32[] memory proof = merkle.getProof(leaves, orderIndex);
         bytes32 root = merkle.getRoot(leaves);
 
-        (packedSignature, bulkOrderHash) = _getSignature(
-            consideration,
-            privateKey,
-            bulkOrderTypehash,
-            root,
-            proof,
-            orderIndex,
-            useCompact2098
-        );
+        return _getSignature(consideration, privateKey, bulkOrderTypehash, root, proof, orderIndex, useCompact2098);
     }
 
     /**
@@ -109,30 +101,29 @@ contract EIP712MerkleTree is Test {
     }
 
     function _getSignature(
-        SeaportInterface consideration,
+        ConsiderationInterface consideration,
         uint256 privateKey,
         bytes32 bulkOrderTypehash,
         bytes32 root,
         bytes32[] memory proof,
         uint24 orderIndex,
         bool useCompact2098
-    ) internal view returns (bytes memory, bytes32) {
+    ) internal view returns (bytes memory) {
+        // bulkOrder hash is keccak256 of the specific bulk order typehash and
+        // the merkle root of the order hashes
+        bytes32 bulkOrderHash = keccak256(abi.encode(bulkOrderTypehash, root));
+
         // get domain separator from the particular seaport instance
         (, bytes32 domainSeparator, ) = consideration.information();
 
         // declare out here to avoid stack too deep errors
         bytes memory signature;
         // avoid stacc 2 thicc
-
-        // bulkOrder hash is keccak256 of the specific bulk order typehash and
-        // the merkle root of the order hashes
-        // bytes32 bulkOrderHash = keccak256(abi.encode(bulkOrderTypehash, root));
-        bytes32 digest = keccak256(
-            abi.encodePacked(bytes2(0x1901), domainSeparator, keccak256(abi.encode(bulkOrderTypehash, root)))
-        );
-
         {
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, digest);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+                privateKey,
+                keccak256(abi.encodePacked(bytes2(0x1901), domainSeparator, bulkOrderHash))
+            );
             // if useCompact2098 is true, encode yParity (v) into s
             if (useCompact2098) {
                 uint256 yParity = (v == 27) ? 0 : 1;
@@ -149,6 +140,6 @@ contract EIP712MerkleTree is Test {
         // orderIndex will be the next 3 bytes
         // then proof will be each element one after another; its offset and
         // length will not be encoded
-        return (abi.encodePacked(signature, orderIndex, proof), digest);
+        return abi.encodePacked(signature, orderIndex, proof);
     }
 }

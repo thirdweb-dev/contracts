@@ -19,6 +19,11 @@ import { ConduitController } from "seaport-core/src/conduit/ConduitController.so
 import { ConsiderationItem, OfferItem, ItemType, SpentItem, OrderComponents, Order, OrderParameters } from "seaport-types/src/lib/ConsiderationStructs.sol";
 import { ConsiderationInterface } from "seaport-types/src/interfaces/ConsiderationInterface.sol";
 import { OrderType, BasicOrderType } from "seaport-types/src/lib/ConsiderationEnums.sol";
+import { OrderParameters } from "seaport-types/src/lib/ConsiderationStructs.sol";
+
+import { Create2AddressDerivation_length, Create2AddressDerivation_ptr, EIP_712_PREFIX, EIP712_ConsiderationItem_size, EIP712_DigestPayload_size, EIP712_DomainSeparator_offset, EIP712_OfferItem_size, EIP712_Order_size, EIP712_OrderHash_offset, FreeMemoryPointerSlot, information_conduitController_offset, information_domainSeparator_offset, information_length, information_version_cd_offset, information_version_offset, information_versionLengthPtr, information_versionWithLength, MaskOverByteTwelve, MaskOverLastTwentyBytes, OneWord, OneWordShift, OrderParameters_consideration_head_offset, OrderParameters_counter_offset, OrderParameters_offer_head_offset, TwoWords } from "seaport-types/src/lib/ConsiderationConstants.sol";
+
+import { BulkOrderProof_keyShift, BulkOrderProof_keySize, BulkOrder_Typehash_Height_One, BulkOrder_Typehash_Height_Two, BulkOrder_Typehash_Height_Three, BulkOrder_Typehash_Height_Four, BulkOrder_Typehash_Height_Five, BulkOrder_Typehash_Height_Six, BulkOrder_Typehash_Height_Seven, BulkOrder_Typehash_Height_Eight, BulkOrder_Typehash_Height_Nine, BulkOrder_Typehash_Height_Ten, BulkOrder_Typehash_Height_Eleven, BulkOrder_Typehash_Height_Twelve, BulkOrder_Typehash_Height_Thirteen, BulkOrder_Typehash_Height_Fourteen, BulkOrder_Typehash_Height_Fifteen, BulkOrder_Typehash_Height_Sixteen, BulkOrder_Typehash_Height_Seventeen, BulkOrder_Typehash_Height_Eighteen, BulkOrder_Typehash_Height_Nineteen, BulkOrder_Typehash_Height_Twenty, BulkOrder_Typehash_Height_TwentyOne, BulkOrder_Typehash_Height_TwentyTwo, BulkOrder_Typehash_Height_TwentyThree, BulkOrder_Typehash_Height_TwentyFour, EIP712_domainData_chainId_offset, EIP712_domainData_nameHash_offset, EIP712_domainData_size, EIP712_domainData_verifyingContract_offset, EIP712_domainData_versionHash_offset, FreeMemoryPointerSlot, NameLengthPtr, NameWithLength, OneWord, Slot0x80, ThreeWords, ZeroSlot } from "seaport-types/src/lib/ConsiderationConstants.sol";
 
 library GPv2EIP1271 {
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
@@ -32,6 +37,7 @@ contract AccountBulkOrderSigTest is BaseTest {
     // Target contracts
     EntryPoint private entrypoint;
     AccountFactory private accountFactory;
+    ConduitController private conduitController;
     Seaport private seaport;
 
     // Signer
@@ -162,7 +168,8 @@ contract AccountBulkOrderSigTest is BaseTest {
         // deploy account factory
         accountFactory = new AccountFactory(deployer, IEntryPoint(payable(address(entrypoint))));
         // deploy seaport contract
-        seaport = new Seaport(address(new ConduitController()));
+        conduitController = new ConduitController();
+        seaport = new Seaport(address(conduitController));
 
         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
@@ -196,7 +203,7 @@ contract AccountBulkOrderSigTest is BaseTest {
         // The other order components can remain empty.
 
         EIP712MerkleTree merkleTree = new EIP712MerkleTree();
-        (bytes memory packedSignature, bytes32 digest) = merkleTree.signBulkOrder(
+        bytes memory packedSignature = merkleTree.signBulkOrder(
             ConsiderationInterface(address(seaport)),
             accountAdminPKey,
             orderComponents,
@@ -204,21 +211,12 @@ contract AccountBulkOrderSigTest is BaseTest {
             false
         );
 
-        Order memory order = Order({ parameters: baseOrderParameters, signature: abi.encode(packedSignature, digest) });
+        Order memory order = Order({
+            parameters: baseOrderParameters,
+            signature: abi.encode(packedSignature, baseOrderParameters, seaport.getCounter(accountAdmin))
+        });
 
         assertEq(packedSignature.length, 132);
-        // vm.expectRevert("ECDSA: invalid signature length");
-        // 0x882f38f087adb31c0a3f7b96bec402664a3e52b748dbf635ecaa5f719df04ec81fd442cdaae162d152c21f866f5b09e097f561f7db6d1020b0a8c72c3ff36fb41c
-        // 0x882f38f087adb31c0a3f7b96bec402664a3e52b748dbf635ecaa5f719df04ec81fd442cdaae162d152c21f866f5b09e097f561f7db6d1020b0a8c72c3ff36fb41c
-        // 0x882f38f087adb31c0a3f7b96bec402664a3e52b748dbf635ecaa5f719df04ec81fd442cdaae162d152c21f866f5b09e097f561f7db6d1020b0a8c72c3ff36fb41c00000006bfdd4fee487c47799fd9aa57225e03268298d2983ff74cbab178665fab33ead34b12e74ee846c338466455cad0c77d7d37d1f8072d72ed279c9c9e7f80a2b5
-
-        // 0x988496fb495acac726f98c32c7d74b1389f7c8cb18fa0be785e9cc5826d5fe57
-        // 0x988496fb495acac726f98c32c7d74b1389f7c8cb18fa0be785e9cc5826d5fe57 -- digest
-        // 0x26fba4b6e6131cf86f3aa79d8968d0152ee9171a95c60fecd5b5a2aa1158a4ff -- originalDigest
-
-        // 0x376ca148aa5b65f07b5dc48dac6cc1957266d972912bca47163071c7eca58725 -- bulkOrderHash in EIP712MerkleTree.sol
-        // 0xc2bbd323938bf2d6e379be48b82c7a8fe220c804b7fe1160f5f1621fe3e9eabb -- order hash
-        // 0x376ca148aa5b65f07b5dc48dac6cc1957266d972912bca47163071c7eca58725 -- order hash modified
         seaport.fulfillOrder{ value: 1 }(order, bytes32(0));
     }
 }
