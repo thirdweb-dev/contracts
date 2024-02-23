@@ -38,7 +38,7 @@ contract DelayedReveal_GetRevealURI is ExtensionUtilTest {
     }
 
     function test_getRevealURI_encryptedDataNotSet() public {
-        vm.expectRevert("Nothing to reveal");
+        vm.expectRevert(abi.encodeWithSelector(DelayedReveal.DelayedRevealNothingToReveal.selector));
         ext.getRevealURI(batchId, encryptionKey);
     }
 
@@ -49,8 +49,15 @@ contract DelayedReveal_GetRevealURI is ExtensionUtilTest {
 
     function test_getRevealURI_incorrectKey() public whenEncryptedDataIsSet {
         bytes memory incorrectKey = "incorrect key";
+        string memory incorrectURI = string(ext.encryptDecrypt(encryptedURI, incorrectKey));
 
-        vm.expectRevert("Incorrect key");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DelayedReveal.DelayedRevealIncorrectResultHash.selector,
+                provenanceHash,
+                keccak256(abi.encodePacked(incorrectURI, incorrectKey, block.chainid))
+            )
+        );
         ext.getRevealURI(batchId, incorrectKey);
     }
 

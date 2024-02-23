@@ -46,7 +46,7 @@ contract BatchMintMetadata_BatchMintMetadata is ExtensionUtilTest {
         assertEq(newBaseURICount, prevBaseURICount + 1);
         assertEq(ext.getBatchIdAtIndex(newBaseURICount - 1), batchId);
 
-        vm.expectRevert("Invalid index");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidBatchId.selector, newBaseURICount));
         ext.getBatchIdAtIndex(newBaseURICount);
     }
 }

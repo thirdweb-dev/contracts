@@ -49,7 +49,9 @@ contract BatchMintMetadata_FreezeBaseURI is ExtensionUtilTest {
     }
 
     function test_freezeBaseURI_invalidBatch() public {
-        vm.expectRevert("Invalid batch");
+        vm.expectRevert(
+            abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidBatchId.selector, batchIds[indexToFreeze] * 10)
+        );
         ext.freezeBaseURI(batchIds[indexToFreeze] * 10); // non-existent batchId
     }
 

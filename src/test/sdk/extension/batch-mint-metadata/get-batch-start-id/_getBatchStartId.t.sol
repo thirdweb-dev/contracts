@@ -43,7 +43,7 @@ contract BatchMintMetadata_GetBatchStartId is ExtensionUtilTest {
     function test_getBatchStartId_invalidBatchId() public {
         uint256 batchId = batchIds[4] + 1; // non-existent batchId
 
-        vm.expectRevert("Invalid batchId");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidBatchId.selector, batchId));
         ext.getBatchStartId(batchId);
     }
 

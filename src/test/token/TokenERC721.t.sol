@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { TokenERC721 } from "contracts/prebuilts/token/TokenERC721.sol";
+import { TokenERC721, NFTMetadata } from "contracts/prebuilts/token/TokenERC721.sol";
 
 // Test imports
 
@@ -675,7 +675,7 @@ contract TokenERC721Test is BaseTest {
     function test_setTokenURI_revert_NotAuthorized() public {
         string memory uri = "uri_string";
 
-        vm.expectRevert("NFTMetadata: not authorized to set metadata.");
+        vm.expectRevert(abi.encodeWithSelector(NFTMetadata.NFTMetadataUnauthorized.selector));
         vm.prank(address(0x1));
         tokenContract.setTokenURI(0, uri);
     }
@@ -686,7 +686,7 @@ contract TokenERC721Test is BaseTest {
         vm.startPrank(deployerSigner);
         tokenContract.freezeMetadata();
 
-        vm.expectRevert("NFTMetadata: metadata is frozen.");
+        vm.expectRevert(abi.encodeWithSelector(NFTMetadata.NFTMetadataFrozen.selector, 0));
         tokenContract.setTokenURI(0, uri);
     }
 }

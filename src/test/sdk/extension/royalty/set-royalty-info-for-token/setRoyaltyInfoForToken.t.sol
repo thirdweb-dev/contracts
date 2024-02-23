@@ -52,7 +52,7 @@ contract Royalty_SetRoyaltyInfoForToken is ExtensionUtilTest {
 
     function test_setRoyaltyInfoForToken_callerNotAuthorized() public {
         vm.prank(address(caller));
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(Royalty.RoyaltyUnauthorized.selector));
         ext.setRoyaltyInfoForToken(tokenId, royaltyRecipientForToken, royaltyBpsForToken);
     }
 
@@ -64,7 +64,7 @@ contract Royalty_SetRoyaltyInfoForToken is ExtensionUtilTest {
     function test_setRoyaltyInfoForToken_exceedMaxBps() public whenCallerAuthorized {
         royaltyBpsForToken = 10_001;
         vm.prank(address(caller));
-        vm.expectRevert("Exceeds max bps");
+        vm.expectRevert(abi.encodeWithSelector(Royalty.RoyaltyExceededMaxFeeBps.selector, 10_000, royaltyBpsForToken));
         ext.setRoyaltyInfoForToken(tokenId, royaltyRecipientForToken, royaltyBpsForToken);
     }
 

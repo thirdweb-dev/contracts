@@ -65,7 +65,7 @@ contract LazyMint_LazyMint is ExtensionUtilTest {
 
     function test_lazyMint_callerNotAuthorized() public {
         vm.prank(address(caller));
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(LazyMint.LazyMintUnauthorized.selector));
         ext.lazyMint(amount, "", "");
     }
 
@@ -76,7 +76,7 @@ contract LazyMint_LazyMint is ExtensionUtilTest {
 
     function test_lazyMint_zeroAmount() public whenCallerAuthorized {
         vm.prank(address(caller));
-        vm.expectRevert("0 amt");
+        vm.expectRevert(abi.encodeWithSelector(LazyMint.LazyMintInvalidAmount.selector));
         ext.lazyMint(amount, "", "");
     }
 
