@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721, LazyMint } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
 import "../../../utils/BaseTest.sol";
@@ -83,12 +83,12 @@ contract DropERC721Test_lazyMint is BaseTest {
     }
 
     function test_revert_NoMinterRole() public callerWithoutMinterRole dataLengthZero {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(LazyMint.LazyMintUnauthorized.selector));
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 
     function test_revert_AmountEqualZero() public callerWithMinterRole dataLengthZero amountEqualZero {
-        vm.expectRevert("0 amt");
+        vm.expectRevert(abi.encodeWithSelector(LazyMint.LazyMintInvalidAmount.selector));
         drop.lazyMint(lazyMint_amount, lazyMint_revealedURI, lazymint_data);
     }
 

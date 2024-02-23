@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { OpenEditionERC721FlatFee } from "contracts/prebuilts/open-edition/OpenEditionERC721FlatFee.sol";
+import { OpenEditionERC721FlatFee, Royalty } from "contracts/prebuilts/open-edition/OpenEditionERC721FlatFee.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
 // Test imports
@@ -107,7 +107,7 @@ contract OpenEditionERC721FlatFeeTest_initialize is BaseTest {
     function test_revert_RoyaltyTooHigh() public {
         uint128 _royaltyBps = 10001;
 
-        vm.expectRevert("Exceeds max bps");
+        vm.expectRevert(abi.encodeWithSelector(Royalty.RoyaltyExceededMaxFeeBps.selector, 10_000, _royaltyBps));
         deployOpenEdition(
             deployer,
             NAME,

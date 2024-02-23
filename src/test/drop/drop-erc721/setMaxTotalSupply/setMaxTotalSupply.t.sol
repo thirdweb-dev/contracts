@@ -36,12 +36,7 @@ contract DropERC721Test_setMaxTotalSupply is BaseTest {
     function test_revert_CallerNotAdmin() public callerNotAdmin {
         bytes32 role = bytes32(0x00);
         vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(unauthorized), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
+            abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, unauthorized, role)
         );
         drop.setMaxTotalSupply(0);
     }
