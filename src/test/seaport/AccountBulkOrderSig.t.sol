@@ -3,17 +3,23 @@ pragma solidity ^0.8.0;
 
 // Test utils
 import "../utils/BaseTest.sol";
+import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
+import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
+import { AccountPermissions } from "contracts/extension/upgradeable/AccountPermissions.sol";
+import { AccountExtension } from "contracts/prebuilts/account/utils/AccountExtension.sol";
 
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
 import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.sol";
 
 // Target
-import { AccountFactory, Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
+import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
+import { ManagedAccountFactory, ManagedAccount } from "contracts/prebuilts/account/managed/ManagedAccountFactory.sol";
 import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
 import { Seaport } from "./Seaport.sol";
 import { EIP712MerkleTree } from "./EIP712MerkleTree.sol";
+import { SeaportOrderEIP1271 } from "contracts/extension/SeaportOrderEIP1271.sol";
 
 import { ConduitController } from "seaport-core/src/conduit/ConduitController.sol";
 import { ConsiderationItem, OfferItem, ItemType, SpentItem, OrderComponents, Order, OrderParameters } from "seaport-types/src/lib/ConsiderationStructs.sol";
@@ -36,15 +42,18 @@ interface EIP1271Verifier {
 contract AccountBulkOrderSigTest is BaseTest {
     // Target contracts
     EntryPoint private entrypoint;
-    AccountFactory private accountFactory;
+    ManagedAccountFactory private accountFactory;
     ConduitController private conduitController;
     Seaport private seaport;
 
     // Signer
     uint256 private accountAdminPKey = 1;
     address private accountAdmin;
+    address private factoryDeployer = address(0x9876);
 
     // Test params
+    bytes internal data = bytes("");
+
     OfferItem offerItem;
     OfferItem[] offerItems;
     ConsiderationItem considerationItem;
@@ -53,7 +62,7 @@ contract AccountBulkOrderSigTest is BaseTest {
     OrderParameters baseOrderParameters;
 
     // UserOp terminology: `sender` is the smart wallet.
-    address private sender = 0xAcF86fd6BA3b8A4CBDbc1F0A605e1667a8879640;
+    address private sender = 0xfD14C2809c876165D0c18878A2dE641018426a11;
     address payable private beneficiary = payable(address(0x45654));
 
     function _configureOrderParameters(address offerer) internal {
@@ -165,8 +174,65 @@ contract AccountBulkOrderSigTest is BaseTest {
 
         // Setup contracts
         entrypoint = new EntryPoint();
+
+        // Setting up default extension.
+        IExtension.Extension memory defaultExtension;
+
+        defaultExtension.metadata = IExtension.ExtensionMetadata({
+            name: "AccountExtension",
+            metadataURI: "ipfs://AccountExtension",
+            implementation: address(new AccountExtension())
+        });
+
+        defaultExtension.functions = new IExtension.ExtensionFunction[](9);
+
+        defaultExtension.functions[0] = IExtension.ExtensionFunction(
+            AccountExtension.supportsInterface.selector,
+            "supportsInterface(bytes4)"
+        );
+        defaultExtension.functions[1] = IExtension.ExtensionFunction(
+            AccountExtension.execute.selector,
+            "execute(address,uint256,bytes)"
+        );
+        defaultExtension.functions[2] = IExtension.ExtensionFunction(
+            AccountExtension.executeBatch.selector,
+            "executeBatch(address[],uint256[],bytes[])"
+        );
+        defaultExtension.functions[3] = IExtension.ExtensionFunction(
+            ERC721Holder.onERC721Received.selector,
+            "onERC721Received(address,address,uint256,bytes)"
+        );
+        defaultExtension.functions[4] = IExtension.ExtensionFunction(
+            ERC1155Holder.onERC1155Received.selector,
+            "onERC1155Received(address,address,uint256,uint256,bytes)"
+        );
+        defaultExtension.functions[5] = IExtension.ExtensionFunction(
+            bytes4(0), // Selector for `receive()` function.
+            "receive()"
+        );
+        defaultExtension.functions[6] = IExtension.ExtensionFunction(
+            AccountExtension.isValidSignature.selector,
+            "isValidSignature(bytes32,bytes)"
+        );
+        defaultExtension.functions[7] = IExtension.ExtensionFunction(
+            AccountExtension.addDeposit.selector,
+            "addDeposit()"
+        );
+        defaultExtension.functions[8] = IExtension.ExtensionFunction(
+            AccountExtension.withdrawDepositTo.selector,
+            "withdrawDepositTo(address,uint256)"
+        );
+
+        IExtension.Extension[] memory extensions = new IExtension.Extension[](1);
+        extensions[0] = defaultExtension;
+
         // deploy account factory
-        accountFactory = new AccountFactory(deployer, IEntryPoint(payable(address(entrypoint))));
+        vm.prank(factoryDeployer);
+        accountFactory = new ManagedAccountFactory(
+            factoryDeployer,
+            IEntryPoint(payable(address(entrypoint))),
+            extensions
+        );
         // deploy seaport contract
         conduitController = new ConduitController();
         seaport = new Seaport(address(conduitController));
@@ -189,7 +255,34 @@ contract AccountBulkOrderSigTest is BaseTest {
                     Test: performing a contract call
     //////////////////////////////////////////////////////////////*/
 
+    /// @dev Make the account support Seaport bulk order signatures.
+    function _upggradeIsValidSignature() internal {
+        // Update isValidSignature to support Seaport bulk order signatures.
+        IExtension.Extension memory extension;
+
+        extension.metadata = IExtension.ExtensionMetadata({
+            name: "SeaportOrderEIP1271",
+            metadataURI: "ipfs://SeaportOrderEIP1271",
+            implementation: address(new SeaportOrderEIP1271())
+        });
+
+        extension.functions = new IExtension.ExtensionFunction[](1);
+
+        extension.functions[0] = IExtension.ExtensionFunction(
+            AccountExtension.isValidSignature.selector,
+            "isValidSignature(bytes32,bytes)"
+        );
+
+        vm.prank(factoryDeployer);
+        accountFactory.disableFunctionInExtension("AccountExtension", AccountExtension.isValidSignature.selector);
+
+        vm.prank(factoryDeployer);
+        accountFactory.addExtension(extension);
+    }
+
     function test_POC() public {
+        _upggradeIsValidSignature();
+
         erc721.mint(address(accountAdmin), 1);
         vm.prank(accountAdmin);
         erc721.setApprovalForAll(address(seaport), true);
