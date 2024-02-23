@@ -2,6 +2,9 @@
 pragma solidity ^0.8.0;
 
 import { ERC721AUpgradeable, OpenEditionERC721FlatFee, ISharedMetadata } from "contracts/prebuilts/open-edition/OpenEditionERC721FlatFee.sol";
+import { Drop } from "contracts/extension/Drop.sol";
+import { LazyMint } from "contracts/extension/LazyMint.sol";
+import { OpenEditionERC721FlatFee } from "contracts/prebuilts/open-edition/OpenEditionERC721FlatFee.sol";
 import { NFTMetadataRenderer } from "contracts/lib/NFTMetadataRenderer.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 
@@ -74,14 +77,7 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
         bytes32 role = keccak256("MINTER_ROLE");
 
         vm.prank(caller);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(caller), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, caller, role));
 
         openEdition.renounceRole(role, caller);
     }
@@ -94,14 +90,7 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
         bytes32 role = keccak256("MINTER_ROLE");
 
         vm.prank(deployer);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(target), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, target, role));
 
         openEdition.revokeRole(role, target);
     }
@@ -117,7 +106,7 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
 
         openEdition.grantRole(role, receiver);
 
-        vm.expectRevert("Can only grant to non holders");
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsAlreadyGranted.selector, receiver, role));
         openEdition.grantRole(role, receiver);
 
         vm.stopPrank();
@@ -141,7 +130,7 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
         openEdition.grantRole(role, receiver);
 
         // expect revert when granting to a holder
-        vm.expectRevert("Can only grant to non holders");
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsAlreadyGranted.selector, receiver, role));
         openEdition.grantRole(role, receiver);
 
         // check if receiver has transfer role
@@ -213,7 +202,7 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
 
         vm.warp(99);
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert("!CONDITION.");
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropNoActiveCondition.selector));
         openEdition.claim(receiver, 1, address(0), 0, alp, "");
 
         vm.warp(100);
@@ -343,7 +332,9 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         openEdition.claim(receiver, 100, address(0), 0, alp, "");
 
-        vm.expectRevert("!MaxSupply");
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedMaxSupply.selector, conditions[0].maxClaimableSupply, 101)
+        );
         vm.prank(getActor(6), getActor(6));
         openEdition.claim(receiver, 1, address(0), 0, alp, "");
     }
@@ -372,21 +363,25 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
         vm.prank(deployer);
         openEdition.setClaimConditions(conditions, false);
 
-        bytes memory errorQty = "!Qty";
-
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, conditions[0].quantityLimitPerWallet, 0)
+        );
         openEdition.claim(receiver, 0, address(0), 0, alp, "");
 
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, conditions[0].quantityLimitPerWallet, 101)
+        );
         openEdition.claim(receiver, 101, address(0), 0, alp, "");
 
         vm.prank(deployer);
         openEdition.setClaimConditions(conditions, true);
 
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, conditions[0].quantityLimitPerWallet, 101)
+        );
         openEdition.claim(receiver, 101, address(0), 0, alp, "");
     }
 
@@ -485,7 +480,9 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
         openEdition.setClaimConditions(conditions, false);
 
         vm.prank(receiver, receiver);
-        vm.expectRevert("!PriceOrCurrency");
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimInvalidTokenPrice.selector, address(erc20), 0, address(erc20), 5)
+        );
         openEdition.claim(receiver, 100, address(erc20), 0, alp, "");
 
         erc20.mint(receiver, 10000);
@@ -602,9 +599,10 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
         vm.prank(receiver);
         erc20.approve(address(openEdition), 10000);
 
-        bytes memory errorQty = "!Qty";
         vm.prank(receiver, receiver);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, conditions[0].quantityLimitPerWallet, 100)
+        );
         openEdition.claim(receiver, 100, address(erc20), 5, alp, ""); // trying to claim more than general limit
 
         // vm.prank(getActor(5), getActor(5));
@@ -659,10 +657,8 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
         openEdition.claim(receiver, x - 5, address(0), 0, alp, "");
         assertEq(openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver), x - 5);
 
-        bytes memory errorQty = "!Qty";
-
         vm.prank(receiver, receiver);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, x, x + 1));
         openEdition.claim(receiver, 6, address(0), 0, alp, "");
 
         vm.prank(receiver, receiver);
@@ -670,7 +666,7 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
         assertEq(openEdition.getSupplyClaimedByWallet(openEdition.getActiveClaimConditionId(), receiver), x);
 
         vm.prank(receiver, receiver);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, x, x + 5));
         openEdition.claim(receiver, 5, address(0), 0, alp, ""); // quantity limit already claimed
     }
 
@@ -699,10 +695,10 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         openEdition.claim(receiver, 100, address(0), 0, alp, "");
 
-        bytes memory errorQty = "!Qty";
-
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, conditions[0].quantityLimitPerWallet, 200)
+        );
         openEdition.claim(receiver, 100, address(0), 0, alp, "");
 
         vm.prank(deployer);
@@ -766,7 +762,7 @@ contract OpenEditionERC721FlatFeeTest is BaseTest {
         conditions[2].quantityLimitPerWallet = 32;
         openEdition.setClaimConditions(conditions, false);
 
-        vm.expectRevert("!CONDITION.");
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropNoActiveCondition.selector));
         openEdition.getActiveClaimConditionId();
 
         vm.warp(10);
