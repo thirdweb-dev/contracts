@@ -76,7 +76,7 @@ contract ExtensionBatchMintMetadata is DSTest, Test {
 
         ext.freezeBaseURI(batchId);
 
-        vm.expectRevert("Batch frozen");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintMetadataFrozen.selector, batchId));
         string memory baseUri = "one";
         ext.setBaseURI(batchId, baseUri);
     }
@@ -94,7 +94,7 @@ contract ExtensionBatchMintMetadata is DSTest, Test {
     }
 
     function test_freezeBaseURI_revert_invalidBatch() public {
-        vm.expectRevert("Invalid batch");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidBatchId.selector, 100));
         ext.freezeBaseURI(100);
     }
 
@@ -103,7 +103,7 @@ contract ExtensionBatchMintMetadata is DSTest, Test {
     //////////////////////////////////////////////////////////////*/
 
     function test_viewBaseURI_revert_invalidTokenId() public {
-        vm.expectRevert("Invalid tokenId");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidTokenId.selector, 100));
         ext.viewBaseURI(100);
     }
 }

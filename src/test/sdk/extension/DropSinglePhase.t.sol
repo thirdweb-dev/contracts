@@ -75,7 +75,13 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         vm.prank(claimer1, claimer1);
         ext.claim(receiver, 100, address(0), 0, alp, "");
 
-        vm.expectRevert("!MaxSupply");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DropSinglePhase.DropClaimExceedMaxSupply.selector,
+                conditions[0].maxClaimableSupply,
+                1 + conditions[0].maxClaimableSupply
+            )
+        );
         vm.prank(claimer2, claimer2);
         ext.claim(receiver, 1, address(0), 0, alp, "");
     }
@@ -102,16 +108,26 @@ contract ExtensionDropSinglePhase is DSTest, Test {
 
         ext.setClaimConditions(conditions[0], false);
 
-        bytes memory errorQty = "!Qty";
-
         vm.prank(claimer, claimer);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DropSinglePhase.DropClaimExceedLimit.selector,
+                conditions[0].quantityLimitPerWallet,
+                101
+            )
+        );
         ext.claim(receiver, 101, address(0), 0, alp, "");
 
         ext.setClaimConditions(conditions[0], true);
 
         vm.prank(claimer, claimer);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DropSinglePhase.DropClaimExceedLimit.selector,
+                conditions[0].quantityLimitPerWallet,
+                101
+            )
+        );
         ext.claim(receiver, 101, address(0), 0, alp, "");
     }
 
@@ -158,10 +174,10 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         ext.claim(receiver, x - 5, address(0), 0, alp, "");
         assertEq(ext.getSupplyClaimedByWallet(receiver), x - 5);
 
-        bytes memory errorQty = "!Qty";
-
         vm.prank(receiver, receiver);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(DropSinglePhase.DropClaimExceedLimit.selector, alp.quantityLimitPerWallet, x + 1)
+        );
         ext.claim(receiver, 6, address(0), 0, alp, "");
 
         vm.prank(receiver, receiver);
@@ -169,7 +185,9 @@ contract ExtensionDropSinglePhase is DSTest, Test {
         assertEq(ext.getSupplyClaimedByWallet(receiver), x);
 
         vm.prank(receiver, receiver);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(DropSinglePhase.DropClaimExceedLimit.selector, alp.quantityLimitPerWallet, x + 5)
+        );
         ext.claim(receiver, 5, address(0), 0, alp, "");
     }
 
