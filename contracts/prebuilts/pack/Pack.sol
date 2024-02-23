@@ -92,6 +92,7 @@ contract Pack is
     constructor(address _nativeTokenWrapper) TokenStore(_nativeTokenWrapper) initializer {}
 
     /// @dev Initializes the contract, like a constructor.
+    /* solhint-disable no-unused-vars */
     function initialize(
         address _defaultAdmin,
         string memory _name,
@@ -117,6 +118,8 @@ contract Pack is
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
     }
+
+    /* solhint-enable no-unused-vars */
 
     receive() external payable {
         require(msg.sender == nativeTokenWrapper, "!nativeTokenWrapper.");
