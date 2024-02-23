@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC1155 } from "contracts/prebuilts/drop/DropERC1155.sol";
+import { DropERC1155, Royalty, PlatformFee } from "contracts/prebuilts/drop/DropERC1155.sol";
 
 // Test imports
 import "../../../utils/BaseTest.sol";
@@ -72,7 +72,7 @@ contract DropERC1155Test_initializer is BaseTest {
     }
 
     function test_revert_RoyaltyBPSTooHigh() public royaltyBPSTooHigh {
-        vm.expectRevert("Exceeds max bps");
+        vm.expectRevert(abi.encodeWithSelector(Royalty.RoyaltyExceededMaxFeeBps.selector, 10_000, 10_001));
         deployContractProxy(
             "DropERC1155",
             abi.encodeCall(
@@ -94,7 +94,7 @@ contract DropERC1155Test_initializer is BaseTest {
     }
 
     function test_revert_PlatformFeeBPSTooHigh() public platformFeeBPSTooHigh {
-        vm.expectRevert("Exceeds max bps");
+        vm.expectRevert(abi.encodeWithSelector(PlatformFee.PlatformFeeExceededMaxFeeBps.selector, 10_000, 10_001));
         deployContractProxy(
             "DropERC1155",
             abi.encodeCall(

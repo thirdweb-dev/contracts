@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC1155 } from "contracts/prebuilts/drop/DropERC1155.sol";
+import { DropERC1155, BatchMintMetadata } from "contracts/prebuilts/drop/DropERC1155.sol";
 
 // Test imports
 
@@ -63,23 +63,20 @@ contract DropERC1155Test_updateBatchBaseURI is BaseTest {
     function test_revert_NoMetadataRole() public lazyMint callerWithoutMetadataRole {
         bytes32 role = keccak256("METADATA_ROLE");
         vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(unauthorized), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
+            abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, unauthorized, role)
         );
         drop.updateBatchBaseURI(0, updatedBaseURI);
     }
 
     function test_revert_IndexTooHigh() public lazyMint callerWithMetadataRole {
-        vm.expectRevert("Invalid index");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidBatchId.selector, 1));
         drop.updateBatchBaseURI(1, updatedBaseURI);
     }
 
     function test_revert_BatchFrozen() public lazyMint batchFrozen callerWithMetadataRole {
-        vm.expectRevert("Batch frozen");
+        vm.expectRevert(
+            abi.encodeWithSelector(BatchMintMetadata.BatchMintMetadataFrozen.selector, drop.getBatchIdAtIndex(0))
+        );
         drop.updateBatchBaseURI(0, updatedBaseURI);
     }
 

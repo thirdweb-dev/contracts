@@ -28,13 +28,9 @@ contract DropERC20Test_setMaxTotalSupply is BaseTest {
 
     function test_revert_doesNotHaveAdminRole() public callerDoesNotHaveDefaultAdminRole {
         bytes32 role = bytes32(0x00);
+
         vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(address(this)), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
+            abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, address(this), role)
         );
         drop.setMaxTotalSupply(0);
     }
