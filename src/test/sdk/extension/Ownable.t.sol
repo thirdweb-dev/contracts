@@ -37,7 +37,7 @@ contract ExtensionOwnableTest is DSTest, Test {
     }
 
     function test_revert_setOwner() public {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorized.selector));
         ext.setOwner(address(0x1234));
     }
 

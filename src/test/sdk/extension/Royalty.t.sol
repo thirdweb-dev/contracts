@@ -53,7 +53,7 @@ contract ExtensionRoyaltyTest is DSTest, Test {
         address _royaltyRecipient = address(0x123);
         uint256 _royaltyBps = 10001;
 
-        vm.expectRevert("Exceeds max bps");
+        vm.expectRevert(abi.encodeWithSelector(Royalty.RoyaltyExceededMaxFeeBps.selector, 10_000, _royaltyBps));
         ext.setDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
     }
 
@@ -71,7 +71,7 @@ contract ExtensionRoyaltyTest is DSTest, Test {
     }
 
     function test_revert_setRoyaltyInfo_NotAuthorized() public {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(Royalty.RoyaltyUnauthorized.selector));
         ext.setRoyaltyInfoForToken(0, address(1), 1000);
     }
 
@@ -82,7 +82,7 @@ contract ExtensionRoyaltyTest is DSTest, Test {
         address _recipient = address(0x123);
         uint256 _bps = 10001;
 
-        vm.expectRevert("Exceeds max bps");
+        vm.expectRevert(abi.encodeWithSelector(Royalty.RoyaltyExceededMaxFeeBps.selector, 10_000, _bps));
         ext.setRoyaltyInfoForToken(_tokenId, _recipient, _bps);
     }
 

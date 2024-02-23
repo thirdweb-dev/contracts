@@ -92,11 +92,10 @@ contract ExtensionPermissions is DSTest, Test {
 
         vm.startPrank(caller);
         vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(caller), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
+            abi.encodeWithSelector(
+                Permissions.PermissionsUnauthorizedAccount.selector,
+                caller,
+                ext.DEFAULT_ADMIN_ROLE()
             )
         );
         ext.grantRole(keccak256("role"), address(0x1));
@@ -106,7 +105,9 @@ contract ExtensionPermissions is DSTest, Test {
         vm.startPrank(defaultAdmin);
         ext.grantRole(keccak256("role"), address(0x1));
 
-        vm.expectRevert("Can only grant to non holders");
+        vm.expectRevert(
+            abi.encodeWithSelector(Permissions.PermissionsAlreadyGranted.selector, address(0x1), keccak256("role"))
+        );
         ext.grantRole(keccak256("role"), address(0x1));
     }
 
@@ -139,11 +140,10 @@ contract ExtensionPermissions is DSTest, Test {
 
         vm.startPrank(address(0x345));
         vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(address(0x345)), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
+            abi.encodeWithSelector(
+                Permissions.PermissionsUnauthorizedAccount.selector,
+                address(0x345),
+                ext.DEFAULT_ADMIN_ROLE()
             )
         );
         ext.revokeRole(keccak256("role"), address(0x567));
@@ -151,11 +151,10 @@ contract ExtensionPermissions is DSTest, Test {
 
         vm.startPrank(defaultAdmin);
         vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(address(0x789)), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(keccak256("role")), 32)
+            abi.encodeWithSelector(
+                Permissions.PermissionsUnauthorizedAccount.selector,
+                address(0x789),
+                keccak256("role")
             )
         );
         ext.revokeRole(keccak256("role"), address(0x789));
@@ -190,12 +189,7 @@ contract ExtensionPermissions is DSTest, Test {
     function test_revert_renounceRole_missingRole() public {
         vm.startPrank(defaultAdmin);
         vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(defaultAdmin), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(keccak256("role")), 32)
-            )
+            abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, defaultAdmin, keccak256("role"))
         );
         ext.renounceRole(keccak256("role"), defaultAdmin);
         vm.stopPrank();
@@ -206,7 +200,9 @@ contract ExtensionPermissions is DSTest, Test {
         ext.grantRole(keccak256("role"), address(0x567));
         assertTrue(ext.hasRole(keccak256("role"), address(0x567)));
 
-        vm.expectRevert("Can only renounce for self");
+        vm.expectRevert(
+            abi.encodeWithSelector(Permissions.PermissionsInvalidPermission.selector, defaultAdmin, address(0x567))
+        );
         ext.renounceRole(keccak256("role"), address(0x567));
         vm.stopPrank();
     }
@@ -218,11 +214,10 @@ contract ExtensionPermissions is DSTest, Test {
     function test_modifier_onlyRole() public {
         vm.startPrank(address(0x345));
         vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(address(0x345)), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(ext.DEFAULT_ADMIN_ROLE()), 32)
+            abi.encodeWithSelector(
+                Permissions.PermissionsUnauthorizedAccount.selector,
+                address(0x345),
+                ext.DEFAULT_ADMIN_ROLE()
             )
         );
         ext.checkModifier();
