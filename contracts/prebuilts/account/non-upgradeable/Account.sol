@@ -20,9 +20,6 @@ import "../utils/Helpers.sol";
 import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 import "../utils/BaseAccountFactory.sol";
 
-import { OrderParameters } from "seaport-types/src/lib/ConsiderationStructs.sol";
-import { SeaportOrderParser } from "./SeaportOrderParser.sol";
-
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
 // $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
@@ -32,7 +29,7 @@ import { SeaportOrderParser } from "./SeaportOrderParser.sol";
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC1155Holder, SeaportOrderParser {
+contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC1155Holder {
     using ECDSA for bytes32;
     using EnumerableSet for EnumerableSet.AddressSet;
 
@@ -70,40 +67,8 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
         bytes32 _message,
         bytes memory _signature
     ) public view virtual override returns (bytes4 magicValue) {
-        bytes32 targetDigest;
-        bytes memory targetSig;
-
-        // Handle OpenSea bulk order signatures that are >65 bytes in length.
-        if (_signature.length > 65) {
-            // Decode packed signature and order parameters.
-            (bytes memory extractedPackedSig, OrderParameters memory orderParameters, uint256 counter) = abi.decode(
-                _signature,
-                (bytes, OrderParameters, uint256)
-            );
-
-            // Verify that the original digest matches the digest built with order parameters.
-            bytes32 domainSeparator = _buildDomainSeparator(msg.sender);
-            bytes32 orderHash = _deriveOrderHash(orderParameters, counter);
-
-            require(
-                _deriveEIP712Digest(domainSeparator, orderHash) == _message,
-                "Seaport: order hash does not match the provided message."
-            );
-
-            // Build bulk signature digest
-            targetDigest = _deriveEIP712Digest(domainSeparator, _computeBulkOrderProof(extractedPackedSig, orderHash));
-
-            // Extract the signature, which is the first 65 bytes
-            targetSig = new bytes(65);
-            for (uint i = 0; i < 65; i++) {
-                targetSig[i] = extractedPackedSig[i];
-            }
-        } else {
-            targetDigest = getMessageHash(abi.encode(_message));
-            targetSig = _signature;
-        }
-
-        address signer = targetDigest.recover(targetSig);
+        bytes32 messageHash = getMessageHash(abi.encode(_message));
+        address signer = messageHash.recover(_signature);
 
         if (isAdmin(signer)) {
             return MAGICVALUE;
