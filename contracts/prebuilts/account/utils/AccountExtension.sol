@@ -64,12 +64,17 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
             super.supportsInterface(interfaceId);
     }
 
-    /// @notice See EIP-1271
+    /**
+     *  @notice See EIP-1271
+     *
+     *  @param _hash The original message hash of the data to sign (before mixing this contract's domain separator)
+     *  @param _signature The signature produced on signing the typed data hash (result of `getMessageHash(abi.encode(rawData))`)
+     */
     function isValidSignature(
-        bytes32 _originalMessageHash,
+        bytes32 _hash,
         bytes memory _signature
     ) public view virtual override returns (bytes4 magicValue) {
-        bytes32 typedDataHash = keccak256(abi.encode(MSG_TYPEHASH, _originalMessageHash));
+        bytes32 typedDataHash = keccak256(abi.encode(MSG_TYPEHASH, _hash));
         bytes32 targetDigest = keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), typedDataHash));
 
         address signer = targetDigest.recover(_signature);
