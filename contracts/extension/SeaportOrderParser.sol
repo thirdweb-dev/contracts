@@ -7,12 +7,12 @@ import { EIP_712_PREFIX, EIP712_ConsiderationItem_size, EIP712_DigestPayload_siz
 contract SeaportOrderParser {
     uint256 constant ECDSA_MaxLength = 65;
 
-    bytes32 internal immutable _NAME_HASH;
-    bytes32 internal immutable _VERSION_HASH;
-    bytes32 internal immutable _EIP_712_DOMAIN_TYPEHASH;
-    bytes32 internal immutable _OFFER_ITEM_TYPEHASH;
-    bytes32 internal immutable _CONSIDERATION_ITEM_TYPEHASH;
-    bytes32 internal immutable _ORDER_TYPEHASH;
+    bytes32 private immutable _NAME_HASH;
+    bytes32 private immutable _VERSION_HASH;
+    bytes32 private immutable _EIP_712_DOMAIN_TYPEHASH;
+    bytes32 private immutable _OFFER_ITEM_TYPEHASH;
+    bytes32 private immutable _CONSIDERATION_ITEM_TYPEHASH;
+    bytes32 private immutable _ORDER_TYPEHASH;
 
     constructor() {
         (
@@ -30,7 +30,7 @@ contract SeaportOrderParser {
         return "Seaport";
     }
 
-    function _buildDomainSeparator(address _domainAddress) internal view returns (bytes32) {
+    function _buildSeaportDomainSeparator(address _domainAddress) internal view returns (bytes32) {
         return
             keccak256(abi.encode(_EIP_712_DOMAIN_TYPEHASH, _NAME_HASH, _VERSION_HASH, block.chainid, _domainAddress));
     }

@@ -28,6 +28,12 @@ contract MerkleUnsorted is MurkyBase {
 }
 
 contract EIP712MerkleTree is Test {
+    bytes32 private constant MSG_TYPEHASH = keccak256("AccountMessage(bytes message)");
+    bytes32 private constant TYPEHASH =
+        keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
+    bytes32 private immutable HASHED_NAME = keccak256("Account");
+    bytes32 private immutable HASHED_VERSION = keccak256("1");
+
     // data contract to retrieve bulk order typehashes
     TypehashDirectory internal immutable _typehashDirectory;
     OrderComponents private emptyOrderComponents;
@@ -38,13 +44,64 @@ contract EIP712MerkleTree is Test {
         merkle = new MerkleUnsorted();
     }
 
+    // /**
+    //  * @dev Creates a single bulk signature: a base signature + a three byte
+    //  * index + a series of 32 byte proofs.  The height of the tree is determined
+    //  * by the length of the orderComponents array and only fills empty orders
+    //  * into the tree to make the length a power of 2.
+    //  */
+    // function signBulkOrder(
+    //     ConsiderationInterface consideration,
+    //     uint256 privateKey,
+    //     OrderComponents[] memory orderComponents,
+    //     uint24 orderIndex,
+    //     bool useCompact2098
+    // ) public view returns (bytes memory) {
+    //     // cache the hash of an empty order components struct to fill out any
+    //     // nodes required to make the length a power of 2
+    //     bytes32 emptyComponentsHash = consideration.getOrderHash(emptyOrderComponents);
+    //     // declare vars here to avoid stack too deep errors
+    //     bytes32[] memory leaves;
+    //     bytes32 bulkOrderTypehash;
+    //     // block scope to avoid stacc 2 dank
+    //     {
+    //         // height of merkle tree is log2(length), rounded up to next power
+    //         // of 2
+    //         uint256 height = Math.log2(orderComponents.length);
+    //         // Murky won't let you compute a merkle tree with only 1 leaf, so
+    //         // if height is 0 (length is 1), set height to 1
+    //         if (2 ** height != orderComponents.length || height == 0) {
+    //             height += 1;
+    //         }
+    //         // get the typehash for a bulk order of this height
+    //         bulkOrderTypehash = _lookupBulkOrderTypehash(height);
+    //         // allocate array for leaf hashes
+    //         leaves = new bytes32[](2 ** height);
+    //         // hash each original order component
+    //         for (uint256 i = 0; i < orderComponents.length; i++) {
+    //             leaves[i] = consideration.getOrderHash(orderComponents[i]);
+    //         }
+    //         // fill out empty node hashes
+    //         for (uint256 i = orderComponents.length; i < 2 ** height; i++) {
+    //             leaves[i] = emptyComponentsHash;
+    //         }
+    //     }
+
+    //     // get the proof for the order index
+    //     bytes32[] memory proof = merkle.getProof(leaves, orderIndex);
+    //     bytes32 root = merkle.getRoot(leaves);
+
+    //     return _getSignature(consideration, privateKey, bulkOrderTypehash, root, proof, orderIndex, useCompact2098);
+    // }
+
     /**
      * @dev Creates a single bulk signature: a base signature + a three byte
      * index + a series of 32 byte proofs.  The height of the tree is determined
      * by the length of the orderComponents array and only fills empty orders
      * into the tree to make the length a power of 2.
      */
-    function signBulkOrder(
+    function signBulkOrderSmartAccount(
+        address _account,
         ConsiderationInterface consideration,
         uint256 privateKey,
         OrderComponents[] memory orderComponents,
@@ -85,7 +142,17 @@ contract EIP712MerkleTree is Test {
         bytes32[] memory proof = merkle.getProof(leaves, orderIndex);
         bytes32 root = merkle.getRoot(leaves);
 
-        return _getSignature(consideration, privateKey, bulkOrderTypehash, root, proof, orderIndex, useCompact2098);
+        return
+            _getSignatureSmartAccount(
+                _account,
+                consideration,
+                privateKey,
+                bulkOrderTypehash,
+                root,
+                proof,
+                orderIndex,
+                useCompact2098
+            );
     }
 
     /**
@@ -100,7 +167,51 @@ contract EIP712MerkleTree is Test {
         }
     }
 
-    function _getSignature(
+    // function _getSignature(
+    //     ConsiderationInterface consideration,
+    //     uint256 privateKey,
+    //     bytes32 bulkOrderTypehash,
+    //     bytes32 root,
+    //     bytes32[] memory proof,
+    //     uint24 orderIndex,
+    //     bool useCompact2098
+    // ) internal view returns (bytes memory) {
+    //     // bulkOrder hash is keccak256 of the specific bulk order typehash and
+    //     // the merkle root of the order hashes
+    //     bytes32 bulkOrderHash = keccak256(abi.encode(bulkOrderTypehash, root));
+
+    //     // get domain separator from the particular seaport instance
+    //     (, bytes32 domainSeparator, ) = consideration.information();
+
+    //     // declare out here to avoid stack too deep errors
+    //     bytes memory signature;
+    //     // avoid stacc 2 thicc
+    //     {
+    //         (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+    //             privateKey,
+    //             keccak256(abi.encodePacked(bytes2(0x1901), domainSeparator, bulkOrderHash))
+    //         );
+    //         // if useCompact2098 is true, encode yParity (v) into s
+    //         if (useCompact2098) {
+    //             uint256 yParity = (v == 27) ? 0 : 1;
+    //             bytes32 yAndS = bytes32(uint256(s) | (yParity << 255));
+    //             signature = abi.encodePacked(r, yAndS);
+    //         } else {
+    //             signature = abi.encodePacked(r, s, v);
+    //         }
+    //     }
+
+    //     // return the packed signature, order index, and proof
+    //     // encodePacked will pack everything tightly without lengths
+    //     // ie, long-style rsv signatures will have 1 byte for v
+    //     // orderIndex will be the next 3 bytes
+    //     // then proof will be each element one after another; its offset and
+    //     // length will not be encoded
+    //     return abi.encodePacked(signature, orderIndex, proof);
+    // }
+
+    function _getSignatureSmartAccount(
+        address _smartAccount,
         ConsiderationInterface consideration,
         uint256 privateKey,
         bytes32 bulkOrderTypehash,
@@ -116,22 +227,22 @@ contract EIP712MerkleTree is Test {
         // get domain separator from the particular seaport instance
         (, bytes32 domainSeparator, ) = consideration.information();
 
+        bytes32 targetDigest = _getTargetDigest(domainSeparator, bulkOrderHash, _smartAccount);
+
         // declare out here to avoid stack too deep errors
         bytes memory signature;
         // avoid stacc 2 thicc
         {
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-                privateKey,
-                keccak256(abi.encodePacked(bytes2(0x1901), domainSeparator, bulkOrderHash))
-            );
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, targetDigest);
+            signature = abi.encodePacked(r, s, v);
             // if useCompact2098 is true, encode yParity (v) into s
-            if (useCompact2098) {
-                uint256 yParity = (v == 27) ? 0 : 1;
-                bytes32 yAndS = bytes32(uint256(s) | (yParity << 255));
-                signature = abi.encodePacked(r, yAndS);
-            } else {
-                signature = abi.encodePacked(r, s, v);
-            }
+            // if (useCompact2098) {
+            //     uint256 yParity = (v == 27) ? 0 : 1;
+            //     bytes32 yAndS = bytes32(uint256(s) | (yParity << 255));
+            //     signature = abi.encodePacked(r, yAndS);
+            // } else {
+            //     signature = abi.encodePacked(r, s, v);
+            // }
         }
 
         // return the packed signature, order index, and proof
@@ -141,5 +252,27 @@ contract EIP712MerkleTree is Test {
         // then proof will be each element one after another; its offset and
         // length will not be encoded
         return abi.encodePacked(signature, orderIndex, proof);
+    }
+
+    function _getTargetDigest(
+        bytes32 _seaportDomainSeparator,
+        bytes32 _bulkOrderHash,
+        address _account
+    ) internal view returns (bytes32) {
+        bytes32 typedDataHash = keccak256(
+            abi.encode(
+                MSG_TYPEHASH,
+                keccak256(abi.encodePacked(bytes2(0x1901), _seaportDomainSeparator, _bulkOrderHash))
+            )
+        );
+        bytes32 targetDigest = keccak256(
+            abi.encodePacked("\x19\x01", _buildDomainSeparatorSmartAccount(_account), typedDataHash)
+        );
+
+        return targetDigest;
+    }
+
+    function _buildDomainSeparatorSmartAccount(address _account) private view returns (bytes32) {
+        return keccak256(abi.encode(TYPEHASH, HASHED_NAME, HASHED_VERSION, block.chainid, _account));
     }
 }

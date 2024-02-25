@@ -296,7 +296,8 @@ contract AccountBulkOrderSigTest is BaseTest {
         // The other order components can remain empty.
 
         EIP712MerkleTree merkleTree = new EIP712MerkleTree();
-        bytes memory packedSignature = merkleTree.signBulkOrder(
+        bytes memory packedSignature = merkleTree.signBulkOrderSmartAccount(
+            sender,
             ConsiderationInterface(address(seaport)),
             accountAdminPKey,
             orderComponents,
