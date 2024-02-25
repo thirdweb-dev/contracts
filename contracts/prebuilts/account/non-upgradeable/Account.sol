@@ -64,11 +64,13 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
 
     /// @notice See EIP-1271
     function isValidSignature(
-        bytes32 _message,
+        bytes32 _originalMessageHash,
         bytes memory _signature
     ) public view virtual override returns (bytes4 magicValue) {
-        bytes32 messageHash = getMessageHash(abi.encode(_message));
-        address signer = messageHash.recover(_signature);
+        bytes32 typedDataHash = keccak256(abi.encode(MSG_TYPEHASH, _originalMessageHash));
+        bytes32 targetDigest = keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), typedDataHash));
+
+        address signer = targetDigest.recover(_signature);
 
         if (isAdmin(signer)) {
             return MAGICVALUE;
@@ -89,12 +91,13 @@ contract Account is AccountCore, ContractMetadata, ERC1271, ERC721Holder, ERC115
 
     /**
      * @notice Returns the hash of message that should be signed for EIP1271 verification.
-     * @param message Message to be hashed i.e. `keccak256(abi.encode(data))`
+     * @param _message The raw abi encoded data to hash and sign i.e. `abi.encode(data)`
      * @return Hashed message
      */
-    function getMessageHash(bytes memory message) public view returns (bytes32) {
-        bytes32 messageHash = keccak256(abi.encode(MSG_TYPEHASH, keccak256(message)));
-        return keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), messageHash));
+    function getMessageHash(bytes memory _message) public view returns (bytes32) {
+        bytes32 messageHash = keccak256(_message);
+        bytes32 typedDataHash = keccak256(abi.encode(MSG_TYPEHASH, messageHash));
+        return keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), typedDataHash));
     }
 
     /*///////////////////////////////////////////////////////////////
