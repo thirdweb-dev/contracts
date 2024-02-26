@@ -122,7 +122,7 @@ contract ExtensionSignatureMintERC721 is DSTest, Test {
         vm.prank(signer);
         ext.mintWithSignature(_mintrequest, _signature);
 
-        vm.expectRevert("Invalid req");
+        vm.expectRevert(abi.encodeWithSelector(SignatureMintERC721.SignatureMintInvalidSigner.selector));
         ext.mintWithSignature(_mintrequest, _signature);
     }
 
@@ -131,7 +131,14 @@ contract ExtensionSignatureMintERC721 is DSTest, Test {
         ext.setCondition(true);
 
         vm.prank(signer);
-        vm.expectRevert("Req expired");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                SignatureMintERC721.SignatureMintInvalidTime.selector,
+                _mintrequest.validityStartTimestamp,
+                _mintrequest.validityEndTimestamp,
+                block.timestamp
+            )
+        );
         ext.mintWithSignature(_mintrequest, _signature);
     }
 }

@@ -59,7 +59,9 @@ contract BatchMintMetadata_SetBaseURI is ExtensionUtilTest {
     }
 
     function test_setBaseURI_frozenBatchId() public {
-        vm.expectRevert("Batch frozen");
+        vm.expectRevert(
+            abi.encodeWithSelector(BatchMintMetadata.BatchMintMetadataFrozen.selector, batchIds[indexToUpdate])
+        );
         ext.setBaseURI(batchIds[indexToUpdate], newBaseURI);
     }
 

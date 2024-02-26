@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC20 } from "contracts/prebuilts/drop/DropERC20.sol";
+import { DropERC20, Permissions, Drop } from "contracts/prebuilts/drop/DropERC20.sol";
 
 // Test imports
 
@@ -36,15 +36,7 @@ contract DropERC20Test is BaseTest {
         bytes32 role = keccak256("TRANSFER_ROLE");
 
         vm.prank(caller);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(caller), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
-        );
-
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, caller, role));
         drop.renounceRole(role, caller);
     }
 
@@ -56,15 +48,7 @@ contract DropERC20Test is BaseTest {
         bytes32 role = keccak256("TRANSFER_ROLE");
 
         vm.prank(deployer);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(target), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
-        );
-
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, target, role));
         drop.revokeRole(role, target);
     }
 
@@ -79,7 +63,7 @@ contract DropERC20Test is BaseTest {
 
         drop.grantRole(role, receiver);
 
-        vm.expectRevert("Can only grant to non holders");
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsAlreadyGranted.selector, receiver, role));
         drop.grantRole(role, receiver);
 
         vm.stopPrank();
@@ -103,7 +87,7 @@ contract DropERC20Test is BaseTest {
         drop.grantRole(role, receiver);
 
         // expect revert when granting to a holder
-        vm.expectRevert("Can only grant to non holders");
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsAlreadyGranted.selector, receiver, role));
         drop.grantRole(role, receiver);
 
         // check if receiver has transfer role
@@ -254,7 +238,7 @@ contract DropERC20Test is BaseTest {
 
         vm.warp(99);
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert("!CONDITION.");
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropNoActiveCondition.selector));
         drop.claim(receiver, 1, address(0), 0, alp, "");
 
         vm.warp(100);
@@ -288,7 +272,9 @@ contract DropERC20Test is BaseTest {
         vm.prank(getActor(5), getActor(5));
         drop.claim(receiver, 100, address(0), 0, alp, "");
 
-        vm.expectRevert("!MaxSupply");
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedMaxSupply.selector, conditions[0].maxClaimableSupply, 101)
+        );
         vm.prank(getActor(6), getActor(6));
         drop.claim(receiver, 1, address(0), 0, alp, "");
     }
@@ -314,21 +300,25 @@ contract DropERC20Test is BaseTest {
         vm.prank(deployer);
         drop.setClaimConditions(conditions, false);
 
-        bytes memory errorQty = "!Qty";
-
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, conditions[0].quantityLimitPerWallet, 0)
+        );
         drop.claim(receiver, 0, address(0), 0, alp, "");
 
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, conditions[0].quantityLimitPerWallet, 101)
+        );
         drop.claim(receiver, 101, address(0), 0, alp, "");
 
         vm.prank(deployer);
         drop.setClaimConditions(conditions, true);
 
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, conditions[0].quantityLimitPerWallet, 101)
+        );
         drop.claim(receiver, 101, address(0), 0, alp, "");
     }
 
@@ -423,7 +413,9 @@ contract DropERC20Test is BaseTest {
         drop.setClaimConditions(conditions, false);
 
         vm.prank(receiver, receiver);
-        vm.expectRevert("!PriceOrCurrency");
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimInvalidTokenPrice.selector, address(erc20), 0, address(erc20), 1 ether)
+        );
         drop.claim(receiver, 100 ether, address(erc20), 0, alp, "");
 
         erc20.mint(receiver, 1000 ether);
@@ -536,9 +528,10 @@ contract DropERC20Test is BaseTest {
         vm.prank(receiver);
         erc20.approve(address(drop), 10000 ether);
 
-        bytes memory errorQty = "!Qty";
         vm.prank(receiver, receiver);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, conditions[0].quantityLimitPerWallet, 100 ether)
+        );
         drop.claim(receiver, 100 ether, address(erc20), 5 ether, alp, ""); // trying to claim more than general limit
 
         // vm.prank(getActor(5), getActor(5));
@@ -591,10 +584,8 @@ contract DropERC20Test is BaseTest {
         drop.claim(receiver, x - 5, address(0), 0, alp, "");
         assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), receiver), x - 5);
 
-        bytes memory errorQty = "!Qty";
-
         vm.prank(receiver, receiver);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, x, x + 1));
         drop.claim(receiver, 6, address(0), 0, alp, "");
 
         vm.prank(receiver, receiver);
@@ -602,7 +593,7 @@ contract DropERC20Test is BaseTest {
         assertEq(drop.getSupplyClaimedByWallet(drop.getActiveClaimConditionId(), receiver), x);
 
         vm.prank(receiver, receiver);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, x, x + 5));
         drop.claim(receiver, 5, address(0), 0, alp, ""); // quantity limit already claimed
     }
 
@@ -628,10 +619,10 @@ contract DropERC20Test is BaseTest {
         vm.prank(getActor(5), getActor(5));
         drop.claim(receiver, 100, address(0), 0, alp, "");
 
-        bytes memory errorQty = "!Qty";
-
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(Drop.DropClaimExceedLimit.selector, conditions[0].quantityLimitPerWallet, 200)
+        );
         drop.claim(receiver, 100, address(0), 0, alp, "");
 
         vm.prank(deployer);
@@ -695,7 +686,7 @@ contract DropERC20Test is BaseTest {
         conditions[2].quantityLimitPerWallet = 32;
         drop.setClaimConditions(conditions, false);
 
-        vm.expectRevert("!CONDITION.");
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropNoActiveCondition.selector));
         drop.getActiveClaimConditionId();
 
         vm.warp(10);

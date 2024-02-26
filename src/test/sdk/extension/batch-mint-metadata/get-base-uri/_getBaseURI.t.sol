@@ -46,7 +46,7 @@ contract BatchMintMetadata_GetBaseURI is ExtensionUtilTest {
     function test_getBaseURI_invalidTokenId() public {
         uint256 tokenId = batchIds[4]; // tokenId greater than the last batchId
 
-        vm.expectRevert("Invalid tokenId");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidTokenId.selector, tokenId));
         ext.getBaseURI(tokenId);
     }
 

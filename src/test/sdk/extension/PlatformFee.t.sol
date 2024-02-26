@@ -44,12 +44,14 @@ contract ExtensionPlatformFee is DSTest, Test {
         address _platformFeeRecipient = address(0x123);
         uint256 _platformFeeBps = 10001;
 
-        vm.expectRevert("Exceeds max bps");
+        vm.expectRevert(
+            abi.encodeWithSelector(PlatformFee.PlatformFeeExceededMaxFeeBps.selector, 10_000, _platformFeeBps)
+        );
         ext.setPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
     }
 
     function test_revert_setPlatformFeeInfo_NotAuthorized() public {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(PlatformFee.PlatformFeeUnauthorized.selector));
         ext.setPlatformFeeInfo(address(1), 1000);
     }
 

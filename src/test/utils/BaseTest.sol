@@ -118,7 +118,7 @@ abstract contract BaseTest is DSTest, Test {
         eoaForwarder = address(new ForwarderEOAOnly());
         registry = address(new TWRegistry(forwarder));
         factory = address(new TWFactory(forwarder, registry));
-        contractPublisher = address(new ContractPublisher(forwarder, new MockContractPublisher()));
+        contractPublisher = address(new ContractPublisher(factoryAdmin, forwarder, new MockContractPublisher()));
         linkToken = address(new Link());
         vrfV2Wrapper = address(new VRFV2Wrapper());
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
@@ -148,7 +148,7 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(
             address(new PackVRFDirect(address(weth), eoaForwarder, linkToken, vrfV2Wrapper))
         );
-        TWFactory(factory).addImplementation(address(new Pack(address(weth), eoaForwarder)));
+        TWFactory(factory).addImplementation(address(new Pack(address(weth))));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("NFTStake"), 1)));
         TWFactory(factory).addImplementation(address(new NFTStake(address(weth))));

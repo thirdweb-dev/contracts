@@ -39,7 +39,7 @@ contract ExtensionPrimarySale is DSTest, Test {
     function test_revert_setPrimarySaleRecipient_NotAuthorized() public {
         address _primarySaleRecipient = address(0x123);
 
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(PrimarySale.PrimarySaleUnauthorized.selector));
         ext.setPrimarySaleRecipient(_primarySaleRecipient);
     }
 

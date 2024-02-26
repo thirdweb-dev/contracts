@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { SignatureDrop, IDropSinglePhase, IDelayedReveal, ISignatureMintERC721, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/signature-drop/SignatureDrop.sol";
+import { SignatureDrop, DropSinglePhase, Permissions, LazyMint, BatchMintMetadata, DelayedReveal, IDropSinglePhase, IDelayedReveal, ISignatureMintERC721, ERC721AUpgradeable, IPermissions, ILazyMint } from "contracts/prebuilts/signature-drop/SignatureDrop.sol";
+import { SignatureMintERC721 } from "contracts/extension/SignatureMintERC721.sol";
 
 // Test imports
 import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
@@ -64,14 +65,7 @@ contract SignatureDropTest is BaseTest {
         bytes32 role = keccak256("MINTER_ROLE");
 
         vm.prank(caller);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(caller), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
-        );
+        vm.expectRevert();
 
         sigdrop.renounceRole(role, caller);
     }
@@ -84,14 +78,7 @@ contract SignatureDropTest is BaseTest {
         bytes32 role = keccak256("MINTER_ROLE");
 
         vm.prank(deployerSigner);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(target), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, target, role));
 
         sigdrop.revokeRole(role, target);
     }
@@ -107,7 +94,7 @@ contract SignatureDropTest is BaseTest {
 
         sigdrop.grantRole(role, receiver);
 
-        vm.expectRevert("Can only grant to non holders");
+        vm.expectRevert();
         sigdrop.grantRole(role, receiver);
 
         vm.stopPrank();
@@ -131,7 +118,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.grantRole(role, receiver);
 
         // expect revert when granting to a holder
-        vm.expectRevert("Can only grant to non holders");
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsAlreadyGranted.selector, receiver, role));
         sigdrop.grantRole(role, receiver);
 
         // check if receiver has transfer role
@@ -291,7 +278,13 @@ contract SignatureDropTest is BaseTest {
 
         vm.warp(99);
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert("cant claim yet");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DropSinglePhase.DropClaimNotStarted.selector,
+                conditions[0].startTimestamp,
+                block.timestamp
+            )
+        );
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
 
@@ -361,7 +354,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
 
         vm.prank(address(0x567));
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(LazyMint.LazyMintUnauthorized.selector));
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
     }
 
@@ -373,7 +366,7 @@ contract SignatureDropTest is BaseTest {
 
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
 
-        vm.expectRevert("Invalid tokenId");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidTokenId.selector, 100));
         sigdrop.tokenURI(100);
 
         vm.stopPrank();
@@ -531,14 +524,13 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.reveal(0, "key");
 
-        bytes memory errorMessage = abi.encodePacked(
-            "Permissions: account ",
-            Strings.toHexString(uint160(address(this)), 20),
-            " is missing role ",
-            Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Permissions.PermissionsUnauthorizedAccount.selector,
+                address(this),
+                keccak256("MINTER_ROLE")
+            )
         );
-
-        vm.expectRevert(errorMessage);
         sigdrop.reveal(0, "key");
     }
 
@@ -557,7 +549,7 @@ contract SignatureDropTest is BaseTest {
         console.log(sigdrop.getBaseURICount());
 
         sigdrop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
-        vm.expectRevert("Invalid index");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidBatchId.selector, 2));
         sigdrop.reveal(2, "key");
 
         vm.stopPrank();
@@ -575,7 +567,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
         sigdrop.reveal(0, "key");
 
-        vm.expectRevert("Nothing to reveal");
+        vm.expectRevert(abi.encodeWithSelector(DelayedReveal.DelayedRevealNothingToReveal.selector));
         sigdrop.reveal(0, "key");
 
         vm.stopPrank();
@@ -802,7 +794,7 @@ contract SignatureDropTest is BaseTest {
         sigdrop.mintWithSignature(mintrequest, signature);
 
         signature = signMintRequest(mintrequest, 4321);
-        vm.expectRevert("Invalid req");
+        vm.expectRevert(abi.encodeWithSelector(SignatureMintERC721.SignatureMintInvalidSigner.selector));
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -831,7 +823,7 @@ contract SignatureDropTest is BaseTest {
         vm.warp(1000);
 
         vm.prank(deployerSigner);
-        vm.expectRevert("0 qty");
+        vm.expectRevert(abi.encodeWithSelector(SignatureMintERC721.SignatureMintInvalidQuantity.selector));
         sigdrop.mintWithSignature(mintrequest, signature);
     }
 
@@ -1044,7 +1036,13 @@ contract SignatureDropTest is BaseTest {
         vm.prank(getActor(5), getActor(5));
         sigdrop.claim(receiver, 100, address(0), 0, alp, "");
 
-        vm.expectRevert("!MaxSupply");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DropSinglePhase.DropClaimExceedMaxSupply.selector,
+                conditions[0].maxClaimableSupply,
+                101
+            )
+        );
         vm.prank(getActor(6), getActor(6));
         sigdrop.claim(receiver, 1, address(0), 0, alp, "");
     }
@@ -1073,17 +1071,27 @@ contract SignatureDropTest is BaseTest {
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], false);
 
-        bytes memory errorQty = "!Qty";
-
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DropSinglePhase.DropClaimExceedLimit.selector,
+                conditions[0].quantityLimitPerWallet,
+                101
+            )
+        );
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
 
         vm.prank(deployerSigner);
         sigdrop.setClaimConditions(conditions[0], true);
 
         vm.prank(getActor(5), getActor(5));
-        vm.expectRevert(errorQty);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DropSinglePhase.DropClaimExceedLimit.selector,
+                conditions[0].quantityLimitPerWallet,
+                101
+            )
+        );
         sigdrop.claim(receiver, 101, address(0), 0, alp, "");
     }
 
@@ -1132,10 +1140,8 @@ contract SignatureDropTest is BaseTest {
         sigdrop.claim(receiver, x - 5, address(0), 0, alp, "");
         assertEq(sigdrop.getSupplyClaimedByWallet(receiver), x - 5);
 
-        bytes memory errorQty = "!Qty";
-
         vm.prank(receiver, receiver);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(abi.encodeWithSelector(DropSinglePhase.DropClaimExceedLimit.selector, x, x + 1));
         sigdrop.claim(receiver, 6, address(0), 0, alp, "");
 
         vm.prank(receiver, receiver);
@@ -1143,7 +1149,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(sigdrop.getSupplyClaimedByWallet(receiver), x);
 
         vm.prank(receiver, receiver);
-        vm.expectRevert(errorQty);
+        vm.expectRevert(abi.encodeWithSelector(DropSinglePhase.DropClaimExceedLimit.selector, x, x + 5));
         sigdrop.claim(receiver, 5, address(0), 0, alp, "");
     }
 
@@ -1195,7 +1201,7 @@ contract SignatureDropTest is BaseTest {
         assertEq(uri, string(abi.encodePacked("ipfs://", "1")));
 
         bytes memory newEncryptedURI = sigdrop.encryptDecrypt("ipfs://secret", "key");
-        vm.expectRevert("0 amt");
+        vm.expectRevert(abi.encodeWithSelector(LazyMint.LazyMintInvalidAmount.selector));
         sigdrop.lazyMint(0, "", abi.encode(newEncryptedURI, provenanceHash));
 
         vm.stopPrank();

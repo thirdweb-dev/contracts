@@ -3,6 +3,7 @@ pragma solidity ^0.8.0;
 
 import { Multiwrap } from "contracts/prebuilts/multiwrap/Multiwrap.sol";
 import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
+import { CurrencyTransferLib } from "contracts/lib/CurrencyTransferLib.sol";
 
 // Test imports
 import { MockERC20 } from "./mocks/MockERC20.sol";
@@ -112,14 +113,7 @@ contract MultiwrapTest is BaseTest {
         bytes32 role = keccak256("MINTER_ROLE");
 
         vm.prank(caller);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(caller), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, caller, role));
 
         multiwrap.renounceRole(role, caller);
     }
@@ -132,14 +126,7 @@ contract MultiwrapTest is BaseTest {
         bytes32 role = keccak256("MINTER_ROLE");
 
         vm.prank(deployer);
-        vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(target), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
-        );
+        vm.expectRevert(abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, target, role));
 
         multiwrap.revokeRole(role, target);
     }
@@ -334,17 +321,14 @@ contract MultiwrapTest is BaseTest {
 
         address recipient = address(0x123);
 
-        string memory errorMsg = string(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(wrappedContent[0].assetContract), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(keccak256("ASSET_ROLE")), 32)
+        vm.prank(address(tokenOwner));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Permissions.PermissionsUnauthorizedAccount.selector,
+                address(erc20),
+                keccak256("ASSET_ROLE")
             )
         );
-
-        vm.prank(address(tokenOwner));
-        vm.expectRevert(bytes(errorMsg));
         multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
     }
 
@@ -357,17 +341,14 @@ contract MultiwrapTest is BaseTest {
 
         address recipient = address(0x123);
 
-        string memory errorMsg = string(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(address(tokenOwner)), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
+        vm.prank(address(tokenOwner));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Permissions.PermissionsUnauthorizedAccount.selector,
+                address(tokenOwner),
+                keccak256("MINTER_ROLE")
             )
         );
-
-        vm.prank(address(tokenOwner));
-        vm.expectRevert(bytes(errorMsg));
         multiwrap.wrap(wrappedContent, uriForWrappedToken, recipient);
     }
 
@@ -388,7 +369,9 @@ contract MultiwrapTest is BaseTest {
         });
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("msg.value != amount");
+        vm.expectRevert(
+            abi.encodeWithSelector(CurrencyTransferLib.CurrencyTransferLibMismatchedValue.selector, 0, 10 ether)
+        );
         multiwrap.wrap(nativeTokenContentToWrap, uriForWrappedToken, recipient);
     }
 
@@ -529,7 +512,9 @@ contract MultiwrapTest is BaseTest {
         });
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("msg.value != amount");
+        vm.expectRevert(
+            abi.encodeWithSelector(CurrencyTransferLib.CurrencyTransferLibMismatchedValue.selector, 10 ether, 20 ether)
+        );
         multiwrap.wrap{ value: 10 ether }(nativeTokenContentToWrap, uriForWrappedToken, recipient);
 
         assertEq(address(multiwrap).balance, 10 ether);
@@ -743,17 +728,14 @@ contract MultiwrapTest is BaseTest {
         vm.prank(deployer);
         multiwrap.revokeRole(keccak256("UNWRAP_ROLE"), address(0));
 
-        string memory errorMsg = string(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(recipient), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(keccak256("UNWRAP_ROLE")), 32)
+        vm.prank(recipient);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Permissions.PermissionsUnauthorizedAccount.selector,
+                recipient,
+                keccak256("UNWRAP_ROLE")
             )
         );
-
-        vm.prank(recipient);
-        vm.expectRevert(bytes(errorMsg));
         multiwrap.unwrap(expectedIdForWrappedToken, recipient);
     }
 

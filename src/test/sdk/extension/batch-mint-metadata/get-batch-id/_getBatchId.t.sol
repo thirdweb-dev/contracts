@@ -43,7 +43,7 @@ contract BatchMintMetadata_GetBatchId is ExtensionUtilTest {
     function test_getBatchId_invalidTokenId() public {
         uint256 tokenId = batchIds[4]; // tokenId greater than the last batchId
 
-        vm.expectRevert("Invalid tokenId");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidTokenId.selector, tokenId));
         ext.getBatchId(tokenId);
     }
 

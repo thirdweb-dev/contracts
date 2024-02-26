@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721, BatchMintMetadata, Permissions } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
 
@@ -83,12 +83,7 @@ contract DropERC721Test_updateBatchBaseURI is BaseTest {
     function test_revert_NoMetadataRole() public callerWithoutMetadataRole {
         bytes32 role = keccak256("METADATA_ROLE");
         vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(unauthorized), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
+            abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, unauthorized, role)
         );
         drop.updateBatchBaseURI(0, updateBatch_newBaseURI);
     }
@@ -99,7 +94,9 @@ contract DropERC721Test_updateBatchBaseURI is BaseTest {
     }
 
     function test_revert_FrozenBatch() public lazyMintUnEncryptedRegularBaseURI callerWithMetadataRole batchFrozen {
-        vm.expectRevert("Batch frozen");
+        vm.expectRevert(
+            abi.encodeWithSelector(BatchMintMetadata.BatchMintMetadataFrozen.selector, drop.getBatchIdAtIndex(0))
+        );
         drop.updateBatchBaseURI(0, updateBatch_newBaseURI);
     }
 

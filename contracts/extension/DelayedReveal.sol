@@ -12,6 +12,12 @@ import "./interface/IDelayedReveal.sol";
  */
 
 abstract contract DelayedReveal is IDelayedReveal {
+    /// @dev The contract doesn't have any url to be delayed revealed
+    error DelayedRevealNothingToReveal();
+
+    /// @dev The result of the returned an incorrect hash
+    error DelayedRevealIncorrectResultHash(bytes32 expected, bytes32 actual);
+
     /// @dev Mapping from tokenId of a batch of tokens => to delayed reveal data.
     mapping(uint256 => bytes) public encryptedData;
 
@@ -34,14 +40,19 @@ abstract contract DelayedReveal is IDelayedReveal {
     function getRevealURI(uint256 _batchId, bytes calldata _key) public view returns (string memory revealedURI) {
         bytes memory data = encryptedData[_batchId];
         if (data.length == 0) {
-            revert("Nothing to reveal");
+            revert DelayedRevealNothingToReveal();
         }
 
         (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(data, (bytes, bytes32));
 
         revealedURI = string(encryptDecrypt(encryptedURI, _key));
 
-        require(keccak256(abi.encodePacked(revealedURI, _key, block.chainid)) == provenanceHash, "Incorrect key");
+        if (keccak256(abi.encodePacked(revealedURI, _key, block.chainid)) != provenanceHash) {
+            revert DelayedRevealIncorrectResultHash(
+                provenanceHash,
+                keccak256(abi.encodePacked(revealedURI, _key, block.chainid))
+            );
+        }
     }
 
     /**

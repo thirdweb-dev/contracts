@@ -42,13 +42,13 @@ contract ExtensionLazyMint is DSTest, Test {
     }
 
     function test_state_lazyMint_NotAuthorized() public {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(LazyMint.LazyMintUnauthorized.selector));
         ext.lazyMint(100, "", "");
     }
 
     function test_state_lazyMint_ZeroAmount() public {
         ext.setCondition(true);
-        vm.expectRevert("0 amt");
+        vm.expectRevert(abi.encodeWithSelector(LazyMint.LazyMintInvalidAmount.selector));
         ext.lazyMint(0, "", "");
     }
 

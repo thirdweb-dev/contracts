@@ -7,6 +7,32 @@ import "./interface/IDropSinglePhase.sol";
 import "../lib/MerkleProof.sol";
 
 abstract contract DropSinglePhase is IDropSinglePhase {
+    /// @dev The sender is not authorized to perform the action
+    error DropUnauthorized();
+
+    /// @dev Exceeded the max token total supply
+    error DropExceedMaxSupply();
+
+    /// @dev No active claim condition
+    error DropNoActiveCondition();
+
+    /// @dev Claim condition invalid currency or price
+    error DropClaimInvalidTokenPrice(
+        address expectedCurrency,
+        uint256 expectedPricePerToken,
+        address actualCurrency,
+        uint256 actualExpectedPricePerToken
+    );
+
+    /// @dev Claim condition exceeded limit
+    error DropClaimExceedLimit(uint256 expected, uint256 actual);
+
+    /// @dev Claim condition exceeded max supply
+    error DropClaimExceedMaxSupply(uint256 expected, uint256 actual);
+
+    /// @dev Claim condition not started yet
+    error DropClaimNotStarted(uint256 expected, uint256 actual);
+
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
@@ -63,7 +89,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
     /// @dev Lets a contract admin set claim conditions.
     function setClaimConditions(ClaimCondition calldata _condition, bool _resetClaimEligibility) external override {
         if (!_canSetClaimConditions()) {
-            revert("Not authorized");
+            revert DropUnauthorized();
         }
 
         bytes32 targetConditionId = conditionId;
@@ -75,7 +101,7 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         }
 
         if (supplyClaimedAlready > _condition.maxClaimableSupply) {
-            revert("max supply claimed");
+            revert DropExceedMaxSupply();
         }
 
         claimCondition = ClaimCondition({
@@ -140,19 +166,22 @@ abstract contract DropSinglePhase is IDropSinglePhase {
         uint256 _supplyClaimedByWallet = supplyClaimedByWallet[conditionId][_claimer];
 
         if (_currency != claimCurrency || _pricePerToken != claimPrice) {
-            revert("!PriceOrCurrency");
+            revert DropClaimInvalidTokenPrice(_currency, _pricePerToken, claimCurrency, claimPrice);
         }
 
         if (_quantity == 0 || (_quantity + _supplyClaimedByWallet > claimLimit)) {
-            revert("!Qty");
+            revert DropClaimExceedLimit(claimLimit, _quantity + _supplyClaimedByWallet);
         }
 
         if (currentClaimPhase.supplyClaimed + _quantity > currentClaimPhase.maxClaimableSupply) {
-            revert("!MaxSupply");
+            revert DropClaimExceedMaxSupply(
+                currentClaimPhase.maxClaimableSupply,
+                currentClaimPhase.supplyClaimed + _quantity
+            );
         }
 
         if (currentClaimPhase.startTimestamp > block.timestamp) {
-            revert("cant claim yet");
+            revert DropClaimNotStarted(currentClaimPhase.startTimestamp, block.timestamp);
         }
     }
 

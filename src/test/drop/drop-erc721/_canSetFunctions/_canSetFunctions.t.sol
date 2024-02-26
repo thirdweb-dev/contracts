@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721, PlatformFee, PrimarySale, ContractMetadata, Royalty, LazyMint, Drop, Ownable } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
 import "../../../utils/BaseTest.sol";
@@ -46,7 +46,7 @@ contract DropERC721Test_canSetFunctions is BaseTest {
     }
 
     function test__canSetPlatformFeeInfo_revert_callerNotAdmin() public callerNotAdmin {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(PlatformFee.PlatformFeeUnauthorized.selector));
         drop.setPlatformFeeInfo(address(0x1), 1);
     }
 
@@ -58,7 +58,7 @@ contract DropERC721Test_canSetFunctions is BaseTest {
     }
 
     function test__canSetPrimarySaleRecipient_revert_callerNotAdmin() public callerNotAdmin {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(PrimarySale.PrimarySaleUnauthorized.selector));
         drop.setPrimarySaleRecipient(address(0x1));
     }
 
@@ -68,7 +68,7 @@ contract DropERC721Test_canSetFunctions is BaseTest {
     }
 
     function test__canSetOwner_revert_callerNotAdmin() public callerNotAdmin {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorized.selector));
         drop.setOwner(address(0x1));
     }
 
@@ -78,7 +78,7 @@ contract DropERC721Test_canSetFunctions is BaseTest {
     }
 
     function test__canSetRoyaltyInfo_revert_callerNotAdmin() public callerNotAdmin {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(Royalty.RoyaltyUnauthorized.selector));
         drop.setDefaultRoyaltyInfo(address(0x1), 1);
     }
 
@@ -90,7 +90,7 @@ contract DropERC721Test_canSetFunctions is BaseTest {
     }
 
     function test__canSetContractURI_revert_callerNotAdmin() public callerNotAdmin {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(ContractMetadata.ContractMetadataUnauthorized.selector));
         drop.setContractURI("ipfs://");
     }
 
@@ -106,7 +106,7 @@ contract DropERC721Test_canSetFunctions is BaseTest {
         conditions[0].merkleRoot = bytes32(0);
         conditions[0].pricePerToken = 10;
         conditions[0].currency = address(0x111);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropUnauthorized.selector));
         drop.setClaimConditions(conditions, true);
     }
 
@@ -124,7 +124,7 @@ contract DropERC721Test_canSetFunctions is BaseTest {
         canset_amount = 10;
         canset_baseURI = "ipfs://";
         canset_data = abi.encode(canset_encryptedURI, canset_provenanceHash);
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(LazyMint.LazyMintUnauthorized.selector));
         drop.lazyMint(canset_amount, canset_baseURI, canset_data);
     }
 

@@ -39,7 +39,7 @@ contract ContractMetadata_SetContractURI is ExtensionUtilTest {
 
     function test_setContractURI_callerNotAuthorized() public {
         vm.prank(address(caller));
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(ContractMetadata.ContractMetadataUnauthorized.selector));
         ext.setContractURI(uri);
     }
 

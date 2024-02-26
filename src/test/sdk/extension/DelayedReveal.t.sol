@@ -58,12 +58,19 @@ contract ExtensionDelayedReveal is DSTest, Test {
 
         bytes memory encryptedUri = ext.encryptDecrypt(bytes(uriToEncrypt), key);
         bytes32 provenanceHash = keccak256(abi.encodePacked(uriToEncrypt, key, block.chainid));
+        string memory incorrectURI = string(ext.encryptDecrypt(encryptedUri, incorrectKey));
 
         bytes memory data = abi.encode(encryptedUri, provenanceHash);
 
         ext.setEncryptedData(0, data);
 
-        vm.expectRevert("Incorrect key");
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DelayedReveal.DelayedRevealIncorrectResultHash.selector,
+                provenanceHash,
+                keccak256(abi.encodePacked(incorrectURI, incorrectKey, block.chainid))
+            )
+        );
         ext.getRevealURI(0, incorrectKey);
     }
 
@@ -82,7 +89,7 @@ contract ExtensionDelayedReveal is DSTest, Test {
         ext.setEncryptedData(0, "");
         assertFalse(ext.isEncryptedBatch(0));
 
-        vm.expectRevert("Nothing to reveal");
+        vm.expectRevert(abi.encodeWithSelector(DelayedReveal.DelayedRevealNothingToReveal.selector));
         ext.getRevealURI(0, key);
     }
 }

@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { Pack, IERC2981Upgradeable, IERC721Receiver, IERC1155Upgradeable } from "contracts/prebuilts/pack/Pack.sol";
 import { IPack } from "contracts/prebuilts/interface/IPack.sol";
 import { ITokenBundle } from "contracts/extension/interface/ITokenBundle.sol";
+import { CurrencyTransferLib } from "contracts/lib/CurrencyTransferLib.sol";
 
 // Test imports
 import { MockERC20 } from "../mocks/MockERC20.sol";
@@ -201,8 +202,8 @@ contract PackTest is BaseTest {
     }
 
     function test_checkForwarders() public {
-        assertTrue(pack.isTrustedForwarder(eoaForwarder));
-        assertTrue(pack.isTrustedForwarder(forwarder));
+        assertFalse(pack.isTrustedForwarder(eoaForwarder));
+        assertFalse(pack.isTrustedForwarder(forwarder));
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -393,17 +394,14 @@ contract PackTest is BaseTest {
 
         address recipient = address(0x123);
 
-        string memory errorMsg = string(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(packContents[0].assetContract), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(keccak256("ASSET_ROLE")), 32)
+        vm.prank(address(tokenOwner));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Permissions.PermissionsUnauthorizedAccount.selector,
+                address(erc721),
+                keccak256("ASSET_ROLE")
             )
         );
-
-        vm.prank(address(tokenOwner));
-        vm.expectRevert(bytes(errorMsg));
         pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
     }
 
@@ -416,17 +414,14 @@ contract PackTest is BaseTest {
 
         address recipient = address(0x123);
 
-        string memory errorMsg = string(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(address(tokenOwner)), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
+        vm.prank(address(tokenOwner));
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Permissions.PermissionsUnauthorizedAccount.selector,
+                address(tokenOwner),
+                keccak256("MINTER_ROLE")
             )
         );
-
-        vm.prank(address(tokenOwner));
-        vm.expectRevert(bytes(errorMsg));
         pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
     }
 
@@ -449,7 +444,9 @@ contract PackTest is BaseTest {
         numOfRewardUnits.push(1);
 
         vm.prank(address(tokenOwner));
-        vm.expectRevert("msg.value != amount");
+        vm.expectRevert(
+            abi.encodeWithSelector(CurrencyTransferLib.CurrencyTransferLibMismatchedValue.selector, 0, 20 ether)
+        );
         pack.createPack(packContents, numOfRewardUnits, packUri, 0, 1, recipient);
     }
 
@@ -712,17 +709,14 @@ contract PackTest is BaseTest {
 
         address randomAccount = address(0x123);
 
-        string memory errorMsg = string(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(address(randomAccount)), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(keccak256("MINTER_ROLE")), 32)
+        vm.prank(randomAccount);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Permissions.PermissionsUnauthorizedAccount.selector,
+                randomAccount,
+                keccak256("MINTER_ROLE")
             )
         );
-
-        vm.prank(randomAccount);
-        vm.expectRevert(bytes(errorMsg));
         pack.addPackContents(packId, additionalContents, additionalContentsRewardUnits, recipient);
     }
 

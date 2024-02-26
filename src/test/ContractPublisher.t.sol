@@ -7,7 +7,7 @@ import "contracts/infra/interface/IContractPublisher.sol";
 import "contracts/infra/TWRegistry.sol";
 
 // Test helpers
-import { BaseTest } from "./utils/BaseTest.sol";
+import { BaseTest, MockContractPublisher } from "./utils/BaseTest.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 
 contract MockCustomContract {
@@ -113,6 +113,84 @@ contract ContractPublisherTest is BaseTest, IContractPublisherData {
     //     assertEq(customContract.bytecodeHash, keccak256(type(MockCustomContract).creationCode));
     //     assertEq(customContract.implementation, address(0));
     // }
+
+    function test_state_setPrevPublisher() public {
+        // === when prevPublisher address is address(0)
+        vm.prank(factoryAdmin);
+        byoc.setPrevPublisher(IContractPublisher(address(0)));
+
+        assertEq(byoc.getAllPublishedContracts(publisher).length, 0);
+        assertEq(address(byoc.prevPublisher()), address(0));
+
+        string memory contractId = "MyContract";
+        vm.prank(publisher);
+        byoc.publishContract(
+            publisher,
+            contractId,
+            publishMetadataUri,
+            compilerMetadataUri,
+            keccak256(type(MockCustomContract).creationCode),
+            address(0)
+        );
+        IContractPublisher.CustomContractInstance[] memory contracts = byoc.getAllPublishedContracts(publisher);
+        assertEq(contracts.length, 1);
+        assertEq(contracts[0].contractId, "MyContract");
+
+        // === when prevPublisher address is set to MockPublisher
+        address mock = address(new MockContractPublisher());
+        vm.prank(factoryAdmin);
+        byoc.setPrevPublisher(IContractPublisher(mock));
+
+        contracts = byoc.getAllPublishedContracts(publisher);
+        assertEq(contracts.length, 2);
+        assertEq(address(byoc.prevPublisher()), mock);
+        assertEq(contracts[0].contractId, "MockContract");
+        assertEq(contracts[1].contractId, "MyContract");
+    }
+
+    function test_revert_setPrevPublisher() public {
+        vm.expectRevert("Not authorized");
+        byoc.setPrevPublisher(IContractPublisher(address(0)));
+    }
+
+    function test_state_setPublisherProfileUri() public {
+        address user = address(0x123);
+        string memory uriOne = "ipfs://one";
+        string memory uriTwo = "ipfs://two";
+
+        // user updating for self
+        vm.prank(user);
+        byoc.setPublisherProfileUri(user, uriOne);
+        assertEq(byoc.getPublisherProfileUri(user), uriOne);
+
+        // random caller
+        vm.prank(address(0x345));
+        vm.expectRevert("Registry paused or caller not authorized");
+        byoc.setPublisherProfileUri(user, uriOne);
+
+        // MIGRATION_ROLE holder updating for a user
+        vm.prank(factoryAdmin);
+        byoc.setPublisherProfileUri(user, uriTwo);
+        assertEq(byoc.getPublisherProfileUri(user), uriTwo);
+    }
+
+    function test_state_setPublisherProfileUri_whenPaused() public {
+        vm.prank(factoryAdmin);
+        byoc.setPause(true);
+        address user = address(0x123);
+        string memory uriOne = "ipfs://one";
+        string memory uriTwo = "ipfs://two";
+
+        // user updating for self
+        vm.prank(user);
+        vm.expectRevert("Registry paused or caller not authorized");
+        byoc.setPublisherProfileUri(user, uriOne);
+
+        // MIGRATION_ROLE holder updating for a user
+        vm.prank(factoryAdmin);
+        byoc.setPublisherProfileUri(user, uriTwo);
+        assertEq(byoc.getPublisherProfileUri(user), uriTwo);
+    }
 
     function test_publish_revert_unapprovedCaller() public {
         string memory contractId = "MyContract";

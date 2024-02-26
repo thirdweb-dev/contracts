@@ -15,6 +15,15 @@ import "./interface/IRoyalty.sol";
  */
 
 abstract contract Royalty is IRoyalty {
+    /// @dev The sender is not authorized to perform the action
+    error RoyaltyUnauthorized();
+
+    /// @dev The recipient is invalid
+    error RoyaltyInvalidRecipient(address recipient);
+
+    /// @dev The fee bps exceeded the max value
+    error RoyaltyExceededMaxFeeBps(uint256 max, uint256 actual);
+
     /// @dev The (default) address that receives all royalty value.
     address private royaltyRecipient;
 
@@ -74,7 +83,7 @@ abstract contract Royalty is IRoyalty {
      */
     function setDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) external override {
         if (!_canSetRoyaltyInfo()) {
-            revert("Not authorized");
+            revert RoyaltyUnauthorized();
         }
 
         _setupDefaultRoyaltyInfo(_royaltyRecipient, _royaltyBps);
@@ -83,7 +92,7 @@ abstract contract Royalty is IRoyalty {
     /// @dev Lets a contract admin update the default royalty recipient and bps.
     function _setupDefaultRoyaltyInfo(address _royaltyRecipient, uint256 _royaltyBps) internal {
         if (_royaltyBps > 10_000) {
-            revert("Exceeds max bps");
+            revert RoyaltyExceededMaxFeeBps(10_000, _royaltyBps);
         }
 
         royaltyRecipient = _royaltyRecipient;
@@ -103,7 +112,7 @@ abstract contract Royalty is IRoyalty {
      */
     function setRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) external override {
         if (!_canSetRoyaltyInfo()) {
-            revert("Not authorized");
+            revert RoyaltyUnauthorized();
         }
 
         _setupRoyaltyInfoForToken(_tokenId, _recipient, _bps);
@@ -112,7 +121,7 @@ abstract contract Royalty is IRoyalty {
     /// @dev Lets a contract admin set the royalty recipient and bps for a particular token Id.
     function _setupRoyaltyInfoForToken(uint256 _tokenId, address _recipient, uint256 _bps) internal {
         if (_bps > 10_000) {
-            revert("Exceeds max bps");
+            revert RoyaltyExceededMaxFeeBps(10_000, _bps);
         }
 
         royaltyInfoForToken[_tokenId] = RoyaltyInfo({ recipient: _recipient, bps: _bps });
