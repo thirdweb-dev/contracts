@@ -16,7 +16,7 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
-import "@openzeppelin/contracts/utils/Multicall.sol";
+import "../extension/Multicall.sol";
 
 //  ==========  Internal imports    ==========
 import { IContractPublisher } from "./interface/IContractPublisher.sol";
@@ -257,7 +257,7 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
     }
 
     /// @dev ERC2771Context overrides
-    function _msgSender() internal view virtual override(Context, ERC2771Context) returns (address sender) {
+    function _msgSender() internal view virtual override(Context, ERC2771Context, Multicall) returns (address sender) {
         return ERC2771Context._msgSender();
     }
 
