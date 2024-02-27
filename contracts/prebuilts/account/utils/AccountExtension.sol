@@ -64,13 +64,18 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
             super.supportsInterface(interfaceId);
     }
 
-    /// @notice See EIP-1271
+    /**
+     *  @notice See EIP-1271
+     *
+     *  @param _hash The original message hash of the data to sign (before mixing this contract's domain separator)
+     *  @param _signature The signature produced on signing the typed data hash (result of `getMessageHash(abi.encode(rawData))`)
+     */
     function isValidSignature(
-        bytes32 _message,
+        bytes32 _hash,
         bytes memory _signature
     ) public view virtual override returns (bytes4 magicValue) {
-        bytes32 messageHash = getMessageHash(abi.encode(_message));
-        address signer = messageHash.recover(_signature);
+        bytes32 targetDigest = getMessageHash(_hash);
+        address signer = targetDigest.recover(_signature);
 
         if (isAdmin(signer)) {
             return MAGICVALUE;
@@ -91,12 +96,13 @@ contract AccountExtension is ContractMetadata, ERC1271, AccountPermissions, ERC7
 
     /**
      * @notice Returns the hash of message that should be signed for EIP1271 verification.
-     * @param message Message to be hashed i.e. `keccak256(abi.encode(data))`
-     * @return Hashed message
+     * @param _hash The message hash to sign for the EIP-1271 origin verifying contract.
+     * @return messageHash The digest to sign for EIP-1271 verification.
      */
-    function getMessageHash(bytes memory message) public view returns (bytes32) {
-        bytes32 messageHash = keccak256(abi.encode(MSG_TYPEHASH, keccak256(message)));
-        return keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), messageHash));
+    function getMessageHash(bytes32 _hash) public view returns (bytes32) {
+        bytes32 messageHash = keccak256(abi.encode(_hash));
+        bytes32 typedDataHash = keccak256(abi.encode(MSG_TYPEHASH, messageHash));
+        return keccak256(abi.encodePacked("\x19\x01", _domainSeparatorV4(), typedDataHash));
     }
 
     /*///////////////////////////////////////////////////////////////

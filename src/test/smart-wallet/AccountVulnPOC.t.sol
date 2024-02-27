@@ -279,7 +279,7 @@ contract SimpleAccountVulnPOCTest is BaseTest {
         // However they can bypass this by using signature verification on number contract instead
         vm.prank(accountSigner);
         bytes32 digest = keccak256(abi.encode(42));
-        bytes32 toSign = SimpleAccount(payable(account)).getMessageHash(abi.encode(digest));
+        bytes32 toSign = SimpleAccount(payable(account)).getMessageHash(digest);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(accountSignerPKey, toSign);
         bytes memory signature = abi.encodePacked(r, s, v);
 
