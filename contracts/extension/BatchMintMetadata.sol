@@ -11,6 +11,15 @@ pragma solidity ^0.8.0;
  */
 
 contract BatchMintMetadata {
+    /// @dev Invalid index for batch
+    error BatchMintInvalidBatchId(uint256 index);
+
+    /// @dev Invalid token
+    error BatchMintInvalidTokenId(uint256 tokenId);
+
+    /// @dev Metadata frozen
+    error BatchMintMetadataFrozen(uint256 batchId);
+
     /// @dev Largest tokenId of each batch of tokens with the same baseURI + 1 {ex: batchId 100 at position 0 includes tokens 0-99}
     uint256[] private batchIds;
 
@@ -46,7 +55,7 @@ contract BatchMintMetadata {
      */
     function getBatchIdAtIndex(uint256 _index) public view returns (uint256) {
         if (_index >= getBaseURICount()) {
-            revert("Invalid index");
+            revert BatchMintInvalidBatchId(_index);
         }
         return batchIds[_index];
     }
@@ -65,7 +74,7 @@ contract BatchMintMetadata {
             }
         }
 
-        revert("Invalid tokenId");
+        revert BatchMintInvalidTokenId(_tokenId);
     }
 
     /// @dev Returns the baseURI for a token. The intended metadata URI for the token is baseURI + tokenId.
@@ -78,7 +87,8 @@ contract BatchMintMetadata {
                 return baseURI[indices[i]];
             }
         }
-        revert("Invalid tokenId");
+
+        revert BatchMintInvalidTokenId(_tokenId);
     }
 
     /// @dev returns the starting tokenId of a given batchId.
@@ -94,12 +104,15 @@ contract BatchMintMetadata {
                 return 0;
             }
         }
-        revert("Invalid batchId");
+
+        revert BatchMintInvalidBatchId(_batchID);
     }
 
     /// @dev Sets the base URI for the batch of tokens with the given batchId.
     function _setBaseURI(uint256 _batchId, string memory _baseURI) internal {
-        require(!batchFrozen[_batchId], "Batch frozen");
+        if (batchFrozen[_batchId]) {
+            revert BatchMintMetadataFrozen(_batchId);
+        }
         baseURI[_batchId] = _baseURI;
         emit BatchMetadataUpdate(_getBatchStartId(_batchId), _batchId);
     }
@@ -107,7 +120,9 @@ contract BatchMintMetadata {
     /// @dev Freezes the base URI for the batch of tokens with the given batchId.
     function _freezeBaseURI(uint256 _batchId) internal {
         string memory baseURIForBatch = baseURI[_batchId];
-        require(bytes(baseURIForBatch).length > 0, "Invalid batch");
+        if (bytes(baseURIForBatch).length == 0) {
+            revert BatchMintInvalidBatchId(_batchId);
+        }
         batchFrozen[_batchId] = true;
         emit MetadataFrozen();
     }

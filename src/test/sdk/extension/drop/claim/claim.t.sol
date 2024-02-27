@@ -72,7 +72,7 @@ contract Drop_Claim is ExtensionUtilTest {
     }
 
     function test_claim_noConditionsSet() public {
-        vm.expectRevert("!CONDITION.");
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropNoActiveCondition.selector));
         ext.claim(_claimer, _quantity, _currency, _pricePerToken, _allowlistProof, "");
     }
 

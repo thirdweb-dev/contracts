@@ -13,6 +13,10 @@ import "./BatchMintMetadata.sol";
  */
 
 abstract contract LazyMint is ILazyMint, BatchMintMetadata {
+    /// @dev The sender is not authorized to perform the action
+    error LazyMintUnauthorized();
+    error LazyMintInvalidAmount();
+
     /// @notice The tokenId assigned to the next new NFT to be lazy minted.
     uint256 internal nextTokenIdToLazyMint;
 
@@ -31,11 +35,11 @@ abstract contract LazyMint is ILazyMint, BatchMintMetadata {
         bytes calldata _data
     ) public virtual override returns (uint256 batchId) {
         if (!_canLazyMint()) {
-            revert("Not authorized");
+            revert LazyMintUnauthorized();
         }
 
         if (_amount == 0) {
-            revert("0 amt");
+            revert LazyMintInvalidAmount();
         }
 
         uint256 startId = nextTokenIdToLazyMint;

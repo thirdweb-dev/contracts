@@ -13,6 +13,15 @@ import "./interface/IPlatformFee.sol";
  */
 
 abstract contract PlatformFee is IPlatformFee {
+    /// @dev The sender is not authorized to perform the action
+    error PlatformFeeUnauthorized();
+
+    /// @dev The recipient is invalid
+    error PlatformFeeInvalidRecipient(address recipient);
+
+    /// @dev The fee bps exceeded the max value
+    error PlatformFeeExceededMaxFeeBps(uint256 max, uint256 actual);
+
     /// @dev The address that receives all platform fees from all sales.
     address private platformFeeRecipient;
 
@@ -51,7 +60,7 @@ abstract contract PlatformFee is IPlatformFee {
      */
     function setPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) external override {
         if (!_canSetPlatformFeeInfo()) {
-            revert("Not authorized");
+            revert PlatformFeeUnauthorized();
         }
         _setupPlatformFeeInfo(_platformFeeRecipient, _platformFeeBps);
     }
@@ -59,10 +68,10 @@ abstract contract PlatformFee is IPlatformFee {
     /// @dev Sets the platform fee recipient and bps
     function _setupPlatformFeeInfo(address _platformFeeRecipient, uint256 _platformFeeBps) internal {
         if (_platformFeeBps > 10_000) {
-            revert("Exceeds max bps");
+            revert PlatformFeeExceededMaxFeeBps(10_000, _platformFeeBps);
         }
         if (_platformFeeRecipient == address(0)) {
-            revert("Invalid recipient");
+            revert PlatformFeeInvalidRecipient(_platformFeeRecipient);
         }
 
         platformFeeBps = uint16(_platformFeeBps);
@@ -74,7 +83,7 @@ abstract contract PlatformFee is IPlatformFee {
     /// @notice Lets a module admin set a flat fee on primary sales.
     function setFlatPlatformFeeInfo(address _platformFeeRecipient, uint256 _flatFee) external {
         if (!_canSetPlatformFeeInfo()) {
-            revert("Not authorized");
+            revert PlatformFeeUnauthorized();
         }
 
         _setupFlatPlatformFeeInfo(_platformFeeRecipient, _flatFee);
@@ -91,7 +100,7 @@ abstract contract PlatformFee is IPlatformFee {
     /// @notice Lets a module admin set platform fee type.
     function setPlatformFeeType(PlatformFeeType _feeType) external {
         if (!_canSetPlatformFeeInfo()) {
-            revert("Not authorized");
+            revert PlatformFeeUnauthorized();
         }
         _setupPlatformFeeType(_feeType);
     }

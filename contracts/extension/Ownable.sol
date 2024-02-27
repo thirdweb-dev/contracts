@@ -13,13 +13,16 @@ import "./interface/IOwnable.sol";
  */
 
 abstract contract Ownable is IOwnable {
+    /// @dev The sender is not authorized to perform the action
+    error OwnableUnauthorized();
+
     /// @dev Owner of the contract (purpose: OpenSea compatibility)
     address private _owner;
 
     /// @dev Reverts if caller is not the owner.
     modifier onlyOwner() {
         if (msg.sender != _owner) {
-            revert("Not authorized");
+            revert OwnableUnauthorized();
         }
         _;
     }
@@ -37,7 +40,7 @@ abstract contract Ownable is IOwnable {
      */
     function setOwner(address _newOwner) external override {
         if (!_canSetOwner()) {
-            revert("Not authorized");
+            revert OwnableUnauthorized();
         }
         _setupOwner(_newOwner);
     }

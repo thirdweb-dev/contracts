@@ -13,6 +13,12 @@ import "./interface/IPrimarySale.sol";
  */
 
 abstract contract PrimarySale is IPrimarySale {
+    /// @dev The sender is not authorized to perform the action
+    error PrimarySaleUnauthorized();
+
+    /// @dev The recipient is invalid
+    error PrimarySaleInvalidRecipient(address recipient);
+
     /// @dev The address that receives all primary sales value.
     address private recipient;
 
@@ -31,7 +37,7 @@ abstract contract PrimarySale is IPrimarySale {
      */
     function setPrimarySaleRecipient(address _saleRecipient) external override {
         if (!_canSetPrimarySaleRecipient()) {
-            revert("Not authorized");
+            revert PrimarySaleUnauthorized();
         }
         _setupPrimarySaleRecipient(_saleRecipient);
     }
@@ -39,8 +45,9 @@ abstract contract PrimarySale is IPrimarySale {
     /// @dev Lets a contract admin set the recipient for all primary sales.
     function _setupPrimarySaleRecipient(address _saleRecipient) internal {
         if (_saleRecipient == address(0)) {
-            revert("Invalid recipient");
+            revert PrimarySaleInvalidRecipient(_saleRecipient);
         }
+
         recipient = _saleRecipient;
         emit PrimarySaleRecipientUpdated(_saleRecipient);
     }

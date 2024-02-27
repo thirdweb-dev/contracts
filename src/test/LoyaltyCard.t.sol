@@ -7,7 +7,7 @@ import "@ds-test/test.sol";
 import "./utils/BaseTest.sol";
 import "contracts/infra/TWProxy.sol";
 import { Strings } from "contracts/lib/Strings.sol";
-import { LoyaltyCard } from "contracts/prebuilts/loyalty/LoyaltyCard.sol";
+import { LoyaltyCard, NFTMetadata } from "contracts/prebuilts/loyalty/LoyaltyCard.sol";
 
 contract LoyaltyCardTest is BaseTest {
     LoyaltyCard internal loyaltyCard;
@@ -320,7 +320,7 @@ contract LoyaltyCardTest is BaseTest {
     function test_setTokenURI_revert_NotAuthorized() public {
         string memory uri = "uri_string";
 
-        vm.expectRevert("NFTMetadata: not authorized to set metadata.");
+        vm.expectRevert(abi.encodeWithSelector(NFTMetadata.NFTMetadataUnauthorized.selector));
         vm.prank(address(0x1));
         loyaltyCard.setTokenURI(0, uri);
     }
@@ -331,7 +331,7 @@ contract LoyaltyCardTest is BaseTest {
         vm.startPrank(signer);
         loyaltyCard.freezeMetadata();
 
-        vm.expectRevert("NFTMetadata: metadata is frozen.");
+        vm.expectRevert(abi.encodeWithSelector(NFTMetadata.NFTMetadataFrozen.selector, 0));
         loyaltyCard.setTokenURI(0, uri);
     }
 

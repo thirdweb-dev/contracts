@@ -5,7 +5,7 @@ import "@std/Test.sol";
 import "@ds-test/test.sol";
 
 import "./BaseUtilTest.sol";
-import { ERC721DelayedReveal } from "contracts/base/ERC721DelayedReveal.sol";
+import { ERC721DelayedReveal, BatchMintMetadata } from "contracts/base/ERC721DelayedReveal.sol";
 
 contract BaseERC721DelayedRevealTest is BaseUtilTest {
     ERC721DelayedReveal internal base;
@@ -77,7 +77,7 @@ contract BaseERC721DelayedRevealTest is BaseUtilTest {
         vm.startPrank(deployer);
         base.lazyMint(_amount, _baseURIForTokens, abi.encode(_encryptedBaseURI, provenanceHash));
 
-        vm.expectRevert("Invalid tokenId");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidTokenId.selector, 100));
         base.tokenURI(100);
 
         vm.stopPrank();

@@ -4,6 +4,15 @@ pragma solidity ^0.8.0;
 import "./interface/INFTMetadata.sol";
 
 abstract contract NFTMetadata is INFTMetadata {
+    /// @dev The sender is not authorized to perform the action
+    error NFTMetadataUnauthorized();
+
+    /// @dev Invalid token metadata url
+    error NFTMetadataInvalidUrl();
+
+    /// @dev the nft metadata is frozen
+    error NFTMetadataFrozen(uint256 tokenId);
+
     bool public uriFrozen;
 
     mapping(uint256 => string) internal _tokenURI;
@@ -15,7 +24,9 @@ abstract contract NFTMetadata is INFTMetadata {
 
     /// @notice Sets the metadata URI for a given NFT.
     function _setTokenURI(uint256 _tokenId, string memory _uri) internal virtual {
-        require(bytes(_uri).length > 0, "NFTMetadata: empty metadata.");
+        if (bytes(_uri).length == 0) {
+            revert NFTMetadataInvalidUrl();
+        }
         _tokenURI[_tokenId] = _uri;
 
         emit MetadataUpdate(_tokenId);
@@ -23,13 +34,19 @@ abstract contract NFTMetadata is INFTMetadata {
 
     /// @notice Sets the metadata URI for a given NFT.
     function setTokenURI(uint256 _tokenId, string memory _uri) public virtual {
-        require(_canSetMetadata(), "NFTMetadata: not authorized to set metadata.");
-        require(!uriFrozen, "NFTMetadata: metadata is frozen.");
+        if (!_canSetMetadata()) {
+            revert NFTMetadataUnauthorized();
+        }
+        if (uriFrozen) {
+            revert NFTMetadataFrozen(_tokenId);
+        }
         _setTokenURI(_tokenId, _uri);
     }
 
     function freezeMetadata() public virtual {
-        require(_canFreezeMetadata(), "NFTMetadata: not authorized to freeze metdata");
+        if (!_canFreezeMetadata()) {
+            revert NFTMetadataUnauthorized();
+        }
         uriFrozen = true;
         emit MetadataFrozen();
     }

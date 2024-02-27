@@ -11,6 +11,15 @@ import "../lib/Strings.sol";
  *  @dev     This contracts provides extending-contracts with role-based access control mechanisms
  */
 contract Permissions is IPermissions {
+    /// @dev The `account` is missing a role.
+    error PermissionsUnauthorizedAccount(address account, bytes32 neededRole);
+
+    /// @dev The `account` already is a holder of `role`
+    error PermissionsAlreadyGranted(address account, bytes32 role);
+
+    /// @dev Invalid priviledge to revoke
+    error PermissionsInvalidPermission(address expected, address actual);
+
     /// @dev Map from keccak256 hash of a role => a map from address => whether address has role.
     mapping(bytes32 => mapping(address => bool)) private _hasRole;
 
@@ -81,7 +90,7 @@ contract Permissions is IPermissions {
     function grantRole(bytes32 role, address account) public virtual override {
         _checkRole(_getRoleAdmin[role], msg.sender);
         if (_hasRole[role][account]) {
-            revert("Can only grant to non holders");
+            revert PermissionsAlreadyGranted(account, role);
         }
         _setupRole(role, account);
     }
@@ -109,7 +118,7 @@ contract Permissions is IPermissions {
      */
     function renounceRole(bytes32 role, address account) public virtual override {
         if (msg.sender != account) {
-            revert("Can only renounce for self");
+            revert PermissionsInvalidPermission(msg.sender, account);
         }
         _revokeRole(role, account);
     }
@@ -137,32 +146,14 @@ contract Permissions is IPermissions {
     /// @dev Checks `role` for `account`. Reverts with a message including the required role.
     function _checkRole(bytes32 role, address account) internal view virtual {
         if (!_hasRole[role][account]) {
-            revert(
-                string(
-                    abi.encodePacked(
-                        "Permissions: account ",
-                        Strings.toHexString(uint160(account), 20),
-                        " is missing role ",
-                        Strings.toHexString(uint256(role), 32)
-                    )
-                )
-            );
+            revert PermissionsUnauthorizedAccount(account, role);
         }
     }
 
     /// @dev Checks `role` for `account`. Reverts with a message including the required role.
     function _checkRoleWithSwitch(bytes32 role, address account) internal view virtual {
         if (!hasRoleWithSwitch(role, account)) {
-            revert(
-                string(
-                    abi.encodePacked(
-                        "Permissions: account ",
-                        Strings.toHexString(uint160(account), 20),
-                        " is missing role ",
-                        Strings.toHexString(uint256(role), 32)
-                    )
-                )
-            );
+            revert PermissionsUnauthorizedAccount(account, role);
         }
     }
 }

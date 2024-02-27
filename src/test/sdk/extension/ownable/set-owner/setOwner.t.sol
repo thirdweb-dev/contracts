@@ -47,7 +47,7 @@ contract Ownable_SetOwner is ExtensionUtilTest {
 
     function test_setOwner_callerNotAuthorized() public {
         vm.prank(address(caller));
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorized.selector));
         ext.setOwner(newOwner);
     }
 

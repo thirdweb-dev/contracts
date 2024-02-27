@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
+import { DropERC721, BatchMintMetadata, DelayedReveal } from "contracts/prebuilts/drop/DropERC721.sol";
 
 // Test imports
 
@@ -82,13 +82,9 @@ contract DropERC721Test_reveal is BaseTest {
 
     function test_revert_NoMetadataRole() public callerWithoutMetadataRole {
         bytes32 role = keccak256("METADATA_ROLE");
+
         vm.expectRevert(
-            abi.encodePacked(
-                "Permissions: account ",
-                Strings.toHexString(uint160(unauthorized), 20),
-                " is missing role ",
-                Strings.toHexString(uint256(role), 32)
-            )
+            abi.encodeWithSelector(Permissions.PermissionsUnauthorizedAccount.selector, unauthorized, role)
         );
         drop.reveal(reveal_index, reveal_key);
     }
@@ -117,17 +113,25 @@ contract DropERC721Test_reveal is BaseTest {
     }
 
     function test_revert_InvalidIndex() public invalidIndex lazyMintEncrypted callerWithMetadataRole {
-        vm.expectRevert("Invalid index");
+        vm.expectRevert(abi.encodeWithSelector(BatchMintMetadata.BatchMintInvalidBatchId.selector, reveal_index));
         drop.reveal(reveal_index, reveal_key);
     }
 
     function test_revert_InvalidKey() public validIndex lazyMintEncrypted invalidKey callerWithMetadataRole {
-        vm.expectRevert("Incorrect key");
+        string memory incorrectURI = string(drop.encryptDecrypt(reveal_encryptedURI, reveal_key));
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                DelayedReveal.DelayedRevealIncorrectResultHash.selector,
+                reveal_provenanceHash,
+                keccak256(abi.encodePacked(incorrectURI, reveal_key, block.chainid))
+            )
+        );
         drop.reveal(reveal_index, reveal_key);
     }
 
     function test_revert_NoEncryptedData() public validIndex lazyMintUnEncrypted callerWithMetadataRole {
-        vm.expectRevert("Nothing to reveal");
+        vm.expectRevert(abi.encodeWithSelector(DelayedReveal.DelayedRevealNothingToReveal.selector));
         drop.reveal(reveal_index, reveal_key);
     }
 }

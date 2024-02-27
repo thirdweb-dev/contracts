@@ -139,10 +139,10 @@ contract Drop_SetClaimConditions is ExtensionUtilTest {
     }
 
     function test_setClaimConditions_notAuthorized() public {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropUnauthorized.selector));
         ext.setClaimConditions(newClaimConditions, false);
 
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropUnauthorized.selector));
         ext.setClaimConditions(newClaimConditions, true);
     }
 
@@ -257,7 +257,7 @@ contract Drop_SetClaimConditions is ExtensionUtilTest {
         // set new maxClaimableSupply less than supplyClaimed of the old condition
         newClaimConditions[0].maxClaimableSupply = _oldCondition.supplyClaimed - 1;
 
-        vm.expectRevert("max supply claimed");
+        vm.expectRevert(abi.encodeWithSelector(Drop.DropExceedMaxSupply.selector));
         ext.setClaimConditions(newClaimConditions, false);
     }
 

@@ -10,6 +10,9 @@ import { SafeERC20, IERC20 } from "../external-deps/openzeppelin/token/ERC20/uti
 library CurrencyTransferLib {
     using SafeERC20 for IERC20;
 
+    error CurrencyTransferLibMismatchedValue(uint256 expected, uint256 actual);
+    error CurrencyTransferLibFailedNativeTransfer(address recipient, uint256 value);
+
     /// @dev The address interpreted as native token of the chain.
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -45,7 +48,9 @@ library CurrencyTransferLib {
                 safeTransferNativeTokenWithWrapper(_to, _amount, _nativeTokenWrapper);
             } else if (_to == address(this)) {
                 // store native currency in weth
-                require(_amount == msg.value, "msg.value != amount");
+                if (_amount != msg.value) {
+                    revert CurrencyTransferLibMismatchedValue(msg.value, _amount);
+                }
                 IWETH(_nativeTokenWrapper).deposit{ value: _amount }();
             } else {
                 safeTransferNativeTokenWithWrapper(_to, _amount, _nativeTokenWrapper);
@@ -73,7 +78,9 @@ library CurrencyTransferLib {
         // solhint-disable avoid-low-level-calls
         // slither-disable-next-line low-level-calls
         (bool success, ) = to.call{ value: value }("");
-        require(success, "native token transfer failed");
+        if (!success) {
+            revert CurrencyTransferLibFailedNativeTransfer(to, value);
+        }
     }
 
     /// @dev Transfers `amount` of native token to `to`. (With native token wrapping)

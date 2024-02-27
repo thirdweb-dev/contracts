@@ -7,6 +7,21 @@ import "./interface/ISignatureMintERC721.sol";
 import "../external-deps/openzeppelin/utils/cryptography/EIP712.sol";
 
 abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
+    /// @dev The sender is not authorized to perform the action
+    error SignatureMintUnauthorized();
+
+    /// @dev The signer is not authorized to perform the signing action
+    error SignatureMintInvalidSigner();
+
+    /// @dev The signature is either expired or not ready to be claimed yet
+    error SignatureMintInvalidTime(uint256 startTime, uint256 endTime, uint256 actualTime);
+
+    /// @dev Invalid mint recipient
+    error SignatureMintInvalidRecipient();
+
+    /// @dev Invalid mint quantity
+    error SignatureMintInvalidQuantity();
+
     using ECDSA for bytes32;
 
     bytes32 private constant TYPEHASH =
@@ -37,14 +52,20 @@ abstract contract SignatureMintERC721 is EIP712, ISignatureMintERC721 {
         (success, signer) = verify(_req, _signature);
 
         if (!success) {
-            revert("Invalid req");
+            revert SignatureMintInvalidSigner();
         }
 
         if (_req.validityStartTimestamp > block.timestamp || block.timestamp > _req.validityEndTimestamp) {
-            revert("Req expired");
+            revert SignatureMintInvalidTime(_req.validityStartTimestamp, _req.validityEndTimestamp, block.timestamp);
         }
-        require(_req.to != address(0), "recipient undefined");
-        require(_req.quantity > 0, "0 qty");
+
+        if (_req.to == address(0)) {
+            revert SignatureMintInvalidRecipient();
+        }
+
+        if (_req.quantity == 0) {
+            revert SignatureMintInvalidQuantity();
+        }
 
         minted[_req.uid] = true;
     }

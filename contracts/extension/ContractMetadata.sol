@@ -13,6 +13,9 @@ import "./interface/IContractMetadata.sol";
  */
 
 abstract contract ContractMetadata is IContractMetadata {
+    /// @dev The sender is not authorized to perform the action
+    error ContractMetadataUnauthorized();
+
     /// @notice Returns the contract metadata URI.
     string public override contractURI;
 
@@ -26,7 +29,7 @@ abstract contract ContractMetadata is IContractMetadata {
      */
     function setContractURI(string memory _uri) external override {
         if (!_canSetContractURI()) {
-            revert("Not authorized");
+            revert ContractMetadataUnauthorized();
         }
 
         _setupContractURI(_uri);

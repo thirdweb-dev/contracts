@@ -58,20 +58,20 @@ contract ExtensionNFTMetadata is DSTest, Test {
     function test_setTokenURI_revert_notAuthorized() public {
         vm.startPrank(address(0x1));
         string memory uri = "test";
-        vm.expectRevert("NFTMetadata: not authorized to set metadata.");
+        vm.expectRevert(abi.encodeWithSelector(NFTMetadata.NFTMetadataUnauthorized.selector));
         ext.setTokenURI(1, uri);
     }
 
     function test_setTokenURI_revert_emptyMetadata() public {
         string memory uri = "";
-        vm.expectRevert("NFTMetadata: empty metadata.");
+        vm.expectRevert(abi.encodeWithSelector(NFTMetadata.NFTMetadataInvalidUrl.selector));
         ext.setTokenURI(1, uri);
     }
 
     function test_setTokenURI_revert_frozen() public {
         ext.freezeMetadata();
         string memory uri = "test";
-        vm.expectRevert("NFTMetadata: metadata is frozen.");
+        vm.expectRevert(abi.encodeWithSelector(NFTMetadata.NFTMetadataFrozen.selector, 2));
         ext.setTokenURI(2, uri);
     }
 
@@ -86,7 +86,7 @@ contract ExtensionNFTMetadata is DSTest, Test {
 
     function test_freezeMetadata_revert_notAuthorized() public {
         vm.startPrank(address(0x1));
-        vm.expectRevert("NFTMetadata: not authorized to freeze metdata");
+        vm.expectRevert(abi.encodeWithSelector(NFTMetadata.NFTMetadataUnauthorized.selector));
         ext.freezeMetadata();
     }
 }

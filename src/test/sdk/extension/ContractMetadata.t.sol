@@ -38,7 +38,7 @@ contract ExtensionContractMetadataTest is DSTest, Test {
     }
 
     function test_revert_setContractURI() public {
-        vm.expectRevert("Not authorized");
+        vm.expectRevert(abi.encodeWithSelector(ContractMetadata.ContractMetadataUnauthorized.selector));
         ext.setContractURI("");
     }
 
