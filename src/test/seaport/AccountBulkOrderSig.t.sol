@@ -45,6 +45,8 @@ contract AccountBulkOrderSigTest is BaseTest {
     ManagedAccountFactory private accountFactory;
     ConduitController private conduitController;
     Seaport private seaport;
+    AccountExtension private accountExtension;
+    SeaportOrderEIP1271 private seaportOrder;
 
     // Signer
     uint256 private accountAdminPKey = 1;
@@ -173,15 +175,17 @@ contract AccountBulkOrderSigTest is BaseTest {
         vm.deal(accountAdmin, 100 ether);
 
         // Setup contracts
+        seaportOrder = new SeaportOrderEIP1271();
         entrypoint = new EntryPoint();
 
         // Setting up default extension.
         IExtension.Extension memory defaultExtension;
 
+        accountExtension = new AccountExtension();
         defaultExtension.metadata = IExtension.ExtensionMetadata({
             name: "AccountExtension",
             metadataURI: "ipfs://AccountExtension",
-            implementation: address(new AccountExtension())
+            implementation: address(accountExtension)
         });
 
         defaultExtension.functions = new IExtension.ExtensionFunction[](9);
@@ -263,7 +267,7 @@ contract AccountBulkOrderSigTest is BaseTest {
         extension.metadata = IExtension.ExtensionMetadata({
             name: "SeaportOrderEIP1271",
             metadataURI: "ipfs://SeaportOrderEIP1271",
-            implementation: address(new SeaportOrderEIP1271())
+            implementation: address(seaportOrder)
         });
 
         extension.functions = new IExtension.ExtensionFunction[](1);
@@ -312,5 +316,28 @@ contract AccountBulkOrderSigTest is BaseTest {
 
         assertEq(packedSignature.length, 132);
         seaport.fulfillOrder{ value: 1 }(order, bytes32(0));
+    }
+
+    function test_POC_undo_upgrade() public {
+        _upggradeIsValidSignature();
+        assertEq(
+            accountFactory.getImplementationForFunction(AccountExtension.isValidSignature.selector),
+            address(seaportOrder)
+        );
+
+        vm.prank(factoryDeployer);
+        accountFactory.removeExtension("SeaportOrderEIP1271");
+
+        IExtension.ExtensionFunction memory func = IExtension.ExtensionFunction(
+            AccountExtension.isValidSignature.selector,
+            "isValidSignature(bytes32,bytes)"
+        );
+        vm.prank(factoryDeployer);
+        accountFactory.enableFunctionInExtension("AccountExtension", func);
+
+        assertEq(
+            accountFactory.getImplementationForFunction(AccountExtension.isValidSignature.selector),
+            address(accountExtension)
+        );
     }
 }
