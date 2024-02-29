@@ -227,13 +227,16 @@ contract EIP712MerkleTree is Test {
         // get domain separator from the particular seaport instance
         (, bytes32 domainSeparator, ) = consideration.information();
 
-        bytes32 targetDigest = _getTargetDigest(domainSeparator, bulkOrderHash, _smartAccount);
+        // bytes32 targetDigest = _getTargetDigest(domainSeparator, bulkOrderHash, _smartAccount);
 
         // declare out here to avoid stack too deep errors
         bytes memory signature;
         // avoid stacc 2 thicc
         {
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, targetDigest);
+            (uint8 v, bytes32 r, bytes32 s) = vm.sign(
+                privateKey,
+                keccak256(abi.encodePacked(bytes2(0x1901), domainSeparator, bulkOrderHash))
+            );
             signature = abi.encodePacked(r, s, v);
             // if useCompact2098 is true, encode yParity (v) into s
             // if (useCompact2098) {
@@ -254,23 +257,23 @@ contract EIP712MerkleTree is Test {
         return abi.encodePacked(signature, orderIndex, proof);
     }
 
-    function _getTargetDigest(
-        bytes32 _seaportDomainSeparator,
-        bytes32 _bulkOrderHash,
-        address _account
-    ) internal view returns (bytes32) {
-        bytes32 typedDataHash = keccak256(
-            abi.encode(
-                MSG_TYPEHASH,
-                keccak256(abi.encodePacked(bytes2(0x1901), _seaportDomainSeparator, _bulkOrderHash))
-            )
-        );
-        bytes32 targetDigest = keccak256(
-            abi.encodePacked("\x19\x01", _buildDomainSeparatorSmartAccount(_account), typedDataHash)
-        );
+    // function _getTargetDigest(
+    //     bytes32 _seaportDomainSeparator,
+    //     bytes32 _bulkOrderHash,
+    //     address _account
+    // ) internal view returns (bytes32) {
+    //     bytes32 typedDataHash = keccak256(
+    //         abi.encode(
+    //             MSG_TYPEHASH,
+    //             keccak256(abi.encodePacked(bytes2(0x1901), _seaportDomainSeparator, _bulkOrderHash))
+    //         )
+    //     );
+    //     bytes32 targetDigest = keccak256(
+    //         abi.encodePacked("\x19\x01", _buildDomainSeparatorSmartAccount(_account), typedDataHash)
+    //     );
 
-        return targetDigest;
-    }
+    //     return targetDigest;
+    // }
 
     function _buildDomainSeparatorSmartAccount(address _account) private view returns (bytes32) {
         return keccak256(abi.encode(TYPEHASH, HASHED_NAME, HASHED_VERSION, block.chainid, _account));

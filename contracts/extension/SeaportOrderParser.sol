@@ -30,7 +30,7 @@ contract SeaportOrderParser {
         return "Seaport";
     }
 
-    function _buildSeaportDomainSeparator(address _domainAddress) internal view returns (bytes32) {
+    function _buildDomainSeparator(address _domainAddress) internal view returns (bytes32) {
         return
             keccak256(abi.encode(_EIP_712_DOMAIN_TYPEHASH, _NAME_HASH, _VERSION_HASH, block.chainid, _domainAddress));
     }

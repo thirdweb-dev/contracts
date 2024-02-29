@@ -318,7 +318,16 @@ contract AccountBulkOrderSigTest is BaseTest {
         seaport.fulfillOrder{ value: 1 }(order, bytes32(0));
     }
 
-    function test_POC_undo_upgrade() public {
+    function test_incorrectCalldata() public {
+        _upggradeIsValidSignature();
+
+        bytes
+            memory data = hex"1626ba7ee746d6438a7035da6bffb1190781d5571dff1452cbbce4796025977a58d7999c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000041a60b8bc1318b87929d4de753d66e24fcacdf0c36d2377076215ac324f093cd7576abd55b273d88f88c5d7daa4b1b396e3dd239563ae4ca712d064d13afcde45d1b";
+
+        (bool success, bytes memory result) = address(accountFactory).call(data);
+    }
+
+    function test_undo_upgrade() public {
         _upggradeIsValidSignature();
         assertEq(
             accountFactory.getImplementationForFunction(AccountExtension.isValidSignature.selector),
