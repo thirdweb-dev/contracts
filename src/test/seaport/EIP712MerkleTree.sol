@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import { MurkyBase } from "murky/common/MurkyBase.sol";
+import {MurkyBase} from "murky/common/MurkyBase.sol";
 
-import { TypehashDirectory } from "./TypehashDirectory.sol";
+import {TypehashDirectory} from "./TypehashDirectory.sol";
 
-import { Test } from "forge-std/Test.sol";
+import {Test} from "forge-std/Test.sol";
 
-import { ConsiderationInterface } from "seaport-types/src/interfaces/ConsiderationInterface.sol";
+import {ConsiderationInterface} from "seaport-types/src/interfaces/ConsiderationInterface.sol";
 
-import { Math } from "@openzeppelin/contracts/utils/math/Math.sol";
+import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
 
-import { OrderComponents } from "seaport-types/src/lib/ConsiderationStructs.sol";
+import {OrderComponents} from "seaport-types/src/lib/ConsiderationStructs.sol";
 
 /**
  * @dev Seaport doesn't sort leaves when hashing for bulk orders, but Murky
@@ -100,6 +100,8 @@ contract EIP712MerkleTree is Test {
      * by the length of the orderComponents array and only fills empty orders
      * into the tree to make the length a power of 2.
      */
+    error TreeHeight(uint256 height);
+
     function signBulkOrderSmartAccount(
         address _account,
         ConsiderationInterface consideration,
@@ -142,17 +144,9 @@ contract EIP712MerkleTree is Test {
         bytes32[] memory proof = merkle.getProof(leaves, orderIndex);
         bytes32 root = merkle.getRoot(leaves);
 
-        return
-            _getSignatureSmartAccount(
-                _account,
-                consideration,
-                privateKey,
-                bulkOrderTypehash,
-                root,
-                proof,
-                orderIndex,
-                useCompact2098
-            );
+        return _getSignatureSmartAccount(
+            _account, consideration, privateKey, bulkOrderTypehash, root, proof, orderIndex, useCompact2098
+        );
     }
 
     /**
@@ -225,7 +219,7 @@ contract EIP712MerkleTree is Test {
         bytes32 bulkOrderHash = keccak256(abi.encode(bulkOrderTypehash, root));
 
         // get domain separator from the particular seaport instance
-        (, bytes32 domainSeparator, ) = consideration.information();
+        (, bytes32 domainSeparator,) = consideration.information();
 
         // bytes32 targetDigest = _getTargetDigest(domainSeparator, bulkOrderHash, _smartAccount);
 
@@ -233,10 +227,8 @@ contract EIP712MerkleTree is Test {
         bytes memory signature;
         // avoid stacc 2 thicc
         {
-            (uint8 v, bytes32 r, bytes32 s) = vm.sign(
-                privateKey,
-                keccak256(abi.encodePacked(bytes2(0x1901), domainSeparator, bulkOrderHash))
-            );
+            (uint8 v, bytes32 r, bytes32 s) =
+                vm.sign(privateKey, keccak256(abi.encodePacked(bytes2(0x1901), domainSeparator, bulkOrderHash)));
             signature = abi.encodePacked(r, s, v);
             // if useCompact2098 is true, encode yParity (v) into s
             // if (useCompact2098) {

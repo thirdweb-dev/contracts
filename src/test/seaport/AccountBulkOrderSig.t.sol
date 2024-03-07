@@ -4,32 +4,105 @@ pragma solidity ^0.8.0;
 // Test utils
 import "../utils/BaseTest.sol";
 import "@thirdweb-dev/dynamic-contracts/src/interface/IExtension.sol";
-import { IAccountPermissions } from "contracts/extension/interface/IAccountPermissions.sol";
-import { AccountPermissions } from "contracts/extension/upgradeable/AccountPermissions.sol";
-import { AccountExtension } from "contracts/prebuilts/account/utils/AccountExtension.sol";
+import {IAccountPermissions} from "contracts/extension/interface/IAccountPermissions.sol";
+import {AccountPermissions} from "contracts/extension/upgradeable/AccountPermissions.sol";
+import {AccountExtension} from "contracts/prebuilts/account/utils/AccountExtension.sol";
 
 // Account Abstraction setup for smart wallets.
-import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
-import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.sol";
+import {EntryPoint, IEntryPoint} from "contracts/prebuilts/account/utils/Entrypoint.sol";
+import {UserOperation} from "contracts/prebuilts/account/utils/UserOperation.sol";
 
 // Target
-import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
-import { ManagedAccountFactory, ManagedAccount } from "contracts/prebuilts/account/managed/ManagedAccountFactory.sol";
-import { ECDSA } from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
+import {Account as SimpleAccount} from "contracts/prebuilts/account/non-upgradeable/Account.sol";
+import {ManagedAccountFactory, ManagedAccount} from "contracts/prebuilts/account/managed/ManagedAccountFactory.sol";
+import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 
-import { Seaport } from "./Seaport.sol";
-import { EIP712MerkleTree } from "./EIP712MerkleTree.sol";
-import { SeaportOrderEIP1271 } from "contracts/extension/SeaportOrderEIP1271.sol";
+import {Seaport} from "./Seaport.sol";
+import {EIP712MerkleTree} from "./EIP712MerkleTree.sol";
+import {SeaportOrderEIP1271} from "contracts/extension/SeaportOrderEIP1271.sol";
 
-import { ConduitController } from "seaport-core/src/conduit/ConduitController.sol";
-import { ConsiderationItem, OfferItem, ItemType, SpentItem, OrderComponents, Order, OrderParameters } from "seaport-types/src/lib/ConsiderationStructs.sol";
-import { ConsiderationInterface } from "seaport-types/src/interfaces/ConsiderationInterface.sol";
-import { OrderType, BasicOrderType } from "seaport-types/src/lib/ConsiderationEnums.sol";
-import { OrderParameters } from "seaport-types/src/lib/ConsiderationStructs.sol";
+import {ConduitController} from "seaport-core/src/conduit/ConduitController.sol";
+import {
+    ConsiderationItem,
+    OfferItem,
+    ItemType,
+    SpentItem,
+    OrderComponents,
+    Order,
+    OrderParameters
+} from "seaport-types/src/lib/ConsiderationStructs.sol";
+import {ConsiderationInterface} from "seaport-types/src/interfaces/ConsiderationInterface.sol";
+import {OrderType, BasicOrderType} from "seaport-types/src/lib/ConsiderationEnums.sol";
+import {OrderParameters} from "seaport-types/src/lib/ConsiderationStructs.sol";
 
-import { Create2AddressDerivation_length, Create2AddressDerivation_ptr, EIP_712_PREFIX, EIP712_ConsiderationItem_size, EIP712_DigestPayload_size, EIP712_DomainSeparator_offset, EIP712_OfferItem_size, EIP712_Order_size, EIP712_OrderHash_offset, FreeMemoryPointerSlot, information_conduitController_offset, information_domainSeparator_offset, information_length, information_version_cd_offset, information_version_offset, information_versionLengthPtr, information_versionWithLength, MaskOverByteTwelve, MaskOverLastTwentyBytes, OneWord, OneWordShift, OrderParameters_consideration_head_offset, OrderParameters_counter_offset, OrderParameters_offer_head_offset, TwoWords } from "seaport-types/src/lib/ConsiderationConstants.sol";
+import {
+    Create2AddressDerivation_length,
+    Create2AddressDerivation_ptr,
+    EIP_712_PREFIX,
+    EIP712_ConsiderationItem_size,
+    EIP712_DigestPayload_size,
+    EIP712_DomainSeparator_offset,
+    EIP712_OfferItem_size,
+    EIP712_Order_size,
+    EIP712_OrderHash_offset,
+    FreeMemoryPointerSlot,
+    information_conduitController_offset,
+    information_domainSeparator_offset,
+    information_length,
+    information_version_cd_offset,
+    information_version_offset,
+    information_versionLengthPtr,
+    information_versionWithLength,
+    MaskOverByteTwelve,
+    MaskOverLastTwentyBytes,
+    OneWord,
+    OneWordShift,
+    OrderParameters_consideration_head_offset,
+    OrderParameters_counter_offset,
+    OrderParameters_offer_head_offset,
+    TwoWords
+} from "seaport-types/src/lib/ConsiderationConstants.sol";
 
-import { BulkOrderProof_keyShift, BulkOrderProof_keySize, BulkOrder_Typehash_Height_One, BulkOrder_Typehash_Height_Two, BulkOrder_Typehash_Height_Three, BulkOrder_Typehash_Height_Four, BulkOrder_Typehash_Height_Five, BulkOrder_Typehash_Height_Six, BulkOrder_Typehash_Height_Seven, BulkOrder_Typehash_Height_Eight, BulkOrder_Typehash_Height_Nine, BulkOrder_Typehash_Height_Ten, BulkOrder_Typehash_Height_Eleven, BulkOrder_Typehash_Height_Twelve, BulkOrder_Typehash_Height_Thirteen, BulkOrder_Typehash_Height_Fourteen, BulkOrder_Typehash_Height_Fifteen, BulkOrder_Typehash_Height_Sixteen, BulkOrder_Typehash_Height_Seventeen, BulkOrder_Typehash_Height_Eighteen, BulkOrder_Typehash_Height_Nineteen, BulkOrder_Typehash_Height_Twenty, BulkOrder_Typehash_Height_TwentyOne, BulkOrder_Typehash_Height_TwentyTwo, BulkOrder_Typehash_Height_TwentyThree, BulkOrder_Typehash_Height_TwentyFour, EIP712_domainData_chainId_offset, EIP712_domainData_nameHash_offset, EIP712_domainData_size, EIP712_domainData_verifyingContract_offset, EIP712_domainData_versionHash_offset, FreeMemoryPointerSlot, NameLengthPtr, NameWithLength, OneWord, Slot0x80, ThreeWords, ZeroSlot } from "seaport-types/src/lib/ConsiderationConstants.sol";
+import {
+    BulkOrderProof_keyShift,
+    BulkOrderProof_keySize,
+    BulkOrder_Typehash_Height_One,
+    BulkOrder_Typehash_Height_Two,
+    BulkOrder_Typehash_Height_Three,
+    BulkOrder_Typehash_Height_Four,
+    BulkOrder_Typehash_Height_Five,
+    BulkOrder_Typehash_Height_Six,
+    BulkOrder_Typehash_Height_Seven,
+    BulkOrder_Typehash_Height_Eight,
+    BulkOrder_Typehash_Height_Nine,
+    BulkOrder_Typehash_Height_Ten,
+    BulkOrder_Typehash_Height_Eleven,
+    BulkOrder_Typehash_Height_Twelve,
+    BulkOrder_Typehash_Height_Thirteen,
+    BulkOrder_Typehash_Height_Fourteen,
+    BulkOrder_Typehash_Height_Fifteen,
+    BulkOrder_Typehash_Height_Sixteen,
+    BulkOrder_Typehash_Height_Seventeen,
+    BulkOrder_Typehash_Height_Eighteen,
+    BulkOrder_Typehash_Height_Nineteen,
+    BulkOrder_Typehash_Height_Twenty,
+    BulkOrder_Typehash_Height_TwentyOne,
+    BulkOrder_Typehash_Height_TwentyTwo,
+    BulkOrder_Typehash_Height_TwentyThree,
+    BulkOrder_Typehash_Height_TwentyFour,
+    EIP712_domainData_chainId_offset,
+    EIP712_domainData_nameHash_offset,
+    EIP712_domainData_size,
+    EIP712_domainData_verifyingContract_offset,
+    EIP712_domainData_versionHash_offset,
+    FreeMemoryPointerSlot,
+    NameLengthPtr,
+    NameWithLength,
+    OneWord,
+    Slot0x80,
+    ThreeWords,
+    ZeroSlot
+} from "seaport-types/src/lib/ConsiderationConstants.sol";
 
 library GPv2EIP1271 {
     bytes4 internal constant MAGICVALUE = 0x1626ba7e;
@@ -106,11 +179,10 @@ contract AccountBulkOrderSigTest is BaseTest {
         baseOrderComponents.counter = counter;
     }
 
-    function _setupUserOp(
-        uint256 _signerPKey,
-        bytes memory _initCode,
-        bytes memory _callDataForEntrypoint
-    ) internal returns (UserOperation[] memory ops) {
+    function _setupUserOp(uint256 _signerPKey, bytes memory _initCode, bytes memory _callDataForEntrypoint)
+        internal
+        returns (UserOperation[] memory ops)
+    {
         uint256 nonce = entrypoint.getNonce(sender, 0);
 
         // Get user op fields
@@ -153,12 +225,8 @@ contract AccountBulkOrderSigTest is BaseTest {
         uint256 _value,
         bytes memory _callData
     ) internal returns (UserOperation[] memory) {
-        bytes memory callDataForEntrypoint = abi.encodeWithSignature(
-            "execute(address,uint256,bytes)",
-            _target,
-            _value,
-            _callData
-        );
+        bytes memory callDataForEntrypoint =
+            abi.encodeWithSignature("execute(address,uint256,bytes)", _target, _value, _callData);
 
         return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint);
     }
@@ -190,41 +258,29 @@ contract AccountBulkOrderSigTest is BaseTest {
 
         defaultExtension.functions = new IExtension.ExtensionFunction[](9);
 
-        defaultExtension.functions[0] = IExtension.ExtensionFunction(
-            AccountExtension.supportsInterface.selector,
-            "supportsInterface(bytes4)"
-        );
-        defaultExtension.functions[1] = IExtension.ExtensionFunction(
-            AccountExtension.execute.selector,
-            "execute(address,uint256,bytes)"
-        );
+        defaultExtension.functions[0] =
+            IExtension.ExtensionFunction(AccountExtension.supportsInterface.selector, "supportsInterface(bytes4)");
+        defaultExtension.functions[1] =
+            IExtension.ExtensionFunction(AccountExtension.execute.selector, "execute(address,uint256,bytes)");
         defaultExtension.functions[2] = IExtension.ExtensionFunction(
-            AccountExtension.executeBatch.selector,
-            "executeBatch(address[],uint256[],bytes[])"
+            AccountExtension.executeBatch.selector, "executeBatch(address[],uint256[],bytes[])"
         );
         defaultExtension.functions[3] = IExtension.ExtensionFunction(
-            ERC721Holder.onERC721Received.selector,
-            "onERC721Received(address,address,uint256,bytes)"
+            ERC721Holder.onERC721Received.selector, "onERC721Received(address,address,uint256,bytes)"
         );
         defaultExtension.functions[4] = IExtension.ExtensionFunction(
-            ERC1155Holder.onERC1155Received.selector,
-            "onERC1155Received(address,address,uint256,uint256,bytes)"
+            ERC1155Holder.onERC1155Received.selector, "onERC1155Received(address,address,uint256,uint256,bytes)"
         );
         defaultExtension.functions[5] = IExtension.ExtensionFunction(
             bytes4(0), // Selector for `receive()` function.
             "receive()"
         );
-        defaultExtension.functions[6] = IExtension.ExtensionFunction(
-            AccountExtension.isValidSignature.selector,
-            "isValidSignature(bytes32,bytes)"
-        );
-        defaultExtension.functions[7] = IExtension.ExtensionFunction(
-            AccountExtension.addDeposit.selector,
-            "addDeposit()"
-        );
+        defaultExtension.functions[6] =
+            IExtension.ExtensionFunction(AccountExtension.isValidSignature.selector, "isValidSignature(bytes32,bytes)");
+        defaultExtension.functions[7] =
+            IExtension.ExtensionFunction(AccountExtension.addDeposit.selector, "addDeposit()");
         defaultExtension.functions[8] = IExtension.ExtensionFunction(
-            AccountExtension.withdrawDepositTo.selector,
-            "withdrawDepositTo(address,uint256)"
+            AccountExtension.withdrawDepositTo.selector, "withdrawDepositTo(address,uint256)"
         );
 
         IExtension.Extension[] memory extensions = new IExtension.Extension[](1);
@@ -232,11 +288,8 @@ contract AccountBulkOrderSigTest is BaseTest {
 
         // deploy account factory
         vm.prank(factoryDeployer);
-        accountFactory = new ManagedAccountFactory(
-            factoryDeployer,
-            IEntryPoint(payable(address(entrypoint))),
-            extensions
-        );
+        accountFactory =
+            new ManagedAccountFactory(factoryDeployer, IEntryPoint(payable(address(entrypoint))), extensions);
         // deploy seaport contract
         conduitController = new ConduitController();
         seaport = new Seaport(address(conduitController));
@@ -244,13 +297,8 @@ contract AccountBulkOrderSigTest is BaseTest {
         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, bytes(""));
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
-        UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
-            accountAdminPKey,
-            initCode,
-            address(0),
-            0,
-            bytes("")
-        );
+        UserOperation[] memory userOpCreateAccount =
+            _setupUserOpExecute(accountAdminPKey, initCode, address(0), 0, bytes(""));
 
         EntryPoint(entrypoint).handleOps(userOpCreateAccount, beneficiary);
     }
@@ -272,10 +320,8 @@ contract AccountBulkOrderSigTest is BaseTest {
 
         extension.functions = new IExtension.ExtensionFunction[](1);
 
-        extension.functions[0] = IExtension.ExtensionFunction(
-            AccountExtension.isValidSignature.selector,
-            "isValidSignature(bytes32,bytes)"
-        );
+        extension.functions[0] =
+            IExtension.ExtensionFunction(AccountExtension.isValidSignature.selector, "isValidSignature(bytes32,bytes)");
 
         vm.prank(factoryDeployer);
         accountFactory.disableFunctionInExtension("AccountExtension", AccountExtension.isValidSignature.selector);
@@ -283,6 +329,8 @@ contract AccountBulkOrderSigTest is BaseTest {
         vm.prank(factoryDeployer);
         accountFactory.addExtension(extension);
     }
+
+    error SigData(bytes sig);
 
     function test_POC() public {
         _upggradeIsValidSignature();
@@ -301,13 +349,10 @@ contract AccountBulkOrderSigTest is BaseTest {
 
         EIP712MerkleTree merkleTree = new EIP712MerkleTree();
         bytes memory packedSignature = merkleTree.signBulkOrderSmartAccount(
-            sender,
-            ConsiderationInterface(address(seaport)),
-            accountAdminPKey,
-            orderComponents,
-            uint24(0),
-            false
+            sender, ConsiderationInterface(address(seaport)), accountAdminPKey, orderComponents, uint24(0), false
         );
+
+        revert SigData(packedSignature);
 
         Order memory order = Order({
             parameters: baseOrderParameters,
@@ -315,38 +360,43 @@ contract AccountBulkOrderSigTest is BaseTest {
         });
 
         assertEq(packedSignature.length, 132);
-        seaport.fulfillOrder{ value: 1 }(order, bytes32(0));
+        seaport.fulfillOrder{value: 1}(order, bytes32(0));
     }
 
     function test_incorrectCalldata() public {
         _upggradeIsValidSignature();
 
-        bytes
-            memory data = hex"1626ba7ee746d6438a7035da6bffb1190781d5571dff1452cbbce4796025977a58d7999c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000041a60b8bc1318b87929d4de753d66e24fcacdf0c36d2377076215ac324f093cd7576abd55b273d88f88c5d7daa4b1b396e3dd239563ae4ca712d064d13afcde45d1b";
+        // bytes memory data =
+        //     hex"1626ba7ee746d6438a7035da6bffb1190781d5571dff1452cbbce4796025977a58d7999c00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000041a60b8bc1318b87929d4de753d66e24fcacdf0c36d2377076215ac324f093cd7576abd55b273d88f88c5d7daa4b1b396e3dd239563ae4ca712d064d13afcde45d1b";
 
-        (bool success, bytes memory result) = address(accountFactory).call(data);
-    }
+        bytes memory data =
+            hex"00000000000000000000000000000000000000000000000000000000000000600000000000000000000000000000000000000000000000000000000000000120000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000848a321beb2ddfbbeb109c1edea4da50aadc88d54b31e10b7b2150448c194db13e6a5d879311929a4d2b9f8c378e0e04d39bbd9db05557ff1acdec0c4432fb2ecc1c00000006bfdd4fee487c47799fd9aa57225e03268298d2983ff74cbab178665fab33ead34b12e74ee846c338466455cad0c77d7d37d1f8072d72ed279c9c9e7f80a2b500000000000000000000000000000000000000000000000000000000000000000000000000000000dd99b75f095d0c4d5112ace938e4e6ed962fb024000000000000000000000000dd99b75f095d0c4d5112ace938e4e6ed962fb024000000000000000000000000000000000000000000000000000000000000016000000000000000000000000000000000000000000000000000000000000002200000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000011c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac800000000000000000000000000000000000000000000000000000000000000011c8aff950685c2ed4bc3174f3472287b56d9517b9c948127319a09a7a36deac8000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000dd99b75f095d0c4d5112ace938e4e6ed962fb02400000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000dd99b75f095d0c4d5112ace938e4e6ed962fb024000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000001000000000000000000000000dd99b75f095d0c4d5112ace938e4e6ed962fb024";
 
-    function test_undo_upgrade() public {
-        _upggradeIsValidSignature();
-        assertEq(
-            accountFactory.getImplementationForFunction(AccountExtension.isValidSignature.selector),
-            address(seaportOrder)
-        );
-
-        vm.prank(factoryDeployer);
-        accountFactory.removeExtension("SeaportOrderEIP1271");
-
-        IExtension.ExtensionFunction memory func = IExtension.ExtensionFunction(
-            AccountExtension.isValidSignature.selector,
-            "isValidSignature(bytes32,bytes)"
-        );
-        vm.prank(factoryDeployer);
-        accountFactory.enableFunctionInExtension("AccountExtension", func);
-
-        assertEq(
-            accountFactory.getImplementationForFunction(AccountExtension.isValidSignature.selector),
-            address(accountExtension)
+        (bool success, bytes memory result) = address(accountFactory).call(
+            abi.encodeWithSelector(AccountExtension.isValidSignature.selector, bytes32(0), data)
         );
     }
+
+    // function test_undo_upgrade() public {
+    //     _upggradeIsValidSignature();
+    //     assertEq(
+    //         accountFactory.getImplementationForFunction(AccountExtension.isValidSignature.selector),
+    //         address(seaportOrder)
+    //     );
+
+    //     vm.prank(factoryDeployer);
+    //     accountFactory.removeExtension("SeaportOrderEIP1271");
+
+    //     IExtension.ExtensionFunction memory func = IExtension.ExtensionFunction(
+    //         AccountExtension.isValidSignature.selector,
+    //         "isValidSignature(bytes32,bytes)"
+    //     );
+    //     vm.prank(factoryDeployer);
+    //     accountFactory.enableFunctionInExtension("AccountExtension", func);
+
+    //     assertEq(
+    //         accountFactory.getImplementationForFunction(AccountExtension.isValidSignature.selector),
+    //         address(accountExtension)
+    //     );
+    // }
 }

@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import { ERC1271 } from "../eip/ERC1271.sol";
-import { SeaportOrderParser } from "./SeaportOrderParser.sol";
-import { OrderParameters } from "seaport-types/src/lib/ConsiderationStructs.sol";
-import { IAccountPermissions, AccountPermissionsStorage, EnumerableSet, ECDSA } from "./upgradeable/AccountPermissions.sol";
+import {ERC1271} from "../eip/ERC1271.sol";
+import {SeaportOrderParser} from "./SeaportOrderParser.sol";
+import {OrderParameters} from "seaport-types/src/lib/ConsiderationStructs.sol";
+import {
+    IAccountPermissions, AccountPermissionsStorage, EnumerableSet, ECDSA
+} from "./upgradeable/AccountPermissions.sol";
 
 contract SeaportOrderEIP1271 is SeaportOrderParser, ERC1271 {
     using ECDSA for bytes32;
@@ -16,21 +18,28 @@ contract SeaportOrderEIP1271 is SeaportOrderParser, ERC1271 {
     bytes32 private immutable HASHED_NAME = keccak256("Account");
     bytes32 private immutable HASHED_VERSION = keccak256("1");
 
+    error MadeItHere(bytes sig, OrderParameters orderParameters, uint256 counter);
+    error MadeIt();
     /// @notice See EIP-1271
-    function isValidSignature(
-        bytes32 _message,
-        bytes memory _signature
-    ) public view virtual override returns (bytes4 magicValue) {
+
+    function isValidSignature(bytes32 _message, bytes memory _signature)
+        public
+        view
+        virtual
+        override
+        returns (bytes4 magicValue)
+    {
         bytes32 targetDigest;
         bytes memory targetSig;
 
         // Handle OpenSea bulk order signatures that are >65 bytes in length.
         if (_signature.length > 65) {
+            // revert MadeIt();
             // Decode packed signature and order parameters.
-            (bytes memory extractedPackedSig, OrderParameters memory orderParameters, uint256 counter) = abi.decode(
-                _signature,
-                (bytes, OrderParameters, uint256)
-            );
+            (bytes memory extractedPackedSig, OrderParameters memory orderParameters, uint256 counter) =
+                abi.decode(_signature, (bytes, OrderParameters, uint256));
+
+            revert MadeItHere(extractedPackedSig, orderParameters, counter);
 
             // Verify that the original digest matches the digest built with order parameters.
             bytes32 domainSeparator = _buildDomainSeparator(msg.sender);
@@ -46,7 +55,7 @@ contract SeaportOrderEIP1271 is SeaportOrderParser, ERC1271 {
 
             // Extract the signature, which is the first 65 bytes
             targetSig = new bytes(65);
-            for (uint i = 0; i < 65; i++) {
+            for (uint256 i = 0; i < 65; i++) {
                 targetSig[i] = extractedPackedSig[i];
             }
         } else {
@@ -76,14 +85,11 @@ contract SeaportOrderEIP1271 is SeaportOrderParser, ERC1271 {
 
     /// @notice Returns whether the given account is an active signer on the account.
     function isActiveSigner(address signer) public view returns (bool) {
-        IAccountPermissions.SignerPermissionsStatic memory permissions = AccountPermissionsStorage
-            .data()
-            .signerPermissions[signer];
+        IAccountPermissions.SignerPermissionsStatic memory permissions =
+            AccountPermissionsStorage.data().signerPermissions[signer];
 
-        return
-            permissions.startTimestamp <= block.timestamp &&
-            block.timestamp < permissions.endTimestamp &&
-            AccountPermissionsStorage.data().approvedTargets[signer].length() > 0;
+        return permissions.startTimestamp <= block.timestamp && block.timestamp < permissions.endTimestamp
+            && AccountPermissionsStorage.data().approvedTargets[signer].length() > 0;
     }
 
     function _buildDomainSeparator() private view returns (bytes32) {
