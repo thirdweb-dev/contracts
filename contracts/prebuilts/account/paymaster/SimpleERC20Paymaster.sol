@@ -125,7 +125,7 @@ contract SimpleERC20Paymaster is BasePaymaster {
         }
     }
 
-    /// @notice Performs post-operation tasks, such as updating the token price and refunding excess tokens.
+    /// @notice Performs post-operation tasks, such as potential refunds and event emission.
     /// @dev This function is called after a user operation has been executed or reverted.
     /// @param mode The post-operation mode (either successful or reverted).
     /// @param context The context containing the token amount and user sender address.
