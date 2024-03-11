@@ -1,6 +1,6 @@
 This document contains details on fixes / response to the preliminary audit reports added to this repository.
 
-### [AirdropERC20](./airdroperc20-claimable.pdf)
+## [AirdropERC20Claimable](./airdroperc20-claimable.pdf)
 
 ### 01: Governance: TrustedForwarder can execute claims on behalf of other addresses
 
