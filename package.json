@@ -10,9 +10,7 @@
   "devDependencies": {
     "@openzeppelin/contracts": "^4.9.3",
     "@openzeppelin/contracts-upgradeable": "^4.9.3",
-    "@thirdweb-dev/chains": "^0.1.54",
     "@thirdweb-dev/dynamic-contracts": "^1.2.4",
-    "@thirdweb-dev/sdk": "^4.0.22",
     "@typechain/ethers-v5": "^10.2.1",
     "@types/fs-extra": "^9.0.13",
     "@types/mocha": "^9.1.1",
