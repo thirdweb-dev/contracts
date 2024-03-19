@@ -138,7 +138,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             Airdrop Push
     //////////////////////////////////////////////////////////////*/
 
-    function airdropERC20(address _tokenAddress, AirdropContent20[] calldata _contents) external {
+    function airdrop20(address _tokenAddress, AirdropContent20[] calldata _contents) external {
         address _from = msg.sender;
         uint256 len = _contents.length;
 
@@ -201,7 +201,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         }
     }
 
-    function airdropERC1155(address _tokenAddress, AirdropContent1155[] calldata _contents) external {
+    function airdrop1155(address _tokenAddress, AirdropContent1155[] calldata _contents) external {
         address _from = msg.sender;
 
         uint256 len = _contents.length;
@@ -225,7 +225,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
                         Airdrop With Signature
     //////////////////////////////////////////////////////////////*/
 
-    function airdropERC20WithSignature(AirdropRequest20 calldata req, bytes calldata signature) external {
+    function airdrop20WithSignature(AirdropRequest20 calldata req, bytes calldata signature) external {
         // verify expiration timestamp
         if (req.expirationTimestamp < block.timestamp) {
             revert AirdropRequestExpired(req.expirationTimestamp);
@@ -327,7 +327,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         }
     }
 
-    function airdropERC1155WithSignature(AirdropRequest1155 calldata req, bytes calldata signature) external {
+    function airdrop1155WithSignature(AirdropRequest1155 calldata req, bytes calldata signature) external {
         // verify expiration timestamp
         if (req.expirationTimestamp < block.timestamp) {
             revert AirdropRequestExpired(req.expirationTimestamp);
@@ -438,6 +438,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
     //////////////////////////////////////////////////////////////*/
 
     function setMerkleRoot20(address _token, bytes32 _merkleRoot) external onlyOwner {
+        tokenAddress20 = _token;
         merkleRoot20[_token] = _merkleRoot;
     }
 
@@ -446,10 +447,12 @@ contract Airdrop is EIP712, Initializable, Ownable {
     }
 
     function setMerkleRoot721(address _token, bytes32 _merkleRoot) external onlyOwner {
+        tokenAddress721 = _token;
         merkleRoot721[_token] = _merkleRoot;
     }
 
     function setMerkleRoot1155(address _token, bytes32 _merkleRoot) external onlyOwner {
+        tokenAddress1155 = _token;
         merkleRoot1155[_token] = _merkleRoot;
     }
 
