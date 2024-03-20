@@ -28,7 +28,7 @@ import "../external-deps/openzeppelin/security/ReentrancyGuard.sol";
  *      - Ability to mint NFTs via the provided `mintTo` and `batchMintTo` functions.
  *
  *      - Contract metadata for royalty support on platforms such as OpenSea that use
- *        off-chain information to distribute roaylties.
+ *        off-chain information to distribute royalties.
  *
  *      - Ownership of the contract, with the ability to restrict certain functions to
  *        only be called by the contract's owner.
