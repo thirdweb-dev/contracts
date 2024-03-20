@@ -1,7 +1,7 @@
 {
   "name": "@thirdweb-dev/contracts",
   "description": "Collection of smart contracts deployable via the thirdweb SDK, dashboard and CLI",
-  "version": "3.11.3",
+  "version": "3.12.0",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -17,11 +17,10 @@
     "/abi"
   ],
   "dependencies": {
-    "@chainlink/contracts": "^0.6.1",
-    "@openzeppelin/contracts": "4.7.3",
-    "@openzeppelin/contracts-upgradeable": "4.7.3",
+    "@openzeppelin/contracts": "^4.9.3",
+    "@openzeppelin/contracts-upgradeable": "^4.9.3",
     "erc721a-upgradeable": "^3.3.0",
-    "@thirdweb-dev/dynamic-contracts": "^1.1.2"
+    "@thirdweb-dev/dynamic-contracts": "^1.2.4"
   },
   "engines": {
     "node": ">=18.0.0"
