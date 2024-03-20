@@ -31,6 +31,14 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             State, constants & structs
     //////////////////////////////////////////////////////////////*/
 
+    // token contract address => merkle root
+    mapping(address => bytes32) public merkleRoot;
+    // hash(claimer address || token address || token id [1155]) => has claimed
+    mapping(bytes32 => bool) private claimed;
+    mapping(bytes32 => bool) private processed;
+
+    //    ----------------------
+
     // ERC20 claimable
     address public tokenAddress20;
     mapping(address => bytes32) public merkleRoot20;
@@ -115,6 +123,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
     //////////////////////////////////////////////////////////////*/
 
     error AirdropInvalidProof();
+    error AirdropAlreadyClaimed();
     error AirdropFailed();
     error AirdropNoMerkleRoot();
     error AirdropValueMismatch();
@@ -160,12 +169,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         for (uint256 i = 0; i < len; ) {
             nativeTokenAmount += _contents[i].amount;
 
-            if (nativeTokenAmount > msg.value) {
-                revert AirdropValueMismatch();
-            }
-
             (bool success, ) = _contents[i].recipient.call{ value: _contents[i].amount }("");
-
             if (!success) {
                 refundAmount += _contents[i].amount;
             }
@@ -189,7 +193,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
     function airdrop721(address _tokenAddress, AirdropContent721[] calldata _contents) external {
         address _from = msg.sender;
-
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; ) {
@@ -360,8 +363,18 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             Airdrop Claimable
     //////////////////////////////////////////////////////////////*/
 
-    function claim20(address _token, address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external {
-        bytes32 _merkleRoot = merkleRoot20[_token];
+    function claim20(
+        address _token,
+        address _receiver,
+        uint256 _quantity,
+        bytes32[] calldata _proofs
+    ) external {
+        bytes32 claimHash = getClaimHashERC20(msg.sender, _token);
+        if (claimed[claimHash]) {
+            revert AirdropAlreadyClaimed();
+        }
+
+        bytes32 _merkleRoot = merkleRoot[_token];
 
         if (_merkleRoot == bytes32(0)) {
             revert AirdropNoMerkleRoot();
@@ -373,12 +386,32 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropInvalidProof();
         }
 
-        claimed20[msg.sender] = true;
+        claimed[claimHash] = true;
 
-        CurrencyTransferLib.transferCurrency(tokenAddress20, owner(), _receiver, _quantity);
+        CurrencyTransferLib.transferCurrency(_token, owner(), _receiver, _quantity);
     }
 
-    function claimETH(address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external {
+    function getClaimHashERC20(address _sender, address _token) private view returns (bytes32) {
+        return keccak256(abi.encodePacked(_sender, _token));
+    }
+
+    function getClaimHashERC721(address _sender, address _token) private view returns (bytes32) {
+        return keccak256(abi.encodePacked(_sender, _token));
+    }
+
+    function getClaimHashERC1155(
+        address _sender,
+        address _token,
+        uint256 _tokenId
+    ) private view returns (bytes32) {
+        return keccak256(abi.encodePacked(_sender, _token, _tokenId));
+    }
+
+    function claimETH(
+        address _receiver,
+        uint256 _quantity,
+        bytes32[] calldata _proofs
+    ) external {
         bool valid = MerkleProofLib.verify(_proofs, merkleRootETH, keccak256(abi.encodePacked(msg.sender, _quantity)));
 
         if (!valid) {
@@ -391,7 +424,12 @@ contract Airdrop is EIP712, Initializable, Ownable {
         if (!success) revert AirdropFailed();
     }
 
-    function claim721(address _token, address _receiver, uint256 _tokenId, bytes32[] calldata _proofs) external {
+    function claim721(
+        address _token,
+        address _receiver,
+        uint256 _tokenId,
+        bytes32[] calldata _proofs
+    ) external {
         bytes32 _merkleRoot = merkleRoot721[_token];
 
         if (_merkleRoot == bytes32(0)) {
@@ -438,8 +476,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
     //////////////////////////////////////////////////////////////*/
 
     function setMerkleRoot20(address _token, bytes32 _merkleRoot) external onlyOwner {
-        tokenAddress20 = _token;
-        merkleRoot20[_token] = _merkleRoot;
+        merkleRoot[_token] = _merkleRoot;
     }
 
     function setMerkleRootETH(bytes32 _merkleRoot) external onlyOwner {
@@ -471,7 +508,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
     function _hashContentInfo20(AirdropContent20[] calldata contents) private pure returns (bytes32) {
         bytes32[] memory contentHashes = new bytes32[](contents.length);
-        for (uint i = 0; i < contents.length; i++) {
+        for (uint256 i = 0; i < contents.length; i++) {
             contentHashes[i] = keccak256(abi.encode(CONTENT_TYPEHASH_ERC20, contents[i].recipient, contents[i].amount));
         }
         return keccak256(abi.encodePacked(contentHashes));
@@ -479,7 +516,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
     function _hashContentInfo721(AirdropContent721[] calldata contents) private pure returns (bytes32) {
         bytes32[] memory contentHashes = new bytes32[](contents.length);
-        for (uint i = 0; i < contents.length; i++) {
+        for (uint256 i = 0; i < contents.length; i++) {
             contentHashes[i] = keccak256(
                 abi.encode(CONTENT_TYPEHASH_ERC721, contents[i].recipient, contents[i].tokenId)
             );
@@ -489,7 +526,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
     function _hashContentInfo1155(AirdropContent1155[] calldata contents) private pure returns (bytes32) {
         bytes32[] memory contentHashes = new bytes32[](contents.length);
-        for (uint i = 0; i < contents.length; i++) {
+        for (uint256 i = 0; i < contents.length; i++) {
             contentHashes[i] = keccak256(
                 abi.encode(CONTENT_TYPEHASH_ERC1155, contents[i].recipient, contents[i].tokenId, contents[i].amount)
             );
