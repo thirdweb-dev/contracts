@@ -4,7 +4,7 @@
 pragma solidity ^0.8.0;
 
 import "../../../../../eip/interface/IERC20.sol";
-import { Address } from "@openzeppelin/contracts/utils/Address.sol";
+import { Address } from "../../../../../lib/Address.sol";
 
 /**
  * @title SafeERC20

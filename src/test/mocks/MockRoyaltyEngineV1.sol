@@ -3,7 +3,7 @@ pragma solidity ^0.8.0;
 
 import "contracts/extension/interface/IRoyaltyEngineV1.sol";
 import { IERC2981 } from "contracts/eip/interface/IERC2981.sol";
-import { ERC165, IERC165 } from "@openzeppelin/contracts/utils/introspection/ERC165.sol";
+import { ERC165 } from "contracts/eip/ERC165.sol";
 
 contract MockRoyaltyEngineV1 is ERC165, IRoyaltyEngineV1 {
     address payable[] public mockRecipients;
