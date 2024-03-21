@@ -22,3 +22,6 @@
 [submodule "lib/dynamic-contracts"]
 	path = lib/dynamic-contracts
 	url = https://github.com/thirdweb-dev/dynamic-contracts
+[submodule "lib/prb-proxy"]
+	path = lib/prb-proxy
+	url = https://github.com/PaulRBerg/prb-proxy
