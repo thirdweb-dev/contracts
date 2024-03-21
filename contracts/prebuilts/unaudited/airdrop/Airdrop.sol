@@ -31,13 +31,12 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             State, constants & structs
     //////////////////////////////////////////////////////////////*/
 
-    bytes32 public merkleRootETH;
-    mapping(address => bool) public claimedETH;
-
-    // token contract address => merkle root
+    /// @dev token contract address => conditionId
+    mapping(address => bytes32) public conditionIdForToken;
+    /// @dev token contract address => merkle root
     mapping(address => bytes32) public merkleRoot;
-    // hash(claimer address || token address || token id [1155]) => has claimed
-    mapping(bytes32 => bool) private claimed;
+    /// @dev conditionId => hash(claimer address, token address, token id [1155]) => has claimed
+    mapping(bytes32 => mapping(bytes32 => bool)) private claimed;
     /// @dev Mapping from request UID => whether the request is processed.
     mapping(bytes32 => bool) private processed;
 
@@ -284,7 +283,9 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
     function claim20(address _token, address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external {
         bytes32 claimHash = _getClaimHashERC20(msg.sender, _token);
-        if (claimed[claimHash]) {
+        bytes32 conditionId = conditionIdForToken[_token];
+
+        if (claimed[conditionId][claimHash]) {
             revert AirdropAlreadyClaimed();
         }
 
@@ -300,7 +301,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropInvalidProof();
         }
 
-        claimed[claimHash] = true;
+        claimed[conditionId][claimHash] = true;
 
         if (_token == CurrencyTransferLib.NATIVE_TOKEN) {
             (bool success, ) = _receiver.call{ value: _quantity }("");
@@ -312,7 +313,9 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
     function claim721(address _token, address _receiver, uint256 _tokenId, bytes32[] calldata _proofs) external {
         bytes32 claimHash = _getClaimHashERC721(msg.sender, _token);
-        if (claimed[claimHash]) {
+        bytes32 conditionId = conditionIdForToken[_token];
+
+        if (claimed[conditionId][claimHash]) {
             revert AirdropAlreadyClaimed();
         }
 
@@ -328,7 +331,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropInvalidProof();
         }
 
-        claimed[claimHash] = true;
+        claimed[conditionId][claimHash] = true;
 
         IERC721(_token).safeTransferFrom(owner(), _receiver, _tokenId);
     }
@@ -341,7 +344,9 @@ contract Airdrop is EIP712, Initializable, Ownable {
         bytes32[] calldata _proofs
     ) external {
         bytes32 claimHash = _getClaimHashERC1155(msg.sender, _token, _tokenId);
-        if (claimed[claimHash]) {
+        bytes32 conditionId = conditionIdForToken[_token];
+
+        if (claimed[conditionId][claimHash]) {
             revert AirdropAlreadyClaimed();
         }
 
@@ -357,7 +362,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropInvalidProof();
         }
 
-        claimed[claimHash] = true;
+        claimed[conditionId][claimHash] = true;
 
         IERC1155(_token).safeTransferFrom(owner(), _receiver, _tokenId, _quantity, "");
     }
@@ -366,7 +371,10 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             Setter functions
     //////////////////////////////////////////////////////////////*/
 
-    function setMerkleRoot(address _token, bytes32 _merkleRoot) external onlyOwner {
+    function setMerkleRoot(address _token, bytes32 _merkleRoot, bool _resetClaimStatus) external onlyOwner {
+        if (_resetClaimStatus || conditionIdForToken[_token] == bytes32(0)) {
+            conditionIdForToken[_token] = keccak256(abi.encodePacked(_token, block.number));
+        }
         merkleRoot[_token] = _merkleRoot;
     }
 
