@@ -127,34 +127,31 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             Airdrop Push
     //////////////////////////////////////////////////////////////*/
 
-    function airdrop20(address _tokenAddress, AirdropContent20[] calldata _contents) external {
+    function airdrop20(address _tokenAddress, AirdropContent20[] calldata _contents) external payable {
         address _from = msg.sender;
         uint256 len = _contents.length;
-
-        for (uint256 i = 0; i < len; ) {
-            CurrencyTransferLib.transferCurrency(_tokenAddress, _from, _contents[i].recipient, _contents[i].amount);
-
-            unchecked {
-                i += 1;
-            }
-        }
-    }
-
-    function airdropNativeToken(AirdropContent20[] calldata _contents) external payable {
-        uint256 len = _contents.length;
-
         uint256 nativeTokenAmount;
 
-        for (uint256 i = 0; i < len; ) {
-            nativeTokenAmount += _contents[i].amount;
+        if (_tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
+            for (uint256 i = 0; i < len; ) {
+                nativeTokenAmount += _contents[i].amount;
 
-            (bool success, ) = _contents[i].recipient.call{ value: _contents[i].amount }("");
-            if (!success) {
-                revert AirdropFailed();
+                (bool success, ) = _contents[i].recipient.call{ value: _contents[i].amount }("");
+                if (!success) {
+                    revert AirdropFailed();
+                }
+
+                unchecked {
+                    i += 1;
+                }
             }
+        } else {
+            for (uint256 i = 0; i < len; ) {
+                CurrencyTransferLib.transferCurrency(_tokenAddress, _from, _contents[i].recipient, _contents[i].amount);
 
-            unchecked {
-                i += 1;
+                unchecked {
+                    i += 1;
+                }
             }
         }
 
@@ -346,32 +343,12 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
         claimed[claimHash] = true;
 
-        CurrencyTransferLib.transferCurrency(_token, owner(), _receiver, _quantity);
-    }
-
-    function _getClaimHashERC20(address _sender, address _token) private view returns (bytes32) {
-        return keccak256(abi.encodePacked(_sender, _token));
-    }
-
-    function _getClaimHashERC721(address _sender, address _token) private view returns (bytes32) {
-        return keccak256(abi.encodePacked(_sender, _token));
-    }
-
-    function _getClaimHashERC1155(address _sender, address _token, uint256 _tokenId) private view returns (bytes32) {
-        return keccak256(abi.encodePacked(_sender, _token, _tokenId));
-    }
-
-    function claimETH(address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external {
-        bool valid = MerkleProofLib.verify(_proofs, merkleRootETH, keccak256(abi.encodePacked(msg.sender, _quantity)));
-
-        if (!valid) {
-            revert AirdropInvalidProof();
+        if (_token == CurrencyTransferLib.NATIVE_TOKEN) {
+            (bool success, ) = _receiver.call{ value: _quantity }("");
+            if (!success) revert AirdropFailed();
+        } else {
+            CurrencyTransferLib.transferCurrency(_token, owner(), _receiver, _quantity);
         }
-
-        claimedETH[msg.sender] = true;
-
-        (bool success, ) = _receiver.call{ value: _quantity }("");
-        if (!success) revert AirdropFailed();
     }
 
     function claim721(address _token, address _receiver, uint256 _tokenId, bytes32[] calldata _proofs) external {
@@ -434,10 +411,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
         merkleRoot[_token] = _merkleRoot;
     }
 
-    function setMerkleRootETH(bytes32 _merkleRoot) external onlyOwner {
-        merkleRootETH = _merkleRoot;
-    }
-
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
@@ -449,6 +422,18 @@ contract Airdrop is EIP712, Initializable, Ownable {
     function _domainNameAndVersion() internal pure override returns (string memory name, string memory version) {
         name = "Airdrop";
         version = "1";
+    }
+
+    function _getClaimHashERC20(address _sender, address _token) private view returns (bytes32) {
+        return keccak256(abi.encodePacked(_sender, _token));
+    }
+
+    function _getClaimHashERC721(address _sender, address _token) private view returns (bytes32) {
+        return keccak256(abi.encodePacked(_sender, _token));
+    }
+
+    function _getClaimHashERC1155(address _sender, address _token, uint256 _tokenId) private view returns (bytes32) {
+        return keccak256(abi.encodePacked(_sender, _token, _tokenId));
     }
 
     function _hashContentInfo20(AirdropContent20[] calldata contents) private pure returns (bytes32) {
