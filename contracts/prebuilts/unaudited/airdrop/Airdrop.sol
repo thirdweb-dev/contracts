@@ -31,33 +31,13 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             State, constants & structs
     //////////////////////////////////////////////////////////////*/
 
+    bytes32 public merkleRootETH;
+    mapping(address => bool) public claimedETH;
+
     // token contract address => merkle root
     mapping(address => bytes32) public merkleRoot;
     // hash(claimer address || token address || token id [1155]) => has claimed
     mapping(bytes32 => bool) private claimed;
-    mapping(bytes32 => bool) private processed;
-
-    //    ----------------------
-
-    // ERC20 claimable
-    address public tokenAddress20;
-    mapping(address => bytes32) public merkleRoot20;
-    mapping(address => bool) public claimed20;
-
-    // Native token claimable
-    bytes32 public merkleRootETH;
-    mapping(address => bool) public claimedETH;
-
-    // ERC721 claimable
-    address public tokenAddress721;
-    mapping(address => bytes32) public merkleRoot721;
-    mapping(uint256 => bool) public claimed721;
-
-    // ERC1155 claimable
-    address public tokenAddress1155;
-    mapping(address => bytes32) public merkleRoot1155;
-    mapping(uint256 => mapping(address => bool)) public claimed1155;
-
     /// @dev Mapping from request UID => whether the request is processed.
     mapping(bytes32 => bool) private processed;
 
@@ -363,13 +343,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             Airdrop Claimable
     //////////////////////////////////////////////////////////////*/
 
-    function claim20(
-        address _token,
-        address _receiver,
-        uint256 _quantity,
-        bytes32[] calldata _proofs
-    ) external {
-        bytes32 claimHash = getClaimHashERC20(msg.sender, _token);
+    function claim20(address _token, address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external {
+        bytes32 claimHash = _getClaimHashERC20(msg.sender, _token);
         if (claimed[claimHash]) {
             revert AirdropAlreadyClaimed();
         }
@@ -391,27 +366,19 @@ contract Airdrop is EIP712, Initializable, Ownable {
         CurrencyTransferLib.transferCurrency(_token, owner(), _receiver, _quantity);
     }
 
-    function getClaimHashERC20(address _sender, address _token) private view returns (bytes32) {
+    function _getClaimHashERC20(address _sender, address _token) private view returns (bytes32) {
         return keccak256(abi.encodePacked(_sender, _token));
     }
 
-    function getClaimHashERC721(address _sender, address _token) private view returns (bytes32) {
+    function _getClaimHashERC721(address _sender, address _token) private view returns (bytes32) {
         return keccak256(abi.encodePacked(_sender, _token));
     }
 
-    function getClaimHashERC1155(
-        address _sender,
-        address _token,
-        uint256 _tokenId
-    ) private view returns (bytes32) {
+    function _getClaimHashERC1155(address _sender, address _token, uint256 _tokenId) private view returns (bytes32) {
         return keccak256(abi.encodePacked(_sender, _token, _tokenId));
     }
 
-    function claimETH(
-        address _receiver,
-        uint256 _quantity,
-        bytes32[] calldata _proofs
-    ) external {
+    function claimETH(address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external {
         bool valid = MerkleProofLib.verify(_proofs, merkleRootETH, keccak256(abi.encodePacked(msg.sender, _quantity)));
 
         if (!valid) {
@@ -424,13 +391,13 @@ contract Airdrop is EIP712, Initializable, Ownable {
         if (!success) revert AirdropFailed();
     }
 
-    function claim721(
-        address _token,
-        address _receiver,
-        uint256 _tokenId,
-        bytes32[] calldata _proofs
-    ) external {
-        bytes32 _merkleRoot = merkleRoot721[_token];
+    function claim721(address _token, address _receiver, uint256 _tokenId, bytes32[] calldata _proofs) external {
+        bytes32 claimHash = _getClaimHashERC721(msg.sender, _token);
+        if (claimed[claimHash]) {
+            revert AirdropAlreadyClaimed();
+        }
+
+        bytes32 _merkleRoot = merkleRoot[_token];
 
         if (_merkleRoot == bytes32(0)) {
             revert AirdropNoMerkleRoot();
@@ -442,9 +409,9 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropInvalidProof();
         }
 
-        claimed721[_tokenId] = true;
+        claimed[claimHash] = true;
 
-        IERC721(tokenAddress721).safeTransferFrom(owner(), _receiver, _tokenId);
+        IERC721(_token).safeTransferFrom(owner(), _receiver, _tokenId);
     }
 
     function claim1155(
@@ -454,7 +421,12 @@ contract Airdrop is EIP712, Initializable, Ownable {
         uint256 _quantity,
         bytes32[] calldata _proofs
     ) external {
-        bytes32 _merkleRoot = merkleRoot1155[_token];
+        bytes32 claimHash = _getClaimHashERC1155(msg.sender, _token, _tokenId);
+        if (claimed[claimHash]) {
+            revert AirdropAlreadyClaimed();
+        }
+
+        bytes32 _merkleRoot = merkleRoot[_token];
 
         if (_merkleRoot == bytes32(0)) {
             revert AirdropNoMerkleRoot();
@@ -466,31 +438,21 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropInvalidProof();
         }
 
-        claimed1155[_tokenId][msg.sender] = true;
+        claimed[claimHash] = true;
 
-        IERC1155(tokenAddress1155).safeTransferFrom(owner(), _receiver, _tokenId, _quantity, "");
+        IERC1155(_token).safeTransferFrom(owner(), _receiver, _tokenId, _quantity, "");
     }
 
     /*///////////////////////////////////////////////////////////////
                             Setter functions
     //////////////////////////////////////////////////////////////*/
 
-    function setMerkleRoot20(address _token, bytes32 _merkleRoot) external onlyOwner {
+    function setMerkleRoot(address _token, bytes32 _merkleRoot) external onlyOwner {
         merkleRoot[_token] = _merkleRoot;
     }
 
     function setMerkleRootETH(bytes32 _merkleRoot) external onlyOwner {
         merkleRootETH = _merkleRoot;
-    }
-
-    function setMerkleRoot721(address _token, bytes32 _merkleRoot) external onlyOwner {
-        tokenAddress721 = _token;
-        merkleRoot721[_token] = _merkleRoot;
-    }
-
-    function setMerkleRoot1155(address _token, bytes32 _merkleRoot) external onlyOwner {
-        tokenAddress1155 = _token;
-        merkleRoot1155[_token] = _merkleRoot;
     }
 
     /*///////////////////////////////////////////////////////////////

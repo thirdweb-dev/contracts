@@ -308,7 +308,7 @@ contract AirdropBenchmarkTest is BaseTest {
 
         // set merkle root
         vm.prank(signer);
-        airdrop.setMerkleRoot20(address(erc20), root);
+        airdrop.setMerkleRoot(address(erc20), root);
 
         // generate proof
         inputs[1] = "src/test/scripts/getProofAirdrop.ts";
@@ -456,7 +456,7 @@ contract AirdropBenchmarkTest is BaseTest {
 
         // set merkle root
         vm.prank(signer);
-        airdrop.setMerkleRoot721(address(erc721), root);
+        airdrop.setMerkleRoot(address(erc721), root);
 
         // generate proof
         inputs[1] = "src/test/scripts/getProofAirdrop.ts";
@@ -604,7 +604,7 @@ contract AirdropBenchmarkTest is BaseTest {
 
         // set merkle root
         vm.prank(signer);
-        airdrop.setMerkleRoot1155(address(erc1155), root);
+        airdrop.setMerkleRoot(address(erc1155), root);
 
         // generate proof
         inputs[1] = "src/test/scripts/getProofAirdrop.ts";
