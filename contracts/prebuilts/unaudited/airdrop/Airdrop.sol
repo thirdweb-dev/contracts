@@ -132,25 +132,17 @@ contract Airdrop is EIP712, Initializable, Ownable {
         uint256 nativeTokenAmount;
 
         if (_tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
-            for (uint256 i = 0; i < len; ) {
+            for (uint256 i = 0; i < len; i++) {
                 nativeTokenAmount += _contents[i].amount;
 
                 (bool success, ) = _contents[i].recipient.call{ value: _contents[i].amount }("");
                 if (!success) {
                     revert AirdropFailed();
                 }
-
-                unchecked {
-                    i += 1;
-                }
             }
         } else {
-            for (uint256 i = 0; i < len; ) {
+            for (uint256 i = 0; i < len; i++) {
                 CurrencyTransferLib.transferCurrency(_tokenAddress, _from, _contents[i].recipient, _contents[i].amount);
-
-                unchecked {
-                    i += 1;
-                }
             }
         }
 
@@ -163,12 +155,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         address _from = msg.sender;
         uint256 len = _contents.length;
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i = 0; i < len; i++) {
             IERC721(_tokenAddress).safeTransferFrom(_from, _contents[i].recipient, _contents[i].tokenId);
-
-            unchecked {
-                i += 1;
-            }
         }
     }
 
@@ -177,7 +165,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
         uint256 len = _contents.length;
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i = 0; i < len; i++) {
             IERC1155(_tokenAddress).safeTransferFrom(
                 _from,
                 _contents[i].recipient,
@@ -185,10 +173,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
                 _contents[i].amount,
                 ""
             );
-
-            unchecked {
-                i += 1;
-            }
         }
     }
 
@@ -211,17 +195,13 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
         address _from = owner();
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i = 0; i < len; i++) {
             CurrencyTransferLib.transferCurrency(
                 req.tokenAddress,
                 _from,
                 req.contents[i].recipient,
                 req.contents[i].amount
             );
-
-            unchecked {
-                i += 1;
-            }
         }
     }
 
@@ -239,12 +219,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         address _from = owner();
         uint256 len = req.contents.length;
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i = 0; i < len; i++) {
             IERC721(req.tokenAddress).safeTransferFrom(_from, req.contents[i].recipient, req.contents[i].tokenId);
-
-            unchecked {
-                i += 1;
-            }
         }
     }
 
@@ -262,7 +238,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         address _from = owner();
         uint256 len = req.contents.length;
 
-        for (uint256 i = 0; i < len; ) {
+        for (uint256 i = 0; i < len; i++) {
             IERC1155(req.tokenAddress).safeTransferFrom(
                 _from,
                 req.contents[i].recipient,
@@ -270,10 +246,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
                 req.contents[i].amount,
                 ""
             );
-
-            unchecked {
-                i += 1;
-            }
         }
     }
 
