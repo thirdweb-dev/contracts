@@ -144,14 +144,13 @@ contract Airdrop is EIP712, Initializable, Ownable {
         uint256 len = _contents.length;
 
         uint256 nativeTokenAmount;
-        uint256 refundAmount;
 
         for (uint256 i = 0; i < len; ) {
             nativeTokenAmount += _contents[i].amount;
 
             (bool success, ) = _contents[i].recipient.call{ value: _contents[i].amount }("");
             if (!success) {
-                refundAmount += _contents[i].amount;
+                revert AirdropFailed();
             }
 
             unchecked {
@@ -161,13 +160,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
         if (nativeTokenAmount != msg.value) {
             revert AirdropValueMismatch();
-        }
-
-        if (refundAmount > 0) {
-            // refund failed payments' amount to sender address
-            // solhint-disable avoid-low-level-calls
-            // slither-disable-next-line low-level-calls
-            (bool refundSuccess, ) = msg.sender.call{ value: refundAmount }("");
         }
     }
 
@@ -251,11 +243,9 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropVerificationFailed();
         }
 
-        address _from = owner();
         uint256 len = req.contents.length;
 
         uint256 nativeTokenAmount;
-        uint256 refundAmount;
 
         for (uint256 i = 0; i < len; ) {
             nativeTokenAmount += req.contents[i].amount;
@@ -267,7 +257,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
             (bool success, ) = req.contents[i].recipient.call{ value: req.contents[i].amount }("");
 
             if (!success) {
-                refundAmount += req.contents[i].amount;
+                revert AirdropFailed();
             }
 
             unchecked {
@@ -277,13 +267,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
         if (nativeTokenAmount != msg.value) {
             revert AirdropValueMismatch();
-        }
-
-        if (refundAmount > 0) {
-            // refund failed payments' amount to sender address
-            // solhint-disable avoid-low-level-calls
-            // slither-disable-next-line low-level-calls
-            (bool refundSuccess, ) = _from.call{ value: refundAmount }("");
         }
     }
 
