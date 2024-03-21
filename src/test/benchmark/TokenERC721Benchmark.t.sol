@@ -109,6 +109,65 @@ contract TokenERC721BenchmarkTest is BaseTest {
                         Benchmark: TokenERC721
     //////////////////////////////////////////////////////////////*/
 
+    function test_benchmark_tokenERC721_mintWithSignature_zeroPrice() public {
+        vm.pauseGasMetering();
+        vm.warp(1000);
+
+        // update mintrequest data
+        _mintrequest.price = 0;
+        _mintrequest.currency = address(erc20);
+        _signature = signMintRequest(_mintrequest, privateKey);
+
+        // mint with signature
+        vm.prank(recipient);
+        vm.resumeGasMetering();
+        tokenContract.mintWithSignature(_mintrequest, _signature);
+    }
+
+    function test_benchmark_tokenERC721_mintWithSignature_fiveTokensMulticall_zeroPrice() public {
+        vm.pauseGasMetering();
+        vm.warp(1000);
+
+        // update mintrequest data
+        _mintrequest.price = 0;
+        _mintrequest.currency = address(erc20);
+
+        bytes[] memory calls = new bytes[](5);
+        for (uint256 i = 0; i < 5; i++) {
+            _mintrequest.uid = bytes32(i);
+            _signature = signMintRequest(_mintrequest, privateKey);
+
+            calls[i] = abi.encodeWithSelector(TokenERC721.mintWithSignature.selector, _mintrequest, _signature);
+        }
+
+        // mint with signature
+        vm.prank(recipient);
+        vm.resumeGasMetering();
+        tokenContract.multicall(calls);
+    }
+
+    function test_benchmark_tokenERC721_mintWithSignature_tenTokensMulticall_zeroPrice() public {
+        vm.pauseGasMetering();
+        vm.warp(1000);
+
+        // update mintrequest data
+        _mintrequest.price = 0;
+        _mintrequest.currency = address(erc20);
+
+        bytes[] memory calls = new bytes[](10);
+        for (uint256 i = 0; i < 10; i++) {
+            _mintrequest.uid = bytes32(i);
+            _signature = signMintRequest(_mintrequest, privateKey);
+
+            calls[i] = abi.encodeWithSelector(TokenERC721.mintWithSignature.selector, _mintrequest, _signature);
+        }
+
+        // mint with signature
+        vm.prank(recipient);
+        vm.resumeGasMetering();
+        tokenContract.multicall(calls);
+    }
+
     function test_benchmark_tokenERC721_mintWithSignature_pay_with_ERC20() public {
         vm.pauseGasMetering();
         vm.warp(1000);

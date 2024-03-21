@@ -10,6 +10,7 @@ gas_reports = [
   "DropERC1155Benchmark",
   "TokenERC20Benchmark",
   "TokenERC721Benchmark",
+  "TokenERC721AltBenchmark",
   "TokenERC1155Benchmark",
   "MultiwrapBenchmark",
   "SignatureDropBenchmark",
