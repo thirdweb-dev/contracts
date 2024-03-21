@@ -208,8 +208,9 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropVerificationFailed();
         }
 
-        address _from = owner();
         uint256 len = req.contents.length;
+
+        address _from = owner();
 
         for (uint256 i = 0; i < len; ) {
             CurrencyTransferLib.transferCurrency(
@@ -222,48 +223,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
             unchecked {
                 i += 1;
             }
-        }
-    }
-
-    function airdropNativeTokenWithSignature(AirdropRequest20 calldata req, bytes calldata signature) external payable {
-        // verify expiration timestamp
-        if (req.expirationTimestamp < block.timestamp) {
-            revert AirdropRequestExpired(req.expirationTimestamp);
-        }
-
-        if (req.tokenAddress != address(0)) {
-            revert AirdropInvalidTokenAddress();
-        }
-
-        // verify data
-        if (!_verifyReqERC20(req, signature)) {
-            revert AirdropVerificationFailed();
-        }
-
-        uint256 len = req.contents.length;
-
-        uint256 nativeTokenAmount;
-
-        for (uint256 i = 0; i < len; ) {
-            nativeTokenAmount += req.contents[i].amount;
-
-            if (nativeTokenAmount > msg.value) {
-                revert AirdropValueMismatch();
-            }
-
-            (bool success, ) = req.contents[i].recipient.call{ value: req.contents[i].amount }("");
-
-            if (!success) {
-                revert AirdropFailed();
-            }
-
-            unchecked {
-                i += 1;
-            }
-        }
-
-        if (nativeTokenAmount != msg.value) {
-            revert AirdropValueMismatch();
         }
     }
 
