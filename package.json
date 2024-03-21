@@ -11,7 +11,6 @@
     "@openzeppelin/contracts": "^4.9.3",
     "@openzeppelin/contracts-upgradeable": "^4.9.3",
     "@thirdweb-dev/dynamic-contracts": "^1.2.4",
-    "@thirdweb-dev/merkletree": "^0.2.2",
     "@typechain/ethers-v5": "^10.2.1",
     "@types/fs-extra": "^9.0.13",
     "@types/mocha": "^9.1.1",
