@@ -191,7 +191,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop20(address(erc20), contents);
+        airdrop.airdropERC20(address(erc20), contents);
     }
 
     function test_benchmark_airdropPush_erc20_100() public {
@@ -203,7 +203,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop20(address(erc20), contents);
+        airdrop.airdropERC20(address(erc20), contents);
     }
 
     function test_benchmark_airdropPush_erc20_1000() public {
@@ -215,7 +215,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop20(address(erc20), contents);
+        airdrop.airdropERC20(address(erc20), contents);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -238,7 +238,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop20WithSignature(req, signature);
+        airdrop.airdropERC20WithSignature(req, signature);
     }
 
     function test_benchmark_airdropSignature_erc20_100() public {
@@ -257,7 +257,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop20WithSignature(req, signature);
+        airdrop.airdropERC20WithSignature(req, signature);
     }
 
     function test_benchmark_airdropSignature_erc20_1000() public {
@@ -276,7 +276,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop20WithSignature(req, signature);
+        airdrop.airdropERC20WithSignature(req, signature);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -309,7 +309,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(receiver);
 
-        airdrop.claim20(address(erc20), receiver, quantity, proofs);
+        airdrop.claimERC20(address(erc20), receiver, quantity, proofs);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -325,7 +325,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop721(address(erc721), contents);
+        airdrop.airdropERC721(address(erc721), contents);
     }
 
     function test_benchmark_airdropPush_erc721_100() public {
@@ -337,7 +337,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop721(address(erc721), contents);
+        airdrop.airdropERC721(address(erc721), contents);
     }
 
     function test_benchmark_airdropPush_erc721_1000() public {
@@ -349,7 +349,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop721(address(erc721), contents);
+        airdrop.airdropERC721(address(erc721), contents);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -372,7 +372,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop721WithSignature(req, signature);
+        airdrop.airdropERC721WithSignature(req, signature);
     }
 
     function test_benchmark_airdropSignature_erc721_100() public {
@@ -391,7 +391,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop721WithSignature(req, signature);
+        airdrop.airdropERC721WithSignature(req, signature);
     }
 
     function test_benchmark_airdropSignature_erc721_1000() public {
@@ -410,7 +410,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop721WithSignature(req, signature);
+        airdrop.airdropERC721WithSignature(req, signature);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -443,7 +443,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(receiver);
 
-        airdrop.claim721(address(erc721), receiver, tokenId, proofs);
+        airdrop.claimERC721(address(erc721), receiver, tokenId, proofs);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -459,7 +459,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop1155(address(erc1155), contents);
+        airdrop.airdropERC1155(address(erc1155), contents);
     }
 
     function test_benchmark_airdropPush_erc1155_100() public {
@@ -471,7 +471,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop1155(address(erc1155), contents);
+        airdrop.airdropERC1155(address(erc1155), contents);
     }
 
     function test_benchmark_airdropPush_erc1155_1000() public {
@@ -483,7 +483,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop1155(address(erc1155), contents);
+        airdrop.airdropERC1155(address(erc1155), contents);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -506,7 +506,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop1155WithSignature(req, signature);
+        airdrop.airdropERC1155WithSignature(req, signature);
     }
 
     function test_benchmark_airdropSignature_erc115_100() public {
@@ -525,7 +525,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop1155WithSignature(req, signature);
+        airdrop.airdropERC1155WithSignature(req, signature);
     }
 
     function test_benchmark_airdropSignature_erc115_1000() public {
@@ -544,7 +544,7 @@ contract AirdropTest is BaseTest {
 
         vm.prank(signer);
 
-        airdrop.airdrop1155WithSignature(req, signature);
+        airdrop.airdropERC1155WithSignature(req, signature);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -577,6 +577,6 @@ contract AirdropTest is BaseTest {
 
         vm.prank(receiver);
 
-        airdrop.claim1155(address(erc1155), receiver, 0, quantity, proofs);
+        airdrop.claimERC1155(address(erc1155), receiver, 0, quantity, proofs);
     }
 }
