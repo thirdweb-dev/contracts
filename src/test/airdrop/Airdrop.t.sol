@@ -182,7 +182,7 @@ contract AirdropTest is BaseTest {
                        Benchmark: Airdrop Push ERC20 
     //////////////////////////////////////////////////////////////*/
 
-    function test_benchmark_airdropPush_erc20_10() public {
+    function test_state_airdropPush_erc20() public {
         erc20.mint(signer, 100 ether);
         vm.prank(signer);
         erc20.approve(address(airdrop), 100 ether);
@@ -192,37 +192,20 @@ contract AirdropTest is BaseTest {
         vm.prank(signer);
 
         airdrop.airdropERC20(address(erc20), contents);
-    }
 
-    function test_benchmark_airdropPush_erc20_100() public {
-        erc20.mint(signer, 100 ether);
-        vm.prank(signer);
-        erc20.approve(address(airdrop), 100 ether);
-
-        Airdrop.AirdropContentERC20[] memory contents = _getContentsERC20(100);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC20(address(erc20), contents);
-    }
-
-    function test_benchmark_airdropPush_erc20_1000() public {
-        erc20.mint(signer, 100 ether);
-        vm.prank(signer);
-        erc20.approve(address(airdrop), 100 ether);
-
-        Airdrop.AirdropContentERC20[] memory contents = _getContentsERC20(1000);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC20(address(erc20), contents);
+        uint256 totalAmount;
+        for (uint256 i = 0; i < contents.length; i++) {
+            totalAmount += contents[i].amount;
+            assertEq(erc20.balanceOf(contents[i].recipient), contents[i].amount);
+        }
+        assertEq(erc20.balanceOf(signer), 100 ether - totalAmount);
     }
 
     /*///////////////////////////////////////////////////////////////
                     Benchmark: Airdrop Signature ERC20 
     //////////////////////////////////////////////////////////////*/
 
-    function test_benchmark_airdropSignature_erc20_10() public {
+    function test_state_airdropSignature_erc20() public {
         erc20.mint(signer, 100 ether);
         vm.prank(signer);
         erc20.approve(address(airdrop), 100 ether);
@@ -239,51 +222,20 @@ contract AirdropTest is BaseTest {
         vm.prank(signer);
 
         airdrop.airdropERC20WithSignature(req, signature);
-    }
 
-    function test_benchmark_airdropSignature_erc20_100() public {
-        erc20.mint(signer, 100 ether);
-        vm.prank(signer);
-        erc20.approve(address(airdrop), 100 ether);
-
-        Airdrop.AirdropContentERC20[] memory contents = _getContentsERC20(100);
-        Airdrop.AirdropRequestERC20 memory req = Airdrop.AirdropRequestERC20({
-            uid: bytes32(uint256(1)),
-            tokenAddress: address(erc20),
-            expirationTimestamp: 1000,
-            contents: contents
-        });
-        bytes memory signature = _signReqERC20(req, privateKey);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC20WithSignature(req, signature);
-    }
-
-    function test_benchmark_airdropSignature_erc20_1000() public {
-        erc20.mint(signer, 100 ether);
-        vm.prank(signer);
-        erc20.approve(address(airdrop), 100 ether);
-
-        Airdrop.AirdropContentERC20[] memory contents = _getContentsERC20(1000);
-        Airdrop.AirdropRequestERC20 memory req = Airdrop.AirdropRequestERC20({
-            uid: bytes32(uint256(1)),
-            tokenAddress: address(erc20),
-            expirationTimestamp: 1000,
-            contents: contents
-        });
-        bytes memory signature = _signReqERC20(req, privateKey);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC20WithSignature(req, signature);
+        uint256 totalAmount;
+        for (uint256 i = 0; i < contents.length; i++) {
+            totalAmount += contents[i].amount;
+            assertEq(erc20.balanceOf(contents[i].recipient), contents[i].amount);
+        }
+        assertEq(erc20.balanceOf(signer), 100 ether - totalAmount);
     }
 
     /*///////////////////////////////////////////////////////////////
                        Benchmark: Airdrop Claim ERC20 
     //////////////////////////////////////////////////////////////*/
 
-    function test_benchmark_airdropClaim_erc20() public {
+    function test_state_airdropClaim_erc20() public {
         erc20.mint(signer, 100 ether);
         vm.prank(signer);
         erc20.approve(address(airdrop), 100 ether);
@@ -310,13 +262,16 @@ contract AirdropTest is BaseTest {
         vm.prank(receiver);
 
         airdrop.claimERC20(address(erc20), receiver, quantity, proofs);
+
+        assertEq(erc20.balanceOf(receiver), quantity);
+        assertEq(erc20.balanceOf(signer), 100 ether - quantity);
     }
 
     /*///////////////////////////////////////////////////////////////
                        Benchmark: Airdrop Push ERC721 
     //////////////////////////////////////////////////////////////*/
 
-    function test_benchmark_airdropPush_erc721_10() public {
+    function test_state_airdropPush_erc721() public {
         erc721.mint(signer, 100);
         vm.prank(signer);
         erc721.setApprovalForAll(address(airdrop), true);
@@ -326,37 +281,17 @@ contract AirdropTest is BaseTest {
         vm.prank(signer);
 
         airdrop.airdropERC721(address(erc721), contents);
-    }
 
-    function test_benchmark_airdropPush_erc721_100() public {
-        erc721.mint(signer, 100);
-        vm.prank(signer);
-        erc721.setApprovalForAll(address(airdrop), true);
-
-        Airdrop.AirdropContentERC721[] memory contents = _getContentsERC721(100);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC721(address(erc721), contents);
-    }
-
-    function test_benchmark_airdropPush_erc721_1000() public {
-        erc721.mint(signer, 1000);
-        vm.prank(signer);
-        erc721.setApprovalForAll(address(airdrop), true);
-
-        Airdrop.AirdropContentERC721[] memory contents = _getContentsERC721(1000);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC721(address(erc721), contents);
+        for (uint256 i = 0; i < contents.length; i++) {
+            assertEq(erc721.ownerOf(contents[i].tokenId), contents[i].recipient);
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
                     Benchmark: Airdrop Signature ERC721 
     //////////////////////////////////////////////////////////////*/
 
-    function test_benchmark_airdropSignature_erc721_10() public {
+    function test_state_airdropSignature_erc721() public {
         erc721.mint(signer, 1000);
         vm.prank(signer);
         erc721.setApprovalForAll(address(airdrop), true);
@@ -373,51 +308,17 @@ contract AirdropTest is BaseTest {
         vm.prank(signer);
 
         airdrop.airdropERC721WithSignature(req, signature);
-    }
 
-    function test_benchmark_airdropSignature_erc721_100() public {
-        erc721.mint(signer, 1000);
-        vm.prank(signer);
-        erc721.setApprovalForAll(address(airdrop), true);
-
-        Airdrop.AirdropContentERC721[] memory contents = _getContentsERC721(100);
-        Airdrop.AirdropRequestERC721 memory req = Airdrop.AirdropRequestERC721({
-            uid: bytes32(uint256(1)),
-            tokenAddress: address(erc721),
-            expirationTimestamp: 1000,
-            contents: contents
-        });
-        bytes memory signature = _signReqERC721(req, privateKey);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC721WithSignature(req, signature);
-    }
-
-    function test_benchmark_airdropSignature_erc721_1000() public {
-        erc721.mint(signer, 1000);
-        vm.prank(signer);
-        erc721.setApprovalForAll(address(airdrop), true);
-
-        Airdrop.AirdropContentERC721[] memory contents = _getContentsERC721(1000);
-        Airdrop.AirdropRequestERC721 memory req = Airdrop.AirdropRequestERC721({
-            uid: bytes32(uint256(1)),
-            tokenAddress: address(erc721),
-            expirationTimestamp: 1000,
-            contents: contents
-        });
-        bytes memory signature = _signReqERC721(req, privateKey);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC721WithSignature(req, signature);
+        for (uint256 i = 0; i < contents.length; i++) {
+            assertEq(erc721.ownerOf(contents[i].tokenId), contents[i].recipient);
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
                        Benchmark: Airdrop Claim ERC721 
     //////////////////////////////////////////////////////////////*/
 
-    function test_benchmark_airdropClaim_erc721() public {
+    function test_state_airdropClaim_erc721() public {
         erc721.mint(signer, 100);
         vm.prank(signer);
         erc721.setApprovalForAll(address(airdrop), true);
@@ -444,13 +345,15 @@ contract AirdropTest is BaseTest {
         vm.prank(receiver);
 
         airdrop.claimERC721(address(erc721), receiver, tokenId, proofs);
+
+        assertEq(erc721.ownerOf(tokenId), receiver);
     }
 
     /*///////////////////////////////////////////////////////////////
                        Benchmark: Airdrop Push ERC1155 
     //////////////////////////////////////////////////////////////*/
 
-    function test_benchmark_airdropPush_erc1155_10() public {
+    function test_state_airdropPush_erc1155() public {
         erc1155.mint(signer, 0, 100 ether);
         vm.prank(signer);
         erc1155.setApprovalForAll(address(airdrop), true);
@@ -460,37 +363,17 @@ contract AirdropTest is BaseTest {
         vm.prank(signer);
 
         airdrop.airdropERC1155(address(erc1155), contents);
-    }
 
-    function test_benchmark_airdropPush_erc1155_100() public {
-        erc1155.mint(signer, 0, 100 ether);
-        vm.prank(signer);
-        erc1155.setApprovalForAll(address(airdrop), true);
-
-        Airdrop.AirdropContentERC1155[] memory contents = _getContentsERC1155(100);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC1155(address(erc1155), contents);
-    }
-
-    function test_benchmark_airdropPush_erc1155_1000() public {
-        erc1155.mint(signer, 0, 100 ether);
-        vm.prank(signer);
-        erc1155.setApprovalForAll(address(airdrop), true);
-
-        Airdrop.AirdropContentERC1155[] memory contents = _getContentsERC1155(1000);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC1155(address(erc1155), contents);
+        for (uint256 i = 0; i < contents.length; i++) {
+            assertEq(erc1155.balanceOf(contents[i].recipient, contents[i].tokenId), contents[i].amount);
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
                     Benchmark: Airdrop Signature ERC1155 
     //////////////////////////////////////////////////////////////*/
 
-    function test_benchmark_airdropSignature_erc115_10() public {
+    function test_state_airdropSignature_erc115() public {
         erc1155.mint(signer, 0, 100 ether);
         vm.prank(signer);
         erc1155.setApprovalForAll(address(airdrop), true);
@@ -507,51 +390,17 @@ contract AirdropTest is BaseTest {
         vm.prank(signer);
 
         airdrop.airdropERC1155WithSignature(req, signature);
-    }
 
-    function test_benchmark_airdropSignature_erc115_100() public {
-        erc1155.mint(signer, 0, 100 ether);
-        vm.prank(signer);
-        erc1155.setApprovalForAll(address(airdrop), true);
-
-        Airdrop.AirdropContentERC1155[] memory contents = _getContentsERC1155(100);
-        Airdrop.AirdropRequestERC1155 memory req = Airdrop.AirdropRequestERC1155({
-            uid: bytes32(uint256(1)),
-            tokenAddress: address(erc1155),
-            expirationTimestamp: 1000,
-            contents: contents
-        });
-        bytes memory signature = _signReqERC1155(req, privateKey);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC1155WithSignature(req, signature);
-    }
-
-    function test_benchmark_airdropSignature_erc115_1000() public {
-        erc1155.mint(signer, 0, 100 ether);
-        vm.prank(signer);
-        erc1155.setApprovalForAll(address(airdrop), true);
-
-        Airdrop.AirdropContentERC1155[] memory contents = _getContentsERC1155(1000);
-        Airdrop.AirdropRequestERC1155 memory req = Airdrop.AirdropRequestERC1155({
-            uid: bytes32(uint256(1)),
-            tokenAddress: address(erc1155),
-            expirationTimestamp: 1000,
-            contents: contents
-        });
-        bytes memory signature = _signReqERC1155(req, privateKey);
-
-        vm.prank(signer);
-
-        airdrop.airdropERC1155WithSignature(req, signature);
+        for (uint256 i = 0; i < contents.length; i++) {
+            assertEq(erc1155.balanceOf(contents[i].recipient, contents[i].tokenId), contents[i].amount);
+        }
     }
 
     /*///////////////////////////////////////////////////////////////
                        Benchmark: Airdrop Claim ERC1155 
     //////////////////////////////////////////////////////////////*/
 
-    function test_benchmark_airdropClaim_erc1155() public {
+    function test_state_airdropClaim_erc1155() public {
         erc1155.mint(signer, 0, 100 ether);
         vm.prank(signer);
         erc1155.setApprovalForAll(address(airdrop), true);
@@ -578,5 +427,8 @@ contract AirdropTest is BaseTest {
         vm.prank(receiver);
 
         airdrop.claimERC1155(address(erc1155), receiver, 0, quantity, proofs);
+
+        assertEq(erc1155.balanceOf(receiver, 0), quantity);
+        assertEq(erc1155.balanceOf(signer, 0), 100 ether - quantity);
     }
 }
