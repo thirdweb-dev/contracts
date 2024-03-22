@@ -15,10 +15,12 @@ pragma solidity ^0.8.11;
 import "@solady/src/utils/MerkleProofLib.sol";
 import "@solady/src/utils/ECDSA.sol";
 import "@solady/src/utils/EIP712.sol";
+import "@solady/src/utils/SafeTransferLib.sol";
 
 import { Initializable } from "../../../extension/Initializable.sol";
 import { Ownable } from "../../../extension/Ownable.sol";
 
+import "../../../eip/interface/IERC20.sol";
 import "../../../eip/interface/IERC721.sol";
 import "../../../eip/interface/IERC1155.sol";
 import "../../../lib/MerkleProof.sol";
@@ -32,11 +34,11 @@ contract Airdrop is EIP712, Initializable, Ownable {
     //////////////////////////////////////////////////////////////*/
 
     /// @dev token contract address => conditionId
-    mapping(address => bytes32) public conditionIdForToken;
+    mapping(address => uint256) public tokenConditionId;
     /// @dev token contract address => merkle root
-    mapping(address => bytes32) public merkleRoot;
+    mapping(address => bytes32) public tokenMerkleRoot;
     /// @dev conditionId => hash(claimer address, token address, token id [1155]) => has claimed
-    mapping(bytes32 => mapping(bytes32 => bool)) private claimed;
+    mapping(uint256 => mapping(bytes32 => bool)) private claimed;
     /// @dev Mapping from request UID => whether the request is processed.
     mapping(bytes32 => bool) private processed;
 
@@ -108,7 +110,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
     error AirdropNoMerkleRoot();
     error AirdropValueMismatch();
     error AirdropRequestExpired(uint256 expirationTimestamp);
-    error AirdropVerificationFailed();
+    error AirdropRequestAlreadyProcessed();
+    error AirdropRequestInvalidSigner();
     error AirdropInvalidTokenAddress();
 
     /*///////////////////////////////////////////////////////////////
@@ -127,23 +130,15 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             Airdrop Push
     //////////////////////////////////////////////////////////////*/
 
-    function airdropERC20(address _tokenAddress, AirdropContentERC20[] calldata _contents) external payable {
-        address _from = msg.sender;
+    function airdropNativeToken(AirdropContentERC20[] calldata _contents) external payable {
         uint256 len = _contents.length;
         uint256 nativeTokenAmount;
 
-        if (_tokenAddress == CurrencyTransferLib.NATIVE_TOKEN) {
-            for (uint256 i = 0; i < len; i++) {
-                nativeTokenAmount += _contents[i].amount;
-
-                (bool success, ) = _contents[i].recipient.call{ value: _contents[i].amount }("");
-                if (!success) {
-                    revert AirdropFailed();
-                }
-            }
-        } else {
-            for (uint256 i = 0; i < len; i++) {
-                CurrencyTransferLib.transferCurrency(_tokenAddress, _from, _contents[i].recipient, _contents[i].amount);
+        for (uint256 i = 0; i < len; i++) {
+            nativeTokenAmount += _contents[i].amount;
+            (bool success, ) = _contents[i].recipient.call{ value: _contents[i].amount }("");
+            if (!success) {
+                revert AirdropFailed();
             }
         }
 
@@ -152,23 +147,29 @@ contract Airdrop is EIP712, Initializable, Ownable {
         }
     }
 
+    function airdropERC20(address _tokenAddress, AirdropContentERC20[] calldata _contents) external {
+        uint256 len = _contents.length;
+        uint256 nativeTokenAmount;
+
+        for (uint256 i = 0; i < len; i++) {
+            SafeTransferLib.safeTransferFrom(_tokenAddress, msg.sender, _contents[i].recipient, _contents[i].amount);
+        }
+    }
+
     function airdropERC721(address _tokenAddress, AirdropContentERC721[] calldata _contents) external {
-        address _from = msg.sender;
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; i++) {
-            IERC721(_tokenAddress).safeTransferFrom(_from, _contents[i].recipient, _contents[i].tokenId);
+            IERC721(_tokenAddress).safeTransferFrom(msg.sender, _contents[i].recipient, _contents[i].tokenId);
         }
     }
 
     function airdropERC1155(address _tokenAddress, AirdropContentERC1155[] calldata _contents) external {
-        address _from = msg.sender;
-
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; i++) {
             IERC1155(_tokenAddress).safeTransferFrom(
-                _from,
+                msg.sender,
                 _contents[i].recipient,
                 _contents[i].tokenId,
                 _contents[i].amount,
@@ -188,16 +189,17 @@ contract Airdrop is EIP712, Initializable, Ownable {
         }
 
         // verify data
-        if (!_verifyReqERC20(req, signature)) {
-            revert AirdropVerificationFailed();
+        if (!_verifyRequestSignerERC20(req, signature)) {
+            revert AirdropRequestInvalidSigner();
         }
 
-        uint256 len = req.contents.length;
+        processed[req.uid] = true;
 
+        uint256 len = req.contents.length;
         address _from = owner();
 
         for (uint256 i = 0; i < len; i++) {
-            CurrencyTransferLib.transferCurrency(
+            SafeTransferLib.safeTransferFrom(
                 req.tokenAddress,
                 _from,
                 req.contents[i].recipient,
@@ -213,9 +215,11 @@ contract Airdrop is EIP712, Initializable, Ownable {
         }
 
         // verify data
-        if (!_verifyReqERC721(req, signature)) {
-            revert AirdropVerificationFailed();
+        if (!_verifyRequestSignerERC721(req, signature)) {
+            revert AirdropRequestInvalidSigner();
         }
+
+        processed[req.uid] = true;
 
         address _from = owner();
         uint256 len = req.contents.length;
@@ -231,10 +235,16 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropRequestExpired(req.expirationTimestamp);
         }
 
-        // verify data
-        if (!_verifyReqERC1155(req, signature)) {
-            revert AirdropVerificationFailed();
+        if (processed[req.uid]) {
+            revert AirdropRequestAlreadyProcessed();
         }
+
+        // verify data
+        if (!_verifyRequestSignerERC1155(req, signature)) {
+            revert AirdropRequestInvalidSigner();
+        }
+
+        processed[req.uid] = true;
 
         address _from = owner();
         uint256 len = req.contents.length;
@@ -254,52 +264,57 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             Airdrop Claimable
     //////////////////////////////////////////////////////////////*/
 
-    function claimERC20(address _token, address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external {
-        bytes32 claimHash = _getClaimHashERC20(msg.sender, _token);
-        bytes32 conditionId = conditionIdForToken[_token];
+    function claimERC20(
+        address _token,
+        address _receiver,
+        uint256 _quantity,
+        bytes32[] calldata _proofs
+    ) external {
+        bytes32 claimHash = _getClaimHashERC20(_receiver, _token);
+        uint256 conditionId = tokenConditionId[_token];
 
         if (claimed[conditionId][claimHash]) {
             revert AirdropAlreadyClaimed();
         }
 
-        bytes32 _merkleRoot = merkleRoot[_token];
-
-        if (_merkleRoot == bytes32(0)) {
+        bytes32 _tokenMerkleRoot = tokenMerkleRoot[_token];
+        if (_tokenMerkleRoot == bytes32(0)) {
             revert AirdropNoMerkleRoot();
         }
 
-        bool valid = MerkleProofLib.verify(_proofs, _merkleRoot, keccak256(abi.encodePacked(msg.sender, _quantity)));
-
+        bool valid = MerkleProofLib.verify(
+            _proofs,
+            _tokenMerkleRoot,
+            keccak256(abi.encodePacked(_receiver, _quantity))
+        );
         if (!valid) {
             revert AirdropInvalidProof();
         }
 
         claimed[conditionId][claimHash] = true;
 
-        if (_token == CurrencyTransferLib.NATIVE_TOKEN) {
-            (bool success, ) = _receiver.call{ value: _quantity }("");
-            if (!success) revert AirdropFailed();
-        } else {
-            CurrencyTransferLib.transferCurrency(_token, owner(), _receiver, _quantity);
-        }
+        SafeTransferLib.safeTransferFrom(_token, owner(), _receiver, _quantity);
     }
 
-    function claimERC721(address _token, address _receiver, uint256 _tokenId, bytes32[] calldata _proofs) external {
-        bytes32 claimHash = _getClaimHashERC721(msg.sender, _token);
-        bytes32 conditionId = conditionIdForToken[_token];
+    function claimERC721(
+        address _token,
+        address _receiver,
+        uint256 _tokenId,
+        bytes32[] calldata _proofs
+    ) external {
+        bytes32 claimHash = _getClaimHashERC721(_receiver, _token);
+        uint256 conditionId = tokenConditionId[_token];
 
         if (claimed[conditionId][claimHash]) {
             revert AirdropAlreadyClaimed();
         }
 
-        bytes32 _merkleRoot = merkleRoot[_token];
-
-        if (_merkleRoot == bytes32(0)) {
+        bytes32 _tokenMerkleRoot = tokenMerkleRoot[_token];
+        if (_tokenMerkleRoot == bytes32(0)) {
             revert AirdropNoMerkleRoot();
         }
 
-        bool valid = MerkleProofLib.verify(_proofs, _merkleRoot, keccak256(abi.encodePacked(msg.sender, _tokenId)));
-
+        bool valid = MerkleProofLib.verify(_proofs, _tokenMerkleRoot, keccak256(abi.encodePacked(_receiver, _tokenId)));
         if (!valid) {
             revert AirdropInvalidProof();
         }
@@ -316,21 +331,23 @@ contract Airdrop is EIP712, Initializable, Ownable {
         uint256 _quantity,
         bytes32[] calldata _proofs
     ) external {
-        bytes32 claimHash = _getClaimHashERC1155(msg.sender, _token, _tokenId);
-        bytes32 conditionId = conditionIdForToken[_token];
+        bytes32 claimHash = _getClaimHashERC1155(_receiver, _token, _tokenId);
+        uint256 conditionId = tokenConditionId[_token];
 
         if (claimed[conditionId][claimHash]) {
             revert AirdropAlreadyClaimed();
         }
 
-        bytes32 _merkleRoot = merkleRoot[_token];
-
-        if (_merkleRoot == bytes32(0)) {
+        bytes32 _tokenMerkleRoot = tokenMerkleRoot[_token];
+        if (_tokenMerkleRoot == bytes32(0)) {
             revert AirdropNoMerkleRoot();
         }
 
-        bool valid = MerkleProofLib.verify(_proofs, _merkleRoot, keccak256(abi.encodePacked(msg.sender, _quantity)));
-
+        bool valid = MerkleProofLib.verify(
+            _proofs,
+            _tokenMerkleRoot,
+            keccak256(abi.encodePacked(_receiver, _quantity))
+        );
         if (!valid) {
             revert AirdropInvalidProof();
         }
@@ -344,11 +361,15 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             Setter functions
     //////////////////////////////////////////////////////////////*/
 
-    function setMerkleRoot(address _token, bytes32 _merkleRoot, bool _resetClaimStatus) external onlyOwner {
-        if (_resetClaimStatus || conditionIdForToken[_token] == bytes32(0)) {
-            conditionIdForToken[_token] = keccak256(abi.encodePacked(_token, block.number));
+    function setMerkleRoot(
+        address _token,
+        bytes32 _tokenMerkleRoot,
+        bool _resetClaimStatus
+    ) external onlyOwner {
+        if (_resetClaimStatus || tokenConditionId[_token] == 0) {
+            tokenConditionId[_token] += 1;
         }
-        merkleRoot[_token] = _merkleRoot;
+        tokenMerkleRoot[_token] = _tokenMerkleRoot;
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -372,11 +393,15 @@ contract Airdrop is EIP712, Initializable, Ownable {
         return keccak256(abi.encodePacked(_sender, _token));
     }
 
-    function _getClaimHashERC1155(address _sender, address _token, uint256 _tokenId) private view returns (bytes32) {
+    function _getClaimHashERC1155(
+        address _sender,
+        address _token,
+        uint256 _tokenId
+    ) private view returns (bytes32) {
         return keccak256(abi.encodePacked(_sender, _token, _tokenId));
     }
 
-    function _hashContentInfo20(AirdropContentERC20[] calldata contents) private pure returns (bytes32) {
+    function _hashContentInfoERC20(AirdropContentERC20[] calldata contents) private pure returns (bytes32) {
         bytes32[] memory contentHashes = new bytes32[](contents.length);
         for (uint256 i = 0; i < contents.length; i++) {
             contentHashes[i] = keccak256(abi.encode(CONTENT_TYPEHASH_ERC20, contents[i].recipient, contents[i].amount));
@@ -384,7 +409,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         return keccak256(abi.encodePacked(contentHashes));
     }
 
-    function _hashContentInfo721(AirdropContentERC721[] calldata contents) private pure returns (bytes32) {
+    function _hashContentInfoERC721(AirdropContentERC721[] calldata contents) private pure returns (bytes32) {
         bytes32[] memory contentHashes = new bytes32[](contents.length);
         for (uint256 i = 0; i < contents.length; i++) {
             contentHashes[i] = keccak256(
@@ -394,7 +419,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         return keccak256(abi.encodePacked(contentHashes));
     }
 
-    function _hashContentInfo1155(AirdropContentERC1155[] calldata contents) private pure returns (bytes32) {
+    function _hashContentInfoERC1155(AirdropContentERC1155[] calldata contents) private pure returns (bytes32) {
         bytes32[] memory contentHashes = new bytes32[](contents.length);
         for (uint256 i = 0; i < contents.length; i++) {
             contentHashes[i] = keccak256(
@@ -404,45 +429,48 @@ contract Airdrop is EIP712, Initializable, Ownable {
         return keccak256(abi.encodePacked(contentHashes));
     }
 
-    function _verifyReqERC20(AirdropRequestERC20 calldata req, bytes calldata signature) private view returns (bool) {
-        bytes32 contentHash = _hashContentInfo20(req.contents);
+    function _verifyRequestSignerERC20(AirdropRequestERC20 calldata req, bytes calldata signature)
+        private
+        view
+        returns (bool)
+    {
+        bytes32 contentHash = _hashContentInfoERC20(req.contents);
         bytes32 structHash = keccak256(
             abi.encode(REQUEST_TYPEHASH_ERC20, req.uid, req.tokenAddress, req.expirationTimestamp, contentHash)
         );
 
         bytes32 digest = _hashTypedData(structHash);
         address recovered = digest.recover(signature);
-        bool valid = recovered == owner() && !processed[req.uid];
-
-        return valid;
+        return recovered == owner();
     }
 
-    function _verifyReqERC721(AirdropRequestERC721 calldata req, bytes calldata signature) private view returns (bool) {
-        bytes32 contentHash = _hashContentInfo721(req.contents);
+    function _verifyRequestSignerERC721(AirdropRequestERC721 calldata req, bytes calldata signature)
+        private
+        view
+        returns (bool)
+    {
+        bytes32 contentHash = _hashContentInfoERC721(req.contents);
         bytes32 structHash = keccak256(
             abi.encode(REQUEST_TYPEHASH_ERC721, req.uid, req.tokenAddress, req.expirationTimestamp, contentHash)
         );
 
         bytes32 digest = _hashTypedData(structHash);
         address recovered = digest.recover(signature);
-        bool valid = recovered == owner() && !processed[req.uid];
-
-        return valid;
+        return recovered == owner();
     }
 
-    function _verifyReqERC1155(
-        AirdropRequestERC1155 calldata req,
-        bytes calldata signature
-    ) private view returns (bool) {
-        bytes32 contentHash = _hashContentInfo1155(req.contents);
+    function _verifyRequestSignerERC1155(AirdropRequestERC1155 calldata req, bytes calldata signature)
+        private
+        view
+        returns (bool)
+    {
+        bytes32 contentHash = _hashContentInfoERC1155(req.contents);
         bytes32 structHash = keccak256(
             abi.encode(REQUEST_TYPEHASH_ERC1155, req.uid, req.tokenAddress, req.expirationTimestamp, contentHash)
         );
 
         bytes32 digest = _hashTypedData(structHash);
         address recovered = digest.recover(signature);
-        bool valid = recovered == owner() && !processed[req.uid];
-
-        return valid;
+        return recovered == owner();
     }
 }
