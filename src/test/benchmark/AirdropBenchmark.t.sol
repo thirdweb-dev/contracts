@@ -43,7 +43,7 @@ contract AirdropBenchmarkTest is BaseTest {
 
         address impl = address(new Airdrop());
 
-        airdrop = Airdrop(address(new TWProxy(impl, abi.encodeCall(Airdrop.initialize, (signer)))));
+        airdrop = Airdrop(payable(address(new TWProxy(impl, abi.encodeCall(Airdrop.initialize, (signer))))));
 
         domainSeparator = keccak256(
             abi.encode(TYPE_HASH_EIP712, NAME_HASH, VERSION_HASH, block.chainid, address(airdrop))
