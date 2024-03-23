@@ -23,8 +23,6 @@ import { Ownable } from "../../../extension/Ownable.sol";
 import "../../../eip/interface/IERC20.sol";
 import "../../../eip/interface/IERC721.sol";
 import "../../../eip/interface/IERC1155.sol";
-import "../../../lib/MerkleProof.sol";
-import "../../../lib/CurrencyTransferLib.sol";
 
 contract Airdrop is EIP712, Initializable, Ownable {
     using ECDSA for bytes32;
@@ -165,7 +163,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
     function airdropERC20(address _tokenAddress, AirdropContentERC20[] calldata _contents) external {
         uint256 len = _contents.length;
-        uint256 nativeTokenAmount;
 
         for (uint256 i = 0; i < len; i++) {
             SafeTransferLib.safeTransferFrom(_tokenAddress, msg.sender, _contents[i].recipient, _contents[i].amount);
