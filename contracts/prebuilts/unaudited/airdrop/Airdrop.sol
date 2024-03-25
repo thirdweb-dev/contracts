@@ -412,15 +412,18 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
     function isClaimed(address _receiver, address _token, uint256 _tokenId) external view returns (bool) {
         uint256 _conditionId = tokenConditionId[_token];
+
         bytes32 claimHash = keccak256(abi.encodePacked(_receiver, _token, _tokenId));
-
-        if (!claimed[_conditionId][claimHash]) {
-            claimHash = keccak256(abi.encodePacked(_receiver, _token));
-
-            return claimed[_conditionId][claimHash];
+        if (claimed[_conditionId][claimHash]) {
+            return true;
         }
 
-        return true;
+        claimHash = keccak256(abi.encodePacked(_receiver, _token));
+        if (claimed[_conditionId][claimHash]) {
+            return true;
+        }
+
+        return false;
     }
 
     function _canSetOwner() internal view virtual override returns (bool) {
