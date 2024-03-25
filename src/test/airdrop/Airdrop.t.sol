@@ -363,12 +363,84 @@ contract AirdropTest is BaseTest {
         address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
         uint256 quantity = 5;
 
-        vm.prank(receiver);
-
         airdrop.claimERC20(address(erc20), receiver, quantity, proofs);
 
         assertEq(erc20.balanceOf(receiver), quantity);
         assertEq(erc20.balanceOf(signer), 100 ether - quantity);
+    }
+
+    function test_revert_airdropClaim_erc20_alreadyClaimed() public {
+        erc20.mint(signer, 100 ether);
+        vm.prank(signer);
+        erc20.approve(address(airdrop), 100 ether);
+
+        string[] memory inputs = new string[](3);
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRootAirdrop.ts";
+        inputs[2] = Strings.toString(uint256(5));
+        bytes memory result = vm.ffi(inputs);
+        bytes32 root = abi.decode(result, (bytes32));
+
+        // set merkle root
+        vm.prank(signer);
+        airdrop.setMerkleRoot(address(erc20), root, true);
+
+        // generate proof
+        inputs[1] = "src/test/scripts/getProofAirdrop.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
+        uint256 quantity = 5;
+
+        airdrop.claimERC20(address(erc20), receiver, quantity, proofs);
+
+        // revert when claiming again
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropAlreadyClaimed.selector));
+        airdrop.claimERC20(address(erc20), receiver, quantity, proofs);
+    }
+
+    function test_revert_airdropClaim_erc20_noMerkleRoot() public {
+        erc20.mint(signer, 100 ether);
+        vm.prank(signer);
+        erc20.approve(address(airdrop), 100 ether);
+
+        bytes32[] memory proofs;
+
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
+        uint256 quantity = 5;
+
+        // revert when claiming again
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropNoMerkleRoot.selector));
+        airdrop.claimERC20(address(erc20), receiver, quantity, proofs);
+    }
+
+    function test_revert_airdropClaim_erc20_invalidProof() public {
+        erc20.mint(signer, 100 ether);
+        vm.prank(signer);
+        erc20.approve(address(airdrop), 100 ether);
+
+        string[] memory inputs = new string[](3);
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRootAirdrop.ts";
+        inputs[2] = Strings.toString(uint256(5));
+        bytes memory result = vm.ffi(inputs);
+        bytes32 root = abi.decode(result, (bytes32));
+
+        // set merkle root
+        vm.prank(signer);
+        airdrop.setMerkleRoot(address(erc20), root, true);
+
+        // generate proof
+        inputs[1] = "src/test/scripts/getProofAirdrop.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+        address receiver = address(0x12345);
+        uint256 quantity = 5;
+
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropInvalidProof.selector));
+        airdrop.claimERC20(address(erc20), receiver, quantity, proofs);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -507,11 +579,82 @@ contract AirdropTest is BaseTest {
         address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
         uint256 tokenId = 5;
 
-        vm.prank(receiver);
-
         airdrop.claimERC721(address(erc721), receiver, tokenId, proofs);
 
         assertEq(erc721.ownerOf(tokenId), receiver);
+    }
+
+    function test_revert_airdropClaim_erc721_alreadyClaimed() public {
+        erc721.mint(signer, 100);
+        vm.prank(signer);
+        erc721.setApprovalForAll(address(airdrop), true);
+
+        string[] memory inputs = new string[](3);
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRootAirdrop.ts";
+        inputs[2] = Strings.toString(uint256(5));
+        bytes memory result = vm.ffi(inputs);
+        bytes32 root = abi.decode(result, (bytes32));
+
+        // set merkle root
+        vm.prank(signer);
+        airdrop.setMerkleRoot(address(erc721), root, true);
+
+        // generate proof
+        inputs[1] = "src/test/scripts/getProofAirdrop.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
+        uint256 tokenId = 5;
+
+        airdrop.claimERC721(address(erc721), receiver, tokenId, proofs);
+
+        // revert when claiming again
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropAlreadyClaimed.selector));
+        airdrop.claimERC721(address(erc721), receiver, tokenId, proofs);
+    }
+
+    function test_revert_airdropClaim_erc721_noMerkleRoot() public {
+        erc721.mint(signer, 100);
+        vm.prank(signer);
+        erc721.setApprovalForAll(address(airdrop), true);
+
+        bytes32[] memory proofs;
+
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
+        uint256 tokenId = 5;
+
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropNoMerkleRoot.selector));
+        airdrop.claimERC721(address(erc721), receiver, tokenId, proofs);
+    }
+
+    function test_revert_airdropClaim_erc721_invalidProof() public {
+        erc721.mint(signer, 100);
+        vm.prank(signer);
+        erc721.setApprovalForAll(address(airdrop), true);
+
+        string[] memory inputs = new string[](3);
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRootAirdrop.ts";
+        inputs[2] = Strings.toString(uint256(5));
+        bytes memory result = vm.ffi(inputs);
+        bytes32 root = abi.decode(result, (bytes32));
+
+        // set merkle root
+        vm.prank(signer);
+        airdrop.setMerkleRoot(address(erc721), root, true);
+
+        // generate proof
+        inputs[1] = "src/test/scripts/getProofAirdrop.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+        address receiver = address(0x12345);
+        uint256 tokenId = 5;
+
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropInvalidProof.selector));
+        airdrop.claimERC721(address(erc721), receiver, tokenId, proofs);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -648,11 +791,85 @@ contract AirdropTest is BaseTest {
         address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
         uint256 quantity = 5;
 
-        vm.prank(receiver);
-
         airdrop.claimERC1155(address(erc1155), receiver, 0, quantity, proofs);
 
         assertEq(erc1155.balanceOf(receiver, 0), quantity);
         assertEq(erc1155.balanceOf(signer, 0), 100 ether - quantity);
+    }
+
+    function test_revert_airdropClaim_erc1155_alreadyClaimed() public {
+        erc1155.mint(signer, 0, 100 ether);
+        vm.prank(signer);
+        erc1155.setApprovalForAll(address(airdrop), true);
+
+        string[] memory inputs = new string[](4);
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRootAirdrop1155.ts";
+        inputs[2] = Strings.toString(uint256(0));
+        inputs[3] = Strings.toString(uint256(5));
+        bytes memory result = vm.ffi(inputs);
+        bytes32 root = abi.decode(result, (bytes32));
+
+        // set merkle root
+        vm.prank(signer);
+        airdrop.setMerkleRoot(address(erc1155), root, true);
+
+        // generate proof
+        inputs[1] = "src/test/scripts/getProofAirdrop1155.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
+        uint256 quantity = 5;
+
+        airdrop.claimERC1155(address(erc1155), receiver, 0, quantity, proofs);
+
+        // revert when claiming again
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropAlreadyClaimed.selector));
+        airdrop.claimERC1155(address(erc1155), receiver, 0, quantity, proofs);
+    }
+
+    function test_revert_airdropClaim_erc1155_noMerkleRoot() public {
+        erc1155.mint(signer, 0, 100 ether);
+        vm.prank(signer);
+        erc1155.setApprovalForAll(address(airdrop), true);
+
+        // generate proof
+        bytes32[] memory proofs;
+
+        address receiver = address(0xDDdDddDdDdddDDddDDddDDDDdDdDDdDDdDDDDDDd);
+        uint256 quantity = 5;
+
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropNoMerkleRoot.selector));
+        airdrop.claimERC1155(address(erc1155), receiver, 0, quantity, proofs);
+    }
+
+    function test_revert_airdropClaim_erc1155_invalidProof() public {
+        erc1155.mint(signer, 0, 100 ether);
+        vm.prank(signer);
+        erc1155.setApprovalForAll(address(airdrop), true);
+
+        string[] memory inputs = new string[](4);
+        inputs[0] = "node";
+        inputs[1] = "src/test/scripts/generateRootAirdrop1155.ts";
+        inputs[2] = Strings.toString(uint256(0));
+        inputs[3] = Strings.toString(uint256(5));
+        bytes memory result = vm.ffi(inputs);
+        bytes32 root = abi.decode(result, (bytes32));
+
+        // set merkle root
+        vm.prank(signer);
+        airdrop.setMerkleRoot(address(erc1155), root, true);
+
+        // generate proof
+        inputs[1] = "src/test/scripts/getProofAirdrop1155.ts";
+        result = vm.ffi(inputs);
+        bytes32[] memory proofs = abi.decode(result, (bytes32[]));
+
+        address receiver = address(0x12345);
+        uint256 quantity = 5;
+
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropInvalidProof.selector));
+        airdrop.claimERC1155(address(erc1155), receiver, 0, quantity, proofs);
     }
 }
