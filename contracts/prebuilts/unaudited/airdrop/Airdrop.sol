@@ -313,7 +313,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
     }
 
     function claimERC721(address _token, address _receiver, uint256 _tokenId, bytes32[] calldata _proofs) external {
-        bytes32 claimHash = _getClaimHashERC721(_receiver, _token);
+        bytes32 claimHash = _getClaimHashERC721(_receiver, _token, _tokenId);
         uint256 conditionId = tokenConditionId[_token];
 
         if (claimed[conditionId][claimHash]) {
@@ -357,7 +357,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         bool valid = MerkleProofLib.verify(
             _proofs,
             _tokenMerkleRoot,
-            keccak256(abi.encodePacked(_receiver, _quantity))
+            keccak256(abi.encodePacked(_receiver, _tokenId, _quantity))
         );
         if (!valid) {
             revert AirdropInvalidProof();
@@ -392,16 +392,16 @@ contract Airdrop is EIP712, Initializable, Ownable {
         version = "1";
     }
 
-    function _getClaimHashERC20(address _sender, address _token) private view returns (bytes32) {
-        return keccak256(abi.encodePacked(_sender, _token));
+    function _getClaimHashERC20(address _receiver, address _token) private view returns (bytes32) {
+        return keccak256(abi.encodePacked(_receiver, _token));
     }
 
-    function _getClaimHashERC721(address _sender, address _token) private view returns (bytes32) {
-        return keccak256(abi.encodePacked(_sender, _token));
+    function _getClaimHashERC721(address _receiver, address _token, uint256 _tokenId) private view returns (bytes32) {
+        return keccak256(abi.encodePacked(_receiver, _token, _tokenId));
     }
 
-    function _getClaimHashERC1155(address _sender, address _token, uint256 _tokenId) private view returns (bytes32) {
-        return keccak256(abi.encodePacked(_sender, _token, _tokenId));
+    function _getClaimHashERC1155(address _receiver, address _token, uint256 _tokenId) private view returns (bytes32) {
+        return keccak256(abi.encodePacked(_receiver, _token, _tokenId));
     }
 
     function _hashContentInfoERC20(AirdropContentERC20[] calldata contents) private pure returns (bytes32) {

@@ -598,10 +598,11 @@ contract AirdropBenchmarkTest is BaseTest {
         vm.prank(signer);
         erc1155.setApprovalForAll(address(airdrop), true);
 
-        string[] memory inputs = new string[](3);
+        string[] memory inputs = new string[](4);
         inputs[0] = "node";
-        inputs[1] = "src/test/scripts/generateRootAirdrop.ts";
-        inputs[2] = Strings.toString(uint256(5));
+        inputs[1] = "src/test/scripts/generateRootAirdrop1155.ts";
+        inputs[2] = Strings.toString(uint256(0));
+        inputs[3] = Strings.toString(uint256(5));
         bytes memory result = vm.ffi(inputs);
         bytes32 root = abi.decode(result, (bytes32));
 
@@ -610,7 +611,7 @@ contract AirdropBenchmarkTest is BaseTest {
         airdrop.setMerkleRoot(address(erc1155), root, true);
 
         // generate proof
-        inputs[1] = "src/test/scripts/getProofAirdrop.ts";
+        inputs[1] = "src/test/scripts/getProofAirdrop1155.ts";
         result = vm.ffi(inputs);
         bytes32[] memory proofs = abi.decode(result, (bytes32[]));
 
