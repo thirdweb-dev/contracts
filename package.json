@@ -55,7 +55,7 @@
     "build": "yarn clean && yarn compile",
     "forge:build": "forge build",
     "forge:test": "forge test",
-    "gas": "forge snapshot --mc Benchmark --gas-report --diff .gas-snapshot > gasreport.txt",
+    "gas": "forge snapshot --isolate --mc Benchmark --gas-report --diff .gas-snapshot > gasreport.txt",
     "forge:snapshot": "forge snapshot --check",
     "aabenchmark": "forge test --mc AABenchmarkPrepare && forge test --mc ProfileThirdwebAccount -vvv"
   }
