@@ -383,12 +383,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
-    function isClaimed(
-        address _receiver,
-        address _token,
-        uint256 _tokenId,
-        uint256 _conditionId
-    ) external view returns (bool) {
+    function isClaimed(address _receiver, address _token, uint256 _tokenId) external view returns (bool) {
+        uint256 _conditionId = tokenConditionId[_token];
         bytes32 claimHash = keccak256(abi.encodePacked(_receiver, _token, _tokenId));
 
         if (!claimed[_conditionId][claimHash]) {
