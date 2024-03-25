@@ -201,6 +201,47 @@ contract AirdropTest is BaseTest {
         assertEq(erc20.balanceOf(signer), 100 ether - totalAmount);
     }
 
+    function test_state_airdropPush_nativeToken() public {
+        vm.deal(signer, 100 ether);
+
+        Airdrop.AirdropContentERC20[] memory contents = _getContentsERC20(10);
+
+        uint256 totalAmount;
+        for (uint256 i = 0; i < contents.length; i++) {
+            totalAmount += contents[i].amount;
+            assertEq(contents[i].recipient.balance, 0);
+        }
+
+        vm.prank(signer);
+        airdrop.airdropNativeToken{ value: totalAmount }(contents);
+
+        for (uint256 i = 0; i < contents.length; i++) {
+            assertEq(contents[i].recipient.balance, contents[i].amount);
+        }
+
+        assertEq(signer.balance, 100 ether - totalAmount);
+    }
+
+    function test_revert_airdropPush_nativeToken() public {
+        vm.deal(signer, 100 ether);
+
+        Airdrop.AirdropContentERC20[] memory contents = _getContentsERC20(10);
+
+        vm.prank(signer);
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropFailed.selector));
+        airdrop.airdropNativeToken{ value: 0 }(contents);
+
+        // add some balance to airdrop contract, which it will try sending to recipeints when msg.value zero
+        vm.deal(address(airdrop), 50 ether);
+        // should revert
+        vm.prank(signer);
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropValueMismatch.selector));
+        airdrop.airdropNativeToken{ value: 0 }(contents);
+
+        // contract balance should remain untouched
+        assertEq(address(airdrop).balance, 50 ether);
+    }
+
     /*///////////////////////////////////////////////////////////////
                     Benchmark: Airdrop Signature ERC20 
     //////////////////////////////////////////////////////////////*/
@@ -229,6 +270,69 @@ contract AirdropTest is BaseTest {
             assertEq(erc20.balanceOf(contents[i].recipient), contents[i].amount);
         }
         assertEq(erc20.balanceOf(signer), 100 ether - totalAmount);
+    }
+
+    function test_revert_airdropSignature_erc20_expired() public {
+        erc20.mint(signer, 100 ether);
+        vm.prank(signer);
+        erc20.approve(address(airdrop), 100 ether);
+
+        Airdrop.AirdropContentERC20[] memory contents = _getContentsERC20(10);
+        Airdrop.AirdropRequestERC20 memory req = Airdrop.AirdropRequestERC20({
+            uid: bytes32(uint256(1)),
+            tokenAddress: address(erc20),
+            expirationTimestamp: 1000,
+            contents: contents
+        });
+        bytes memory signature = _signReqERC20(req, privateKey);
+
+        vm.warp(1001);
+
+        vm.prank(signer);
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropRequestExpired.selector, req.expirationTimestamp));
+        airdrop.airdropERC20WithSignature(req, signature);
+    }
+
+    function test_revert_airdropSignature_erc20_alreadyProcessed() public {
+        erc20.mint(signer, 100 ether);
+        vm.prank(signer);
+        erc20.approve(address(airdrop), 100 ether);
+
+        Airdrop.AirdropContentERC20[] memory contents = _getContentsERC20(10);
+        Airdrop.AirdropRequestERC20 memory req = Airdrop.AirdropRequestERC20({
+            uid: bytes32(uint256(1)),
+            tokenAddress: address(erc20),
+            expirationTimestamp: 1000,
+            contents: contents
+        });
+        bytes memory signature = _signReqERC20(req, privateKey);
+
+        vm.prank(signer);
+
+        airdrop.airdropERC20WithSignature(req, signature);
+
+        // try re-sending same request/signature
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropRequestAlreadyProcessed.selector));
+        airdrop.airdropERC20WithSignature(req, signature);
+    }
+
+    function test_revert_airdropSignature_erc20_invalidSigner() public {
+        erc20.mint(signer, 100 ether);
+        vm.prank(signer);
+        erc20.approve(address(airdrop), 100 ether);
+
+        Airdrop.AirdropContentERC20[] memory contents = _getContentsERC20(10);
+        Airdrop.AirdropRequestERC20 memory req = Airdrop.AirdropRequestERC20({
+            uid: bytes32(uint256(1)),
+            tokenAddress: address(erc20),
+            expirationTimestamp: 1000,
+            contents: contents
+        });
+        bytes memory signature = _signReqERC20(req, 123);
+
+        vm.prank(signer);
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropRequestInvalidSigner.selector));
+        airdrop.airdropERC20WithSignature(req, signature);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -314,6 +418,67 @@ contract AirdropTest is BaseTest {
         }
     }
 
+    function test_revert_airdropSignature_erc721_expired() public {
+        erc721.mint(signer, 1000);
+        vm.prank(signer);
+        erc721.setApprovalForAll(address(airdrop), true);
+
+        Airdrop.AirdropContentERC721[] memory contents = _getContentsERC721(10);
+        Airdrop.AirdropRequestERC721 memory req = Airdrop.AirdropRequestERC721({
+            uid: bytes32(uint256(1)),
+            tokenAddress: address(erc721),
+            expirationTimestamp: 1000,
+            contents: contents
+        });
+        bytes memory signature = _signReqERC721(req, privateKey);
+
+        vm.warp(1001);
+
+        vm.prank(signer);
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropRequestExpired.selector, req.expirationTimestamp));
+        airdrop.airdropERC721WithSignature(req, signature);
+    }
+
+    function test_revert_airdropSignature_erc721_alreadyProcessed() public {
+        erc721.mint(signer, 1000);
+        vm.prank(signer);
+        erc721.setApprovalForAll(address(airdrop), true);
+
+        Airdrop.AirdropContentERC721[] memory contents = _getContentsERC721(10);
+        Airdrop.AirdropRequestERC721 memory req = Airdrop.AirdropRequestERC721({
+            uid: bytes32(uint256(1)),
+            tokenAddress: address(erc721),
+            expirationTimestamp: 1000,
+            contents: contents
+        });
+        bytes memory signature = _signReqERC721(req, privateKey);
+
+        vm.prank(signer);
+        airdrop.airdropERC721WithSignature(req, signature);
+
+        // send it again
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropRequestAlreadyProcessed.selector));
+        airdrop.airdropERC721WithSignature(req, signature);
+    }
+
+    function test_revert_airdropSignature_erc721_invalidSigner() public {
+        erc721.mint(signer, 1000);
+        vm.prank(signer);
+        erc721.setApprovalForAll(address(airdrop), true);
+
+        Airdrop.AirdropContentERC721[] memory contents = _getContentsERC721(10);
+        Airdrop.AirdropRequestERC721 memory req = Airdrop.AirdropRequestERC721({
+            uid: bytes32(uint256(1)),
+            tokenAddress: address(erc721),
+            expirationTimestamp: 1000,
+            contents: contents
+        });
+        bytes memory signature = _signReqERC721(req, 123);
+
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropRequestInvalidSigner.selector));
+        airdrop.airdropERC721WithSignature(req, signature);
+    }
+
     /*///////////////////////////////////////////////////////////////
                        Benchmark: Airdrop Claim ERC721 
     //////////////////////////////////////////////////////////////*/
@@ -396,6 +561,64 @@ contract AirdropTest is BaseTest {
         }
     }
 
+    function test_revert_airdropSignature_erc115_expired() public {
+        erc1155.mint(signer, 0, 100 ether);
+        vm.prank(signer);
+        erc1155.setApprovalForAll(address(airdrop), true);
+
+        Airdrop.AirdropContentERC1155[] memory contents = _getContentsERC1155(10);
+        Airdrop.AirdropRequestERC1155 memory req = Airdrop.AirdropRequestERC1155({
+            uid: bytes32(uint256(1)),
+            tokenAddress: address(erc1155),
+            expirationTimestamp: 1000,
+            contents: contents
+        });
+        bytes memory signature = _signReqERC1155(req, privateKey);
+
+        vm.warp(1001);
+
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropRequestExpired.selector, req.expirationTimestamp));
+        airdrop.airdropERC1155WithSignature(req, signature);
+    }
+
+    function test_revert_airdropSignature_erc115_alreadyProcessed() public {
+        erc1155.mint(signer, 0, 100 ether);
+        vm.prank(signer);
+        erc1155.setApprovalForAll(address(airdrop), true);
+
+        Airdrop.AirdropContentERC1155[] memory contents = _getContentsERC1155(10);
+        Airdrop.AirdropRequestERC1155 memory req = Airdrop.AirdropRequestERC1155({
+            uid: bytes32(uint256(1)),
+            tokenAddress: address(erc1155),
+            expirationTimestamp: 1000,
+            contents: contents
+        });
+        bytes memory signature = _signReqERC1155(req, privateKey);
+
+        airdrop.airdropERC1155WithSignature(req, signature);
+
+        // send it again
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropRequestAlreadyProcessed.selector));
+        airdrop.airdropERC1155WithSignature(req, signature);
+    }
+
+    function test_revert_airdropSignature_erc115_invalidSigner() public {
+        erc1155.mint(signer, 0, 100 ether);
+        vm.prank(signer);
+        erc1155.setApprovalForAll(address(airdrop), true);
+
+        Airdrop.AirdropContentERC1155[] memory contents = _getContentsERC1155(10);
+        Airdrop.AirdropRequestERC1155 memory req = Airdrop.AirdropRequestERC1155({
+            uid: bytes32(uint256(1)),
+            tokenAddress: address(erc1155),
+            expirationTimestamp: 1000,
+            contents: contents
+        });
+        bytes memory signature = _signReqERC1155(req, 123);
+
+        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropRequestInvalidSigner.selector));
+        airdrop.airdropERC1155WithSignature(req, signature);
+    }
     /*///////////////////////////////////////////////////////////////
                        Benchmark: Airdrop Claim ERC1155 
     //////////////////////////////////////////////////////////////*/
