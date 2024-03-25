@@ -201,6 +201,10 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropRequestExpired(req.expirationTimestamp);
         }
 
+        if (processed[req.uid]) {
+            revert AirdropRequestAlreadyProcessed();
+        }
+
         // verify data
         if (!_verifyRequestSignerERC20(req, signature)) {
             revert AirdropRequestInvalidSigner();
@@ -225,6 +229,10 @@ contract Airdrop is EIP712, Initializable, Ownable {
         // verify expiration timestamp
         if (req.expirationTimestamp < block.timestamp) {
             revert AirdropRequestExpired(req.expirationTimestamp);
+        }
+
+        if (processed[req.uid]) {
+            revert AirdropRequestAlreadyProcessed();
         }
 
         // verify data
