@@ -115,6 +115,13 @@ contract Airdrop is EIP712, Initializable, Ownable {
     error AirdropInvalidTokenAddress();
 
     /*///////////////////////////////////////////////////////////////
+                                Events
+    //////////////////////////////////////////////////////////////*/
+
+    event Airdrop(address token);
+    event AirdropClaimed(address token, address receiver);
+
+    /*///////////////////////////////////////////////////////////////
                             Constructor
     //////////////////////////////////////////////////////////////*/
 
@@ -159,6 +166,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         if (nativeTokenAmount != msg.value) {
             revert AirdropValueMismatch();
         }
+
+        emit Airdrop(NATIVE_TOKEN_ADDRESS);
     }
 
     function airdropERC20(address _tokenAddress, AirdropContentERC20[] calldata _contents) external onlyOwner {
@@ -167,6 +176,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         for (uint256 i = 0; i < len; i++) {
             SafeTransferLib.safeTransferFrom(_tokenAddress, msg.sender, _contents[i].recipient, _contents[i].amount);
         }
+
+        emit Airdrop(_tokenAddress);
     }
 
     function airdropERC721(address _tokenAddress, AirdropContentERC721[] calldata _contents) external onlyOwner {
@@ -175,6 +186,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         for (uint256 i = 0; i < len; i++) {
             IERC721(_tokenAddress).safeTransferFrom(msg.sender, _contents[i].recipient, _contents[i].tokenId);
         }
+
+        emit Airdrop(_tokenAddress);
     }
 
     function airdropERC1155(address _tokenAddress, AirdropContentERC1155[] calldata _contents) external onlyOwner {
@@ -189,6 +202,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
                 ""
             );
         }
+
+        emit Airdrop(_tokenAddress);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -223,6 +238,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
                 req.contents[i].amount
             );
         }
+
+        emit Airdrop(req.tokenAddress);
     }
 
     function airdropERC721WithSignature(AirdropRequestERC721 calldata req, bytes calldata signature) external {
@@ -248,6 +265,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         for (uint256 i = 0; i < len; i++) {
             IERC721(req.tokenAddress).safeTransferFrom(_from, req.contents[i].recipient, req.contents[i].tokenId);
         }
+
+        emit Airdrop(req.tokenAddress);
     }
 
     function airdropERC1155WithSignature(AirdropRequestERC1155 calldata req, bytes calldata signature) external {
@@ -279,6 +298,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
                 ""
             );
         }
+
+        emit Airdrop(req.tokenAddress);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -310,6 +331,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         claimed[conditionId][claimHash] = true;
 
         SafeTransferLib.safeTransferFrom(_token, owner(), _receiver, _quantity);
+
+        emit AirdropClaimed(_token, _receiver);
     }
 
     function claimERC721(address _token, address _receiver, uint256 _tokenId, bytes32[] calldata _proofs) external {
@@ -333,6 +356,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         claimed[conditionId][claimHash] = true;
 
         IERC721(_token).safeTransferFrom(owner(), _receiver, _tokenId);
+
+        emit AirdropClaimed(_token, _receiver);
     }
 
     function claimERC1155(
@@ -366,6 +391,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         claimed[conditionId][claimHash] = true;
 
         IERC1155(_token).safeTransferFrom(owner(), _receiver, _tokenId, _quantity, "");
+
+        emit AirdropClaimed(_token, _receiver);
     }
 
     /*///////////////////////////////////////////////////////////////
