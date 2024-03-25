@@ -1,16 +1,30 @@
-No files changed, compilation skipped
+Compiling 1 files with 0.8.23
+Solc 0.8.23 finished in 22.27s
+Compiler run [33msuccessful with warnings:[0m
+[1;33mWarning (5667)[0m[1;37m: Unused function parameter. Remove or comment out the variable name to silence this warning.[0m
+   [34m-->[0m contracts/prebuilts/pack/Pack.sol:101:9:
+[34m    |[0m
+[34m101 |[0m         [33maddress[] memory _trustedForwarders[0m,
+[34m    |[0m         [1;33m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
 
-Ran 3 tests for src/test/benchmark/EditionStakeBenchmark.t.sol:EditionStakeBenchmarkTest
-[32m[PASS][0m test_benchmark_editionStake_claimRewards() (gas: 98765)
-[32m[PASS][0m test_benchmark_editionStake_stake() (gas: 203676)
-[32m[PASS][0m test_benchmark_editionStake_withdraw() (gas: 94296)
-Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 652.02ms (715.83µs CPU time)
+[1;33mWarning (2018)[0m[1;37m: Function state mutability can be restricted to pure[0m
+   [34m-->[0m contracts/prebuilts/unaudited/airdrop/Airdrop.sol:395:5:
+[34m    |[0m
+[34m395 |[0m     [33mfunction _getClaimHashERC20(address _receiver, address _token) private view returns (bytes32) {[0m
+[34m    |[0m     [1;33m^ (Relevant source part starts here and spans across multiple lines).[0m
 
-Ran 3 tests for src/test/benchmark/PackBenchmark.t.sol:PackBenchmarkTest
-[32m[PASS][0m test_benchmark_pack_addPackContents() (gas: 312595)
-[32m[PASS][0m test_benchmark_pack_createPack() (gas: 1419379)
-[32m[PASS][0m test_benchmark_pack_openPack() (gas: 306658)
-Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 660.31ms (3.57ms CPU time)
+[1;33mWarning (2018)[0m[1;37m: Function state mutability can be restricted to pure[0m
+   [34m-->[0m contracts/prebuilts/unaudited/airdrop/Airdrop.sol:399:5:
+[34m    |[0m
+[34m399 |[0m     [33mfunction _getClaimHashERC721(address _receiver, address _token, uint256 _tokenId) private view returns (bytes32) {[0m
+[34m    |[0m     [1;33m^ (Relevant source part starts here and spans across multiple lines).[0m
+
+[1;33mWarning (2018)[0m[1;37m: Function state mutability can be restricted to pure[0m
+   [34m-->[0m contracts/prebuilts/unaudited/airdrop/Airdrop.sol:403:5:
+[34m    |[0m
+[34m403 |[0m     [33mfunction _getClaimHashERC1155(address _receiver, address _token, uint256 _tokenId) private view returns (bytes32) {[0m
+[34m    |[0m     [1;33m^ (Relevant source part starts here and spans across multiple lines).[0m
+
 
 Ran 5 tests for src/test/benchmark/SignatureDropBenchmark.t.sol:SignatureDropBenchmarkTest
 [32m[PASS][0m test_benchmark_signatureDrop_claim_five_tokens() (gas: 185688)
@@ -18,25 +32,29 @@ Ran 5 tests for src/test/benchmark/SignatureDropBenchmark.t.sol:SignatureDropBen
 [32m[PASS][0m test_benchmark_signatureDrop_lazyMint_for_delayed_reveal() (gas: 249057)
 [32m[PASS][0m test_benchmark_signatureDrop_reveal() (gas: 49802)
 [32m[PASS][0m test_benchmark_signatureDrop_setClaimConditions() (gas: 100719)
-Suite result: [32mok[0m. [32m5[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 667.52ms (808.25µs CPU time)
+Suite result: [32mok[0m. [32m5[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 777.81ms (1.16ms CPU time)
+
+Ran 3 tests for src/test/benchmark/EditionStakeBenchmark.t.sol:EditionStakeBenchmarkTest
+[32m[PASS][0m test_benchmark_editionStake_claimRewards() (gas: 98765)
+[32m[PASS][0m test_benchmark_editionStake_stake() (gas: 203676)
+[32m[PASS][0m test_benchmark_editionStake_withdraw() (gas: 94296)
+Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 777.55ms (1.41ms CPU time)
 
 Ran 3 tests for src/test/benchmark/NFTStakeBenchmark.t.sol:NFTStakeBenchmarkTest
 [32m[PASS][0m test_benchmark_nftStake_claimRewards() (gas: 99831)
 [32m[PASS][0m test_benchmark_nftStake_stake_five_tokens() (gas: 553577)
 [32m[PASS][0m test_benchmark_nftStake_withdraw() (gas: 96144)
-Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 670.59ms (846.13µs CPU time)
+Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 781.23ms (899.88µs CPU time)
+
+Ran 3 tests for src/test/benchmark/PackBenchmark.t.sol:PackBenchmarkTest
+[32m[PASS][0m test_benchmark_pack_addPackContents() (gas: 312595)
+[32m[PASS][0m test_benchmark_pack_createPack() (gas: 1419379)
+[32m[PASS][0m test_benchmark_pack_openPack() (gas: 302612)
+Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 783.66ms (3.44ms CPU time)
 
 Ran 1 test for src/test/smart-wallet/utils/AABenchmarkPrepare.sol:AABenchmarkPrepare
 [32m[PASS][0m test_prepareBenchmarkFile() (gas: 2955770)
-Suite result: [32mok[0m. [32m1[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 672.41ms (20.88ms CPU time)
-
-Ran 1 test for src/test/benchmark/AirdropERC20Benchmark.t.sol:AirdropERC20BenchmarkTest
-[32m[PASS][0m test_benchmark_airdropERC20_airdrop() (gas: 32443785)
-Suite result: [32mok[0m. [32m1[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 676.87ms (15.63ms CPU time)
-
-Ran 1 test for src/test/benchmark/AirdropERC721Benchmark.t.sol:AirdropERC721BenchmarkTest
-[32m[PASS][0m test_benchmark_airdropERC721_airdrop() (gas: 42241588)
-Suite result: [32mok[0m. [32m1[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 685.01ms (16.22ms CPU time)
+Suite result: [32mok[0m. [32m1[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 797.24ms (20.05ms CPU time)
 
 Ran 14 tests for src/test/benchmark/AccountBenchmark.t.sol:AccountBenchmarkTest
 [32m[PASS][0m test_state_accountReceivesNativeTokens() (gas: 34537)
@@ -53,83 +71,109 @@ Ran 14 tests for src/test/benchmark/AccountBenchmark.t.sol:AccountBenchmarkTest
 [32m[PASS][0m test_state_receiveERC1155NFT() (gas: 66043)
 [32m[PASS][0m test_state_receiveERC721NFT() (gas: 100196)
 [32m[PASS][0m test_state_transferOutsNativeTokens() (gas: 133673)
-Suite result: [32mok[0m. [32m14[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 738.85ms (21.33ms CPU time)
+Suite result: [32mok[0m. [32m14[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 798.25ms (21.10ms CPU time)
 
-Ran 2 tests for src/test/benchmark/MultiwrapBenchmark.t.sol:MultiwrapBenchmarkTest
-[32m[PASS][0m test_benchmark_multiwrap_unwrap() (gas: 152040)
-[32m[PASS][0m test_benchmark_multiwrap_wrap() (gas: 480722)
-Suite result: [32mok[0m. [32m2[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 222.28ms (685.96µs CPU time)
+Ran 1 test for src/test/benchmark/AirdropERC20Benchmark.t.sol:AirdropERC20BenchmarkTest
+[32m[PASS][0m test_benchmark_airdropERC20_airdrop() (gas: 32443785)
+Suite result: [32mok[0m. [32m1[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 809.63ms (27.77ms CPU time)
+
+Ran 1 test for src/test/benchmark/AirdropERC721Benchmark.t.sol:AirdropERC721BenchmarkTest
+[32m[PASS][0m test_benchmark_airdropERC721_airdrop() (gas: 42241588)
+Suite result: [32mok[0m. [32m1[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 818.36ms (26.52ms CPU time)
 
 Ran 3 tests for src/test/benchmark/PackVRFDirectBenchmark.t.sol:PackVRFDirectBenchmarkTest
 [32m[PASS][0m test_benchmark_packvrf_createPack() (gas: 1392387)
 [32m[PASS][0m test_benchmark_packvrf_openPack() (gas: 150677)
 [32m[PASS][0m test_benchmark_packvrf_openPackAndClaimRewards() (gas: 3621)
-Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 217.48ms (1.99ms CPU time)
+Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 232.32ms (1.99ms CPU time)
 
 Ran 4 tests for src/test/benchmark/TokenERC1155Benchmark.t.sol:TokenERC1155BenchmarkTest
 [32m[PASS][0m test_benchmark_tokenERC1155_burn() (gas: 30352)
 [32m[PASS][0m test_benchmark_tokenERC1155_mintTo() (gas: 144229)
 [32m[PASS][0m test_benchmark_tokenERC1155_mintWithSignature_pay_with_ERC20() (gas: 307291)
 [32m[PASS][0m test_benchmark_tokenERC1155_mintWithSignature_pay_with_native_token() (gas: 318712)
-Suite result: [32mok[0m. [32m4[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 229.46ms (1.60ms CPU time)
+Suite result: [32mok[0m. [32m4[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 297.36ms (1.61ms CPU time)
+
+Ran 2 tests for src/test/benchmark/MultiwrapBenchmark.t.sol:MultiwrapBenchmarkTest
+[32m[PASS][0m test_benchmark_multiwrap_unwrap() (gas: 152040)
+[32m[PASS][0m test_benchmark_multiwrap_wrap() (gas: 480722)
+Suite result: [32mok[0m. [32m2[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 310.37ms (726.13µs CPU time)
+
+Ran 1 test for src/test/benchmark/AirdropERC1155Benchmark.t.sol:AirdropERC1155BenchmarkTest
+[32m[PASS][0m test_benchmark_airdropERC1155_airdrop() (gas: 38536544)
+Suite result: [32mok[0m. [32m1[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 273.46ms (21.60ms CPU time)
 
 Ran 3 tests for src/test/benchmark/TokenERC20Benchmark.t.sol:TokenERC20BenchmarkTest
 [32m[PASS][0m test_benchmark_tokenERC20_mintTo() (gas: 139513)
 [32m[PASS][0m test_benchmark_tokenERC20_mintWithSignature_pay_with_ERC20() (gas: 221724)
 [32m[PASS][0m test_benchmark_tokenERC20_mintWithSignature_pay_with_native_token() (gas: 228786)
-Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 229.79ms (1.31ms CPU time)
-
-Ran 1 test for src/test/benchmark/AirdropERC1155Benchmark.t.sol:AirdropERC1155BenchmarkTest
-[32m[PASS][0m test_benchmark_airdropERC1155_airdrop() (gas: 38536544)
-Suite result: [32mok[0m. [32m1[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 262.58ms (18.95ms CPU time)
-
-Ran 3 tests for src/test/benchmark/TokenStakeBenchmark.t.sol:TokenStakeBenchmarkTest
-[32m[PASS][0m test_benchmark_tokenStake_claimRewards() (gas: 101098)
-[32m[PASS][0m test_benchmark_tokenStake_stake() (gas: 195556)
-[32m[PASS][0m test_benchmark_tokenStake_withdraw() (gas: 104792)
-Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 205.37ms (599.46µs CPU time)
+Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 339.25ms (3.19ms CPU time)
 
 Ran 4 tests for src/test/benchmark/TokenERC721Benchmark.t.sol:TokenERC721BenchmarkTest
 [32m[PASS][0m test_benchmark_tokenERC721_burn() (gas: 40392)
 [32m[PASS][0m test_benchmark_tokenERC721_mintTo() (gas: 172834)
 [32m[PASS][0m test_benchmark_tokenERC721_mintWithSignature_pay_with_ERC20() (gas: 301844)
 [32m[PASS][0m test_benchmark_tokenERC721_mintWithSignature_pay_with_native_token() (gas: 308814)
-Suite result: [32mok[0m. [32m4[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 303.02ms (1.56ms CPU time)
+Suite result: [32mok[0m. [32m4[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 311.67ms (1.86ms CPU time)
+
+Ran 3 tests for src/test/benchmark/TokenStakeBenchmark.t.sol:TokenStakeBenchmarkTest
+[32m[PASS][0m test_benchmark_tokenStake_claimRewards() (gas: 101098)
+[32m[PASS][0m test_benchmark_tokenStake_stake() (gas: 195556)
+[32m[PASS][0m test_benchmark_tokenStake_withdraw() (gas: 104792)
+Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 194.65ms (694.21µs CPU time)
 
 Ran 21 tests for src/test/benchmark/AirdropBenchmark.t.sol:AirdropBenchmarkTest
-[32m[PASS][0m test_benchmark_airdropClaim_erc1155() (gas: 103778)
-[32m[PASS][0m test_benchmark_airdropClaim_erc20() (gas: 109548)
-[32m[PASS][0m test_benchmark_airdropClaim_erc721() (gas: 107657)
-[32m[PASS][0m test_benchmark_airdropPush_erc1155_10() (gas: 366949)
-[32m[PASS][0m test_benchmark_airdropPush_erc1155_100() (gas: 3263174)
-[32m[PASS][0m test_benchmark_airdropPush_erc1155_1000() (gas: 32346075)
-[32m[PASS][0m test_benchmark_airdropPush_erc20_10() (gas: 358772)
-[32m[PASS][0m test_benchmark_airdropPush_erc20_100() (gas: 3137837)
-[32m[PASS][0m test_benchmark_airdropPush_erc20_1000() (gas: 31113395)
-[32m[PASS][0m test_benchmark_airdropPush_erc721_10() (gas: 423341)
-[32m[PASS][0m test_benchmark_airdropPush_erc721_100() (gas: 3834095)
-[32m[PASS][0m test_benchmark_airdropPush_erc721_1000() (gas: 38105680)
-[32m[PASS][0m test_benchmark_airdropSignature_erc115_10() (gas: 395103)
-[32m[PASS][0m test_benchmark_airdropSignature_erc115_100() (gas: 3436492)
-[32m[PASS][0m test_benchmark_airdropSignature_erc115_1000() (gas: 34312635)
-[32m[PASS][0m test_benchmark_airdropSignature_erc20_10() (gas: 384317)
-[32m[PASS][0m test_benchmark_airdropSignature_erc20_100() (gas: 3284223)
-[32m[PASS][0m test_benchmark_airdropSignature_erc20_1000() (gas: 32869617)
-[32m[PASS][0m test_benchmark_airdropSignature_erc721_10() (gas: 448536)
-[32m[PASS][0m test_benchmark_airdropSignature_erc721_100() (gas: 3987990)
-[32m[PASS][0m test_benchmark_airdropSignature_erc721_1000() (gas: 39670457)
-Suite result: [32mok[0m. [32m21[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 1.30s (1.14s CPU time)
+[32m[PASS][0m test_benchmark_airdropClaim_erc1155() (gas: 103870)
+[32m[PASS][0m test_benchmark_airdropClaim_erc20() (gas: 108214)
+[32m[PASS][0m test_benchmark_airdropClaim_erc721() (gas: 107404)
+[32m[PASS][0m test_benchmark_airdropPush_erc1155_10() (gas: 366803)
+[32m[PASS][0m test_benchmark_airdropPush_erc1155_100() (gas: 3262938)
+[32m[PASS][0m test_benchmark_airdropPush_erc1155_1000() (gas: 32344939)
+[32m[PASS][0m test_benchmark_airdropPush_erc20_10() (gas: 342387)
+[32m[PASS][0m test_benchmark_airdropPush_erc20_100() (gas: 2972974)
+[32m[PASS][0m test_benchmark_airdropPush_erc20_1000() (gas: 29348844)
+[32m[PASS][0m test_benchmark_airdropPush_erc721_10() (gas: 423239)
+[32m[PASS][0m test_benchmark_airdropPush_erc721_100() (gas: 3833903)
+[32m[PASS][0m test_benchmark_airdropPush_erc721_1000() (gas: 38104588)
+[32m[PASS][0m test_benchmark_airdropSignature_erc115_10() (gas: 415414)
+[32m[PASS][0m test_benchmark_airdropSignature_erc115_100() (gas: 3456815)
+[32m[PASS][0m test_benchmark_airdropSignature_erc115_1000() (gas: 34332958)
+[32m[PASS][0m test_benchmark_airdropSignature_erc20_10() (gas: 388010)
+[32m[PASS][0m test_benchmark_airdropSignature_erc20_100() (gas: 3137606)
+[32m[PASS][0m test_benchmark_airdropSignature_erc20_1000() (gas: 30935300)
+[32m[PASS][0m test_benchmark_airdropSignature_erc721_10() (gas: 468925)
+[32m[PASS][0m test_benchmark_airdropSignature_erc721_100() (gas: 4008367)
+[32m[PASS][0m test_benchmark_airdropSignature_erc721_1000() (gas: 39690834)
+Suite result: [32mok[0m. [32m21[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 1.63s (1.75s CPU time)
+
+Ran 21 tests for src/test/benchmark/AirdropBenchmarkAlt.t.sol:AirdropBenchmarkAltTest
+[32m[PASS][0m test_benchmark_airdropClaim_erc1155() (gas: 103870)
+[32m[PASS][0m test_benchmark_airdropClaim_erc20() (gas: 108214)
+[32m[PASS][0m test_benchmark_airdropClaim_erc721() (gas: 107404)
+[32m[PASS][0m test_benchmark_airdropPush_erc1155_10() (gas: 366803)
+[32m[PASS][0m test_benchmark_airdropPush_erc1155_100() (gas: 3262938)
+[32m[PASS][0m test_benchmark_airdropPush_erc1155_1000() (gas: 32344939)
+[32m[PASS][0m test_benchmark_airdropPush_erc20_10() (gas: 342387)
+[32m[PASS][0m test_benchmark_airdropPush_erc20_100() (gas: 2972974)
+[32m[PASS][0m test_benchmark_airdropPush_erc20_1000() (gas: 29348844)
+[32m[PASS][0m test_benchmark_airdropPush_erc721_10() (gas: 423239)
+[32m[PASS][0m test_benchmark_airdropPush_erc721_100() (gas: 3833903)
+[32m[PASS][0m test_benchmark_airdropPush_erc721_1000() (gas: 38104588)
+[32m[PASS][0m test_benchmark_airdropSignature_erc115_10() (gas: 415414)
+[32m[PASS][0m test_benchmark_airdropSignature_erc115_100() (gas: 3456815)
+[32m[PASS][0m test_benchmark_airdropSignature_erc115_1000() (gas: 34332958)
+[32m[PASS][0m test_benchmark_airdropSignature_erc20_10() (gas: 388010)
+[32m[PASS][0m test_benchmark_airdropSignature_erc20_100() (gas: 3137606)
+[32m[PASS][0m test_benchmark_airdropSignature_erc20_1000() (gas: 30935300)
+[32m[PASS][0m test_benchmark_airdropSignature_erc721_10() (gas: 468925)
+[32m[PASS][0m test_benchmark_airdropSignature_erc721_100() (gas: 4008367)
+[32m[PASS][0m test_benchmark_airdropSignature_erc721_1000() (gas: 39690834)
+Suite result: [32mok[0m. [32m21[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 866.76ms (1.41s CPU time)
 
 Ran 2 tests for src/test/benchmark/DropERC20Benchmark.t.sol:DropERC20BenchmarkTest
 [32m[PASS][0m test_benchmark_dropERC20_claim() (gas: 291508)
 [32m[PASS][0m test_benchmark_dropERC20_setClaimConditions_five_conditions() (gas: 530026)
-Suite result: [32mok[0m. [32m2[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 444.21ms (516.94ms CPU time)
-
-Ran 3 tests for src/test/benchmark/DropERC1155Benchmark.t.sol:DropERC1155BenchmarkTest
-[32m[PASS][0m test_benchmark_dropERC1155_claim() (gas: 245552)
-[32m[PASS][0m test_benchmark_dropERC1155_lazyMint() (gas: 146425)
-[32m[PASS][0m test_benchmark_dropERC1155_setClaimConditions_five_conditions() (gas: 525725)
-Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 1.31s (677.77ms CPU time)
+Suite result: [32mok[0m. [32m2[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 915.15ms (767.18ms CPU time)
 
 Ran 5 tests for src/test/benchmark/DropERC721Benchmark.t.sol:DropERC721BenchmarkTest
 [32m[PASS][0m test_benchmark_dropERC721_claim_five_tokens() (gas: 273303)
@@ -137,10 +181,16 @@ Ran 5 tests for src/test/benchmark/DropERC721Benchmark.t.sol:DropERC721Benchmark
 [32m[PASS][0m test_benchmark_dropERC721_lazyMint_for_delayed_reveal() (gas: 248985)
 [32m[PASS][0m test_benchmark_dropERC721_reveal() (gas: 49433)
 [32m[PASS][0m test_benchmark_dropERC721_setClaimConditions_five_conditions() (gas: 529470)
-Suite result: [32mok[0m. [32m5[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 429.81ms (520.49ms CPU time)
+Suite result: [32mok[0m. [32m5[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 462.45ms (550.25ms CPU time)
+
+Ran 3 tests for src/test/benchmark/DropERC1155Benchmark.t.sol:DropERC1155BenchmarkTest
+[32m[PASS][0m test_benchmark_dropERC1155_claim() (gas: 245552)
+[32m[PASS][0m test_benchmark_dropERC1155_lazyMint() (gas: 146425)
+[32m[PASS][0m test_benchmark_dropERC1155_setClaimConditions_five_conditions() (gas: 525725)
+Suite result: [32mok[0m. [32m3[0m passed; [31m0[0m failed; [33m0[0m skipped; finished in 1.79s (1.05s CPU time)
 
 
-Ran 19 test suites in 1.52s (10.57s CPU time): [32m82[0m tests passed, [31m0[0m failed, [33m0[0m skipped (82 total tests)
+Ran 20 test suites in 2.00s (13.97s CPU time): [32m103[0m tests passed, [31m0[0m failed, [33m0[0m skipped (103 total tests)
 test_benchmark_packvrf_openPackAndClaimRewards() (gas: 0 (0.000%)) 
 test_benchmark_pack_createPack() (gas: [31m6511[0m ([31m0.461%[0m)) 
 test_benchmark_airdropERC721_airdrop() (gas: [31m329052[0m ([31m0.785%[0m)) 
@@ -194,7 +244,7 @@ test_state_executeBatchTransaction() (gas: [31m36192[0m ([31m90.766%[0m))
 test_state_executeTransaction() (gas: [31m33156[0m ([31m92.783%[0m)) 
 test_state_contractMetadata() (gas: [31m57800[0m ([31m102.288%[0m)) 
 test_benchmark_editionStake_withdraw() (gas: [31m47932[0m ([31m103.382%[0m)) 
-test_benchmark_pack_openPack() (gas: [31m164798[0m ([31m116.169%[0m)) 
+test_benchmark_pack_openPack() (gas: [31m160752[0m ([31m113.317%[0m)) 
 test_benchmark_tokenStake_withdraw() (gas: [31m57396[0m ([31m121.099%[0m)) 
 test_benchmark_nftStake_withdraw() (gas: [31m58068[0m ([31m152.506%[0m)) 
 test_state_accountReceivesNativeTokens() (gas: [31m23500[0m ([31m212.920%[0m)) 
@@ -202,4 +252,4 @@ test_benchmark_dropERC721_reveal() (gas: [31m35701[0m ([31m259.984%[0m))
 test_benchmark_tokenERC721_burn() (gas: [31m31438[0m ([31m351.106%[0m)) 
 test_benchmark_signatureDrop_reveal() (gas: [31m39155[0m ([31m367.756%[0m)) 
 test_benchmark_tokenERC1155_burn() (gas: [31m24624[0m ([31m429.888%[0m)) 
-Overall gas change: [31m3379969[0m ([31m2.656%[0m)
+Overall gas change: [31m3375923[0m ([31m2.652%[0m)
