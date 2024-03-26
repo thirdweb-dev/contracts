@@ -28,3 +28,6 @@
 [submodule "lib/seaport"]
 	path = lib/seaport
 	url = https://github.com/ProjectOpenSea/seaport
+[submodule "lib/murky"]
+	path = lib/murky
+	url = https://github.com/lib/murky
