@@ -26,7 +26,7 @@ import { CurrencyTransferLib } from "../lib/CurrencyTransferLib.sol";
  *  It includes the following additions to standard ERC721 logic:
  *
  *      - Contract metadata for royalty support on platforms such as OpenSea that use
- *        off-chain information to distribute roaylties.
+ *        off-chain information to distribute royalties.
  *
  *      - Ownership of the contract, with the ability to restrict certain functions to
  *        only be called by the contract's owner.
