@@ -25,3 +25,6 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/vectorized/solady
+[submodule "lib/seaport"]
+	path = lib/seaport
+	url = https://github.com/ProjectOpenSea/seaport
