@@ -1,49 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import {OrderParameters} from "seaport-types/src/lib/ConsiderationStructs.sol";
-import {
-    EIP_712_PREFIX,
-    EIP712_ConsiderationItem_size,
-    EIP712_DigestPayload_size,
-    EIP712_DomainSeparator_offset,
-    EIP712_OfferItem_size,
-    EIP712_Order_size,
-    EIP712_OrderHash_offset,
-    OneWord,
-    OneWordShift,
-    OrderParameters_consideration_head_offset,
-    OrderParameters_counter_offset,
-    OrderParameters_offer_head_offset,
-    TwoWords,
-    BulkOrderProof_keyShift,
-    BulkOrderProof_keySize,
-    BulkOrder_Typehash_Height_One,
-    BulkOrder_Typehash_Height_Two,
-    BulkOrder_Typehash_Height_Three,
-    BulkOrder_Typehash_Height_Four,
-    BulkOrder_Typehash_Height_Five,
-    BulkOrder_Typehash_Height_Six,
-    BulkOrder_Typehash_Height_Seven,
-    BulkOrder_Typehash_Height_Eight,
-    BulkOrder_Typehash_Height_Nine,
-    BulkOrder_Typehash_Height_Ten,
-    BulkOrder_Typehash_Height_Eleven,
-    BulkOrder_Typehash_Height_Twelve,
-    BulkOrder_Typehash_Height_Thirteen,
-    BulkOrder_Typehash_Height_Fourteen,
-    BulkOrder_Typehash_Height_Fifteen,
-    BulkOrder_Typehash_Height_Sixteen,
-    BulkOrder_Typehash_Height_Seventeen,
-    BulkOrder_Typehash_Height_Eighteen,
-    BulkOrder_Typehash_Height_Nineteen,
-    BulkOrder_Typehash_Height_Twenty,
-    BulkOrder_Typehash_Height_TwentyOne,
-    BulkOrder_Typehash_Height_TwentyTwo,
-    BulkOrder_Typehash_Height_TwentyThree,
-    BulkOrder_Typehash_Height_TwentyFour,
-    FreeMemoryPointerSlot
-} from "seaport-types/src/lib/ConsiderationConstants.sol";
+import { OrderParameters } from "seaport-types/src/lib/ConsiderationStructs.sol";
+import { EIP_712_PREFIX, EIP712_ConsiderationItem_size, EIP712_DigestPayload_size, EIP712_DomainSeparator_offset, EIP712_OfferItem_size, EIP712_Order_size, EIP712_OrderHash_offset, OneWord, OneWordShift, OrderParameters_consideration_head_offset, OrderParameters_counter_offset, OrderParameters_offer_head_offset, TwoWords, BulkOrderProof_keyShift, BulkOrderProof_keySize, BulkOrder_Typehash_Height_One, BulkOrder_Typehash_Height_Two, BulkOrder_Typehash_Height_Three, BulkOrder_Typehash_Height_Four, BulkOrder_Typehash_Height_Five, BulkOrder_Typehash_Height_Six, BulkOrder_Typehash_Height_Seven, BulkOrder_Typehash_Height_Eight, BulkOrder_Typehash_Height_Nine, BulkOrder_Typehash_Height_Ten, BulkOrder_Typehash_Height_Eleven, BulkOrder_Typehash_Height_Twelve, BulkOrder_Typehash_Height_Thirteen, BulkOrder_Typehash_Height_Fourteen, BulkOrder_Typehash_Height_Fifteen, BulkOrder_Typehash_Height_Sixteen, BulkOrder_Typehash_Height_Seventeen, BulkOrder_Typehash_Height_Eighteen, BulkOrder_Typehash_Height_Nineteen, BulkOrder_Typehash_Height_Twenty, BulkOrder_Typehash_Height_TwentyOne, BulkOrder_Typehash_Height_TwentyTwo, BulkOrder_Typehash_Height_TwentyThree, BulkOrder_Typehash_Height_TwentyFour, FreeMemoryPointerSlot } from "seaport-types/src/lib/ConsiderationConstants.sol";
 
 contract SeaportOrderParser {
     uint256 constant ECDSA_MaxLength = 65;
@@ -72,14 +31,14 @@ contract SeaportOrderParser {
     }
 
     function _buildSeaportDomainSeparator(address _domainAddress) internal view returns (bytes32) {
-        return keccak256(abi.encode(_EIP_712_DOMAIN_TYPEHASH, _NAME_HASH, _VERSION_HASH, block.chainid, _domainAddress));
+        return
+            keccak256(abi.encode(_EIP_712_DOMAIN_TYPEHASH, _NAME_HASH, _VERSION_HASH, block.chainid, _domainAddress));
     }
 
-    function _deriveOrderHash(OrderParameters memory orderParameters, uint256 counter)
-        internal
-        view
-        returns (bytes32 orderHash)
-    {
+    function _deriveOrderHash(
+        OrderParameters memory orderParameters,
+        uint256 counter
+    ) internal view returns (bytes32 orderHash) {
         // Get length of original consideration array and place it on the stack.
         uint256 originalConsiderationLength = (orderParameters.totalOriginalConsiderationItems);
 
@@ -111,7 +70,11 @@ contract SeaportOrderParser {
             offerArrPtr := add(offerArrPtr, OneWord)
 
             // Iterate over the offer items.
-            for { let i := 0 } lt(i, offerLength) { i := add(i, 1) } {
+            for {
+                let i := 0
+            } lt(i, offerLength) {
+                i := add(i, 1)
+            } {
                 // Read the pointer to the offer data and subtract one word
                 // to get typeHash pointer.
                 let ptr := sub(mload(offerArrPtr), OneWord)
@@ -149,11 +112,17 @@ contract SeaportOrderParser {
             let hashArrPtr := mload(FreeMemoryPointerSlot)
 
             // Get the pointer to the consideration array.
-            let considerationArrPtr :=
-                add(mload(add(orderParameters, OrderParameters_consideration_head_offset)), OneWord)
+            let considerationArrPtr := add(
+                mload(add(orderParameters, OrderParameters_consideration_head_offset)),
+                OneWord
+            )
 
             // Iterate over the consideration items (not including tips).
-            for { let i := 0 } lt(i, originalConsiderationLength) { i := add(i, 1) } {
+            for {
+                let i := 0
+            } lt(i, originalConsiderationLength) {
+                i := add(i, 1)
+            } {
                 // Read the pointer to the consideration data and subtract one
                 // word to get typeHash pointer.
                 let ptr := sub(mload(considerationArrPtr), OneWord)
@@ -254,26 +223,54 @@ contract SeaportOrderParser {
 
         // Construct the OfferItem type string.
         bytes memory offerItemTypeString = bytes(
-            "OfferItem(" "uint8 itemType," "address token," "uint256 identifierOrCriteria," "uint256 startAmount,"
-            "uint256 endAmount" ")"
+            "OfferItem("
+            "uint8 itemType,"
+            "address token,"
+            "uint256 identifierOrCriteria,"
+            "uint256 startAmount,"
+            "uint256 endAmount"
+            ")"
         );
 
         // Construct the ConsiderationItem type string.
         bytes memory considerationItemTypeString = bytes(
-            "ConsiderationItem(" "uint8 itemType," "address token," "uint256 identifierOrCriteria,"
-            "uint256 startAmount," "uint256 endAmount," "address recipient" ")"
+            "ConsiderationItem("
+            "uint8 itemType,"
+            "address token,"
+            "uint256 identifierOrCriteria,"
+            "uint256 startAmount,"
+            "uint256 endAmount,"
+            "address recipient"
+            ")"
         );
 
         // Construct the OrderComponents type string, not including the above.
         bytes memory orderComponentsPartialTypeString = bytes(
-            "OrderComponents(" "address offerer," "address zone," "OfferItem[] offer,"
-            "ConsiderationItem[] consideration," "uint8 orderType," "uint256 startTime," "uint256 endTime,"
-            "bytes32 zoneHash," "uint256 salt," "bytes32 conduitKey," "uint256 counter" ")"
+            "OrderComponents("
+            "address offerer,"
+            "address zone,"
+            "OfferItem[] offer,"
+            "ConsiderationItem[] consideration,"
+            "uint8 orderType,"
+            "uint256 startTime,"
+            "uint256 endTime,"
+            "bytes32 zoneHash,"
+            "uint256 salt,"
+            "bytes32 conduitKey,"
+            "uint256 counter"
+            ")"
         );
 
         // Construct the primary EIP-712 domain type string.
         eip712DomainTypehash = keccak256(
-            bytes("EIP712Domain(" "string name," "string version," "uint256 chainId," "address verifyingContract" ")")
+            bytes(
+                "EIP712Domain("
+                "string name,"
+                "string version,"
+                "uint256 chainId,"
+                "address verifyingContract"
+                ")"
+            )
         );
 
         // Derive the OfferItem type hash using the corresponding type string.
@@ -282,18 +279,20 @@ contract SeaportOrderParser {
         // Derive ConsiderationItem type hash using corresponding type string.
         considerationItemTypehash = keccak256(considerationItemTypeString);
 
-        bytes memory orderTypeString =
-            bytes.concat(orderComponentsPartialTypeString, considerationItemTypeString, offerItemTypeString);
+        bytes memory orderTypeString = bytes.concat(
+            orderComponentsPartialTypeString,
+            considerationItemTypeString,
+            offerItemTypeString
+        );
 
         // Derive OrderItem type hash via combination of relevant type strings.
         orderTypehash = keccak256(orderTypeString);
     }
 
-    function _computeBulkOrderProof(bytes memory proofAndSignature, bytes32 leaf)
-        internal
-        pure
-        returns (bytes32 bulkOrderHash)
-    {
+    function _computeBulkOrderProof(
+        bytes memory proofAndSignature,
+        bytes32 leaf
+    ) internal pure returns (bytes32 bulkOrderHash) {
         // Declare arguments for the root hash and the height of the proof.
         bytes32 root;
         uint256 height;
@@ -329,7 +328,11 @@ contract SeaportOrderParser {
             mstore(xor(scratchPtr1, OneWord), mload(proof))
 
             // Compute remaining proofs.
-            for { let i := 1 } lt(i, height) { i := add(i, 1) } {
+            for {
+                let i := 1
+            } lt(i, height) {
+                i := add(i, 1)
+            } {
                 proof := add(proof, OneWord)
                 let scratchPtr := shl(OneWordShift, and(shr(i, key), 1))
                 mstore(scratchPtr, keccak256(0, TwoWords))
@@ -364,16 +367,22 @@ contract SeaportOrderParser {
                         // Handle tree heights one and two.
                         if lt(treeHeight, 3) {
                             // Utilize branchless logic to determine typehash.
-                            typeHash :=
-                                ternary(eq(treeHeight, 1), BulkOrder_Typehash_Height_One, BulkOrder_Typehash_Height_Two)
+                            typeHash := ternary(
+                                eq(treeHeight, 1),
+                                BulkOrder_Typehash_Height_One,
+                                BulkOrder_Typehash_Height_Two
+                            )
 
                             // Exit the function once typehash has been located.
                             leave
                         }
 
                         // Handle height three and four via branchless logic.
-                        typeHash :=
-                            ternary(eq(treeHeight, 3), BulkOrder_Typehash_Height_Three, BulkOrder_Typehash_Height_Four)
+                        typeHash := ternary(
+                            eq(treeHeight, 3),
+                            BulkOrder_Typehash_Height_Three,
+                            BulkOrder_Typehash_Height_Four
+                        )
 
                         // Exit the function once typehash has been located.
                         leave
@@ -382,16 +391,22 @@ contract SeaportOrderParser {
                     // Handle tree height five and six.
                     if lt(treeHeight, 7) {
                         // Utilize branchless logic to determine typehash.
-                        typeHash :=
-                            ternary(eq(treeHeight, 5), BulkOrder_Typehash_Height_Five, BulkOrder_Typehash_Height_Six)
+                        typeHash := ternary(
+                            eq(treeHeight, 5),
+                            BulkOrder_Typehash_Height_Five,
+                            BulkOrder_Typehash_Height_Six
+                        )
 
                         // Exit the function once typehash has been located.
                         leave
                     }
 
                     // Handle height seven and eight via branchless logic.
-                    typeHash :=
-                        ternary(eq(treeHeight, 7), BulkOrder_Typehash_Height_Seven, BulkOrder_Typehash_Height_Eight)
+                    typeHash := ternary(
+                        eq(treeHeight, 7),
+                        BulkOrder_Typehash_Height_Seven,
+                        BulkOrder_Typehash_Height_Eight
+                    )
 
                     // Exit the function once typehash has been located.
                     leave
@@ -404,16 +419,22 @@ contract SeaportOrderParser {
                         // Handle tree height nine and ten.
                         if lt(treeHeight, 11) {
                             // Utilize branchless logic to determine typehash.
-                            typeHash :=
-                                ternary(eq(treeHeight, 9), BulkOrder_Typehash_Height_Nine, BulkOrder_Typehash_Height_Ten)
+                            typeHash := ternary(
+                                eq(treeHeight, 9),
+                                BulkOrder_Typehash_Height_Nine,
+                                BulkOrder_Typehash_Height_Ten
+                            )
 
                             // Exit the function once typehash has been located.
                             leave
                         }
 
                         // Handle height eleven and twelve via branchless logic.
-                        typeHash :=
-                            ternary(eq(treeHeight, 11), BulkOrder_Typehash_Height_Eleven, BulkOrder_Typehash_Height_Twelve)
+                        typeHash := ternary(
+                            eq(treeHeight, 11),
+                            BulkOrder_Typehash_Height_Eleven,
+                            BulkOrder_Typehash_Height_Twelve
+                        )
 
                         // Exit the function once typehash has been located.
                         leave
@@ -422,17 +443,21 @@ contract SeaportOrderParser {
                     // Handle tree height thirteen and fourteen.
                     if lt(treeHeight, 15) {
                         // Utilize branchless logic to determine typehash.
-                        typeHash :=
-                            ternary(
-                                eq(treeHeight, 13), BulkOrder_Typehash_Height_Thirteen, BulkOrder_Typehash_Height_Fourteen
-                            )
+                        typeHash := ternary(
+                            eq(treeHeight, 13),
+                            BulkOrder_Typehash_Height_Thirteen,
+                            BulkOrder_Typehash_Height_Fourteen
+                        )
 
                         // Exit the function once typehash has been located.
                         leave
                     }
                     // Handle height fifteen and sixteen via branchless logic.
-                    typeHash :=
-                        ternary(eq(treeHeight, 15), BulkOrder_Typehash_Height_Fifteen, BulkOrder_Typehash_Height_Sixteen)
+                    typeHash := ternary(
+                        eq(treeHeight, 15),
+                        BulkOrder_Typehash_Height_Fifteen,
+                        BulkOrder_Typehash_Height_Sixteen
+                    )
 
                     // Exit the function once typehash has been located.
                     leave
@@ -443,18 +468,22 @@ contract SeaportOrderParser {
                     // Handle tree height seventeen and eighteen.
                     if lt(treeHeight, 19) {
                         // Utilize branchless logic to determine typehash.
-                        typeHash :=
-                            ternary(
-                                eq(treeHeight, 17), BulkOrder_Typehash_Height_Seventeen, BulkOrder_Typehash_Height_Eighteen
-                            )
+                        typeHash := ternary(
+                            eq(treeHeight, 17),
+                            BulkOrder_Typehash_Height_Seventeen,
+                            BulkOrder_Typehash_Height_Eighteen
+                        )
 
                         // Exit the function once typehash has been located.
                         leave
                     }
 
                     // Handle height nineteen and twenty via branchless logic.
-                    typeHash :=
-                        ternary(eq(treeHeight, 19), BulkOrder_Typehash_Height_Nineteen, BulkOrder_Typehash_Height_Twenty)
+                    typeHash := ternary(
+                        eq(treeHeight, 19),
+                        BulkOrder_Typehash_Height_Nineteen,
+                        BulkOrder_Typehash_Height_Twenty
+                    )
 
                     // Exit the function once typehash has been located.
                     leave
@@ -463,18 +492,22 @@ contract SeaportOrderParser {
                 // Handle tree height twenty-one and twenty-two.
                 if lt(treeHeight, 23) {
                     // Utilize branchless logic to determine typehash.
-                    typeHash :=
-                        ternary(
-                            eq(treeHeight, 21), BulkOrder_Typehash_Height_TwentyOne, BulkOrder_Typehash_Height_TwentyTwo
-                        )
+                    typeHash := ternary(
+                        eq(treeHeight, 21),
+                        BulkOrder_Typehash_Height_TwentyOne,
+                        BulkOrder_Typehash_Height_TwentyTwo
+                    )
 
                     // Exit the function once typehash has been located.
                     leave
                 }
 
                 // Handle height twenty-three & twenty-four w/ branchless logic.
-                typeHash :=
-                    ternary(eq(treeHeight, 23), BulkOrder_Typehash_Height_TwentyThree, BulkOrder_Typehash_Height_TwentyFour)
+                typeHash := ternary(
+                    eq(treeHeight, 23),
+                    BulkOrder_Typehash_Height_TwentyThree,
+                    BulkOrder_Typehash_Height_TwentyFour
+                )
 
                 // Exit the function once typehash has been located.
                 leave

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import {SeaportEIP1271} from "../../../extension/SeaportEIP1271.sol";
-import {AccountPermissions, AccountPermissionsStorage} from "../../../extension/upgradeable/AccountPermissions.sol";
-import {EnumerableSet} from "../../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
+import { SeaportEIP1271 } from "../../../extension/SeaportEIP1271.sol";
+import { AccountPermissions, AccountPermissionsStorage } from "../../../extension/upgradeable/AccountPermissions.sol";
+import { EnumerableSet } from "../../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
 
 contract AccountSeaportBulkSigSupport is SeaportEIP1271 {
     using EnumerableSet for EnumerableSet.AddressSet;
@@ -26,11 +26,13 @@ contract AccountSeaportBulkSigSupport is SeaportEIP1271 {
         );
 
         // is signer an active signer of account?
-        AccountPermissions.SignerPermissionsStatic memory permissions =
-            AccountPermissionsStorage.data().signerPermissions[_signer];
+        AccountPermissions.SignerPermissionsStatic memory permissions = AccountPermissionsStorage
+            .data()
+            .signerPermissions[_signer];
         if (
-            permissions.startTimestamp <= block.timestamp && block.timestamp < permissions.endTimestamp
-                && AccountPermissionsStorage.data().approvedTargets[_signer].length() > 0
+            permissions.startTimestamp <= block.timestamp &&
+            block.timestamp < permissions.endTimestamp &&
+            AccountPermissionsStorage.data().approvedTargets[_signer].length() > 0
         ) {
             authorized = true;
         }

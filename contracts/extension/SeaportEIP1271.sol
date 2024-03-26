@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import {ECDSA} from "solady/utils/ECDSA.sol";
-import {SeaportOrderParser} from "./SeaportOrderParser.sol";
-import {OrderParameters} from "seaport-types/src/lib/ConsiderationStructs.sol";
+import { ECDSA } from "solady/utils/ECDSA.sol";
+import { SeaportOrderParser } from "./SeaportOrderParser.sol";
+import { OrderParameters } from "seaport-types/src/lib/ConsiderationStructs.sol";
 
 abstract contract SeaportEIP1271 is SeaportOrderParser {
     using ECDSA for bytes32;
@@ -23,20 +23,20 @@ abstract contract SeaportEIP1271 is SeaportOrderParser {
     }
 
     /// @notice See EIP-1271: https://eips.ethereum.org/EIPS/eip-1271
-    function isValidSignature(bytes32 _message, bytes memory _signature)
-        public
-        view
-        virtual
-        returns (bytes4 magicValue)
-    {
+    function isValidSignature(
+        bytes32 _message,
+        bytes memory _signature
+    ) public view virtual returns (bytes4 magicValue) {
         bytes32 targetDigest;
         bytes memory targetSig;
 
         // Handle OpenSea bulk order signatures that are >65 bytes in length.
         if (_signature.length > 65) {
             // Decode packed signature and order parameters.
-            (bytes memory extractedPackedSig, OrderParameters memory orderParameters, uint256 counter) =
-                abi.decode(_signature, (bytes, OrderParameters, uint256));
+            (bytes memory extractedPackedSig, OrderParameters memory orderParameters, uint256 counter) = abi.decode(
+                _signature,
+                (bytes, OrderParameters, uint256)
+            );
 
             // Verify that the original digest matches the digest built with order parameters.
             bytes32 domainSeparator = _buildSeaportDomainSeparator(msg.sender);
