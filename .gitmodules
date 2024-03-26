@@ -25,3 +25,27 @@
 [submodule "lib/solady"]
 	path = lib/solady
 	url = https://github.com/vectorized/solady
+[submodule "lib/seaport"]
+	path = lib/seaport
+	url = https://github.com/ProjectOpenSea/seaport
+[submodule "lib/murky"]
+	path = lib/murky
+	url = https://github.com/dmfxyz/murky
+[submodule "lib/openzeppelin-contracts"]
+	path = lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts
+[submodule "lib/solmate"]
+	path = lib/solmate
+	url = https://github.com/transmissions11/solmate
+[submodule "lib/solarray"]
+	path = lib/solarray
+	url = https://github.com/emo-eth/solarray
+[submodule "lib/seaport-types"]
+	path = lib/seaport-types
+	url = https://github.com/projectopensea/seaport-types
+[submodule "lib/seaport-core"]
+	path = lib/seaport-core
+	url = https://github.com/projectopensea/seaport-core
+[submodule "lib/seaport-sol"]
+	path = lib/seaport-sol
+	url = https://github.com/projectopensea/seaport-sol

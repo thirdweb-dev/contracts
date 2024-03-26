@@ -40,6 +40,9 @@ remappings = [
   '@thirdweb-dev/dynamic-contracts/=lib/dynamic-contracts/',
   'lib/sstore2=lib/dynamic-contracts/lib/sstore2/',
   '@solady/=lib/solady/',
+  '@seaport/=lib/seaport/contracts/',
+  'seaport-types/=lib/seaport/lib/seaport-types/',
+  'seaport-core/=lib/seaport/lib/seaport-core/'
 ]
 fs_permissions = [{ access = "read-write", path = "./src/test/smart-wallet/utils"}]
 src = 'contracts'
