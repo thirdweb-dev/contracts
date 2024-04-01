@@ -386,7 +386,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropNoMerkleRoot();
         }
 
-        bool valid = MerkleProofLib.verify(
+        bool valid = MerkleProofLib.verifyCalldata(
             _proofs,
             _tokenMerkleRoot,
             keccak256(abi.encodePacked(_receiver, _quantity))
@@ -425,7 +425,11 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropNoMerkleRoot();
         }
 
-        bool valid = MerkleProofLib.verify(_proofs, _tokenMerkleRoot, keccak256(abi.encodePacked(_receiver, _tokenId)));
+        bool valid = MerkleProofLib.verifyCalldata(
+            _proofs,
+            _tokenMerkleRoot,
+            keccak256(abi.encodePacked(_receiver, _tokenId))
+        );
         if (!valid) {
             revert AirdropInvalidProof();
         }
@@ -467,7 +471,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
             revert AirdropNoMerkleRoot();
         }
 
-        bool valid = MerkleProofLib.verify(
+        bool valid = MerkleProofLib.verifyCalldata(
             _proofs,
             _tokenMerkleRoot,
             keccak256(abi.encodePacked(_receiver, _tokenId, _quantity))
