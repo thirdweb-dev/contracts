@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { Airdrop } from "contracts/prebuilts/unaudited/airdrop/Airdrop.sol";
+import { Airdrop, SafeTransferLib } from "contracts/prebuilts/unaudited/airdrop/Airdrop.sol";
 
 // Test imports
 import { TWProxy } from "contracts/infra/TWProxy.sol";
@@ -228,7 +228,7 @@ contract AirdropTest is BaseTest {
         Airdrop.AirdropContentERC20[] memory contents = _getContentsERC20(10);
 
         vm.prank(signer);
-        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropFailed.selector));
+        vm.expectRevert(abi.encodeWithSelector(SafeTransferLib.ETHTransferFailed.selector));
         airdrop.airdropNativeToken{ value: 0 }(contents);
 
         // add some balance to airdrop contract, which it will try sending to recipeints when msg.value zero

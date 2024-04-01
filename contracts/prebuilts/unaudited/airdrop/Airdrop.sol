@@ -157,10 +157,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
         for (uint256 i = 0; i < len; i++) {
             nativeTokenAmount += _contents[i].amount;
-            (bool success, ) = _contents[i].recipient.call{ value: _contents[i].amount }("");
-            if (!success) {
-                revert AirdropFailed();
-            }
+            SafeTransferLib.safeTransferETH(_contents[i].recipient, _contents[i].amount);
         }
 
         if (nativeTokenAmount != msg.value) {
