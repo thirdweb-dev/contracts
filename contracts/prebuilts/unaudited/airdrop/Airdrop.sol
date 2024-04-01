@@ -106,7 +106,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
     error AirdropInvalidProof();
     error AirdropAlreadyClaimed();
-    error AirdropFailed();
     error AirdropNoMerkleRoot();
     error AirdropValueMismatch();
     error AirdropRequestExpired(uint256 expirationTimestamp);
