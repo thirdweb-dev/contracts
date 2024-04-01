@@ -38,7 +38,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
     /// @dev conditionId => hash(claimer address, token address, token id [1155]) => has claimed
     mapping(uint256 => mapping(bytes32 => bool)) private claimed;
     /// @dev Mapping from request UID => whether the request is processed.
-    mapping(bytes32 => bool) private processed;
+    mapping(bytes32 => bool) public processed;
 
     struct AirdropContentERC20 {
         address recipient;
