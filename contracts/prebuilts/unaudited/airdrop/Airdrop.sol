@@ -112,7 +112,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
     error AirdropRequestExpired(uint256 expirationTimestamp);
     error AirdropRequestAlreadyProcessed();
     error AirdropRequestInvalidSigner();
-    error AirdropInvalidTokenAddress();
 
     /*///////////////////////////////////////////////////////////////
                                 Events
