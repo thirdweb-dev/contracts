@@ -134,20 +134,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
     }
 
     /*///////////////////////////////////////////////////////////////
-                        Receive and withdraw logic
-    //////////////////////////////////////////////////////////////*/
-
-    receive() external payable {}
-
-    function withdraw(address _tokenAddress, uint256 _amount) external onlyOwner {
-        if (_tokenAddress == NATIVE_TOKEN_ADDRESS) {
-            SafeTransferLib.safeTransferETH(msg.sender, _amount);
-        } else {
-            SafeTransferLib.safeTransferFrom(_tokenAddress, address(this), msg.sender, _amount);
-        }
-    }
-
-    /*///////////////////////////////////////////////////////////////
                             Airdrop Push
     //////////////////////////////////////////////////////////////*/
 

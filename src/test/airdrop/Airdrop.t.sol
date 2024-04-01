@@ -230,16 +230,6 @@ contract AirdropTest is BaseTest {
         vm.prank(signer);
         vm.expectRevert(abi.encodeWithSelector(SafeTransferLib.ETHTransferFailed.selector));
         airdrop.airdropNativeToken{ value: 0 }(contents);
-
-        // add some balance to airdrop contract, which it will try sending to recipeints when msg.value zero
-        vm.deal(address(airdrop), 50 ether);
-        // should revert
-        vm.prank(signer);
-        vm.expectRevert(abi.encodeWithSelector(Airdrop.AirdropValueMismatch.selector));
-        airdrop.airdropNativeToken{ value: 0 }(contents);
-
-        // contract balance should remain untouched
-        assertEq(address(airdrop).balance, 50 ether);
     }
 
     /*///////////////////////////////////////////////////////////////
