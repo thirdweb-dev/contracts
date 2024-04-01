@@ -136,6 +136,13 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             Airdrop Push
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     *  @notice          Lets contract-owner send native token (eth) to a list of addresses.
+     *  @dev             Owner should send total airdrop amount as msg.value.
+     *                   Can only be called by contract owner.
+     *
+     *  @param _contents List containing recipients and amounts to airdrop
+     */
     function airdropNativeToken(AirdropContentERC20[] calldata _contents) external payable onlyOwner {
         uint256 len = _contents.length;
         uint256 nativeTokenAmount;
@@ -152,6 +159,14 @@ contract Airdrop is EIP712, Initializable, Ownable {
         emit Airdrop(NATIVE_TOKEN_ADDRESS);
     }
 
+    /**
+     *  @notice          Lets contract owner send ERC20 tokens to a list of addresses.
+     *  @dev             The token-owner should approve total airdrop amount to this contract.
+     *                   Can only be called by contract owner.
+     *
+     *  @param _tokenAddress Address of the ERC20 token being airdropped
+     *  @param _contents     List containing recipients and amounts to airdrop
+     */
     function airdropERC20(address _tokenAddress, AirdropContentERC20[] calldata _contents) external onlyOwner {
         uint256 len = _contents.length;
 
@@ -162,6 +177,14 @@ contract Airdrop is EIP712, Initializable, Ownable {
         emit Airdrop(_tokenAddress);
     }
 
+    /**
+     *  @notice          Lets contract owner send ERC721 tokens to a list of addresses.
+     *  @dev             The token-owner should approve airdrop tokenIds to this contract.
+     *                   Can only be called by contract owner.
+     *
+     *  @param _tokenAddress Address of the ERC721 token being airdropped
+     *  @param _contents     List containing recipients and tokenIds to airdrop
+     */
     function airdropERC721(address _tokenAddress, AirdropContentERC721[] calldata _contents) external onlyOwner {
         uint256 len = _contents.length;
 
@@ -172,6 +195,14 @@ contract Airdrop is EIP712, Initializable, Ownable {
         emit Airdrop(_tokenAddress);
     }
 
+    /**
+     *  @notice          Lets contract owner send ERC1155 tokens to a list of addresses.
+     *  @dev             The token-owner should approve airdrop tokenIds and amounts to this contract.
+     *                   Can only be called by contract owner.
+     *
+     *  @param _tokenAddress Address of the ERC1155 token being airdropped
+     *  @param _contents     List containing recipients, tokenIds, and amounts to airdrop
+     */
     function airdropERC1155(address _tokenAddress, AirdropContentERC1155[] calldata _contents) external onlyOwner {
         uint256 len = _contents.length;
 
@@ -192,6 +223,14 @@ contract Airdrop is EIP712, Initializable, Ownable {
                         Airdrop With Signature
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     *  @notice          Lets contract owner send ERC20 tokens to a list of addresses with EIP-712 signature.
+     *  @dev             The token-owner should approve airdrop amounts to this contract.
+     *                   Signer should be the contract owner.
+     *
+     *  @param req          Struct containing airdrop contents, uid, and expiration timestamp
+     *  @param signature    EIP-712 signature to perform the airdrop
+     */
     function airdropERC20WithSignature(AirdropRequestERC20 calldata req, bytes calldata signature) external {
         // verify expiration timestamp
         if (req.expirationTimestamp < block.timestamp) {
@@ -224,6 +263,14 @@ contract Airdrop is EIP712, Initializable, Ownable {
         emit AirdropWithSignature(req.tokenAddress);
     }
 
+    /**
+     *  @notice          Lets contract owner send ERC721 tokens to a list of addresses with EIP-712 signature.
+     *  @dev             The token-owner should approve airdrop tokenIds to this contract.
+     *                   Signer should be the contract owner.
+     *
+     *  @param req          Struct containing airdrop contents, uid, and expiration timestamp
+     *  @param signature    EIP-712 signature to perform the airdrop
+     */
     function airdropERC721WithSignature(AirdropRequestERC721 calldata req, bytes calldata signature) external {
         // verify expiration timestamp
         if (req.expirationTimestamp < block.timestamp) {
@@ -251,6 +298,14 @@ contract Airdrop is EIP712, Initializable, Ownable {
         emit AirdropWithSignature(req.tokenAddress);
     }
 
+    /**
+     *  @notice          Lets contract owner send ERC1155 tokens to a list of addresses with EIP-712 signature.
+     *  @dev             The token-owner should approve airdrop tokenIds and amounts to this contract.
+     *                   Signer should be the contract owner.
+     *
+     *  @param req          Struct containing airdrop contents, uid, and expiration timestamp
+     *  @param signature    EIP-712 signature to perform the airdrop
+     */
     function airdropERC1155WithSignature(AirdropRequestERC1155 calldata req, bytes calldata signature) external {
         // verify expiration timestamp
         if (req.expirationTimestamp < block.timestamp) {
@@ -288,6 +343,16 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             Airdrop Claimable
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     *  @notice          Lets allowlisted addresses claim ERC20 airdrop tokens.
+     *  @dev             The token-owner should approve total airdrop amount to this contract,
+     *                   and set merkle root of allowlisted address for this airdrop.
+     *
+     *  @param _token       Address of ERC20 airdrop token
+     *  @param _receiver    Allowlisted address for which the token is being claimed
+     *  @param _quantity    Allowlisted quantity of tokens to claim
+     *  @param _proofs      Merkle proofs for allowlist verification
+     */
     function claimERC20(address _token, address _receiver, uint256 _quantity, bytes32[] calldata _proofs) external {
         bytes32 claimHash = _getClaimHashERC20(_receiver, _token);
         uint256 conditionId = tokenConditionId[_token];
@@ -317,6 +382,16 @@ contract Airdrop is EIP712, Initializable, Ownable {
         emit AirdropClaimed(_token, _receiver);
     }
 
+    /**
+     *  @notice          Lets allowlisted addresses claim ERC721 airdrop tokens.
+     *  @dev             The token-owner should approve airdrop tokenIds to this contract,
+     *                   and set merkle root of allowlisted address for this airdrop.
+     *
+     *  @param _token       Address of ERC721 airdrop token
+     *  @param _receiver    Allowlisted address for which the token is being claimed
+     *  @param _tokenId     Allowlisted tokenId to claim
+     *  @param _proofs      Merkle proofs for allowlist verification
+     */
     function claimERC721(address _token, address _receiver, uint256 _tokenId, bytes32[] calldata _proofs) external {
         bytes32 claimHash = _getClaimHashERC721(_receiver, _token, _tokenId);
         uint256 conditionId = tokenConditionId[_token];
@@ -342,6 +417,17 @@ contract Airdrop is EIP712, Initializable, Ownable {
         emit AirdropClaimed(_token, _receiver);
     }
 
+    /**
+     *  @notice          Lets allowlisted addresses claim ERC1155 airdrop tokens.
+     *  @dev             The token-owner should approve tokenIds and total airdrop amounts to this contract,
+     *                   and set merkle root of allowlisted address for this airdrop.
+     *
+     *  @param _token       Address of ERC1155 airdrop token
+     *  @param _receiver    Allowlisted address for which the token is being claimed
+     *  @param _tokenId     Allowlisted tokenId to claim
+     *  @param _quantity    Allowlisted quantity of tokens to claim
+     *  @param _proofs      Merkle proofs for allowlist verification
+     */
     function claimERC1155(
         address _token,
         address _receiver,
@@ -381,6 +467,13 @@ contract Airdrop is EIP712, Initializable, Ownable {
                             Setter functions
     //////////////////////////////////////////////////////////////*/
 
+    /**
+     *  @notice          Lets contract owner set merkle root (allowlist) for claim based airdrops.
+     *
+     *  @param _token             Address of airdrop token
+     *  @param _tokenMerkleRoot   Merkle root of allowlist
+     *  @param _resetClaimStatus  Reset claim status / amount claimed so far to zero for all recipients
+     */
     function setMerkleRoot(address _token, bytes32 _tokenMerkleRoot, bool _resetClaimStatus) external onlyOwner {
         if (_resetClaimStatus || tokenConditionId[_token] == 0) {
             tokenConditionId[_token] += 1;
@@ -392,6 +485,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
+    /// @notice Returns claim status of a receiver for a claim based airdrop
     function isClaimed(address _receiver, address _token, uint256 _tokenId) external view returns (bool) {
         uint256 _conditionId = tokenConditionId[_token];
 
@@ -407,28 +501,33 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
         return false;
     }
-
+    /// @dev Checks whether contract owner can be set in the given execution context.
     function _canSetOwner() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
+    /// @dev Domain name and version for EIP-712
     function _domainNameAndVersion() internal pure override returns (string memory name, string memory version) {
         name = "Airdrop";
         version = "1";
     }
 
+    /// @dev Keccak256 hash of receiver and token addresses, for claim based airdrop status tracking
     function _getClaimHashERC20(address _receiver, address _token) private view returns (bytes32) {
         return keccak256(abi.encodePacked(_receiver, _token));
     }
 
+    /// @dev Keccak256 hash of receiver, token address and tokenId, for claim based airdrop status tracking
     function _getClaimHashERC721(address _receiver, address _token, uint256 _tokenId) private view returns (bytes32) {
         return keccak256(abi.encodePacked(_receiver, _token, _tokenId));
     }
 
+    /// @dev Keccak256 hash of receiver, token address and tokenId, for claim based airdrop status tracking
     function _getClaimHashERC1155(address _receiver, address _token, uint256 _tokenId) private view returns (bytes32) {
         return keccak256(abi.encodePacked(_receiver, _token, _tokenId));
     }
 
+    /// @dev Hash nested struct within AirdropRequest___
     function _hashContentInfoERC20(AirdropContentERC20[] calldata contents) private pure returns (bytes32) {
         bytes32[] memory contentHashes = new bytes32[](contents.length);
         for (uint256 i = 0; i < contents.length; i++) {
@@ -437,6 +536,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         return keccak256(abi.encodePacked(contentHashes));
     }
 
+    /// @dev Hash nested struct within AirdropRequest___
     function _hashContentInfoERC721(AirdropContentERC721[] calldata contents) private pure returns (bytes32) {
         bytes32[] memory contentHashes = new bytes32[](contents.length);
         for (uint256 i = 0; i < contents.length; i++) {
@@ -447,6 +547,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         return keccak256(abi.encodePacked(contentHashes));
     }
 
+    /// @dev Hash nested struct within AirdropRequest___
     function _hashContentInfoERC1155(AirdropContentERC1155[] calldata contents) private pure returns (bytes32) {
         bytes32[] memory contentHashes = new bytes32[](contents.length);
         for (uint256 i = 0; i < contents.length; i++) {
@@ -457,6 +558,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         return keccak256(abi.encodePacked(contentHashes));
     }
 
+    /// @dev Verify EIP-712 signature
     function _verifyRequestSignerERC20(
         AirdropRequestERC20 calldata req,
         bytes calldata signature
@@ -471,6 +573,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         return recovered == owner();
     }
 
+    /// @dev Verify EIP-712 signature
     function _verifyRequestSignerERC721(
         AirdropRequestERC721 calldata req,
         bytes calldata signature
@@ -485,6 +588,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         return recovered == owner();
     }
 
+    /// @dev Verify EIP-712 signature
     function _verifyRequestSignerERC1155(
         AirdropRequestERC1155 calldata req,
         bytes calldata signature
