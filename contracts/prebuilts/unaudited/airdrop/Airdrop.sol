@@ -149,7 +149,13 @@ contract Airdrop is EIP712, Initializable, Ownable {
 
         for (uint256 i = 0; i < len; i++) {
             nativeTokenAmount += _contents[i].amount;
-            SafeTransferLib.safeTransferETH(_contents[i].recipient, _contents[i].amount);
+
+            // NOTE: Gas cap to prevent misuse of gas at recipient address
+            SafeTransferLib.forceSafeTransferETH(
+                _contents[i].recipient,
+                _contents[i].amount,
+                SafeTransferLib.GAS_STIPEND_NO_GRIEF
+            );
         }
 
         if (nativeTokenAmount != msg.value) {
@@ -171,6 +177,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; i++) {
+            // NOTE: Gas cap to prevent misuse of gas at recipient address
             SafeTransferLib.safeTransferFrom(_tokenAddress, msg.sender, _contents[i].recipient, _contents[i].amount);
         }
 
@@ -189,7 +196,12 @@ contract Airdrop is EIP712, Initializable, Ownable {
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; i++) {
-            IERC721(_tokenAddress).safeTransferFrom(msg.sender, _contents[i].recipient, _contents[i].tokenId);
+            // NOTE: Gas cap to prevent misuse of gas at recipient address
+            IERC721(_tokenAddress).safeTransferFrom{ gas: 100_000 }(
+                msg.sender,
+                _contents[i].recipient,
+                _contents[i].tokenId
+            );
         }
 
         emit Airdrop(_tokenAddress);
@@ -207,7 +219,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         uint256 len = _contents.length;
 
         for (uint256 i = 0; i < len; i++) {
-            IERC1155(_tokenAddress).safeTransferFrom(
+            // NOTE: Gas cap to prevent misuse of gas at recipient address
+            IERC1155(_tokenAddress).safeTransferFrom{ gas: 100_000 }(
                 msg.sender,
                 _contents[i].recipient,
                 _contents[i].tokenId,
@@ -252,6 +265,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         address _from = owner();
 
         for (uint256 i = 0; i < len; i++) {
+            // NOTE: Gas cap to prevent misuse of gas at recipient address
             SafeTransferLib.safeTransferFrom(
                 req.tokenAddress,
                 _from,
@@ -292,7 +306,12 @@ contract Airdrop is EIP712, Initializable, Ownable {
         uint256 len = req.contents.length;
 
         for (uint256 i = 0; i < len; i++) {
-            IERC721(req.tokenAddress).safeTransferFrom(_from, req.contents[i].recipient, req.contents[i].tokenId);
+            // NOTE: Gas cap to prevent misuse of gas at recipient address
+            IERC721(req.tokenAddress).safeTransferFrom{ gas: 100_000 }(
+                _from,
+                req.contents[i].recipient,
+                req.contents[i].tokenId
+            );
         }
 
         emit AirdropWithSignature(req.tokenAddress);
@@ -327,7 +346,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         uint256 len = req.contents.length;
 
         for (uint256 i = 0; i < len; i++) {
-            IERC1155(req.tokenAddress).safeTransferFrom(
+            // NOTE: Gas cap to prevent misuse of gas at recipient address
+            IERC1155(req.tokenAddress).safeTransferFrom{ gas: 100_000 }(
                 _from,
                 req.contents[i].recipient,
                 req.contents[i].tokenId,
