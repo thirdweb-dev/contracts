@@ -118,6 +118,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
     //////////////////////////////////////////////////////////////*/
 
     event Airdrop(address token);
+    event AirdropWithSignature(address token);
     event AirdropClaimed(address token, address receiver);
 
     /*///////////////////////////////////////////////////////////////
@@ -238,7 +239,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
             );
         }
 
-        emit Airdrop(req.tokenAddress);
+        emit AirdropWithSignature(req.tokenAddress);
     }
 
     function airdropERC721WithSignature(AirdropRequestERC721 calldata req, bytes calldata signature) external {
@@ -265,7 +266,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
             IERC721(req.tokenAddress).safeTransferFrom(_from, req.contents[i].recipient, req.contents[i].tokenId);
         }
 
-        emit Airdrop(req.tokenAddress);
+        emit AirdropWithSignature(req.tokenAddress);
     }
 
     function airdropERC1155WithSignature(AirdropRequestERC1155 calldata req, bytes calldata signature) external {
@@ -298,7 +299,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
             );
         }
 
-        emit Airdrop(req.tokenAddress);
+        emit AirdropWithSignature(req.tokenAddress);
     }
 
     /*///////////////////////////////////////////////////////////////
