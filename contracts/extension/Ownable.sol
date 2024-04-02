@@ -46,7 +46,7 @@ abstract contract Ownable is IOwnable {
     }
 
     /// @dev Lets a contract admin set a new owner for the contract. The new owner must be a contract admin.
-    function _setupOwner(address _newOwner) internal virtual {
+    function _setupOwner(address _newOwner) internal {
         address _prevOwner = _owner;
         _owner = _newOwner;
 
