@@ -99,8 +99,6 @@ contract Airdrop is EIP712, Initializable, Ownable {
             "AirdropRequestERC1155(bytes32 uid,address tokenAddress,uint256 expirationTimestamp,AirdropContentERC1155[] contents)AirdropContentERC1155(address recipient,uint256 tokenId,uint256 amount)"
         );
 
-    bytes4 private constant EIP1271_MAGIC_VALUE = 0x1626ba7e;
-
     address private constant NATIVE_TOKEN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
     /*///////////////////////////////////////////////////////////////
