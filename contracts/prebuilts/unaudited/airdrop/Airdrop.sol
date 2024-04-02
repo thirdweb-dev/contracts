@@ -16,6 +16,7 @@ import "@solady/src/utils/MerkleProofLib.sol";
 import "@solady/src/utils/ECDSA.sol";
 import "@solady/src/utils/EIP712.sol";
 import "@solady/src/utils/SafeTransferLib.sol";
+import "@solady/src/utils/SignatureCheckerLib.sol";
 
 import { Initializable } from "../../../extension/Initializable.sol";
 import { Ownable } from "../../../extension/Ownable.sol";
@@ -491,18 +492,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         );
 
         bytes32 digest = _hashTypedData(structHash);
-        address recovered = digest.recover(signature);
 
-        address owner_ = owner();
-        if (recovered != owner_) {
-            try IEIP1271(owner_).isValidSignature(digest, signature) returns (bytes4 magicValue) {
-                return magicValue == EIP1271_MAGIC_VALUE;
-            } catch {}
-
-            return false;
-        }
-
-        return true;
+        return SignatureCheckerLib.isValidSignatureNowCalldata(owner(), digest, signature);
     }
 
     function _verifyRequestSignerERC721(
@@ -515,18 +506,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         );
 
         bytes32 digest = _hashTypedData(structHash);
-        address recovered = digest.recover(signature);
 
-        address owner_ = owner();
-        if (recovered != owner_) {
-            try IEIP1271(owner_).isValidSignature(digest, signature) returns (bytes4 magicValue) {
-                return magicValue == EIP1271_MAGIC_VALUE;
-            } catch {}
-
-            return false;
-        }
-
-        return true;
+        return SignatureCheckerLib.isValidSignatureNowCalldata(owner(), digest, signature);
     }
 
     function _verifyRequestSignerERC1155(
@@ -539,17 +520,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         );
 
         bytes32 digest = _hashTypedData(structHash);
-        address recovered = digest.recover(signature);
 
-        address owner_ = owner();
-        if (recovered != owner_) {
-            try IEIP1271(owner_).isValidSignature(digest, signature) returns (bytes4 magicValue) {
-                return magicValue == EIP1271_MAGIC_VALUE;
-            } catch {}
-
-            return false;
-        }
-
-        return true;
+        return SignatureCheckerLib.isValidSignatureNowCalldata(owner(), digest, signature);
     }
 }
