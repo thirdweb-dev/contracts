@@ -25,10 +25,6 @@ import "../../../eip/interface/IERC20.sol";
 import "../../../eip/interface/IERC721.sol";
 import "../../../eip/interface/IERC1155.sol";
 
-interface IEIP1271 {
-    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4);
-}
-
 contract Airdrop is EIP712, Initializable, Ownable {
     using ECDSA for bytes32;
 
