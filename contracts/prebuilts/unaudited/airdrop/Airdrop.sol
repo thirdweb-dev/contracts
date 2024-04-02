@@ -493,9 +493,9 @@ contract Airdrop is EIP712, Initializable, Ownable {
         bytes32 digest = _hashTypedData(structHash);
         address recovered = digest.recover(signature);
 
-        address _owner = owner();
-        if (recovered != _owner) {
-            try IEIP1271(_owner).isValidSignature(digest, signature) returns (bytes4 magicValue) {
+        address owner_ = owner();
+        if (recovered != owner_) {
+            try IEIP1271(owner_).isValidSignature(digest, signature) returns (bytes4 magicValue) {
                 return magicValue == EIP1271_MAGIC_VALUE;
             } catch {}
 
@@ -517,9 +517,9 @@ contract Airdrop is EIP712, Initializable, Ownable {
         bytes32 digest = _hashTypedData(structHash);
         address recovered = digest.recover(signature);
 
-        address _owner = owner();
-        if (recovered != _owner) {
-            try IEIP1271(_owner).isValidSignature(digest, signature) returns (bytes4 magicValue) {
+        address owner_ = owner();
+        if (recovered != owner_) {
+            try IEIP1271(owner_).isValidSignature(digest, signature) returns (bytes4 magicValue) {
                 return magicValue == EIP1271_MAGIC_VALUE;
             } catch {}
 
@@ -541,9 +541,9 @@ contract Airdrop is EIP712, Initializable, Ownable {
         bytes32 digest = _hashTypedData(structHash);
         address recovered = digest.recover(signature);
 
-        address _owner = owner();
-        if (recovered != _owner) {
-            try IEIP1271(_owner).isValidSignature(digest, signature) returns (bytes4 magicValue) {
+        address owner_ = owner();
+        if (recovered != owner_) {
+            try IEIP1271(owner_).isValidSignature(digest, signature) returns (bytes4 magicValue) {
                 return magicValue == EIP1271_MAGIC_VALUE;
             } catch {}
 
