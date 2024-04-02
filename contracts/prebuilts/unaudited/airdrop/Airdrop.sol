@@ -24,6 +24,10 @@ import "../../../eip/interface/IERC20.sol";
 import "../../../eip/interface/IERC721.sol";
 import "../../../eip/interface/IERC1155.sol";
 
+interface IEIP1271 {
+    function isValidSignature(bytes32 hash, bytes memory signature) external view returns (bytes4);
+}
+
 contract Airdrop is EIP712, Initializable, Ownable {
     using ECDSA for bytes32;
 
@@ -39,6 +43,9 @@ contract Airdrop is EIP712, Initializable, Ownable {
     mapping(uint256 => mapping(bytes32 => bool)) private claimed;
     /// @dev Mapping from request UID => whether the request is processed.
     mapping(bytes32 => bool) private processed;
+
+    /// @dev Flag to indicate if signature verification should be EIP-1271 (based on whether owner is a contract)
+    bool private check1271;
 
     struct AirdropContentERC20 {
         address recipient;
@@ -97,6 +104,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         keccak256(
             "AirdropRequestERC1155(bytes32 uid,address tokenAddress,uint256 expirationTimestamp,AirdropContentERC1155[] contents)AirdropContentERC1155(address recipient,uint256 tokenId,uint256 amount)"
         );
+
+    bytes4 private constant EIP1271_MAGIC_VALUE = 0x1626ba7e;
 
     address private constant NATIVE_TOKEN_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
@@ -406,6 +415,12 @@ contract Airdrop is EIP712, Initializable, Ownable {
         tokenMerkleRoot[_token] = _tokenMerkleRoot;
     }
 
+    function _setupOwner(address _newOwner) internal override {
+        super._setupOwner(_newOwner);
+
+        check1271 = _isContract(_newOwner) ? true : false;
+    }
+
     /*///////////////////////////////////////////////////////////////
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
@@ -424,6 +439,15 @@ contract Airdrop is EIP712, Initializable, Ownable {
         }
 
         return false;
+    }
+
+    function _isContract(address account) internal view returns (bool) {
+        if (account == address(0)) return false;
+        bytes32 codehash;
+        assembly {
+            codehash := extcodehash(account)
+        }
+        return (codehash != 0x0 && codehash != 0xc5d2460186f7233c927e7db2dcc703c0e500b653ca82273b7bfad8045d85a470);
     }
 
     function _canSetOwner() internal view virtual override returns (bool) {
@@ -485,6 +509,11 @@ contract Airdrop is EIP712, Initializable, Ownable {
         );
 
         bytes32 digest = _hashTypedData(structHash);
+
+        if (check1271) {
+            return IEIP1271(owner()).isValidSignature(digest, signature) == EIP1271_MAGIC_VALUE;
+        }
+
         address recovered = digest.recover(signature);
         return recovered == owner();
     }
@@ -499,6 +528,11 @@ contract Airdrop is EIP712, Initializable, Ownable {
         );
 
         bytes32 digest = _hashTypedData(structHash);
+
+        if (check1271) {
+            return IEIP1271(owner()).isValidSignature(digest, signature) == EIP1271_MAGIC_VALUE;
+        }
+
         address recovered = digest.recover(signature);
         return recovered == owner();
     }
@@ -513,6 +547,11 @@ contract Airdrop is EIP712, Initializable, Ownable {
         );
 
         bytes32 digest = _hashTypedData(structHash);
+
+        if (check1271) {
+            return IEIP1271(owner()).isValidSignature(digest, signature) == EIP1271_MAGIC_VALUE;
+        }
+
         address recovered = digest.recover(signature);
         return recovered == owner();
     }
