@@ -16,6 +16,7 @@ import "@solady/src/utils/MerkleProofLib.sol";
 import "@solady/src/utils/ECDSA.sol";
 import "@solady/src/utils/EIP712.sol";
 import "@solady/src/utils/SafeTransferLib.sol";
+import "@solady/src/utils/SignatureCheckerLib.sol";
 
 import { Initializable } from "../../../extension/Initializable.sol";
 import { Ownable } from "../../../extension/Ownable.sol";
@@ -593,8 +594,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         );
 
         bytes32 digest = _hashTypedData(structHash);
-        address recovered = digest.recover(signature);
-        return recovered == owner();
+
+        return SignatureCheckerLib.isValidSignatureNowCalldata(owner(), digest, signature);
     }
 
     /// @dev Verify EIP-712 signature
@@ -608,8 +609,8 @@ contract Airdrop is EIP712, Initializable, Ownable {
         );
 
         bytes32 digest = _hashTypedData(structHash);
-        address recovered = digest.recover(signature);
-        return recovered == owner();
+
+        return SignatureCheckerLib.isValidSignatureNowCalldata(owner(), digest, signature);
     }
 
     /// @dev Verify EIP-712 signature
@@ -623,7 +624,7 @@ contract Airdrop is EIP712, Initializable, Ownable {
         );
 
         bytes32 digest = _hashTypedData(structHash);
-        address recovered = digest.recover(signature);
-        return recovered == owner();
+
+        return SignatureCheckerLib.isValidSignatureNowCalldata(owner(), digest, signature);
     }
 }
