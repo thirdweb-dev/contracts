@@ -7,6 +7,41 @@ import { Airdrop } from "contracts/prebuilts/unaudited/airdrop/Airdrop.sol";
 import { TWProxy } from "contracts/infra/TWProxy.sol";
 import "../utils/BaseTest.sol";
 
+contract ERC721ReceiverCompliant is IERC721Receiver {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external view virtual override returns (bytes4) {
+        return this.onERC721Received.selector;
+    }
+}
+
+contract ERC1155ReceiverCompliant is IERC1155Receiver {
+    function onERC1155Received(
+        address operator,
+        address from,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external view virtual override returns (bytes4) {
+        return this.onERC1155Received.selector;
+    }
+
+    function onERC1155BatchReceived(
+        address operator,
+        address from,
+        uint256[] calldata ids,
+        uint256[] calldata values,
+        bytes calldata data
+    ) external returns (bytes4) {
+        return this.onERC1155BatchReceived.selector;
+    }
+
+    function supportsInterface(bytes4 interfaceId) external view returns (bool) {}
+}
+
 contract AirdropBenchmarkTest is BaseTest {
     Airdrop internal airdrop;
 
@@ -372,6 +407,23 @@ contract AirdropBenchmarkTest is BaseTest {
         airdrop.airdropERC721(address(erc721), contents);
     }
 
+    function test_benchmark_airdropPush_erc721ReceiverCompliant() public {
+        vm.pauseGasMetering();
+
+        erc721.mint(signer, 100);
+        vm.prank(signer);
+        erc721.setApprovalForAll(address(airdrop), true);
+
+        Airdrop.AirdropContentERC721[] memory contents = new Airdrop.AirdropContentERC721[](1);
+
+        contents[0].recipient = address(new ERC721ReceiverCompliant());
+        contents[0].tokenId = 0;
+
+        vm.prank(signer);
+        vm.resumeGasMetering();
+        airdrop.airdropERC721(address(erc721), contents);
+    }
+
     /*///////////////////////////////////////////////////////////////
                     Benchmark: Airdrop Signature ERC721 
     //////////////////////////////////////////////////////////////*/
@@ -514,6 +566,24 @@ contract AirdropBenchmarkTest is BaseTest {
         erc1155.setApprovalForAll(address(airdrop), true);
 
         Airdrop.AirdropContentERC1155[] memory contents = _getContentsERC1155(1000);
+
+        vm.prank(signer);
+        vm.resumeGasMetering();
+        airdrop.airdropERC1155(address(erc1155), contents);
+    }
+
+    function test_benchmark_airdropPush_erc1155ReceiverCompliant() public {
+        vm.pauseGasMetering();
+
+        erc1155.mint(signer, 0, 100 ether);
+        vm.prank(signer);
+        erc1155.setApprovalForAll(address(airdrop), true);
+
+        Airdrop.AirdropContentERC1155[] memory contents = new Airdrop.AirdropContentERC1155[](1);
+
+        contents[0].recipient = address(new ERC1155ReceiverCompliant());
+        contents[0].tokenId = 0;
+        contents[0].amount = 100;
 
         vm.prank(signer);
         vm.resumeGasMetering();
