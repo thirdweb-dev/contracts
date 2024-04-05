@@ -26,8 +26,6 @@ import "../../../eip/interface/IERC721.sol";
 import "../../../eip/interface/IERC1155.sol";
 
 contract Airdrop is EIP712, Initializable, Ownable {
-    using ECDSA for bytes32;
-
     /*///////////////////////////////////////////////////////////////
                             State, constants & structs
     //////////////////////////////////////////////////////////////*/
