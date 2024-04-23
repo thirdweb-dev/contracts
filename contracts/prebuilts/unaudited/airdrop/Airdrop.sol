@@ -20,12 +20,13 @@ import "@solady/src/utils/SignatureCheckerLib.sol";
 
 import { Initializable } from "../../../extension/Initializable.sol";
 import { Ownable } from "../../../extension/Ownable.sol";
+import { ContractMetadata } from "../../../extension/ContractMetadata.sol";
 
 import "../../../eip/interface/IERC20.sol";
 import "../../../eip/interface/IERC721.sol";
 import "../../../eip/interface/IERC1155.sol";
 
-contract Airdrop is EIP712, Initializable, Ownable {
+contract Airdrop is EIP712, Initializable, Ownable, ContractMetadata {
     /*///////////////////////////////////////////////////////////////
                             State, constants & structs
     //////////////////////////////////////////////////////////////*/
@@ -127,8 +128,9 @@ contract Airdrop is EIP712, Initializable, Ownable {
         _disableInitializers();
     }
 
-    function initialize(address _defaultAdmin) external initializer {
+    function initialize(address _defaultAdmin, string memory _contractURI) external initializer {
         _setupOwner(_defaultAdmin);
+        _setupContractURI(_contractURI);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -507,6 +509,11 @@ contract Airdrop is EIP712, Initializable, Ownable {
     }
     /// @dev Checks whether contract owner can be set in the given execution context.
     function _canSetOwner() internal view virtual override returns (bool) {
+        return msg.sender == owner();
+    }
+
+    /// @dev Checks whether contract metadata can be set in the given execution context.
+    function _canSetContractURI() internal view virtual override returns (bool) {
         return msg.sender == owner();
     }
 
