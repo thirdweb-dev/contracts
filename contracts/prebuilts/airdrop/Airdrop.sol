@@ -12,11 +12,11 @@ pragma solidity ^0.8.11;
 //   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
-import "@solady/src/utils/MerkleProofLib.sol";
-import "@solady/src/utils/ECDSA.sol";
-import "@solady/src/utils/EIP712.sol";
-import "@solady/src/utils/SafeTransferLib.sol";
-import "@solady/src/utils/SignatureCheckerLib.sol";
+import "solady/src/utils/MerkleProofLib.sol";
+import "solady/src/utils/ECDSA.sol";
+import "solady/src/utils/EIP712.sol";
+import "solady/src/utils/SafeTransferLib.sol";
+import "solady/src/utils/SignatureCheckerLib.sol";
 
 import { Initializable } from "../../extension/Initializable.sol";
 import { Ownable } from "../../extension/Ownable.sol";

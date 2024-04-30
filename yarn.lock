@@ -2476,6 +2476,11 @@ slice-ansi@^4.0.0:
     astral-regex "^2.0.0"
     is-fullwidth-code-point "^3.0.0"
 
+solady@^0.0.194:
+  version "0.0.194"
+  resolved "https://registry.yarnpkg.com/solady/-/solady-0.0.194.tgz#fff090867d7761705f5e6a4ac1a499ffb57af698"
+  integrity sha512-ZvTIv1bHi58V0McpzyMS7YTfAJHuHx3jVTRrmRyZC5uNd/jOtdKS+Y5iSKPT9LoDE0udStInJ8ins4jCUoASHA==
+
 solhint-plugin-prettier@^0.0.5:
   version "0.0.5"
   resolved "https://registry.yarnpkg.com/solhint-plugin-prettier/-/solhint-plugin-prettier-0.0.5.tgz#e3b22800ba435cd640a9eca805a7f8bc3e3e6a6b"
