@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-import { ECDSA } from "solady/utils/ECDSA.sol";
+import { ECDSA } from "solady/src/utils/ECDSA.sol";
 import { SeaportOrderParser } from "./SeaportOrderParser.sol";
 import { OrderParameters } from "seaport-types/src/lib/ConsiderationStructs.sol";
 
