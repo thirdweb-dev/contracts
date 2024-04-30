@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
-import { Airdrop } from "contracts/prebuilts/unaudited/airdrop/Airdrop.sol";
+import { Airdrop } from "contracts/prebuilts/airdrop/Airdrop.sol";
 
 // Test imports
 import { TWProxy } from "contracts/infra/TWProxy.sol";
