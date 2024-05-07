@@ -1,0 +1,5 @@
+contractType()
+├── it should return bytes32("TokenERC721") ✅
+
+contractVersion()
+├── it should return uint8(1) ✅

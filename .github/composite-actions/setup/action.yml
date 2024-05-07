@@ -1,0 +1,22 @@
+name: "Install"
+description: "Sets up Node.js and runs install"
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 18
+        registry-url: "https://registry.npmjs.org"
+        cache: "yarn"
+
+    - name: Install dependencies
+      shell: bash
+      run: yarn
+
+    - name: Setup lcov
+      shell: bash
+      run: |
+        sudo apt update
+        sudo apt install -y lcov

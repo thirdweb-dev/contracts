@@ -1,0 +1,64 @@
+[profile.default]
+solc-version = "0.8.23"
+#auto_detect_solc = false
+cache = true
+evm_version = 'london'
+force = false
+gas_reports = [
+  "DropERC721Benchmark",
+  "DropERC20Benchmark",
+  "DropERC1155Benchmark",
+  "TokenERC20Benchmark",
+  "TokenERC721Benchmark",
+  "TokenERC1155Benchmark",
+  "MultiwrapBenchmark",
+  "SignatureDropBenchmark",
+  "AirdropERC20Benchmark",
+  "AirdropERC721Benchmark",
+  "AirdropERC1155Benchmark",
+  "NFTStakeBenchmark",
+  "EditionStakeBenchmark",
+  "TokenStakeBenchmark",
+  "PackBenchmark",
+  "PackVRFDirectBenchmark",
+  "AccountBenchmark",
+]
+libraries = []
+libs = ['lib']
+optimizer = true
+optimizer_runs = 20
+out = 'artifacts_forge'
+remappings = [
+  '@chainlink/=lib/chainlink/',
+  '@openzeppelin/contracts=lib/openzeppelin-contracts/contracts',
+  '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
+  '@ds-test=lib/ds-test/src/',
+  '@std=lib/forge-std/src/',
+  'contracts/=contracts/',
+  'erc721a-upgradeable/=lib/ERC721A-Upgradeable/',
+  'erc721a/=lib/ERC721A/',
+  '@thirdweb-dev/dynamic-contracts/=lib/dynamic-contracts/',
+  'lib/sstore2=lib/dynamic-contracts/lib/sstore2/',
+  'solady/=lib/solady/',
+  '@seaport/=lib/seaport/contracts/',
+  'seaport-types/=lib/seaport/lib/seaport-types/',
+  'seaport-core/=lib/seaport/lib/seaport-core/'
+]
+fs_permissions = [{ access = "read-write", path = "./src/test/smart-wallet/utils"}]
+src = 'contracts'
+test = 'src/test'
+verbosity = 0
+#ignored_error_codes = []
+#fuzz_runs = 100
+ffi = true
+#sender = '0x00a329c0648769a73afac7f9381e08fb43dbea72'
+#tx_origin = '0x00a329c0648769a73afac7f9381e08fb43dbea72'
+#initial_balance = '0xffffffffffffffffffffffff'
+#block_number = 0
+#chain_id = 1
+#gas_limit = 9223372036854775807
+#gas_price = 0
+#block_base_fee_per_gas = 0
+#block_coinbase = '0x0000000000000000000000000000000000000000'
+#block_timestamp = 0
+#block_difficulty = 0
