@@ -8,6 +8,7 @@ artifacts/build-info
 build/
 scripts/reference-scripts
 cache/
+cache_hardhat-zk/
 coverage/
 dist/
 node_modules/
@@ -18,6 +19,7 @@ abi/
 contracts/abi/
 contracts/README.md
 artifacts/
+artifacts-zk/
 artifacts_forge/
 contract_artifacts/
 
