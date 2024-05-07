@@ -1,6 +1,0 @@
-# folders
-.yarn/
-build/
-dist/
-node_modules/
-contracts/openzeppelin-presets/
