@@ -20,9 +20,8 @@ import { ERC721Holder } from "@openzeppelin/contracts/token/ERC721/utils/ERC721H
 import { ERC1155Holder, ERC1155Receiver } from "@openzeppelin/contracts/token/ERC1155/utils/ERC1155Holder.sol";
 
 //  ==========  Internal imports    ==========
-import { Router } from "../../../extension/plugin/RouterImmutable.sol";
+import { Router, Multicall } from "../../../extension/plugin/Router.sol";
 
-import "../../../extension/Multicall.sol";
 import "../../../extension/upgradeable/Initializable.sol";
 import "../../../extension/upgradeable/ContractMetadata.sol";
 import "../../../extension/upgradeable/PlatformFee.sol";
@@ -36,7 +35,6 @@ import { RoyaltyPaymentsLogic } from "../../../extension/upgradeable/RoyaltyPaym
  */
 contract MarketplaceV3 is
     Initializable,
-    Multicall,
     ContractMetadata,
     PlatformFee,
     PermissionsEnumerable,

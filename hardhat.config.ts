@@ -24,7 +24,6 @@ const config: HardhatUserConfig = {
   solidity: {
     version: "0.8.23",
   },
-  // OTHER SETTINGS...
 };
 
 export default config;
