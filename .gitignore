@@ -9,6 +9,7 @@ build/
 scripts/reference-scripts
 cache/
 cache_hardhat-zk/
+cache_hardhat/
 coverage/
 dist/
 node_modules/
