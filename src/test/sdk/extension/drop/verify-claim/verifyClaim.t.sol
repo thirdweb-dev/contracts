@@ -34,7 +34,8 @@ contract MyDrop is Drop {
     }
 
     function setSupplyClaimedByWallet(uint256 _conditionId, address _wallet, uint256 _supplyClaimed) public {
-        claimCondition.supplyClaimedByWallet[_conditionId][_wallet] = _supplyClaimed;
+        bytes32 _conditionHash = keccak256(abi.encodePacked(_conditionId, block.number));
+        claimCondition.supplyClaimedByWallet[_conditionHash][_wallet] = _supplyClaimed;
     }
 }
 

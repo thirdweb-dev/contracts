@@ -33,7 +33,8 @@ interface IClaimConditionMultiPhase is IClaimCondition {
     struct ClaimConditionList {
         uint256 currentStartId;
         uint256 count;
+        mapping(uint256 => bytes32) conditionHash;
         mapping(uint256 => ClaimCondition) conditions;
-        mapping(uint256 => mapping(address => uint256)) supplyClaimedByWallet;
+        mapping(bytes32 => mapping(address => uint256)) supplyClaimedByWallet;
     }
 }
