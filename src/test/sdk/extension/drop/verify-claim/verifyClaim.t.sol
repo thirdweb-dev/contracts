@@ -31,6 +31,7 @@ contract MyDrop is Drop {
 
     function setCondition(ClaimCondition calldata condition, uint256 _conditionId) public {
         claimCondition.conditions[_conditionId] = condition;
+        claimCondition.conditionHash[_conditionId] = keccak256(abi.encodePacked(_conditionId, block.number));
     }
 
     function setSupplyClaimedByWallet(uint256 _conditionId, address _wallet, uint256 _supplyClaimed) public {
@@ -407,6 +408,7 @@ contract Drop_VerifyClaim is ExtensionUtilTest {
         _currency = address(weth);
         _pricePerToken = 2;
         _quantity = 1;
+
         vm.expectRevert(
             abi.encodeWithSelector(
                 Drop.DropClaimExceedLimit.selector,
