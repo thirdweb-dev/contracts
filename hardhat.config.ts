@@ -12,9 +12,14 @@ dotenv.config();
 const config: HardhatUserConfig = {
   zksolc: {
     version: "latest", // Uses latest available in https://github.com/matter-labs/zksolc-bin/
-    settings: {},
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 20,
+      },
+    },
   },
-  defaultNetwork: "zkSyncSepoliaTestnet",
+  // defaultNetwork: "zkSyncSepoliaTestnet",
   networks: {
     hardhat: {
       zksync: false,
@@ -32,8 +37,37 @@ const config: HardhatUserConfig = {
       verifyURL: "https://zksync2-mainnet-explorer.zksync.io/contract_verification",
     },
   },
+  paths: {
+    artifacts: "./artifacts-zk",
+    cache: "./cache-zk",
+    sources: "./contracts",
+    tests: "./test",
+  },
   solidity: {
     version: "0.8.23",
+    settings: {
+      // You should disable the optimizer when debugging
+      // https://hardhat.org/hardhat-network/#solidity-optimizer-support
+      optimizer: {
+        enabled: true,
+        runs: 20,
+      },
+      metadata: {
+        bytecodeHash: "ipfs",
+      },
+      outputSelection: {
+        "*": {
+          "*": [
+            "metadata",
+            "abi",
+            "evm.bytecode.object",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.sourceMap",
+          ],
+        },
+      },
+    },
   },
 };
 

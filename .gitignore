@@ -8,6 +8,7 @@ artifacts/build-info
 build/
 scripts/reference-scripts
 cache/
+cache-zk/
 cache_hardhat-zk/
 cache_hardhat/
 coverage/
