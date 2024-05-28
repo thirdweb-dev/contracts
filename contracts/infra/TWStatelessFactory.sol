@@ -14,7 +14,7 @@ pragma solidity ^0.8.11;
 
 import "../extension/interface/IContractFactory.sol";
 
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "../external-deps/openzeppelin/metatx/ERC2771Context.sol";
 import "../extension/Multicall.sol";
 import "@openzeppelin/contracts/proxy/Clones.sol";
 
@@ -22,7 +22,7 @@ contract TWStatelessFactory is Multicall, ERC2771Context, IContractFactory {
     /// @dev Emitted when a proxy is deployed.
     event ProxyDeployed(address indexed implementation, address proxy, address indexed deployer);
 
-    constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {}
+    constructor(address[] memory _trustedForwarders) ERC2771Context(_trustedForwarders) {}
 
     /// @dev Deploys a proxy that points to the given implementation.
     function deployProxyByImplementation(

@@ -17,7 +17,7 @@ import "./interface/IThirdwebContract.sol";
 import "../extension/interface/IContractFactory.sol";
 
 import { AccessControlEnumerable, Context } from "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
-import { ERC2771Context } from "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import { ERC2771Context } from "../external-deps/openzeppelin/metatx/ERC2771Context.sol";
 import { Create2 } from "@openzeppelin/contracts/utils/Create2.sol";
 import { Multicall } from "../extension/Multicall.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
@@ -46,7 +46,7 @@ contract TWFactory is Multicall, ERC2771Context, AccessControlEnumerable, IContr
     /// @dev mapping of proxy address to deployer address
     mapping(address => address) public deployer;
 
-    constructor(address _trustedForwarder, address _registry) ERC2771Context(_trustedForwarder) {
+    constructor(address[] memory _trustedForwarders, address _registry) ERC2771Context(_trustedForwarders) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(FACTORY_ROLE, _msgSender());
 

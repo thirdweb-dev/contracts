@@ -25,7 +25,7 @@ contract ForwarderTest is BaseTest {
     function setUp() public override {
         super.setUp();
         user = vm.addr(userPKey);
-        consumer = new ForwarderConsumer(forwarder);
+        consumer = new ForwarderConsumer(forwarders());
 
         typehashForwardRequest = keccak256(
             "ForwardRequest(address from,address to,uint256 value,uint256 gas,uint256 nonce,bytes data)"

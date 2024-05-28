@@ -116,9 +116,9 @@ abstract contract BaseTest is DSTest, Test {
         weth = new WETH9();
         forwarder = address(new Forwarder());
         eoaForwarder = address(new ForwarderEOAOnly());
-        registry = address(new TWRegistry(forwarder));
-        factory = address(new TWFactory(forwarder, registry));
-        contractPublisher = address(new ContractPublisher(factoryAdmin, forwarder, new MockContractPublisher()));
+        registry = address(new TWRegistry(forwarders()));
+        factory = address(new TWFactory(forwarders(), registry));
+        contractPublisher = address(new ContractPublisher(factoryAdmin, forwarders(), new MockContractPublisher()));
         linkToken = address(new Link());
         vrfV2Wrapper = address(new VRFV2Wrapper());
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);

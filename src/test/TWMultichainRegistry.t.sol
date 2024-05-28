@@ -44,7 +44,7 @@ contract TWMultichainRegistryTest is ITWMultichainRegistryData, BaseTest {
         }
 
         vm.startPrank(factoryAdmin_);
-        _registry = new TWMultichainRegistry(address(0));
+        _registry = new TWMultichainRegistry(forwarders());
 
         _registry.grantRole(keccak256("OPERATOR_ROLE"), factory_);
 

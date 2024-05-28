@@ -7,7 +7,7 @@ import { ForwarderChainlessDomain } from "contracts/infra/forwarder/ForwarderCha
 import "./utils/BaseTest.sol";
 
 contract ForwarderChainlessDomainTest is BaseTest {
-    address public forwarderChainlessDomain;
+    address[] public forwarderChainlessDomain;
     ForwarderConsumer public consumer;
 
     uint256 public userPKey = 1020;
@@ -25,9 +25,9 @@ contract ForwarderChainlessDomainTest is BaseTest {
     function setUp() public override {
         super.setUp();
         user = vm.addr(userPKey);
-        consumer = new ForwarderConsumer(forwarder);
+        consumer = new ForwarderConsumer(forwarders());
 
-        forwarderChainlessDomain = address(new ForwarderChainlessDomain());
+        forwarderChainlessDomain.push(address(new ForwarderChainlessDomain()));
         consumer = new ForwarderConsumer(forwarderChainlessDomain);
 
         typehashForwardRequest = keccak256(
@@ -36,7 +36,7 @@ contract ForwarderChainlessDomainTest is BaseTest {
         nameHash = keccak256(bytes("GSNv2 Forwarder"));
         versionHash = keccak256(bytes("0.0.1"));
         typehashEip712 = keccak256("EIP712Domain(string name,string version,address verifyingContract)");
-        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, forwarderChainlessDomain));
+        domainSeparator = keccak256(abi.encode(typehashEip712, nameHash, versionHash, forwarderChainlessDomain[0]));
 
         vm.label(user, "End user");
         vm.label(forwarder, "Forwarder");
@@ -78,13 +78,13 @@ contract ForwarderChainlessDomainTest is BaseTest {
         forwardRequest.to = address(consumer);
         forwardRequest.value = 0;
         forwardRequest.gas = 100_000;
-        forwardRequest.nonce = ForwarderChainlessDomain(forwarderChainlessDomain).getNonce(user);
+        forwardRequest.nonce = ForwarderChainlessDomain(forwarderChainlessDomain[0]).getNonce(user);
         forwardRequest.data = abi.encodeCall(ForwarderConsumer.setCaller, ());
         forwardRequest.chainid = block.chainid;
 
         bytes memory signature = signForwarderRequest(forwardRequest, userPKey);
         vm.prank(relayer);
-        ForwarderChainlessDomain(forwarderChainlessDomain).execute(forwardRequest, signature);
+        ForwarderChainlessDomain(forwarderChainlessDomain[0]).execute(forwardRequest, signature);
 
         assertEq(consumer.caller(), user);
     }
