@@ -8,8 +8,8 @@
     "/contracts/**/*.sol"
   ],
   "devDependencies": {
-    "@openzeppelin/contracts": "^4.9.3",
-    "@openzeppelin/contracts-upgradeable": "^4.9.3",
+    "@openzeppelin/contracts": "^4.9.6",
+    "@openzeppelin/contracts-upgradeable": "^4.9.6",
     "@thirdweb-dev/dynamic-contracts": "^1.2.4",
     "@thirdweb-dev/merkletree": "^0.2.2",
     "@typechain/ethers-v5": "^10.2.1",
