@@ -17,8 +17,8 @@
     "/abi"
   ],
   "dependencies": {
-    "@openzeppelin/contracts": "^4.9.3",
-    "@openzeppelin/contracts-upgradeable": "^4.9.3",
+    "@openzeppelin/contracts": "^4.9.6",
+    "@openzeppelin/contracts-upgradeable": "^4.9.6",
     "erc721a-upgradeable": "^3.3.0",
     "@thirdweb-dev/dynamic-contracts": "^1.2.4",
     "solady": "0.0.180"

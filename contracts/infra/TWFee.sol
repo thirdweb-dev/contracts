@@ -8,7 +8,7 @@ import "./interface/ITWFee.sol";
 
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import { Multicall } from "../extension/Multicall.sol";
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "../external-deps/openzeppelin/metatx/ERC2771Context.sol";
 
 interface IFeeTierPlacementExtension {
     /// @dev Returns the fee tier for a given proxy contract address and proxy deployer address.
@@ -55,7 +55,7 @@ contract TWFee is ITWFee, Multicall, ERC2771Context, AccessControlEnumerable, IF
     event TierUpdated(address indexed proxyOrDeployer, uint256 tierId, uint256 validUntilTimestamp);
     event FeeTierUpdated(uint256 indexed tierId, uint256 indexed feeType, address recipient, uint256 bps);
 
-    constructor(address _trustedForwarder, address _factory) ERC2771Context(_trustedForwarder) {
+    constructor(address[] memory _trustedForwarders, address _factory) ERC2771Context(_trustedForwarders) {
         factory = TWFactory(_factory);
 
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
