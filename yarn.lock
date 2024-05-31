@@ -517,12 +517,7 @@
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts-upgradeable/-/contracts-upgradeable-4.9.6.tgz#38b21708a719da647de4bb0e4802ee235a0d24df"
   integrity sha512-m4iHazOsOCv1DgM7eD7GupTJ+NFVujRZt1wzddDPSVGpWdKq1SKkla5htKG7+IS4d2XOCtzkUNwRZ7Vq5aEUMA==
 
-"@openzeppelin/contracts@^4.4.2":
-  version "4.9.5"
-  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.5.tgz#1eed23d4844c861a1835b5d33507c1017fa98de8"
-  integrity sha512-ZK+W5mVhRppff9BE6YdR8CC52C8zAvsVAiWhEtQ5+oNxFE6h1WdeWo+FJSF8KKvtxxVYZ7MTP/5KoVpAU3aSWg==
-
-"@openzeppelin/contracts@^4.9.6":
+"@openzeppelin/contracts@^4.4.2", "@openzeppelin/contracts@^4.9.6":
   version "4.9.6"
   resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-4.9.6.tgz#2a880a24eb19b4f8b25adc2a5095f2aa27f39677"
   integrity sha512-xSmezSupL+y9VkHZJGDoCBpmnB2ogM13ccaYDWqJTfS3dbuHkgjuwDFUmaFauBCboQMGB/S5UqUl2y54X99BmA==
