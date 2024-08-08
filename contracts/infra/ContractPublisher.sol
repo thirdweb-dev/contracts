@@ -13,9 +13,9 @@ pragma solidity ^0.8.0;
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 //  ==========  External imports    ==========
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
+import "../external-deps/openzeppelin/metatx/ERC2771Context.sol";
 import "../extension/Multicall.sol";
 
 //  ==========  Internal imports    ==========
@@ -66,9 +66,9 @@ contract ContractPublisher is IContractPublisher, ERC2771Context, AccessControlE
 
     constructor(
         address _defaultAdmin,
-        address _trustedForwarder,
+        address[] memory _trustedForwarders,
         IContractPublisher _prevPublisher
-    ) ERC2771Context(_trustedForwarder) {
+    ) ERC2771Context(_trustedForwarders) {
         _setupRole(DEFAULT_ADMIN_ROLE, _defaultAdmin);
         _setupRole(MIGRATION_ROLE, _defaultAdmin);
         _setRoleAdmin(MIGRATION_ROLE, MIGRATION_ROLE);

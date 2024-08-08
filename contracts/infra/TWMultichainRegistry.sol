@@ -15,7 +15,7 @@ pragma solidity ^0.8.11;
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "../extension/Multicall.sol";
-import "@openzeppelin/contracts/metatx/ERC2771Context.sol";
+import "../external-deps/openzeppelin/metatx/ERC2771Context.sol";
 
 import "./interface/ITWMultichainRegistry.sol";
 
@@ -32,7 +32,7 @@ contract TWMultichainRegistry is ITWMultichainRegistry, Multicall, ERC2771Contex
 
     EnumerableSet.UintSet private chainIds;
 
-    constructor(address _trustedForwarder) ERC2771Context(_trustedForwarder) {
+    constructor(address[] memory _trustedForwarders) ERC2771Context(_trustedForwarders) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
