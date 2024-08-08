@@ -11,7 +11,7 @@ dotenv.config();
 
 const config: HardhatUserConfig = {
   zksolc: {
-    version: "latest", // Uses latest available in https://github.com/matter-labs/zksolc-bin/
+    version: "1.4.1", // Uses latest available in https://github.com/matter-labs/zksolc-bin/
     settings: {
       optimizer: {
         enabled: true,
@@ -23,6 +23,12 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {
       zksync: false,
+    },
+    zkCandySepolia: {
+      url: "https://sepolia.rpc.zkcandy.io",
+      ethNetwork: "sepolia",
+      zksync: true,
+      verifyURL: "https://sepolia.contract-verifier.zkcandy.io/contract_verification",
     },
     zkSyncSepoliaTestnet: {
       url: "https://sepolia.era.zksync.dev",
