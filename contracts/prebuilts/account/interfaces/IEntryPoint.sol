@@ -43,12 +43,7 @@ interface IEntryPoint is IStakeManager, INonceManager {
      * @param factory    - The factory used to deploy this account (in the initCode)
      * @param paymaster  - The paymaster used by this UserOp
      */
-    event AccountDeployed(
-        bytes32 indexed userOpHash,
-        address indexed sender,
-        address factory,
-        address paymaster
-    );
+    event AccountDeployed(bytes32 indexed userOpHash, address indexed sender, address factory, address paymaster);
 
     /**
      * An event emitted if the UserOperation "callData" reverted with non-zero length.
@@ -71,12 +66,7 @@ interface IEntryPoint is IStakeManager, INonceManager {
      * @param nonce        - The nonce used in the request.
      * @param revertReason - The return bytes from the (reverted) call to "callData".
      */
-    event PostOpRevertReason(
-        bytes32 indexed userOpHash,
-        address indexed sender,
-        uint256 nonce,
-        bytes revertReason
-    );
+    event PostOpRevertReason(bytes32 indexed userOpHash, address indexed sender, uint256 nonce, bytes revertReason);
 
     /**
      * UserOp consumed more than prefund. The UserOperation is reverted, and no refund is made.
@@ -84,11 +74,7 @@ interface IEntryPoint is IStakeManager, INonceManager {
      * @param sender       - The sender of this request.
      * @param nonce        - The nonce used in the request.
      */
-    event UserOperationPrefundTooLow(
-        bytes32 indexed userOpHash,
-        address indexed sender,
-        uint256 nonce
-    );
+    event UserOperationPrefundTooLow(bytes32 indexed userOpHash, address indexed sender, uint256 nonce);
 
     /**
      * An event emitted by handleOps(), before starting the execution loop.
@@ -151,10 +137,7 @@ interface IEntryPoint is IStakeManager, INonceManager {
      * @param ops         - The operations to execute.
      * @param beneficiary - The address to receive the fees.
      */
-    function handleOps(
-        PackedUserOperation[] calldata ops,
-        address payable beneficiary
-    ) external;
+    function handleOps(PackedUserOperation[] calldata ops, address payable beneficiary) external;
 
     /**
      * Execute a batch of UserOperation with Aggregators
@@ -172,9 +155,7 @@ interface IEntryPoint is IStakeManager, INonceManager {
      * @param userOp - The user operation to generate the request ID for.
      * @return hash the hash of this UserOperation
      */
-    function getUserOpHash(
-        PackedUserOperation calldata userOp
-    ) external view returns (bytes32);
+    function getUserOpHash(PackedUserOperation calldata userOp) external view returns (bytes32);
 
     /**
      * Gas and return values during simulation.

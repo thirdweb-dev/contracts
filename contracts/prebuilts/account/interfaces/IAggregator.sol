@@ -13,10 +13,7 @@ interface IAggregator {
      * @param userOps   - Array of UserOperations to validate the signature for.
      * @param signature - The aggregated signature.
      */
-    function validateSignatures(
-        PackedUserOperation[] calldata userOps,
-        bytes calldata signature
-    ) external view;
+    function validateSignatures(PackedUserOperation[] calldata userOps, bytes calldata signature) external view;
 
     /**
      * Validate signature of a single userOp.

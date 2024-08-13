@@ -47,10 +47,7 @@ abstract contract BaseAccount is IAccount {
      * Ensure the request comes from the known entrypoint.
      */
     function _requireFromEntryPoint() internal view virtual {
-        require(
-            msg.sender == address(entryPoint()),
-            "account: not from EntryPoint"
-        );
+        require(msg.sender == address(entryPoint()), "account: not from EntryPoint");
     }
 
     /**
@@ -88,8 +85,7 @@ abstract contract BaseAccount is IAccount {
      *
      * solhint-disable-next-line no-empty-blocks
      */
-    function _validateNonce(uint256 nonce) internal view virtual {
-    }
+    function _validateNonce(uint256 nonce) internal view virtual {}
 
     /**
      * Sends to the entrypoint (msg.sender) the missing funds for this transaction.
@@ -102,10 +98,7 @@ abstract contract BaseAccount is IAccount {
      */
     function _payPrefund(uint256 missingAccountFunds) internal virtual {
         if (missingAccountFunds != 0) {
-            (bool success, ) = payable(msg.sender).call{
-                value: missingAccountFunds,
-                gas: type(uint256).max
-            }("");
+            (bool success, ) = payable(msg.sender).call{ value: missingAccountFunds, gas: type(uint256).max }("");
             (success);
             //ignore failure (its EntryPoint's job to verify, not account.)
         }

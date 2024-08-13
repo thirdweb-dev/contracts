@@ -105,7 +105,7 @@ contract AccountBenchmarkTest is BaseTest {
         {
             uint128 verificationGasLimit = 500_000;
             uint128 callGasLimit = 500_000;
-            bytes32 packedGasLimits = bytes32(uint256(verificationGasLimit)) << 128 | bytes32(uint256(callGasLimit));
+            bytes32 packedGasLimits = (bytes32(uint256(verificationGasLimit)) << 128) | bytes32(uint256(callGasLimit));
 
             // Get user op fields
             op = PackedUserOperation({
@@ -446,7 +446,13 @@ contract AccountBenchmarkTest is BaseTest {
         address recipient = address(0x3456);
 
         vm.resumeGasMetering();
-        PackedUserOperation[] memory userOp = _setupUserOpExecute(accountAdminPKey, bytes(""), recipient, value, bytes(""));
+        PackedUserOperation[] memory userOp = _setupUserOpExecute(
+            accountAdminPKey,
+            bytes(""),
+            recipient,
+            value,
+            bytes("")
+        );
 
         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
     }

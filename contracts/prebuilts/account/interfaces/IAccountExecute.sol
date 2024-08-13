@@ -13,8 +13,5 @@ interface IAccountExecute {
      * @param userOp              - The operation that was just validated.
      * @param userOpHash          - Hash of the user's request data.
      */
-    function executeUserOp(
-        PackedUserOperation calldata userOp,
-        bytes32 userOpHash
-    ) external;
+    function executeUserOp(PackedUserOperation calldata userOp, bytes32 userOpHash) external;
 }

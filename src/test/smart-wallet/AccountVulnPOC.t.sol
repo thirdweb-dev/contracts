@@ -130,7 +130,7 @@ contract SimpleAccountVulnPOCTest is BaseTest {
         {
             uint128 verificationGasLimit = 500_000;
             uint128 callGasLimit = 500_000;
-            bytes32 packedGasLimits = bytes32(uint256(verificationGasLimit)) << 128 | bytes32(uint256(callGasLimit));
+            bytes32 packedGasLimits = (bytes32(uint256(verificationGasLimit)) << 128) | bytes32(uint256(callGasLimit));
 
             // Get user op fields
             op = PackedUserOperation({
