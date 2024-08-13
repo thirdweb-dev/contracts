@@ -10,7 +10,7 @@ import { AccountExtension } from "contracts/prebuilts/account/utils/AccountExten
 
 // Account Abstraction setup for smart wallets.
 import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
-import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.sol";
+import { PackedUserOperation } from "contracts/prebuilts/account/interfaces/PackedUserOperation.sol";
 
 // Target
 import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
@@ -42,7 +42,7 @@ contract NFTRejector {
 
 contract DynamicAccountTest is BaseTest {
     // Target contracts
-    EntryPoint private constant entrypoint = EntryPoint(payable(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789));
+    EntryPoint private constant entrypoint = EntryPoint(payable(0x0000000071727De22E5E9d8BAf0edAc6f37da032));
     DynamicAccountFactory private accountFactory;
 
     // Mocks
@@ -113,23 +113,28 @@ contract DynamicAccountTest is BaseTest {
         uint256 _signerPKey,
         bytes memory _initCode,
         bytes memory _callDataForEntrypoint
-    ) internal returns (UserOperation[] memory ops) {
+    ) internal returns (PackedUserOperation[] memory ops) {
         uint256 nonce = entrypoint.getNonce(sender, 0);
+        PackedUserOperation memory op;
 
-        // Get user op fields
-        UserOperation memory op = UserOperation({
-            sender: sender,
-            nonce: nonce,
-            initCode: _initCode,
-            callData: _callDataForEntrypoint,
-            callGasLimit: 5_000_000,
-            verificationGasLimit: 5_000_000,
-            preVerificationGas: 5_000_000,
-            maxFeePerGas: 0,
-            maxPriorityFeePerGas: 0,
-            paymasterAndData: bytes(""),
-            signature: bytes("")
-        });
+        {
+            uint128 verificationGasLimit = 5_000_000;
+            uint128 callGasLimit = 5_000_000;
+            bytes32 packedGasLimits = (bytes32(uint256(verificationGasLimit)) << 128) | bytes32(uint256(callGasLimit));
+
+            // Get user op fields
+            op = PackedUserOperation({
+                sender: sender,
+                nonce: nonce,
+                initCode: _initCode,
+                callData: _callDataForEntrypoint,
+                accountGasLimits: packedGasLimits,
+                preVerificationGas: 5_000_000,
+                gasFees: 0,
+                paymasterAndData: bytes(""),
+                signature: bytes("")
+            });
+        }
 
         // Sign UserOp
         bytes32 opHash = EntryPoint(entrypoint).getUserOpHash(op);
@@ -145,7 +150,7 @@ contract DynamicAccountTest is BaseTest {
         op.signature = userOpSignature;
 
         // Store UserOp
-        ops = new UserOperation[](1);
+        ops = new PackedUserOperation[](1);
         ops[0] = op;
     }
 
@@ -153,23 +158,28 @@ contract DynamicAccountTest is BaseTest {
         bytes memory _initCode,
         bytes memory _callDataForEntrypoint,
         address _sender
-    ) internal returns (UserOperation[] memory ops) {
+    ) internal returns (PackedUserOperation[] memory ops) {
         uint256 nonce = entrypoint.getNonce(_sender, 0);
+        PackedUserOperation memory op;
 
-        // Get user op fields
-        UserOperation memory op = UserOperation({
-            sender: _sender,
-            nonce: nonce,
-            initCode: _initCode,
-            callData: _callDataForEntrypoint,
-            callGasLimit: 5_000_000,
-            verificationGasLimit: 5_000_000,
-            preVerificationGas: 5_000_000,
-            maxFeePerGas: 0,
-            maxPriorityFeePerGas: 0,
-            paymasterAndData: bytes(""),
-            signature: bytes("")
-        });
+        {
+            uint128 verificationGasLimit = 5_000_000;
+            uint128 callGasLimit = 5_000_000;
+            bytes32 packedGasLimits = (bytes32(uint256(verificationGasLimit)) << 128) | bytes32(uint256(callGasLimit));
+
+            // Get user op fields
+            op = PackedUserOperation({
+                sender: _sender,
+                nonce: nonce,
+                initCode: _initCode,
+                callData: _callDataForEntrypoint,
+                accountGasLimits: packedGasLimits,
+                preVerificationGas: 5_000_000,
+                gasFees: 0,
+                paymasterAndData: bytes(""),
+                signature: bytes("")
+            });
+        }
 
         // Sign UserOp
         bytes32 opHash = EntryPoint(entrypoint).getUserOpHash(op);
@@ -185,7 +195,7 @@ contract DynamicAccountTest is BaseTest {
         op.signature = userOpSignature;
 
         // Store UserOp
-        ops = new UserOperation[](1);
+        ops = new PackedUserOperation[](1);
         ops[0] = op;
     }
 
@@ -195,7 +205,7 @@ contract DynamicAccountTest is BaseTest {
         uint256 _value,
         bytes memory _callData,
         address _sender
-    ) internal returns (UserOperation[] memory) {
+    ) internal returns (PackedUserOperation[] memory) {
         bytes memory callDataForEntrypoint = abi.encodeWithSignature(
             "execute(address,uint256,bytes)",
             _target,
@@ -212,7 +222,7 @@ contract DynamicAccountTest is BaseTest {
         address _target,
         uint256 _value,
         bytes memory _callData
-    ) internal returns (UserOperation[] memory) {
+    ) internal returns (PackedUserOperation[] memory) {
         bytes memory callDataForEntrypoint = abi.encodeWithSignature(
             "execute(address,uint256,bytes)",
             _target,
@@ -229,7 +239,7 @@ contract DynamicAccountTest is BaseTest {
         address[] memory _target,
         uint256[] memory _value,
         bytes[] memory _callData
-    ) internal returns (UserOperation[] memory) {
+    ) internal returns (PackedUserOperation[] memory) {
         bytes memory callDataForEntrypoint = abi.encodeWithSignature(
             "executeBatch(address[],uint256[],bytes[])",
             _target,
@@ -385,7 +395,7 @@ contract DynamicAccountTest is BaseTest {
         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
-        UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
+        PackedUserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
             accountAdminPKey,
             initCode,
             address(0),
@@ -427,7 +437,7 @@ contract DynamicAccountTest is BaseTest {
                 address(accountFactory)
             );
 
-            UserOperation[] memory userOpCreateAccount = _setupUserOpExecuteWithSender(
+            PackedUserOperation[] memory userOpCreateAccount = _setupUserOpExecuteWithSender(
                 initCode,
                 address(0),
                 0,
@@ -463,7 +473,7 @@ contract DynamicAccountTest is BaseTest {
         bytes memory initCallData = abi.encodeWithSignature("createAccount(address,bytes)", accountAdmin, data);
         bytes memory initCode = abi.encodePacked(abi.encodePacked(address(accountFactory)), initCallData);
 
-        UserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
+        PackedUserOperation[] memory userOpCreateAccount = _setupUserOpExecute(
             accountAdminPKey,
             initCode,
             address(0),
@@ -523,7 +533,7 @@ contract DynamicAccountTest is BaseTest {
 
         assertEq(numberContract.num(), 0);
 
-        UserOperation[] memory userOp = _setupUserOpExecute(
+        PackedUserOperation[] memory userOp = _setupUserOpExecute(
             accountAdminPKey,
             bytes(""),
             address(numberContract),
@@ -553,7 +563,7 @@ contract DynamicAccountTest is BaseTest {
             callData[i] = abi.encodeWithSignature("incrementNum()", i);
         }
 
-        UserOperation[] memory userOp = _setupUserOpExecuteBatch(
+        PackedUserOperation[] memory userOp = _setupUserOpExecuteBatch(
             accountAdminPKey,
             bytes(""),
             targets,
@@ -604,7 +614,7 @@ contract DynamicAccountTest is BaseTest {
         bytes memory sig = _signSignerPermissionRequest(permissionsReq);
         SimpleAccount(payable(account)).setPermissionsForSigner(permissionsReq, sig);
 
-        UserOperation[] memory userOp = _setupUserOpExecuteBatch(
+        PackedUserOperation[] memory userOp = _setupUserOpExecuteBatch(
             accountSignerPKey,
             bytes(""),
             targets,
@@ -644,7 +654,7 @@ contract DynamicAccountTest is BaseTest {
 
         assertEq(numberContract.num(), 0);
 
-        UserOperation[] memory userOp = _setupUserOpExecute(
+        PackedUserOperation[] memory userOp = _setupUserOpExecute(
             accountSignerPKey,
             bytes(""),
             address(numberContract),
@@ -663,7 +673,7 @@ contract DynamicAccountTest is BaseTest {
 
         assertEq(numberContract.num(), 0);
 
-        UserOperation[] memory userOp = _setupUserOpExecute(
+        PackedUserOperation[] memory userOp = _setupUserOpExecute(
             accountSignerPKey,
             bytes(""),
             address(numberContract),
@@ -749,7 +759,13 @@ contract DynamicAccountTest is BaseTest {
 
         address recipient = address(0x3456);
 
-        UserOperation[] memory userOp = _setupUserOpExecute(accountAdminPKey, bytes(""), recipient, value, bytes(""));
+        PackedUserOperation[] memory userOp = _setupUserOpExecute(
+            accountAdminPKey,
+            bytes(""),
+            recipient,
+            value,
+            bytes("")
+        );
 
         EntryPoint(entrypoint).handleOps(userOp, beneficiary);
         assertEq(address(account).balance, 0);

@@ -22,7 +22,7 @@ import { DynamicAccount, IEntryPoint } from "./DynamicAccount.sol";
 //    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
 
 contract DynamicAccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnumerable {
-    address public constant ENTRYPOINT_ADDRESS = 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789;
+    address public constant ENTRYPOINT_ADDRESS = 0x0000000071727De22E5E9d8BAf0edAc6f37da032;
 
     /*///////////////////////////////////////////////////////////////
                             Constructor
