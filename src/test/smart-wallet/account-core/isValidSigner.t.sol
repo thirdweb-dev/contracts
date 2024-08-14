@@ -9,7 +9,7 @@ import { IAccountPermissions } from "contracts/extension/interface/IAccountPermi
 import { AccountPermissions, EnumerableSet, ECDSA } from "contracts/extension/upgradeable/AccountPermissions.sol";
 
 // Account Abstraction setup for smart wallets.
-import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
+import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/EntryPoint.sol";
 import { PackedUserOperation } from "contracts/prebuilts/account/interfaces/PackedUserOperation.sol";
 
 // Target

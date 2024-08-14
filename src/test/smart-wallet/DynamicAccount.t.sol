@@ -9,7 +9,7 @@ import { AccountPermissions } from "contracts/extension/upgradeable/AccountPermi
 import { AccountExtension } from "contracts/prebuilts/account/utils/AccountExtension.sol";
 
 // Account Abstraction setup for smart wallets.
-import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
+import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/EntryPoint.sol";
 import { PackedUserOperation } from "contracts/prebuilts/account/interfaces/PackedUserOperation.sol";
 
 // Target

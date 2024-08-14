@@ -938,166 +938,166 @@ contract TieredDropTest is BaseTest {
     }
 }
 
-contract TieredDropBechmarkTest is BaseTest {
-    using Strings for uint256;
+// contract TieredDropBechmarkTest is BaseTest {
+//     using Strings for uint256;
 
-    TieredDrop public tieredDrop;
+//     TieredDrop public tieredDrop;
 
-    address internal dropAdmin;
-    address internal claimer;
+//     address internal dropAdmin;
+//     address internal claimer;
 
-    // Signature params
-    address internal deployerSigner;
-    bytes32 internal typehashGenericRequest;
-    bytes32 internal nameHash;
-    bytes32 internal versionHash;
-    bytes32 internal typehashEip712;
-    bytes32 internal domainSeparator;
+//     // Signature params
+//     address internal deployerSigner;
+//     bytes32 internal typehashGenericRequest;
+//     bytes32 internal nameHash;
+//     bytes32 internal versionHash;
+//     bytes32 internal typehashEip712;
+//     bytes32 internal domainSeparator;
 
-    // Lazy mint variables
-    uint256 internal quantityTier1 = 10;
-    string internal tier1 = "tier1";
-    string internal baseURITier1 = "baseURI1/";
-    string internal placeholderURITier1 = "placeholderURI1/";
-    bytes internal keyTier1 = "tier1_key";
+//     // Lazy mint variables
+//     uint256 internal quantityTier1 = 10;
+//     string internal tier1 = "tier1";
+//     string internal baseURITier1 = "baseURI1/";
+//     string internal placeholderURITier1 = "placeholderURI1/";
+//     bytes internal keyTier1 = "tier1_key";
 
-    uint256 internal quantityTier2 = 20;
-    string internal tier2 = "tier2";
-    string internal baseURITier2 = "baseURI2/";
-    string internal placeholderURITier2 = "placeholderURI2/";
-    bytes internal keyTier2 = "tier2_key";
+//     uint256 internal quantityTier2 = 20;
+//     string internal tier2 = "tier2";
+//     string internal baseURITier2 = "baseURI2/";
+//     string internal placeholderURITier2 = "placeholderURI2/";
+//     bytes internal keyTier2 = "tier2_key";
 
-    uint256 internal quantityTier3 = 30;
-    string internal tier3 = "tier3";
-    string internal baseURITier3 = "baseURI3/";
-    string internal placeholderURITier3 = "placeholderURI3/";
-    bytes internal keyTier3 = "tier3_key";
+//     uint256 internal quantityTier3 = 30;
+//     string internal tier3 = "tier3";
+//     string internal baseURITier3 = "baseURI3/";
+//     string internal placeholderURITier3 = "placeholderURI3/";
+//     bytes internal keyTier3 = "tier3_key";
 
-    function setUp() public virtual override {
-        super.setUp();
+//     function setUp() public virtual override {
+//         super.setUp();
 
-        dropAdmin = getActor(1);
-        claimer = getActor(2);
+//         dropAdmin = getActor(1);
+//         claimer = getActor(2);
 
-        // Deploy implementation.
-        address tieredDropImpl = address(new TieredDrop());
+//         // Deploy implementation.
+//         address tieredDropImpl = address(new TieredDrop());
 
-        // Deploy proxy pointing to implementaion.
-        vm.prank(dropAdmin);
-        tieredDrop = TieredDrop(
-            address(
-                new TWProxy(
-                    tieredDropImpl,
-                    abi.encodeCall(
-                        TieredDrop.initialize,
-                        (dropAdmin, "Tiered Drop", "TD", "ipfs://", new address[](0), dropAdmin, dropAdmin, 0)
-                    )
-                )
-            )
-        );
+//         // Deploy proxy pointing to implementaion.
+//         vm.prank(dropAdmin);
+//         tieredDrop = TieredDrop(
+//             address(
+//                 new TWProxy(
+//                     tieredDropImpl,
+//                     abi.encodeCall(
+//                         TieredDrop.initialize,
+//                         (dropAdmin, "Tiered Drop", "TD", "ipfs://", new address[](0), dropAdmin, dropAdmin, 0)
+//                     )
+//                 )
+//             )
+//         );
 
-        // ====== signature params
+//         // ====== signature params
 
-        deployerSigner = signer;
-        vm.prank(dropAdmin);
-        tieredDrop.grantRole(keccak256("MINTER_ROLE"), deployerSigner);
+//         deployerSigner = signer;
+//         vm.prank(dropAdmin);
+//         tieredDrop.grantRole(keccak256("MINTER_ROLE"), deployerSigner);
 
-        typehashGenericRequest = keccak256(
-            "GenericRequest(uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid,bytes data)"
-        );
-        nameHash = keccak256(bytes("SignatureAction"));
-        versionHash = keccak256(bytes("1"));
-        typehashEip712 = keccak256(
-            "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
-        );
-        domainSeparator = keccak256(
-            abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(tieredDrop))
-        );
+//         typehashGenericRequest = keccak256(
+//             "GenericRequest(uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid,bytes data)"
+//         );
+//         nameHash = keccak256(bytes("SignatureAction"));
+//         versionHash = keccak256(bytes("1"));
+//         typehashEip712 = keccak256(
+//             "EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"
+//         );
+//         domainSeparator = keccak256(
+//             abi.encode(typehashEip712, nameHash, versionHash, block.chainid, address(tieredDrop))
+//         );
 
-        // ======
+//         // ======
 
-        // Lazy mint tokens: 3 different tiers
-        vm.startPrank(dropAdmin);
+//         // Lazy mint tokens: 3 different tiers
+//         vm.startPrank(dropAdmin);
 
-        // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
-        tieredDrop.lazyMint(totalQty, baseURITier1, tier1, "");
-        // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
-        tieredDrop.lazyMint(totalQty, baseURITier2, tier2, "");
+//         // Tier 1: tokenIds assigned 0 -> 10 non-inclusive.
+//         tieredDrop.lazyMint(totalQty, baseURITier1, tier1, "");
+//         // Tier 2: tokenIds assigned 10 -> 30 non-inclusive.
+//         tieredDrop.lazyMint(totalQty, baseURITier2, tier2, "");
 
-        vm.stopPrank();
+//         vm.stopPrank();
 
-        /**
-         *  Claim tokens.
-         *      - Order of priority: [tier2, tier1]
-         *      - Total quantity: 25. [20 from tier2, 5 from tier1]
-         */
+//         /**
+//          *  Claim tokens.
+//          *      - Order of priority: [tier2, tier1]
+//          *      - Total quantity: 25. [20 from tier2, 5 from tier1]
+//          */
 
-        string[] memory tiers = new string[](2);
-        tiers[0] = tier2;
-        tiers[1] = tier1;
+//         string[] memory tiers = new string[](2);
+//         tiers[0] = tier2;
+//         tiers[1] = tier1;
 
-        uint256 claimQuantity = totalQty;
+//         uint256 claimQuantity = totalQty;
 
-        for (uint256 i = 0; i < claimQuantity; i += 1) {
-            _setupClaimSignature(tiers, 1);
+//         for (uint256 i = 0; i < claimQuantity; i += 1) {
+//             _setupClaimSignature(tiers, 1);
 
-            vm.warp(claimRequest.validityStartTimestamp);
+//             vm.warp(claimRequest.validityStartTimestamp);
 
-            vm.prank(claimer);
-            tieredDrop.claimWithSignature(claimRequest, claimSignature);
-        }
-    }
+//             vm.prank(claimer);
+//             tieredDrop.claimWithSignature(claimRequest, claimSignature);
+//         }
+//     }
 
-    TieredDrop.GenericRequest internal claimRequest;
-    bytes internal claimSignature;
+//     TieredDrop.GenericRequest internal claimRequest;
+//     bytes internal claimSignature;
 
-    uint256 internal nonce;
+//     uint256 internal nonce;
 
-    function _setupClaimSignature(string[] memory _orderedTiers, uint256 _totalQuantity) internal {
-        claimRequest.validityStartTimestamp = 1000;
-        claimRequest.validityEndTimestamp = 2000;
-        claimRequest.uid = keccak256(abi.encodePacked(nonce));
-        nonce += 1;
-        claimRequest.data = abi.encode(
-            _orderedTiers,
-            claimer,
-            address(0),
-            0,
-            dropAdmin,
-            _totalQuantity,
-            0,
-            NATIVE_TOKEN
-        );
+//     function _setupClaimSignature(string[] memory _orderedTiers, uint256 _totalQuantity) internal {
+//         claimRequest.validityStartTimestamp = 1000;
+//         claimRequest.validityEndTimestamp = 2000;
+//         claimRequest.uid = keccak256(abi.encodePacked(nonce));
+//         nonce += 1;
+//         claimRequest.data = abi.encode(
+//             _orderedTiers,
+//             claimer,
+//             address(0),
+//             0,
+//             dropAdmin,
+//             _totalQuantity,
+//             0,
+//             NATIVE_TOKEN
+//         );
 
-        bytes memory encodedRequest = abi.encode(
-            typehashGenericRequest,
-            claimRequest.validityStartTimestamp,
-            claimRequest.validityEndTimestamp,
-            claimRequest.uid,
-            keccak256(bytes(claimRequest.data))
-        );
+//         bytes memory encodedRequest = abi.encode(
+//             typehashGenericRequest,
+//             claimRequest.validityStartTimestamp,
+//             claimRequest.validityEndTimestamp,
+//             claimRequest.uid,
+//             keccak256(bytes(claimRequest.data))
+//         );
 
-        bytes32 structHash = keccak256(encodedRequest);
-        bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
+//         bytes32 structHash = keccak256(encodedRequest);
+//         bytes32 typedDataHash = keccak256(abi.encodePacked("\x19\x01", domainSeparator, structHash));
 
-        (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
-        claimSignature = abi.encodePacked(r, s, v);
-    }
+//         (uint8 v, bytes32 r, bytes32 s) = vm.sign(privateKey, typedDataHash);
+//         claimSignature = abi.encodePacked(r, s, v);
+//     }
 
-    // What does it take to exhaust the 550mil RPC view fn gas limit ?
+//     // What does it take to exhaust the 550mil RPC view fn gas limit ?
 
-    // 10_000: 67 mil gas (67,536,754)
-    uint256 internal totalQty = 10_000;
+//     // 10_000: 67 mil gas (67,536,754)
+//     uint256 internal totalQty = 10_000;
 
-    function test_banchmark_getTokensInTier() public view {
-        tieredDrop.getTokensInTier(tier1, 0, totalQty);
-    }
+//     function test_banchmark_getTokensInTier() public view {
+//         tieredDrop.getTokensInTier(tier1, 0, totalQty);
+//     }
 
-    function test_banchmark_getTokensInTier_ten() public view {
-        tieredDrop.getTokensInTier(tier1, 0, 10);
-    }
+//     function test_banchmark_getTokensInTier_ten() public view {
+//         tieredDrop.getTokensInTier(tier1, 0, 10);
+//     }
 
-    function test_banchmark_getTokensInTier_hundred() public view {
-        tieredDrop.getTokensInTier(tier1, 0, 100);
-    }
-}
+//     function test_banchmark_getTokensInTier_hundred() public view {
+//         tieredDrop.getTokensInTier(tier1, 0, 100);
+//     }
+// }

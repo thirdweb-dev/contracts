@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { BaseTest } from "../../utils/BaseTest.sol";
 
 // Account Abstraction setup for smart wallets.
-import { IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
+import { IEntryPoint } from "contracts/prebuilts/account/utils/EntryPoint.sol";
 import { Strings } from "contracts/lib/Strings.sol";
 import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
 import "forge-std/Test.sol";
