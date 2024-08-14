@@ -2,7 +2,6 @@
 pragma solidity ^0.8.23;
 /* solhint-disable avoid-low-level-calls */
 /* solhint-disable no-inline-assembly */
-//
 
 import "../interfaces/IAccount.sol";
 import "../interfaces/IAccountExecute.sol";
