@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-only
-pragma solidity ^0.8.12;
+pragma solidity ^0.8.23;
 
-import "../interface/IStakeManager.sol";
+import "../interfaces/IStakeManager.sol";
 
 /* solhint-disable avoid-low-level-calls */
 /* solhint-disable not-rely-on-time */
+
 /**
- * manage deposits and stakes.
- * deposit is just a balance used to pay for UserOperations (either by a paymaster or an account)
- * stake is value locked for at least "unstakeDelay" by a paymaster.
+ * Manage deposits and stakes.
+ * Deposit is just a balance used to pay for UserOperations (either by a paymaster or an account).
+ * Stake is value locked for at least "unstakeDelay" by a paymaster.
  */
 abstract contract StakeManager is IStakeManager {
     /// maps paymaster to their deposits and stakes
@@ -19,14 +20,17 @@ abstract contract StakeManager is IStakeManager {
         return deposits[account];
     }
 
-    // internal method to return just the stake info
+    /**
+     * Internal method to return just the stake info.
+     * @param addr - The account to query.
+     */
     function _getStakeInfo(address addr) internal view returns (StakeInfo memory info) {
         DepositInfo storage depositInfo = deposits[addr];
         info.stake = depositInfo.stake;
         info.unstakeDelaySec = depositInfo.unstakeDelaySec;
     }
 
-    /// return the deposit (for gas payment) of the account
+    /// @inheritdoc IStakeManager
     function balanceOf(address account) public view returns (uint256) {
         return deposits[account].deposit;
     }
@@ -35,26 +39,32 @@ abstract contract StakeManager is IStakeManager {
         depositTo(msg.sender);
     }
 
-    function _incrementDeposit(address account, uint256 amount) internal {
+    /**
+     * Increments an account's deposit.
+     * @param account - The account to increment.
+     * @param amount  - The amount to increment by.
+     * @return the updated deposit of this account
+     */
+    function _incrementDeposit(address account, uint256 amount) internal returns (uint256) {
         DepositInfo storage info = deposits[account];
         uint256 newAmount = info.deposit + amount;
-        require(newAmount <= type(uint112).max, "deposit overflow");
-        info.deposit = uint112(newAmount);
+        info.deposit = newAmount;
+        return newAmount;
     }
 
     /**
-     * add to the deposit of the given account
+     * Add to the deposit of the given account.
+     * @param account - The account to add to.
      */
-    function depositTo(address account) public payable {
-        _incrementDeposit(account, msg.value);
-        DepositInfo storage info = deposits[account];
-        emit Deposited(account, info.deposit);
+    function depositTo(address account) public payable virtual {
+        uint256 newDeposit = _incrementDeposit(account, msg.value);
+        emit Deposited(account, newDeposit);
     }
 
     /**
-     * add to the account's stake - amount and delay
+     * Add to the account's stake - amount and delay
      * any pending unstake is first cancelled.
-     * @param unstakeDelaySec the new lock duration before the deposit can be withdrawn.
+     * @param unstakeDelaySec The new lock duration before the deposit can be withdrawn.
      */
     function addStake(uint32 unstakeDelaySec) public payable {
         DepositInfo storage info = deposits[msg.sender];
@@ -68,8 +78,8 @@ abstract contract StakeManager is IStakeManager {
     }
 
     /**
-     * attempt to unlock the stake.
-     * the value can be withdrawn (using withdrawStake) after the unstake delay.
+     * Attempt to unlock the stake.
+     * The value can be withdrawn (using withdrawStake) after the unstake delay.
      */
     function unlockStake() external {
         DepositInfo storage info = deposits[msg.sender];
@@ -82,9 +92,9 @@ abstract contract StakeManager is IStakeManager {
     }
 
     /**
-     * withdraw from the (unlocked) stake.
-     * must first call unlockStake and wait for the unstakeDelay to pass
-     * @param withdrawAddress the address to send withdrawn value.
+     * Withdraw from the (unlocked) stake.
+     * Must first call unlockStake and wait for the unstakeDelay to pass.
+     * @param withdrawAddress - The address to send withdrawn value.
      */
     function withdrawStake(address payable withdrawAddress) external {
         DepositInfo storage info = deposits[msg.sender];
@@ -101,14 +111,14 @@ abstract contract StakeManager is IStakeManager {
     }
 
     /**
-     * withdraw from the deposit.
-     * @param withdrawAddress the address to send withdrawn value.
-     * @param withdrawAmount the amount to withdraw.
+     * Withdraw from the deposit.
+     * @param withdrawAddress - The address to send withdrawn value.
+     * @param withdrawAmount  - The amount to withdraw.
      */
     function withdrawTo(address payable withdrawAddress, uint256 withdrawAmount) external {
         DepositInfo storage info = deposits[msg.sender];
         require(withdrawAmount <= info.deposit, "Withdraw amount too large");
-        info.deposit = uint112(info.deposit - withdrawAmount);
+        info.deposit = info.deposit - withdrawAmount;
         emit Withdrawn(msg.sender, withdrawAddress, withdrawAmount);
         (bool success, ) = withdrawAddress.call{ value: withdrawAmount }("");
         require(success, "failed to withdraw");

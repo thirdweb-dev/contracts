@@ -9,8 +9,8 @@ import { IAccountPermissions } from "contracts/extension/interface/IAccountPermi
 import { AccountPermissions, EnumerableSet, ECDSA } from "contracts/extension/upgradeable/AccountPermissions.sol";
 
 // Account Abstraction setup for smart wallets.
-import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
-import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.sol";
+import { EntryPoint, IEntryPoint } from "contracts/prebuilts/account/utils/EntryPoint.sol";
+import { PackedUserOperation } from "contracts/prebuilts/account/interfaces/PackedUserOperation.sol";
 
 // Target
 import { DynamicAccountFactory, DynamicAccount, BaseAccountFactory } from "contracts/prebuilts/account/dynamic/DynamicAccountFactory.sol";
@@ -90,7 +90,7 @@ contract AccountCoreTest_isValidSigner is BaseTest {
     uint256 private startTimestamp;
     uint256 private endTimestamp;
     uint256 private nativeTokenLimit;
-    UserOperation private op;
+    PackedUserOperation private op;
 
     bytes internal data = bytes("");
 
@@ -98,23 +98,28 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         uint256 _signerPKey,
         bytes memory _initCode,
         bytes memory _callDataForEntrypoint
-    ) internal returns (UserOperation memory) {
+    ) internal returns (PackedUserOperation memory) {
         uint256 nonce = entrypoint.getNonce(address(account), 0);
+        PackedUserOperation memory op;
 
-        // Get user op fields
-        UserOperation memory op = UserOperation({
-            sender: address(account),
-            nonce: nonce,
-            initCode: _initCode,
-            callData: _callDataForEntrypoint,
-            callGasLimit: 5_000_000,
-            verificationGasLimit: 5_000_000,
-            preVerificationGas: 5_000_000,
-            maxFeePerGas: 0,
-            maxPriorityFeePerGas: 0,
-            paymasterAndData: bytes(""),
-            signature: bytes("")
-        });
+        {
+            uint128 verificationGasLimit = 5_000_000;
+            uint128 callGasLimit = 5_000_000;
+            bytes32 packedGasLimits = (bytes32(uint256(verificationGasLimit)) << 128) | bytes32(uint256(callGasLimit));
+
+            // Get user op fields
+            op = PackedUserOperation({
+                sender: address(account),
+                nonce: nonce,
+                initCode: _initCode,
+                callData: _callDataForEntrypoint,
+                accountGasLimits: packedGasLimits,
+                preVerificationGas: 5_000_000,
+                gasFees: 0,
+                paymasterAndData: bytes(""),
+                signature: bytes("")
+            });
+        }
 
         // Sign UserOp
         bytes32 opHash = EntryPoint(entrypoint).getUserOpHash(op);
@@ -138,7 +143,7 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         address _target,
         uint256 _value,
         bytes memory _callData
-    ) internal returns (UserOperation memory) {
+    ) internal returns (PackedUserOperation memory) {
         bytes memory callDataForEntrypoint = abi.encodeWithSignature(
             "execute(address,uint256,bytes)",
             _target,
@@ -155,7 +160,7 @@ contract AccountCoreTest_isValidSigner is BaseTest {
         address[] memory _targets,
         uint256[] memory _values,
         bytes[] memory _callData
-    ) internal returns (UserOperation memory) {
+    ) internal returns (PackedUserOperation memory) {
         bytes memory callDataForEntrypoint = abi.encodeWithSignature(
             "executeBatch(address[],uint256[],bytes[])",
             _targets,
@@ -169,7 +174,7 @@ contract AccountCoreTest_isValidSigner is BaseTest {
     function _setupUserOpInvalidFunction(
         uint256 _signerPKey,
         bytes memory _initCode
-    ) internal returns (UserOperation memory) {
+    ) internal returns (PackedUserOperation memory) {
         bytes memory callDataForEntrypoint = abi.encodeWithSignature("invalidFunction()");
 
         return _setupUserOp(_signerPKey, _initCode, callDataForEntrypoint);
@@ -203,7 +208,7 @@ contract AccountCoreTest_isValidSigner is BaseTest {
 
     function test_isValidSigner_whenSignerIsAdmin() public {
         opSigner = accountAdmin;
-        UserOperation memory _op; // empty op since it's not relevant for this check
+        PackedUserOperation memory _op; // empty op since it's not relevant for this check
         bool isValid = DynamicAccount(payable(account)).isValidSigner(opSigner, _op);
 
         assertTrue(isValid);
@@ -215,7 +220,7 @@ contract AccountCoreTest_isValidSigner is BaseTest {
     }
 
     function test_isValidSigner_invalidTimestamps() public whenNotAdmin {
-        UserOperation memory _op; // empty op since it's not relevant for this check
+        PackedUserOperation memory _op; // empty op since it's not relevant for this check
         startTimestamp = 100;
         endTimestamp = 200;
         account.setPermissionsForSigner(opSigner, nativeTokenLimit, startTimestamp, endTimestamp);
@@ -244,7 +249,7 @@ contract AccountCoreTest_isValidSigner is BaseTest {
     }
 
     function test_isValidSigner_noApprovedTargets() public whenNotAdmin whenValidTimestamps {
-        UserOperation memory _op; // empty op since it's not relevant for this check
+        PackedUserOperation memory _op; // empty op since it's not relevant for this check
         address[] memory _approvedTargets;
         account.setPermissionsForSigner(opSigner, nativeTokenLimit, startTimestamp, endTimestamp);
         account.setApprovedTargetsForSigner(opSigner, _approvedTargets);

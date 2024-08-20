@@ -5,7 +5,7 @@ pragma solidity ^0.8.0;
 import { BaseTest } from "../../utils/BaseTest.sol";
 
 // Account Abstraction setup for smart wallets.
-import { IEntryPoint } from "contracts/prebuilts/account/utils/Entrypoint.sol";
+import { IEntryPoint } from "contracts/prebuilts/account/utils/EntryPoint.sol";
 import { Strings } from "contracts/lib/Strings.sol";
 import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/AccountFactory.sol";
 import "forge-std/Test.sol";
@@ -17,7 +17,7 @@ contract AABenchmarkPrepare is BaseTest {
         super.setUp();
         accountFactory = new AccountFactory(
             deployer,
-            IEntryPoint(payable(address(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789)))
+            IEntryPoint(payable(address(0x0000000071727De22E5E9d8BAf0edAc6f37da032)))
         );
     }
 
