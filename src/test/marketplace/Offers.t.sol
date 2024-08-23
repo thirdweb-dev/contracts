@@ -139,7 +139,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
@@ -378,7 +378,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
@@ -426,7 +426,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // Approve Marketplace to transfer currency tokens. (without owning)
         vm.prank(buyer);
@@ -454,7 +454,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer, but not approved to marketplace
         erc20.mint(buyer, totalPrice);
@@ -481,7 +481,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 0;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
@@ -512,7 +512,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 2; // Asking for more than `1` quantity of erc721 tokenId
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
@@ -656,7 +656,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
@@ -708,7 +708,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
@@ -749,7 +749,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
@@ -800,7 +800,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
@@ -840,7 +840,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
@@ -879,7 +879,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
@@ -923,7 +923,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         // mint total-price to buyer
         erc20.mint(buyer, totalPrice);
@@ -977,7 +977,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         uint256 quantity = 1;
         address currency = address(erc20);
         uint256 totalPrice = 1 ether;
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 60 minutes;
 
         IOffers.OfferParams memory offerParams;
 
@@ -1029,7 +1029,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         address assetContract = address(erc721);
         uint256 quantity = 1;
         address currency = address(erc20);
-        uint256 expirationTimestamp = 200;
+        uint256 expirationTimestamp = block.timestamp + 90 minutes;
 
         IOffers.OfferParams memory offerParams;
 
@@ -1069,12 +1069,12 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         }
 
         // create an offer, and check the offers returned post its expiry
-        offerParams = IOffers.OfferParams(assetContract, 5, quantity, currency, 10, 10);
+        offerParams = IOffers.OfferParams(assetContract, 5, quantity, currency, 10, block.timestamp + 60 minutes);
 
         vm.prank(buyer);
         OffersLogic(marketplace).makeOffer(offerParams);
 
-        vm.warp(10);
+        vm.warp(block.timestamp + 60 minutes + 1 minutes);
         allOffers = OffersLogic(marketplace).getAllValidOffers(0, 5);
         assertEq(allOffers.length, 3);
     }

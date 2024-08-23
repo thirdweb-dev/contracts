@@ -210,7 +210,7 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
         require(_params.quantity > 0, "Marketplace: wanted zero tokens.");
         require(_params.quantity == 1 || _tokenType == TokenType.ERC1155, "Marketplace: wanted invalid quantity.");
         require(
-            _params.expirationTimestamp + 60 minutes > block.timestamp,
+            _params.expirationTimestamp >= block.timestamp + 60 minutes,
             "Marketplace: invalid expiration timestamp."
         );
 
@@ -223,7 +223,7 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     /// @dev Checks whether the offer exists, is active, and if the offeror has sufficient balance.
     function _validateExistingOffer(Offer memory _targetOffer) internal view returns (bool isValid) {
         isValid =
-            _targetOffer.expirationTimestamp > block.timestamp &&
+            _targetOffer.expirationTimestamp >= block.timestamp &&
             _targetOffer.status == IOffers.Status.CREATED &&
             _validateERC20BalAndAllowance(_targetOffer.offeror, _targetOffer.currency, _targetOffer.totalPrice);
     }
