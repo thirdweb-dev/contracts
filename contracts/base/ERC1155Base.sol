@@ -20,7 +20,7 @@ import "../lib/Strings.sol";
  *      - Ability to mint NFTs via the provided `mintTo` and `batchMintTo` functions.
  *
  *      - Contract metadata for royalty support on platforms such as OpenSea that use
- *        off-chain information to distribute roaylties.
+ *        off-chain information to distribute royalties.
  *
  *      - Ownership of the contract, with the ability to restrict certain functions to
  *        only be called by the contract's owner.
@@ -142,7 +142,7 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
 
         uint256 numOfNewNFTs;
 
-        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
+        for (uint256 i; i < _tokenIds.length;) {
             if (_tokenIds[i] == type(uint256).max) {
                 _tokenIds[i] = nextIdToMint;
 
@@ -150,6 +150,10 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
                 numOfNewNFTs += 1;
             } else {
                 require(_tokenIds[i] < nextIdToMint, "invalid id");
+            }
+
+            unchecked {
+                ++i;
             }
         }
 
@@ -190,8 +194,12 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
         require(caller == _owner || isApprovedForAll[_owner][caller], "Unapproved caller");
         require(_tokenIds.length == _amounts.length, "Length mismatch");
 
-        for (uint256 i = 0; i < _tokenIds.length; i += 1) {
+        for (uint256 i; i < _tokenIds.length;) {
             require(balanceOf[_owner][_tokenIds[i]] >= _amounts[i], "Not enough tokens owned");
+
+            unchecked {
+                ++i;
+            }
         }
 
         _burnBatch(_owner, _tokenIds, _amounts);
@@ -268,14 +276,22 @@ contract ERC1155Base is ERC1155, ContractMetadata, Ownable, Royalty, Multicall, 
         super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         if (from == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
+            for (uint256 i; i < ids.length;) {
                 totalSupply[ids[i]] += amounts[i];
+
+                unchecked {
+                    ++i;
+                }
             }
         }
 
         if (to == address(0)) {
-            for (uint256 i = 0; i < ids.length; ++i) {
+            for (uint256 i; i < ids.length;) {
                 totalSupply[ids[i]] -= amounts[i];
+
+                unchecked {
+                    ++i;
+                }
             }
         }
     }
