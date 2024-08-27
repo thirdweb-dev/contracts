@@ -7,10 +7,10 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 
 import "../interfaces/IEntryPoint.sol";
-import "../core/BasePaymaster.sol";
+import "./BasePaymaster.sol";
 import "../utils/Helpers.sol";
-import "./utils/UniswapHelper.sol";
-import "./utils/OracleHelper.sol";
+import "../utils/UniswapHelper.sol";
+import "../utils/OracleHelper.sol";
 
 /// @title Sample ERC-20 Token Paymaster for ERC-4337
 /// This Paymaster covers gas fees in exchange for ERC20 tokens charged using allowance pre-issued by ERC-4337 accounts.

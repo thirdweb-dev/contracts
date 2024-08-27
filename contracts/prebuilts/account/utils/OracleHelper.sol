@@ -3,7 +3,7 @@ pragma solidity ^0.8.23;
 
 /* solhint-disable not-rely-on-time */
 
-import "./IOracle.sol";
+import "../interfaces/IOracle.sol";
 
 /// @title Helper functions for dealing with various forms of price feed oracles.
 /// @notice Maintains a price cache and updates the current price if needed.
