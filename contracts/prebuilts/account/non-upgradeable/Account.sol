@@ -5,9 +5,6 @@ pragma solidity ^0.8.11;
 /* solhint-disable no-inline-assembly */
 /* solhint-disable reason-string */
 
-// Base
-import "../utils/BaseAccount.sol";
-
 // Extensions
 import "../utils/AccountCore.sol";
 import "../../../extension/upgradeable/ContractMetadata.sol";

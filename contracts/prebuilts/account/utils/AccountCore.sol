@@ -6,7 +6,7 @@ pragma solidity ^0.8.11;
 /* solhint-disable reason-string */
 
 // Base
-import "./../utils/BaseAccount.sol";
+import "./BaseAccount.sol";
 
 // Fixed Extensions
 import "../../../extension/Multicall.sol";
@@ -20,7 +20,7 @@ import "./BaseAccountFactory.sol";
 import { AccountExtension } from "./AccountExtension.sol";
 import "../../../external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 
-import "../interface/IAccountCore.sol";
+import "../interfaces/IAccountCore.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |
@@ -87,7 +87,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
     */
 
     /* solhint-disable*/
-    function isValidSigner(address _signer, UserOperation calldata _userOp) public view virtual returns (bool) {
+    function isValidSigner(address _signer, PackedUserOperation calldata _userOp) public view virtual returns (bool) {
         // First, check if the signer is an admin.
         if (_accountPermissionsStorage().isAdmin[_signer]) {
             return true;
@@ -208,7 +208,7 @@ contract AccountCore is IAccountCore, Initializable, Multicall, BaseAccount, Acc
 
     /// @notice Validates the signature of a user operation.
     function _validateSignature(
-        UserOperation calldata userOp,
+        PackedUserOperation calldata userOp,
         bytes32 userOpHash
     ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();

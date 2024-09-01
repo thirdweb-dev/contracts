@@ -1,9 +1,12 @@
 pragma solidity ^0.8.0;
 
-import { IEntryPoint } from "contracts/prebuilts/account/interface/IEntrypoint.sol";
-import { UserOperation } from "contracts/prebuilts/account/utils/UserOperation.sol";
-import { IAccount } from "contracts/prebuilts/account/interface/IAccount.sol";
-import { VERIFYINGPAYMASTER_BYTECODE, VERIFYINGPAYMASTER_ADDRESS, ENTRYPOINT_0_6_BYTECODE, CREATOR_0_6_BYTECODE } from "./AATestArtifacts.sol";
+import { IEntryPoint } from "contracts/prebuilts/account/interfaces/IEntryPoint.sol";
+import { EntryPoint } from "contracts/prebuilts/account/utils/EntryPoint.sol";
+import { PackedUserOperation } from "contracts/prebuilts/account/interfaces/PackedUserOperation.sol";
+import { IAccount } from "contracts/prebuilts/account/interfaces/IAccount.sol";
+import { VERIFYINGPAYMASTER_BYTECODE, VERIFYINGPAYMASTER_ADDRESS, ENTRYPOINT_0_7_BYTECODE, CREATOR_0_7_BYTECODE } from "./AATestArtifacts.sol";
+import { UserOperationLib } from "contracts/prebuilts/account/utils/UserOperationLib.sol";
+import { VerifyingPaymaster } from "./VerifyingPaymaster.sol";
 
 import "contracts/external-deps/openzeppelin/utils/cryptography/ECDSA.sol";
 import "forge-std/Test.sol";
@@ -15,7 +18,7 @@ interface IVerifyingPaymaster {
     function owner() external view returns (address);
 
     function getHash(
-        UserOperation calldata userOp,
+        PackedUserOperation calldata userOp,
         uint48 validUntil,
         uint48 validAfter
     ) external view returns (bytes32);
@@ -45,28 +48,29 @@ abstract contract AAGasProfileBase is Test {
     IAccount public account;
     address public owner;
     uint256 public key;
-    IVerifyingPaymaster public paymaster;
+    VerifyingPaymaster public paymaster;
     address public verifier;
     uint256 public verifierKey;
     bool public writeGasProfile = false;
 
-    function(UserOperation memory) internal view returns (bytes memory) paymasterData;
-    function(UserOperation memory) internal view returns (bytes memory) dummyPaymasterData;
+    function(PackedUserOperation memory) internal view returns (bytes memory) paymasterData;
+    function(PackedUserOperation memory) internal view returns (bytes memory) dummyPaymasterData;
 
     function initializeTest(string memory _name) internal {
         writeGasProfile = vm.envOr("WRITE_GAS_PROFILE", false);
         name = _name;
-        entryPoint = IEntryPoint(payable(address(0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789)));
-        vm.etch(address(entryPoint), ENTRYPOINT_0_6_BYTECODE);
-        vm.etch(0x7fc98430eAEdbb6070B35B39D798725049088348, CREATOR_0_6_BYTECODE);
+        address _testEntrypoint = address(new EntryPoint());
+        entryPoint = IEntryPoint(payable(address(0x0000000071727De22E5E9d8BAf0edAc6f37da032)));
+        vm.etch(address(entryPoint), ENTRYPOINT_0_7_BYTECODE); // ENTRYPOINT_0_7_BYTECODE
+        vm.etch(0xEFC2c1444eBCC4Db75e7613d20C6a62fF67A167C, CREATOR_0_7_BYTECODE);
         beneficiary = payable(makeAddr("beneficiary"));
         vm.deal(beneficiary, 1e18);
         paymasterData = emptyPaymasterAndData;
         dummyPaymasterData = emptyPaymasterAndData;
         (verifier, verifierKey) = makeAddrAndKey("VERIFIER");
-        paymaster = IVerifyingPaymaster(VERIFYINGPAYMASTER_ADDRESS);
-        vm.etch(address(paymaster), VERIFYINGPAYMASTER_BYTECODE);
-        vm.store(address(paymaster), bytes32(0), bytes32(uint256(uint160(verifier))));
+        address _testPaymaster = address(new VerifyingPaymaster(entryPoint, verifier));
+        paymaster = VerifyingPaymaster(VERIFYINGPAYMASTER_ADDRESS);
+        vm.etch(address(paymaster), _testPaymaster.code); // VERIFYINGPAYMASTER_BYTECODE
     }
 
     function setAccount() internal {
@@ -75,33 +79,84 @@ abstract contract AAGasProfileBase is Test {
         vm.deal(address(account), 1e18);
     }
 
-    function fillUserOp(bytes memory _data) internal view returns (UserOperation memory op) {
+    function packPaymasterStaticFields(
+        address paymaster,
+        uint256 validationGasLimit,
+        uint256 postOpGasLimit,
+        uint48 validUntil,
+        uint48 validAfter,
+        bytes memory signature
+    ) internal pure returns (bytes memory) {
+        // Pack the static fields using abi.encodePacked
+        bytes memory packed = abi.encodePacked(
+            paymaster,
+            uint128(validationGasLimit),
+            uint128(postOpGasLimit),
+            uint256(validUntil), // Padding to make it 32 bytes
+            uint256(validAfter) // Padding to make it 32 bytes
+        );
+
+        // Append the signature to the packed data
+        packed = abi.encodePacked(packed, signature);
+
+        return packed;
+    }
+
+    function fillUserOp(bytes memory _data) internal view returns (PackedUserOperation memory op) {
         op.sender = address(account);
         op.nonce = entryPoint.getNonce(address(account), 0);
         if (address(account).code.length == 0) {
             op.initCode = getInitCode(owner);
         }
+
+        uint128 verificationGasLimit = 500000;
+        uint128 callGasLimit = 500000;
+        bytes32 packedGasLimits = (bytes32(uint256(verificationGasLimit)) << 128) | bytes32(uint256(callGasLimit));
+
+        bytes memory paymasterData = packPaymasterStaticFields(
+            address(paymaster),
+            100_000,
+            100_000,
+            type(uint48).max,
+            0,
+            hex"0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"
+        );
+
         op.callData = _data;
-        op.callGasLimit = 1000000;
-        op.verificationGasLimit = 1000000;
-        op.preVerificationGas = 21000;
-        op.maxFeePerGas = 1;
-        op.maxPriorityFeePerGas = 1;
+        op.accountGasLimits = packedGasLimits;
+        op.preVerificationGas = 500000;
+        op.gasFees = (bytes32(uint256(1)) << 128) | bytes32(uint256(1));
         op.signature = getDummySig(op);
         op.paymasterAndData = dummyPaymasterData(op);
         op.preVerificationGas = calculatePreVerificationGas(op);
-        op.paymasterAndData = paymasterData(op);
+        op.paymasterAndData = paymasterData;
+
+        bytes32 paymasterHash = paymaster.getHash(op, type(uint48).max, 0);
+        (uint8 v, bytes32 r, bytes32 s) = vm.sign(verifierKey, ECDSA.toEthSignedMessageHash(paymasterHash));
+        bytes memory signature = abi.encodePacked(r, s, v);
+
+        op.paymasterAndData = packPaymasterStaticFields(
+            address(paymaster),
+            100_000,
+            100_000,
+            type(uint48).max,
+            0,
+            signature
+        );
         op.signature = getSignature(op);
     }
 
-    function signUserOpHash(uint256 _key, UserOperation memory _op) internal view returns (bytes memory signature) {
+    function signUserOpHash(
+        uint256 _key,
+        PackedUserOperation memory _op
+    ) internal view returns (bytes memory signature) {
         bytes32 hash = entryPoint.getUserOpHash(_op);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(_key, ECDSA.toEthSignedMessageHash(hash));
         signature = abi.encodePacked(r, s, v);
     }
 
-    function executeUserOp(UserOperation memory _op, string memory _test, uint256 _value) internal {
-        UserOperation[] memory ops = new UserOperation[](1);
+    function executeUserOp(PackedUserOperation memory _op, string memory _test, uint256 _value) internal {
+        PackedUserOperation[] memory ops = new PackedUserOperation[](1);
         ops[0] = _op;
         uint256 eth_before;
         if (_op.paymasterAndData.length > 0) {
@@ -132,7 +187,7 @@ abstract contract AAGasProfileBase is Test {
     }
 
     function testCreation() internal {
-        UserOperation memory op = fillUserOp(fillData(address(0), 0, ""));
+        PackedUserOperation memory op = fillUserOp(fillData(address(0), 0, ""));
         executeUserOp(op, "creation", 0);
     }
 
@@ -140,7 +195,7 @@ abstract contract AAGasProfileBase is Test {
         vm.skip(writeGasProfile);
         createAccount(owner);
         _amount = bound(_amount, 1, address(account).balance / 2);
-        UserOperation memory op = fillUserOp(fillData(_recipient, _amount, ""));
+        PackedUserOperation memory op = fillUserOp(fillData(_recipient, _amount, ""));
         executeUserOp(op, "native", _amount);
     }
 
@@ -148,7 +203,7 @@ abstract contract AAGasProfileBase is Test {
         createAccount(owner);
         uint256 amount = 5e17;
         address recipient = makeAddr("recipient");
-        UserOperation memory op = fillUserOp(fillData(recipient, amount, ""));
+        PackedUserOperation memory op = fillUserOp(fillData(recipient, amount, ""));
         executeUserOp(op, "native", amount);
     }
 
@@ -159,7 +214,7 @@ abstract contract AAGasProfileBase is Test {
         uint256 amount = 5e17;
         address recipient = makeAddr("recipient");
         uint256 balance = mockERC20.balanceOf(recipient);
-        UserOperation memory op = fillUserOp(
+        PackedUserOperation memory op = fillUserOp(
             fillData(address(mockERC20), 0, abi.encodeWithSelector(mockERC20.transfer.selector, recipient, amount))
         );
         executeUserOp(op, "erc20", 0);
@@ -169,6 +224,7 @@ abstract contract AAGasProfileBase is Test {
     function testBenchmark1Vanila() external {
         scenarioName = "vanila";
         jsonObj = string(abi.encodePacked(scenarioName, " ", name));
+        entryPoint.depositTo{ value: 1000e18 }(address(paymaster));
         testCreation();
         testTransferNative();
         testTransferERC20();
@@ -182,9 +238,10 @@ abstract contract AAGasProfileBase is Test {
     function testBenchmark2Paymaster() external {
         scenarioName = "paymaster";
         jsonObj = string(abi.encodePacked(scenarioName, " ", name));
-        entryPoint.depositTo{ value: 100e18 }(address(paymaster));
+        entryPoint.depositTo{ value: 1000e18 }(address(paymaster));
         paymasterData = validatePaymasterAndData;
         dummyPaymasterData = getDummyPaymasterAndData;
+
         testCreation();
         testTransferNative();
         testTransferERC20();
@@ -198,7 +255,8 @@ abstract contract AAGasProfileBase is Test {
     function testBenchmark3Deposit() external {
         scenarioName = "deposit";
         jsonObj = string(abi.encodePacked(scenarioName, " ", name));
-        entryPoint.depositTo{ value: 100e18 }(address(account));
+        entryPoint.depositTo{ value: 1000e18 }(address(paymaster));
+        entryPoint.depositTo{ value: 1000e18 }(address(account));
         testCreation();
         testTransferNative();
         testTransferERC20();
@@ -209,15 +267,15 @@ abstract contract AAGasProfileBase is Test {
         }
     }
 
-    function emptyPaymasterAndData(UserOperation memory _op) internal pure returns (bytes memory ret) {}
+    function emptyPaymasterAndData(PackedUserOperation memory _op) internal pure returns (bytes memory ret) {}
 
-    function validatePaymasterAndData(UserOperation memory _op) internal view returns (bytes memory ret) {
+    function validatePaymasterAndData(PackedUserOperation memory _op) internal view returns (bytes memory ret) {
         bytes32 hash = paymaster.getHash(_op, 0, 0);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(verifierKey, ECDSA.toEthSignedMessageHash(hash));
         ret = abi.encodePacked(address(paymaster), uint256(0), uint256(0), r, s, uint8(v));
     }
 
-    function getDummyPaymasterAndData(UserOperation memory _op) internal view returns (bytes memory ret) {
+    function getDummyPaymasterAndData(PackedUserOperation memory _op) internal view returns (bytes memory ret) {
         ret = abi.encodePacked(
             address(paymaster),
             uint256(0),
@@ -226,17 +284,15 @@ abstract contract AAGasProfileBase is Test {
         );
     }
 
-    function pack(UserOperation memory _op) internal pure returns (bytes memory) {
+    function pack(PackedUserOperation memory _op) internal pure returns (bytes memory) {
         bytes memory packed = abi.encode(
             _op.sender,
             _op.nonce,
             _op.initCode,
             _op.callData,
-            _op.callGasLimit,
-            _op.verificationGasLimit,
+            _op.accountGasLimits,
             _op.preVerificationGas,
-            _op.maxFeePerGas,
-            _op.maxPriorityFeePerGas,
+            _op.gasFees,
             _op.paymasterAndData,
             _op.signature
         );
@@ -256,7 +312,7 @@ abstract contract AAGasProfileBase is Test {
     }
 
     // NOTE: this can vary depending on the bundler, this equation is referencing eth-infinitism bundler's pvg calculation
-    function calculatePreVerificationGas(UserOperation memory _op) internal view returns (uint256) {
+    function calculatePreVerificationGas(PackedUserOperation memory _op) internal view returns (uint256) {
         bytes memory packed = pack(_op);
         uint256 calculated = OV_FIXED + OV_PER_USEROP + (OV_PER_WORD * (packed.length + 31)) / 32;
         calculated += calldataCost(packed);
@@ -265,9 +321,9 @@ abstract contract AAGasProfileBase is Test {
 
     function createAccount(address _owner) internal virtual;
 
-    function getSignature(UserOperation memory _op) internal view virtual returns (bytes memory);
+    function getSignature(PackedUserOperation memory _op) internal view virtual returns (bytes memory);
 
-    function getDummySig(UserOperation memory _op) internal pure virtual returns (bytes memory);
+    function getDummySig(PackedUserOperation memory _op) internal pure virtual returns (bytes memory);
 
     function fillData(address _to, uint256 _amount, bytes memory _data) internal view virtual returns (bytes memory);
 

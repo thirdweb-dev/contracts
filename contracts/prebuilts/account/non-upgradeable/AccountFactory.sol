@@ -3,15 +3,11 @@ pragma solidity ^0.8.12;
 
 // Utils
 import "../utils/BaseAccountFactory.sol";
-import "../utils/BaseAccount.sol";
 import "../../../external-deps/openzeppelin/proxy/Clones.sol";
 
 // Extensions
 import "../../../extension/upgradeable//PermissionsEnumerable.sol";
 import "../../../extension/upgradeable//ContractMetadata.sol";
-
-// Interface
-import "../interface/IEntrypoint.sol";
 
 // Smart wallet implementation
 import { Account } from "./Account.sol";

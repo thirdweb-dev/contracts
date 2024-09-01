@@ -5,13 +5,12 @@ pragma solidity ^0.8.12;
 import "../../../extension/Multicall.sol";
 import "../../../external-deps/openzeppelin/proxy/Clones.sol";
 import "../../../external-deps/openzeppelin/utils/structs/EnumerableSet.sol";
-import "../utils/BaseAccount.sol";
+import "./BaseAccount.sol";
 import "../../../extension/interface/IAccountPermissions.sol";
 import "../../../lib/BytesLib.sol";
 
 // Interface
-import "../interface/IEntrypoint.sol";
-import "../interface/IAccountFactory.sol";
+import "../interfaces/IAccountFactory.sol";
 
 //   $$\     $$\       $$\                 $$\                         $$\
 //   $$ |    $$ |      \__|                $$ |                        $$ |

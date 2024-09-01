@@ -19,7 +19,7 @@ contract ProfileThirdwebAccount is AAGasProfileBase {
         return abi.encodeWithSelector(ThirdwebAccount.execute.selector, _to, _value, _data);
     }
 
-    function getSignature(UserOperation memory _op) internal view override returns (bytes memory) {
+    function getSignature(PackedUserOperation memory _op) internal view override returns (bytes memory) {
         return signUserOpHash(key, _op);
     }
 
@@ -37,7 +37,7 @@ contract ProfileThirdwebAccount is AAGasProfileBase {
         return abi.encodePacked(address(factory), abi.encodeWithSelector(factory.createAccount.selector, _owner, ""));
     }
 
-    function getDummySig(UserOperation memory _op) internal pure override returns (bytes memory) {
+    function getDummySig(PackedUserOperation memory _op) internal pure override returns (bytes memory) {
         return
             hex"fffffffffffffffffffffffffffffff0000000000000000000000000000000007aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1c";
     }

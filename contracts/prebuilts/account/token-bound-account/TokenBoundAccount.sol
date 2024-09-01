@@ -73,7 +73,7 @@ contract TokenBoundAccount is
     /**
      * @notice Executes once when a contract is created to initialize state variables
      *
-     * @param _entrypoint - 0x5FF137D4b0FDCD49DcA30c7CF57E578a026d2789
+     * @param _entrypoint - 0x0000000071727De22E5E9d8BAf0edAc6f37da032
      * @param _factory - The factory contract address to issue token Bound accounts
      *
      */
@@ -92,7 +92,7 @@ contract TokenBoundAccount is
     }
 
     /// @notice Returns whether a signer is authorized to perform transactions using the wallet.
-    function isValidSigner(address _signer, UserOperation calldata) public view returns (bool) {
+    function isValidSigner(address _signer, PackedUserOperation calldata) public view returns (bool) {
         return (owner() == _signer);
     }
 
@@ -198,7 +198,7 @@ contract TokenBoundAccount is
 
     /// @notice Validates the signature of a user operation.
     function _validateSignature(
-        UserOperation calldata userOp,
+        PackedUserOperation calldata userOp,
         bytes32 userOpHash
     ) internal virtual override returns (uint256 validationData) {
         bytes32 hash = userOpHash.toEthSignedMessageHash();
