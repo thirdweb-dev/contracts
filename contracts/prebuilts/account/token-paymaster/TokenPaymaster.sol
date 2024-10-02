@@ -40,7 +40,10 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
     event ConfigUpdated(TokenPaymasterConfig tokenPaymasterConfig);
 
     event UserOperationSponsored(
-        address indexed user, uint256 actualTokenCharge, uint256 actualGasCost, uint256 actualTokenPriceWithMarkup
+        address indexed user,
+        uint256 actualTokenCharge,
+        uint256 actualGasCost,
+        uint256 actualTokenPriceWithMarkup
     );
 
     event Received(address indexed sender, uint256 value);
@@ -76,6 +79,8 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
         UniswapHelper(_token, _wrappedNative, _uniswap, _uniswapHelperConfig)
     {
         _tokenDecimals = _token.decimals();
+        require(_tokenDecimals <= 18, "TPM: token not supported");
+
         setTokenPaymasterConfig(_tokenPaymasterConfig);
         transferOwnership(_owner);
     }
@@ -105,11 +110,11 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
     /// @param requiredPreFund The maximum cost (in native token) the paymaster has to prefund.
     /// @return context The context containing the token amount and user sender address (if applicable).
     /// @return validationResult A uint256 value indicating the result of the validation (always 0 in this implementation).
-    function _validatePaymasterUserOp(PackedUserOperation calldata userOp, bytes32, uint256 requiredPreFund)
-        internal
-        override
-        returns (bytes memory context, uint256 validationResult)
-    {
+    function _validatePaymasterUserOp(
+        PackedUserOperation calldata userOp,
+        bytes32,
+        uint256 requiredPreFund
+    ) internal override returns (bytes memory context, uint256 validationResult) {
         unchecked {
             uint256 priceMarkup = tokenPaymasterConfig.priceMarkup;
             uint256 dataLength = userOp.paymasterAndData.length - PAYMASTER_DATA_OFFSET;
@@ -119,10 +124,11 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
             require(refundPostopCost < userOp.unpackPostOpGasLimit(), "TPM: postOpGasLimit too low");
             uint256 preChargeNative = requiredPreFund + (refundPostopCost * maxFeePerGas);
             // note: as price is in native-asset-per-token and we want more tokens increasing it means dividing it by markup
-            uint256 cachedPriceWithMarkup = cachedPrice * PRICE_DENOMINATOR / priceMarkup;
+            uint256 cachedPriceWithMarkup = (cachedPrice * PRICE_DENOMINATOR) / priceMarkup;
             if (dataLength == 32) {
-                uint256 clientSuppliedPrice =
-                    uint256(bytes32(userOp.paymasterAndData[PAYMASTER_DATA_OFFSET:PAYMASTER_DATA_OFFSET + 32]));
+                uint256 clientSuppliedPrice = uint256(
+                    bytes32(userOp.paymasterAndData[PAYMASTER_DATA_OFFSET:PAYMASTER_DATA_OFFSET + 32])
+                );
                 if (clientSuppliedPrice < cachedPriceWithMarkup) {
                     // note: smaller number means 'more native asset per token'
                     cachedPriceWithMarkup = clientSuppliedPrice;
@@ -131,8 +137,11 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
             uint256 tokenAmount = weiToToken(preChargeNative, cachedPriceWithMarkup) / (10 ** (18 - _tokenDecimals));
             SafeERC20.safeTransferFrom(token, userOp.sender, address(this), tokenAmount);
             context = abi.encode(tokenAmount, userOp.sender);
-            validationResult =
-                _packValidationData(false, uint48(cachedPriceTimestamp + tokenPaymasterConfig.priceMaxAge), 0);
+            validationResult = _packValidationData(
+                false,
+                uint48(cachedPriceTimestamp + tokenPaymasterConfig.priceMaxAge),
+                0
+            );
         }
     }
 
@@ -143,20 +152,22 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
     /// @param actualUserOpFeePerGas - the gas price this UserOp pays. This value is based on the UserOp's maxFeePerGas
     //      and maxPriorityFee (and basefee)
     //      It is not the same as tx.gasprice, which is what the bundler pays.
-    function _postOp(PostOpMode, bytes calldata context, uint256 actualGasCost, uint256 actualUserOpFeePerGas)
-        internal
-        override
-    {
+    function _postOp(
+        PostOpMode,
+        bytes calldata context,
+        uint256 actualGasCost,
+        uint256 actualUserOpFeePerGas
+    ) internal override {
         unchecked {
             uint256 priceMarkup = tokenPaymasterConfig.priceMarkup;
             (uint256 preCharge, address userOpSender) = abi.decode(context, (uint256, address));
             uint256 _cachedPrice = updateCachedPrice(false);
             // note: as price is in native-asset-per-token and we want more tokens increasing it means dividing it by markup
-            uint256 cachedPriceWithMarkup = _cachedPrice * PRICE_DENOMINATOR / priceMarkup;
+            uint256 cachedPriceWithMarkup = (_cachedPrice * PRICE_DENOMINATOR) / priceMarkup;
             // Refund tokens based on actual gas cost
             uint256 actualChargeNative = actualGasCost + tokenPaymasterConfig.refundPostopCost * actualUserOpFeePerGas;
-            uint256 actualTokenNeeded =
-                weiToToken(actualChargeNative, cachedPriceWithMarkup) / (10 ** (18 - _tokenDecimals));
+            uint256 actualTokenNeeded = weiToToken(actualChargeNative, cachedPriceWithMarkup) /
+                (10 ** (18 - _tokenDecimals));
             if (preCharge > actualTokenNeeded) {
                 // If the initially provided token amount is greater than the actual amount needed, refund the difference
                 SafeERC20.safeTransfer(token, userOpSender, preCharge - actualTokenNeeded);
@@ -178,7 +189,7 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
         if (currentEntryPointBalance < tokenPaymasterConfig.minEntryPointBalance) {
             uint256 swappedWeth = _maybeSwapTokenToWeth(token, _cachedPrice);
             unwrapWeth(swappedWeth);
-            entryPoint.depositTo{value: address(this).balance}(address(this));
+            entryPoint.depositTo{ value: address(this).balance }(address(this));
         }
     }
 
@@ -187,7 +198,7 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
     }
 
     function withdrawEth(address payable recipient, uint256 amount) external onlyOwner {
-        (bool success,) = recipient.call{value: amount}("");
+        (bool success, ) = recipient.call{ value: amount }("");
         require(success, "withdraw failed");
     }
 }
