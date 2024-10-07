@@ -1,27 +1,43 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
+
+/// @author thirdweb
+
+//   $$\     $$\       $$\                 $$\                         $$\
+//   $$ |    $$ |      \__|                $$ |                        $$ |
+// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
+// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
+//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
+//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
+//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
+//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
+
+//  ==========  External imports    ==========
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 
-import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from "@zksync/l2/system-contracts/interfaces/IPaymaster.sol";
-import {IPaymasterFlow} from "@zksync/l2/system-contracts/interfaces/IPaymasterFlow.sol";
-import {TransactionHelper, Transaction} from "@zksync/l2/system-contracts/libraries/TransactionHelper.sol";
+import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from "@zksync/l2-contracts/contracts/interfaces/IPaymaster.sol";
+import {IPaymasterFlow} from "@zksync/l2-contracts/contracts/interfaces/IPaymasterFlow.sol";
+import {TransactionHelper, Transaction} from "@zksync/system-contracts/contracts/libraries/TransactionHelper.sol";
 
-import "@zksync/l2/system-contracts/Constants.sol";
+import "@zksync/system-contracts/contracts/Constants.sol";
 
 /// @notice This smart contract pays the gas fees on behalf of users that provide valid signature from the signer.
 /// @dev This contract is controlled by an owner, who can update the signer, cancel a user's nonce and withdraw funds from contract.
 contract SignatureBasedPaymaster is IPaymaster, Ownable, EIP712 {
     using ECDSA for bytes32;
+
     // Note - EIP712 Domain compliance typehash. TYPES should exactly match while signing signature to avoid signature failure.
     bytes32 public constant SIGNATURE_TYPEHASH = keccak256(
     "SignatureBasedPaymaster(address userAddress,uint256 lastTimestamp,uint256 nonces)"
     );
+
     // All signatures should be validated based on signer
     address public signer;
+
     // Mapping user => nonce to guard against signature re-play attack.
     mapping(address => uint256) public nonces;
 
@@ -34,12 +50,14 @@ contract SignatureBasedPaymaster is IPaymaster, Ownable, EIP712 {
         _;
     }
 
-/// @param _signer Sets the signer to validate against signatures
-/// @dev Changes in EIP712 constructor arguments - "name","version" would update domainSeparator which should be taken into considertion while signing.
-    constructor(address _signer) EIP712("SignatureBasedPaymaster","1") {
+    /// @param _signer Sets the signer to validate against signatures
+    /// @param _admin Sets the owner of the contract
+    /// @dev Changes in EIP712 constructor arguments - "name","version" would update domainSeparator which should be taken into considertion while signing.
+    constructor(address _signer, address _admin) EIP712("SignatureBasedPaymaster","1") {
         require(_signer != address(0), "Signer cannot be address(0)");
         // Owner can be signer too.
         signer = _signer;
+        _transferOwnership(_admin);
     }
 
     function validateAndPayForPaymasterTransaction(

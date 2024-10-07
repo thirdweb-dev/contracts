@@ -46,3 +46,6 @@
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "lib/era-contracts"]
+	path = lib/era-contracts
+	url = https://github.com/matter-labs/era-contracts
