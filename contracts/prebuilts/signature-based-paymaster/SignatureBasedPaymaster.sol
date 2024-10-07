@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -5,11 +6,11 @@ import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 
-import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from "@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymaster.sol";
-import {IPaymasterFlow} from "@matterlabs/zksync-contracts/l2/system-contracts/interfaces/IPaymasterFlow.sol";
-import {TransactionHelper, Transaction} from "@matterlabs/zksync-contracts/l2/system-contracts/libraries/TransactionHelper.sol";
+import {IPaymaster, ExecutionResult, PAYMASTER_VALIDATION_SUCCESS_MAGIC} from "@zksync/l2/system-contracts/interfaces/IPaymaster.sol";
+import {IPaymasterFlow} from "@zksync/l2/system-contracts/interfaces/IPaymasterFlow.sol";
+import {TransactionHelper, Transaction} from "@zksync/l2/system-contracts/libraries/TransactionHelper.sol";
 
-import "@matterlabs/zksync-contracts/l2/system-contracts/Constants.sol";
+import "@zksync/l2/system-contracts/Constants.sol";
 
 /// @notice This smart contract pays the gas fees on behalf of users that provide valid signature from the signer.
 /// @dev This contract is controlled by an owner, who can update the signer, cancel a user's nonce and withdraw funds from contract.
