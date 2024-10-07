@@ -42,7 +42,8 @@ remappings = [
   'solady/=lib/solady/',
   '@seaport/=lib/seaport/contracts/',
   'seaport-types/=lib/seaport/lib/seaport-types/',
-  'seaport-core/=lib/seaport/lib/seaport-core/'
+  'seaport-core/=lib/seaport/lib/seaport-core/',
+  '@zksync/=lib/era-contracts'
 ]
 fs_permissions = [{ access = "read-write", path = "./src/test/smart-wallet/utils"}]
 src = 'contracts'
