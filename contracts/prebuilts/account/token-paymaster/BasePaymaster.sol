@@ -28,7 +28,10 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
     //sanity check: make sure this EntryPoint was compiled against the same
     // IEntryPoint of this paymaster
     function _validateEntryPointInterface(IEntryPoint _entryPoint) internal virtual {
-        require(IERC165(address(_entryPoint)).supportsInterface(type(IEntryPoint).interfaceId), "IEntryPoint interface mismatch");
+        require(
+            IERC165(address(_entryPoint)).supportsInterface(type(IEntryPoint).interfaceId),
+            "IEntryPoint interface mismatch"
+        );
     }
 
     /// @inheritdoc IPaymaster
@@ -94,7 +97,7 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
      * Add a deposit for this paymaster, used for paying for transaction fees.
      */
     function deposit() public payable {
-        entryPoint.depositTo{value: msg.value}(address(this));
+        entryPoint.depositTo{ value: msg.value }(address(this));
     }
 
     /**
@@ -102,10 +105,7 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
      * @param withdrawAddress - Target to send to.
      * @param amount          - Amount to withdraw.
      */
-    function withdrawTo(
-        address payable withdrawAddress,
-        uint256 amount
-    ) public onlyOwner {
+    function withdrawTo(address payable withdrawAddress, uint256 amount) public onlyOwner {
         entryPoint.withdrawTo(withdrawAddress, amount);
     }
 
@@ -115,7 +115,7 @@ abstract contract BasePaymaster is IPaymaster, Ownable {
      * @param unstakeDelaySec - The unstake delay for this paymaster. Can only be increased.
      */
     function addStake(uint32 unstakeDelaySec) external payable onlyOwner {
-        entryPoint.addStake{value: msg.value}(unstakeDelaySec);
+        entryPoint.addStake{ value: msg.value }(unstakeDelaySec);
     }
 
     /**
