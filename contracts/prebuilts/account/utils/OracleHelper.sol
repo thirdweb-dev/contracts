@@ -54,7 +54,7 @@ abstract contract OracleHelper {
         _setOracleConfiguration(_oracleHelperConfig);
     }
 
-    function _setOracleConfiguration(OracleHelperConfig memory _oracleHelperConfig) private {
+    function _setOracleConfiguration(OracleHelperConfig memory _oracleHelperConfig) internal {
         oracleHelperConfig = _oracleHelperConfig;
         require(_oracleHelperConfig.priceUpdateThreshold <= PRICE_DENOMINATOR, "TPM: update threshold too high");
         tokenOracleDecimalPower = uint128(10 ** oracleHelperConfig.tokenOracle.decimals());
