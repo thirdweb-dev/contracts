@@ -115,7 +115,8 @@ contract TokenPaymasterTest is BaseTest {
         UniswapHelper.UniswapHelperConfig memory uniswapHelperConfig = UniswapHelper.UniswapHelperConfig({
             minSwapAmount: 1,
             slippage: 5,
-            uniswapPoolFee: 3
+            uniswapPoolFee: 3,
+            wethIsNativeAsset: false
         });
 
         paymaster = new TokenPaymaster(

@@ -98,6 +98,10 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
         _setUniswapHelperConfiguration(_uniswapHelperConfig);
     }
 
+    function setOracleConfiguration(OracleHelperConfig memory _oracleHelperConfig) external onlyOwner {
+        _setOracleConfiguration(_oracleHelperConfig);
+    }
+
     /// @notice Allows the contract owner to withdraw a specified amount of tokens from the contract.
     /// @param to The address to transfer the tokens to.
     /// @param amount The amount of tokens to transfer.
@@ -161,7 +165,8 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
         unchecked {
             uint256 priceMarkup = tokenPaymasterConfig.priceMarkup;
             (uint256 preCharge, address userOpSender) = abi.decode(context, (uint256, address));
-            uint256 _cachedPrice = updateCachedPrice(false);
+            bool forceUpdate = (block.timestamp - cachedPriceTimestamp) > tokenPaymasterConfig.priceMaxAge;
+            uint256 _cachedPrice = updateCachedPrice(forceUpdate);
             // note: as price is in native-asset-per-token and we want more tokens increasing it means dividing it by markup
             uint256 cachedPriceWithMarkup = (_cachedPrice * PRICE_DENOMINATOR) / priceMarkup;
             // Refund tokens based on actual gas cost
