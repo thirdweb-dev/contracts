@@ -19,6 +19,7 @@ abstract contract UniswapHelper {
         uint256 minSwapAmount;
         uint24 uniswapPoolFee;
         uint8 slippage;
+        bool wethIsNativeAsset;
     }
 
     /// @notice The Uniswap V3 SwapRouter contract
@@ -85,6 +86,9 @@ abstract contract UniswapHelper {
     }
 
     function unwrapWeth(uint256 amount) internal {
+        if (uniswapHelperConfig.wethIsNativeAsset) {
+            return;
+        }
         IPeripheryPayments(address(uniswap)).unwrapWETH9(amount, address(this));
     }
 
