@@ -68,7 +68,7 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
         IERC20Metadata _token,
         IEntryPoint _entryPoint,
         IERC20 _wrappedNative,
-        ISwapRouter _uniswap,
+        IV3SwapRouter _uniswap,
         TokenPaymasterConfig memory _tokenPaymasterConfig,
         OracleHelperConfig memory _oracleHelperConfig,
         UniswapHelperConfig memory _uniswapHelperConfig,

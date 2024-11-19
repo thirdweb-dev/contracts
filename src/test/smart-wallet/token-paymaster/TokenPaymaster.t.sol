@@ -18,7 +18,7 @@ import { AccountFactory } from "contracts/prebuilts/account/non-upgradeable/Acco
 import { Account as SimpleAccount } from "contracts/prebuilts/account/non-upgradeable/Account.sol";
 import { TokenPaymaster, IERC20Metadata } from "contracts/prebuilts/account/token-paymaster/TokenPaymaster.sol";
 import { OracleHelper, IOracle } from "contracts/prebuilts/account/utils/OracleHelper.sol";
-import { UniswapHelper, ISwapRouter } from "contracts/prebuilts/account/utils/UniswapHelper.sol";
+import { UniswapHelper, IV3SwapRouter } from "contracts/prebuilts/account/utils/UniswapHelper.sol";
 
 /// @dev This is a dummy contract to test contract interactions with Account.
 contract Number {
@@ -123,7 +123,7 @@ contract TokenPaymasterTest is BaseTest {
             IERC20Metadata(address(token)),
             entrypoint,
             weth,
-            ISwapRouter(address(testUniswap)),
+            IV3SwapRouter(address(testUniswap)),
             tokenPaymasterConfig,
             oracleHelperConfig,
             uniswapHelperConfig,
