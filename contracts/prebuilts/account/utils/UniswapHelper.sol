@@ -31,7 +31,7 @@ abstract contract UniswapHelper {
     /// @notice The ERC-20 token that wraps the native asset for current chain
     IERC20 public immutable wrappedNative;
 
-    UniswapHelperConfig private uniswapHelperConfig;
+    UniswapHelperConfig public uniswapHelperConfig;
 
     constructor(
         IERC20Metadata _token,

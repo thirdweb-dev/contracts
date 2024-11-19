@@ -41,7 +41,7 @@ abstract contract OracleHelper {
     /// @notice The timestamp of a block when the cached price was updated
     uint48 public cachedPriceTimestamp;
 
-    OracleHelperConfig private oracleHelperConfig;
+    OracleHelperConfig public oracleHelperConfig;
 
     /// @notice The "10^(tokenOracle.decimals)" value used for the price calculation
     uint128 private tokenOracleDecimalPower;
