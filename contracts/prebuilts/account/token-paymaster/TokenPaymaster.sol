@@ -127,6 +127,10 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
             uint256 refundPostopCost = tokenPaymasterConfig.refundPostopCost;
             require(refundPostopCost < userOp.unpackPostOpGasLimit(), "TPM: postOpGasLimit too low");
             uint256 preChargeNative = requiredPreFund + (refundPostopCost * maxFeePerGas);
+
+            bool forceUpdate = (block.timestamp - cachedPriceTimestamp) > tokenPaymasterConfig.priceMaxAge;
+            updateCachedPrice(forceUpdate);
+
             // note: as price is in native-asset-per-token and we want more tokens increasing it means dividing it by markup
             uint256 cachedPriceWithMarkup = (cachedPrice * PRICE_DENOMINATOR) / priceMarkup;
             if (dataLength == 32) {
@@ -165,8 +169,7 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
         unchecked {
             uint256 priceMarkup = tokenPaymasterConfig.priceMarkup;
             (uint256 preCharge, address userOpSender) = abi.decode(context, (uint256, address));
-            bool forceUpdate = (block.timestamp - cachedPriceTimestamp) > tokenPaymasterConfig.priceMaxAge;
-            uint256 _cachedPrice = updateCachedPrice(forceUpdate);
+            uint256 _cachedPrice = cachedPrice;
             // note: as price is in native-asset-per-token and we want more tokens increasing it means dividing it by markup
             uint256 cachedPriceWithMarkup = (_cachedPrice * PRICE_DENOMINATOR) / priceMarkup;
             // Refund tokens based on actual gas cost
