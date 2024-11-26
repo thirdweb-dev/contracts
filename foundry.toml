@@ -31,6 +31,7 @@ out = 'artifacts_forge'
 remappings = [
   '@uniswap/v3-core/contracts=lib/v3-core/contracts',
   '@uniswap/v3-periphery/contracts=lib/v3-periphery/contracts',
+  '@uniswap/swap-router-contracts/contracts=lib/swap-router-contracts/contracts',
   '@chainlink/=lib/chainlink/',
   '@openzeppelin/contracts=lib/openzeppelin-contracts/contracts',
   '@openzeppelin/contracts-upgradeable/=lib/openzeppelin-contracts-upgradeable/contracts/',
