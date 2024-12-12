@@ -41,7 +41,7 @@ abstract contract OracleHelper {
     /// @notice The timestamp of a block when the cached price was updated
     uint48 public cachedPriceTimestamp;
 
-    OracleHelperConfig private oracleHelperConfig;
+    OracleHelperConfig public oracleHelperConfig;
 
     /// @notice The "10^(tokenOracle.decimals)" value used for the price calculation
     uint128 private tokenOracleDecimalPower;
@@ -54,7 +54,7 @@ abstract contract OracleHelper {
         _setOracleConfiguration(_oracleHelperConfig);
     }
 
-    function _setOracleConfiguration(OracleHelperConfig memory _oracleHelperConfig) private {
+    function _setOracleConfiguration(OracleHelperConfig memory _oracleHelperConfig) internal {
         oracleHelperConfig = _oracleHelperConfig;
         require(_oracleHelperConfig.priceUpdateThreshold <= PRICE_DENOMINATOR, "TPM: update threshold too high");
         tokenOracleDecimalPower = uint128(10 ** oracleHelperConfig.tokenOracle.decimals());

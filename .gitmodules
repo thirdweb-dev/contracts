@@ -52,3 +52,6 @@
 [submodule "lib/v3-core"]
 	path = lib/v3-core
 	url = https://github.com/uniswap/v3-core
+[submodule "lib/swap-router-contracts"]
+	path = lib/swap-router-contracts
+	url = https://github.com/Uniswap/swap-router-contracts

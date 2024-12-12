@@ -68,7 +68,7 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
         IERC20Metadata _token,
         IEntryPoint _entryPoint,
         IERC20 _wrappedNative,
-        ISwapRouter _uniswap,
+        IV3SwapRouter _uniswap,
         TokenPaymasterConfig memory _tokenPaymasterConfig,
         OracleHelperConfig memory _oracleHelperConfig,
         UniswapHelperConfig memory _uniswapHelperConfig,
@@ -98,6 +98,10 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
         _setUniswapHelperConfiguration(_uniswapHelperConfig);
     }
 
+    function setOracleConfiguration(OracleHelperConfig memory _oracleHelperConfig) external onlyOwner {
+        _setOracleConfiguration(_oracleHelperConfig);
+    }
+
     /// @notice Allows the contract owner to withdraw a specified amount of tokens from the contract.
     /// @param to The address to transfer the tokens to.
     /// @param amount The amount of tokens to transfer.
@@ -123,6 +127,10 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
             uint256 refundPostopCost = tokenPaymasterConfig.refundPostopCost;
             require(refundPostopCost < userOp.unpackPostOpGasLimit(), "TPM: postOpGasLimit too low");
             uint256 preChargeNative = requiredPreFund + (refundPostopCost * maxFeePerGas);
+
+            bool forceUpdate = (block.timestamp - cachedPriceTimestamp) > tokenPaymasterConfig.priceMaxAge;
+            updateCachedPrice(forceUpdate);
+
             // note: as price is in native-asset-per-token and we want more tokens increasing it means dividing it by markup
             uint256 cachedPriceWithMarkup = (cachedPrice * PRICE_DENOMINATOR) / priceMarkup;
             if (dataLength == 32) {
@@ -161,7 +169,7 @@ contract TokenPaymaster is BasePaymaster, UniswapHelper, OracleHelper {
         unchecked {
             uint256 priceMarkup = tokenPaymasterConfig.priceMarkup;
             (uint256 preCharge, address userOpSender) = abi.decode(context, (uint256, address));
-            uint256 _cachedPrice = updateCachedPrice(false);
+            uint256 _cachedPrice = cachedPrice;
             // note: as price is in native-asset-per-token and we want more tokens increasing it means dividing it by markup
             uint256 cachedPriceWithMarkup = (_cachedPrice * PRICE_DENOMINATOR) / priceMarkup;
             // Refund tokens based on actual gas cost

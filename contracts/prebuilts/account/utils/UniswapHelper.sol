@@ -6,7 +6,7 @@ pragma solidity ^0.8.23;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 
-import "@uniswap/v3-periphery/contracts/interfaces/ISwapRouter.sol";
+import "@uniswap/swap-router-contracts/contracts/interfaces/IV3SwapRouter.sol";
 import "@uniswap/v3-periphery/contracts/interfaces/IPeripheryPayments.sol";
 
 abstract contract UniswapHelper {
@@ -19,10 +19,11 @@ abstract contract UniswapHelper {
         uint256 minSwapAmount;
         uint24 uniswapPoolFee;
         uint8 slippage;
+        bool wethIsNativeAsset;
     }
 
     /// @notice The Uniswap V3 SwapRouter contract
-    ISwapRouter public immutable uniswap;
+    IV3SwapRouter public immutable uniswap;
 
     /// @notice The ERC20 token used for transaction fee payments
     IERC20Metadata public immutable token;
@@ -30,12 +31,12 @@ abstract contract UniswapHelper {
     /// @notice The ERC-20 token that wraps the native asset for current chain
     IERC20 public immutable wrappedNative;
 
-    UniswapHelperConfig private uniswapHelperConfig;
+    UniswapHelperConfig public uniswapHelperConfig;
 
     constructor(
         IERC20Metadata _token,
         IERC20 _wrappedNative,
-        ISwapRouter _uniswap,
+        IV3SwapRouter _uniswap,
         UniswapHelperConfig memory _uniswapHelperConfig
     ) {
         _token.approve(address(_uniswap), type(uint256).max);
@@ -85,6 +86,9 @@ abstract contract UniswapHelper {
     }
 
     function unwrapWeth(uint256 amount) internal {
+        if (uniswapHelperConfig.wethIsNativeAsset) {
+            return;
+        }
         IPeripheryPayments(address(uniswap)).unwrapWETH9(amount, address(this));
     }
 
@@ -96,12 +100,11 @@ abstract contract UniswapHelper {
         uint256 amountOutMin,
         uint24 fee
     ) internal returns (uint256 amountOut) {
-        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams(
+        IV3SwapRouter.ExactInputSingleParams memory params = IV3SwapRouter.ExactInputSingleParams(
             tokenIn, //tokenIn
             tokenOut, //tokenOut
             fee,
             address(uniswap),
-            block.timestamp, //deadline
             amountIn,
             amountOutMin,
             0
