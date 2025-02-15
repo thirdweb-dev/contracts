@@ -72,6 +72,9 @@ contract DropERC1155 is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
+    address private constant DEFAULT_FEE_RECIPIENT = 0x000000000000000000000000000000000000dEaD;
+    uint16 private constant DEFAULT_FEE_BPS = 250;
+
     /*///////////////////////////////////////////////////////////////
                                 Mappings
     //////////////////////////////////////////////////////////////*/
@@ -250,7 +253,8 @@ contract DropERC1155 is
             : _primarySaleRecipient;
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
+        uint256 platformFees = ((totalPrice - platformFeesTw) * platformFeeBps) / MAX_BPS;
 
         bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -260,8 +264,14 @@ contract DropERC1155 is
         }
         require(validMsgValue, "!V");
 
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), DEFAULT_FEE_RECIPIENT, platformFeesTw);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), _saleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            _msgSender(),
+            _saleRecipient,
+            totalPrice - platformFees - platformFeesTw
+        );
     }
 
     /// @dev Transfers the NFTs being claimed.
