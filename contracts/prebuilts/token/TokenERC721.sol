@@ -379,7 +379,7 @@ contract TokenERC721 is
 
         uint256 totalPrice = _req.price;
         uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
-        uint256 platformFees = ((totalPrice - platformFeesTw) * platformFeeBps) / MAX_BPS;
+        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
         if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");

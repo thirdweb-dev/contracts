@@ -472,7 +472,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
         {
             uint256 platformFeesTw = (_totalPayoutAmount * DEFAULT_FEE_BPS) / MAX_BPS;
             (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
-            uint256 platformFeeCut = ((_totalPayoutAmount - platformFeesTw) * platformFeeBps) / MAX_BPS;
+            uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
             // Transfer platform fee
             CurrencyTransferLib.transferCurrencyWithWrapper(

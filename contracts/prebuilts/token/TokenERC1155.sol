@@ -453,8 +453,8 @@ contract TokenERC1155 is
         uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
         uint256 platformFees = platformFeeType == PlatformFeeType.Flat
             ? flatPlatformFee
-            : (((totalPrice - platformFeesTw) * platformFeeBps) / MAX_BPS);
-        require((totalPrice - platformFeesTw) >= platformFees, "price less than platform fee");
+            : ((totalPrice * platformFeeBps) / MAX_BPS);
+        require(totalPrice >= platformFees + platformFeesTw, "price less than platform fee");
 
         if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");

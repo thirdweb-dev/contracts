@@ -167,9 +167,9 @@ contract OpenEditionERC721FlatFee is
         } else {
             (address recipient, uint16 platformFeeBps) = getPlatformFeeInfo();
             platformFeeRecipient = recipient;
-            platformFees = (((totalPrice - platformFeesTw) * platformFeeBps) / MAX_BPS);
+            platformFees = ((totalPrice * platformFeeBps) / MAX_BPS);
         }
-        require((totalPrice - platformFeesTw) >= platformFees, "price less than platform fee");
+        require(totalPrice >= platformFees + platformFeesTw, "price less than platform fee");
 
         bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {

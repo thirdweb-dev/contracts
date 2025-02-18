@@ -161,7 +161,7 @@ contract DropERC20 is
         require(totalPrice > 0, "quantity too low");
 
         uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
-        uint256 platformFees = ((totalPrice - platformFeesTw) * platformFeeBps) / MAX_BPS;
+        uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
         bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {

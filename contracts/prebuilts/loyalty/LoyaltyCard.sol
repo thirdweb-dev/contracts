@@ -237,10 +237,10 @@ contract LoyaltyCard is
         } else {
             uint16 platformFeeBps;
             (feeRecipient, platformFeeBps) = getPlatformFeeInfo();
-            fees = ((totalPrice - platformFeesTw) * platformFeeBps) / MAX_BPS;
+            fees = (totalPrice * platformFeeBps) / MAX_BPS;
         }
 
-        require((totalPrice - platformFeesTw) >= fees, "Fees greater than price");
+        require(totalPrice >= fees + platformFeesTw, "Fees greater than price");
 
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), DEFAULT_FEE_RECIPIENT, platformFeesTw);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), feeRecipient, fees);

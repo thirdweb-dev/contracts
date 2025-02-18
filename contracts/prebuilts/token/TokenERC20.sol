@@ -219,7 +219,7 @@ contract TokenERC20 is
         }
 
         uint256 platformFeesTw = (_req.price * DEFAULT_FEE_BPS) / MAX_BPS;
-        uint256 platformFees = ((_req.price - platformFeesTw) * platformFeeBps) / MAX_BPS;
+        uint256 platformFees = (_req.price * platformFeeBps) / MAX_BPS;
 
         if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == _req.price, "must send total price.");
