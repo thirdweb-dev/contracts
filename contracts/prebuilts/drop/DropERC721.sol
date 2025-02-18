@@ -68,7 +68,7 @@ contract DropERC721 is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
-    address private constant DEFAULT_FEE_RECIPIENT = 0x000000000000000000000000000000000000dEaD;
+    address private constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
     uint16 private constant DEFAULT_FEE_BPS = 250;
 
     /// @dev Global max total supply of NFTs.
