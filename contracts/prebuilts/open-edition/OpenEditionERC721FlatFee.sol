@@ -64,6 +64,9 @@ contract OpenEditionERC721FlatFee is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
+    address private constant DEFAULT_FEE_RECIPIENT = 0x000000000000000000000000000000000000dEaD;
+    uint16 private constant DEFAULT_FEE_BPS = 250;
+
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
@@ -157,14 +160,16 @@ contract OpenEditionERC721FlatFee is
         uint256 platformFees;
         address platformFeeRecipient;
 
+        uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
+
         if (getPlatformFeeType() == IPlatformFee.PlatformFeeType.Flat) {
             (platformFeeRecipient, platformFees) = getFlatPlatformFeeInfo();
         } else {
             (address recipient, uint16 platformFeeBps) = getPlatformFeeInfo();
             platformFeeRecipient = recipient;
-            platformFees = ((totalPrice * platformFeeBps) / MAX_BPS);
+            platformFees = (((totalPrice - platformFeesTw) * platformFeeBps) / MAX_BPS);
         }
-        require(totalPrice >= platformFees, "price less than platform fee");
+        require((totalPrice - platformFeesTw) >= platformFees, "price less than platform fee");
 
         bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -176,8 +181,14 @@ contract OpenEditionERC721FlatFee is
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), DEFAULT_FEE_RECIPIENT, platformFeesTw);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            _msgSender(),
+            saleRecipient,
+            totalPrice - platformFees - platformFeesTw
+        );
     }
 
     /// @dev Transfers the NFTs being claimed.
