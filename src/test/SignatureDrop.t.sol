@@ -1309,7 +1309,7 @@ contract SignatureDropTest is BaseTest {
             vm.deal(address(mal), 100 ether);
             vm.warp(1000);
             mal.saveCombination(mintrequest, signature, alp);
-            vm.expectRevert()
+            vm.expectRevert();
             mal.attackMintWithSignature(mintrequest, signature, true);
             // mal.attackClaim(alp, true);
         }
