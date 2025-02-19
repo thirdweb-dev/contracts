@@ -57,7 +57,7 @@ contract TokenERC20 is
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC20");
     uint256 private constant VERSION = 1;
 
-    address private constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
+    address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
     uint16 private constant DEFAULT_FEE_BPS = 250;
 
     bytes32 private constant TYPEHASH =
