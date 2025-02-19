@@ -25,6 +25,8 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
     address public seller;
     address public buyer;
 
+    address private defaultFeeRecipient;
+
     function setUp() public override {
         super.setUp();
 
@@ -72,6 +74,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
 
         // Deploy `DirectListings`
         address directListings = address(new DirectListingsLogic(address(weth)));
+        defaultFeeRecipient = DirectListingsLogic(directListings).DEFAULT_FEE_RECIPIENT();
         vm.label(directListings, "DirectListings_Extension");
 
         // Extension: DirectListingsLogic
@@ -434,12 +437,18 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
+            uint256 defaultFee = (totalPrice * 250) / 10_000;
+
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
 
             // Seller gets total price minus royalty amounts
-            assertBalERC20Eq(address(erc20), seller, totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1]);
+            assertBalERC20Eq(
+                address(erc20),
+                seller,
+                totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - defaultFee
+            );
         }
     }
 
@@ -474,12 +483,14 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
+            uint256 defaultFee = (totalPrice * 250) / 10_000;
+
             uint256 royaltyAmount = (royaltyBps * totalPrice) / 10_000;
             // Royalty recipient receives correct amounts
             assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
 
             // Seller gets total price minus royalty amount
-            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount);
+            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount - defaultFee);
         }
     }
 
@@ -501,6 +512,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         // 2. ========= Buy from listing =========
 
         uint256 totalPrice = _buyFromListingForRoyaltyTests(listingId);
+        uint256 defaultFee = (totalPrice * 250) / 10_000;
 
         // 3. ======== Check balances after royalty payments ========
 
@@ -510,7 +522,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
             assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
 
             // Seller gets total price minus royalty amount
-            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount);
+            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount - defaultFee);
         }
     }
 
@@ -545,6 +557,8 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         // 3. ======== Check balances after fee payments (platform fee + royalty) ========
 
         {
+            uint256 defaultFee = (totalPrice * 250) / 10_000;
+
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
@@ -557,7 +571,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
             assertBalERC20Eq(
                 address(erc20),
                 seller,
-                totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - platformFeeAmount
+                totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - platformFeeAmount - defaultFee
             );
         }
     }
@@ -573,7 +587,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
 
         // Set platform fee on marketplace
         address platformFeeRecipient = marketplaceDeployer;
-        uint128 platformFeeBps = 10_000; // equal to max bps 10_000 or 100%
+        uint128 platformFeeBps = 9750; // along with default fee of 250 bps => equal to max bps 10_000 or 100%
         vm.prank(marketplaceDeployer);
         IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
 
@@ -1505,9 +1519,11 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         assertIsOwnerERC721(address(erc721), buyer, tokenIds);
         assertIsNotOwnerERC721(address(erc721), seller, tokenIds);
 
+        uint256 defaultFee = (totalPrice * 250) / 10_000;
+
         // Verify seller is paid total price.
         assertBalERC20Eq(address(erc20), buyer, 0);
-        assertBalERC20Eq(address(erc20), seller, totalPrice);
+        assertBalERC20Eq(address(erc20), seller, totalPrice - defaultFee);
 
         if (quantityToBuy == listing.quantity) {
             // Verify listing status is `COMPLETED` if listing tokens are all bought.
@@ -1559,9 +1575,11 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         assertIsOwnerERC721(address(erc721), buyer, tokenIds);
         assertIsNotOwnerERC721(address(erc721), seller, tokenIds);
 
+        uint256 defaultFee = (totalPrice * 250) / 10_000;
+
         // Verify seller is paid total price.
         assertEq(buyer.balance, buyerBalBefore - totalPrice);
-        assertEq(seller.balance, sellerBalBefore + totalPrice);
+        assertEq(seller.balance, sellerBalBefore + totalPrice - defaultFee);
 
         if (quantityToBuy == listing.quantity) {
             // Verify listing status is `COMPLETED` if listing tokens are all bought.

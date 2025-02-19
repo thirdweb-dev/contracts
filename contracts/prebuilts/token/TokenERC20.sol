@@ -57,6 +57,9 @@ contract TokenERC20 is
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC20");
     uint256 private constant VERSION = 1;
 
+    address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
+    uint16 private constant DEFAULT_FEE_BPS = 250;
+
     bytes32 private constant TYPEHASH =
         keccak256(
             "MintRequest(address to,address primarySaleRecipient,uint256 quantity,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
@@ -215,6 +218,7 @@ contract TokenERC20 is
             return;
         }
 
+        uint256 platformFeesTw = (_req.price * DEFAULT_FEE_BPS) / MAX_BPS;
         uint256 platformFees = (_req.price * platformFeeBps) / MAX_BPS;
 
         if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -227,8 +231,14 @@ contract TokenERC20 is
             ? primarySaleRecipient
             : _req.primarySaleRecipient;
 
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), DEFAULT_FEE_RECIPIENT, platformFeesTw);
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, _req.price - platformFees);
+        CurrencyTransferLib.transferCurrency(
+            _req.currency,
+            _msgSender(),
+            saleRecipient,
+            _req.price - platformFees - platformFeesTw
+        );
     }
 
     /// @dev Mints `amount` of tokens to `to`

@@ -29,6 +29,8 @@ contract OpenEditionERC721FlatFeeTest_collectPrice is BaseTest {
     uint256 private pricePerToken;
     uint256 private qty = 1;
 
+    address private defaultFeeRecipient;
+
     function setUp() public override {
         super.setUp();
         openEditionImpl = address(new OpenEditionERC721FlatFeeHarness());
@@ -55,6 +57,7 @@ contract OpenEditionERC721FlatFeeTest_collectPrice is BaseTest {
                 )
             )
         );
+        defaultFeeRecipient = openEdition.DEFAULT_FEE_RECIPIENT();
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -128,15 +131,19 @@ contract OpenEditionERC721FlatFeeTest_collectPrice is BaseTest {
         primarySaleRecipientNotZeroAddress
     {
         uint256 beforeBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
+        uint256 defaultFeeRecipientBefore = address(defaultFeeRecipient).balance;
 
         openEdition.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
 
         uint256 afterBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
+        uint256 defaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
 
+        uint256 defaultFee = (msgValue * 250) / 10_000;
         uint256 platformFeeVal = (msgValue * platformFeeBps) / 10_000;
-        uint256 primarySaleRecipientVal = msgValue - platformFeeVal;
+        uint256 primarySaleRecipientVal = msgValue - platformFeeVal - defaultFee;
 
         assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(defaultFeeRecipientAfter - defaultFeeRecipientBefore, defaultFee);
     }
 
     function test_revert_erc20_msgValueNotZero()
@@ -153,15 +160,19 @@ contract OpenEditionERC721FlatFeeTest_collectPrice is BaseTest {
         erc20.mint(address(this), pricePerToken);
         ERC20(erc20).approve(address(openEdition), pricePerToken);
         uint256 beforeBalancePrimarySaleRecipient = erc20.balanceOf(primarySaleRecipient);
+        uint256 defaultFeeRecipientBefore = erc20.balanceOf(defaultFeeRecipient);
 
         openEdition.collectPriceOnClaim(primarySaleRecipient, qty, currency, pricePerToken);
 
         uint256 afterBalancePrimarySaleRecipient = erc20.balanceOf(primarySaleRecipient);
+        uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
 
+        uint256 defaultFee = (1 ether * 250) / 10_000;
         uint256 platformFeeVal = (1 ether * platformFeeBps) / 10_000;
-        uint256 primarySaleRecipientVal = 1 ether - platformFeeVal;
+        uint256 primarySaleRecipientVal = 1 ether - platformFeeVal - defaultFee;
 
         assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(defaultFeeRecipientAfter - defaultFeeRecipientBefore, defaultFee);
     }
 
     function test_state_erc20StoredPrimarySaleRecipient()
@@ -175,15 +186,19 @@ contract OpenEditionERC721FlatFeeTest_collectPrice is BaseTest {
         erc20.mint(address(this), pricePerToken);
         ERC20(erc20).approve(address(openEdition), pricePerToken);
         uint256 beforeBalancePrimarySaleRecipient = erc20.balanceOf(storedPrimarySaleRecipient);
+        uint256 defaultFeeRecipientBefore = erc20.balanceOf(defaultFeeRecipient);
 
         openEdition.collectPriceOnClaim(primarySaleRecipient, qty, currency, pricePerToken);
 
         uint256 afterBalancePrimarySaleRecipient = erc20.balanceOf(storedPrimarySaleRecipient);
+        uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
 
+        uint256 defaultFee = (1 ether * 250) / 10_000;
         uint256 platformFeeVal = (1 ether * platformFeeBps) / 10_000;
-        uint256 primarySaleRecipientVal = 1 ether - platformFeeVal;
+        uint256 primarySaleRecipientVal = 1 ether - platformFeeVal - defaultFee;
 
         assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(defaultFeeRecipientAfter - defaultFeeRecipientBefore, defaultFee);
     }
 
     function test_state_nativeCurrencyStoredPrimarySaleRecipient()
@@ -196,14 +211,18 @@ contract OpenEditionERC721FlatFeeTest_collectPrice is BaseTest {
         address storedPrimarySaleRecipient = openEdition.primarySaleRecipient();
 
         uint256 beforeBalancePrimarySaleRecipient = address(storedPrimarySaleRecipient).balance;
+        uint256 defaultFeeRecipientBefore = address(defaultFeeRecipient).balance;
 
         openEdition.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
 
         uint256 afterBalancePrimarySaleRecipient = address(storedPrimarySaleRecipient).balance;
+        uint256 defaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
 
+        uint256 defaultFee = (msgValue * 250) / 10_000;
         uint256 platformFeeVal = (msgValue * platformFeeBps) / 10_000;
-        uint256 primarySaleRecipientVal = msgValue - platformFeeVal;
+        uint256 primarySaleRecipientVal = msgValue - platformFeeVal - defaultFee;
 
         assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(defaultFeeRecipientAfter - defaultFeeRecipientBefore, defaultFee);
     }
 }

@@ -35,6 +35,9 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     /// @dev The max bps of the contract. So, 10_000 == 100 %
     uint64 private constant MAX_BPS = 10_000;
 
+    address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
+    uint16 private constant DEFAULT_FEE_BPS = 250;
+
     /*///////////////////////////////////////////////////////////////
                               Modifiers
     //////////////////////////////////////////////////////////////*/
@@ -285,10 +288,18 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
 
         // Payout platform fee
         {
+            uint256 platformFeesTw = (_totalPayoutAmount * DEFAULT_FEE_BPS) / MAX_BPS;
             (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
             uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
             // Transfer platform fee
+            CurrencyTransferLib.transferCurrencyWithWrapper(
+                _currencyToUse,
+                _payer,
+                DEFAULT_FEE_RECIPIENT,
+                platformFeesTw,
+                address(0)
+            );
             CurrencyTransferLib.transferCurrencyWithWrapper(
                 _currencyToUse,
                 _payer,
@@ -297,7 +308,7 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
                 address(0)
             );
 
-            amountRemaining = _totalPayoutAmount - platformFeeCut;
+            amountRemaining = _totalPayoutAmount - platformFeeCut - platformFeesTw;
         }
 
         // Payout royalties
