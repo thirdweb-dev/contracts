@@ -62,7 +62,7 @@ contracts
 2. `forge install`: install tests dependencies
 3. `forge test`: run the tests
 
-This repository is a [forge](https://github.com/foundry-rs/foundry/tree/master/forge) project.
+This repository is a [forge](https://github.com/foundry-rs/foundry/tree/master?tab=readme-ov-file#forge) project.
 
 First install the relevant dependencies of the project:
 
