@@ -117,7 +117,7 @@ contract DropERC721Test_collectPrice is BaseTest {
         uint256 balanceSaleRecipientAfter = address(saleRecipient).balance;
         uint256 platformFeeRecipientAfter = address(platformFeeRecipient).balance;
         uint256 defaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
-        uint256 defaultPlatformFeeVal = (collectPrice_pricePerToken * 250) / MAX_BPS;
+        uint256 defaultPlatformFeeVal = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee - defaultPlatformFeeVal;
 
@@ -141,7 +141,7 @@ contract DropERC721Test_collectPrice is BaseTest {
         uint256 balanceSaleRecipientAfter = erc20.balanceOf(saleRecipient);
         uint256 platformFeeRecipientAfter = erc20.balanceOf(platformFeeRecipient);
         uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
-        uint256 defaultPlatformFeeVal = (collectPrice_pricePerToken * 250) / MAX_BPS;
+        uint256 defaultPlatformFeeVal = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken - expectedPlatformFee - defaultPlatformFeeVal;
 
