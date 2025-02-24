@@ -138,7 +138,7 @@ contract OpenEditionERC721FlatFeeTest_collectPrice is BaseTest {
         uint256 afterBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
         uint256 defaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
 
-        uint256 defaultFee = (msgValue * 250) / 10_000;
+        uint256 defaultFee = (msgValue * 100) / 10_000;
         uint256 platformFeeVal = (msgValue * platformFeeBps) / 10_000;
         uint256 primarySaleRecipientVal = msgValue - platformFeeVal - defaultFee;
 
@@ -167,7 +167,7 @@ contract OpenEditionERC721FlatFeeTest_collectPrice is BaseTest {
         uint256 afterBalancePrimarySaleRecipient = erc20.balanceOf(primarySaleRecipient);
         uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
 
-        uint256 defaultFee = (1 ether * 250) / 10_000;
+        uint256 defaultFee = (1 ether * 100) / 10_000;
         uint256 platformFeeVal = (1 ether * platformFeeBps) / 10_000;
         uint256 primarySaleRecipientVal = 1 ether - platformFeeVal - defaultFee;
 
@@ -193,7 +193,7 @@ contract OpenEditionERC721FlatFeeTest_collectPrice is BaseTest {
         uint256 afterBalancePrimarySaleRecipient = erc20.balanceOf(storedPrimarySaleRecipient);
         uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
 
-        uint256 defaultFee = (1 ether * 250) / 10_000;
+        uint256 defaultFee = (1 ether * 100) / 10_000;
         uint256 platformFeeVal = (1 ether * platformFeeBps) / 10_000;
         uint256 primarySaleRecipientVal = 1 ether - platformFeeVal - defaultFee;
 
@@ -218,7 +218,7 @@ contract OpenEditionERC721FlatFeeTest_collectPrice is BaseTest {
         uint256 afterBalancePrimarySaleRecipient = address(storedPrimarySaleRecipient).balance;
         uint256 defaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
 
-        uint256 defaultFee = (msgValue * 250) / 10_000;
+        uint256 defaultFee = (msgValue * 100) / 10_000;
         uint256 platformFeeVal = (msgValue * platformFeeBps) / 10_000;
         uint256 primarySaleRecipientVal = msgValue - platformFeeVal - defaultFee;
 

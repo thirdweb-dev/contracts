@@ -152,7 +152,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 balanceSaleRecipientAfter = address(saleRecipient).balance;
         uint256 defaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
         uint256 platformFeeRecipientAfter = address(platformFeeRecipient).balance;
-        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 250) / MAX_BPS;
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee - expectedDefaultPlatformFee;
 
@@ -177,7 +177,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 balanceSaleRecipientAfter = erc20.balanceOf(saleRecipient);
         uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
         uint256 platformFeeRecipientAfter = erc20.balanceOf(platformFeeRecipient);
-        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 250) / MAX_BPS;
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken -
             expectedPlatformFee -
@@ -211,7 +211,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 defaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
         uint256 platformFeeRecipientAfter = address(platformFeeRecipient).balance;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
-        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 250) / MAX_BPS;
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee - expectedDefaultPlatformFee;
 
         assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
@@ -236,7 +236,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
         uint256 platformFeeRecipientAfter = erc20.balanceOf(platformFeeRecipient);
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
-        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 250) / MAX_BPS;
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken -
             expectedPlatformFee -
             expectedDefaultPlatformFee;
@@ -266,7 +266,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 balanceSaleRecipientAfter = address(saleRecipient).balance;
         uint256 balanceDefaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
         uint256 platformFeeRecipientAfter = address(platformFeeRecipient).balance;
-        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 250) / MAX_BPS;
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee - expectedDefaultPlatformFee;
 
@@ -291,7 +291,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
         uint256 balanceSaleRecipientAfter = erc20.balanceOf(saleRecipient);
         uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
         uint256 platformFeeRecipientAfter = erc20.balanceOf(platformFeeRecipient);
-        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 250) / MAX_BPS;
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken -
             expectedPlatformFee -

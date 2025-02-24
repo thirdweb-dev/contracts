@@ -256,7 +256,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         // 4. ======== Check balances after royalty payments ========
 
         {
-            uint256 defaultFee = (buyoutAmount * 250) / 10_000;
+            uint256 defaultFee = (buyoutAmount * 100) / 10_000;
 
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
@@ -307,7 +307,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         // 4. ======== Check balances after royalty payments ========
 
         {
-            uint256 defaultFee = (buyoutAmount * 250) / 10_000;
+            uint256 defaultFee = (buyoutAmount * 100) / 10_000;
 
             uint256 royaltyAmount = (royaltyBps * buyoutAmount) / 10_000;
             // Royalty recipient receives correct amounts
@@ -345,7 +345,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         // 4. ======== Check balances after royalty payments ========
 
         {
-            uint256 defaultFee = (buyoutAmount * 250) / 10_000;
+            uint256 defaultFee = (buyoutAmount * 100) / 10_000;
             uint256 royaltyAmount = (royaltyBps * buyoutAmount) / 10_000;
             // Royalty recipient receives correct amounts
             assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
@@ -392,7 +392,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         // 4. ======== Check balances after royalty payments ========
 
         {
-            uint256 defaultFee = (buyoutAmount * 250) / 10_000;
+            uint256 defaultFee = (buyoutAmount * 100) / 10_000;
 
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
@@ -422,7 +422,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
         // Set platform fee on marketplace
         address platformFeeRecipient = marketplaceDeployer;
-        uint128 platformFeeBps = 9750; // equal to max bps 10_000 or 100% with 250 bps default
+        uint128 platformFeeBps = 9900; // equal to max bps 10_000 or 100% with 100 bps default
         vm.prank(marketplaceDeployer);
         IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
 
@@ -1514,7 +1514,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         assertEq(currency, address(erc20));
         assertEq(bidAmount, 10 ether);
 
-        uint256 defaultFee = (10 ether * 250) / 10_000;
+        uint256 defaultFee = (10 ether * 100) / 10_000;
 
         // collect auction payout
         vm.prank(seller);
@@ -1563,7 +1563,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         vm.prank(seller);
         EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
 
-        uint256 defaultFee = (5 ether * 250) / 10_000;
+        uint256 defaultFee = (5 ether * 100) / 10_000;
 
         assertIsOwnerERC721(address(erc721), marketplace, tokenIds);
         assertEq(erc20.balanceOf(marketplace), 0);
@@ -1951,7 +1951,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         assertEq(currency, NATIVE_TOKEN);
         assertEq(bidAmount, 10 ether);
 
-        uint256 defaultFee = (10 ether * 250) / 10_000;
+        uint256 defaultFee = (10 ether * 100) / 10_000;
 
         vm.prank(seller);
         // calls WETH.withdraw (which calls receive function of Marketplace) and sends native tokens to seller
@@ -2298,7 +2298,7 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, buyoutBidAmount);
 
         // 2. Collect their own bid.
-        uint256 defaultFee = (buyoutBidAmount * 250) / 10_000;
+        uint256 defaultFee = (buyoutBidAmount * 100) / 10_000;
         EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
         assertEq(erc20.balanceOf(seller), buyoutBidAmount - defaultFee);
         assertEq(erc20.balanceOf(defaultFeeRecipient), defaultFee);

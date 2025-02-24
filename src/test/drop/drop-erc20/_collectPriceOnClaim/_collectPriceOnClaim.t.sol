@@ -123,7 +123,7 @@ contract DropERC20Test_collectPrice is BaseTest {
         uint256 afterBalancePlatformFeeRecipient = address(platformFeeRecipient).balance;
         uint256 defaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
 
-        uint256 defaultPlatformFeeVal = (pricePerToken * 250) / MAX_BPS;
+        uint256 defaultPlatformFeeVal = (pricePerToken * 100) / MAX_BPS;
         uint256 platformFeeVal = (msgValue * platformFeeBps) / MAX_BPS;
         uint256 primarySaleRecipientVal = msgValue - platformFeeVal - defaultPlatformFeeVal;
 
@@ -157,7 +157,7 @@ contract DropERC20Test_collectPrice is BaseTest {
         uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
         uint256 afterBalancePlatformFeeRecipient = erc20.balanceOf(platformFeeRecipient);
 
-        uint256 defaultPlatformFeeVal = (pricePerToken * 250) / MAX_BPS;
+        uint256 defaultPlatformFeeVal = (pricePerToken * 100) / MAX_BPS;
         uint256 platformFeeVal = (pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 primarySaleRecipientVal = 1 ether - platformFeeVal - defaultPlatformFeeVal;
 
@@ -187,7 +187,7 @@ contract DropERC20Test_collectPrice is BaseTest {
         uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
         uint256 afterBalancePlatformFeeRecipient = erc20.balanceOf(platformFeeRecipient);
 
-        uint256 defaultPlatformFeeVal = (pricePerToken * 250) / MAX_BPS;
+        uint256 defaultPlatformFeeVal = (pricePerToken * 100) / MAX_BPS;
         uint256 platformFeeVal = (pricePerToken * platformFeeBps) / MAX_BPS;
         uint256 primarySaleRecipientVal = 1 ether - platformFeeVal - defaultPlatformFeeVal;
 
@@ -216,7 +216,7 @@ contract DropERC20Test_collectPrice is BaseTest {
         uint256 afterBalancePlatformFeeRecipient = address(platformFeeRecipient).balance;
         uint256 defaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
 
-        uint256 defaultPlatformFeeVal = (pricePerToken * 250) / MAX_BPS;
+        uint256 defaultPlatformFeeVal = (pricePerToken * 100) / MAX_BPS;
         uint256 platformFeeVal = (msgValue * platformFeeBps) / MAX_BPS;
         uint256 primarySaleRecipientVal = msgValue - platformFeeVal - defaultPlatformFeeVal;
 

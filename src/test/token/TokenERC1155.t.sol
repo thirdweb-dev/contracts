@@ -254,7 +254,7 @@ contract TokenERC1155Test is BaseTest {
         assertEq(tokenContract.balanceOf(recipient, nextTokenId), currentBalanceOfRecipient + _mintrequest.quantity);
 
         // check erc20 balances after minting
-        uint256 defaultFee = ((_mintrequest.pricePerToken * _mintrequest.quantity) * 250) / MAX_BPS;
+        uint256 defaultFee = ((_mintrequest.pricePerToken * _mintrequest.quantity) * 100) / MAX_BPS;
         uint256 _platformFees = ((_mintrequest.pricePerToken * _mintrequest.quantity) * platformFeeBps) / MAX_BPS;
         assertEq(
             erc20.balanceOf(recipient),
@@ -295,7 +295,7 @@ contract TokenERC1155Test is BaseTest {
         assertEq(tokenContract.balanceOf(recipient, nextTokenId), currentBalanceOfRecipient + _mintrequest.quantity);
 
         // check balances after minting
-        uint256 defaultFee = ((_mintrequest.pricePerToken * _mintrequest.quantity) * 250) / MAX_BPS;
+        uint256 defaultFee = ((_mintrequest.pricePerToken * _mintrequest.quantity) * 100) / MAX_BPS;
         uint256 _platformFees = ((_mintrequest.pricePerToken * _mintrequest.quantity) * platformFeeBps) / MAX_BPS;
         assertEq(
             address(recipient).balance,
@@ -699,7 +699,7 @@ contract TokenERC1155Test is BaseTest {
         _mintrequest.currency = address(erc20);
         _signature = signMintRequest(_mintrequest, privateKey);
 
-        uint256 defaultFee = (_mintrequest.pricePerToken * _mintrequest.quantity * 250) / 10_000;
+        uint256 defaultFee = (_mintrequest.pricePerToken * _mintrequest.quantity * 100) / 10_000;
 
         // approve erc20 tokens to tokenContract
         vm.prank(recipient);
@@ -762,7 +762,7 @@ contract TokenERC1155Test is BaseTest {
             _signature
         );
 
-        uint256 defaultFee = (_mintrequest.pricePerToken * _mintrequest.quantity * 250) / 10_000;
+        uint256 defaultFee = (_mintrequest.pricePerToken * _mintrequest.quantity * 100) / 10_000;
 
         // check state after minting
         assertEq(tokenContract.nextTokenIdToMint(), nextTokenId + 1);

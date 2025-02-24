@@ -534,7 +534,7 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         assertEq(tokenContract.totalSupply(_tokenIdToMint), _mintrequest.quantity);
 
         uint256 _platformFee = (totalPrice * platformFeeBps) / 10_000;
-        uint256 defaultFee = (totalPrice * 250) / 10_000;
+        uint256 defaultFee = (totalPrice * 100) / 10_000;
         uint256 _saleProceeds = totalPrice - _platformFee - defaultFee;
         assertEq(caller.balance, 1000 ether - totalPrice);
         assertEq(tokenContract.platformFeeRecipient().balance, _platformFee);
@@ -640,7 +640,7 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         assertEq(tokenContract.totalSupply(_tokenIdToMint), _mintrequest.quantity);
 
         uint256 _platformFee = (totalPrice * platformFeeBps) / 10_000;
-        uint256 defaultFee = (totalPrice * 250) / 10_000;
+        uint256 defaultFee = (totalPrice * 100) / 10_000;
         uint256 _saleProceeds = totalPrice - _platformFee - defaultFee;
         assertEq(erc20.balanceOf(caller), 1000 ether - totalPrice);
         assertEq(erc20.balanceOf(tokenContract.platformFeeRecipient()), _platformFee);
@@ -822,7 +822,7 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         assertEq(tokenContract.totalSupply(_tokenIdToMint), _mintrequest.quantity);
 
         (, uint256 _platformFee) = tokenContract.getFlatPlatformFeeInfo();
-        uint256 defaultFee = (totalPrice * 250) / 10_000;
+        uint256 defaultFee = (totalPrice * 100) / 10_000;
         uint256 _saleProceeds = totalPrice - _platformFee - defaultFee;
         assertEq(erc20.balanceOf(caller), 1000 ether - totalPrice);
         assertEq(erc20.balanceOf(tokenContract.platformFeeRecipient()), _platformFee);

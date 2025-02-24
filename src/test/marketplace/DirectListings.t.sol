@@ -437,7 +437,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
-            uint256 defaultFee = (totalPrice * 250) / 10_000;
+            uint256 defaultFee = (totalPrice * 100) / 10_000;
 
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
@@ -483,7 +483,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
-            uint256 defaultFee = (totalPrice * 250) / 10_000;
+            uint256 defaultFee = (totalPrice * 100) / 10_000;
 
             uint256 royaltyAmount = (royaltyBps * totalPrice) / 10_000;
             // Royalty recipient receives correct amounts
@@ -512,7 +512,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         // 2. ========= Buy from listing =========
 
         uint256 totalPrice = _buyFromListingForRoyaltyTests(listingId);
-        uint256 defaultFee = (totalPrice * 250) / 10_000;
+        uint256 defaultFee = (totalPrice * 100) / 10_000;
 
         // 3. ======== Check balances after royalty payments ========
 
@@ -557,7 +557,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         // 3. ======== Check balances after fee payments (platform fee + royalty) ========
 
         {
-            uint256 defaultFee = (totalPrice * 250) / 10_000;
+            uint256 defaultFee = (totalPrice * 100) / 10_000;
 
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
@@ -587,7 +587,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
 
         // Set platform fee on marketplace
         address platformFeeRecipient = marketplaceDeployer;
-        uint128 platformFeeBps = 9750; // along with default fee of 250 bps => equal to max bps 10_000 or 100%
+        uint128 platformFeeBps = 9900; // along with default fee of 100 bps => equal to max bps 10_000 or 100%
         vm.prank(marketplaceDeployer);
         IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
 
@@ -1519,7 +1519,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         assertIsOwnerERC721(address(erc721), buyer, tokenIds);
         assertIsNotOwnerERC721(address(erc721), seller, tokenIds);
 
-        uint256 defaultFee = (totalPrice * 250) / 10_000;
+        uint256 defaultFee = (totalPrice * 100) / 10_000;
 
         // Verify seller is paid total price.
         assertBalERC20Eq(address(erc20), buyer, 0);
@@ -1575,7 +1575,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
         assertIsOwnerERC721(address(erc721), buyer, tokenIds);
         assertIsNotOwnerERC721(address(erc721), seller, tokenIds);
 
-        uint256 defaultFee = (totalPrice * 250) / 10_000;
+        uint256 defaultFee = (totalPrice * 100) / 10_000;
 
         // Verify seller is paid total price.
         assertEq(buyer.balance, buyerBalBefore - totalPrice);
