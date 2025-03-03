@@ -46,12 +46,3 @@
 [submodule "lib/openzeppelin-contracts"]
 	path = lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
-[submodule "lib/v3-periphery"]
-	path = lib/v3-periphery
-	url = https://github.com/uniswap/v3-periphery
-[submodule "lib/v3-core"]
-	path = lib/v3-core
-	url = https://github.com/uniswap/v3-core
-[submodule "lib/swap-router-contracts"]
-	path = lib/swap-router-contracts
-	url = https://github.com/Uniswap/swap-router-contracts
