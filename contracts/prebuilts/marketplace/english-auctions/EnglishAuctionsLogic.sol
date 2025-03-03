@@ -39,7 +39,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     uint64 private constant MAX_BPS = 10_000;
 
     address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
-    uint16 private constant DEFAULT_FEE_BPS = 250;
+    uint16 private constant DEFAULT_FEE_BPS = 100;
 
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
