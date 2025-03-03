@@ -24,6 +24,10 @@ async function main() {
   console.log("Verifying contract.");
   // deployed address zksync mainnet: 0x5f4964a30b86B626BCAAaCc4622CB70d76c844f2
   // deployed address zksync sepolia: 0xB89DbEe6fA8664507b0f7758bCc532817CAf6Eb2
+  // deployed address abstract testnet: 0x98B25911d02851b0a39D5947ac6012efC92E6c79
+  // deployed address lens testnet: 0x038890935747f67B45c83fe99a15B0A94AEb996c
+  // deployed address xsolla testnet: 0x4c7416f13deB20215Ab1A163B63b35E03Fa3Fae1
+  // abstract mainnet: 0x56Abb6a3f25DCcdaDa106191053b1CC54C196DEE
   await verify(contract.address, "contracts/prebuilts/marketplace/offers/OffersLogic.sol:OffersLogic", []);
 }
 

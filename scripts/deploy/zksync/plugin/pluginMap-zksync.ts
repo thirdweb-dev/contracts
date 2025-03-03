@@ -50,7 +50,7 @@ async function getPluginInput() {
     "DirectListingsLogic",
   )) as ZkSyncArtifact;
   const pluginsDirectListings = generatePluginFunctions(
-    "0x8b0DBCf5b7D01eBB0F24525CE8AB72F16CE4F8C8",
+    "0x26279882D5E93045D4FA986847CAAC048b2Bac3b",
     DirectListingsLogicArtifact.abi,
   );
 
@@ -58,12 +58,12 @@ async function getPluginInput() {
     "EnglishAuctionsLogic",
   )) as ZkSyncArtifact;
   const pluginsEnglishAuctions = generatePluginFunctions(
-    "0xefE2fF8F3282Fd63898cb0A532099BA7780b459F",
+    "0xf3C7d3F0AA374a2D32489929e24D3e9313Aec8bb",
     EnglishAuctionsLogicArtifact.abi,
   );
 
   const OffersLogicABI: ZkSyncArtifact = (await hre.artifacts.readArtifact("OffersLogic")) as ZkSyncArtifact;
-  const pluginsOffers = generatePluginFunctions("0xB89DbEe6fA8664507b0f7758bCc532817CAf6Eb2", OffersLogicABI.abi);
+  const pluginsOffers = generatePluginFunctions("0x56Abb6a3f25DCcdaDa106191053b1CC54C196DEE", OffersLogicABI.abi);
 
   return [...pluginsDirectListings, ...pluginsEnglishAuctions, ...pluginsOffers];
 }
@@ -85,6 +85,10 @@ async function main() {
 
   // deployed address zksync mainnet: 0x0326643B8844710065C9ce0e5326B006608E8D8d
   // deployed address zksync sepolia: 0xC2f4B1B6B3d6813aBc8e55B3BAd0796526A5d633
+  // deployed address abstract testnet: 0xa6344b5B22c13444Ed46709fE810108Bc14BdB2b
+  // deployed address lens testnet: 0x6dc0A7c9c0E79883345e2384B7619EA1D1199C3C
+  // xsolla testnet: 0xf415B06d4C62F03066DA67C2c6401818701EE430
+  // abstract mainnet: 
   await verify(contract.address, "contracts/extension/plugin/PluginMap.sol:PluginMap", [pluginInput]);
 }
 

@@ -17,7 +17,11 @@ async function main() {
   // WETH address as constructor param
   // Zksync Mainnet: 0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91
   // Zksync Sepolia: 0x0462C05457Fed440740Ff3696bDd2D0577411e34
-  const contract = await directListings.deploy("0x0462C05457Fed440740Ff3696bDd2D0577411e34");
+  // abstract testnet: 0x9EDCde0257F2386Ce177C3a7FCdd97787F0D841d
+  // lens sepolia testnet: 0xaA91D645D7a6C1aeaa5988e0547267B77d33fe16
+  // xsolla testnet: 0xb0b8b267d44c64BA6dD1Daf442949887c85199f6
+  // abstract mainnet: 0x3439153EB7AF838Ad19d56E1571FBD09333C2809
+  const contract = await directListings.deploy("0x3439153EB7AF838Ad19d56E1571FBD09333C2809");
   await contract.deployed();
 
   console.log("Deployed DirectListingsLogic \n: ", contract.address);
@@ -27,10 +31,14 @@ async function main() {
   console.log("Verifying contract.");
   // deployed address zksync mainnet: 0xfaCf7A60a24E28534c643653c974540343f5ff09
   // deployed address zksync sepolia: 0x8b0DBCf5b7D01eBB0F24525CE8AB72F16CE4F8C8
+  // deployed address abstract testnet: 0xab2b0451C07f35FB490A3939BD4DfE327013d2A6
+  // lens sepolia testnet: 0xF73EFC402e9467ED756598193dD74ac4C1615724
+  // xsolla testnet: 0x038890935747f67B45c83fe99a15B0A94AEb996c
+  // abstract mainnet: 0x26279882D5E93045D4FA986847CAAC048b2Bac3b
   await verify(
     contract.address,
     "contracts/prebuilts/marketplace/direct-listings/DirectListingsLogic.sol:DirectListingsLogic",
-    ["0x0462C05457Fed440740Ff3696bDd2D0577411e34"],
+    ["0x3439153EB7AF838Ad19d56E1571FBD09333C2809"],
   );
 }
 
