@@ -22,7 +22,7 @@
     "@openzeppelin/contracts": "^4.9.6",
     "@openzeppelin/contracts-upgradeable": "^4.9.6",
     "@thirdweb-dev/dynamic-contracts": "^1.2.4",
-    "@thirdweb-dev/merkletree": "^0.2.2",
+    "@thirdweb-dev/merkletree": "^0.2.6",
     "@typechain/ethers-v5": "^10.2.1",
     "@typechain/ethers-v6": "^0.5.0",
     "@typechain/hardhat": "^9.0.0",
