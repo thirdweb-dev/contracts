@@ -66,6 +66,9 @@ contract TokenERC1155 is
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC1155");
     uint256 private constant VERSION = 1;
 
+    address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
+    uint16 private constant DEFAULT_FEE_BPS = 100;
+
     // Token name
     string public name;
 
@@ -447,10 +450,11 @@ contract TokenERC1155 is
         }
 
         uint256 totalPrice = _req.pricePerToken * _req.quantity;
+        uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
         uint256 platformFees = platformFeeType == PlatformFeeType.Flat
             ? flatPlatformFee
             : ((totalPrice * platformFeeBps) / MAX_BPS);
-        require(totalPrice >= platformFees, "price less than platform fee");
+        require(totalPrice >= platformFees + platformFeesTw, "price less than platform fee");
 
         if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
             require(msg.value == totalPrice, "must send total price.");
@@ -462,8 +466,14 @@ contract TokenERC1155 is
             ? primarySaleRecipient
             : _req.primarySaleRecipient;
 
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), DEFAULT_FEE_RECIPIENT, platformFeesTw);
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(
+            _req.currency,
+            _msgSender(),
+            saleRecipient,
+            totalPrice - platformFees - platformFeesTw
+        );
     }
 
     ///     =====   Low-level overrides  =====

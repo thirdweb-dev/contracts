@@ -64,6 +64,9 @@ contract OpenEditionERC721FlatFee is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
+    address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
+    uint16 private constant DEFAULT_FEE_BPS = 100;
+
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
@@ -157,6 +160,8 @@ contract OpenEditionERC721FlatFee is
         uint256 platformFees;
         address platformFeeRecipient;
 
+        uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
+
         if (getPlatformFeeType() == IPlatformFee.PlatformFeeType.Flat) {
             (platformFeeRecipient, platformFees) = getFlatPlatformFeeInfo();
         } else {
@@ -164,7 +169,7 @@ contract OpenEditionERC721FlatFee is
             platformFeeRecipient = recipient;
             platformFees = ((totalPrice * platformFeeBps) / MAX_BPS);
         }
-        require(totalPrice >= platformFees, "price less than platform fee");
+        require(totalPrice >= platformFees + platformFeesTw, "price less than platform fee");
 
         bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -176,8 +181,14 @@ contract OpenEditionERC721FlatFee is
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), DEFAULT_FEE_RECIPIENT, platformFeesTw);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            _msgSender(),
+            saleRecipient,
+            totalPrice - platformFees - platformFeesTw
+        );
     }
 
     /// @dev Transfers the NFTs being claimed.

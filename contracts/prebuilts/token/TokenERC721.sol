@@ -69,6 +69,9 @@ contract TokenERC721 is
     bytes32 private constant MODULE_TYPE = bytes32("TokenERC721");
     uint256 private constant VERSION = 1;
 
+    address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
+    uint16 private constant DEFAULT_FEE_BPS = 100;
+
     bytes32 private constant TYPEHASH =
         keccak256(
             "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,string uri,uint256 price,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
@@ -375,6 +378,7 @@ contract TokenERC721 is
         }
 
         uint256 totalPrice = _req.price;
+        uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
         if (_req.currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -387,8 +391,14 @@ contract TokenERC721 is
             ? primarySaleRecipient
             : _req.primarySaleRecipient;
 
+        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), DEFAULT_FEE_RECIPIENT, platformFeesTw);
         CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), platformFeeRecipient, platformFees);
-        CurrencyTransferLib.transferCurrency(_req.currency, _msgSender(), saleRecipient, totalPrice - platformFees);
+        CurrencyTransferLib.transferCurrency(
+            _req.currency,
+            _msgSender(),
+            saleRecipient,
+            totalPrice - platformFees - platformFeesTw
+        );
     }
 
     ///     =====   Low-level overrides  =====

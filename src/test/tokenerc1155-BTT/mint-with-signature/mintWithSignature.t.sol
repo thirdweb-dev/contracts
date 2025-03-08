@@ -51,6 +51,8 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
     address public recipient;
     string public uri;
 
+    address private defaultFeeRecipient;
+
     MyTokenERC1155 internal tokenContract;
     ERC1155ReceiverCompliant internal erc1155ReceiverContract;
 
@@ -104,6 +106,7 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         );
 
         tokenContract = MyTokenERC1155(proxy);
+        defaultFeeRecipient = tokenContract.DEFAULT_FEE_RECIPIENT();
 
         typehashMintRequest = keccak256(
             "MintRequest(address to,address royaltyRecipient,uint256 royaltyBps,address primarySaleRecipient,uint256 tokenId,string uri,uint256 quantity,uint256 pricePerToken,address currency,uint128 validityStartTimestamp,uint128 validityEndTimestamp,bytes32 uid)"
@@ -531,10 +534,12 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         assertEq(tokenContract.totalSupply(_tokenIdToMint), _mintrequest.quantity);
 
         uint256 _platformFee = (totalPrice * platformFeeBps) / 10_000;
-        uint256 _saleProceeds = totalPrice - _platformFee;
+        uint256 defaultFee = (totalPrice * 100) / 10_000;
+        uint256 _saleProceeds = totalPrice - _platformFee - defaultFee;
         assertEq(caller.balance, 1000 ether - totalPrice);
         assertEq(tokenContract.platformFeeRecipient().balance, _platformFee);
         assertEq(tokenContract.primarySaleRecipient().balance, _saleProceeds);
+        assertEq(defaultFeeRecipient.balance, defaultFee);
     }
 
     function test_mintWithSignature_nonZeroPrice_nativeToken_MetadataUpdateEvent()
@@ -635,10 +640,12 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         assertEq(tokenContract.totalSupply(_tokenIdToMint), _mintrequest.quantity);
 
         uint256 _platformFee = (totalPrice * platformFeeBps) / 10_000;
-        uint256 _saleProceeds = totalPrice - _platformFee;
+        uint256 defaultFee = (totalPrice * 100) / 10_000;
+        uint256 _saleProceeds = totalPrice - _platformFee - defaultFee;
         assertEq(erc20.balanceOf(caller), 1000 ether - totalPrice);
         assertEq(erc20.balanceOf(tokenContract.platformFeeRecipient()), _platformFee);
         assertEq(erc20.balanceOf(tokenContract.primarySaleRecipient()), _saleProceeds);
+        assertEq(erc20.balanceOf(defaultFeeRecipient), defaultFee);
     }
 
     function test_mintWithSignature_nonZeroPrice_ERC20_MetadataUpdateEvent()
@@ -815,10 +822,12 @@ contract TokenERC1155Test_MintWithSignature is BaseTest {
         assertEq(tokenContract.totalSupply(_tokenIdToMint), _mintrequest.quantity);
 
         (, uint256 _platformFee) = tokenContract.getFlatPlatformFeeInfo();
-        uint256 _saleProceeds = totalPrice - _platformFee;
+        uint256 defaultFee = (totalPrice * 100) / 10_000;
+        uint256 _saleProceeds = totalPrice - _platformFee - defaultFee;
         assertEq(erc20.balanceOf(caller), 1000 ether - totalPrice);
         assertEq(erc20.balanceOf(tokenContract.platformFeeRecipient()), _platformFee);
         assertEq(erc20.balanceOf(tokenContract.primarySaleRecipient()), _saleProceeds);
+        assertEq(erc20.balanceOf(defaultFeeRecipient), defaultFee);
     }
 
     modifier whenNotMaxTokenId() {

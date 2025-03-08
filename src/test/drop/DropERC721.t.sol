@@ -562,7 +562,7 @@ contract DropERC721Test is BaseTest {
     /*
      *  note: Testing state changes; revealing URI with an incorrect key.
      */
-    function testFail_reveal_incorrectKey() public {
+    function test_revert_reveal_incorrectKey() public {
         vm.startPrank(deployer);
 
         bytes memory key = "key";
@@ -570,8 +570,8 @@ contract DropERC721Test is BaseTest {
         bytes32 provenanceHash = keccak256(abi.encodePacked("ipfs://", key, block.chainid));
         drop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
 
+        vm.expectRevert();
         string memory revealedURI = drop.reveal(0, "keyy");
-        assertEq(revealedURI, "ipfs://");
 
         vm.stopPrank();
     }
