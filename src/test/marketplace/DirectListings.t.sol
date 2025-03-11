@@ -74,7 +74,7 @@ contract MarketplaceDirectListingsTest is BaseTest, IExtension {
 
         // Deploy `DirectListings`
         address directListings = address(new DirectListingsLogic(address(weth)));
-        defaultFeeRecipient = DirectListingsLogic(directListings).DEFAULT_FEE_RECIPIENT();
+        defaultFeeRecipient = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
         vm.label(directListings, "DirectListings_Extension");
 
         // Extension: DirectListingsLogic

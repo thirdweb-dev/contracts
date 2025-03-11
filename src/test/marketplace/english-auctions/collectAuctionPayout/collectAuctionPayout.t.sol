@@ -144,7 +144,7 @@ contract CollectAuctionPayoutTest is BaseTest, IExtension {
 
         // Deploy `EnglishAuctions`
         address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
-        defaultFeeRecipient = EnglishAuctionsLogic(englishAuctions).DEFAULT_FEE_RECIPIENT();
+        defaultFeeRecipient = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
         vm.label(englishAuctions, "EnglishAuctions_Extension");
 
         // Extension: EnglishAuctionsLogic
