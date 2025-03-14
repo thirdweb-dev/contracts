@@ -58,6 +58,8 @@ contract MarketplaceV3 is
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
 
+    address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
+
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
