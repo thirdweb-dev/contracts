@@ -41,4 +41,8 @@ abstract contract ERC2771Context is Context {
     }
 
     uint256[49] private __gap;
+
+    function _contextSuffixLength() internal view virtual override returns (uint256) {
+        return 20;
+    }
 }
