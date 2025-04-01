@@ -74,7 +74,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
 
         // Deploy `Offers`
         address offers = address(new OffersLogic());
-        defaultFeeRecipient = OffersLogic(offers).DEFAULT_FEE_RECIPIENT();
+        defaultFeeRecipient = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
         vm.label(offers, "Offers_Extension");
 
         // Extension: OffersLogic

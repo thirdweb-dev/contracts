@@ -35,7 +35,7 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
     /// @dev The max bps of the contract. So, 10_000 == 100 %
     uint64 private constant MAX_BPS = 10_000;
 
-    address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
+    address private constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
     uint16 private constant DEFAULT_FEE_BPS = 100;
 
     /*///////////////////////////////////////////////////////////////
