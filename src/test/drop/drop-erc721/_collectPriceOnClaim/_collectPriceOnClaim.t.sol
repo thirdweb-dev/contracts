@@ -8,6 +8,8 @@ import { TWProxy } from "contracts/infra/TWProxy.sol";
 import "../../../utils/BaseTest.sol";
 
 contract HarnessDropERC721 is DropERC721 {
+    constructor() DropERC721(address(new MockMintFeeManager(0x1Af20C6B23373350aD464700B5965CE4B0D2aD94, 100))) {}
+
     function collectionPriceOnClaim(
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
@@ -50,7 +52,7 @@ contract DropERC721Test_collectPrice is BaseTest {
 
         dropImp = address(new HarnessDropERC721());
         proxy = HarnessDropERC721(address(new TWProxy(dropImp, initializeData)));
-        defaultFeeRecipient = proxy.DEFAULT_FEE_RECIPIENT();
+        defaultFeeRecipient = DEFAULT_FEE_RECIPIENT;
     }
 
     modifier pricePerTokenZero() {

@@ -37,6 +37,8 @@ import "../../extension/LazyMint.sol";
 import "../../extension/PermissionsEnumerable.sol";
 import "../../extension/Drop.sol";
 
+import "../../extension/interface/IMintFeeManager.sol";
+
 contract DropERC721 is
     Initializable,
     ContractMetadata,
@@ -68,11 +70,10 @@ contract DropERC721 is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
-    address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
-    uint16 private constant DEFAULT_FEE_BPS = 100;
-
     /// @dev Global max total supply of NFTs.
     uint256 public maxTotalSupply;
+
+    address public immutable mintFeeManager;
 
     /// @dev Emitted when the global max supply of tokens is updated.
     event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
@@ -81,7 +82,9 @@ contract DropERC721 is
                     Constructor + initializer logic
     //////////////////////////////////////////////////////////////*/
 
-    constructor() initializer {}
+    constructor(address _mintFeeManager) initializer {
+        mintFeeManager = _mintFeeManager;
+    }
 
     /// @dev Initializes the contract, like a constructor.
     function initialize(
@@ -264,8 +267,16 @@ contract DropERC721 is
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
+
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
+        address _mintFeeManager = mintFeeManager;
+        uint256 platformFeesTw = 0;
+        address feeRecipientTw;
+        if (_mintFeeManager != address(0)) {
+            (platformFeesTw, feeRecipientTw) = IMintFeeManager(_mintFeeManager).calculatePlatformFeeAndRecipient(
+                totalPrice
+            );
+        }
 
         bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -275,7 +286,7 @@ contract DropERC721 is
         }
         require(validMsgValue, "!V");
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), DEFAULT_FEE_RECIPIENT, platformFeesTw);
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), feeRecipientTw, platformFeesTw);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(
             _currency,

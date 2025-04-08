@@ -49,12 +49,15 @@ import { ERC721Holder, IERC721Receiver } from "@openzeppelin/contracts/token/ERC
 import { Clones } from "@openzeppelin/contracts/proxy/Clones.sol";
 import { Strings } from "contracts/lib/Strings.sol";
 import { IERC165 } from "@openzeppelin/contracts/utils/introspection/IERC165.sol";
+import { MockMintFeeManager } from "../mocks/MockMintFeeManager.sol";
 
 abstract contract BaseTest is DSTest, Test {
     string public constant NAME = "NAME";
     string public constant SYMBOL = "SYMBOL";
     string public constant CONTRACT_URI = "CONTRACT_URI";
     address public constant NATIVE_TOKEN = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+    address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
+    uint16 public constant DEFAULT_FEE_BPS = 100;
 
     MockERC20 public erc20;
     MockERC20 public erc20Aux;
@@ -63,6 +66,7 @@ abstract contract BaseTest is DSTest, Test {
     MockERC721NonBurnable public erc721NonBurnable;
     MockERC1155NonBurnable public erc1155NonBurnable;
     WETH9 public weth;
+    MockMintFeeManager public mintFeeManager;
 
     address public forwarder;
     address public eoaForwarder;
@@ -121,6 +125,8 @@ abstract contract BaseTest is DSTest, Test {
         contractPublisher = address(new ContractPublisher(factoryAdmin, forwarders(), new MockContractPublisher()));
         linkToken = address(new Link());
         vrfV2Wrapper = address(new VRFV2Wrapper());
+        mintFeeManager = new MockMintFeeManager(DEFAULT_FEE_RECIPIENT, DEFAULT_FEE_BPS);
+
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), contractPublisher);
 
@@ -129,7 +135,7 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new TokenERC1155()));
         TWFactory(factory).addImplementation(address(new DropERC20()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC721"), 1)));
-        TWFactory(factory).addImplementation(address(new DropERC721()));
+        TWFactory(factory).addImplementation(address(new DropERC721(address(mintFeeManager))));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC1155"), 1)));
         TWFactory(factory).addImplementation(address(new DropERC1155()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("SignatureDrop"), 1)));

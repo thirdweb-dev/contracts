@@ -189,6 +189,8 @@ contract DropERC721Test_misc is BaseTest {
 }
 
 contract HarnessDropERC721MsgData is DropERC721 {
+    constructor() DropERC721(address(new MockMintFeeManager(0x1Af20C6B23373350aD464700B5965CE4B0D2aD94, 100))) {}
+
     function msgData() public view returns (bytes memory) {
         return _msgData();
     }

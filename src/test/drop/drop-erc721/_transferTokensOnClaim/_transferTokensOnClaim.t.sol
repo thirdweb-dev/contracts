@@ -9,6 +9,8 @@ import "erc721a-upgradeable/contracts/IERC721AUpgradeable.sol";
 import "../../../utils/BaseTest.sol";
 
 contract HarnessDropERC721 is DropERC721 {
+    constructor() DropERC721(address(new MockMintFeeManager(0x1Af20C6B23373350aD464700B5965CE4B0D2aD94, 100))) {}
+
     function transferTokensOnClaim(address _to, uint256 _quantityToClaim) public payable {
         _transferTokensOnClaim(_to, _quantityToClaim);
     }
