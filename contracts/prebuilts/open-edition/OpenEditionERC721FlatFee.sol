@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-/// @author thirdweb
+/// @author rarible
 
-//   $$\     $$\       $$\                 $$\                         $$\
-//   $$ |    $$ |      \__|                $$ |                        $$ |
-// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
-// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
-//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
-//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
-//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
-//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
+// $$$$$$$\                      $$\ $$\       $$\           
+// $$  __$$\                     \__|$$ |      $$ |          
+// $$ |  $$ | $$$$$$\   $$$$$$\  $$\ $$$$$$$\  $$ | $$$$$$\  
+// $$$$$$$  | \____$$\ $$  __$$\ $$ |$$  __$$\ $$ |$$  __$$\ 
+// $$  __$$<  $$$$$$$ |$$ |  \__|$$ |$$ |  $$ |$$ |$$$$$$$$ |
+// $$ |  $$ |$$  __$$ |$$ |      $$ |$$ |  $$ |$$ |$$   ____|
+// $$ |  $$ |\$$$$$$$ |$$ |      $$ |$$$$$$$  |$$ |\$$$$$$$\ 
+// \__|  \__| \_______|\__|      \__|\_______/ \__| \_______|       
 
 //  ==========  External imports    ==========
 
@@ -160,8 +160,6 @@ contract OpenEditionERC721FlatFee is
         uint256 platformFees;
         address platformFeeRecipient;
 
-        uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
-
         if (getPlatformFeeType() == IPlatformFee.PlatformFeeType.Flat) {
             (platformFeeRecipient, platformFees) = getFlatPlatformFeeInfo();
         } else {
@@ -169,7 +167,7 @@ contract OpenEditionERC721FlatFee is
             platformFeeRecipient = recipient;
             platformFees = ((totalPrice * platformFeeBps) / MAX_BPS);
         }
-        require(totalPrice >= platformFees + platformFeesTw, "price less than platform fee");
+        require(totalPrice >= platformFees, "price less than platform fee");
 
         bool validMsgValue;
         if (_currency == CurrencyTransferLib.NATIVE_TOKEN) {
@@ -181,13 +179,12 @@ contract OpenEditionERC721FlatFee is
 
         address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), DEFAULT_FEE_RECIPIENT, platformFeesTw);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(
             _currency,
             _msgSender(),
             saleRecipient,
-            totalPrice - platformFees - platformFeesTw
+            totalPrice - platformFees
         );
     }
 

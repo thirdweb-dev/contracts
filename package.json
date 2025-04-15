@@ -1,5 +1,5 @@
 {
-  "name": "@thirdweb-dev/contracts",
+  "name": "@rarible/external-contracts",
   "description": "",
   "version": "3.11.4",
   "license": "Apache-2.0",
@@ -52,8 +52,8 @@
     "prettier:list-different": "prettier --config .prettierrc --plugin=prettier-plugin-solidity --list-different '**/*.sol'",
     "prettier:contracts": "prettier --config .prettierrc --plugin=prettier-plugin-solidity --list-different '{contracts,src}/**/*.sol'",
     "test": "forge test",
-    "typechain": "typechain --target ethers-v5 --out-dir ./typechain artifacts_forge/**/*.json",
-    "build": "yarn clean && yarn compile",
+    "typechain": "typechain --target ethers-v5 --out-dir ./typechain artifacts_forge/**.sol/**/*.json",
+    "build": "yarn clean && yarn compile && yarn typechain",
     "forge:build": "forge build",
     "forge:test": "forge test",
     "gas": "forge snapshot --isolate --mc Benchmark --gas-report --diff .gas-snapshot > gasreport.txt",

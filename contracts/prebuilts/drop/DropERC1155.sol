@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: Apache-2.0
 pragma solidity ^0.8.11;
 
-/// @author thirdweb
+/// @author rarible
 
-//   $$\     $$\       $$\                 $$\                         $$\
-//   $$ |    $$ |      \__|                $$ |                        $$ |
-// $$$$$$\   $$$$$$$\  $$\  $$$$$$\   $$$$$$$ |$$\  $$\  $$\  $$$$$$\  $$$$$$$\
-// \_$$  _|  $$  __$$\ $$ |$$  __$$\ $$  __$$ |$$ | $$ | $$ |$$  __$$\ $$  __$$\
-//   $$ |    $$ |  $$ |$$ |$$ |  \__|$$ /  $$ |$$ | $$ | $$ |$$$$$$$$ |$$ |  $$ |
-//   $$ |$$\ $$ |  $$ |$$ |$$ |      $$ |  $$ |$$ | $$ | $$ |$$   ____|$$ |  $$ |
-//   \$$$$  |$$ |  $$ |$$ |$$ |      \$$$$$$$ |\$$$$$\$$$$  |\$$$$$$$\ $$$$$$$  |
-//    \____/ \__|  \__|\__|\__|       \_______| \_____\____/  \_______|\_______/
+// $$$$$$$\                      $$\ $$\       $$\           
+// $$  __$$\                     \__|$$ |      $$ |          
+// $$ |  $$ | $$$$$$\   $$$$$$\  $$\ $$$$$$$\  $$ | $$$$$$\  
+// $$$$$$$  | \____$$\ $$  __$$\ $$ |$$  __$$\ $$ |$$  __$$\ 
+// $$  __$$<  $$$$$$$ |$$ |  \__|$$ |$$ |  $$ |$$ |$$$$$$$$ |
+// $$ |  $$ |$$  __$$ |$$ |      $$ |$$ |  $$ |$$ |$$   ____|
+// $$ |  $$ |\$$$$$$$ |$$ |      $$ |$$$$$$$  |$$ |\$$$$$$$\ 
+// \__|  \__| \_______|\__|      \__|\_______/ \__| \_______|       
 
 //  ==========  External imports    ==========
 
@@ -253,7 +253,6 @@ contract DropERC1155 is
             : _primarySaleRecipient;
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
-        uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
         uint256 platformFees = (totalPrice * platformFeeBps) / MAX_BPS;
 
         bool validMsgValue;
@@ -264,13 +263,12 @@ contract DropERC1155 is
         }
         require(validMsgValue, "!V");
 
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), DEFAULT_FEE_RECIPIENT, platformFeesTw);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), platformFeeRecipient, platformFees);
         CurrencyTransferLib.transferCurrency(
             _currency,
             _msgSender(),
             _saleRecipient,
-            totalPrice - platformFees - platformFeesTw
+            totalPrice - platformFees
         );
     }
 
