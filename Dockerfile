@@ -1,9 +1,13 @@
-# <ai_context>
-# This Dockerfile is used to build the smart contract project.
-# It sets up the environment with Node.js and Foundry, installs dependencies, and runs the build command.
-# </ai_context>
+ARG BASE_IMAGE_VERSION=20.18.3-bullseye
+FROM node:${BASE_IMAGE_VERSION} AS base
 
-FROM node:18
+FROM base AS base-dev
+
+WORKDIR /app
+RUN apt-get update -y \
+    && apt-get install -y ca-certificates curl gnupg jq git \
+    && npm install -g truffle@5.4.17 \
+    && rm -rf /var/{lib/apt,lib/dpkg/info,cache,log}/
 
 # Install Foundry
 RUN curl -L https://foundry.paradigm.xyz | bash && \
