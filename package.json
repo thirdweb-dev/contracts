@@ -65,5 +65,9 @@
     "forge:snapshot": "forge snapshot --check",
     "aabenchmark": "forge test --mc AABenchmarkPrepare && forge test --mc ProfileThirdwebAccount -vvv",
     "release": "npm publish --access public"
-  }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "access": "public"
 }
