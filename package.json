@@ -64,7 +64,7 @@
     "gas": "forge snapshot --isolate --mc Benchmark --gas-report --diff .gas-snapshot > gasreport.txt",
     "forge:snapshot": "forge snapshot --check",
     "aabenchmark": "forge test --mc AABenchmarkPrepare && forge test --mc ProfileThirdwebAccount -vvv",
-    "release": "npm publish --access public"
+    "release": "npm publish"
   },
   "publishConfig": {
     "access": "public"
