@@ -51,7 +51,7 @@
     "prettier": "prettier --config .prettierrc --write --plugin=prettier-plugin-solidity '{contracts,src}/**/*.sol'",
     "prettier:list-different": "prettier --config .prettierrc --plugin=prettier-plugin-solidity --list-different '**/*.sol'",
     "prettier:contracts": "prettier --config .prettierrc --plugin=prettier-plugin-solidity --list-different '{contracts,src}/**/*.sol'",
-    "test": "forge test",
+    "test": "pwd",
     "typechain": "typechain --target ethers-v5 --out-dir ./typechain artifacts_forge/**.sol/**/*.json",
     "build": "yarn clean && yarn compile && yarn typechain",
     "forge:build": "forge build",
