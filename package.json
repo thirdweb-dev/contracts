@@ -57,12 +57,13 @@
     "typechain-rari-oe": "typechain --target ethers-v5 --out-dir ./typechain artifacts_forge/OpenEditionERC721FlatFee.sol/**/*.json",
     "typechain-rari-721": "typechain --target ethers-v5 --out-dir ./typechain artifacts_forge/DropERC721.sol/**/*.json",
     "typechain-rari-1155": "typechain --target ethers-v5 --out-dir ./typechain artifacts_forge/DropERC1155.sol/**/*.json",
-    "build": "yarn clean && yarn compile && yarn typechain-rari-oe && yarn typechain-rari-721 && yarn typechain-rari-1155",
+    "build": "yarn clean && yarn compile && yarn typechain-rari-oe && yarn typechain-rari-721 && yarn typechain-rari-1155 && yarn tsc",
     "forge:build": "forge build",
     "forge:test": "forge test",
     "tsc": "tsc --project tsconfig.build.json",
     "gas": "forge snapshot --isolate --mc Benchmark --gas-report --diff .gas-snapshot > gasreport.txt",
     "forge:snapshot": "forge snapshot --check",
-    "aabenchmark": "forge test --mc AABenchmarkPrepare && forge test --mc ProfileThirdwebAccount -vvv"
+    "aabenchmark": "forge test --mc AABenchmarkPrepare && forge test --mc ProfileThirdwebAccount -vvv",
+    "release": "npm publish --access public"
   }
 }
