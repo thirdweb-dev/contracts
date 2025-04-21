@@ -3,7 +3,6 @@
   "include": ["typechain", "./scripts", "./test", "./utils"],
   "files": ["./hardhat.config.ts"],
   "compilerOptions": {
-    "module": "esnext",
     "lib": ["esnext"],
     "importHelpers": true,
     // output .d.ts declaration files for consumers
@@ -32,7 +31,8 @@
     "forceConsistentCasingInFileNames": true,
     // `tsdx build` ignores this option, but it is commonly used when type-checking separately with `tsc`
     "noEmit": true,
-    "target": "ES6"
+    "target": "es5",
+    "module": "commonjs",
   },
   "ts-node": {
     "compilerOptions": {
