@@ -13,12 +13,9 @@ import { MockERC1155, IERC1155 } from "../mocks/MockERC1155.sol";
 import { MockERC721NonBurnable } from "../mocks/MockERC721NonBurnable.sol";
 import { MockERC1155NonBurnable } from "../mocks/MockERC1155NonBurnable.sol";
 import { Forwarder } from "contracts/infra/forwarder/Forwarder.sol";
-import { ForwarderEOAOnly } from "contracts/infra/forwarder/ForwarderEOAOnly.sol";
 import { TWRegistry } from "contracts/infra/TWRegistry.sol";
 import { TWFactory } from "contracts/infra/TWFactory.sol";
 import { Multiwrap } from "contracts/prebuilts/multiwrap/Multiwrap.sol";
-import { Pack } from "contracts/prebuilts/pack/Pack.sol";
-import { PackVRFDirect } from "contracts/prebuilts/pack/PackVRFDirect.sol";
 import { Split } from "contracts/prebuilts/split/Split.sol";
 import { DropERC20 } from "contracts/prebuilts/drop/DropERC20.sol";
 import { DropERC721 } from "contracts/prebuilts/drop/DropERC721.sol";
@@ -65,7 +62,6 @@ abstract contract BaseTest is DSTest, Test {
     WETH9 public weth;
 
     address public forwarder;
-    address public eoaForwarder;
     address public registry;
     address public factory;
     address public fee;
@@ -115,7 +111,6 @@ abstract contract BaseTest is DSTest, Test {
         erc1155NonBurnable = new MockERC1155NonBurnable();
         weth = new WETH9();
         forwarder = address(new Forwarder());
-        eoaForwarder = address(new ForwarderEOAOnly());
         registry = address(new TWRegistry(forwarders()));
         factory = address(new TWFactory(forwarders(), registry));
         contractPublisher = address(new ContractPublisher(factoryAdmin, forwarders(), new MockContractPublisher()));
@@ -138,17 +133,12 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new Marketplace(address(weth))));
         TWFactory(factory).addImplementation(address(new Split()));
         TWFactory(factory).addImplementation(address(new Multiwrap(address(weth))));
-        TWFactory(factory).addImplementation(address(new MockContract(bytes32("Pack"), 1)));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC721"), 1)));
         TWFactory(factory).addImplementation(address(new AirdropERC721()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC20"), 1)));
         TWFactory(factory).addImplementation(address(new AirdropERC20()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("AirdropERC1155"), 1)));
         TWFactory(factory).addImplementation(address(new AirdropERC1155()));
-        TWFactory(factory).addImplementation(
-            address(new PackVRFDirect(address(weth), eoaForwarder, linkToken, vrfV2Wrapper))
-        );
-        TWFactory(factory).addImplementation(address(new Pack(address(weth))));
         TWFactory(factory).addImplementation(address(new VoteERC20()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("NFTStake"), 1)));
         TWFactory(factory).addImplementation(address(new NFTStake(address(weth))));
@@ -286,21 +276,6 @@ abstract contract BaseTest is DSTest, Test {
             "Multiwrap",
             abi.encodeCall(
                 Multiwrap.initialize,
-                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
-            )
-        );
-        deployContractProxy(
-            "Pack",
-            abi.encodeCall(
-                Pack.initialize,
-                (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
-            )
-        );
-
-        deployContractProxy(
-            "PackVRFDirect",
-            abi.encodeCall(
-                PackVRFDirect.initialize,
                 (deployer, NAME, SYMBOL, CONTRACT_URI, forwarders(), royaltyRecipient, royaltyBps)
             )
         );
