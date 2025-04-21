@@ -25,7 +25,6 @@ import { TokenERC721 } from "contracts/prebuilts/token/TokenERC721.sol";
 import { TokenERC1155 } from "contracts/prebuilts/token/TokenERC1155.sol";
 import { Marketplace } from "contracts/prebuilts/marketplace-legacy/Marketplace.sol";
 import { VoteERC20 } from "contracts/prebuilts/vote/VoteERC20.sol";
-import { SignatureDrop } from "contracts/prebuilts/signature-drop/SignatureDrop.sol";
 import { ContractPublisher } from "contracts/infra/ContractPublisher.sol";
 import { IContractPublisher } from "contracts/infra/interface/IContractPublisher.sol";
 import { AirdropERC721 } from "contracts/prebuilts/unaudited/airdrop/AirdropERC721.sol";
@@ -127,8 +126,6 @@ abstract contract BaseTest is DSTest, Test {
         TWFactory(factory).addImplementation(address(new DropERC721()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("DropERC1155"), 1)));
         TWFactory(factory).addImplementation(address(new DropERC1155()));
-        TWFactory(factory).addImplementation(address(new MockContract(bytes32("SignatureDrop"), 1)));
-        TWFactory(factory).addImplementation(address(new SignatureDrop()));
         TWFactory(factory).addImplementation(address(new MockContract(bytes32("Marketplace"), 1)));
         TWFactory(factory).addImplementation(address(new Marketplace(address(weth))));
         TWFactory(factory).addImplementation(address(new Split()));
@@ -235,24 +232,6 @@ abstract contract BaseTest is DSTest, Test {
                 DropERC1155.initialize,
                 (
                     deployer,
-                    NAME,
-                    SYMBOL,
-                    CONTRACT_URI,
-                    forwarders(),
-                    saleRecipient,
-                    royaltyRecipient,
-                    royaltyBps,
-                    platformFeeBps,
-                    platformFeeRecipient
-                )
-            )
-        );
-        deployContractProxy(
-            "SignatureDrop",
-            abi.encodeCall(
-                SignatureDrop.initialize,
-                (
-                    signer,
                     NAME,
                     SYMBOL,
                     CONTRACT_URI,
