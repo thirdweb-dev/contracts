@@ -39,6 +39,8 @@ contract CollectAuctionPayoutTest is BaseTest, IExtension {
     address public seller;
     address public buyer;
 
+    address private defaultFeeRecipient;
+
     // Auction parameters
     uint256 internal auctionId;
     address internal winningBidder = address(0x123);
@@ -142,6 +144,7 @@ contract CollectAuctionPayoutTest is BaseTest, IExtension {
 
         // Deploy `EnglishAuctions`
         address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
+        defaultFeeRecipient = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
         vm.label(englishAuctions, "EnglishAuctions_Extension");
 
         // Extension: EnglishAuctionsLogic
@@ -292,7 +295,10 @@ contract CollectAuctionPayoutTest is BaseTest, IExtension {
             uint256(IEnglishAuctions.Status.COMPLETED)
         );
 
+        uint256 defaultFee = (marketplaceBal * 100) / 10_000;
+
         assertEq(erc20.balanceOf(address(marketplace)), 0);
-        assertEq(erc20.balanceOf(seller), marketplaceBal);
+        assertEq(erc20.balanceOf(seller), marketplaceBal - defaultFee);
+        assertEq(erc20.balanceOf(defaultFeeRecipient), defaultFee);
     }
 }

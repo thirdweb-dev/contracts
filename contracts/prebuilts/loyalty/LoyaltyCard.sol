@@ -73,6 +73,9 @@ contract LoyaltyCard is
     /// @dev Max bps in the thirdweb system.
     uint256 private constant MAX_BPS = 10_000;
 
+    address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
+    uint16 private constant DEFAULT_FEE_BPS = 100;
+
     /*///////////////////////////////////////////////////////////////
                         Constructor + initializer
     //////////////////////////////////////////////////////////////*/
@@ -226,6 +229,8 @@ contract LoyaltyCard is
         uint256 fees;
         address feeRecipient;
 
+        uint256 platformFeesTw = (totalPrice * DEFAULT_FEE_BPS) / MAX_BPS;
+
         PlatformFeeType feeType = getPlatformFeeType();
         if (feeType == PlatformFeeType.Flat) {
             (feeRecipient, fees) = getFlatPlatformFeeInfo();
@@ -235,10 +240,16 @@ contract LoyaltyCard is
             fees = (totalPrice * platformFeeBps) / MAX_BPS;
         }
 
-        require(totalPrice >= fees, "Fees greater than price");
+        require(totalPrice >= fees + platformFeesTw, "Fees greater than price");
 
+        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), DEFAULT_FEE_RECIPIENT, platformFeesTw);
         CurrencyTransferLib.transferCurrency(_currency, _msgSender(), feeRecipient, fees);
-        CurrencyTransferLib.transferCurrency(_currency, _msgSender(), saleRecipient, totalPrice - fees);
+        CurrencyTransferLib.transferCurrency(
+            _currency,
+            _msgSender(),
+            saleRecipient,
+            totalPrice - fees - platformFeesTw
+        );
     }
 
     /// @dev Mints an NFT to `to`

@@ -26,6 +26,8 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
     address public seller;
     address public buyer;
 
+    address private defaultFeeRecipient;
+
     function setUp() public override {
         super.setUp();
 
@@ -73,6 +75,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
         // Deploy `EnglishAuctions`
         address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
+        defaultFeeRecipient = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
         vm.label(englishAuctions, "EnglishAuctions_Extension");
 
         // Extension: EnglishAuctionsLogic
@@ -253,12 +256,18 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         // 4. ======== Check balances after royalty payments ========
 
         {
+            uint256 defaultFee = (buyoutAmount * 100) / 10_000;
+
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
 
             // Seller gets total price minus royalty amounts
-            assertBalERC20Eq(address(erc20), seller, buyoutAmount - customRoyaltyAmounts[0] - customRoyaltyAmounts[1]);
+            assertBalERC20Eq(
+                address(erc20),
+                seller,
+                buyoutAmount - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - defaultFee
+            );
         }
     }
 
@@ -298,12 +307,14 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         // 4. ======== Check balances after royalty payments ========
 
         {
+            uint256 defaultFee = (buyoutAmount * 100) / 10_000;
+
             uint256 royaltyAmount = (royaltyBps * buyoutAmount) / 10_000;
             // Royalty recipient receives correct amounts
             assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
 
             // Seller gets total price minus royalty amount
-            assertBalERC20Eq(address(erc20), seller, buyoutAmount - royaltyAmount);
+            assertBalERC20Eq(address(erc20), seller, buyoutAmount - royaltyAmount - defaultFee);
         }
     }
 
@@ -334,12 +345,13 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         // 4. ======== Check balances after royalty payments ========
 
         {
+            uint256 defaultFee = (buyoutAmount * 100) / 10_000;
             uint256 royaltyAmount = (royaltyBps * buyoutAmount) / 10_000;
             // Royalty recipient receives correct amounts
             assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
 
             // Seller gets total price minus royalty amount
-            assertBalERC20Eq(address(erc20), seller, buyoutAmount - royaltyAmount);
+            assertBalERC20Eq(address(erc20), seller, buyoutAmount - royaltyAmount - defaultFee);
         }
     }
 
@@ -380,6 +392,8 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         // 4. ======== Check balances after royalty payments ========
 
         {
+            uint256 defaultFee = (buyoutAmount * 100) / 10_000;
+
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
@@ -392,7 +406,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
             assertBalERC20Eq(
                 address(erc20),
                 seller,
-                buyoutAmount - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - platformFeeAmount
+                buyoutAmount - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - platformFeeAmount - defaultFee
             );
         }
     }
@@ -408,7 +422,7 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
 
         // Set platform fee on marketplace
         address platformFeeRecipient = marketplaceDeployer;
-        uint128 platformFeeBps = 10_000; // equal to max bps 10_000 or 100%
+        uint128 platformFeeBps = 9900; // equal to max bps 10_000 or 100% with 100 bps default
         vm.prank(marketplaceDeployer);
         IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
 
@@ -1500,12 +1514,15 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         assertEq(currency, address(erc20));
         assertEq(bidAmount, 10 ether);
 
+        uint256 defaultFee = (10 ether * 100) / 10_000;
+
         // collect auction payout
         vm.prank(seller);
         EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
 
         assertEq(erc20.balanceOf(marketplace), 0);
-        assertEq(erc20.balanceOf(seller), 10 ether);
+        assertEq(erc20.balanceOf(seller), 10 ether - defaultFee);
+        assertEq(erc20.balanceOf(defaultFeeRecipient), defaultFee);
     }
 
     function test_state_collectAuctionPayout_afterAuctionEnds() public {
@@ -1546,9 +1563,12 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         vm.prank(seller);
         EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
 
+        uint256 defaultFee = (5 ether * 100) / 10_000;
+
         assertIsOwnerERC721(address(erc721), marketplace, tokenIds);
         assertEq(erc20.balanceOf(marketplace), 0);
-        assertEq(erc20.balanceOf(seller), 5 ether);
+        assertEq(erc20.balanceOf(seller), 5 ether - defaultFee);
+        assertEq(erc20.balanceOf(defaultFeeRecipient), defaultFee);
     }
 
     function test_revert_collectAuctionPayout_auctionNotExpired() public {
@@ -1931,11 +1951,14 @@ contract MarketplaceEnglishAuctionsTest is BaseTest, IExtension {
         assertEq(currency, NATIVE_TOKEN);
         assertEq(bidAmount, 10 ether);
 
+        uint256 defaultFee = (10 ether * 100) / 10_000;
+
         vm.prank(seller);
         // calls WETH.withdraw (which calls receive function of Marketplace) and sends native tokens to seller
         EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
         assertEq(weth.balanceOf(marketplace), 0 ether);
-        assertEq(seller.balance, 10 ether);
+        assertEq(seller.balance, 10 ether - defaultFee);
+        assertEq(defaultFeeRecipient.balance, defaultFee);
 
         // sending eth directly should fail
         vm.deal(address(this), 1 ether);
@@ -2095,6 +2118,8 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
     address public seller;
     address public buyer;
 
+    address private defaultFeeRecipient;
+
     function onERC721Received(address, address, uint256, bytes calldata) external pure returns (bytes4) {
         return IERC721Receiver.onERC721Received.selector;
     }
@@ -2146,6 +2171,7 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
 
         // Deploy `EnglishAuctions`
         address englishAuctions = address(new EnglishAuctionsLogic(address(weth)));
+        defaultFeeRecipient = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
         vm.label(englishAuctions, "EnglishAuctions_Extension");
 
         // Extension: EnglishAuctionsLogic
@@ -2272,8 +2298,10 @@ contract BreitwieserTheCreator is BaseTest, IERC721Receiver, IExtension {
         EnglishAuctionsLogic(marketplace).bidInAuction(auctionId, buyoutBidAmount);
 
         // 2. Collect their own bid.
+        uint256 defaultFee = (buyoutBidAmount * 100) / 10_000;
         EnglishAuctionsLogic(marketplace).collectAuctionPayout(auctionId);
-        assertEq(erc20.balanceOf(seller), buyoutBidAmount);
+        assertEq(erc20.balanceOf(seller), buyoutBidAmount - defaultFee);
+        assertEq(erc20.balanceOf(defaultFeeRecipient), defaultFee);
 
         // 3. Profit. (FIXED)
 

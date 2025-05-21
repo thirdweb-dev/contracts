@@ -38,6 +38,9 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
     /// @dev The max bps of the contract. So, 10_000 == 100 %
     uint64 private constant MAX_BPS = 10_000;
 
+    address private constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
+    uint16 private constant DEFAULT_FEE_BPS = 100;
+
     /// @dev The address of the native token wrapper contract.
     address private immutable nativeTokenWrapper;
 
@@ -467,10 +470,18 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
 
         // Payout platform fee
         {
+            uint256 platformFeesTw = (_totalPayoutAmount * DEFAULT_FEE_BPS) / MAX_BPS;
             (address platformFeeRecipient, uint16 platformFeeBps) = IPlatformFee(address(this)).getPlatformFeeInfo();
             uint256 platformFeeCut = (_totalPayoutAmount * platformFeeBps) / MAX_BPS;
 
             // Transfer platform fee
+            CurrencyTransferLib.transferCurrencyWithWrapper(
+                _currencyToUse,
+                _payer,
+                DEFAULT_FEE_RECIPIENT,
+                platformFeesTw,
+                _nativeTokenWrapper
+            );
             CurrencyTransferLib.transferCurrencyWithWrapper(
                 _currencyToUse,
                 _payer,
@@ -479,7 +490,7 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
                 _nativeTokenWrapper
             );
 
-            amountRemaining = _totalPayoutAmount - platformFeeCut;
+            amountRemaining = _totalPayoutAmount - platformFeeCut - platformFeesTw;
         }
 
         // Payout royalties

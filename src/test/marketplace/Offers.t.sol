@@ -27,6 +27,8 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
     address public seller;
     address public buyer;
 
+    address private defaultFeeRecipient;
+
     function setUp() public override {
         super.setUp();
 
@@ -72,6 +74,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
 
         // Deploy `Offers`
         address offers = address(new OffersLogic());
+        defaultFeeRecipient = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
         vm.label(offers, "Offers_Extension");
 
         // Extension: OffersLogic
@@ -202,12 +205,19 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
+            uint256 defaultFee = (totalPrice * 100) / 10_000;
+
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
 
             // Seller gets total price minus royalty amounts
-            assertBalERC20Eq(address(erc20), seller, totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1]);
+            assertBalERC20Eq(
+                address(erc20),
+                seller,
+                totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - defaultFee
+            );
+            assertBalERC20Eq(address(erc20), defaultFeeRecipient, defaultFee);
         }
     }
 
@@ -242,12 +252,14 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
+            uint256 defaultFee = (totalPrice * 100) / 10_000;
             uint256 royaltyAmount = (royaltyBps * totalPrice) / 10_000;
             // Royalty recipient receives correct amounts
             assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
 
             // Seller gets total price minus royalty amount
-            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount);
+            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount - defaultFee);
+            assertBalERC20Eq(address(erc20), defaultFeeRecipient, defaultFee);
         }
     }
 
@@ -273,12 +285,15 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
+            uint256 defaultFee = (totalPrice * 100) / 10_000;
+
             uint256 royaltyAmount = (royaltyBps * totalPrice) / 10_000;
             // Royalty recipient receives correct amounts
             assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
 
             // Seller gets total price minus royalty amount
-            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount);
+            assertBalERC20Eq(address(erc20), seller, totalPrice - royaltyAmount - defaultFee);
+            assertBalERC20Eq(address(erc20), defaultFeeRecipient, defaultFee);
         }
     }
 
@@ -314,6 +329,8 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
+            uint256 defaultFee = (totalPrice * 100) / 10_000;
+
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[1], customRoyaltyAmounts[1]);
@@ -326,8 +343,10 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
             assertBalERC20Eq(
                 address(erc20),
                 seller,
-                totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - platformFeeAmount
+                totalPrice - customRoyaltyAmounts[0] - customRoyaltyAmounts[1] - platformFeeAmount - defaultFee
             );
+
+            assertBalERC20Eq(address(erc20), defaultFeeRecipient, defaultFee);
         }
     }
 
@@ -342,7 +361,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
 
         // Set platform fee on marketplace
         address platformFeeRecipient = marketplaceDeployer;
-        uint128 platformFeeBps = 10_000; // equal to max bps 10_000 or 100%
+        uint128 platformFeeBps = 9900; // equal to max bps 10_000 or 100% with 100 bps default
         vm.prank(marketplaceDeployer);
         IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
 
@@ -784,9 +803,11 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         IOffers.Offer memory completedOffer = OffersLogic(marketplace).getOffer(offerId);
         assertTrue(completedOffer.status == IOffers.Status.COMPLETED);
 
+        uint256 defaultFee = (totalPrice * 100) / 10_000;
         // check states after accepting offer
         assertEq(erc721.ownerOf(tokenId), buyer);
-        assertEq(erc20.balanceOf(seller), totalPrice);
+        assertEq(erc20.balanceOf(seller), totalPrice - defaultFee);
+        assertEq(erc20.balanceOf(defaultFeeRecipient), defaultFee);
         assertEq(erc20.balanceOf(buyer), 0);
     }
 

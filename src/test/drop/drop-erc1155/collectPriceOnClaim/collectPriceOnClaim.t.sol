@@ -30,6 +30,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
     address private collectPrice_currency;
     uint256 private collectPrice_msgValue;
     address private collectPrice_tokenSaleRecipient = address(0x111);
+    address private defaultFeeRecipient;
 
     address public dropImp;
     HarnessDropERC1155 public proxy;
@@ -55,6 +56,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
 
         dropImp = address(new HarnessDropERC1155());
         proxy = HarnessDropERC1155(address(new TWProxy(dropImp, initializeData)));
+        defaultFeeRecipient = proxy.DEFAULT_FEE_RECIPIENT();
     }
 
     modifier pricePerTokenZero() {
@@ -137,6 +139,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
 
     function test_transferNativeCurrencyToSaleRecipient() public nativeCurrency pricePerTokenNotZero msgValueNotZero {
         uint256 balanceSaleRecipientBefore = address(saleRecipient).balance;
+        uint256 defaultFeeRecipientBefore = address(defaultFeeRecipient).balance;
         uint256 platformFeeRecipientBefore = address(platformFeeRecipient).balance;
         proxy.collectPriceOnClaimHarness{ value: collectPrice_msgValue }(
             0,
@@ -147,16 +150,20 @@ contract DropERC1155Test_collectPrice is BaseTest {
         );
 
         uint256 balanceSaleRecipientAfter = address(saleRecipient).balance;
+        uint256 defaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
         uint256 platformFeeRecipientAfter = address(platformFeeRecipient).balance;
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
-        uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee;
+        uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee - expectedDefaultPlatformFee;
 
         assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
+        assertEq(defaultFeeRecipientAfter - defaultFeeRecipientBefore, expectedDefaultPlatformFee);
     }
 
     function test_transferERC20ToSaleRecipient() public erc20Currency pricePerTokenNotZero {
         uint256 balanceSaleRecipientBefore = erc20.balanceOf(saleRecipient);
+        uint256 defaultFeeRecipientBefore = erc20.balanceOf(defaultFeeRecipient);
         uint256 platformFeeRecipientBefore = erc20.balanceOf(platformFeeRecipient);
         erc20.approve(address(proxy), collectPrice_pricePerToken);
         proxy.collectPriceOnClaimHarness(
@@ -168,12 +175,17 @@ contract DropERC1155Test_collectPrice is BaseTest {
         );
 
         uint256 balanceSaleRecipientAfter = erc20.balanceOf(saleRecipient);
+        uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
         uint256 platformFeeRecipientAfter = erc20.balanceOf(platformFeeRecipient);
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
-        uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken - expectedPlatformFee;
+        uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken -
+            expectedPlatformFee -
+            expectedDefaultPlatformFee;
 
         assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
+        assertEq(defaultFeeRecipientAfter - defaultFeeRecipientBefore, expectedDefaultPlatformFee);
     }
 
     function test_transferNativeCurrencyToTokenIdSaleRecipient()
@@ -185,6 +197,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
         primarySaleRecipientZeroAddress
     {
         uint256 balanceSaleRecipientBefore = address(collectPrice_tokenSaleRecipient).balance;
+        uint256 defaultFeeRecipientBefore = address(defaultFeeRecipient).balance;
         uint256 platformFeeRecipientBefore = address(platformFeeRecipient).balance;
         proxy.collectPriceOnClaimHarness{ value: collectPrice_msgValue }(
             0,
@@ -195,16 +208,20 @@ contract DropERC1155Test_collectPrice is BaseTest {
         );
 
         uint256 balanceSaleRecipientAfter = address(collectPrice_tokenSaleRecipient).balance;
+        uint256 defaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
         uint256 platformFeeRecipientAfter = address(platformFeeRecipient).balance;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
-        uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee;
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
+        uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee - expectedDefaultPlatformFee;
 
         assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
+        assertEq(defaultFeeRecipientAfter - defaultFeeRecipientBefore, expectedDefaultPlatformFee);
     }
 
     function test_transferERC20ToTokenIdSaleRecipient() public erc20Currency pricePerTokenNotZero saleRecipientSet {
         uint256 balanceSaleRecipientBefore = erc20.balanceOf(collectPrice_tokenSaleRecipient);
+        uint256 defaultFeeRecipientBefore = erc20.balanceOf(defaultFeeRecipient);
         uint256 platformFeeRecipientBefore = erc20.balanceOf(platformFeeRecipient);
         erc20.approve(address(proxy), collectPrice_pricePerToken);
         proxy.collectPriceOnClaimHarness(
@@ -216,12 +233,17 @@ contract DropERC1155Test_collectPrice is BaseTest {
         );
 
         uint256 balanceSaleRecipientAfter = erc20.balanceOf(collectPrice_tokenSaleRecipient);
+        uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
         uint256 platformFeeRecipientAfter = erc20.balanceOf(platformFeeRecipient);
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
-        uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken - expectedPlatformFee;
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
+        uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken -
+            expectedPlatformFee -
+            expectedDefaultPlatformFee;
 
         assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
+        assertEq(defaultFeeRecipientAfter - defaultFeeRecipientBefore, expectedDefaultPlatformFee);
     }
 
     function test_transferNativeCurrencyToPrimarySaleRecipient()
@@ -231,6 +253,7 @@ contract DropERC1155Test_collectPrice is BaseTest {
         msgValueNotZero
     {
         uint256 balanceSaleRecipientBefore = address(saleRecipient).balance;
+        uint256 balanceDefaultFeeRecipientBefore = address(defaultFeeRecipient).balance;
         uint256 platformFeeRecipientBefore = address(platformFeeRecipient).balance;
         proxy.collectPriceOnClaimHarness{ value: collectPrice_msgValue }(
             0,
@@ -241,16 +264,20 @@ contract DropERC1155Test_collectPrice is BaseTest {
         );
 
         uint256 balanceSaleRecipientAfter = address(saleRecipient).balance;
+        uint256 balanceDefaultFeeRecipientAfter = address(defaultFeeRecipient).balance;
         uint256 platformFeeRecipientAfter = address(platformFeeRecipient).balance;
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
-        uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee;
+        uint256 expectedSaleRecipientProceed = collectPrice_msgValue - expectedPlatformFee - expectedDefaultPlatformFee;
 
         assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
+        assertEq(balanceDefaultFeeRecipientAfter - balanceDefaultFeeRecipientBefore, expectedDefaultPlatformFee);
     }
 
     function test_transferERC20ToPrimarySaleRecipient() public erc20Currency pricePerTokenNotZero {
         uint256 balanceSaleRecipientBefore = erc20.balanceOf(saleRecipient);
+        uint256 defaultFeeRecipientBefore = erc20.balanceOf(defaultFeeRecipient);
         uint256 platformFeeRecipientBefore = erc20.balanceOf(platformFeeRecipient);
         erc20.approve(address(proxy), collectPrice_pricePerToken);
         proxy.collectPriceOnClaimHarness(
@@ -262,11 +289,16 @@ contract DropERC1155Test_collectPrice is BaseTest {
         );
 
         uint256 balanceSaleRecipientAfter = erc20.balanceOf(saleRecipient);
+        uint256 defaultFeeRecipientAfter = erc20.balanceOf(defaultFeeRecipient);
         uint256 platformFeeRecipientAfter = erc20.balanceOf(platformFeeRecipient);
+        uint256 expectedDefaultPlatformFee = (collectPrice_pricePerToken * 100) / MAX_BPS;
         uint256 expectedPlatformFee = (collectPrice_pricePerToken * platformFeeBps) / MAX_BPS;
-        uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken - expectedPlatformFee;
+        uint256 expectedSaleRecipientProceed = collectPrice_pricePerToken -
+            expectedPlatformFee -
+            expectedDefaultPlatformFee;
 
         assertEq(balanceSaleRecipientAfter - balanceSaleRecipientBefore, expectedSaleRecipientProceed);
+        assertEq(defaultFeeRecipientAfter - defaultFeeRecipientBefore, expectedDefaultPlatformFee);
         assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, expectedPlatformFee);
     }
 }

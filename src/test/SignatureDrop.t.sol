@@ -576,7 +576,7 @@ contract SignatureDropTest is BaseTest {
     /*
      *  note: Testing state changes; revealing URI with an incorrect key.
      */
-    function testFail_reveal_incorrectKey() public {
+    function test_revert_reveal_incorrectKey() public {
         vm.startPrank(deployerSigner);
 
         bytes memory key = "key";
@@ -584,8 +584,8 @@ contract SignatureDropTest is BaseTest {
         bytes32 provenanceHash = keccak256(abi.encodePacked("ipfs://", key, block.chainid));
         sigdrop.lazyMint(100, "", abi.encode(encryptedURI, provenanceHash));
 
+        vm.expectRevert();
         string memory revealedURI = sigdrop.reveal(0, "keyy");
-        assertEq(revealedURI, "ipfs://");
 
         vm.stopPrank();
     }
@@ -1211,7 +1211,7 @@ contract SignatureDropTest is BaseTest {
                             Reentrancy related Tests
     //////////////////////////////////////////////////////////////*/
 
-    function testFail_reentrancy_mintWithSignature() public {
+    function test_revert_reentrancy_mintWithSignature() public {
         vm.prank(deployerSigner);
         sigdrop.lazyMint(100, "ipfs://", emptyEncodedBytes);
         uint256 id = 0;
@@ -1239,13 +1239,12 @@ contract SignatureDropTest is BaseTest {
             MaliciousReceiver mal = new MaliciousReceiver(address(sigdrop));
             vm.deal(address(mal), 100 ether);
             vm.warp(1000);
+            vm.expectRevert();
             mal.attackMintWithSignature(mintrequest, signature, false);
-
-            assertEq(totalSupplyBefore + mintrequest.quantity, sigdrop.totalSupply());
         }
     }
 
-    function testFail_reentrancy_claim() public {
+    function test_revert_reentrancy_claim() public {
         vm.warp(1);
         bytes32[] memory proofs = new bytes32[](0);
 
@@ -1264,10 +1263,11 @@ contract SignatureDropTest is BaseTest {
 
         MaliciousReceiver mal = new MaliciousReceiver(address(sigdrop));
         vm.deal(address(mal), 100 ether);
+        vm.expectRevert();
         mal.attackClaim(alp, false);
     }
 
-    function testFail_combination_signatureAndClaim() public {
+    function test_revert_combination_signatureAndClaim() public {
         vm.warp(1);
         bytes32[] memory proofs = new bytes32[](0);
 
@@ -1309,10 +1309,9 @@ contract SignatureDropTest is BaseTest {
             vm.deal(address(mal), 100 ether);
             vm.warp(1000);
             mal.saveCombination(mintrequest, signature, alp);
+            vm.expectRevert();
             mal.attackMintWithSignature(mintrequest, signature, true);
             // mal.attackClaim(alp, true);
-
-            assertEq(totalSupplyBefore + mintrequest.quantity, sigdrop.totalSupply());
         }
     }
 }
