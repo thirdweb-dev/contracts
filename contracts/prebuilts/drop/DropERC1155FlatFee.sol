@@ -10,15 +10,15 @@ pragma solidity ^0.8.11;
 // $$  __$$<  $$$$$$$ |$$ |  \__|$$ |$$ |  $$ |$$ |$$$$$$$$ |
 // $$ |  $$ |$$  __$$ |$$ |      $$ |$$ |  $$ |$$ |$$   ____|
 // $$ |  $$ |\$$$$$$$ |$$ |      $$ |$$$$$$$  |$$ |\$$$$$$$\ 
-// \__|  \__| \_______|\__|      \__|\_______/ \__| \_______|                                                          
+// \__|  \__| \_______|\__|      \__|\_______/ \__| \_______|       
 
 //  ==========  External imports    ==========
+
+import "@openzeppelin/contracts-upgradeable/token/ERC1155/ERC1155Upgradeable.sol";
 
 import "../../extension/Multicall.sol";
 import "@openzeppelin/contracts-upgradeable/utils/StringsUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/interfaces/IERC2981Upgradeable.sol";
-
-import "../../eip/ERC721AVirtualApproveUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
@@ -32,32 +32,35 @@ import "../../extension/PlatformFee.sol";
 import "../../extension/Royalty.sol";
 import "../../extension/PrimarySale.sol";
 import "../../extension/Ownable.sol";
-import "../../extension/DelayedReveal.sol";
 import "../../extension/LazyMint.sol";
 import "../../extension/PermissionsEnumerable.sol";
-import "../../extension/Drop.sol";
-import "../../extension/PlatformFee.sol";
+import "../../extension/Drop1155.sol";
 
-contract DropERC721FlatFee is
+contract DropERC1155FlatFee is
     Initializable,
     ContractMetadata,
     PlatformFee,
     Royalty,
     PrimarySale,
     Ownable,
-    DelayedReveal,
     LazyMint,
     PermissionsEnumerable,
-    Drop,
+    Drop1155,
     ERC2771ContextUpgradeable,
     Multicall,
-    ERC721AUpgradeable
+    ERC1155Upgradeable
 {
     using StringsUpgradeable for uint256;
 
     /*///////////////////////////////////////////////////////////////
                             State variables
     //////////////////////////////////////////////////////////////*/
+
+    // Token name
+    string public name;
+
+    // Token symbol
+    string public symbol;
 
     /// @dev Only transfers to or from TRANSFER_ROLE holders are valid, when transfers are restricted.
     bytes32 private transferRole;
@@ -72,11 +75,28 @@ contract DropERC721FlatFee is
     address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
     uint16 private constant DEFAULT_FEE_BPS = 100;
 
-    /// @dev Global max total supply of NFTs.
-    uint256 public maxTotalSupply;
+    /*///////////////////////////////////////////////////////////////
+                                Mappings
+    //////////////////////////////////////////////////////////////*/
 
-    /// @dev Emitted when the global max supply of tokens is updated.
-    event MaxTotalSupplyUpdated(uint256 maxTotalSupply);
+    /// @dev Mapping from token ID => total circulating supply of tokens with that ID.
+    mapping(uint256 => uint256) public totalSupply;
+
+    /// @dev Mapping from token ID => maximum possible total circulating supply of tokens with that ID.
+    mapping(uint256 => uint256) public maxTotalSupply;
+
+    /// @dev Mapping from token ID => the address of the recipient of primary sales.
+    mapping(uint256 => address) public saleRecipient;
+
+    /*///////////////////////////////////////////////////////////////
+                               Events
+    //////////////////////////////////////////////////////////////*/
+
+    /// @dev Emitted when the global max supply of a token is updated.
+    event MaxTotalSupplyUpdated(uint256 tokenId, uint256 maxTotalSupply);
+
+    /// @dev Emitted when the sale recipient for a particular tokenId is updated.
+    event SaleRecipientForTokenUpdated(uint256 indexed tokenId, address saleRecipient);
 
     /*///////////////////////////////////////////////////////////////
                     Constructor + initializer logic
@@ -103,8 +123,9 @@ contract DropERC721FlatFee is
 
         // Initialize inherited contracts, most base-like -> most derived.
         __ERC2771Context_init(_trustedForwarders);
-        __ERC721A_init(_name, _symbol);
+        __ERC1155_init_unchained("");
 
+        // Initialize this contract's state.
         _setupContractURI(_contractURI);
         _setupOwner(_defaultAdmin);
 
@@ -122,28 +143,24 @@ contract DropERC721FlatFee is
         transferRole = _transferRole;
         minterRole = _minterRole;
         metadataRole = _metadataRole;
+        name = _name;
+        symbol = _symbol;
     }
 
     /*///////////////////////////////////////////////////////////////
-                        ERC 165 / 721 / 2981 logic
+                        ERC 165 / 1155 / 2981 logic
     //////////////////////////////////////////////////////////////*/
 
-    /// @dev Returns the URI for a given tokenId.
-    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        (uint256 batchId, ) = _getBatchId(_tokenId);
+    /// @dev Returns the uri for a given tokenId.
+    function uri(uint256 _tokenId) public view override returns (string memory) {
         string memory batchUri = _getBaseURI(_tokenId);
-
-        if (isEncryptedBatch(batchId)) {
-            return string(abi.encodePacked(batchUri, "0"));
-        } else {
-            return string(abi.encodePacked(batchUri, _tokenId.toString()));
-        }
+        return string(abi.encodePacked(batchUri, _tokenId.toString()));
     }
 
     /// @dev See ERC 165
     function supportsInterface(
         bytes4 interfaceId
-    ) public view virtual override(ERC721AUpgradeable, IERC165) returns (bool) {
+    ) public view virtual override(ERC1155Upgradeable, IERC165) returns (bool) {
         return super.supportsInterface(interfaceId) || type(IERC2981Upgradeable).interfaceId == interfaceId;
     }
 
@@ -152,7 +169,7 @@ contract DropERC721FlatFee is
     //////////////////////////////////////////////////////////////*/
 
     function contractType() external pure returns (bytes32) {
-        return bytes32("DropERC721");
+        return bytes32("DropERC1155");
     }
 
     function contractVersion() external pure returns (uint8) {
@@ -160,52 +177,28 @@ contract DropERC721FlatFee is
     }
 
     /*///////////////////////////////////////////////////////////////
-                    Lazy minting + delayed-reveal logic
+                        Setter functions
     //////////////////////////////////////////////////////////////*/
 
-    /**
-     *  @dev Lets an account with `MINTER_ROLE` lazy mint 'n' NFTs.
-     *       The URIs for each token is the provided `_baseURIForTokens` + `{tokenId}`.
-     */
-    function lazyMint(
-        uint256 _amount,
-        string calldata _baseURIForTokens,
-        bytes calldata _data
-    ) public override returns (uint256 batchId) {
-        if (_data.length > 0) {
-            (bytes memory encryptedURI, bytes32 provenanceHash) = abi.decode(_data, (bytes, bytes32));
-            if (encryptedURI.length != 0 && provenanceHash != "") {
-                _setEncryptedData(nextTokenIdToLazyMint + _amount, _data);
-            }
-        }
-
-        return super.lazyMint(_amount, _baseURIForTokens, _data);
+    /// @dev Lets a module admin set a max total supply for token.
+    function setMaxTotalSupply(uint256 _tokenId, uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        maxTotalSupply[_tokenId] = _maxTotalSupply;
+        emit MaxTotalSupplyUpdated(_tokenId, _maxTotalSupply);
     }
 
-    /// @dev Lets an account with `METADATA_ROLE` reveal the URI for a batch of 'delayed-reveal' NFTs.
-    /// @param _index the ID of a token with the desired batch.
-    /// @param _key the key to decrypt the batch's URI.
-    function reveal(
-        uint256 _index,
-        bytes calldata _key
-    ) external onlyRole(metadataRole) returns (string memory revealedURI) {
-        uint256 batchId = getBatchIdAtIndex(_index);
-        revealedURI = getRevealURI(batchId, _key);
-
-        _setEncryptedData(batchId, "");
-        _setBaseURI(batchId, revealedURI);
-
-        emit TokenURIRevealed(_index, revealedURI);
+    /// @dev Lets a contract admin set the recipient for all primary sales.
+    function setSaleRecipientForToken(uint256 _tokenId, address _saleRecipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        saleRecipient[_tokenId] = _saleRecipient;
+        emit SaleRecipientForTokenUpdated(_tokenId, _saleRecipient);
     }
 
     /**
-     * @notice Updates the base URI for a batch of tokens. Can only be called if the batch has been revealed/is not encrypted.
+     * @notice Updates the base URI for a batch of tokens.
      *
-     * @param _index Index of the desired batch in batchIds array
+     * @param _index Index of the desired batch in batchIds array.
      * @param _uri   the new base URI for the batch.
      */
     function updateBatchBaseURI(uint256 _index, string calldata _uri) external onlyRole(metadataRole) {
-        require(!isEncryptedBatch(getBatchIdAtIndex(_index)), "Encrypted batch");
         uint256 batchId = getBatchIdAtIndex(_index);
         _setBaseURI(batchId, _uri);
     }
@@ -216,19 +209,8 @@ contract DropERC721FlatFee is
      * @param _index Index of the desired batch in batchIds array.
      */
     function freezeBatchBaseURI(uint256 _index) external onlyRole(metadataRole) {
-        require(!isEncryptedBatch(getBatchIdAtIndex(_index)), "Encrypted batch");
         uint256 batchId = getBatchIdAtIndex(_index);
         _freezeBaseURI(batchId);
-    }
-
-    /*///////////////////////////////////////////////////////////////
-                        Setter functions
-    //////////////////////////////////////////////////////////////*/
-
-    /// @dev Lets a contract admin set the global maximum supply for collection's NFTs.
-    function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        maxTotalSupply = _maxTotalSupply;
-        emit MaxTotalSupplyUpdated(_maxTotalSupply);
     }
 
     /*///////////////////////////////////////////////////////////////
@@ -237,6 +219,7 @@ contract DropERC721FlatFee is
 
     /// @dev Runs before every `claim` function call.
     function _beforeClaim(
+        uint256 _tokenId,
         address,
         uint256 _quantity,
         address,
@@ -244,12 +227,15 @@ contract DropERC721FlatFee is
         AllowlistProof calldata,
         bytes memory
     ) internal view override {
-        require(_currentIndex + _quantity <= nextTokenIdToLazyMint, "!Tokens");
-        require(maxTotalSupply == 0 || _currentIndex + _quantity <= maxTotalSupply, "!Supply");
+        require(
+            maxTotalSupply[_tokenId] == 0 || totalSupply[_tokenId] + _quantity <= maxTotalSupply[_tokenId],
+            "exceed max total supply"
+        );
     }
 
     /// @dev Collects and distributes the primary sale value of NFTs being claimed.
-    function _collectPriceOnClaim(
+    function collectPriceOnClaim(
+        uint256 _tokenId,
         address _primarySaleRecipient,
         uint256 _quantityToClaim,
         address _currency,
@@ -260,7 +246,9 @@ contract DropERC721FlatFee is
             return;
         }
 
-        address saleRecipient = _primarySaleRecipient == address(0) ? primarySaleRecipient() : _primarySaleRecipient;
+        address _saleRecipient = _primarySaleRecipient == address(0)
+            ? (saleRecipient[_tokenId] == address(0) ? primarySaleRecipient() : saleRecipient[_tokenId])
+            : _primarySaleRecipient;
 
         uint256 totalPrice = _quantityToClaim * _pricePerToken;
         uint256 platformFees;
@@ -287,18 +275,14 @@ contract DropERC721FlatFee is
         CurrencyTransferLib.transferCurrency(
             _currency,
             _msgSender(),
-            saleRecipient,
+            _saleRecipient,
             totalPrice - platformFees
         );
     }
 
     /// @dev Transfers the NFTs being claimed.
-    function _transferTokensOnClaim(
-        address _to,
-        uint256 _quantityBeingClaimed
-    ) internal override returns (uint256 startTokenId) {
-        startTokenId = _currentIndex;
-        _safeMint(_to, _quantityBeingClaimed);
+    function transferTokensOnClaim(address _to, uint256 _tokenId, uint256 _quantityBeingClaimed) internal override {
+        _mint(_to, _tokenId, _quantityBeingClaimed, "");
     }
 
     /// @dev Checks whether platform fee info can be set in the given execution context.
@@ -340,42 +324,48 @@ contract DropERC721FlatFee is
                         Miscellaneous
     //////////////////////////////////////////////////////////////*/
 
-    /**
-     * Returns the total amount of tokens minted in the contract.
-     */
-    function totalMinted() external view returns (uint256) {
-        return _totalMinted();
-    }
-
     /// @dev The tokenId of the next NFT that will be minted / lazy minted.
     function nextTokenIdToMint() external view returns (uint256) {
         return nextTokenIdToLazyMint;
     }
 
-    /// @dev The next token ID of the NFT that can be claimed.
-    function nextTokenIdToClaim() external view returns (uint256) {
-        return _currentIndex;
+    /// @dev Lets a token owner burn multiple tokens they own at once (i.e. destroy for good)
+    function burnBatch(address account, uint256[] memory ids, uint256[] memory values) public virtual {
+        require(
+            account == _msgSender() || isApprovedForAll(account, _msgSender()),
+            "ERC1155: caller is not owner nor approved."
+        );
+
+        _burnBatch(account, ids, values);
     }
 
-    /// @dev Burns `tokenId`. See {ERC721-_burn}.
-    function burn(uint256 tokenId) external virtual {
-        // note: ERC721AUpgradeable's `_burn(uint256,bool)` internally checks for token approvals.
-        _burn(tokenId, true);
-    }
-
-    /// @dev See {ERC721-_beforeTokenTransfer}.
-    function _beforeTokenTransfers(
+    /**
+     * @dev See {ERC1155-_beforeTokenTransfer}.
+     */
+    function _beforeTokenTransfer(
+        address operator,
         address from,
         address to,
-        uint256 startTokenId,
-        uint256 quantity
+        uint256[] memory ids,
+        uint256[] memory amounts,
+        bytes memory data
     ) internal virtual override {
-        super._beforeTokenTransfers(from, to, startTokenId, quantity);
+        super._beforeTokenTransfer(operator, from, to, ids, amounts, data);
 
         // if transfer is restricted on the contract, we still want to allow burning and minting
         if (!hasRole(transferRole, address(0)) && from != address(0) && to != address(0)) {
-            if (!hasRole(transferRole, from) && !hasRole(transferRole, to)) {
-                revert("!Transfer-Role");
+            require(hasRole(transferRole, from) || hasRole(transferRole, to), "restricted to TRANSFER_ROLE holders.");
+        }
+
+        if (from == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] += amounts[i];
+            }
+        }
+
+        if (to == address(0)) {
+            for (uint256 i = 0; i < ids.length; ++i) {
+                totalSupply[ids[i]] -= amounts[i];
             }
         }
     }
