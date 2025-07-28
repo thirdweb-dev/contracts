@@ -151,6 +151,146 @@ contract DropERC721FlatFeeTest_collectPrice is BaseTest {
         drop.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
     }
 
-    // Other tests similar, adapted for flat fee (no defaultFee, only platform flat and primary)
-    // ...
+    // -----------------------------
+    // Additional tests for flat fee
+    // -----------------------------
+
+    function test_state_erc20() public currencyNotNativeToken pricePerTokenNotZero primarySaleRecipientNotZeroAddress {
+        uint256 total = pricePerToken * qty;
+
+        erc20.mint(address(this), total);
+        ERC20(erc20).approve(address(drop), total);
+
+        uint256 beforeBalancePrimarySaleRecipient = erc20.balanceOf(primarySaleRecipient);
+        uint256 platformFeeRecipientBefore = erc20.balanceOf(platformFeeRecipient);
+
+        drop.collectPriceOnClaim(primarySaleRecipient, qty, currency, pricePerToken);
+
+        uint256 afterBalancePrimarySaleRecipient = erc20.balanceOf(primarySaleRecipient);
+        uint256 platformFeeRecipientAfter = erc20.balanceOf(platformFeeRecipient);
+
+        uint256 platformFees = 0.1 ether; // flat fee
+        uint256 primarySaleRecipientVal = total - platformFees;
+
+        assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, platformFees);
+    }
+
+    function test_state_erc20StoredPrimarySaleRecipient() public currencyNotNativeToken pricePerTokenNotZero primarySaleRecipientZeroAddress {
+        uint256 total = pricePerToken * qty;
+        address storedPrimarySaleRecipient = drop.primarySaleRecipient();
+
+        erc20.mint(address(this), total);
+        ERC20(erc20).approve(address(drop), total);
+
+        uint256 beforeBalancePrimarySaleRecipient = erc20.balanceOf(storedPrimarySaleRecipient);
+        uint256 platformFeeRecipientBefore = erc20.balanceOf(platformFeeRecipient);
+
+        drop.collectPriceOnClaim(primarySaleRecipient, qty, currency, pricePerToken);
+
+        uint256 afterBalancePrimarySaleRecipient = erc20.balanceOf(storedPrimarySaleRecipient);
+        uint256 platformFeeRecipientAfter = erc20.balanceOf(platformFeeRecipient);
+
+        uint256 platformFees = 0.1 ether; // flat fee
+        uint256 primarySaleRecipientVal = total - platformFees;
+
+        assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, platformFees);
+    }
+
+    function test_state_nativeCurrencyStoredPrimarySaleRecipient()
+        public
+        currencyNativeToken
+        pricePerTokenNotZero
+        primarySaleRecipientZeroAddress
+        msgValueNotZero
+    {
+        address storedPrimarySaleRecipient = drop.primarySaleRecipient();
+
+        uint256 beforeBalancePrimarySaleRecipient = address(storedPrimarySaleRecipient).balance;
+        uint256 platformFeeRecipientBefore = address(platformFeeRecipient).balance;
+
+        drop.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
+
+        uint256 afterBalancePrimarySaleRecipient = address(storedPrimarySaleRecipient).balance;
+        uint256 platformFeeRecipientAfter = address(platformFeeRecipient).balance;
+
+        uint256 platformFees = 0.1 ether; // flat fee
+        uint256 primarySaleRecipientVal = msgValue - platformFees;
+
+        assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, platformFees);
+    }
+
+    function test_state_totalEqualsPlatformFee_nativeCurrency()
+        public
+        currencyNativeToken
+        primarySaleRecipientNotZeroAddress
+    {
+        pricePerToken = 0.1 ether; // equals flat fee
+        msgValue = 0.1 ether;
+
+        uint256 beforeBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
+        uint256 platformFeeRecipientBefore = address(platformFeeRecipient).balance;
+
+        drop.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
+
+        uint256 afterBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
+        uint256 platformFeeRecipientAfter = address(platformFeeRecipient).balance;
+
+        // sale recipient gets zero, platform gets full flat fee
+        assertEq(afterBalancePrimarySaleRecipient, beforeBalancePrimarySaleRecipient);
+        assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, 0.1 ether);
+    }
+
+    function test_state_nativeCurrency_multiQuantity_flatFeeOnce()
+        public
+        currencyNativeToken
+        primarySaleRecipientNotZeroAddress
+    {
+        qty = 3;
+        pricePerToken = 1 ether;
+        msgValue = qty * pricePerToken; // 3 ether
+
+        uint256 beforeBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
+        uint256 platformFeeRecipientBefore = address(platformFeeRecipient).balance;
+
+        drop.collectPriceOnClaim{ value: msgValue }(primarySaleRecipient, qty, currency, pricePerToken);
+
+        uint256 afterBalancePrimarySaleRecipient = address(primarySaleRecipient).balance;
+        uint256 platformFeeRecipientAfter = address(platformFeeRecipient).balance;
+
+        uint256 platformFees = 0.1 ether; // charged once per claim
+        uint256 primarySaleRecipientVal = msgValue - platformFees; // 2.9 ether
+
+        assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, platformFees);
+    }
+
+    function test_state_erc20_multiQuantity_flatFeeOnce()
+        public
+        currencyNotNativeToken
+        primarySaleRecipientNotZeroAddress
+    {
+        qty = 3;
+        pricePerToken = 1 ether;
+        uint256 total = qty * pricePerToken; // 3 ether
+
+        erc20.mint(address(this), total);
+        ERC20(erc20).approve(address(drop), total);
+
+        uint256 beforeBalancePrimarySaleRecipient = erc20.balanceOf(primarySaleRecipient);
+        uint256 platformFeeRecipientBefore = erc20.balanceOf(platformFeeRecipient);
+
+        drop.collectPriceOnClaim(primarySaleRecipient, qty, currency, pricePerToken);
+
+        uint256 afterBalancePrimarySaleRecipient = erc20.balanceOf(primarySaleRecipient);
+        uint256 platformFeeRecipientAfter = erc20.balanceOf(platformFeeRecipient);
+
+        uint256 platformFees = 0.1 ether; // charged once per claim
+        uint256 primarySaleRecipientVal = total - platformFees; // 2.9 ether
+
+        assertEq(beforeBalancePrimarySaleRecipient + primarySaleRecipientVal, afterBalancePrimarySaleRecipient);
+        assertEq(platformFeeRecipientAfter - platformFeeRecipientBefore, platformFees);
+    }
 }
