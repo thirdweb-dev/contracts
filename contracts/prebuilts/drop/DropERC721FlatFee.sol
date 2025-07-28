@@ -256,7 +256,8 @@ contract DropERC721FlatFee is
         uint256 _pricePerToken
     ) internal override {
         if (_pricePerToken == 0) {
-            require(msg.value == 0, "!V");
+            // Align revert reason with tests and OpenEdition behavior
+            require(msg.value == 0, "!Value");
             return;
         }
 
