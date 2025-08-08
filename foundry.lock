@@ -1,0 +1,59 @@
+{
+  "lib/seaport-types": {
+    "rev": "25bae8ddfa8709e5c51ab429fe06024e46a18f15"
+  },
+  "lib/ERC721A": {
+    "rev": "17fb77ffce10bb9a2bb94cac1fea17e2bf9e8a27"
+  },
+  "lib/chainlink": {
+    "rev": "5d44bd4e8fa2bdc80228a0df891960d72246b645"
+  },
+  "lib/creator-token-standards": {
+    "tag": {
+      "name": "v5.0.0",
+      "rev": "980a63b33591d568b6e04b45f37deba05a55f787"
+    }
+  },
+  "lib/solady": {
+    "rev": "c6738e40225288842ce890cd265a305684e52c3d"
+  },
+  "lib/openzeppelin-contracts": {
+    "rev": "dc44c9f1a4c3b10af99492eed84f83ed244203f6"
+  },
+  "lib/openzeppelin-contracts-upgradeable": {
+    "rev": "2d081f24cac1a867f6f73d512f2022e1fa987854"
+  },
+  "lib/swap-router-contracts": {
+    "rev": "c696aada49b33c8e764e6f0bd0a0a56bd8aa455f"
+  },
+  "lib/ERC721A-Upgradeable": {
+    "rev": "80b4afb376ba1e886053c5aa82af852b3a09ba58"
+  },
+  "lib/seaport": {
+    "rev": "1d12e33b71b6988cbbe955373ddbc40a87bd5b16"
+  },
+  "lib/dynamic-contracts": {
+    "rev": "14af36f8f3af50d7d4ccfe6f16df589b27edd662"
+  },
+  "lib/seaport-core": {
+    "rev": "d4e8c74adc472b311ab64b5c9f9757b5bba57a15"
+  },
+  "lib/seaport-sol": {
+    "rev": "040d005768abafe3308b5f996aca3fd843d9c20e"
+  },
+  "lib/ds-test": {
+    "rev": "e282159d5170298eb2455a6c05280ab5a73a4ef0"
+  },
+  "lib/v3-periphery": {
+    "rev": "80f26c86c57b8a5e4b913f42844d4c8bd274d058"
+  },
+  "lib/v3-core": {
+    "rev": "e3589b192d0be27e100cd0daaf6c97204fdb1899"
+  },
+  "lib/forge-std": {
+    "rev": "2f112697506eab12d433a65fdc31a639548fe365"
+  },
+  "lib/murky": {
+    "rev": "40de6e80117f39cda69d71b07b7c824adac91b29"
+  }
+}

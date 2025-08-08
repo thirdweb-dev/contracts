@@ -55,3 +55,6 @@
 [submodule "lib/swap-router-contracts"]
 	path = lib/swap-router-contracts
 	url = https://github.com/Uniswap/swap-router-contracts
+[submodule "lib/creator-token-standards"]
+	path = lib/creator-token-standards
+	url = https://github.com/limitbreakinc/creator-token-standards
