@@ -24,7 +24,6 @@ import "../../eip/ERC721AVirtualApproveUpgradeable.sol";
 
 //  ==========  Internal imports    ==========
 
-import "../../external-deps/openzeppelin/metatx/ERC2771ContextUpgradeable.sol";
 import "../../lib/CurrencyTransferLib.sol";
 
 //  ==========  Features    ==========
@@ -50,7 +49,6 @@ contract DropERC721C is
     LazyMint,
     PermissionsEnumerable,
     Drop,
-    ERC2771ContextUpgradeable,
     Multicall,
     ERC721AUpgradeable,
     CreatorTokenBase,
@@ -110,7 +108,6 @@ contract DropERC721C is
         bytes32 _metadataRole = keccak256("METADATA_ROLE");
 
         // Initialize inherited contracts, most base-like -> most derived.
-        __ERC2771Context_init(_trustedForwarders);
         __ERC721A_init(_name, _symbol);
 
         _setupContractURI(_contractURI);
@@ -449,19 +446,19 @@ contract DropERC721C is
         internal
         view
         virtual
-        override(Context, ContextUpgradeable, ERC2771ContextUpgradeable, Multicall)
+        override(Context, ContextUpgradeable, Multicall)
         returns (address sender)
     {
-        return ERC2771ContextUpgradeable._msgSender();
+        return super._msgSender();
     }
 
     function _msgData()
         internal
         view
         virtual
-        override(Context, ContextUpgradeable, ERC2771ContextUpgradeable)
+        override(Context, ContextUpgradeable)
         returns (bytes calldata)
     {
-        return ERC2771ContextUpgradeable._msgData();
+        return super._msgData();
     }
 }
