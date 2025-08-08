@@ -127,6 +127,9 @@ contract DropERC721C is
         transferRole = _transferRole;
         minterRole = _minterRole;
         metadataRole = _metadataRole;
+
+        _emitDefaultTransferValidator();
+        _registerTokenType(DEFAULT_TRANSFER_VALIDATOR);
     }
 
     /**
