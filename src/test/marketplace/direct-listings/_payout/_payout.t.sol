@@ -266,7 +266,7 @@ contract PayoutTest is BaseTest, IExtension {
         uint256 platformFees = (totalPrice * platformFeeBps) / 10_000;
 
         {
-            uint256 defaultFee = (totalPrice * 100) / 10_000;
+            uint256 defaultFee = (totalPrice * 50) / 10_000;
             // Platform fee recipient receives correct amount
             assertBalERC20Eq(address(erc20), platformFeeRecipient, platformFees);
 
@@ -335,7 +335,7 @@ contract PayoutTest is BaseTest, IExtension {
         uint256 platformFees = (totalPrice * platformFeeBps) / 10_000;
 
         {
-            uint256 defaultFee = (totalPrice * 100) / 10_000;
+            uint256 defaultFee = (totalPrice * 50) / 10_000;
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), mockRecipients[0], mockAmounts[0]);
             assertBalERC20Eq(address(erc20), mockRecipients[1], mockAmounts[1]);

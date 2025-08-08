@@ -295,7 +295,7 @@ contract CollectAuctionPayoutTest is BaseTest, IExtension {
             uint256(IEnglishAuctions.Status.COMPLETED)
         );
 
-        uint256 defaultFee = (marketplaceBal * 100) / 10_000;
+        uint256 defaultFee = (marketplaceBal * 50) / 10_000;
 
         assertEq(erc20.balanceOf(address(marketplace)), 0);
         assertEq(erc20.balanceOf(seller), marketplaceBal - defaultFee);
