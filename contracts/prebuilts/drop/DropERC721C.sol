@@ -96,7 +96,7 @@ contract DropERC721C is
         string memory _name,
         string memory _symbol,
         string memory _contractURI,
-        address[] memory _trustedForwarders,
+        address[] memory _trustedForwarders, // unused
         address _saleRecipient,
         address _royaltyRecipient,
         uint128 _royaltyBps,
