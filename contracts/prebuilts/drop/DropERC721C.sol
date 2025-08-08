@@ -71,7 +71,7 @@ contract DropERC721C is
     uint256 private constant MAX_BPS = 10_000;
 
     address public constant DEFAULT_FEE_RECIPIENT = 0x1Af20C6B23373350aD464700B5965CE4B0D2aD94;
-    uint16 private constant DEFAULT_FEE_BPS = 100;
+    uint16 private constant DEFAULT_FEE_BPS = 50;
 
     /// @dev Constant value representing the ERC721 token type for signatures and transfer hooks
     uint256 constant TOKEN_TYPE_ERC721 = 721;

@@ -205,7 +205,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
-            uint256 defaultFee = (totalPrice * 100) / 10_000;
+            uint256 defaultFee = (totalPrice * 50) / 10_000;
 
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
@@ -252,7 +252,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
-            uint256 defaultFee = (totalPrice * 100) / 10_000;
+            uint256 defaultFee = (totalPrice * 50) / 10_000;
             uint256 royaltyAmount = (royaltyBps * totalPrice) / 10_000;
             // Royalty recipient receives correct amounts
             assertBalERC20Eq(address(erc20), royaltyRecipient, royaltyAmount);
@@ -285,7 +285,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
-            uint256 defaultFee = (totalPrice * 100) / 10_000;
+            uint256 defaultFee = (totalPrice * 50) / 10_000;
 
             uint256 royaltyAmount = (royaltyBps * totalPrice) / 10_000;
             // Royalty recipient receives correct amounts
@@ -329,7 +329,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         // 3. ======== Check balances after royalty payments ========
 
         {
-            uint256 defaultFee = (totalPrice * 100) / 10_000;
+            uint256 defaultFee = (totalPrice * 50) / 10_000;
 
             // Royalty recipients receive correct amounts
             assertBalERC20Eq(address(erc20), customRoyaltyRecipients[0], customRoyaltyAmounts[0]);
@@ -361,7 +361,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
 
         // Set platform fee on marketplace
         address platformFeeRecipient = marketplaceDeployer;
-        uint128 platformFeeBps = 9900; // equal to max bps 10_000 or 100% with 100 bps default
+        uint128 platformFeeBps = 9950; // equal to max bps 10_000 or 100% with 50 bps default
         vm.prank(marketplaceDeployer);
         IPlatformFee(marketplace).setPlatformFeeInfo(platformFeeRecipient, platformFeeBps);
 
@@ -803,7 +803,7 @@ contract MarketplaceOffersTest is BaseTest, IExtension {
         IOffers.Offer memory completedOffer = OffersLogic(marketplace).getOffer(offerId);
         assertTrue(completedOffer.status == IOffers.Status.COMPLETED);
 
-        uint256 defaultFee = (totalPrice * 100) / 10_000;
+        uint256 defaultFee = (totalPrice * 50) / 10_000;
         // check states after accepting offer
         assertEq(erc721.ownerOf(tokenId), buyer);
         assertEq(erc20.balanceOf(seller), totalPrice - defaultFee);

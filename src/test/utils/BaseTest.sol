@@ -5,7 +5,6 @@ import "@std/Test.sol";
 import "@ds-test/test.sol";
 // import "./Console.sol";
 import { Wallet } from "./Wallet.sol";
-import "./ChainlinkVRF.sol";
 import { WETH9 } from "../mocks/WETH9.sol";
 import { MockERC20, ERC20, IERC20 } from "../mocks/MockERC20.sol";
 import { MockERC721, IERC721 } from "../mocks/MockERC721.sol";
@@ -65,8 +64,6 @@ abstract contract BaseTest is DSTest, Test {
     address public factory;
     address public fee;
     address public contractPublisher;
-    address public linkToken;
-    address public vrfV2Wrapper;
 
     address public factoryAdmin = address(0x10000);
     address public deployer = address(0x20000);
@@ -113,8 +110,6 @@ abstract contract BaseTest is DSTest, Test {
         registry = address(new TWRegistry(forwarders()));
         factory = address(new TWFactory(forwarders(), registry));
         contractPublisher = address(new ContractPublisher(factoryAdmin, forwarders(), new MockContractPublisher()));
-        linkToken = address(new Link());
-        vrfV2Wrapper = address(new VRFV2Wrapper());
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), factory);
         TWRegistry(registry).grantRole(TWRegistry(registry).OPERATOR_ROLE(), contractPublisher);
 
