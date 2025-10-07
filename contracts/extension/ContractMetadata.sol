@@ -1,48 +1,24 @@
 // SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.19;
 
-/// @author thirdweb
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-import "./interface/IContractMetadata.sol";
+contract RebelByNature is ERC721URIStorage, Ownable, ContractMetadata {
+    uint256 public nextTokenId;
 
-/**
- *  @title   Contract Metadata
- *  @notice  Thirdweb's `ContractMetadata` is a contract extension for any base contracts. It lets you set a metadata URI
- *           for you contract.
- *           Additionally, `ContractMetadata` is necessary for NFT contracts that want royalties to get distributed on OpenSea.
- */
+    event TributeMinted(uint256 tokenId, address recipient, uint256 timestamp);
 
-abstract contract ContractMetadata is IContractMetadata {
-    /// @dev The sender is not authorized to perform the action
-    error ContractMetadataUnauthorized();
+    constructor() ERC721("Rebel By Nature", "SEQREB") {}
 
-    /// @notice Returns the contract metadata URI.
-    string public override contractURI;
-
-    /**
-     *  @notice         Lets a contract admin set the URI for contract-level metadata.
-     *  @dev            Caller should be authorized to setup contractURI, e.g. contract admin.
-     *                  See {_canSetContractURI}.
-     *                  Emits {ContractURIUpdated Event}.
-     *
-     *  @param _uri     keccak256 hash of the role. e.g. keccak256("TRANSFER_ROLE")
-     */
-    function setContractURI(string memory _uri) external override {
-        if (!_canSetContractURI()) {
-            revert ContractMetadataUnauthorized();
-        }
-
-        _setupContractURI(_uri);
+    function mintTribute(address recipient) external onlyOwner {
+        uint256 tokenId = nextTokenId++;
+        _mint(recipient, tokenId);
+        _setTokenURI(tokenId, contractURI);
+        emit TributeMinted(tokenId, recipient, block.timestamp);
     }
 
-    /// @dev Lets a contract admin set the URI for contract-level metadata.
-    function _setupContractURI(string memory _uri) internal {
-        string memory prevURI = contractURI;
-        contractURI = _uri;
-
-        emit ContractURIUpdated(prevURI, _uri);
+    function _canSetContractURI() internal view override returns (bool) {
+        return msg.sender == owner();
     }
-
-    /// @dev Returns whether contract metadata can be set in the given execution context.
-    function _canSetContractURI() internal view virtual returns (bool);
 }
