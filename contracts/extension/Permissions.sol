@@ -17,7 +17,7 @@ contract Permissions is IPermissions {
     /// @dev The `account` already is a holder of `role`
     error PermissionsAlreadyGranted(address account, bytes32 role);
 
-    /// @dev Invalid priviledge to revoke
+    /// @dev Invalid privilege to revoke
     error PermissionsInvalidPermission(address expected, address actual);
 
     /// @dev Map from keccak256 hash of a role => a map from address => whether address has role.
