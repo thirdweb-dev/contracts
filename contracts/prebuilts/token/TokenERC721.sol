@@ -93,10 +93,10 @@ contract TokenERC721 is
     /// @dev The token ID of the next token to mint.
     uint256 public nextTokenIdToMint;
 
-    /// @dev The adress that receives all primary sales value.
+    /// @dev The address that receives all primary sales value.
     address public primarySaleRecipient;
 
-    /// @dev The adress that receives all primary sales value.
+    /// @dev The address that receives all platform fee value.
     address public platformFeeRecipient;
 
     /// @dev The recipient of who gets the royalty.

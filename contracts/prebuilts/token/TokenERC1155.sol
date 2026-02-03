@@ -96,10 +96,10 @@ contract TokenERC1155 is
     /// @dev The next token ID of the NFT to mint.
     uint256 public nextTokenIdToMint;
 
-    /// @dev The adress that receives all primary sales value.
+    /// @dev The address that receives all primary sales value.
     address public primarySaleRecipient;
 
-    /// @dev The adress that receives all primary sales value.
+    /// @dev The address that receives all platform fee value.
     address public platformFeeRecipient;
 
     /// @dev The recipient of who gets the royalty.

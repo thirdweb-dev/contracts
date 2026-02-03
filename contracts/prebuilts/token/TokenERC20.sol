@@ -77,10 +77,10 @@ contract TokenERC20 is
     /// @dev The % of primary sales collected by the contract as fees.
     uint128 private platformFeeBps;
 
-    /// @dev The adress that receives all primary sales value.
+    /// @dev The address that receives all platform fee value.
     address internal platformFeeRecipient;
 
-    /// @dev The adress that receives all primary sales value.
+    /// @dev The address that receives all primary sales value.
     address public primarySaleRecipient;
 
     /// @dev Mapping from mint request UID => whether the mint request is processed.
