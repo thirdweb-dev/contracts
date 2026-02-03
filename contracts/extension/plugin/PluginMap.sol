@@ -40,7 +40,7 @@ contract PluginMap is IPluginMap {
         return _pluginAddress;
     }
 
-    /// @dev View all funtionality as list of function signatures.
+    /// @dev View all functionality as list of function signatures.
     function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] memory registered) {
         uint256 len = selectorsForPlugin[_pluginAddress].length();
         registered = new bytes4[](len);
@@ -50,7 +50,7 @@ contract PluginMap is IPluginMap {
         }
     }
 
-    /// @dev View all funtionality existing on the contract.
+    /// @dev View all functionality existing on the contract.
     function getAllPlugins() external view returns (Plugin[] memory _plugins) {
         uint256 len = allSelectors.length();
         _plugins = new Plugin[](len);

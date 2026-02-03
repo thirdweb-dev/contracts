@@ -133,7 +133,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
         return pluginAddress != address(0) ? pluginAddress : IPluginMap(pluginMap).getPluginForFunction(_selector);
     }
 
-    /// @dev View all funtionality as list of function signatures.
+    /// @dev View all functionality as list of function signatures.
     function getAllFunctionsOfPlugin(address _pluginAddress) external view returns (bytes4[] memory registered) {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
 
@@ -165,7 +165,7 @@ abstract contract Router is Multicall, ERC165, IRouter {
         }
     }
 
-    /// @dev View all funtionality existing on the contract.
+    /// @dev View all functionality existing on the contract.
     function getAllPlugins() external view returns (Plugin[] memory registered) {
         RouterStorage.Data storage data = RouterStorage.routerStorage();
 
