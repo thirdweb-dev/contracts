@@ -6,9 +6,9 @@ function collectAuctionTokens(uint256 _auctionId) external
     ├── when the auction is still active
     │   └── it should reverts ✅
     └── when the auction is not active
-        ├── when the auction has no wining bid
+        ├── when the auction has no winning bid
         │   └── it should reverts ✅
-        └── when the auction has a wining bid
+        └── when the auction has a winning bid
             ├── when auction bidder has already been paid out tokens
             │   └── it should reverts ✅
             └── when auction creator has not been paid out tokens ✅
