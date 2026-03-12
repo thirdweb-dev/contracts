@@ -48,7 +48,7 @@ contract AccountFactory is BaseAccountFactory, ContractMetadata, PermissionsEnum
     }
 
     /// @notice Returns the sender in the given execution context.
-    function _msgSender() internal view override(Multicall, Permissions) returns (address) {
+    function _msgSender() internal view virtual override(Multicall, Permissions) returns (address) {
         return msg.sender;
     }
 }

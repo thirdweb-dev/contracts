@@ -51,7 +51,7 @@ contract TWMultichainRegistryRouter is PermissionsEnumerableLogic, ERC2771Contex
         return hasRole(DEFAULT_ADMIN_ROLE, _msgSender());
     }
 
-    function _msgSender() internal view override(ERC2771ContextLogic, PermissionsLogic, Multicall) returns (address) {
+    function _msgSender() internal view virtual override(ERC2771ContextLogic, PermissionsLogic, Multicall) returns (address) {
         return ERC2771ContextLogic._msgSender();
     }
 
