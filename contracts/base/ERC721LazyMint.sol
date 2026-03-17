@@ -213,7 +213,7 @@ contract ERC721LazyMint is
     }
 
     /// @notice Returns the sender in the given execution context.
-    function _msgSender() internal view override(Multicall, Context) returns (address) {
+    function _msgSender() internal view virtual override(Multicall, Context) returns (address) {
         return msg.sender;
     }
 }

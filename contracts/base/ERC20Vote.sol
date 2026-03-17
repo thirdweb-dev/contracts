@@ -61,7 +61,7 @@ contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes, IMintabl
      */
     function burn(uint256 _amount) external virtual {
         require(balanceOf(_msgSender()) >= _amount, "not enough balance");
-        _burn(msg.sender, _amount);
+        _burn(_msgSender(), _amount);
     }
 
     /**
@@ -74,9 +74,9 @@ contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes, IMintabl
     function burnFrom(address _account, uint256 _amount) external virtual override {
         require(_canBurn(), "Not authorized to burn.");
         require(balanceOf(_account) >= _amount, "not enough balance");
-        uint256 decreasedAllowance = allowance(_account, msg.sender) - _amount;
-        _approve(_account, msg.sender, 0);
-        _approve(_account, msg.sender, decreasedAllowance);
+        uint256 decreasedAllowance = allowance(_account, _msgSender()) - _amount;
+        _approve(_account, _msgSender(), 0);
+        _approve(_account, _msgSender(), decreasedAllowance);
         _burn(_account, _amount);
     }
 
@@ -86,26 +86,26 @@ contract ERC20Vote is ContractMetadata, Multicall, Ownable, ERC20Votes, IMintabl
 
     /// @dev Returns whether contract metadata can be set in the given execution context.
     function _canSetContractURI() internal view virtual override returns (bool) {
-        return msg.sender == owner();
+        return _msgSender() == owner();
     }
 
     /// @dev Returns whether tokens can be minted in the given execution context.
     function _canMint() internal view virtual returns (bool) {
-        return msg.sender == owner();
+        return _msgSender() == owner();
     }
 
     /// @dev Returns whether tokens can be burned in the given execution context.
     function _canBurn() internal view virtual returns (bool) {
-        return msg.sender == owner();
+        return _msgSender() == owner();
     }
 
     /// @dev Returns whether owner can be set in the given execution context.
     function _canSetOwner() internal view virtual override returns (bool) {
-        return msg.sender == owner();
+        return _msgSender() == owner();
     }
 
     /// @notice Returns the sender in the given execution context.
-    function _msgSender() internal view override(Multicall, Context) returns (address) {
-        return msg.sender;
+    function _msgSender() internal view virtual override(Multicall, Context) returns (address) {
+        return super._msgSender();
     }
 }
