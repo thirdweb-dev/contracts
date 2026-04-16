@@ -142,3 +142,9 @@ If you have any feedback, please reach out to us at support@thirdweb.com.
 ## License
 
 [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.txt)
+
+# Forge projects
+forge install https://github.com/thirdweb-dev/contracts
+
+# Hardhat / npm based projects
+npm i @thirdweb-dev/contracts
