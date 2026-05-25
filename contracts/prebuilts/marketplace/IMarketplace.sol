@@ -113,6 +113,17 @@ interface IDirectListings {
         uint256 totalPricePaid
     );
 
+    /// @notice Emitted when a royalty payment is made during a sale.
+    event RoyaltyPaid(
+        uint256 indexed listingId,
+        address indexed recipient,
+        address indexed payer,
+        address assetContract,
+        uint256 tokenId,
+        address currency,
+        uint256 amount
+    );
+
     /**
      *  @notice List NFTs (ERC721 or ERC1155) for sale at a fixed price.
      *
@@ -333,6 +344,17 @@ interface IEnglishAuctions {
         address winningBidder
     );
 
+    /// @notice Emitted when a royalty payment is made when an auction is settled.
+    event RoyaltyPaid(
+        uint256 indexed auctionId,
+        address indexed recipient,
+        address indexed payer,
+        address assetContract,
+        uint256 tokenId,
+        address currency,
+        uint256 amount
+    );
+
     /**
      *  @notice Put up NFTs (ERC721 or ERC1155) for an english auction.
      *
@@ -476,6 +498,17 @@ interface IOffers {
         address seller,
         uint256 quantityBought,
         uint256 totalPricePaid
+    );
+
+    /// @notice Emitted when a royalty payment is made when an offer is accepted.
+    event RoyaltyPaid(
+        uint256 indexed offerId,
+        address indexed recipient,
+        address indexed payer,
+        address assetContract,
+        uint256 tokenId,
+        address currency,
+        uint256 amount
     );
 
     /**

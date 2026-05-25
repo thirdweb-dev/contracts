@@ -75,9 +75,10 @@ library CurrencyTransferLib {
 
     /// @dev Transfers `amount` of native token to `to`.
     function safeTransferNativeToken(address to, uint256 value) internal {
-        // solhint-disable avoid-low-level-calls
-        // slither-disable-next-line low-level-calls
-        (bool success, ) = to.call{ value: value }("");
+        bool success;
+        assembly {
+            success := call(gas(), to, value, 0, 0, 0, 0)
+        }
         if (!success) {
             revert CurrencyTransferLibFailedNativeTransfer(to, value);
         }
@@ -85,9 +86,10 @@ library CurrencyTransferLib {
 
     /// @dev Transfers `amount` of native token to `to`. (With native token wrapping)
     function safeTransferNativeTokenWithWrapper(address to, uint256 value, address _nativeTokenWrapper) internal {
-        // solhint-disable avoid-low-level-calls
-        // slither-disable-next-line low-level-calls
-        (bool success, ) = to.call{ value: value }("");
+        bool success;
+        assembly {
+            success := call(gas(), to, value, 0, 0, 0, 0)
+        }
         if (!success) {
             IWETH(_nativeTokenWrapper).deposit{ value: value }();
             IERC20(_nativeTokenWrapper).safeTransfer(to, value);

@@ -339,6 +339,16 @@ contract OffersLogic is IOffers, ReentrancyGuard, ERC2771ContextConsumer {
                         address(0)
                     );
 
+                    emit RoyaltyPaid(
+                        _offer.offerId,
+                        royaltyRecipient,
+                        _payer,
+                        _offer.assetContract,
+                        _offer.tokenId,
+                        _currencyToUse,
+                        royaltyCut
+                    );
+
                     unchecked {
                         amountRemaining -= royaltyCut;
                         ++i;

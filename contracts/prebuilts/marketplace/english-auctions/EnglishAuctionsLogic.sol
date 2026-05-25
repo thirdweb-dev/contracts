@@ -521,6 +521,16 @@ contract EnglishAuctionsLogic is IEnglishAuctions, ReentrancyGuard, ERC2771Conte
                         _nativeTokenWrapper
                     );
 
+                    emit RoyaltyPaid(
+                        _targetAuction.auctionId,
+                        royaltyRecipient,
+                        _englishAuctionsStorage().winningBid[_targetAuction.auctionId].bidder,
+                        _targetAuction.assetContract,
+                        _targetAuction.tokenId,
+                        _currencyToUse,
+                        royaltyCut
+                    );
+
                     unchecked {
                         amountRemaining -= royaltyCut;
                         ++i;

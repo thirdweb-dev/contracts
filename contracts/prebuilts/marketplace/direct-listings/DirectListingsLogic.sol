@@ -554,6 +554,16 @@ contract DirectListingsLogic is IDirectListings, ReentrancyGuard, ERC2771Context
                         _nativeTokenWrapper
                     );
 
+                    emit RoyaltyPaid(
+                        _listing.listingId,
+                        royaltyRecipient,
+                        _payer,
+                        _listing.assetContract,
+                        _listing.tokenId,
+                        _currencyToUse,
+                        royaltyCut
+                    );
+
                     unchecked {
                         amountRemaining -= royaltyCut;
                         ++i;
